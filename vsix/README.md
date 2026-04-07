@@ -22,6 +22,7 @@ Current scope:
 - includes automated UI smoke tests that render the shared design surface and load real VFP sample assets
 - supports asset-aware property-grid editing for `MNX/MNT` menu items
 - now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing
+- now surfaces the platform's native security/RBAC stance and `.NET`/Python/MCP extensibility story inside project workspaces
 
 Current limitations:
 

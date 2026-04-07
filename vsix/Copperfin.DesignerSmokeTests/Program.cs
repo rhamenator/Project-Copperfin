@@ -195,6 +195,10 @@ internal static class Program
                 $"project workspace summary should include a build output for {path}");
             Expect(summary.Text.IndexOf("Startup Item:", StringComparison.OrdinalIgnoreCase) >= 0,
                 $"project workspace summary should include a startup item for {path}");
+            Expect(summary.Text.IndexOf("Native Security:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project workspace summary should include native security for {path}");
+            Expect(summary.Text.IndexOf(".NET And Extensibility:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project workspace summary should include .NET/extensibility guidance for {path}");
         }
 
         hostForm.Hide();

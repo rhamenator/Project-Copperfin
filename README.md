@@ -46,6 +46,8 @@ Contents:
 - [`docs/15-local-product-archeology.md`](E:/Project-Copperfin/docs/15-local-product-archeology.md)
 - [`docs/16-vfp9-equivalent-subsystems.md`](E:/Project-Copperfin/docs/16-vfp9-equivalent-subsystems.md)
 - [`docs/17-modern-designer-direction.md`](E:/Project-Copperfin/docs/17-modern-designer-direction.md)
+- [`docs/18-native-security-and-rbac.md`](E:/Project-Copperfin/docs/18-native-security-and-rbac.md)
+- [`docs/19-polyglot-and-ai-subprojects.md`](E:/Project-Copperfin/docs/19-polyglot-and-ai-subprojects.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:
@@ -83,6 +85,7 @@ Current runnable artifacts:
   - current `FRX/FRT` and `LBX/LBT` slices now surface named report sections in a more modern Visual Studio-style designer shell, with section-aware layout editing for `HPOS/VPOS/WIDTH/HEIGHT` plus key expression/font fields
   - current `MNX/MNT` slices support asset-aware property-grid editing for menu metadata
   - current `PJX/PJT` slices now surface a grouped project workspace with project-item grouping, startup/build-plan summary, and project-entry property editing
+  - project workspaces now also surface the platform's native security/RBAC posture and `.NET`/Python/MCP extensibility story
 - `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
   - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
   - current output: `vsix\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`

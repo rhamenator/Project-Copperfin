@@ -33,6 +33,28 @@ Copperfin Shield is the planned security layer around runtime, packaging, and de
 - executable/plugin allow-lists
 - auditable file/data access events
 - environment and network policy controls
+- optional native RBAC for IDE, build, runtime, and interop features
+- policy-controlled .NET, Python, and MCP boundaries
+
+## Native Platform Security
+
+Security should not depend on every application author reinventing:
+
+- users
+- roles
+- package trust
+- secrets handling
+- audit policy
+
+Copperfin should provide a native security profile that teams can enable when they need it.
+
+Current direction:
+
+- local identity plus optional enterprise identity
+- native RBAC with platform roles like developer, build engineer, security admin, auditor, and runtime operator
+- explicit permissions for build, release, runtime admin, data export, .NET interop, Python sidecars, MCP tools, and external process launches
+- signed packages and signed extensions
+- explicit allow-list policy for managed/native/plugin loading
 
 ## Security Boundaries
 
@@ -81,6 +103,9 @@ Protect:
 - report exports
 - file import/export
 - external process launches
+- .NET interop calls
+- Python sidecar execution
+- MCP or AI-tool invocation
 - policy denials
 - configuration changes
 
@@ -109,4 +134,3 @@ Protect:
 ## Long-Term Opportunity
 
 Copperfin can become the modernization bridge that legacy FoxPro estates never had: business-app productivity with modern governance.
-

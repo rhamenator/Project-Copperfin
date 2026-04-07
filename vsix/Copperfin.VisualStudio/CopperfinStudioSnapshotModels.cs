@@ -25,6 +25,8 @@ internal sealed class CopperfinStudioSnapshotDocument
     public List<CopperfinStudioSnapshotField> Fields { get; set; } = new();
     public CopperfinStudioReportLayout? ReportLayout { get; set; }
     public CopperfinStudioProjectWorkspace? ProjectWorkspace { get; set; }
+    public CopperfinStudioSecurityProfile SecurityProfile { get; set; } = new();
+    public CopperfinStudioExtensibilityProfile ExtensibilityProfile { get; set; } = new();
     public List<CopperfinStudioSnapshotObject> Objects { get; set; } = new();
 }
 
@@ -145,6 +147,84 @@ internal sealed class CopperfinStudioProjectBuildPlan
     public bool EncryptEnabled { get; set; }
     public bool SaveCode { get; set; }
     public bool NoLogo { get; set; }
+}
+
+internal sealed class CopperfinStudioSecurityProfile
+{
+    public bool Available { get; set; }
+    public bool Optional { get; set; }
+    public string Mode { get; set; } = string.Empty;
+    public string PackagePolicy { get; set; } = string.Empty;
+    public string ManagedInteropPolicy { get; set; } = string.Empty;
+    public List<CopperfinStudioSecurityRole> Roles { get; set; } = new();
+    public List<CopperfinStudioIdentityProvider> IdentityProviders { get; set; } = new();
+    public List<CopperfinStudioSecurityFeature> Features { get; set; } = new();
+    public List<string> AuditEvents { get; set; } = new();
+    public List<string> HardeningProfiles { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioSecurityRole
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool DefaultAssignment { get; set; }
+    public List<string> PermissionIds { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioIdentityProvider
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Kind { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool EnabledByDefault { get; set; }
+}
+
+internal sealed class CopperfinStudioSecurityFeature
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool EnabledByDefault { get; set; }
+    public bool Optional { get; set; }
+}
+
+internal sealed class CopperfinStudioExtensibilityProfile
+{
+    public bool Available { get; set; }
+    public List<CopperfinStudioLanguageIntegration> Languages { get; set; } = new();
+    public List<CopperfinStudioAiFeature> AiFeatures { get; set; } = new();
+    public CopperfinStudioDotNetOutputProfile DotNetOutput { get; set; } = new();
+    public List<string> Guardrails { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioLanguageIntegration
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string IntegrationMode { get; set; } = string.Empty;
+    public string TrustBoundary { get; set; } = string.Empty;
+    public string OutputStory { get; set; } = string.Empty;
+    public bool EnabledByDefault { get; set; }
+}
+
+internal sealed class CopperfinStudioAiFeature
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string TrustBoundary { get; set; } = string.Empty;
+    public bool EnabledByDefault { get; set; }
+}
+
+internal sealed class CopperfinStudioDotNetOutputProfile
+{
+    public bool Available { get; set; }
+    public bool NativeHostExecutables { get; set; }
+    public bool ManagedWrappers { get; set; }
+    public bool NugetSdk { get; set; }
+    public string PrimaryStory { get; set; } = string.Empty;
 }
 
 internal sealed class CopperfinStudioSnapshotResult

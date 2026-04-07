@@ -40,6 +40,15 @@ Legacy/reference code on `E:\`:
 - [VFPX Toolbox](https://vfpx.github.io/projects/)
 - [VFPX CodeReferences](https://vfpx.github.io/projects/)
 - [VFPX Automated Test Harness](https://vfpx.github.io/projects/)
+- [VFPX GoFish](https://vfpx.github.io/projects/)
+- [VFPX PEM Editor](https://vfpx.github.io/projects/)
+- [VFPX FoxBin2Prg](https://vfpx.github.io/projects/)
+- [VFPX ProjectHookX](https://vfpx.github.io/projects/)
+- [VFPX FoxUnit](https://vfpx.github.io/projects/)
+- [VFPX FoxMock](https://vfpx.github.io/projects/)
+- [VFPX DeployFox](https://vfpx.github.io/projects/)
+- [VFPX pdfium-vfp](https://vfpx.github.io/projects/)
+- [VFPX VFPRuntimeInstallers](https://vfpx.github.io/projects/)
 
 ## Key Lessons Pulled From The References
 
@@ -48,6 +57,7 @@ Legacy/reference code on `E:\`:
 - Local `ReportBuilder`, `DataExplorer`, `taskpane`, `toolbox`, `obrowser`, and `foxref` source trees are direct clean-room guidance for Copperfin report surfaces, data explorer tooling, task panes, toolbox UX, object browsing, and code/reference search.
 - HelpFile shows documentation gaps become operational risk.
 - The VFPX project index highlights community successors for project explorer, data explorer, toolbox/task panes, code references, and automated testing, which are all directly relevant to Copperfin's missing parity surfaces.
+- The broader VFPX ecosystem also highlights project hooks, source-control-friendly serializers, property/method tooling, automated testing, deployment helpers, and PDF/report adjuncts that Copperfin should treat as real subsystem inputs rather than optional trivia.
 - The wizard/template system shows productivity and scaffolding are core product value.
 - Your local xBase/FoxPro-era code provides a starting point for file engine and compatibility research.
 - A modern successor should not trap users on DBF alone; connector-based SQL support is part of the modernization value proposition.

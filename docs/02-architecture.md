@@ -412,3 +412,5 @@ Derived from the inspected VFP/VFPX materials:
 - wizards/templates drive adoption
 - sample apps teach architecture
 - help/documentation must be maintained as code evolves
+- project explorer, data explorer, toolbox/task panes, and automated testing deserve first-class product modules
+- modern credibility also depends on native security, auditable interop, and a strong `.NET` compatibility story

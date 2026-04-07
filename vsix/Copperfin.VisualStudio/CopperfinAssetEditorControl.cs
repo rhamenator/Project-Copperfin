@@ -512,7 +512,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
         {
-            workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot.ProjectWorkspace);
+            workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
             workspaceSummaryBox.Visible = true;
             designSurface.Visible = false;
             return;
@@ -665,6 +665,47 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine();
         summary.AppendLine("Next build-workflow step:");
         summary.AppendLine("Copperfin can now inspect the project structure and derive a build plan, but executable generation still needs the runtime/compiler pipeline behind this workspace.");
+        return summary.ToString();
+    }
+
+    private string BuildProjectWorkspaceSummary(CopperfinStudioSnapshotDocument snapshot)
+    {
+        var summary = new StringBuilder(BuildProjectWorkspaceSummary(snapshot.ProjectWorkspace!));
+
+        if (snapshot.SecurityProfile.Available)
+        {
+            summary.AppendLine();
+            summary.AppendLine("Native Security:");
+            summary.AppendLine($"- Mode: {snapshot.SecurityProfile.Mode}");
+            summary.AppendLine($"- Roles: {snapshot.SecurityProfile.Roles.Count}");
+            summary.AppendLine($"- Identity Providers: {snapshot.SecurityProfile.IdentityProviders.Count}");
+            summary.AppendLine($"- Package Policy: {snapshot.SecurityProfile.PackagePolicy}");
+            summary.AppendLine($"- Managed Interop Policy: {snapshot.SecurityProfile.ManagedInteropPolicy}");
+            if (snapshot.SecurityProfile.HardeningProfiles.Count > 0)
+            {
+                summary.AppendLine($"- Hardening: {snapshot.SecurityProfile.HardeningProfiles[0]}");
+            }
+        }
+
+        if (snapshot.ExtensibilityProfile.Available)
+        {
+            summary.AppendLine();
+            summary.AppendLine(".NET And Extensibility:");
+            summary.AppendLine($"- .NET Story: {snapshot.ExtensibilityProfile.DotNetOutput.PrimaryStory}");
+            summary.AppendLine($"- Languages: {snapshot.ExtensibilityProfile.Languages.Count}");
+            summary.AppendLine($"- AI/MCP Features: {snapshot.ExtensibilityProfile.AiFeatures.Count}");
+            var python = snapshot.ExtensibilityProfile.Languages.FirstOrDefault(language => language.Id == "python");
+            if (python is not null)
+            {
+                summary.AppendLine($"- Python: {python.OutputStory}");
+            }
+            var mcp = snapshot.ExtensibilityProfile.AiFeatures.FirstOrDefault(feature => feature.Id == "mcp-host");
+            if (mcp is not null)
+            {
+                summary.AppendLine($"- MCP: {mcp.Description}");
+            }
+        }
+
         return summary.ToString();
     }
 }

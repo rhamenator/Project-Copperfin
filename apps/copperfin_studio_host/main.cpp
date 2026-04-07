@@ -1,4 +1,6 @@
 #include "copperfin/studio/document_model.h"
+#include "copperfin/platform/extensibility_model.h"
+#include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
 #include "copperfin/studio/product_subsystems.h"
 #include "copperfin/studio/report_layout.h"
@@ -70,6 +72,8 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
+    const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -344,6 +348,181 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      }\n";
         std::cout << "    },\n";
     }
+    std::cout << "    \"securityProfile\": {\n";
+    std::cout << "      \"available\": " << (security_profile.available ? "true" : "false") << ",\n";
+    std::cout << "      \"optional\": " << (security_profile.optional ? "true" : "false") << ",\n";
+    std::cout << "      \"mode\": ";
+    print_json_string(security_profile.mode);
+    std::cout << ",\n";
+    std::cout << "      \"packagePolicy\": ";
+    print_json_string(security_profile.package_policy);
+    std::cout << ",\n";
+    std::cout << "      \"managedInteropPolicy\": ";
+    print_json_string(security_profile.managed_interop_policy);
+    std::cout << ",\n";
+    std::cout << "      \"roles\": [\n";
+    for (std::size_t role_index = 0; role_index < security_profile.roles.size(); ++role_index) {
+        const auto& role = security_profile.roles[role_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(role.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(role.title);
+        std::cout << ",\n";
+        std::cout << "          \"description\": ";
+        print_json_string(role.description);
+        std::cout << ",\n";
+        std::cout << "          \"defaultAssignment\": " << (role.default_assignment ? "true" : "false") << ",\n";
+        std::cout << "          \"permissionIds\": [";
+        for (std::size_t permission_index = 0; permission_index < role.permission_ids.size(); ++permission_index) {
+            print_json_string(role.permission_ids[permission_index]);
+            if ((permission_index + 1U) != role.permission_ids.size()) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "]\n";
+        std::cout << "        }";
+        if ((role_index + 1U) != security_profile.roles.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"identityProviders\": [\n";
+    for (std::size_t provider_index = 0; provider_index < security_profile.identity_providers.size(); ++provider_index) {
+        const auto& provider = security_profile.identity_providers[provider_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(provider.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(provider.title);
+        std::cout << ",\n";
+        std::cout << "          \"kind\": ";
+        print_json_string(provider.kind);
+        std::cout << ",\n";
+        std::cout << "          \"description\": ";
+        print_json_string(provider.description);
+        std::cout << ",\n";
+        std::cout << "          \"enabledByDefault\": " << (provider.enabled_by_default ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((provider_index + 1U) != security_profile.identity_providers.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"features\": [\n";
+    for (std::size_t feature_index = 0; feature_index < security_profile.features.size(); ++feature_index) {
+        const auto& feature = security_profile.features[feature_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(feature.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(feature.title);
+        std::cout << ",\n";
+        std::cout << "          \"description\": ";
+        print_json_string(feature.description);
+        std::cout << ",\n";
+        std::cout << "          \"enabledByDefault\": " << (feature.enabled_by_default ? "true" : "false") << ",\n";
+        std::cout << "          \"optional\": " << (feature.optional ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((feature_index + 1U) != security_profile.features.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"auditEvents\": [";
+    for (std::size_t audit_index = 0; audit_index < security_profile.audit_events.size(); ++audit_index) {
+        print_json_string(security_profile.audit_events[audit_index]);
+        if ((audit_index + 1U) != security_profile.audit_events.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "],\n";
+    std::cout << "      \"hardeningProfiles\": [";
+    for (std::size_t hardening_index = 0; hardening_index < security_profile.hardening_profiles.size(); ++hardening_index) {
+        print_json_string(security_profile.hardening_profiles[hardening_index]);
+        if ((hardening_index + 1U) != security_profile.hardening_profiles.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]\n";
+    std::cout << "    },\n";
+    std::cout << "    \"extensibilityProfile\": {\n";
+    std::cout << "      \"available\": " << (extensibility_profile.available ? "true" : "false") << ",\n";
+    std::cout << "      \"languages\": [\n";
+    for (std::size_t language_index = 0; language_index < extensibility_profile.languages.size(); ++language_index) {
+        const auto& language = extensibility_profile.languages[language_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(language.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(language.title);
+        std::cout << ",\n";
+        std::cout << "          \"integrationMode\": ";
+        print_json_string(language.integration_mode);
+        std::cout << ",\n";
+        std::cout << "          \"trustBoundary\": ";
+        print_json_string(language.trust_boundary);
+        std::cout << ",\n";
+        std::cout << "          \"outputStory\": ";
+        print_json_string(language.output_story);
+        std::cout << ",\n";
+        std::cout << "          \"enabledByDefault\": " << (language.enabled_by_default ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((language_index + 1U) != extensibility_profile.languages.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"aiFeatures\": [\n";
+    for (std::size_t feature_index = 0; feature_index < extensibility_profile.ai_features.size(); ++feature_index) {
+        const auto& feature = extensibility_profile.ai_features[feature_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(feature.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(feature.title);
+        std::cout << ",\n";
+        std::cout << "          \"description\": ";
+        print_json_string(feature.description);
+        std::cout << ",\n";
+        std::cout << "          \"trustBoundary\": ";
+        print_json_string(feature.trust_boundary);
+        std::cout << ",\n";
+        std::cout << "          \"enabledByDefault\": " << (feature.enabled_by_default ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((feature_index + 1U) != extensibility_profile.ai_features.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"dotNetOutput\": {\n";
+    std::cout << "        \"available\": " << (extensibility_profile.dotnet_output.available ? "true" : "false") << ",\n";
+    std::cout << "        \"nativeHostExecutables\": " << (extensibility_profile.dotnet_output.native_host_executables ? "true" : "false") << ",\n";
+    std::cout << "        \"managedWrappers\": " << (extensibility_profile.dotnet_output.managed_wrappers ? "true" : "false") << ",\n";
+    std::cout << "        \"nugetSdk\": " << (extensibility_profile.dotnet_output.nuget_sdk ? "true" : "false") << ",\n";
+    std::cout << "        \"primaryStory\": ";
+    print_json_string(extensibility_profile.dotnet_output.primary_story);
+    std::cout << "\n";
+    std::cout << "      },\n";
+    std::cout << "      \"guardrails\": [";
+    for (std::size_t guardrail_index = 0; guardrail_index < extensibility_profile.guardrails.size(); ++guardrail_index) {
+        print_json_string(extensibility_profile.guardrails[guardrail_index]);
+        if ((guardrail_index + 1U) != extensibility_profile.guardrails.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]\n";
+    std::cout << "    },\n";
     std::cout << "    \"objects\": [\n";
     for (std::size_t index = 0; index < objects.size(); ++index) {
         const auto& object = objects[index];
@@ -386,6 +565,8 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
 void print_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
+    const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
     std::cout << "status: ok\n";
     std::cout << "document.path: " << document.path << "\n";
     std::cout << "document.display_name: " << document.display_name << "\n";
@@ -432,6 +613,11 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
                       << " excluded=" << group.excluded_count << "\n";
         }
     }
+
+    std::cout << "preview.security.mode: " << security_profile.mode << "\n";
+    std::cout << "preview.security.role_count: " << security_profile.roles.size() << "\n";
+    std::cout << "preview.extensibility.language_count: " << extensibility_profile.languages.size() << "\n";
+    std::cout << "preview.extensibility.dotnet_story: " << extensibility_profile.dotnet_output.primary_story << "\n";
 
     if (!document.table_preview.fields.empty()) {
         std::cout << "preview.fields:";

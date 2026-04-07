@@ -8,6 +8,36 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 
+add_library(cf_security
+    src/security/security_model.cpp
+)
+
+target_include_directories(cf_security
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_security PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_security PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_library(cf_platform_profile
+    src/platform/extensibility_model.cpp
+)
+
+target_include_directories(cf_platform_profile
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_platform_profile PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_platform_profile PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(cf_vfp_assets
     src/vfp/asset_inspector.cpp
     src/vfp/cdx_header.cpp
@@ -65,7 +95,7 @@ add_executable(copperfin_studio_host
     apps/copperfin_studio_host/main.cpp
 )
 
-target_link_libraries(copperfin_studio_host PRIVATE cf_design_model)
+target_link_libraries(copperfin_studio_host PRIVATE cf_design_model cf_security cf_platform_profile)
 
 if(MSVC)
     target_compile_options(copperfin_studio_host PRIVATE /W4 /permissive-)
@@ -173,4 +203,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_project_workspace COMMAND $<TARGET_FILE:test_project_workspace>)
+
+    add_executable(test_platform_models
+        tests/test_platform_models.cpp
+    )
+
+    target_link_libraries(test_platform_models PRIVATE cf_security cf_platform_profile)
+
+    if(MSVC)
+        target_compile_options(test_platform_models PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_platform_models PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_platform_models COMMAND $<TARGET_FILE:test_platform_models>)
 endif()
