@@ -68,6 +68,9 @@ Current runnable artifacts:
   - low-level file and index inspection for DBF/VFP asset families
 - `build\Release\copperfin_studio_host.exe`
   - early human-facing Studio host for opening legacy VFP assets and previewing schema/records
+- `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
+  - installable Visual Studio extension baseline for VS 2022+
+  - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
 
 Quick examples:
 
@@ -87,3 +90,4 @@ Current MVP scope:
 Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
+- the Visual Studio extension does not yet provide inline visual designers or executable compilation for Copperfin applications; today it bridges Visual Studio to the native Studio host
