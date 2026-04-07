@@ -1,0 +1,230 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+
+namespace Copperfin.VisualStudio;
+
+internal static class Program
+{
+    private static int failures;
+
+    [STAThread]
+    private static int Main()
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+
+        SmokeDesignSurfaceWithSyntheticReportLayout();
+        SmokeAssetEditorWithRealAsset(
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
+            expectSection: "Detail");
+        SmokeAssetEditorWithRealAsset(
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\cust.lbx",
+            expectSection: "Detail");
+
+        if (failures != 0)
+        {
+            Console.Error.WriteLine($"{failures} UI smoke test(s) failed.");
+            return 1;
+        }
+
+        Console.WriteLine("All UI smoke tests passed.");
+        return 0;
+    }
+
+    private static void SmokeDesignSurfaceWithSyntheticReportLayout()
+    {
+        using var surface = new CopperfinDesignSurfaceControl
+        {
+            Size = new Size(900, 700)
+        };
+
+        var objects = new List<CopperfinStudioSnapshotObject>
+        {
+            new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 6,
+                Title = "customer.company",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "1200" },
+                    new() { Name = "VPOS", Value = "2600" },
+                    new() { Name = "WIDTH", Value = "4000" },
+                    new() { Name = "HEIGHT", Value = "500" },
+                    new() { Name = "EXPR", Value = "customer.company" }
+                }
+            }
+        };
+
+        var layout = new CopperfinStudioReportLayout
+        {
+            Sections = new List<CopperfinStudioReportSection>
+            {
+                new()
+                {
+                    Id = "detail_1",
+                    Title = "Detail",
+                    BandKind = "detail",
+                    RecordIndex = 1,
+                    Top = 2000,
+                    Height = 5000,
+                    Objects = new List<CopperfinStudioReportLayoutObject>
+                    {
+                        new()
+                        {
+                            RecordIndex = 6,
+                            ObjectKind = "field",
+                            Title = "customer.company",
+                            Expression = "customer.company",
+                            Left = 1200,
+                            Top = 2600,
+                            Width = 4000,
+                            Height = 500
+                        }
+                    }
+                }
+            }
+        };
+
+        surface.LoadReportLayout(layout, objects);
+        using var bitmap = new Bitmap(surface.Width, surface.Height);
+        surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        Expect(CountNonWhitePixels(bitmap) > 5000, "synthetic report layout should render visible UI content");
+    }
+
+    private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
+    {
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {path} not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(path);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => FindListViews(control).Any(list => list.Items.Count > 0));
+        Expect(loaded, $"editor should load snapshot data for {path}");
+
+        var sectionFound = FindListViews(control)
+            .SelectMany(list => list.Items.Cast<ListViewItem>())
+            .Any(item => string.Equals(item.Text, expectSection, StringComparison.OrdinalIgnoreCase) ||
+                         item.Text.IndexOf(expectSection, StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(sectionFound, $"editor should surface section '{expectSection}' for {path}");
+
+        var designSurface = FindDesignSurface(control);
+        Expect(designSurface is not null, $"design surface should exist for {path}");
+        if (designSurface is not null)
+        {
+            using var bitmap = new Bitmap(Math.Max(1, designSurface.Width), Math.Max(1, designSurface.Height));
+            designSurface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+            Expect(CountNonWhitePixels(bitmap) > 5000, $"design surface should render visible content for {path}");
+        }
+
+        hostForm.Hide();
+    }
+
+    private static bool WaitUntil(TimeSpan timeout, Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            Application.DoEvents();
+            if (condition())
+            {
+                return true;
+            }
+
+            Thread.Sleep(50);
+        }
+
+        Application.DoEvents();
+        return condition();
+    }
+
+    private static IEnumerable<ListView> FindListViews(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is ListView listView)
+            {
+                yield return listView;
+            }
+
+            foreach (var nested in FindListViews(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
+    private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is CopperfinDesignSurfaceControl surface)
+            {
+                return surface;
+            }
+
+            var nested = FindDesignSurface(child);
+            if (nested is not null)
+            {
+                return nested;
+            }
+        }
+
+        return null;
+    }
+
+    private static int CountNonWhitePixels(Bitmap bitmap)
+    {
+        var count = 0;
+        for (var y = 0; y < bitmap.Height; y += 2)
+        {
+            for (var x = 0; x < bitmap.Width; x += 2)
+            {
+                if (bitmap.GetPixel(x, y).ToArgb() != Color.White.ToArgb())
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private static void Expect(bool condition, string message)
+    {
+        if (condition)
+        {
+            Console.WriteLine("PASS: " + message);
+            return;
+        }
+
+        Console.Error.WriteLine("FAIL: " + message);
+        failures++;
+    }
+}

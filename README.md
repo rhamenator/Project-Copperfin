@@ -82,6 +82,13 @@ Current runnable artifacts:
   - current `SCX/SCT` and `VCX/VCT` slices expose flattened VFP `PROPERTIES` data for inline object selection, design-surface layout, drag-move, and safe property edits
   - current `FRX/FRT` and `LBX/LBT` slices now surface named report sections in a more modern Visual Studio-style designer shell, with section-aware layout editing for `HPOS/VPOS/WIDTH/HEIGHT` plus key expression/font fields
   - current `MNX/MNT` and `PJX/PJT` slices support asset-aware property-grid editing for menu and project metadata
+- `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
+  - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
+  - current output: `vsix\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`
+- `vsix\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj`
+  - automated WinForms smoke tests for the shared designer UI
+  - current output: `vsix\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
+  - exercises synthetic rendering plus real `invoice.frx` and `cust.lbx` assets from the local VFP 9 sample tree
 
 Quick examples:
 
@@ -89,6 +96,7 @@ Quick examples:
 E:\Project-Copperfin\build\Release\copperfin_studio_host.exe --from-vs --path "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx"
 E:\Project-Copperfin\build\Release\copperfin_studio_host.exe "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx"
 E:\Project-Copperfin\build\Release\copperfin_inspect.exe "E:\DBASE\DBFS\CHNGREAS.NDX"
+E:\Project-Copperfin\scripts\validate-windows.ps1
 ```
 
 Current MVP scope:
@@ -102,3 +110,4 @@ Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
 - the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, but it still does not provide full VFP 9-style design fidelity or executable compilation for Copperfin applications
+- the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE

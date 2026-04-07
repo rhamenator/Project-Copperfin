@@ -6,6 +6,8 @@ Current scope:
 
 - targets Visual Studio 2022 and later compatible major versions
 - builds an installable VSIX at `bin\Release\net472\Copperfin.VisualStudio.vsix`
+- builds a standalone Windows shell at `..\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`
+- builds UI smoke tests at `..\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
 - registers a `Copperfin Visual Designer` editor for `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, and `MNX`
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus
@@ -16,6 +18,8 @@ Current scope:
 - supports inline editable `SCX/SCT` and `VCX/VCT` slices with object selection, a simple design surface, drag-move, and safe property edits sourced from flattened VFP `PROPERTIES` blobs
 - supports inline editable `FRX/FRT` and `LBX/LBT` layout slices for `HPOS`, `VPOS`, `WIDTH`, `HEIGHT`, `EXPR`, and key font fields
 - now uses a section-aware report/label shell with named bands, a modernized design surface, and a dedicated left-pane section explorer instead of treating reports and labels as flat record lists
+- reuses the same shared WinForms designer controls in the standalone Copperfin Studio shell
+- includes automated UI smoke tests that render the shared design surface and load real VFP sample assets
 - supports asset-aware property-grid editing for `MNX/MNT` menu items and `PJX/PJT` project entries
 
 Current limitations:
@@ -45,3 +49,15 @@ Suggested first-use flow:
 3. Install `bin\Release\net472\Copperfin.VisualStudio.vsix`
 4. Open or select a `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, or `MNX` file in Visual Studio
 5. Double-click the asset to open the `Copperfin Visual Designer` shell, or use `Tools -> Open In Copperfin Studio`
+
+Suggested UI regression flow:
+
+1. Build `..\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj`
+2. Run `..\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
+3. Keep the smoke tests green as report/label/form shells evolve
+
+Repeatable Windows validation:
+
+```powershell
+E:\Project-Copperfin\scripts\validate-windows.ps1
+```

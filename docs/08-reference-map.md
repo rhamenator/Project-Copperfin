@@ -18,6 +18,12 @@ Legacy/reference code on `E:\`:
 
 - [`E:\xBaseEngineRFV`](E:/xBaseEngineRFV)
 - [`E:\VFPSource`](E:/VFPSource)
+- [`E:\VFPSource\ReportBuilder`](E:/VFPSource/ReportBuilder)
+- [`E:\VFPSource\DataExplorer`](E:/VFPSource/DataExplorer)
+- [`E:\VFPSource\taskpane`](E:/VFPSource/taskpane)
+- [`E:\VFPSource\toolbox`](E:/VFPSource/toolbox)
+- [`E:\VFPSource\obrowser`](E:/VFPSource/obrowser)
+- [`E:\VFPSource\foxref`](E:/VFPSource/foxref)
 - [`E:\DotNetFromVFP`](E:/DotNetFromVFP)
 - [`E:\VFP - Installers`](E:/VFP%20-%20Installers)
 
@@ -28,12 +34,20 @@ Legacy/reference code on `E:\`:
 - [VFPX ReportingApps](https://github.com/VFPX/ReportingApps)
 - [VFPX HelpFile](https://github.com/VFPX/HelpFile)
 - [VFPX VFPInstallers](https://github.com/VFPX/VFPInstallers)
+- [VFPX DataExplorer 3](https://vfpx.github.io/projects/)
+- [VFPX Project Explorer](https://vfpx.github.io/projects/)
+- [VFPX TaskPaneManager](https://vfpx.github.io/projects/)
+- [VFPX Toolbox](https://vfpx.github.io/projects/)
+- [VFPX CodeReferences](https://vfpx.github.io/projects/)
+- [VFPX Automated Test Harness](https://vfpx.github.io/projects/)
 
 ## Key Lessons Pulled From The References
 
 - FFC indicates the framework layer is central.
 - ReportingApps proves reporting deserves its own maintained subsystem.
+- Local `ReportBuilder`, `DataExplorer`, `taskpane`, `toolbox`, `obrowser`, and `foxref` source trees are direct clean-room guidance for Copperfin report surfaces, data explorer tooling, task panes, toolbox UX, object browsing, and code/reference search.
 - HelpFile shows documentation gaps become operational risk.
+- The VFPX project index highlights community successors for project explorer, data explorer, toolbox/task panes, code references, and automated testing, which are all directly relevant to Copperfin's missing parity surfaces.
 - The wizard/template system shows productivity and scaffolding are core product value.
 - Your local xBase/FoxPro-era code provides a starting point for file engine and compatibility research.
 - A modern successor should not trap users on DBF alone; connector-based SQL support is part of the modernization value proposition.

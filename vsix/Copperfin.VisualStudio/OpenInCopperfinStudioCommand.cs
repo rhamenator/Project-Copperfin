@@ -56,7 +56,7 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (studioHostPath is null)
         {
             VsShellUtilities.ShowMessageBox(
@@ -69,7 +69,7 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        if (!CopperfinStudioLauncher.Launch(studioHostPath, documentPath!))
+        if (!CopperfinStudioHostBridge.Launch(studioHostPath, documentPath!))
         {
             VsShellUtilities.ShowMessageBox(
                 package,

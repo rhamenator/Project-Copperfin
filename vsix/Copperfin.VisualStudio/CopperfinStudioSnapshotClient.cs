@@ -90,7 +90,7 @@ internal static class CopperfinStudioSnapshotClient
 
     public static CopperfinStudioSnapshotResult TryLoad(string assetPath)
     {
-        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
@@ -100,7 +100,7 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        return RunSnapshotCommand(studioHostPath!, CopperfinStudioLauncher.BuildArguments(assetPath, readOnly: true) + " --json");
+        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json");
     }
 
     public static CopperfinStudioSnapshotResult TryUpdateProperty(
@@ -109,7 +109,7 @@ internal static class CopperfinStudioSnapshotClient
         string propertyName,
         string propertyValue)
     {
-        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
@@ -121,6 +121,6 @@ internal static class CopperfinStudioSnapshotClient
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioLauncher.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
+            CopperfinStudioHostBridge.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
     }
 }

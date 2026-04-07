@@ -29,6 +29,17 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
     private bool suppressSelectionSync;
+    private bool embeddedStudioShell;
+
+    public bool EmbeddedStudioShell
+    {
+        get => embeddedStudioShell;
+        set
+        {
+            embeddedStudioShell = value;
+            ApplyHostMode();
+        }
+    }
 
     public CopperfinAssetEditorControl()
     {
@@ -210,6 +221,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         stack.Controls.Add(splitContainer);
 
         Controls.Add(stack);
+        ApplyHostMode();
     }
 
     public void LoadDocument(string path)
@@ -217,7 +229,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentPath = path;
 
         var info = new FileInfo(path);
-        titleLabel.Text = CopperfinStudioLauncher.DescribeAssetKind(path);
+        titleLabel.Text = CopperfinStudioHostBridge.DescribeAssetKind(path);
         pathLabel.Text = path;
         detailsLabel.Text =
             $"Size: {info.Length:N0} bytes   Last write: {info.LastWriteTime:G}   Extension: {info.Extension.ToLowerInvariant()}";
@@ -440,13 +452,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void LaunchStudio()
     {
+        if (embeddedStudioShell)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(currentPath) || !File.Exists(currentPath))
         {
             MessageBox.Show(this, "The asset path is no longer available on disk.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
-        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (studioHostPath is null)
         {
             MessageBox.Show(
@@ -458,7 +475,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        if (!CopperfinStudioLauncher.Launch(studioHostPath, currentPath!))
+        if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!))
         {
             MessageBox.Show(this, "Copperfin Studio did not start successfully.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
@@ -479,5 +496,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
 
         _ = Process.Start(startInfo);
+    }
+
+    private void ApplyHostMode()
+    {
+        launchButton.Visible = !embeddedStudioShell;
+        subtitleLabel.Text = embeddedStudioShell
+            ? "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack."
+            : "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.";
     }
 }
