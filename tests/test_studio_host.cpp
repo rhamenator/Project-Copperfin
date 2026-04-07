@@ -40,6 +40,7 @@ void test_parse_launch_arguments() {
         "--path", "E:\\Forms\\customer.scx",
         "--from-vs",
         "--read-only",
+        "--json",
         "--line", "25",
         "--column", "7",
         "--symbol", "cmdSave.Click"
@@ -49,6 +50,7 @@ void test_parse_launch_arguments() {
     expect(result.request.path == "E:\\Forms\\customer.scx", "launch path should be captured");
     expect(result.request.launched_from_visual_studio, "launch contract should detect --from-vs");
     expect(result.request.read_only, "launch contract should detect --read-only");
+    expect(result.output_json, "launch contract should detect --json");
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
@@ -95,6 +97,9 @@ void test_open_document_infers_form_sidecar() {
     expect(result.document.sidecar_path == sidecar_path.string(), "open_document should infer the SCT sidecar path");
     expect(result.document.launched_from_visual_studio, "launch metadata should flow into the Studio document");
     expect(result.document.inspection.header_available, "inspection metadata should be attached to the document");
+
+    const auto objects = copperfin::studio::build_object_snapshot(result.document);
+    expect(objects.empty(), "header-only synthetic SCX should not produce object snapshots without parsed records");
 
     std::error_code ignored;
     fs::remove(form_path, ignored);

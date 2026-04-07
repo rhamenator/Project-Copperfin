@@ -4,6 +4,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include <string>
+#include <vector>
 
 namespace copperfin::studio {
 
@@ -44,6 +45,21 @@ struct StudioDocumentModel {
     vfp::DbfTable table_preview{};
 };
 
+struct StudioPropertySnapshot {
+    std::string name;
+    char type = '\0';
+    bool is_null = false;
+    std::string value;
+};
+
+struct StudioObjectSnapshot {
+    std::size_t record_index = 0;
+    bool deleted = false;
+    std::string title;
+    std::string subtitle;
+    std::vector<StudioPropertySnapshot> properties;
+};
+
 struct StudioOpenResult {
     bool ok = false;
     StudioDocumentModel document{};
@@ -53,6 +69,7 @@ struct StudioOpenResult {
 [[nodiscard]] StudioAssetKind studio_asset_kind_from_vfp_family(vfp::AssetFamily family);
 [[nodiscard]] const char* studio_asset_kind_name(StudioAssetKind kind);
 [[nodiscard]] std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind);
+[[nodiscard]] std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document);
 StudioOpenResult open_document(const StudioOpenRequest& request);
 
 }  // namespace copperfin::studio

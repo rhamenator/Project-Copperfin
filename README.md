@@ -68,10 +68,12 @@ Current runnable artifacts:
   - low-level file and index inspection for DBF/VFP asset families
 - `build\Release\copperfin_studio_host.exe`
   - early human-facing Studio host for opening legacy VFP assets and previewing schema/records
+  - now supports `--json` snapshots for Visual Studio designer integration
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
   - registers a first `Copperfin Visual Designer` document shell for `PJX/SCX/VCX/FRX/LBX/MNX`
+  - current shell shows object/property snapshots sourced from the native Studio host
 
 Quick examples:
 

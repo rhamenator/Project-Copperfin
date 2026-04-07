@@ -1,15 +1,153 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
 
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
+}
+
+std::string json_escape(const std::string& value) {
+    std::ostringstream stream;
+    for (unsigned char ch : value) {
+        switch (ch) {
+            case '\"':
+                stream << "\\\"";
+                break;
+            case '\\':
+                stream << "\\\\";
+                break;
+            case '\b':
+                stream << "\\b";
+                break;
+            case '\f':
+                stream << "\\f";
+                break;
+            case '\n':
+                stream << "\\n";
+                break;
+            case '\r':
+                stream << "\\r";
+                break;
+            case '\t':
+                stream << "\\t";
+                break;
+            default:
+                if (ch < 0x20U) {
+                    stream << "\\u"
+                           << std::hex
+                           << std::setw(4)
+                           << std::setfill('0')
+                           << static_cast<unsigned int>(ch)
+                           << std::dec
+                           << std::setfill(' ');
+                } else {
+                    stream << static_cast<char>(ch);
+                }
+                break;
+        }
+    }
+    return stream.str();
+}
+
+void print_json_string(const std::string& value) {
+    std::cout << "\"" << json_escape(value) << "\"";
+}
+
+void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
+    const auto objects = copperfin::studio::build_object_snapshot(document);
+
+    std::cout << "{\n";
+    std::cout << "  \"status\": \"ok\",\n";
+    std::cout << "  \"document\": {\n";
+    std::cout << "    \"path\": ";
+    print_json_string(document.path);
+    std::cout << ",\n";
+    std::cout << "    \"displayName\": ";
+    print_json_string(document.display_name);
+    std::cout << ",\n";
+    std::cout << "    \"kind\": ";
+    print_json_string(copperfin::studio::studio_asset_kind_name(document.kind));
+    std::cout << ",\n";
+    std::cout << "    \"readOnly\": " << (document.read_only ? "true" : "false") << ",\n";
+    std::cout << "    \"launchedFromVisualStudio\": "
+              << (document.launched_from_visual_studio ? "true" : "false") << ",\n";
+    std::cout << "    \"hasSidecar\": " << (document.has_sidecar ? "true" : "false") << ",\n";
+    std::cout << "    \"sidecarPath\": ";
+    print_json_string(document.sidecar_path);
+    std::cout << ",\n";
+    std::cout << "    \"assetFamily\": ";
+    print_json_string(copperfin::vfp::asset_family_name(document.inspection.family));
+    std::cout << ",\n";
+    std::cout << "    \"indexCount\": " << document.inspection.indexes.size() << ",\n";
+    std::cout << "    \"headerVersionDescription\": ";
+    if (document.inspection.header_available) {
+        print_json_string(document.inspection.header.version_description());
+    } else {
+        std::cout << "null";
+    }
+    std::cout << ",\n";
+    std::cout << "    \"fieldCount\": " << document.table_preview.fields.size() << ",\n";
+    std::cout << "    \"recordCount\": " << document.table_preview.records.size() << ",\n";
+    std::cout << "    \"fields\": [\n";
+    for (std::size_t index = 0; index < document.table_preview.fields.size(); ++index) {
+        const auto& field = document.table_preview.fields[index];
+        std::cout << "      {\"name\": ";
+        print_json_string(field.name);
+        std::cout << ", \"type\": ";
+        print_json_string(std::string(1U, field.type));
+        std::cout << ", \"length\": " << static_cast<unsigned int>(field.length);
+        std::cout << ", \"decimalCount\": " << static_cast<unsigned int>(field.decimal_count) << "}";
+        if ((index + 1U) != document.table_preview.fields.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ],\n";
+    std::cout << "    \"objects\": [\n";
+    for (std::size_t index = 0; index < objects.size(); ++index) {
+        const auto& object = objects[index];
+        std::cout << "      {\n";
+        std::cout << "        \"recordIndex\": " << object.record_index << ",\n";
+        std::cout << "        \"deleted\": " << (object.deleted ? "true" : "false") << ",\n";
+        std::cout << "        \"title\": ";
+        print_json_string(object.title);
+        std::cout << ",\n";
+        std::cout << "        \"subtitle\": ";
+        print_json_string(object.subtitle);
+        std::cout << ",\n";
+        std::cout << "        \"properties\": [\n";
+        for (std::size_t property_index = 0; property_index < object.properties.size(); ++property_index) {
+            const auto& property = object.properties[property_index];
+            std::cout << "          {\"name\": ";
+            print_json_string(property.name);
+            std::cout << ", \"type\": ";
+            print_json_string(std::string(1U, property.type));
+            std::cout << ", \"isNull\": " << (property.is_null ? "true" : "false") << ", \"value\": ";
+            print_json_string(property.value);
+            std::cout << "}";
+            if ((property_index + 1U) != object.properties.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "        ]\n";
+        std::cout << "      }";
+        if ((index + 1U) != objects.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
+    std::cout << "  }\n";
+    std::cout << "}\n";
 }
 
 void print_document(const copperfin::studio::StudioDocumentModel& document) {
@@ -90,6 +228,11 @@ int main(int argc, char** argv) {
         std::cout << "status: error\n";
         std::cout << "error: " << open_result.error << "\n";
         return 3;
+    }
+
+    if (parse_result.output_json) {
+        print_json_document(open_result.document);
+        return 0;
     }
 
     print_document(open_result.document);

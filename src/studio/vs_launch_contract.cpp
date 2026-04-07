@@ -37,6 +37,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--json") {
+            result.output_json = true;
+            continue;
+        }
+
         if (argument == "--path") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --path."};

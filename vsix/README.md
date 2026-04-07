@@ -10,12 +10,14 @@ Current scope:
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus
 - opens a Copperfin document surface inside Visual Studio for registered asset types
+- loads a structured object/property snapshot from the native Studio host for the open asset
 - lets that document surface launch the native `copperfin_studio_host.exe`
 - launches the native `copperfin_studio_host.exe` against the active document or selected project item
 
 Current limitations:
 
 - the registered document surface is a first designer shell, not yet a full inline form/report/menu/class designer
+- the first useful fidelity slice is read-only object/property inspection, especially for `SCX/SCT`
 - it does not yet own project build/debug/run pipelines for Copperfin applications
 - it does not yet render forms/reports inline inside the Visual Studio document with VFP 9 fidelity
 - it does not yet compile Copperfin executables from inside Visual Studio

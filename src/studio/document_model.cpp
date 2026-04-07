@@ -1,6 +1,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include <filesystem>
+#include <string_view>
 
 namespace copperfin::studio {
 
@@ -8,6 +9,33 @@ namespace {
 
 std::string filename_of(const std::string& path) {
     return std::filesystem::path(path).filename().string();
+}
+
+const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
+    for (const auto& value : record.values) {
+        if (value.field_name == field_name) {
+            return &value;
+        }
+    }
+    return nullptr;
+}
+
+std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
+    const auto* value = find_value(record, field_name);
+    if (value == nullptr) {
+        return {};
+    }
+    return value->display_value;
+}
+
+std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
+    for (const auto field_name : field_names) {
+        const std::string value = value_or_empty(record, field_name);
+        if (!value.empty()) {
+            return value;
+        }
+    }
+    return {};
 }
 
 }  // namespace
@@ -96,6 +124,42 @@ std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind) {
             return {};
     }
     return {};
+}
+
+std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document) {
+    std::vector<StudioObjectSnapshot> objects;
+    if (!document.table_preview_available) {
+        return objects;
+    }
+
+    objects.reserve(document.table_preview.records.size());
+    for (const auto& record : document.table_preview.records) {
+        StudioObjectSnapshot snapshot;
+        snapshot.record_index = record.record_index;
+        snapshot.deleted = record.deleted;
+        snapshot.title = first_non_empty(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
+        snapshot.subtitle = first_non_empty(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
+        if (snapshot.title.empty()) {
+            snapshot.title = "Record " + std::to_string(record.record_index);
+        }
+
+        for (const auto& value : record.values) {
+            if (value.display_value.empty()) {
+                continue;
+            }
+
+            snapshot.properties.push_back({
+                .name = value.field_name,
+                .type = value.field_type,
+                .is_null = value.is_null,
+                .value = value.display_value
+            });
+        }
+
+        objects.push_back(std::move(snapshot));
+    }
+
+    return objects;
 }
 
 StudioOpenResult open_document(const StudioOpenRequest& request) {
