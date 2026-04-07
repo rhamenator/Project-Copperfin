@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,6 +26,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly ListView objectListView;
     private readonly PropertyGrid propertyGrid;
     private readonly CopperfinDesignSurfaceControl designSurface;
+    private readonly RichTextBox workspaceSummaryBox;
 
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
@@ -143,6 +145,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         sectionListView.Columns.Add("Section", 200);
         sectionListView.Columns.Add("Objects", 70);
         sectionListView.Columns.Add("Top", 80);
+        sectionListView.SelectedIndexChanged += (_, _) => SyncExplorerSelection();
 
         propertyGrid = new PropertyGrid
         {
@@ -165,13 +168,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ApplyVisualPropertyChange(recordIndex, verticalName, top.ToString());
         };
 
+        workspaceSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Visible = false
+        };
+
+        var surfaceHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        surfaceHost.Controls.Add(workspaceSummaryBox);
+        surfaceHost.Controls.Add(designSurface);
+
         var rightSplit = new SplitContainer
         {
             Dock = DockStyle.Fill,
             Orientation = Orientation.Horizontal,
             SplitterDistance = 320
         };
-        rightSplit.Panel1.Controls.Add(designSurface);
+        rightSplit.Panel1.Controls.Add(surfaceHost);
         rightSplit.Panel2.Controls.Add(propertyGrid);
 
         leftExplorerSplit = new SplitContainer
@@ -241,6 +261,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectListView.Items.Clear();
         propertyGrid.SelectedObject = null;
         designSurface.LoadObjects(string.Empty, Array.Empty<CopperfinStudioSnapshotObject>());
+        workspaceSummaryBox.Text = string.Empty;
+        workspaceSummaryBox.Visible = false;
+        designSurface.Visible = true;
         snapshotStatusLabel.Text = "Loading Copperfin Studio snapshot...";
         _ = LoadSnapshotAsync(path);
     }
@@ -276,25 +299,58 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         sectionListView.BeginUpdate();
         sectionListView.Items.Clear();
 
-        if (currentSnapshot?.ReportLayout?.Sections is null || currentSnapshot.ReportLayout.Sections.Count == 0)
+        if (currentSnapshot?.ReportLayout?.Sections is { Count: > 0 })
         {
-            sectionListView.Visible = false;
-            leftExplorerSplit.Panel1Collapsed = true;
+            sectionListView.Visible = true;
+            leftExplorerSplit.Panel1Collapsed = false;
+            sectionListView.Columns[0].Text = "Section";
+            sectionListView.Columns[1].Text = "Objects";
+            sectionListView.Columns[2].Text = "Top";
+            foreach (var section in currentSnapshot.ReportLayout.Sections)
+            {
+                var item = new ListViewItem(section.Title);
+                item.SubItems.Add(section.Objects.Count.ToString());
+                item.SubItems.Add(section.Top.ToString());
+                item.Tag = section;
+                sectionListView.Items.Add(item);
+            }
+
+            if (sectionListView.Items.Count > 0)
+            {
+                sectionListView.Items[0].Selected = true;
+            }
+
             sectionListView.EndUpdate();
             return;
         }
 
-        sectionListView.Visible = true;
-        leftExplorerSplit.Panel1Collapsed = false;
-        foreach (var section in currentSnapshot.ReportLayout.Sections)
+        if (currentSnapshot?.ProjectWorkspace?.Groups is { Count: > 0 })
         {
-            var item = new ListViewItem(section.Title);
-            item.SubItems.Add(section.Objects.Count.ToString());
-            item.SubItems.Add(section.Top.ToString());
-            item.Tag = section;
-            sectionListView.Items.Add(item);
+            sectionListView.Visible = true;
+            leftExplorerSplit.Panel1Collapsed = false;
+            sectionListView.Columns[0].Text = "Group";
+            sectionListView.Columns[1].Text = "Items";
+            sectionListView.Columns[2].Text = "Excluded";
+            foreach (var group in currentSnapshot.ProjectWorkspace.Groups)
+            {
+                var item = new ListViewItem(group.Title);
+                item.SubItems.Add(group.ItemCount.ToString());
+                item.SubItems.Add(group.ExcludedCount.ToString());
+                item.Tag = group;
+                sectionListView.Items.Add(item);
+            }
+
+            if (sectionListView.Items.Count > 0)
+            {
+                sectionListView.Items[0].Selected = true;
+            }
+
+            sectionListView.EndUpdate();
+            return;
         }
 
+        sectionListView.Visible = false;
+        leftExplorerSplit.Panel1Collapsed = true;
         sectionListView.EndUpdate();
     }
 
@@ -302,6 +358,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         objectListView.BeginUpdate();
         objectListView.Items.Clear();
+        ConfigureObjectColumns();
 
         if (currentSnapshot is null)
         {
@@ -309,10 +366,21 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        foreach (var item in currentSnapshot.Objects)
+        foreach (var item in GetVisibleObjects())
         {
-            var listItem = new ListViewItem(string.IsNullOrWhiteSpace(item.Title) ? $"Record {item.RecordIndex}" : item.Title);
-            listItem.SubItems.Add(item.Subtitle);
+            var projectEntry = LookupProjectEntry(item.RecordIndex);
+            var title = string.IsNullOrWhiteSpace(item.Title) ? $"Record {item.RecordIndex}" : item.Title;
+            if (currentSnapshot.AssetFamily == "project" && projectEntry is not null && !string.IsNullOrWhiteSpace(projectEntry.RelativePath))
+            {
+                title = projectEntry.RelativePath;
+            }
+
+            var subtitle = currentSnapshot.AssetFamily == "project"
+                ? projectEntry?.GroupTitle ?? item.Subtitle
+                : item.Subtitle;
+
+            var listItem = new ListViewItem(title);
+            listItem.SubItems.Add(subtitle);
             listItem.SubItems.Add(item.RecordIndex.ToString());
             listItem.Tag = item;
 
@@ -350,6 +418,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ? null
             : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject);
         designSurface.SelectRecord(selectedObject?.RecordIndex);
+    }
+
+    private void SyncExplorerSelection()
+    {
+        if (suppressSelectionSync)
+        {
+            return;
+        }
+
+        PopulateObjectList();
     }
 
     private void SyncSelectionFromSurface(int recordIndex)
@@ -426,13 +504,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (currentSnapshot?.ReportLayout is not null &&
             (currentSnapshot.AssetFamily == "report" || currentSnapshot.AssetFamily == "label"))
         {
+            workspaceSummaryBox.Visible = false;
+            designSurface.Visible = true;
             designSurface.LoadReportLayout(currentSnapshot.ReportLayout, currentSnapshot.Objects);
+            return;
+        }
+
+        if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
+        {
+            workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot.ProjectWorkspace);
+            workspaceSummaryBox.Visible = true;
+            designSurface.Visible = false;
             return;
         }
 
         var objects = currentSnapshot?.Objects is null
             ? (IReadOnlyList<CopperfinStudioSnapshotObject>)Array.Empty<CopperfinStudioSnapshotObject>()
             : currentSnapshot.Objects;
+        workspaceSummaryBox.Visible = false;
+        designSurface.Visible = true;
         designSurface.LoadObjects(currentSnapshot?.AssetFamily ?? string.Empty, objects);
     }
 
@@ -445,7 +535,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "report" => "Copperfin is surfacing report bands and objects from FRX/FRT assets in a more modern report-designer shape with section outlines, live layout panes, and inline editing for safe layout fields.",
             "label" => "Copperfin is surfacing label objects from LBX/LBT assets in the shared report/label designer shell so label layouts feel closer to current Visual Studio tooling than to legacy modal editors.",
             "menu" => "Copperfin is surfacing menu structures from MNX/MNT assets. Prompt, command, procedure, and message fields can be edited from the property grid.",
-            "project" => "Copperfin is surfacing project entries from PJX/PJT assets. Project-level flags and comments can be edited from the property grid while the native Studio grows toward full project parity.",
+            "project" => "Copperfin is surfacing PJX/PJT files as grouped workspaces with project entries, startup/build settings, and a first Copperfin build summary while the project manager grows toward full VFP parity.",
             _ => "This shell now pulls a structured snapshot from the native Copperfin Studio host so each VFP asset family can grow toward a high-fidelity Visual Studio editor."
         };
     }
@@ -504,5 +594,77 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         subtitleLabel.Text = embeddedStudioShell
             ? "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack."
             : "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.";
+    }
+
+    private void ConfigureObjectColumns()
+    {
+        objectListView.Columns[0].Text = currentSnapshot?.AssetFamily == "project" ? "Item" : "Object";
+        objectListView.Columns[1].Text = currentSnapshot?.AssetFamily == "project" ? "Group" : "Type";
+        objectListView.Columns[2].Text = "Record";
+    }
+
+    private IEnumerable<CopperfinStudioSnapshotObject> GetVisibleObjects()
+    {
+        if (currentSnapshot is null)
+        {
+            return Array.Empty<CopperfinStudioSnapshotObject>();
+        }
+
+        if (currentSnapshot.AssetFamily != "project")
+        {
+            return currentSnapshot.Objects;
+        }
+
+        var selectedGroup = sectionListView.SelectedItems
+            .Cast<ListViewItem>()
+            .Select(item => item.Tag as CopperfinStudioProjectGroup)
+            .FirstOrDefault(item => item is not null);
+        if (selectedGroup is null)
+        {
+            return currentSnapshot.Objects;
+        }
+
+        var includedRecords = selectedGroup.RecordIndexes.ToHashSet();
+        return currentSnapshot.Objects.Where(item => includedRecords.Contains(item.RecordIndex)).ToList();
+    }
+
+    private CopperfinStudioProjectEntry? LookupProjectEntry(int recordIndex)
+    {
+        return currentSnapshot?.ProjectWorkspace?.Entries.FirstOrDefault(entry => entry.RecordIndex == recordIndex);
+    }
+
+    private static string BuildProjectWorkspaceSummary(CopperfinStudioProjectWorkspace workspace)
+    {
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Project Workspace");
+        summary.AppendLine();
+        summary.AppendLine($"Project: {workspace.ProjectTitle}");
+        if (!string.IsNullOrWhiteSpace(workspace.ProjectKey))
+        {
+            summary.AppendLine($"Key: {workspace.ProjectKey}");
+        }
+        if (!string.IsNullOrWhiteSpace(workspace.HomeDirectory))
+        {
+            summary.AppendLine($"Home Directory: {workspace.HomeDirectory}");
+        }
+        summary.AppendLine($"Planned Output: {workspace.BuildPlan.OutputPath}");
+        summary.AppendLine($"Build Target: {workspace.BuildPlan.BuildTarget}");
+        summary.AppendLine($"Startup Item: {workspace.BuildPlan.StartupItem}");
+        summary.AppendLine($"Items: {workspace.BuildPlan.TotalItems} total, {workspace.BuildPlan.ExcludedItems} excluded");
+        summary.AppendLine($"Debug: {workspace.BuildPlan.DebugEnabled}");
+        summary.AppendLine($"Encrypt: {workspace.BuildPlan.EncryptEnabled}");
+        summary.AppendLine($"Save Code: {workspace.BuildPlan.SaveCode}");
+        summary.AppendLine($"No Logo: {workspace.BuildPlan.NoLogo}");
+        summary.AppendLine();
+        summary.AppendLine("Groups:");
+        foreach (var group in workspace.Groups)
+        {
+            summary.AppendLine($"- {group.Title}: {group.ItemCount} item(s), {group.ExcludedCount} excluded");
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Next build-workflow step:");
+        summary.AppendLine("Copperfin can now inspect the project structure and derive a build plan, but executable generation still needs the runtime/compiler pipeline behind this workspace.");
+        return summary.ToString();
     }
 }

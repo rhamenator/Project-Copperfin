@@ -30,6 +30,7 @@ endif()
 
 add_library(cf_design_model
     src/studio/document_model.cpp
+    src/studio/project_workspace.cpp
     src/studio/product_subsystems.cpp
     src/studio/report_layout.cpp
     src/studio/vs_launch_contract.cpp
@@ -158,4 +159,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_report_layout COMMAND $<TARGET_FILE:test_report_layout>)
+
+    add_executable(test_project_workspace
+        tests/test_project_workspace.cpp
+    )
+
+    target_link_libraries(test_project_workspace PRIVATE cf_design_model)
+
+    if(MSVC)
+        target_compile_options(test_project_workspace PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_project_workspace PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_project_workspace COMMAND $<TARGET_FILE:test_project_workspace>)
 endif()

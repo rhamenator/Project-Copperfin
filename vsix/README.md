@@ -20,7 +20,8 @@ Current scope:
 - now uses a section-aware report/label shell with named bands, a modernized design surface, and a dedicated left-pane section explorer instead of treating reports and labels as flat record lists
 - reuses the same shared WinForms designer controls in the standalone Copperfin Studio shell
 - includes automated UI smoke tests that render the shared design surface and load real VFP sample assets
-- supports asset-aware property-grid editing for `MNX/MNT` menu items and `PJX/PJT` project entries
+- supports asset-aware property-grid editing for `MNX/MNT` menu items
+- now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing
 
 Current limitations:
 
@@ -54,7 +55,7 @@ Suggested UI regression flow:
 
 1. Build `..\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj`
 2. Run `..\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
-3. Keep the smoke tests green as report/label/form shells evolve
+3. Keep the smoke tests green as report/label/form/project shells evolve
 
 Repeatable Windows validation:
 

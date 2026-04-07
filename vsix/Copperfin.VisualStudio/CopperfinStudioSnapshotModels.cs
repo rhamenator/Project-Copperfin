@@ -24,6 +24,7 @@ internal sealed class CopperfinStudioSnapshotDocument
     public int RecordCount { get; set; }
     public List<CopperfinStudioSnapshotField> Fields { get; set; } = new();
     public CopperfinStudioReportLayout? ReportLayout { get; set; }
+    public CopperfinStudioProjectWorkspace? ProjectWorkspace { get; set; }
     public List<CopperfinStudioSnapshotObject> Objects { get; set; } = new();
 }
 
@@ -89,6 +90,61 @@ internal sealed class CopperfinStudioReportLayoutObject
     public int Width { get; set; }
     public int Height { get; set; }
     public List<CopperfinStudioNamedValue> Highlights { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioProjectWorkspace
+{
+    public string ProjectTitle { get; set; } = string.Empty;
+    public string ProjectKey { get; set; } = string.Empty;
+    public string HomeDirectory { get; set; } = string.Empty;
+    public string OutputPath { get; set; } = string.Empty;
+    public List<CopperfinStudioProjectGroup> Groups { get; set; } = new();
+    public List<CopperfinStudioProjectEntry> Entries { get; set; } = new();
+    public CopperfinStudioProjectBuildPlan BuildPlan { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioProjectGroup
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public int ItemCount { get; set; }
+    public int ExcludedCount { get; set; }
+    public List<int> RecordIndexes { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioProjectEntry
+{
+    public int RecordIndex { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string RelativePath { get; set; } = string.Empty;
+    public string TypeCode { get; set; } = string.Empty;
+    public string TypeTitle { get; set; } = string.Empty;
+    public string GroupId { get; set; } = string.Empty;
+    public string GroupTitle { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty;
+    public string Comments { get; set; } = string.Empty;
+    public bool Excluded { get; set; }
+    public bool MainProgram { get; set; }
+    public bool Local { get; set; }
+}
+
+internal sealed class CopperfinStudioProjectBuildPlan
+{
+    public bool Available { get; set; }
+    public bool CanBuild { get; set; }
+    public string ProjectTitle { get; set; } = string.Empty;
+    public string ProjectKey { get; set; } = string.Empty;
+    public string HomeDirectory { get; set; } = string.Empty;
+    public string OutputPath { get; set; } = string.Empty;
+    public string BuildTarget { get; set; } = string.Empty;
+    public string StartupItem { get; set; } = string.Empty;
+    public int StartupRecordIndex { get; set; }
+    public int TotalItems { get; set; }
+    public int ExcludedItems { get; set; }
+    public bool DebugEnabled { get; set; }
+    public bool EncryptEnabled { get; set; }
+    public bool SaveCode { get; set; }
+    public bool NoLogo { get; set; }
 }
 
 internal sealed class CopperfinStudioSnapshotResult

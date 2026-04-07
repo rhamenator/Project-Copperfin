@@ -1,4 +1,5 @@
 #include "copperfin/studio/document_model.h"
+#include "copperfin/studio/project_workspace.h"
 #include "copperfin/studio/product_subsystems.h"
 #include "copperfin/studio/report_layout.h"
 #include "copperfin/studio/vs_launch_contract.h"
@@ -68,6 +69,7 @@ void print_json_string(const std::string& value) {
 void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto report_layout = copperfin::studio::build_report_layout(document);
+    const auto project_workspace = copperfin::studio::build_project_workspace(document);
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -228,6 +230,120 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      ]\n";
         std::cout << "    },\n";
     }
+    std::cout << "    \"projectWorkspace\": ";
+    if (!project_workspace.available) {
+        std::cout << "null,\n";
+    } else {
+        std::cout << "{\n";
+        std::cout << "      \"projectTitle\": ";
+        print_json_string(project_workspace.project_title);
+        std::cout << ",\n";
+        std::cout << "      \"projectKey\": ";
+        print_json_string(project_workspace.project_key);
+        std::cout << ",\n";
+        std::cout << "      \"homeDirectory\": ";
+        print_json_string(project_workspace.home_directory);
+        std::cout << ",\n";
+        std::cout << "      \"outputPath\": ";
+        print_json_string(project_workspace.output_path);
+        std::cout << ",\n";
+        std::cout << "      \"groups\": [\n";
+        for (std::size_t group_index = 0; group_index < project_workspace.groups.size(); ++group_index) {
+            const auto& group = project_workspace.groups[group_index];
+            std::cout << "        {\n";
+            std::cout << "          \"id\": ";
+            print_json_string(group.id);
+            std::cout << ",\n";
+            std::cout << "          \"title\": ";
+            print_json_string(group.title);
+            std::cout << ",\n";
+            std::cout << "          \"itemCount\": " << group.item_count << ",\n";
+            std::cout << "          \"excludedCount\": " << group.excluded_count << ",\n";
+            std::cout << "          \"recordIndexes\": [";
+            for (std::size_t record_index = 0; record_index < group.record_indexes.size(); ++record_index) {
+                std::cout << group.record_indexes[record_index];
+                if ((record_index + 1U) != group.record_indexes.size()) {
+                    std::cout << ", ";
+                }
+            }
+            std::cout << "]\n";
+            std::cout << "        }";
+            if ((group_index + 1U) != project_workspace.groups.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ],\n";
+        std::cout << "      \"entries\": [\n";
+        for (std::size_t entry_index = 0; entry_index < project_workspace.entries.size(); ++entry_index) {
+            const auto& entry = project_workspace.entries[entry_index];
+            std::cout << "        {\n";
+            std::cout << "          \"recordIndex\": " << entry.record_index << ",\n";
+            std::cout << "          \"name\": ";
+            print_json_string(entry.name);
+            std::cout << ",\n";
+            std::cout << "          \"relativePath\": ";
+            print_json_string(entry.relative_path);
+            std::cout << ",\n";
+            std::cout << "          \"typeCode\": ";
+            print_json_string(entry.type_code);
+            std::cout << ",\n";
+            std::cout << "          \"typeTitle\": ";
+            print_json_string(entry.type_title);
+            std::cout << ",\n";
+            std::cout << "          \"groupId\": ";
+            print_json_string(entry.group_id);
+            std::cout << ",\n";
+            std::cout << "          \"groupTitle\": ";
+            print_json_string(entry.group_title);
+            std::cout << ",\n";
+            std::cout << "          \"key\": ";
+            print_json_string(entry.key);
+            std::cout << ",\n";
+            std::cout << "          \"comments\": ";
+            print_json_string(entry.comments);
+            std::cout << ",\n";
+            std::cout << "          \"excluded\": " << (entry.excluded ? "true" : "false") << ",\n";
+            std::cout << "          \"mainProgram\": " << (entry.main_program ? "true" : "false") << ",\n";
+            std::cout << "          \"local\": " << (entry.local ? "true" : "false") << "\n";
+            std::cout << "        }";
+            if ((entry_index + 1U) != project_workspace.entries.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ],\n";
+        std::cout << "      \"buildPlan\": {\n";
+        std::cout << "        \"available\": " << (project_workspace.build_plan.available ? "true" : "false") << ",\n";
+        std::cout << "        \"canBuild\": " << (project_workspace.build_plan.can_build ? "true" : "false") << ",\n";
+        std::cout << "        \"projectTitle\": ";
+        print_json_string(project_workspace.build_plan.project_title);
+        std::cout << ",\n";
+        std::cout << "        \"projectKey\": ";
+        print_json_string(project_workspace.build_plan.project_key);
+        std::cout << ",\n";
+        std::cout << "        \"homeDirectory\": ";
+        print_json_string(project_workspace.build_plan.home_directory);
+        std::cout << ",\n";
+        std::cout << "        \"outputPath\": ";
+        print_json_string(project_workspace.build_plan.output_path);
+        std::cout << ",\n";
+        std::cout << "        \"buildTarget\": ";
+        print_json_string(project_workspace.build_plan.build_target);
+        std::cout << ",\n";
+        std::cout << "        \"startupItem\": ";
+        print_json_string(project_workspace.build_plan.startup_item);
+        std::cout << ",\n";
+        std::cout << "        \"startupRecordIndex\": " << project_workspace.build_plan.startup_record_index << ",\n";
+        std::cout << "        \"totalItems\": " << project_workspace.build_plan.total_items << ",\n";
+        std::cout << "        \"excludedItems\": " << project_workspace.build_plan.excluded_items << ",\n";
+        std::cout << "        \"debugEnabled\": " << (project_workspace.build_plan.debug_enabled ? "true" : "false") << ",\n";
+        std::cout << "        \"encryptEnabled\": " << (project_workspace.build_plan.encrypt_enabled ? "true" : "false") << ",\n";
+        std::cout << "        \"saveCode\": " << (project_workspace.build_plan.save_code ? "true" : "false") << ",\n";
+        std::cout << "        \"noLogo\": " << (project_workspace.build_plan.no_logo ? "true" : "false") << "\n";
+        std::cout << "      }\n";
+        std::cout << "    },\n";
+    }
     std::cout << "    \"objects\": [\n";
     for (std::size_t index = 0; index < objects.size(); ++index) {
         const auto& object = objects[index];
@@ -269,6 +385,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
 
 void print_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto report_layout = copperfin::studio::build_report_layout(document);
+    const auto project_workspace = copperfin::studio::build_project_workspace(document);
     std::cout << "status: ok\n";
     std::cout << "document.path: " << document.path << "\n";
     std::cout << "document.display_name: " << document.display_name << "\n";
@@ -301,6 +418,18 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
                       << " objects=" << section.objects.size()
                       << " top=" << section.top
                       << " height=" << section.height << "\n";
+        }
+    }
+
+    if (project_workspace.available) {
+        std::cout << "preview.project_workspace.group_count: " << project_workspace.groups.size() << "\n";
+        std::cout << "preview.project_workspace.entry_count: " << project_workspace.entries.size() << "\n";
+        std::cout << "preview.project_workspace.output_path: " << project_workspace.output_path << "\n";
+        std::cout << "preview.project_workspace.startup_item: " << project_workspace.build_plan.startup_item << "\n";
+        for (const auto& group : project_workspace.groups) {
+            std::cout << "group[" << group.id << "]: " << group.title
+                      << " items=" << group.item_count
+                      << " excluded=" << group.excluded_count << "\n";
         }
     }
 

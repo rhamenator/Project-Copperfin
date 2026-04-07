@@ -25,6 +25,9 @@ internal static class Program
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\cust.lbx",
             expectSection: "Detail");
+        SmokeProjectEditorWithRealAsset(
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx",
+            expectGroup: "Forms");
 
         if (failures != 0)
         {
@@ -146,6 +149,57 @@ internal static class Program
         hostForm.Hide();
     }
 
+    private static void SmokeProjectEditorWithRealAsset(string path, string expectGroup)
+    {
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {path} not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(path);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => FindListViews(control).Any(list => list.Items.Count > 0) &&
+                  FindRichTextBoxes(control).Any(box => !string.IsNullOrWhiteSpace(box.Text)));
+        Expect(loaded, $"project editor should load grouped workspace data for {path}");
+
+        var groupFound = FindListViews(control)
+            .SelectMany(list => list.Items.Cast<ListViewItem>())
+            .Any(item => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase));
+        Expect(groupFound, $"project editor should surface group '{expectGroup}' for {path}");
+
+        var summary = FindRichTextBoxes(control).FirstOrDefault();
+        Expect(summary is not null, $"project editor should surface a workspace summary for {path}");
+        if (summary is not null)
+        {
+            Expect(summary.Text.IndexOf("Planned Output:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project workspace summary should include a build output for {path}");
+            Expect(summary.Text.IndexOf("Startup Item:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project workspace summary should include a startup item for {path}");
+        }
+
+        hostForm.Hide();
+    }
+
     private static bool WaitUntil(TimeSpan timeout, Func<bool> condition)
     {
         var deadline = DateTime.UtcNow + timeout;
@@ -197,6 +251,22 @@ internal static class Program
         }
 
         return null;
+    }
+
+    private static IEnumerable<RichTextBox> FindRichTextBoxes(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is RichTextBox textBox)
+            {
+                yield return textBox;
+            }
+
+            foreach (var nested in FindRichTextBoxes(child))
+            {
+                yield return nested;
+            }
+        }
     }
 
     private static int CountNonWhitePixels(Bitmap bitmap)
