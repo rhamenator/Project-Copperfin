@@ -43,6 +43,7 @@ Contents:
 - [`docs/12-vfp-asset-editing-and-execution.md`](E:/Project-Copperfin/docs/12-vfp-asset-editing-and-execution.md)
 - [`docs/13-index-format-notes.md`](E:/Project-Copperfin/docs/13-index-format-notes.md)
 - [`docs/14-hybrid-studio-and-visual-studio-host.md`](E:/Project-Copperfin/docs/14-hybrid-studio-and-visual-studio-host.md)
+- [`docs/15-local-product-archeology.md`](E:/Project-Copperfin/docs/15-local-product-archeology.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:
