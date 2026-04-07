@@ -6,15 +6,18 @@ Current scope:
 
 - targets Visual Studio 2022 and later compatible major versions
 - builds an installable VSIX at `bin\Release\net472\Copperfin.VisualStudio.vsix`
+- registers a `Copperfin Visual Designer` editor for `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, and `MNX`
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus
+- opens a Copperfin document surface inside Visual Studio for registered asset types
+- lets that document surface launch the native `copperfin_studio_host.exe`
 - launches the native `copperfin_studio_host.exe` against the active document or selected project item
 
 Current limitations:
 
-- this is not yet a custom editor factory
+- the registered document surface is a first designer shell, not yet a full inline form/report/menu/class designer
 - it does not yet own project build/debug/run pipelines for Copperfin applications
-- it does not yet render forms/reports inline inside the Visual Studio document well
+- it does not yet render forms/reports inline inside the Visual Studio document with VFP 9 fidelity
 - it does not yet compile Copperfin executables from inside Visual Studio
 
 Why VS 2022 as the baseline:
@@ -35,4 +38,4 @@ Suggested first-use flow:
 2. Rebuild the VSIX project
 3. Install `bin\Release\net472\Copperfin.VisualStudio.vsix`
 4. Open or select a `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, or `MNX` file in Visual Studio
-5. Run `Tools -> Open In Copperfin Studio` or use the Solution Explorer context menu
+5. Double-click the asset to open the `Copperfin Visual Designer` shell, or use `Tools -> Open In Copperfin Studio`

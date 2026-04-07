@@ -71,6 +71,7 @@ Current runnable artifacts:
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
+  - registers a first `Copperfin Visual Designer` document shell for `PJX/SCX/VCX/FRX/LBX/MNX`
 
 Quick examples:
 
@@ -90,4 +91,4 @@ Current MVP scope:
 Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
-- the Visual Studio extension does not yet provide inline visual designers or executable compilation for Copperfin applications; today it bridges Visual Studio to the native Studio host
+- the Visual Studio extension now provides a registered designer shell, but it still does not provide full inline VFP 9-style visual design fidelity or executable compilation for Copperfin applications

@@ -43,7 +43,7 @@ internal sealed class OpenInCopperfinStudioCommand
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
         var dte = await package.GetServiceAsync(typeof(DTE)) as DTE;
-        var documentPath = dte is null ? null : ResolveTargetPath(dte);
+        var documentPath = dte is null ? null : CopperfinStudioLauncher.ResolveTargetPath(dte);
         if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
         {
             VsShellUtilities.ShowMessageBox(
@@ -56,7 +56,7 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        var studioHostPath = ResolveStudioHostPath();
+        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
         if (studioHostPath is null)
         {
             VsShellUtilities.ShowMessageBox(
@@ -69,83 +69,15 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        var startInfo = new System.Diagnostics.ProcessStartInfo
+        if (!CopperfinStudioLauncher.Launch(studioHostPath, documentPath!))
         {
-            FileName = studioHostPath,
-            Arguments = BuildArguments(documentPath!),
-            UseShellExecute = false
-        };
-
-        _ = System.Diagnostics.Process.Start(startInfo);
-    }
-
-    private static string? ResolveStudioHostPath()
-    {
-        var configured = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-        {
-            return configured;
+            VsShellUtilities.ShowMessageBox(
+                package,
+                "Copperfin Studio did not start successfully.",
+                "Copperfin",
+                OLEMSGICON.OLEMSGICON_WARNING,
+                OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
         }
-
-        const string repoDevelopmentPath = @"E:\Project-Copperfin\build\Release\copperfin_studio_host.exe";
-        if (File.Exists(repoDevelopmentPath))
-        {
-            return repoDevelopmentPath;
-        }
-
-        return null;
-    }
-
-    private static string BuildArguments(string documentPath)
-    {
-        return $"--from-vs --path \"{documentPath.Replace("\"", "\"\"")}\"";
-    }
-
-    private static string? ResolveTargetPath(DTE dte)
-    {
-        ThreadHelper.ThrowIfNotOnUIThread();
-
-        var activeDocumentPath = dte.ActiveDocument?.FullName;
-        if (!string.IsNullOrWhiteSpace(activeDocumentPath) && File.Exists(activeDocumentPath))
-        {
-            return activeDocumentPath;
-        }
-
-        var selectedItems = dte.SelectedItems;
-        if (selectedItems is null || selectedItems.Count <= 0)
-        {
-            return null;
-        }
-
-        for (var index = 1; index <= selectedItems.Count; ++index)
-        {
-            var selectedItem = selectedItems.Item(index);
-            if (selectedItem?.ProjectItem is ProjectItem projectItem)
-            {
-                try
-                {
-                    for (short fileIndex = 1; fileIndex <= projectItem.FileCount; ++fileIndex)
-                    {
-                        var candidate = projectItem.FileNames[fileIndex];
-                        if (!string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate))
-                        {
-                            return candidate;
-                        }
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // Some project systems expose non-file nodes. Skip them.
-                }
-            }
-
-            var projectPath = selectedItem?.Project?.FullName;
-            if (!string.IsNullOrWhiteSpace(projectPath) && File.Exists(projectPath))
-            {
-                return projectPath;
-            }
-        }
-
-        return null;
     }
 }

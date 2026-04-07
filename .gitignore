@@ -1,5 +1,7 @@
 /build/
 /.vs/
+/vsix/**/bin/
+/vsix/**/obj/
 *.user
 *.suo
 *.VC.db
