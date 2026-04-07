@@ -23,6 +23,7 @@ internal sealed class CopperfinStudioSnapshotDocument
     public int FieldCount { get; set; }
     public int RecordCount { get; set; }
     public List<CopperfinStudioSnapshotField> Fields { get; set; } = new();
+    public CopperfinStudioReportLayout? ReportLayout { get; set; }
     public List<CopperfinStudioSnapshotObject> Objects { get; set; } = new();
 }
 
@@ -49,6 +50,45 @@ internal sealed class CopperfinStudioSnapshotProperty
     public string Type { get; set; } = string.Empty;
     public bool IsNull { get; set; }
     public string Value { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioReportLayout
+{
+    public bool IsLabel { get; set; }
+    public string DocumentTitle { get; set; } = string.Empty;
+    public List<CopperfinStudioNamedValue> Settings { get; set; } = new();
+    public List<CopperfinStudioReportSection> Sections { get; set; } = new();
+    public List<CopperfinStudioReportLayoutObject> UnplacedObjects { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioNamedValue
+{
+    public string Name { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioReportSection
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string BandKind { get; set; } = string.Empty;
+    public int RecordIndex { get; set; }
+    public int Top { get; set; }
+    public int Height { get; set; }
+    public List<CopperfinStudioReportLayoutObject> Objects { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioReportLayoutObject
+{
+    public int RecordIndex { get; set; }
+    public string ObjectKind { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Expression { get; set; } = string.Empty;
+    public int Left { get; set; }
+    public int Top { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public List<CopperfinStudioNamedValue> Highlights { get; set; } = new();
 }
 
 internal sealed class CopperfinStudioSnapshotResult

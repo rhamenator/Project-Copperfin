@@ -1,5 +1,6 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/product_subsystems.h"
+#include "copperfin/studio/report_layout.h"
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -66,6 +67,7 @@ void print_json_string(const std::string& value) {
 
 void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
+    const auto report_layout = copperfin::studio::build_report_layout(document);
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -114,6 +116,118 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "\n";
     }
     std::cout << "    ],\n";
+    std::cout << "    \"reportLayout\": ";
+    if (!report_layout.available) {
+        std::cout << "null,\n";
+    } else {
+        std::cout << "{\n";
+        std::cout << "      \"isLabel\": " << (report_layout.is_label ? "true" : "false") << ",\n";
+        std::cout << "      \"documentTitle\": ";
+        print_json_string(report_layout.document_title);
+        std::cout << ",\n";
+        std::cout << "      \"settings\": [\n";
+        for (std::size_t index = 0; index < report_layout.settings.size(); ++index) {
+            const auto& setting = report_layout.settings[index];
+            std::cout << "        {\"name\": ";
+            print_json_string(setting.name);
+            std::cout << ", \"value\": ";
+            print_json_string(setting.value);
+            std::cout << "}";
+            if ((index + 1U) != report_layout.settings.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ],\n";
+        std::cout << "      \"sections\": [\n";
+        for (std::size_t section_index = 0; section_index < report_layout.sections.size(); ++section_index) {
+            const auto& section = report_layout.sections[section_index];
+            std::cout << "        {\n";
+            std::cout << "          \"id\": ";
+            print_json_string(section.id);
+            std::cout << ",\n";
+            std::cout << "          \"title\": ";
+            print_json_string(section.title);
+            std::cout << ",\n";
+            std::cout << "          \"bandKind\": ";
+            print_json_string(section.band_kind);
+            std::cout << ",\n";
+            std::cout << "          \"recordIndex\": " << section.record_index << ",\n";
+            std::cout << "          \"top\": " << section.top << ",\n";
+            std::cout << "          \"height\": " << section.height << ",\n";
+            std::cout << "          \"objects\": [\n";
+            for (std::size_t object_index = 0; object_index < section.objects.size(); ++object_index) {
+                const auto& object = section.objects[object_index];
+                std::cout << "            {\n";
+                std::cout << "              \"recordIndex\": " << object.record_index << ",\n";
+                std::cout << "              \"objectKind\": ";
+                print_json_string(object.object_kind);
+                std::cout << ",\n";
+                std::cout << "              \"title\": ";
+                print_json_string(object.title);
+                std::cout << ",\n";
+                std::cout << "              \"expression\": ";
+                print_json_string(object.expression);
+                std::cout << ",\n";
+                std::cout << "              \"left\": " << object.left << ",\n";
+                std::cout << "              \"top\": " << object.top << ",\n";
+                std::cout << "              \"width\": " << object.width << ",\n";
+                std::cout << "              \"height\": " << object.height << ",\n";
+                std::cout << "              \"highlights\": [\n";
+                for (std::size_t highlight_index = 0; highlight_index < object.highlights.size(); ++highlight_index) {
+                    const auto& highlight = object.highlights[highlight_index];
+                    std::cout << "                {\"name\": ";
+                    print_json_string(highlight.name);
+                    std::cout << ", \"value\": ";
+                    print_json_string(highlight.value);
+                    std::cout << "}";
+                    if ((highlight_index + 1U) != object.highlights.size()) {
+                        std::cout << ",";
+                    }
+                    std::cout << "\n";
+                }
+                std::cout << "              ]\n";
+                std::cout << "            }";
+                if ((object_index + 1U) != section.objects.size()) {
+                    std::cout << ",";
+                }
+                std::cout << "\n";
+            }
+            std::cout << "          ]\n";
+            std::cout << "        }";
+            if ((section_index + 1U) != report_layout.sections.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ],\n";
+        std::cout << "      \"unplacedObjects\": [\n";
+        for (std::size_t object_index = 0; object_index < report_layout.unplaced_objects.size(); ++object_index) {
+            const auto& object = report_layout.unplaced_objects[object_index];
+            std::cout << "        {\n";
+            std::cout << "          \"recordIndex\": " << object.record_index << ",\n";
+            std::cout << "          \"objectKind\": ";
+            print_json_string(object.object_kind);
+            std::cout << ",\n";
+            std::cout << "          \"title\": ";
+            print_json_string(object.title);
+            std::cout << ",\n";
+            std::cout << "          \"expression\": ";
+            print_json_string(object.expression);
+            std::cout << ",\n";
+            std::cout << "          \"left\": " << object.left << ",\n";
+            std::cout << "          \"top\": " << object.top << ",\n";
+            std::cout << "          \"width\": " << object.width << ",\n";
+            std::cout << "          \"height\": " << object.height << "\n";
+            std::cout << "        }";
+            if ((object_index + 1U) != report_layout.unplaced_objects.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ]\n";
+        std::cout << "    },\n";
+    }
     std::cout << "    \"objects\": [\n";
     for (std::size_t index = 0; index < objects.size(); ++index) {
         const auto& object = objects[index];
@@ -154,6 +268,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
 }
 
 void print_document(const copperfin::studio::StudioDocumentModel& document) {
+    const auto report_layout = copperfin::studio::build_report_layout(document);
     std::cout << "status: ok\n";
     std::cout << "document.path: " << document.path << "\n";
     std::cout << "document.display_name: " << document.display_name << "\n";
@@ -179,6 +294,15 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
 
     std::cout << "preview.field_count: " << document.table_preview.fields.size() << "\n";
     std::cout << "preview.record_count: " << document.table_preview.records.size() << "\n";
+    if (report_layout.available) {
+        std::cout << "preview.report_layout.section_count: " << report_layout.sections.size() << "\n";
+        for (const auto& section : report_layout.sections) {
+            std::cout << "section[" << section.record_index << "]: " << section.title
+                      << " objects=" << section.objects.size()
+                      << " top=" << section.top
+                      << " height=" << section.height << "\n";
+        }
+    }
 
     if (!document.table_preview.fields.empty()) {
         std::cout << "preview.fields:";

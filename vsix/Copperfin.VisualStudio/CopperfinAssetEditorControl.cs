@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -19,6 +20,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button launchButton;
     private readonly Button revealButton;
     private readonly Button refreshButton;
+    private readonly SplitContainer leftExplorerSplit;
+    private readonly ListView sectionListView;
     private readonly ListView objectListView;
     private readonly PropertyGrid propertyGrid;
     private readonly CopperfinDesignSurfaceControl designSurface;
@@ -118,6 +121,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectListView.Columns.Add("Record", 70);
         objectListView.SelectedIndexChanged += (_, _) => SyncSelectionFromList();
 
+        sectionListView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        sectionListView.Columns.Add("Section", 200);
+        sectionListView.Columns.Add("Objects", 70);
+        sectionListView.Columns.Add("Top", 80);
+
         propertyGrid = new PropertyGrid
         {
             Dock = DockStyle.Fill,
@@ -148,13 +163,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         rightSplit.Panel1.Controls.Add(designSurface);
         rightSplit.Panel2.Controls.Add(propertyGrid);
 
+        leftExplorerSplit = new SplitContainer
+        {
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Horizontal,
+            SplitterDistance = 180
+        };
+        leftExplorerSplit.Panel1.Controls.Add(sectionListView);
+        leftExplorerSplit.Panel2.Controls.Add(objectListView);
+
         var splitContainer = new SplitContainer
         {
             Dock = DockStyle.Fill,
             Orientation = Orientation.Vertical,
             SplitterDistance = 360
         };
-        splitContainer.Panel1.Controls.Add(objectListView);
+        splitContainer.Panel1.Controls.Add(leftExplorerSplit);
         splitContainer.Panel2.Controls.Add(rightSplit);
 
         var buttonPanel = new FlowLayoutPanel
@@ -201,6 +225,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         revealButton.Enabled = true;
         refreshButton.Enabled = true;
         currentSnapshot = null;
+        sectionListView.Items.Clear();
         objectListView.Items.Clear();
         propertyGrid.SelectedObject = null;
         designSurface.LoadObjects(string.Empty, Array.Empty<CopperfinStudioSnapshotObject>());
@@ -228,9 +253,37 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapshotStatusLabel.Text =
                 $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes.";
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
+            PopulateSectionList();
             PopulateObjectList();
-            designSurface.LoadObjects(currentSnapshot.AssetFamily, currentSnapshot.Objects);
+            LoadSurface();
         }));
+    }
+
+    private void PopulateSectionList()
+    {
+        sectionListView.BeginUpdate();
+        sectionListView.Items.Clear();
+
+        if (currentSnapshot?.ReportLayout?.Sections is null || currentSnapshot.ReportLayout.Sections.Count == 0)
+        {
+            sectionListView.Visible = false;
+            leftExplorerSplit.Panel1Collapsed = true;
+            sectionListView.EndUpdate();
+            return;
+        }
+
+        sectionListView.Visible = true;
+        leftExplorerSplit.Panel1Collapsed = false;
+        foreach (var section in currentSnapshot.ReportLayout.Sections)
+        {
+            var item = new ListViewItem(section.Title);
+            item.SubItems.Add(section.Objects.Count.ToString());
+            item.SubItems.Add(section.Top.ToString());
+            item.Tag = section;
+            sectionListView.Items.Add(item);
+        }
+
+        sectionListView.EndUpdate();
     }
 
     private void PopulateObjectList()
@@ -349,10 +402,26 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentSnapshot = updateResult.Document;
         snapshotStatusLabel.Text =
             $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
+        PopulateSectionList();
         PopulateObjectList();
-        designSurface.LoadObjects(currentSnapshot.AssetFamily, currentSnapshot.Objects);
+        LoadSurface();
         designSurface.SelectRecord(recordIndex);
         SyncSelectionFromSurface(recordIndex);
+    }
+
+    private void LoadSurface()
+    {
+        if (currentSnapshot?.ReportLayout is not null &&
+            (currentSnapshot.AssetFamily == "report" || currentSnapshot.AssetFamily == "label"))
+        {
+            designSurface.LoadReportLayout(currentSnapshot.ReportLayout, currentSnapshot.Objects);
+            return;
+        }
+
+        var objects = currentSnapshot?.Objects is null
+            ? (IReadOnlyList<CopperfinStudioSnapshotObject>)Array.Empty<CopperfinStudioSnapshotObject>()
+            : currentSnapshot.Objects;
+        designSurface.LoadObjects(currentSnapshot?.AssetFamily ?? string.Empty, objects);
     }
 
     private string BuildGuidanceText(string assetFamily)
@@ -361,8 +430,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             "form" => "Copperfin is surfacing form objects from SCX/SCT assets and can now round-trip a safe editable subset inside Visual Studio.",
             "class_library" => "Copperfin is surfacing class-library objects from VCX/VCT assets so you can inspect and edit reusable visual classes in-place.",
-            "report" => "Copperfin is surfacing report bands and objects from FRX/FRT assets with inline layout editing for position and size fields.",
-            "label" => "Copperfin is surfacing label objects from LBX/LBT assets with inline layout editing for placement, sizing, and text fields.",
+            "report" => "Copperfin is surfacing report bands and objects from FRX/FRT assets in a more modern report-designer shape with section outlines, live layout panes, and inline editing for safe layout fields.",
+            "label" => "Copperfin is surfacing label objects from LBX/LBT assets in the shared report/label designer shell so label layouts feel closer to current Visual Studio tooling than to legacy modal editors.",
             "menu" => "Copperfin is surfacing menu structures from MNX/MNT assets. Prompt, command, procedure, and message fields can be edited from the property grid.",
             "project" => "Copperfin is surfacing project entries from PJX/PJT assets. Project-level flags and comments can be edited from the property grid while the native Studio grows toward full project parity.",
             _ => "This shell now pulls a structured snapshot from the native Copperfin Studio host so each VFP asset family can grow toward a high-fidelity Visual Studio editor."

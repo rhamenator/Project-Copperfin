@@ -15,6 +15,7 @@ Current scope:
 - launches the native `copperfin_studio_host.exe` against the active document or selected project item
 - supports inline editable `SCX/SCT` and `VCX/VCT` slices with object selection, a simple design surface, drag-move, and safe property edits sourced from flattened VFP `PROPERTIES` blobs
 - supports inline editable `FRX/FRT` and `LBX/LBT` layout slices for `HPOS`, `VPOS`, `WIDTH`, `HEIGHT`, `EXPR`, and key font fields
+- now uses a section-aware report/label shell with named bands, a modernized design surface, and a dedicated left-pane section explorer instead of treating reports and labels as flat record lists
 - supports asset-aware property-grid editing for `MNX/MNT` menu items and `PJX/PJT` project entries
 
 Current limitations:
@@ -22,7 +23,7 @@ Current limitations:
 - the registered document surface is still a first designer shell, not yet a full inline VFP 9-fidelity designer across all asset families
 - the highest-fidelity inline layout experience is still in the form/class/report/label families rather than project-system tooling
 - it does not yet own project build/debug/run pipelines for Copperfin applications
-- it does not yet render forms/reports inline inside the Visual Studio document with VFP 9 fidelity
+- it does not yet render forms/reports inline inside the Visual Studio document with full VFP 9 fidelity, even though reports and labels now have a section-aware designer shape
 - it does not yet compile Copperfin executables from inside Visual Studio
 
 Why VS 2022 as the baseline:
