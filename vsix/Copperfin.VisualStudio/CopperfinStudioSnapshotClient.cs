@@ -7,22 +7,12 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioSnapshotClient
 {
-    public static CopperfinStudioSnapshotResult TryLoad(string assetPath)
+    private static CopperfinStudioSnapshotResult RunSnapshotCommand(string studioHostPath, string arguments)
     {
-        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
-        if (string.IsNullOrWhiteSpace(studioHostPath))
-        {
-            return new CopperfinStudioSnapshotResult
-            {
-                Success = false,
-                Error = "Copperfin Studio host was not found."
-            };
-        }
-
         var startInfo = new ProcessStartInfo
         {
             FileName = studioHostPath,
-            Arguments = CopperfinStudioLauncher.BuildArguments(assetPath, readOnly: true) + " --json",
+            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -96,5 +86,41 @@ internal static class CopperfinStudioSnapshotClient
                 Error = "Could not parse Copperfin Studio snapshot: " + ex.Message
             };
         }
+    }
+
+    public static CopperfinStudioSnapshotResult TryLoad(string assetPath)
+    {
+        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = "Copperfin Studio host was not found."
+            };
+        }
+
+        return RunSnapshotCommand(studioHostPath!, CopperfinStudioLauncher.BuildArguments(assetPath, readOnly: true) + " --json");
+    }
+
+    public static CopperfinStudioSnapshotResult TryUpdateProperty(
+        string assetPath,
+        int recordIndex,
+        string propertyName,
+        string propertyValue)
+    {
+        var studioHostPath = CopperfinStudioLauncher.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = "Copperfin Studio host was not found."
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioLauncher.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
     }
 }

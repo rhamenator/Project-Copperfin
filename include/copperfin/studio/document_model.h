@@ -26,10 +26,14 @@ enum class StudioAssetKind {
 struct StudioOpenRequest {
     std::string path;
     std::string symbol;
+    std::string property_name;
+    std::string property_value;
     std::size_t line = 0;
     std::size_t column = 0;
+    std::size_t record_index = 0;
     bool launched_from_visual_studio = false;
     bool read_only = false;
+    bool apply_property_update = false;
 };
 
 struct StudioDocumentModel {

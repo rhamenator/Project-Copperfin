@@ -18,11 +18,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Label snapshotStatusLabel;
     private readonly Button launchButton;
     private readonly Button revealButton;
+    private readonly Button refreshButton;
     private readonly ListView objectListView;
-    private readonly ListView propertyListView;
+    private readonly PropertyGrid propertyGrid;
+    private readonly CopperfinDesignSurfaceControl designSurface;
 
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
+    private bool suppressSelectionSync;
 
     public CopperfinAssetEditorControl()
     {
@@ -81,6 +84,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         revealButton.Click += (_, _) => RevealInExplorer();
 
+        refreshButton = new Button
+        {
+            AutoSize = true,
+            Text = "Refresh"
+        };
+        refreshButton.Click += (_, _) =>
+        {
+            if (!string.IsNullOrWhiteSpace(currentPath))
+            {
+                LoadDocument(currentPath!);
+            }
+        };
+
         snapshotStatusLabel = new Label
         {
             AutoSize = true,
@@ -100,19 +116,35 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectListView.Columns.Add("Object", 240);
         objectListView.Columns.Add("Type", 180);
         objectListView.Columns.Add("Record", 70);
-        objectListView.SelectedIndexChanged += (_, _) => PopulatePropertyList();
+        objectListView.SelectedIndexChanged += (_, _) => SyncSelectionFromList();
 
-        propertyListView = new ListView
+        propertyGrid = new PropertyGrid
         {
             Dock = DockStyle.Fill,
-            FullRowSelect = true,
-            HideSelection = false,
-            MultiSelect = false,
-            View = View.Details
+            HelpVisible = true,
+            ToolbarVisible = false
         };
-        propertyListView.Columns.Add("Property", 180);
-        propertyListView.Columns.Add("Type", 60);
-        propertyListView.Columns.Add("Value", 520);
+        propertyGrid.PropertyValueChanged += (_, e) => ApplyPropertyGridChange(e.ChangedItem.PropertyDescriptor.Name, e.ChangedItem.Value);
+
+        designSurface = new CopperfinDesignSurfaceControl
+        {
+            Dock = DockStyle.Fill
+        };
+        designSurface.SelectedRecordChanged += recordIndex => SyncSelectionFromSurface(recordIndex);
+        designSurface.ObjectMoved += (recordIndex, left, top) =>
+        {
+            ApplyVisualPropertyChange(recordIndex, "Left", left.ToString());
+            ApplyVisualPropertyChange(recordIndex, "Top", top.ToString());
+        };
+
+        var rightSplit = new SplitContainer
+        {
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Horizontal,
+            SplitterDistance = 320
+        };
+        rightSplit.Panel1.Controls.Add(designSurface);
+        rightSplit.Panel2.Controls.Add(propertyGrid);
 
         var splitContainer = new SplitContainer
         {
@@ -121,7 +153,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             SplitterDistance = 360
         };
         splitContainer.Panel1.Controls.Add(objectListView);
-        splitContainer.Panel2.Controls.Add(propertyListView);
+        splitContainer.Panel2.Controls.Add(rightSplit);
 
         var buttonPanel = new FlowLayoutPanel
         {
@@ -132,6 +164,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         buttonPanel.Controls.Add(launchButton);
         buttonPanel.Controls.Add(revealButton);
+        buttonPanel.Controls.Add(refreshButton);
 
         var stack = new FlowLayoutPanel
         {
@@ -164,9 +197,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             $"Size: {info.Length:N0} bytes   Last write: {info.LastWriteTime:G}   Extension: {info.Extension.ToLowerInvariant()}";
         launchButton.Enabled = true;
         revealButton.Enabled = true;
+        refreshButton.Enabled = true;
         currentSnapshot = null;
         objectListView.Items.Clear();
-        propertyListView.Items.Clear();
+        propertyGrid.SelectedObject = null;
+        designSurface.LoadObjects(Array.Empty<CopperfinStudioSnapshotObject>());
         snapshotStatusLabel.Text = "Loading Copperfin Studio snapshot...";
         _ = LoadSnapshotAsync(path);
     }
@@ -191,6 +226,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapshotStatusLabel.Text =
                 $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes.";
             PopulateObjectList();
+            designSurface.LoadObjects(currentSnapshot.Objects);
         }));
     }
 
@@ -228,32 +264,102 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            PopulatePropertyList();
+            propertyGrid.SelectedObject = null;
         }
     }
 
-    private void PopulatePropertyList()
+    private void SyncSelectionFromList()
     {
-        propertyListView.BeginUpdate();
-        propertyListView.Items.Clear();
-
+        if (suppressSelectionSync) {
+            return;
+        }
         var selectedObject = objectListView.SelectedItems
             .Cast<ListViewItem>()
             .Select(item => item.Tag as CopperfinStudioSnapshotObject)
             .FirstOrDefault(item => item is not null);
 
-        if (selectedObject is not null)
-        {
-            foreach (var property in selectedObject.Properties)
-            {
-                var listItem = new ListViewItem(property.Name);
-                listItem.SubItems.Add(property.Type);
-                listItem.SubItems.Add(property.Value);
-                propertyListView.Items.Add(listItem);
-            }
+        propertyGrid.SelectedObject = selectedObject is null ? null : CopperfinDesignerSelection.FromSnapshot(selectedObject);
+        designSurface.SelectRecord(selectedObject?.RecordIndex);
+    }
+
+    private void SyncSelectionFromSurface(int recordIndex)
+    {
+        if (suppressSelectionSync) {
+            return;
         }
 
-        propertyListView.EndUpdate();
+        try
+        {
+            suppressSelectionSync = true;
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            var selectedObject = objectListView.Items
+                .Cast<ListViewItem>()
+                .Where(item => item.Selected)
+                .Select(item => item.Tag as CopperfinStudioSnapshotObject)
+                .FirstOrDefault(item => item is not null);
+
+            propertyGrid.SelectedObject = selectedObject is null ? null : CopperfinDesignerSelection.FromSnapshot(selectedObject);
+        }
+        finally
+        {
+            suppressSelectionSync = false;
+        }
+    }
+
+    private void ApplyPropertyGridChange(string propertyName, object oldValue)
+    {
+        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection selection || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return;
+        }
+
+        switch (propertyName)
+        {
+            case nameof(CopperfinDesignerSelection.Left):
+                ApplyVisualPropertyChange(selection.RecordIndex, "Left", selection.Left.ToString());
+                break;
+            case nameof(CopperfinDesignerSelection.Top):
+                ApplyVisualPropertyChange(selection.RecordIndex, "Top", selection.Top.ToString());
+                break;
+            case nameof(CopperfinDesignerSelection.Width):
+                ApplyVisualPropertyChange(selection.RecordIndex, "Width", selection.Width.ToString());
+                break;
+            case nameof(CopperfinDesignerSelection.Height):
+                ApplyVisualPropertyChange(selection.RecordIndex, "Height", selection.Height.ToString());
+                break;
+            case nameof(CopperfinDesignerSelection.Caption):
+                ApplyVisualPropertyChange(selection.RecordIndex, "Caption", "\"" + selection.Caption.Replace("\"", "\"\"") + "\"");
+                break;
+        }
+    }
+
+    private void ApplyVisualPropertyChange(int recordIndex, string propertyName, string propertyValue)
+    {
+        if (string.IsNullOrWhiteSpace(currentPath))
+        {
+            return;
+        }
+
+        snapshotStatusLabel.Text = $"Applying {propertyName} change...";
+        var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(currentPath!, recordIndex, propertyName, propertyValue);
+        if (!updateResult.Success || updateResult.Document is null)
+        {
+            snapshotStatusLabel.Text = "Property update failed: " + updateResult.Error;
+            return;
+        }
+
+        currentSnapshot = updateResult.Document;
+        snapshotStatusLabel.Text =
+            $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
+        PopulateObjectList();
+        designSurface.LoadObjects(currentSnapshot.Objects);
+        designSurface.SelectRecord(recordIndex);
+        SyncSelectionFromSurface(recordIndex);
     }
 
     private void LaunchStudio()

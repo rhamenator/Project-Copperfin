@@ -1,5 +1,6 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
+#include "copperfin/vfp/visual_asset_editor.h"
 
 #include <iomanip>
 #include <iostream>
@@ -10,7 +11,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--set-property --record <n> --property-name <name> --property-value <value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
 }
 
@@ -221,6 +222,21 @@ int main(int argc, char** argv) {
     if (parse_result.show_help) {
         print_usage();
         return 0;
+    }
+
+    if (parse_result.request.apply_property_update) {
+        const auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = parse_result.request.path,
+            .record_index = parse_result.request.record_index,
+            .property_name = parse_result.request.property_name,
+            .property_value = parse_result.request.property_value
+        });
+
+        if (!update_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << update_result.error << "\n";
+            return 4;
+        }
     }
 
     const auto open_result = copperfin::studio::open_document(parse_result.request);

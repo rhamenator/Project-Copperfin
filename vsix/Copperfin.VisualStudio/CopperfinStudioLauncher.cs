@@ -27,12 +27,21 @@ internal static class CopperfinStudioLauncher
         return null;
     }
 
+    private static string Quote(string value)
+    {
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
     public static string BuildArguments(string documentPath, bool readOnly = false)
     {
-        var escaped = documentPath.Replace("\"", "\"\"");
         return readOnly
-            ? $"--from-vs --read-only --path \"{escaped}\""
-            : $"--from-vs --path \"{escaped}\"";
+            ? $"--from-vs --read-only --path {Quote(documentPath)}"
+            : $"--from-vs --path {Quote(documentPath)}";
+    }
+
+    public static string BuildPropertyUpdateArguments(string documentPath, int recordIndex, string propertyName, string propertyValue)
+    {
+        return $"--from-vs --json --set-property --record {recordIndex} --property-name {Quote(propertyName)} --property-value {Quote(propertyValue)} --path {Quote(documentPath)}";
     }
 
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)

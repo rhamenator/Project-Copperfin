@@ -41,6 +41,10 @@ void test_parse_launch_arguments() {
         "--from-vs",
         "--read-only",
         "--json",
+        "--set-property",
+        "--record", "3",
+        "--property-name", "Left",
+        "--property-value", "25",
         "--line", "25",
         "--column", "7",
         "--symbol", "cmdSave.Click"
@@ -51,6 +55,10 @@ void test_parse_launch_arguments() {
     expect(result.request.launched_from_visual_studio, "launch contract should detect --from-vs");
     expect(result.request.read_only, "launch contract should detect --read-only");
     expect(result.output_json, "launch contract should detect --json");
+    expect(result.request.apply_property_update, "launch contract should detect --set-property");
+    expect(result.request.record_index == 3U, "launch contract should parse the record index");
+    expect(result.request.property_name == "Left", "launch contract should capture the property name");
+    expect(result.request.property_value == "25", "launch contract should capture the property value");
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");

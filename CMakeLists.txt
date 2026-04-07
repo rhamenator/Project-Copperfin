@@ -14,6 +14,7 @@ add_library(cf_vfp_assets
     src/vfp/dbf_header.cpp
     src/vfp/dbf_table.cpp
     src/vfp/index_probe.cpp
+    src/vfp/visual_asset_editor.cpp
 )
 
 target_include_directories(cf_vfp_assets
@@ -113,4 +114,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_dbf_table COMMAND $<TARGET_FILE:test_dbf_table>)
+
+    add_executable(test_visual_asset_editor
+        tests/test_visual_asset_editor.cpp
+    )
+
+    target_link_libraries(test_visual_asset_editor PRIVATE cf_vfp_assets)
+
+    if(MSVC)
+        target_compile_options(test_visual_asset_editor PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_visual_asset_editor PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_visual_asset_editor COMMAND $<TARGET_FILE:test_visual_asset_editor>)
 endif()

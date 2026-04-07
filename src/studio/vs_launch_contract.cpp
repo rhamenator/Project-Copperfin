@@ -37,6 +37,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--set-property") {
+            result.request.apply_property_update = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -55,6 +60,34 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --symbol."};
             }
             result.request.symbol = args[++index];
+            continue;
+        }
+
+        if (argument == "--record") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record."};
+            }
+            std::size_t record_index = 0;
+            if (!parse_size_value(args[++index], record_index)) {
+                return {.ok = false, .error = "The --record value must be an unsigned integer."};
+            }
+            result.request.record_index = record_index;
+            continue;
+        }
+
+        if (argument == "--property-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --property-name."};
+            }
+            result.request.property_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--property-value") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --property-value."};
+            }
+            result.request.property_value = args[++index];
             continue;
         }
 
@@ -96,6 +129,10 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
     if (result.request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    if (result.request.apply_property_update && result.request.property_name.empty()) {
+        return {.ok = false, .error = "A property update requires --property-name."};
     }
 
     result.ok = true;
