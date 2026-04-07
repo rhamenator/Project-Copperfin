@@ -30,6 +30,7 @@ endif()
 
 add_library(cf_design_model
     src/studio/document_model.cpp
+    src/studio/product_subsystems.cpp
     src/studio/vs_launch_contract.cpp
 )
 
@@ -128,4 +129,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_visual_asset_editor COMMAND $<TARGET_FILE:test_visual_asset_editor>)
+
+    add_executable(test_product_subsystems
+        tests/test_product_subsystems.cpp
+    )
+
+    target_link_libraries(test_product_subsystems PRIVATE cf_design_model)
+
+    if(MSVC)
+        target_compile_options(test_product_subsystems PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_product_subsystems PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_product_subsystems COMMAND $<TARGET_FILE:test_product_subsystems>)
 endif()

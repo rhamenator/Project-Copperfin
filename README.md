@@ -44,6 +44,8 @@ Contents:
 - [`docs/13-index-format-notes.md`](E:/Project-Copperfin/docs/13-index-format-notes.md)
 - [`docs/14-hybrid-studio-and-visual-studio-host.md`](E:/Project-Copperfin/docs/14-hybrid-studio-and-visual-studio-host.md)
 - [`docs/15-local-product-archeology.md`](E:/Project-Copperfin/docs/15-local-product-archeology.md)
+- [`docs/16-vfp9-equivalent-subsystems.md`](E:/Project-Copperfin/docs/16-vfp9-equivalent-subsystems.md)
+- [`docs/17-modern-designer-direction.md`](E:/Project-Copperfin/docs/17-modern-designer-direction.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:
@@ -70,6 +72,7 @@ Current runnable artifacts:
 - `build\Release\copperfin_studio_host.exe`
   - early human-facing Studio host for opening legacy VFP assets and previewing schema/records
   - now supports `--json` snapshots for Visual Studio designer integration
+  - now supports `--list-subsystems` to inspect the planned VFP 9-equivalent Copperfin subsystem map
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`

@@ -1,4 +1,5 @@
 #include "copperfin/studio/document_model.h"
+#include "copperfin/studio/product_subsystems.h"
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -12,6 +13,7 @@ namespace {
 
 void print_usage() {
     std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--set-property --record <n> --property-name <name> --property-value <value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
 }
 
@@ -202,6 +204,64 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     }
 }
 
+void print_json_subsystems() {
+    const auto& subsystems = copperfin::studio::product_subsystems();
+    std::cout << "{\n";
+    std::cout << "  \"status\": \"ok\",\n";
+    std::cout << "  \"subsystems\": [\n";
+    for (std::size_t index = 0; index < subsystems.size(); ++index) {
+        const auto& subsystem = subsystems[index];
+        std::cout << "    {\n";
+        std::cout << "      \"id\": ";
+        print_json_string(std::string(subsystem.id));
+        std::cout << ",\n";
+        std::cout << "      \"title\": ";
+        print_json_string(std::string(subsystem.title));
+        std::cout << ",\n";
+        std::cout << "      \"vfp9Equivalent\": ";
+        print_json_string(std::string(subsystem.vfp9_equivalent));
+        std::cout << ",\n";
+        std::cout << "      \"copperfinComponent\": ";
+        print_json_string(std::string(subsystem.copperfin_component));
+        std::cout << ",\n";
+        std::cout << "      \"hostKind\": ";
+        print_json_string(copperfin::studio::product_host_kind_name(subsystem.host_kind));
+        std::cout << ",\n";
+        std::cout << "      \"currentStatus\": ";
+        print_json_string(std::string(subsystem.current_status));
+        std::cout << ",\n";
+        std::cout << "      \"parityScope\": ";
+        print_json_string(std::string(subsystem.parity_scope));
+        std::cout << ",\n";
+        std::cout << "      \"modernEditorDirection\": ";
+        print_json_string(std::string(subsystem.modern_editor_direction));
+        std::cout << "\n";
+        std::cout << "    }";
+        if ((index + 1U) != subsystems.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "  ]\n";
+    std::cout << "}\n";
+}
+
+void print_subsystems() {
+    const auto& subsystems = copperfin::studio::product_subsystems();
+    std::cout << "status: ok\n";
+    std::cout << "subsystem_count: " << subsystems.size() << "\n";
+    for (const auto& subsystem : subsystems) {
+        std::cout << "subsystem.id: " << subsystem.id << "\n";
+        std::cout << "  title: " << subsystem.title << "\n";
+        std::cout << "  vfp9_equivalent: " << subsystem.vfp9_equivalent << "\n";
+        std::cout << "  copperfin_component: " << subsystem.copperfin_component << "\n";
+        std::cout << "  host_kind: " << copperfin::studio::product_host_kind_name(subsystem.host_kind) << "\n";
+        std::cout << "  current_status: " << subsystem.current_status << "\n";
+        std::cout << "  parity_scope: " << subsystem.parity_scope << "\n";
+        std::cout << "  modern_editor_direction: " << subsystem.modern_editor_direction << "\n";
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -209,6 +269,17 @@ int main(int argc, char** argv) {
     args.reserve(argc > 1 ? static_cast<std::size_t>(argc - 1) : 0U);
     for (int index = 1; index < argc; ++index) {
         args.emplace_back(argv[index]);
+    }
+
+    const bool list_subsystems = std::find(args.begin(), args.end(), "--list-subsystems") != args.end();
+    if (list_subsystems) {
+        const bool output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+        if (output_json) {
+            print_json_subsystems();
+        } else {
+            print_subsystems();
+        }
+        return 0;
     }
 
     const auto parse_result = copperfin::studio::parse_launch_arguments(args);
