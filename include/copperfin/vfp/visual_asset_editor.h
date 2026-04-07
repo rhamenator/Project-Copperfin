@@ -25,6 +25,7 @@ struct VisualAssetEditResult {
 
 [[nodiscard]] std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::string& text);
 [[nodiscard]] std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssignment>& properties);
+[[nodiscard]] bool is_property_blob_asset_path(const std::string& path);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 
 }  // namespace copperfin::vfp

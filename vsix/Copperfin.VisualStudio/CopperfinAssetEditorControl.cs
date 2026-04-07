@@ -133,8 +133,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         designSurface.SelectedRecordChanged += recordIndex => SyncSelectionFromSurface(recordIndex);
         designSurface.ObjectMoved += (recordIndex, left, top) =>
         {
-            ApplyVisualPropertyChange(recordIndex, "Left", left.ToString());
-            ApplyVisualPropertyChange(recordIndex, "Top", top.ToString());
+            var horizontalName = currentSnapshot?.AssetFamily is "report" or "label" ? "HPOS" : "Left";
+            var verticalName = currentSnapshot?.AssetFamily is "report" or "label" ? "VPOS" : "Top";
+            ApplyVisualPropertyChange(recordIndex, horizontalName, left.ToString());
+            ApplyVisualPropertyChange(recordIndex, verticalName, top.ToString());
         };
 
         var rightSplit = new SplitContainer
@@ -201,7 +203,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentSnapshot = null;
         objectListView.Items.Clear();
         propertyGrid.SelectedObject = null;
-        designSurface.LoadObjects(Array.Empty<CopperfinStudioSnapshotObject>());
+        designSurface.LoadObjects(string.Empty, Array.Empty<CopperfinStudioSnapshotObject>());
         snapshotStatusLabel.Text = "Loading Copperfin Studio snapshot...";
         _ = LoadSnapshotAsync(path);
     }
@@ -225,8 +227,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentSnapshot = snapshotResult.Document;
             snapshotStatusLabel.Text =
                 $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes.";
+            guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
             PopulateObjectList();
-            designSurface.LoadObjects(currentSnapshot.Objects);
+            designSurface.LoadObjects(currentSnapshot.AssetFamily, currentSnapshot.Objects);
         }));
     }
 
@@ -278,7 +281,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             .Select(item => item.Tag as CopperfinStudioSnapshotObject)
             .FirstOrDefault(item => item is not null);
 
-        propertyGrid.SelectedObject = selectedObject is null ? null : CopperfinDesignerSelection.FromSnapshot(selectedObject);
+        propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
+            ? null
+            : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject);
         designSurface.SelectRecord(selectedObject?.RecordIndex);
     }
 
@@ -303,7 +308,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 .Select(item => item.Tag as CopperfinStudioSnapshotObject)
                 .FirstOrDefault(item => item is not null);
 
-            propertyGrid.SelectedObject = selectedObject is null ? null : CopperfinDesignerSelection.FromSnapshot(selectedObject);
+            propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
+                ? null
+                : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject);
         }
         finally
         {
@@ -318,23 +325,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        switch (propertyName)
+        if (selection.TryGetUpdate(propertyName, out var targetName, out var serializedValue))
         {
-            case nameof(CopperfinDesignerSelection.Left):
-                ApplyVisualPropertyChange(selection.RecordIndex, "Left", selection.Left.ToString());
-                break;
-            case nameof(CopperfinDesignerSelection.Top):
-                ApplyVisualPropertyChange(selection.RecordIndex, "Top", selection.Top.ToString());
-                break;
-            case nameof(CopperfinDesignerSelection.Width):
-                ApplyVisualPropertyChange(selection.RecordIndex, "Width", selection.Width.ToString());
-                break;
-            case nameof(CopperfinDesignerSelection.Height):
-                ApplyVisualPropertyChange(selection.RecordIndex, "Height", selection.Height.ToString());
-                break;
-            case nameof(CopperfinDesignerSelection.Caption):
-                ApplyVisualPropertyChange(selection.RecordIndex, "Caption", "\"" + selection.Caption.Replace("\"", "\"\"") + "\"");
-                break;
+            ApplyVisualPropertyChange(selection.RecordIndex, targetName, serializedValue);
         }
     }
 
@@ -357,9 +350,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         snapshotStatusLabel.Text =
             $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
         PopulateObjectList();
-        designSurface.LoadObjects(currentSnapshot.Objects);
+        designSurface.LoadObjects(currentSnapshot.AssetFamily, currentSnapshot.Objects);
         designSurface.SelectRecord(recordIndex);
         SyncSelectionFromSurface(recordIndex);
+    }
+
+    private string BuildGuidanceText(string assetFamily)
+    {
+        return assetFamily switch
+        {
+            "form" => "Copperfin is surfacing form objects from SCX/SCT assets and can now round-trip a safe editable subset inside Visual Studio.",
+            "class_library" => "Copperfin is surfacing class-library objects from VCX/VCT assets so you can inspect and edit reusable visual classes in-place.",
+            "report" => "Copperfin is surfacing report bands and objects from FRX/FRT assets with inline layout editing for position and size fields.",
+            "label" => "Copperfin is surfacing label objects from LBX/LBT assets with inline layout editing for placement, sizing, and text fields.",
+            "menu" => "Copperfin is surfacing menu structures from MNX/MNT assets. Prompt, command, procedure, and message fields can be edited from the property grid.",
+            "project" => "Copperfin is surfacing project entries from PJX/PJT assets. Project-level flags and comments can be edited from the property grid while the native Studio grows toward full project parity.",
+            _ => "This shell now pulls a structured snapshot from the native Copperfin Studio host so each VFP asset family can grow toward a high-fidelity Visual Studio editor."
+        };
     }
 
     private void LaunchStudio()

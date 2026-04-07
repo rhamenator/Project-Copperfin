@@ -1,5 +1,7 @@
 #include "copperfin/studio/document_model.h"
 
+#include "copperfin/vfp/visual_asset_editor.h"
+
 #include <filesystem>
 #include <string_view>
 
@@ -36,6 +38,34 @@ std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<
         }
     }
     return {};
+}
+
+bool supports_visual_property_blob(const StudioDocumentModel& document) {
+    return document.kind == StudioAssetKind::form || document.kind == StudioAssetKind::class_library;
+}
+
+void append_property_snapshots(
+    const std::vector<vfp::VisualPropertyAssignment>& assignments,
+    std::vector<StudioPropertySnapshot>& properties) {
+    for (const auto& assignment : assignments) {
+        if (assignment.name.empty()) {
+            continue;
+        }
+
+        const auto existing = std::find_if(properties.begin(), properties.end(), [&](const StudioPropertySnapshot& property) {
+            return property.name == assignment.name;
+        });
+        if (existing != properties.end()) {
+            continue;
+        }
+
+        properties.push_back({
+            .name = assignment.name,
+            .type = 'P',
+            .is_null = assignment.value.empty(),
+            .value = assignment.value
+        });
+    }
 }
 
 }  // namespace
@@ -137,8 +167,32 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         StudioObjectSnapshot snapshot;
         snapshot.record_index = record.record_index;
         snapshot.deleted = record.deleted;
-        snapshot.title = first_non_empty(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
-        snapshot.subtitle = first_non_empty(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
+        switch (document.kind) {
+            case StudioAssetKind::report:
+            case StudioAssetKind::label:
+                snapshot.title = first_non_empty(record, {"EXPR", "NAME", "UNIQUEID"});
+                snapshot.subtitle = first_non_empty(record, {"OBJTYPE", "OBJCODE", "FONTFACE", "PLATFORM"});
+                break;
+            case StudioAssetKind::menu:
+                snapshot.title = first_non_empty(record, {"PROMPT", "NAME", "LEVELNAME"});
+                snapshot.subtitle = first_non_empty(record, {"LEVELNAME", "OBJTYPE", "OBJCODE"});
+                break;
+            case StudioAssetKind::project:
+                snapshot.title = first_non_empty(record, {"NAME", "KEY", "TYPE"});
+                snapshot.subtitle = first_non_empty(record, {"TYPE", "KEY", "COMMENTS"});
+                break;
+            case StudioAssetKind::form:
+            case StudioAssetKind::class_library:
+            case StudioAssetKind::index:
+            case StudioAssetKind::table:
+            case StudioAssetKind::database_container:
+            case StudioAssetKind::program:
+            case StudioAssetKind::header:
+            case StudioAssetKind::unknown:
+                snapshot.title = first_non_empty(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
+                snapshot.subtitle = first_non_empty(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
+                break;
+        }
         if (snapshot.title.empty()) {
             snapshot.title = "Record " + std::to_string(record.record_index);
         }
@@ -154,6 +208,13 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 .is_null = value.is_null,
                 .value = value.display_value
             });
+        }
+
+        if (supports_visual_property_blob(document)) {
+            const auto* property_blob = find_value(record, "PROPERTIES");
+            if (property_blob != nullptr && !property_blob->display_value.empty() && property_blob->display_value != "<memo block 0>") {
+                append_property_snapshots(vfp::parse_visual_property_blob(property_blob->display_value), snapshot.properties);
+            }
         }
 
         objects.push_back(std::move(snapshot));

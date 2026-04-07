@@ -17,6 +17,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     }
 
     private readonly List<SurfaceObject> objects = new();
+    private string assetFamily = string.Empty;
     private int? selectedRecordIndex;
     private int? dragRecordIndex;
     private Point lastMousePoint;
@@ -31,11 +32,12 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         MinimumSize = new Size(400, 260);
     }
 
-    public void LoadObjects(IReadOnlyList<CopperfinStudioSnapshotObject> snapshotObjects)
+    public void LoadObjects(string assetFamily, IReadOnlyList<CopperfinStudioSnapshotObject> snapshotObjects)
     {
+        this.assetFamily = assetFamily ?? string.Empty;
         objects.Clear();
         foreach (var snapshotObject in snapshotObjects) {
-            if (!TryBuildBounds(snapshotObject, out var bounds)) {
+            if (!TryBuildBounds(this.assetFamily, snapshotObject, out var bounds)) {
                 continue;
             }
 
@@ -44,7 +46,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
                 Source = snapshotObject,
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
-                Caption = ExtractCaption(snapshotObject)
+                Caption = ExtractCaption(this.assetFamily, snapshotObject)
             });
         }
 
@@ -171,8 +173,9 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var deltaX = e.Location.X - lastMousePoint.X;
         var deltaY = e.Location.Y - lastMousePoint.Y;
         if (Math.Abs(deltaX) > 0 || Math.Abs(deltaY) > 0) {
-            var left = ExtractNumericProperty(moved.Source, "Left");
-            var top = ExtractNumericProperty(moved.Source, "Top");
+            var (horizontalName, verticalName) = GetCoordinatePropertyNames(assetFamily);
+            var left = ExtractNumericProperty(moved.Source, horizontalName);
+            var top = ExtractNumericProperty(moved.Source, verticalName);
             if (left.HasValue && top.HasValue) {
                 var newLeft = Math.Max(0, (int)Math.Round(left.Value + (deltaX / scale)));
                 var newTop = Math.Max(0, (int)Math.Round(top.Value + (deltaY / scale)));
@@ -193,19 +196,35 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         return RectangleF.FromLTRB(minLeft, minTop, maxRight, maxBottom);
     }
 
-    private static bool TryBuildBounds(CopperfinStudioSnapshotObject snapshotObject, out RectangleF bounds)
+    private static bool TryBuildBounds(string assetFamily, CopperfinStudioSnapshotObject snapshotObject, out RectangleF bounds)
     {
         bounds = RectangleF.Empty;
-        var left = ExtractNumericProperty(snapshotObject, "Left");
-        var top = ExtractNumericProperty(snapshotObject, "Top");
-        var width = ExtractNumericProperty(snapshotObject, "Width");
-        var height = ExtractNumericProperty(snapshotObject, "Height");
+        var (horizontalName, verticalName) = GetCoordinatePropertyNames(assetFamily);
+        var (widthName, heightName) = GetSizePropertyNames(assetFamily);
+        var left = ExtractNumericProperty(snapshotObject, horizontalName);
+        var top = ExtractNumericProperty(snapshotObject, verticalName);
+        var width = ExtractNumericProperty(snapshotObject, widthName);
+        var height = ExtractNumericProperty(snapshotObject, heightName);
         if (!left.HasValue || !top.HasValue || !width.HasValue || !height.HasValue) {
             return false;
         }
 
         bounds = new RectangleF(left.Value, top.Value, Math.Max(8, width.Value), Math.Max(8, height.Value));
         return true;
+    }
+
+    private static (string Horizontal, string Vertical) GetCoordinatePropertyNames(string assetFamily)
+    {
+        return assetFamily is "report" or "label"
+            ? ("HPOS", "VPOS")
+            : ("Left", "Top");
+    }
+
+    private static (string Width, string Height) GetSizePropertyNames(string assetFamily)
+    {
+        return assetFamily is "report" or "label"
+            ? ("WIDTH", "HEIGHT")
+            : ("Width", "Height");
     }
 
     private static int? ExtractNumericProperty(CopperfinStudioSnapshotObject snapshotObject, string propertyName)
@@ -217,11 +236,22 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         return int.TryParse(property.Value, out var value) ? value : null;
     }
 
-    private static string ExtractCaption(CopperfinStudioSnapshotObject snapshotObject)
+    private static string ExtractCaption(string assetFamily, CopperfinStudioSnapshotObject snapshotObject)
     {
-        var caption = snapshotObject.Properties.FirstOrDefault(item => item.Name == "Caption")?.Value ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(caption)) {
-            return caption.Trim('"');
+        string[] candidateNames = assetFamily switch
+        {
+            "report" or "label" => new[] { "EXPR", "NAME" },
+            "menu" => new[] { "PROMPT", "NAME" },
+            _ => new[] { "Caption", "OBJNAME", "NAME" }
+        };
+
+        foreach (var candidate in candidateNames)
+        {
+            var caption = snapshotObject.Properties.FirstOrDefault(item => item.Name == candidate)?.Value ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(caption) && caption != "<memo block 0>")
+            {
+                return caption.Trim('"');
+            }
         }
 
         return string.IsNullOrWhiteSpace(snapshotObject.Title) ? $"Record {snapshotObject.RecordIndex}" : snapshotObject.Title;

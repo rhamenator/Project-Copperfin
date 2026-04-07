@@ -74,7 +74,9 @@ Current runnable artifacts:
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
   - registers a first `Copperfin Visual Designer` document shell for `PJX/SCX/VCX/FRX/LBX/MNX`
   - current shell shows object/property snapshots sourced from the native Studio host
-  - current `SCX/SCT` slice supports inline object selection, a simple design canvas, drag-move, and a safe editable property subset
+  - current `SCX/SCT` and `VCX/VCT` slices expose flattened VFP `PROPERTIES` data for inline object selection, design-surface layout, drag-move, and safe property edits
+  - current `FRX/FRT` and `LBX/LBT` slices support inline layout editing for `HPOS/VPOS/WIDTH/HEIGHT` plus key expression/font fields
+  - current `MNX/MNT` and `PJX/PJT` slices support asset-aware property-grid editing for menu and project metadata
 
 Quick examples:
 
@@ -94,4 +96,4 @@ Current MVP scope:
 Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
-- the Visual Studio extension now provides a registered designer shell with a real editable `SCX/SCT` subset, but it still does not provide full VFP 9-style visual design fidelity or executable compilation for Copperfin applications
+- the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, but it still does not provide full VFP 9-style design fidelity or executable compilation for Copperfin applications

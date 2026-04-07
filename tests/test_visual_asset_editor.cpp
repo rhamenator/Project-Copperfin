@@ -143,10 +143,106 @@ void test_update_visual_object_property_rewrites_properties_memo() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_property_rewrites_direct_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_direct_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "sample.frx";
+    const fs::path memo_path = temp_dir / "sample.frt";
+
+    std::vector<std::uint8_t> table_bytes(178U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 161U);
+    write_le_u16(table_bytes, 10U, 17U);
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, "OBJTYPE", 'N', 1U, 2U);
+    write_field_descriptor(table_bytes, 64U, "HPOS", 'N', 3U, 9U);
+    write_field_descriptor(table_bytes, 96U, "GRID", 'L', 12U, 1U);
+    write_field_descriptor(table_bytes, 128U, "EXPR", 'M', 13U, 4U);
+    table_bytes[160] = 0x0DU;
+    table_bytes[161] = 0x20U;
+    write_ascii(table_bytes, 162U, " 8");
+    write_ascii(table_bytes, 164U, "  7812.5");
+    table_bytes[173] = 'F';
+    write_le_u32(table_bytes, 174U, 1U);
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+    write_be_u32(memo_bytes, 0U, 2U);
+    write_be_u16(memo_bytes, 6U, 512U);
+    const std::string expr = "customer.company";
+    memo_bytes[512 + 3] = 1U;
+    write_be_u32(memo_bytes, 512 + 4, static_cast<std::uint32_t>(expr.size()));
+    write_ascii(memo_bytes, 520U, expr);
+
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    auto update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .property_name = "HPOS",
+        .property_value = "9583.333"
+    });
+    expect(update_result.ok, "numeric FRX field update should succeed");
+
+    update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .property_name = "GRID",
+        .property_value = "true"
+    });
+    expect(update_result.ok, "logical FRX field update should succeed");
+
+    update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .property_name = "EXPR",
+        .property_value = "\"newexpr\""
+    });
+    expect(update_result.ok, "memo FRX field update should succeed");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "updated synthetic FRX/FRT should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto& record = parse_result.table.records[0];
+        for (const auto& value : record.values) {
+            if (value.field_name == "HPOS") {
+                expect(value.display_value == "9583.333", "updated HPOS should be reflected in the parsed table");
+            }
+            if (value.field_name == "GRID") {
+                expect(value.display_value == "true", "updated GRID should be reflected in the parsed table");
+            }
+            if (value.field_name == "EXPR") {
+                expect(value.display_value == "\"newexpr\"", "updated EXPR memo should be reflected in the parsed table");
+            }
+        }
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
+    test_update_visual_object_property_rewrites_direct_fields();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

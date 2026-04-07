@@ -13,12 +13,14 @@ Current scope:
 - loads a structured object/property snapshot from the native Studio host for the open asset
 - lets that document surface launch the native `copperfin_studio_host.exe`
 - launches the native `copperfin_studio_host.exe` against the active document or selected project item
-- supports a first inline editable `SCX/SCT` slice with object selection, a simple design surface, drag-move, and property edits for a safe subset (`Left`, `Top`, `Width`, `Height`, `Caption`)
+- supports inline editable `SCX/SCT` and `VCX/VCT` slices with object selection, a simple design surface, drag-move, and safe property edits sourced from flattened VFP `PROPERTIES` blobs
+- supports inline editable `FRX/FRT` and `LBX/LBT` layout slices for `HPOS`, `VPOS`, `WIDTH`, `HEIGHT`, `EXPR`, and key font fields
+- supports asset-aware property-grid editing for `MNX/MNT` menu items and `PJX/PJT` project entries
 
 Current limitations:
 
-- the registered document surface is a first designer shell, not yet a full inline form/report/menu/class designer across all asset families
-- the current editable fidelity slice is strongest for `SCX/SCT`
+- the registered document surface is still a first designer shell, not yet a full inline VFP 9-fidelity designer across all asset families
+- the highest-fidelity inline layout experience is still in the form/class/report/label families rather than project-system tooling
 - it does not yet own project build/debug/run pipelines for Copperfin applications
 - it does not yet render forms/reports inline inside the Visual Studio document with VFP 9 fidelity
 - it does not yet compile Copperfin executables from inside Visual Studio

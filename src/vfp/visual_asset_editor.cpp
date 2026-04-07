@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <vector>
 
@@ -107,7 +108,10 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
 
 std::string infer_memo_sidecar_path(const std::string& path) {
     std::filesystem::path file_path(path);
-    const std::string ext = file_path.extension().string();
+    std::string ext = file_path.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
 
     if (ext == ".scx") {
         return file_path.replace_extension(".sct").string();
@@ -141,6 +145,30 @@ VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
     std::size_t record_index,
     const std::string& field_name,
+    const std::string& new_value);
+
+std::optional<char> normalize_logical_value(std::string value) {
+    value = trim_both(std::move(value));
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+
+    if (value.empty() || value == "null" || value == "?") {
+        return '?';
+    }
+    if (value == "t" || value == "true" || value == "y" || value == "yes" || value == ".t.") {
+        return 'T';
+    }
+    if (value == "f" || value == "false" || value == "n" || value == "no" || value == ".f.") {
+        return 'F';
+    }
+    return std::nullopt;
+}
+
+VisualAssetEditResult replace_non_memo_field_value(
+    const std::string& table_path,
+    std::size_t record_index,
+    const RawFieldDescriptor& field,
     const std::string& new_value) {
     auto table_bytes = read_binary_file(table_path);
     if (table_bytes.empty()) {
@@ -152,6 +180,77 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = header_result.error};
     }
 
+    if (record_index >= header_result.header.record_count) {
+        return {.ok = false, .error = "Record index is out of range for the asset."};
+    }
+
+    const std::size_t record_offset = header_result.header.header_length +
+                                      (record_index * header_result.header.record_length);
+    const std::size_t field_offset = record_offset + field.offset;
+    if ((field_offset + field.length) > table_bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated."};
+    }
+
+    std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
+
+    switch (field.type) {
+        case 'C': {
+            const std::string text = trim_both(new_value);
+            if (text.size() > field.length) {
+                return {.ok = false, .error = "Character value is too large for the target field."};
+            }
+            std::copy(text.begin(),
+                      text.end(),
+                      table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            break;
+        }
+        case 'N':
+        case 'F': {
+            const std::string text = trim_both(new_value);
+            if (text.empty()) {
+                break;
+            }
+            if (text.size() > field.length) {
+                return {.ok = false, .error = "Numeric value is too large for the target field."};
+            }
+            const auto padding = static_cast<std::ptrdiff_t>(field.length - text.size());
+            std::copy(text.begin(),
+                      text.end(),
+                      table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset) + padding);
+            break;
+        }
+        case 'L': {
+            const auto logical_value = normalize_logical_value(new_value);
+            if (!logical_value.has_value()) {
+                return {.ok = false, .error = "Logical fields only accept true/false values."};
+            }
+            table_bytes[field_offset] = static_cast<std::uint8_t>(*logical_value);
+            break;
+        }
+        default:
+            return {.ok = false, .error = "Direct updates are not implemented for this field type yet."};
+    }
+
+    if (!write_binary_file(table_path, table_bytes)) {
+        return {.ok = false, .error = "Unable to write the visual asset table."};
+    }
+
+    return {.ok = true};
+}
+
+VisualAssetEditResult replace_field_value(
+    const std::string& table_path,
+    std::size_t record_index,
+    const RawFieldDescriptor& field,
+    const std::string& new_value) {
+    if (field.type == 'M') {
+        return replace_memo_field_value(table_path, record_index, field.name, new_value);
+    }
+
+    return replace_non_memo_field_value(table_path, record_index, field, new_value);
+}
+
+std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes) {
     std::vector<RawFieldDescriptor> fields;
     std::size_t descriptor_offset = 32U;
     while ((descriptor_offset + 32U) <= table_bytes.size() && table_bytes[descriptor_offset] != 0x0DU) {
@@ -163,6 +262,25 @@ VisualAssetEditResult replace_memo_field_value(
         });
         descriptor_offset += 32U;
     }
+    return fields;
+}
+
+VisualAssetEditResult replace_memo_field_value(
+    const std::string& table_path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& new_value) {
+    auto table_bytes = read_binary_file(table_path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+
+    const auto header_result = parse_dbf_header(table_bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(table_bytes);
 
     const auto field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
         return field.name == field_name;
@@ -232,7 +350,7 @@ VisualAssetEditResult replace_memo_field_value(
     std::fill(
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_block_offset + 8U),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_total_size),
-        0U);
+        static_cast<std::uint8_t>(0U));
     std::copy(
         new_value.begin(),
         new_value.end(),
@@ -294,6 +412,14 @@ std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssig
     return stream.str();
 }
 
+bool is_property_blob_asset_path(const std::string& path) {
+    std::string ext = std::filesystem::path(path).extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return ext == ".scx" || ext == ".vcx";
+}
+
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
@@ -308,6 +434,23 @@ VisualAssetEditResult update_visual_object_property(const VisualObjectEditReques
     }
     if (request.record_index >= table_result.table.records.size()) {
         return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return field.name == request.property_name;
+    });
+    if (direct_field_it != fields.end()) {
+        return replace_field_value(request.path, request.record_index, *direct_field_it, request.property_value);
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = "The requested property is not exposed as a writable field on this asset."};
     }
 
     const auto& record = table_result.table.records[request.record_index];
