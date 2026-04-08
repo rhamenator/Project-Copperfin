@@ -121,6 +121,11 @@ struct CursorState {
     std::string active_order_expression;
 };
 
+struct IndexedCandidate {
+    std::string key;
+    std::size_t recno = 0;
+};
+
 struct DataSessionState {
     int selected_work_area = 1;
     int next_work_area = 1;
@@ -192,6 +197,23 @@ std::string take_first_token(std::string value) {
 
     const auto separator = value.find(' ');
     return separator == std::string::npos ? value : value.substr(0U, separator);
+}
+
+std::pair<std::string, std::string> split_first_word(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.empty()) {
+        return {};
+    }
+
+    const auto separator = value.find(' ');
+    if (separator == std::string::npos) {
+        return {value, {}};
+    }
+
+    return {
+        value.substr(0U, separator),
+        trim_copy(value.substr(separator + 1U))
+    };
 }
 
 std::string uppercase_copy(std::string value);
@@ -1035,6 +1057,16 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
+    bool is_set_enabled(const std::string& option_name) const {
+        const auto found = set_state.find(normalize_identifier(option_name));
+        if (found == set_state.end()) {
+            return false;
+        }
+
+        const std::string normalized_value = normalize_identifier(found->second);
+        return normalized_value != "off" && normalized_value != "false" && normalized_value != "0";
+    }
+
     void move_cursor_to(CursorState& cursor, long long target_recno) {
         if (cursor.record_count == 0U) {
             cursor.recno = 0U;
@@ -1135,13 +1167,41 @@ struct PrgRuntimeSession::Impl {
         }
 
         const std::string normalized_target = evaluate_index_expression(search_key, vfp::DbfRecord{});
+        std::vector<IndexedCandidate> candidates;
+        candidates.reserve(table_result.table.records.size());
+
         for (const auto& record : table_result.table.records) {
-            const std::string candidate = evaluate_index_expression(cursor.active_order_expression, record);
-            if (candidate == normalized_target) {
-                move_cursor_to(cursor, static_cast<long long>(record.record_index + 1U));
-                cursor.found = true;
-                return true;
+            candidates.push_back({
+                .key = evaluate_index_expression(cursor.active_order_expression, record),
+                .recno = record.record_index + 1U
+            });
+        }
+
+        std::sort(candidates.begin(), candidates.end(), [](const IndexedCandidate& left, const IndexedCandidate& right) {
+            if (left.key != right.key) {
+                return left.key < right.key;
             }
+            return left.recno < right.recno;
+        });
+
+        const auto lower = std::lower_bound(
+            candidates.begin(),
+            candidates.end(),
+            normalized_target,
+            [](const IndexedCandidate& candidate, const std::string& value) {
+                return candidate.key < value;
+            });
+
+        if (lower != candidates.end() && lower->key == normalized_target) {
+            move_cursor_to(cursor, static_cast<long long>(lower->recno));
+            cursor.found = true;
+            return true;
+        }
+
+        if (is_set_enabled("near") && lower != candidates.end()) {
+            move_cursor_to(cursor, static_cast<long long>(lower->recno));
+            cursor.found = false;
+            return false;
         }
 
         move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));
@@ -2418,13 +2478,21 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::set_command:
-            set_state[normalize_identifier(statement.expression)] = "true";
+        {
+            const auto [option_name, option_value] = split_first_word(statement.expression);
+            const std::string normalized_name = normalize_identifier(option_name);
+            if (!normalized_name.empty()) {
+                set_state[normalized_name] = option_value.empty() ? "on" : option_value;
+            } else {
+                set_state[normalize_identifier(statement.expression)] = "true";
+            }
             events.push_back({
                 .category = "runtime.set",
                 .detail = statement.expression,
                 .location = statement.location
             });
             return {};
+        }
         case StatementKind::set_datasession: {
             const int session_id = static_cast<int>(std::llround(value_as_number(evaluate_expression(statement.expression, frame))));
             current_data_session = std::max(1, session_id);

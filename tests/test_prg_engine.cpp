@@ -839,6 +839,85 @@ void test_set_order_and_seek_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_near_changes_seek_failure_position() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "set_near.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SET NEAR ON\n"
+        "SEEK 'BRAVO'\n"
+        "lNearFound = FOUND()\n"
+        "lNearEof = EOF()\n"
+        "nNearRec = RECNO()\n"
+        "SET NEAR OFF\n"
+        "SEEK 'BRAVO'\n"
+        "lFarFound = FOUND()\n"
+        "lFarEof = EOF()\n"
+        "nFarRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET NEAR seek script should complete");
+
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_eof = state.globals.find("lneareof");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto far_found = state.globals.find("lfarfound");
+    const auto far_eof = state.globals.find("lfareof");
+    const auto far_rec = state.globals.find("nfarrec");
+
+    expect(near_found != state.globals.end(), "FOUND() after SET NEAR ON should be captured");
+    expect(near_eof != state.globals.end(), "EOF() after SET NEAR ON should be captured");
+    expect(near_rec != state.globals.end(), "RECNO() after SET NEAR ON should be captured");
+    expect(far_found != state.globals.end(), "FOUND() after SET NEAR OFF should be captured");
+    expect(far_eof != state.globals.end(), "EOF() after SET NEAR OFF should be captured");
+    expect(far_rec != state.globals.end(), "RECNO() after SET NEAR OFF should be captured");
+
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "SET NEAR ON should keep FOUND() false when SEEK misses");
+    }
+    if (near_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_eof->second) == "false", "SET NEAR ON should position to the nearest record instead of EOF");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "2", "SET NEAR ON should position to the next ordered record");
+    }
+    if (far_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(far_found->second) == "false", "SET NEAR OFF should still report a failed seek");
+    }
+    if (far_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(far_eof->second) == "true", "SET NEAR OFF should leave the cursor at EOF after a missed seek");
+    }
+    if (far_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(far_rec->second) == "4", "SET NEAR OFF should place RECNO() at record_count + 1 after a missed seek");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.set", "NEAR ON") &&
+        has_runtime_event(state.events, "runtime.set", "NEAR OFF"),
+        "SET NEAR changes should emit runtime.set events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_again_and_alias_collision_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again";
@@ -1058,6 +1137,7 @@ int main() {
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_set_order_and_seek_for_local_tables();
+    test_set_near_changes_seek_failure_position();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();

@@ -21,11 +21,16 @@ The generated command inventory lives here:
 - [`docs/generated/vfp-language-reference-summary.json`](E:/Project-Copperfin/docs/generated/vfp-language-reference-summary.json)
 - [`docs/generated/vfp-language-reference-commands.json`](E:/Project-Copperfin/docs/generated/vfp-language-reference-commands.json)
 - [`docs/generated/vfp-language-reference-commands.txt`](E:/Project-Copperfin/docs/generated/vfp-language-reference-commands.txt)
+- [`docs/generated/vfp-chm-index-summary.json`](E:/Project-Copperfin/docs/generated/vfp-chm-index-summary.json)
+- [`docs/generated/vfp-chm-command-topics.json`](E:/Project-Copperfin/docs/generated/vfp-chm-command-topics.json)
+- [`docs/generated/vfp-foxtools-topics.json`](E:/Project-Copperfin/docs/generated/vfp-foxtools-topics.json)
+- [`docs/generated/vfp-chm-topic-manifest.json`](E:/Project-Copperfin/docs/generated/vfp-chm-topic-manifest.json)
 
 Refresh it with:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File E:\Project-Copperfin\scripts\export-vfp-reference-index.ps1
+powershell -ExecutionPolicy Bypass -File E:\Project-Copperfin\scripts\export-vfp-chm-topic-index.ps1
 ```
 
 Current official index snapshot from the Learn language-reference page:
@@ -39,6 +44,13 @@ Current official index snapshot from the Learn language-reference page:
 - `22` object entries
 - `4` preprocessor-directive entries
 - `3` operator entries
+
+Current local CHM snapshot from the installed VFP help set:
+
+- `dv_foxhelp.chm` is the main product help and the command-behavior source that matters most
+- `foxtools.chm` is supplemental and much smaller
+- the local indexer now emits both a command-topic view and a broader topic manifest, so it can capture `foxtools` functions that are not indexed as `Command` topics
+- the generated CHM outputs give local keyword-to-HTML mappings for offline behavior lookup, including `RegFn()`, `RegFn32()`, and `CallFn()`
 
 ## Current Copperfin Runtime Surface
 
@@ -103,5 +115,6 @@ The official command inventory is much larger than the current runtime. The deep
 
 - Use the Learn language-reference index to decide what command/function families exist and to avoid missing major areas.
 - Use the Learn general reference for file structures, table/index storage, and other low-level behavior.
+- Use the generated local CHM command-topic index and topic manifest to jump from a command or `foxtools` function name to the installed VFP help page that describes its behavior.
 - Use installed VFP 9 help and local source trees for product-era behavior and sample patterns.
 - Use `FOXHELP.DBF` and its memo file as a fallback source for older semantics when Learn pages are missing, gated, or too shallow.

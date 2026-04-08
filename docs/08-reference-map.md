@@ -9,6 +9,14 @@ Installed VFP 9:
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/Wizards)
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/Samples)
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\dv_foxhelp.chm`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/dv_foxhelp.chm)
+- [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\foxtools.chm`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/foxtools.chm)
+- [`docs/generated/vfp-chm-command-topics.json`](E:/Project-Copperfin/docs/generated/vfp-chm-command-topics.json)
+- [`docs/generated/vfp-foxtools-topics.json`](E:/Project-Copperfin/docs/generated/vfp-foxtools-topics.json)
+- [`docs/generated/vfp-chm-topic-manifest.json`](E:/Project-Copperfin/docs/generated/vfp-chm-topic-manifest.json)
+
+Legacy local help fallback:
+
+- [`C:\vDosPlus\FPD26\FOXHELP.DBF`](C:/vDosPlus/FPD26/FOXHELP.DBF)
 
 Mounted VFP 9 media:
 
@@ -62,7 +70,7 @@ Legacy/reference code on `E:\`:
 - ReportingApps proves reporting deserves its own maintained subsystem.
 - Local `ReportBuilder`, `DataExplorer`, `taskpane`, `toolbox`, `obrowser`, and `foxref` source trees are direct clean-room guidance for Copperfin report surfaces, data explorer tooling, task panes, toolbox UX, object browsing, and code/reference search.
 - HelpFile shows documentation gaps become operational risk.
-- The official Learn language reference is now the canonical command/function inventory for Copperfin parity planning, with local VFP help and `FOXHELP.DBF` serving as fallbacks when individual pages are incomplete or inaccessible.
+- The official Learn language reference is now the canonical command/function inventory for Copperfin parity planning, with local VFP help, generated CHM manifests, and `FOXHELP.DBF` serving as fallbacks when individual pages are incomplete or inaccessible.
 - The VFPX project index highlights community successors for project explorer, data explorer, toolbox/task panes, code references, and automated testing, which are all directly relevant to Copperfin's missing parity surfaces.
 - The broader VFPX ecosystem also highlights project hooks, source-control-friendly serializers, property/method tooling, automated testing, deployment helpers, and PDF/report adjuncts that Copperfin should treat as real subsystem inputs rather than optional trivia.
 - `GoToDefinition` and `FoxcodePlus` are especially relevant to the editor parity story: they validate definition navigation, richer member hints, error-list-style assistance, and deeper IntelliSense as expected IDE behavior for FoxPro developers.
@@ -73,6 +81,7 @@ Legacy/reference code on `E:\`:
 - `tasklist` points toward task items that stay attached to real files, classes, methods, and lines instead of becoming detached notes.
 - `builders` and `coverage` point toward context-aware builders plus explicit analysis/export modes for debugging and quality tooling.
 - XSharp shows that an xBase-family stack can sustain a modern compiler, runtime, project system, and tools layer inside the contemporary .NET and Visual Studio ecosystem, which reinforces Copperfin's hybrid native-runtime plus VS-host strategy.
+- The installed `foxtools` help and extension files point toward a narrow dispatch-style native extension boundary, which is more useful to Copperfin as an interop/reference clue than as a direct implementation model.
 - The wizard/template system shows productivity and scaffolding are core product value.
 - Your local xBase/FoxPro-era code provides a starting point for file engine and compatibility research.
 - A modern successor should not trap users on DBF alone; connector-based SQL support is part of the modernization value proposition.
