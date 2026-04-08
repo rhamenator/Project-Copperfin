@@ -232,6 +232,10 @@ std::string join_strings(const std::vector<std::string>& values) {
     return stream.str();
 }
 
+bool is_prg_path(const std::string& value) {
+    return std::filesystem::path(value).extension() == ".prg";
+}
+
 }  // namespace
 
 const char* build_configuration_name(BuildConfiguration configuration) {
@@ -321,8 +325,8 @@ RuntimePackagePlan create_runtime_package_plan(
         source_working_directory,
         plan.content_root
     };
-    plan.debug_plan.supports_breakpoints = false;
-    plan.debug_plan.supports_step_debugging = false;
+    plan.debug_plan.supports_breakpoints = is_prg_path(plan.debug_plan.startup_source_path);
+    plan.debug_plan.supports_step_debugging = is_prg_path(plan.debug_plan.startup_source_path);
 
     if (enable_security && !security_profile.available) {
         plan.warnings.push_back("Security was requested but no native security profile is available.");

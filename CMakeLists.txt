@@ -70,6 +70,21 @@ add_library(cf_runtime_pipeline
     src/runtime/runtime_pipeline.cpp
 )
 
+add_library(cf_xbase_runtime
+    src/runtime/prg_engine.cpp
+)
+
+target_include_directories(cf_xbase_runtime
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_xbase_runtime PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 target_include_directories(cf_runtime_pipeline
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -128,6 +143,8 @@ endif()
 add_executable(copperfin_runtime_host
     apps/copperfin_runtime_host/main.cpp
 )
+
+target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime)
 
 if(MSVC)
     target_compile_options(copperfin_runtime_host PRIVATE /W4 /permissive-)
@@ -275,4 +292,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_runtime_pipeline COMMAND $<TARGET_FILE:test_runtime_pipeline>)
+
+    add_executable(test_prg_engine
+        tests/test_prg_engine.cpp
+    )
+
+    target_link_libraries(test_prg_engine PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine COMMAND $<TARGET_FILE:test_prg_engine>)
 endif()

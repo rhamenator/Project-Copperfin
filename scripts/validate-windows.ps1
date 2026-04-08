@@ -97,5 +97,49 @@ Invoke-Step -Name "Run runtime package smoke test" -Action {
     Invoke-Checked -FilePath $launcherExe -ArgumentList @("--debug")
 }
 
+Invoke-Step -Name "Run PRG debugger smoke test" -Action {
+    $prgSmokeRoot = Join-Path $repoRoot "artifacts\prg-debug-smoke"
+    Remove-Item -Recurse -Force $prgSmokeRoot -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $prgSmokeRoot | Out-Null
+
+    $prgPath = Join-Path $prgSmokeRoot "main.prg"
+    @(
+        "x = 1",
+        "DO localproc",
+        "x = x + 1",
+        "RETURN",
+        "PROCEDURE localproc",
+        "x = x + 2",
+        "RETURN"
+    ) | Set-Content -Path $prgPath
+
+    $manifestPath = Join-Path $prgSmokeRoot "app.cfmanifest"
+    @(
+        "manifest_version=1",
+        "project_title=PRGDEBUG",
+        "project_path=E:\Project-Copperfin\smoke.pjx",
+        "package_root=$prgSmokeRoot",
+        "content_root=$prgSmokeRoot",
+        "working_directory=$prgSmokeRoot",
+        "startup_item=main.prg",
+        "startup_source=$prgPath",
+        "configuration=debug",
+        "security_enabled=false",
+        "security_mode=off",
+        "dotnet_enabled=false",
+        "dotnet_story="
+    ) | Set-Content -Path $manifestPath
+
+    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
+        "--manifest", $manifestPath,
+        "--debug",
+        "--breakpoint", "2",
+        "--debug-command", "continue",
+        "--debug-command", "step",
+        "--debug-command", "out",
+        "--debug-command", "continue"
+    )
+}
+
 Write-Host ""
 Write-Host "Validation complete." -ForegroundColor Green

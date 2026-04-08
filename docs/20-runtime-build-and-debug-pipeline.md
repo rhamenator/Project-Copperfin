@@ -13,8 +13,9 @@ Current native components:
   - can generate and publish a `.NET` launcher executable beside the native host
 - `copperfin_runtime_host.exe`
   - reads the Copperfin runtime manifest
-  - prepares compatibility-mode execution and debug launch context
-  - reports working directory, startup source, security posture, and `.NET` story
+  - executes `PRG` startup code through a native xBase runtime session
+  - supports real breakpoints plus `step`, `next`, and `out` debugger actions for `PRG` execution
+  - still falls back to compatibility-mode launch reporting for non-`PRG` startup assets
 
 Current package layout:
 
@@ -49,7 +50,11 @@ E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\SOLUTION.exe --debug
 ```powershell
 E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\copperfin_runtime_host.exe `
   --manifest "E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\app.cfmanifest" `
-  --debug
+  --debug `
+  --breakpoint 12 `
+  --debug-command continue `
+  --debug-command step `
+  --debug-command out
 ```
 
 Current behavior:
@@ -59,12 +64,13 @@ Current behavior:
 - `.NET` launchers are emitted as `net8.0-windows` executables
 - packaged runtime manifests now point at staged package content instead of stale legacy source paths
 - debug manifests keep source-side paths so Visual Studio and the standalone Studio shell can debug against the editable source tree
+- `PRG` startup paths now advertise real breakpoint and step-debugging support in the debug manifest
 - legacy imported projects with only excluded assets now still get a real startup asset instead of falling back to the project header
 
 Current limitations:
 
-- this is still a compatibility launcher, not a full xBase execution engine
-- breakpoints and step-debugging are not implemented yet
+- the native execution engine is `PRG-first`, not yet the full FoxPro/VFP command/runtime surface
+- xBase code embedded in `SCX/VCX/FRX/LBX/MNX` assets still needs dedicated runtime decoding and execution
 - package manifests are line-based metadata, not the finished long-term runtime format
 - build output planning is still driven by current `PJX` heuristics rather than a fully compatible FoxPro compiler/runtime
 

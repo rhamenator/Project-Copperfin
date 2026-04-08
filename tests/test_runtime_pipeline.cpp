@@ -100,6 +100,8 @@ void test_materialize_runtime_package() {
         expect(
             result.plan.debug_plan.startup_source_path == (project_dir / "main.prg").string(),
             "debug plan should point startup to source content");
+        expect(result.plan.debug_plan.supports_breakpoints, "debug plan should enable breakpoints for PRG startup");
+        expect(result.plan.debug_plan.supports_step_debugging, "debug plan should enable step debugging for PRG startup");
         expect(runtime_manifest.find("startup_source=") != std::string::npos, "runtime manifest should include a startup source field");
         expect(debug_manifest.find("startup_source=") != std::string::npos, "debug manifest should include a startup source field");
     }
