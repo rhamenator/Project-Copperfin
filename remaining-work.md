@@ -56,6 +56,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-08: `CDX/DCX` inspection moved beyond header-only probing. Copperfin now enumerates first-pass tag/expression hints from real file contents and surfaces them through the asset inspector and CLI.
 - 2026-04-08: `GO`, `GOTO`, and `SKIP` cursor navigation now have runtime coverage in the native `PRG` engine tests, which closes one more piece of work-area behavior before broader table/session semantics.
 - 2026-04-08: `USED()`, `DBF()`, and `FCOUNT()` now participate in the native cursor/session model for both local tables and synthetic SQL result cursors, with explicit regression coverage for data-session isolation and `USE IN`.
+- 2026-04-08: `SELECT` now fails cleanly on missing aliases instead of inventing new work areas, and `USE AGAIN` / duplicate-open rules now participate in the native runtime with regression coverage.
 
 ### A1. File And Index Fidelity
 
@@ -66,7 +67,6 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### A2. Work Areas, Sessions, And Cursor Semantics
 
-- Finish `USE`, `USE IN`, `SELECT`, `SELECT()`, `ALIAS()`, `RECCOUNT()`, `RECNO()`, `EOF()`, `BOF()`, and related work-area behavior.
 - Finish alias scoping and work-area selection behavior to match VFP expectations.
 - Deepen data-session isolation, switching, restoration, and nested behavior.
 - Support remote cursors and result cursors with behavior closer to SQL pass-through in VFP.

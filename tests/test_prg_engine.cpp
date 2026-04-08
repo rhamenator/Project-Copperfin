@@ -80,6 +80,25 @@ void write_simple_dbf(const std::filesystem::path& path, const std::vector<std::
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_synthetic_cdx(const std::filesystem::path& path, const std::string& tag_name, const std::string& expression) {
+    std::vector<std::uint8_t> bytes(4096U, 0U);
+    write_le_u16(bytes, 0U, 1024U);
+    write_le_u16(bytes, 12U, 10U);
+    write_le_u16(bytes, 14U, 480U);
+
+    for (std::size_t index = 0; index < expression.size(); ++index) {
+        bytes[1024U + index] = static_cast<std::uint8_t>(expression[index]);
+    }
+
+    const std::size_t tail_offset = 512U + 480U;
+    for (std::size_t index = 0; index < tag_name.size(); ++index) {
+        bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
+    }
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
 bool has_runtime_event(
     const std::vector<copperfin::runtime::RuntimeEvent>& events,
     const std::string& category,
@@ -747,6 +766,173 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_order_and_seek_for_local_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SEEK 'BRAVO'\n"
+        "lFound1 = FOUND()\n"
+        "nRec1 = RECNO()\n"
+        "SEEK 'ZZZZ'\n"
+        "lFound2 = FOUND()\n"
+        "lEof2 = EOF()\n"
+        "nRec2 = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "seek script should complete");
+
+    const auto found1 = state.globals.find("lfound1");
+    const auto rec1 = state.globals.find("nrec1");
+    const auto found2 = state.globals.find("lfound2");
+    const auto eof2 = state.globals.find("leof2");
+    const auto rec2 = state.globals.find("nrec2");
+
+    expect(found1 != state.globals.end(), "FOUND() after a successful SEEK should be captured");
+    expect(rec1 != state.globals.end(), "RECNO() after a successful SEEK should be captured");
+    expect(found2 != state.globals.end(), "FOUND() after a failed SEEK should be captured");
+    expect(eof2 != state.globals.end(), "EOF() after a failed SEEK should be captured");
+    expect(rec2 != state.globals.end(), "RECNO() after a failed SEEK should be captured");
+
+    if (found1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found1->second) == "true", "SEEK should set FOUND() when it locates a matching record");
+    }
+    if (rec1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec1->second) == "2", "SEEK should move the record pointer to the matched row");
+    }
+    if (found2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found2->second) == "false", "failed SEEK should clear FOUND()");
+    }
+    if (eof2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof2->second) == "true", "failed SEEK should move the cursor to EOF");
+    }
+    if (rec2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec2->second) == "4", "failed SEEK should place RECNO() at record_count + 1");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.order", "NAME") &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" && event.detail.find("NAME: BRAVO -> found") != std::string::npos;
+        }),
+        "SET ORDER and SEEK should emit runtime.order and runtime.seek events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_use_again_and_alias_collision_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "use_again.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS PeopleAgain AGAIN IN 0\n"
+        "nAreaAgain = SELECT()\n"
+        "cAliasAgain = ALIAS()\n"
+        "USE '" + table_path.string() + "' ALIAS PeopleThird IN 0\n"
+        "xAfterError = 7\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "duplicate table opens without AGAIN should pause with an error");
+    expect(state.location.line == 5U, "duplicate table opens without AGAIN should highlight the failing USE statement");
+    expect(
+        state.message.find("USE AGAIN is required") != std::string::npos,
+        "duplicate table opens without AGAIN should report a USE AGAIN message");
+
+    const auto area_again = state.globals.find("nareaagain");
+    const auto alias_again = state.globals.find("caliasagain");
+    expect(area_again != state.globals.end(), "USE AGAIN should let execution reach the second-area checks");
+    expect(alias_again != state.globals.end(), "USE AGAIN should let execution expose the second alias");
+    if (area_again != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_again->second) == "2", "USE AGAIN IN 0 should allocate a second work area");
+    }
+    if (alias_again != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_again->second) == "PeopleAgain", "USE AGAIN should keep the requested second alias");
+    }
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a USE AGAIN error should keep the host alive");
+    const auto after_error = state.globals.find("xaftererror");
+    expect(after_error != state.globals.end(), "post-error statements should still run after continuing");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "7", "post-error statements should still update globals");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_select_missing_alias_is_an_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_select_missing_alias";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "select_missing.prg";
+    write_text(
+        main_path,
+        "SELECT MissingAlias\n"
+        "xAfterError = 9\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "SELECT MissingAlias should pause with an error");
+    expect(state.location.line == 1U, "SELECT MissingAlias should highlight the failing line");
+    expect(
+        state.message.find("SELECT target work area not found") != std::string::npos,
+        "SELECT MissingAlias should report a missing-target message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a SELECT error should keep the host alive");
+    const auto after_error = state.globals.find("xaftererror");
+    expect(after_error != state.globals.end(), "post-error statements should still run after SELECT errors");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "9", "post-error statements should still update globals after SELECT errors");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursors_and_ole_actions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sqlcursor";
@@ -871,6 +1057,9 @@ int main() {
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
+    test_set_order_and_seek_for_local_tables();
+    test_use_again_and_alias_collision_semantics();
+    test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
     test_runtime_fault_containment();
 
