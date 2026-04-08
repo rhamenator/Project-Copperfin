@@ -149,13 +149,27 @@ void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
     for (const auto& [area, alias] : state.work_area.aliases) {
         std::cout << "debug.workarea[" << area << "].alias: " << alias << "\n";
     }
+    for (const auto& cursor : state.cursors) {
+        std::cout << "debug.cursor[" << cursor.work_area << "].alias: " << cursor.alias << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].source: " << cursor.source_path << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].kind: " << cursor.source_kind << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].remote: " << (cursor.remote ? "true" : "false") << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].reccount: " << cursor.record_count << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].recno: " << cursor.recno << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].bof: " << (cursor.bof ? "true" : "false") << "\n";
+        std::cout << "debug.cursor[" << cursor.work_area << "].eof: " << (cursor.eof ? "true" : "false") << "\n";
+    }
     for (const auto& connection : state.sql_connections) {
         std::cout << "debug.sql[" << connection.handle << "].target: " << connection.target << "\n";
         std::cout << "debug.sql[" << connection.handle << "].provider: " << connection.provider << "\n";
+        std::cout << "debug.sql[" << connection.handle << "].cursor: " << connection.last_cursor_alias << "\n";
+        std::cout << "debug.sql[" << connection.handle << "].rows: " << connection.last_result_count << "\n";
     }
     for (const auto& object : state.ole_objects) {
         std::cout << "debug.ole[" << object.handle << "].progid: " << object.prog_id << "\n";
         std::cout << "debug.ole[" << object.handle << "].source: " << object.source << "\n";
+        std::cout << "debug.ole[" << object.handle << "].lastaction: " << object.last_action << "\n";
+        std::cout << "debug.ole[" << object.handle << "].actioncount: " << object.action_count << "\n";
     }
     for (std::size_t index = 0; index < state.call_stack.size(); ++index) {
         const auto& frame = state.call_stack[index];

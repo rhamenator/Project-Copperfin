@@ -1,9 +1,11 @@
 #include "copperfin/runtime/prg_engine.h"
 
 #include <cstdlib>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 namespace {
 
@@ -19,6 +21,54 @@ void expect(bool condition, const std::string& message) {
 void write_text(const std::filesystem::path& path, const std::string& contents) {
     std::ofstream output(path, std::ios::binary);
     output << contents;
+}
+
+void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
+    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+}
+
+void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
+    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
+    bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
+}
+
+void write_simple_dbf(const std::filesystem::path& path, const std::vector<std::string>& records) {
+    constexpr std::size_t field_length = 10U;
+    constexpr std::size_t header_length = 32U + 32U + 1U;
+    constexpr std::size_t record_length = 1U + field_length;
+    std::vector<std::uint8_t> bytes(header_length + (records.size() * record_length) + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, static_cast<std::uint32_t>(records.size()));
+    write_le_u16(bytes, 8U, static_cast<std::uint16_t>(header_length));
+    write_le_u16(bytes, 10U, static_cast<std::uint16_t>(record_length));
+
+    const char name[] = "NAME";
+    for (std::size_t index = 0; index < 4U; ++index) {
+        bytes[32U + index] = static_cast<std::uint8_t>(name[index]);
+    }
+    bytes[32U + 11U] = static_cast<std::uint8_t>('C');
+    write_le_u32(bytes, 32U + 12U, 1U);
+    bytes[32U + 16U] = static_cast<std::uint8_t>(field_length);
+    bytes[64U] = 0x0DU;
+
+    for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
+        const std::size_t offset = header_length + (record_index * record_length);
+        bytes[offset] = 0x20U;
+        const std::string value = records[record_index].substr(0U, field_length);
+        for (std::size_t index = 0; index < value.size(); ++index) {
+            bytes[offset + 1U + index] = static_cast<std::uint8_t>(value[index]);
+        }
+        for (std::size_t index = value.size(); index < field_length; ++index) {
+            bytes[offset + 1U + index] = 0x20U;
+        }
+    }
+
+    bytes.back() = 0x1AU;
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
 void test_breakpoints_and_stepping() {
@@ -343,6 +393,212 @@ void test_sql_and_ole_compatibility_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_and_data_session_isolation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tables";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "tables.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cAlias1 = ALIAS()\n"
+        "nCount1 = RECCOUNT()\n"
+        "nRec1 = RECNO()\n"
+        "lEof1 = EOF()\n"
+        "lBof1 = BOF()\n"
+        "SELECT People\n"
+        "SET DATASESSION TO 2\n"
+        "cAlias2 = ALIAS()\n"
+        "nCount2 = RECCOUNT()\n"
+        "USE '" + table_path.string() + "' ALIAS SessionTwo IN 0\n"
+        "cAlias3 = ALIAS()\n"
+        "SET DATASESSION TO 1\n"
+        "cAlias4 = ALIAS()\n"
+        "USE IN People\n"
+        "cAlias5 = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "table/data-session script should complete");
+    expect(state.work_area.data_session == 1, "runtime should finish back in data session 1");
+    expect(state.work_area.aliases.empty(), "USE IN People should close the session-1 cursor");
+
+    const auto alias1 = state.globals.find("calias1");
+    const auto count1 = state.globals.find("ncount1");
+    const auto rec1 = state.globals.find("nrec1");
+    const auto eof1 = state.globals.find("leof1");
+    const auto bof1 = state.globals.find("lbof1");
+    const auto alias2 = state.globals.find("calias2");
+    const auto count2 = state.globals.find("ncount2");
+    const auto alias3 = state.globals.find("calias3");
+    const auto alias4 = state.globals.find("calias4");
+    const auto alias5 = state.globals.find("calias5");
+
+    expect(alias1 != state.globals.end(), "ALIAS() after USE should be captured");
+    expect(count1 != state.globals.end(), "RECCOUNT() after USE should be captured");
+    expect(rec1 != state.globals.end(), "RECNO() after USE should be captured");
+    expect(eof1 != state.globals.end(), "EOF() after USE should be captured");
+    expect(bof1 != state.globals.end(), "BOF() after USE should be captured");
+    expect(alias2 != state.globals.end(), "ALIAS() in a fresh second data session should be captured");
+    expect(count2 != state.globals.end(), "RECCOUNT() in a fresh second data session should be captured");
+    expect(alias3 != state.globals.end(), "ALIAS() after opening a second-session cursor should be captured");
+    expect(alias4 != state.globals.end(), "ALIAS() after restoring session 1 should be captured");
+    expect(alias5 != state.globals.end(), "ALIAS() after USE IN should be captured");
+
+    if (alias1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias1->second) == "People", "USE ... ALIAS should establish the alias in the selected work area");
+    }
+    if (count1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count1->second) == "2", "RECCOUNT() should reflect opened DBF rows");
+    }
+    if (rec1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec1->second) == "1", "RECNO() should start at the first record");
+    }
+    if (eof1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof1->second) == "false", "EOF() should be false immediately after opening a non-empty table");
+    }
+    if (bof1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof1->second) == "false", "BOF() should be false immediately after opening a non-empty table");
+    }
+    if (alias2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias2->second).empty(), "switching to a fresh data session should isolate work-area aliases");
+    }
+    if (count2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count2->second) == "0", "RECCOUNT() in a fresh data session should be zero");
+    }
+    if (alias3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias3->second) == "SessionTwo", "session 2 should maintain its own alias set");
+    }
+    if (alias4 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias4->second) == "People", "restoring data session 1 should restore its selected alias");
+    }
+    if (alias5 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias5->second).empty(), "USE IN alias should close the targeted work area");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursors_and_ole_actions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sqlcursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sqlcursor.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "cAlias = ALIAS()\n"
+        "nCount = RECCOUNT()\n"
+        "nRec = RECNO()\n"
+        "oExcel = CREATEOBJECT('Excel.Application')\n"
+        "oExcel.Visible = .T.\n"
+        "cVisible = oExcel.Visible\n"
+        "oBook = oExcel.Workbooks.Add()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL cursor/OLE script should complete");
+    expect(!state.cursors.empty(), "SQLEXEC should materialize a result cursor");
+    expect(state.ole_objects.size() == 1U, "CREATEOBJECT and follow-on automation should track one OLE object");
+
+    const auto alias = state.globals.find("calias");
+    const auto count = state.globals.find("ncount");
+    const auto rec = state.globals.find("nrec");
+    const auto visible = state.globals.find("cvisible");
+    const auto book = state.globals.find("obook");
+
+    expect(alias != state.globals.end(), "ALIAS() for SQL cursor should be captured");
+    expect(count != state.globals.end(), "RECCOUNT() for SQL cursor should be captured");
+    expect(rec != state.globals.end(), "RECNO() for SQL cursor should be captured");
+    expect(visible != state.globals.end(), "OLE property reads should flow back into VFP code");
+    expect(book != state.globals.end(), "OLE method calls should return a placeholder value");
+
+    if (alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias->second) == "sqlcust", "SQLEXEC cursor alias should be selectable like a normal work area");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "3", "synthetic SQL result cursors should expose row counts");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "1", "synthetic SQL result cursors should begin on record 1");
+    }
+    if (visible != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(visible->second).empty(), "OLE property access should produce a debuggable value");
+    }
+    if (book != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(book->second).empty(), "OLE method invocation should return a placeholder object/value");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "sql.cursor"; }),
+        "SQLEXEC with a cursor alias should emit a sql.cursor event");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.set"; }),
+        "OLE property assignments should emit ole.set events");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.invoke"; }),
+        "OLE method calls should emit ole.invoke events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_fault_containment() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faults";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "faults.prg";
+    write_text(
+        main_path,
+        "x = 'abc' - 1\n"
+        "y = 7\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "broken code should pause with an error instead of killing the host");
+    expect(state.location.line == 1U, "runtime faults should highlight the faulting line");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.error"; }),
+        "runtime faults should emit a runtime.error event");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a trapped runtime error should keep the session alive");
+    const auto y = state.globals.find("y");
+    expect(y != state.globals.end(), "post-fault statements should still be able to run");
+    if (y != state.globals.end()) {
+        expect(copperfin::runtime::format_value(y->second) == "7", "post-fault statements should update globals");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -355,6 +611,9 @@ int main() {
     test_do_form_pause();
     test_work_area_and_data_session_compatibility();
     test_sql_and_ole_compatibility_functions();
+    test_use_and_data_session_isolation();
+    test_sql_result_cursors_and_ole_actions();
+    test_runtime_fault_containment();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

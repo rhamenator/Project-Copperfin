@@ -69,16 +69,32 @@ struct RuntimeWorkAreaState {
     std::map<int, std::string> aliases;
 };
 
+struct RuntimeCursorState {
+    int work_area = 0;
+    std::string alias;
+    std::string source_path;
+    std::string source_kind;
+    bool remote = false;
+    std::size_t record_count = 0;
+    std::size_t recno = 0;
+    bool bof = true;
+    bool eof = true;
+};
+
 struct RuntimeSqlConnectionState {
     int handle = 0;
     std::string target;
     std::string provider;
+    std::string last_cursor_alias;
+    std::size_t last_result_count = 0;
 };
 
 struct RuntimeOleObjectState {
     int handle = 0;
     std::string prog_id;
     std::string source;
+    std::string last_action;
+    int action_count = 0;
 };
 
 struct RuntimePauseState {
@@ -93,6 +109,7 @@ struct RuntimePauseState {
     std::map<std::string, PrgValue> globals;
     std::vector<RuntimeEvent> events;
     RuntimeWorkAreaState work_area{};
+    std::vector<RuntimeCursorState> cursors;
     std::vector<RuntimeSqlConnectionState> sql_connections;
     std::vector<RuntimeOleObjectState> ole_objects;
     std::size_t executed_statement_count = 0;

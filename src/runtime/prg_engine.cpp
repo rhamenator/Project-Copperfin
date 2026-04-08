@@ -2,6 +2,7 @@
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
 #include <cctype>
@@ -36,6 +37,7 @@ enum class StatementKind {
     read_events,
     clear_events,
     select_command,
+    use_command,
     set_command,
     set_datasession,
     set_default,
@@ -89,6 +91,25 @@ struct ExecutionOutcome {
     bool waiting_for_events = false;
     bool frame_returned = false;
     std::string message;
+};
+
+struct CursorState {
+    int work_area = 0;
+    std::string alias;
+    std::string source_path;
+    std::string source_kind;
+    bool remote = false;
+    std::size_t record_count = 0;
+    std::size_t recno = 0;
+    bool bof = true;
+    bool eof = true;
+};
+
+struct DataSessionState {
+    int selected_work_area = 1;
+    int next_work_area = 1;
+    std::map<int, std::string> aliases;
+    std::map<int, CursorState> cursors;
 };
 
 std::string trim_copy(std::string value) {
@@ -162,6 +183,40 @@ std::string take_first_token(std::string value) {
 
     const auto separator = value.find(' ');
     return separator == std::string::npos ? value : value.substr(0U, separator);
+}
+
+std::string take_keyword_value(const std::string& text, const std::string& keyword) {
+    const std::string upper = uppercase_copy(text);
+    const std::string pattern = " " + uppercase_copy(keyword) + " ";
+    const auto position = upper.find(pattern);
+    if (position == std::string::npos) {
+        return {};
+    }
+    return take_first_token(text.substr(position + pattern.size()));
+}
+
+bool parse_object_handle_reference(const PrgValue& value, int& handle, std::string& prog_id) {
+    if (value.kind != PrgValueKind::string) {
+        return false;
+    }
+
+    const std::string prefix = "object:";
+    if (value.string_value.rfind(prefix, 0) != 0) {
+        return false;
+    }
+
+    const auto separator = value.string_value.rfind('#');
+    if (separator == std::string::npos || separator <= prefix.size()) {
+        return false;
+    }
+
+    prog_id = value.string_value.substr(prefix.size(), separator - prefix.size());
+    try {
+        handle = std::stoi(value.string_value.substr(separator + 1U));
+    } catch (...) {
+        return false;
+    }
+    return true;
 }
 
 std::string strip_inline_comment(const std::string& line) {
@@ -357,6 +412,16 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;
             statement.expression = trim_copy(line.substr(7U));
+        } else if (upper == "USE" || starts_with_insensitive(line, "USE ")) {
+            statement.kind = StatementKind::use_command;
+            const std::string body = upper == "USE" ? std::string{} : trim_copy(line.substr(4U));
+            if (starts_with_insensitive(body, "IN ")) {
+                statement.secondary_expression = trim_copy(body.substr(3U));
+            } else if (!body.empty()) {
+                statement.expression = take_first_token(body);
+                statement.identifier = take_keyword_value(body, "ALIAS");
+                statement.secondary_expression = take_keyword_value(body, "IN");
+            }
         } else if (starts_with_insensitive(line, "SET DATASESSION TO ")) {
             statement.kind = StatementKind::set_datasession;
             statement.expression = trim_copy(line.substr(19U));
@@ -488,14 +553,14 @@ struct PrgRuntimeSession::Impl {
     RuntimePauseState last_state{};
     std::string default_directory;
     std::string last_error_message;
+    SourceLocation last_fault_location{};
+    std::string last_fault_statement;
     std::string error_handler;
     std::map<std::string, std::string> set_state;
-    int selected_work_area = 1;
     int current_data_session = 1;
-    int next_work_area = 1;
     int next_sql_handle = 1;
     int next_ole_handle = 1;
-    std::map<int, std::string> work_area_aliases;
+    std::map<int, DataSessionState> data_sessions;
     std::map<int, RuntimeSqlConnectionState> sql_connections;
     std::map<int, RuntimeOleObjectState> ole_objects;
     bool entry_pause_pending = false;
@@ -544,6 +609,26 @@ struct PrgRuntimeSession::Impl {
         return &frame.routine->statements[frame.pc];
     }
 
+    DataSessionState& current_session_state() {
+        auto [iterator, _] = data_sessions.try_emplace(current_data_session);
+        iterator->second.selected_work_area = std::max(1, iterator->second.selected_work_area);
+        iterator->second.next_work_area = std::max(1, iterator->second.next_work_area);
+        return iterator->second;
+    }
+
+    const DataSessionState& current_session_state() const {
+        const auto found = data_sessions.find(current_data_session);
+        if (found != data_sessions.end()) {
+            return found->second;
+        }
+        static const DataSessionState empty_session{};
+        return empty_session;
+    }
+
+    int current_selected_work_area() const {
+        return current_session_state().selected_work_area;
+    }
+
     RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {}) {
         RuntimePauseState state;
         state.paused = reason != DebugPauseReason::completed;
@@ -554,9 +639,23 @@ struct PrgRuntimeSession::Impl {
         state.executed_statement_count = executed_statement_count;
         state.globals = globals;
         state.events = events;
-        state.work_area.selected = selected_work_area;
+        const DataSessionState& session = current_session_state();
+        state.work_area.selected = session.selected_work_area;
         state.work_area.data_session = current_data_session;
-        state.work_area.aliases = work_area_aliases;
+        state.work_area.aliases = session.aliases;
+        for (const auto& [_, cursor] : session.cursors) {
+            state.cursors.push_back({
+                .work_area = cursor.work_area,
+                .alias = cursor.alias,
+                .source_path = cursor.source_path,
+                .source_kind = cursor.source_kind,
+                .remote = cursor.remote,
+                .record_count = cursor.record_count,
+                .recno = cursor.recno,
+                .bof = cursor.bof,
+                .eof = cursor.eof
+            });
+        }
         for (const auto& [_, connection] : sql_connections) {
             state.sql_connections.push_back(connection);
         }
@@ -564,7 +663,19 @@ struct PrgRuntimeSession::Impl {
             state.ole_objects.push_back(object);
         }
 
-        if (const Statement* statement = current_statement()) {
+        if (reason == DebugPauseReason::error) {
+            const auto error_event = std::find_if(events.rbegin(), events.rend(), [](const RuntimeEvent& event) {
+                return event.category == "runtime.error";
+            });
+            if (error_event != events.rend()) {
+                state.location = error_event->location;
+            } else if (!last_fault_location.file_path.empty()) {
+                state.location = last_fault_location;
+            }
+            if (!last_fault_statement.empty()) {
+                state.statement_text = last_fault_statement;
+            }
+        } else if (const Statement* statement = current_statement()) {
             state.location = statement->location;
             state.statement_text = statement->text;
         }
@@ -585,17 +696,183 @@ struct PrgRuntimeSession::Impl {
     }
 
     int allocate_work_area() {
-        return std::max(1, next_work_area++);
+        DataSessionState& session = current_session_state();
+        const int allocated = std::max(1, session.next_work_area);
+        session.next_work_area = allocated + 1;
+        return allocated;
     }
 
     int select_work_area(int requested_area) {
+        DataSessionState& session = current_session_state();
         if (requested_area <= 0) {
             requested_area = allocate_work_area();
-        } else if (requested_area >= next_work_area) {
-            next_work_area = requested_area + 1;
+        } else if (requested_area >= session.next_work_area) {
+            session.next_work_area = requested_area + 1;
         }
-        selected_work_area = requested_area;
-        return selected_work_area;
+        session.selected_work_area = requested_area;
+        return session.selected_work_area;
+    }
+
+    CursorState* find_cursor_by_area(int area) {
+        auto& session = current_session_state();
+        const auto found = session.cursors.find(area);
+        return found == session.cursors.end() ? nullptr : &found->second;
+    }
+
+    const CursorState* find_cursor_by_area(int area) const {
+        const auto& session = current_session_state();
+        const auto found = session.cursors.find(area);
+        return found == session.cursors.end() ? nullptr : &found->second;
+    }
+
+    CursorState* find_cursor_by_alias(const std::string& alias) {
+        const std::string normalized = normalize_identifier(alias);
+        if (normalized.empty()) {
+            return find_cursor_by_area(current_selected_work_area());
+        }
+
+        auto& session = current_session_state();
+        const auto found = std::find_if(session.aliases.begin(), session.aliases.end(), [&](const auto& pair) {
+            return normalize_identifier(pair.second) == normalized;
+        });
+        if (found == session.aliases.end()) {
+            return nullptr;
+        }
+        return find_cursor_by_area(found->first);
+    }
+
+    const CursorState* find_cursor_by_alias(const std::string& alias) const {
+        const std::string normalized = normalize_identifier(alias);
+        if (normalized.empty()) {
+            return find_cursor_by_area(current_selected_work_area());
+        }
+
+        const auto& session = current_session_state();
+        const auto found = std::find_if(session.aliases.begin(), session.aliases.end(), [&](const auto& pair) {
+            return normalize_identifier(pair.second) == normalized;
+        });
+        if (found == session.aliases.end()) {
+            return nullptr;
+        }
+        return find_cursor_by_area(found->first);
+    }
+
+    CursorState* resolve_cursor_target(const std::string& designator) {
+        const std::string trimmed = trim_copy(designator);
+        if (trimmed.empty()) {
+            return find_cursor_by_area(current_selected_work_area());
+        }
+
+        const bool numeric_selection = std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        });
+        if (numeric_selection) {
+            return find_cursor_by_area(std::stoi(trimmed));
+        }
+        return find_cursor_by_alias(trimmed);
+    }
+
+    const CursorState* resolve_cursor_target(const std::string& designator) const {
+        const std::string trimmed = trim_copy(designator);
+        if (trimmed.empty()) {
+            return find_cursor_by_area(current_selected_work_area());
+        }
+
+        const bool numeric_selection = std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        });
+        if (numeric_selection) {
+            return find_cursor_by_area(std::stoi(trimmed));
+        }
+        return find_cursor_by_alias(trimmed);
+    }
+
+    void close_cursor(const std::string& designator) {
+        DataSessionState& session = current_session_state();
+        CursorState* cursor = resolve_cursor_target(designator);
+        if (cursor == nullptr) {
+            return;
+        }
+        session.aliases.erase(cursor->work_area);
+        session.cursors.erase(cursor->work_area);
+    }
+
+    bool open_table_cursor(
+        const std::string& raw_path,
+        const std::string& requested_alias,
+        const std::string& in_expression,
+        bool remote,
+        int sql_handle,
+        const std::string& sql_command,
+        std::size_t synthetic_record_count) {
+        (void)sql_command;
+        std::string alias = requested_alias;
+        std::string resolved_path = raw_path;
+        std::size_t record_count = synthetic_record_count;
+
+        if (!remote) {
+            std::filesystem::path table_path(unquote_string(trim_copy(raw_path)));
+            if (table_path.extension().empty()) {
+                table_path += ".dbf";
+            }
+            if (table_path.is_relative()) {
+                table_path = std::filesystem::path(default_directory) / table_path;
+            }
+            table_path = table_path.lexically_normal();
+            if (!std::filesystem::exists(table_path)) {
+                last_error_message = "Unable to resolve USE target: " + table_path.string();
+                return false;
+            }
+
+            const auto table_result = vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+            if (!table_result.ok) {
+                last_error_message = table_result.error;
+                return false;
+            }
+
+            resolved_path = table_path.string();
+            record_count = table_result.table.header.record_count;
+            if (alias.empty()) {
+                alias = table_path.stem().string();
+            }
+        } else if (alias.empty()) {
+            alias = "sqlresult" + std::to_string(current_session_state().next_work_area);
+        }
+
+        int target_area = 0;
+        if (!trim_copy(in_expression).empty()) {
+            const PrgValue area_value = evaluate_expression(in_expression, stack.back());
+            const std::string area_text = trim_copy(value_as_string(area_value));
+            if (std::all_of(area_text.begin(), area_text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+                target_area = std::stoi(area_text);
+            } else if (!area_text.empty()) {
+                CursorState* existing = find_cursor_by_alias(area_text);
+                target_area = existing == nullptr ? 0 : existing->work_area;
+            }
+        }
+        target_area = select_work_area(target_area);
+
+        DataSessionState& session = current_session_state();
+        session.aliases[target_area] = alias;
+        session.cursors[target_area] = CursorState{
+            .work_area = target_area,
+            .alias = alias,
+            .source_path = resolved_path,
+            .source_kind = remote ? "sql-cursor" : "table",
+            .remote = remote,
+            .record_count = record_count,
+            .recno = record_count == 0U ? 0U : 1U,
+            .bof = record_count == 0U,
+            .eof = record_count == 0U
+        };
+        if (remote && sql_handle > 0) {
+            auto found = sql_connections.find(sql_handle);
+            if (found != sql_connections.end()) {
+                found->second.last_cursor_alias = alias;
+                found->second.last_result_count = record_count;
+            }
+        }
+        return true;
     }
 
     int sql_connect(const std::string& target, const std::string& provider) {
@@ -603,7 +880,9 @@ struct PrgRuntimeSession::Impl {
         sql_connections.emplace(handle, RuntimeSqlConnectionState{
             .handle = handle,
             .target = target,
-            .provider = provider
+            .provider = provider,
+            .last_cursor_alias = {},
+            .last_result_count = 0U
         });
         return handle;
     }
@@ -612,17 +891,37 @@ struct PrgRuntimeSession::Impl {
         return sql_connections.erase(handle) > 0;
     }
 
-    bool sql_exec(int handle, const std::string& command) {
-        if (sql_connections.find(handle) == sql_connections.end()) {
+    int sql_exec(int handle, const std::string& command, const std::string& cursor_alias) {
+        const auto found = sql_connections.find(handle);
+        if (found == sql_connections.end()) {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
-            return false;
+            return -1;
+        }
+
+        std::size_t result_count = 0;
+        const std::string normalized_command = lowercase_copy(trim_copy(command));
+        if (normalized_command.rfind("select", 0) == 0) {
+            result_count = 3U;
+            const std::string alias = trim_copy(cursor_alias).empty()
+                ? "sqlresult" + std::to_string(handle)
+                : trim_copy(cursor_alias);
+            if (!open_table_cursor({}, alias, "0", true, handle, command, result_count)) {
+                return -1;
+            }
         }
         events.push_back({
             .category = "sql.exec",
             .detail = "handle " + std::to_string(handle) + ": " + command,
             .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
         });
-        return true;
+        if (result_count > 0U) {
+            events.push_back({
+                .category = "sql.cursor",
+                .detail = found->second.last_cursor_alias + " (" + std::to_string(result_count) + " rows)",
+                .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+            });
+        }
+        return 1;
     }
 
     int register_ole_object(const std::string& prog_id, const std::string& source) {
@@ -630,9 +929,25 @@ struct PrgRuntimeSession::Impl {
         ole_objects.emplace(handle, RuntimeOleObjectState{
             .handle = handle,
             .prog_id = prog_id,
-            .source = source
+            .source = source,
+            .last_action = source,
+            .action_count = 1
         });
         return handle;
+    }
+
+    std::optional<RuntimeOleObjectState*> resolve_ole_object(const PrgValue& value) {
+        int handle = 0;
+        std::string prog_id;
+        if (!parse_object_handle_reference(value, handle, prog_id)) {
+            return std::nullopt;
+        }
+
+        auto found = ole_objects.find(handle);
+        if (found == ole_objects.end()) {
+            return std::nullopt;
+        }
+        return &found->second;
     }
 
     PrgValue evaluate_expression(const std::string& expression, const Frame& frame);
@@ -720,6 +1035,8 @@ struct PrgRuntimeSession::Impl {
         const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
         if (!std::filesystem::exists(asset_path)) {
             last_error_message = std::string("Unable to resolve report asset: ") + asset_path.string();
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
             return {.ok = false, .message = last_error_message};
         }
 
@@ -730,6 +1047,8 @@ struct PrgRuntimeSession::Impl {
         });
         if (!open_result.ok) {
             last_error_message = open_result.error;
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
             return {.ok = false, .message = last_error_message};
         }
 
@@ -767,18 +1086,34 @@ public:
         const std::string& last_error_message,
         const std::string& error_handler,
         int current_work_area,
-        std::function<int(int)> select_work_area_callback,
+        std::function<int()> next_free_work_area_callback,
+        std::function<int(const std::string&)> resolve_work_area_callback,
+        std::function<std::string(const std::string&)> alias_lookup_callback,
+        std::function<std::size_t(const std::string&)> record_count_callback,
+        std::function<std::size_t(const std::string&)> recno_callback,
+        std::function<bool(const std::string&)> eof_callback,
+        std::function<bool(const std::string&)> bof_callback,
         std::function<int(const std::string&, const std::string&)> sql_connect_callback,
-        std::function<bool(int, const std::string&)> sql_exec_callback,
+        std::function<int(int, const std::string&, const std::string&)> sql_exec_callback,
         std::function<bool(int)> sql_disconnect_callback,
         std::function<int(const std::string&, const std::string&)> register_ole_callback,
+        std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback,
+        std::function<PrgValue(const std::string&)> ole_property_callback,
         std::function<void(const std::string&, const std::string&)> record_event_callback)
         : current_work_area_(current_work_area),
-          select_work_area_callback_(std::move(select_work_area_callback)),
+          next_free_work_area_callback_(std::move(next_free_work_area_callback)),
+          resolve_work_area_callback_(std::move(resolve_work_area_callback)),
+          alias_lookup_callback_(std::move(alias_lookup_callback)),
+          record_count_callback_(std::move(record_count_callback)),
+          recno_callback_(std::move(recno_callback)),
+          eof_callback_(std::move(eof_callback)),
+          bof_callback_(std::move(bof_callback)),
           sql_connect_callback_(std::move(sql_connect_callback)),
           sql_exec_callback_(std::move(sql_exec_callback)),
           sql_disconnect_callback_(std::move(sql_disconnect_callback)),
           register_ole_callback_(std::move(register_ole_callback)),
+          ole_invoke_callback_(std::move(ole_invoke_callback)),
+          ole_property_callback_(std::move(ole_property_callback)),
           record_event_callback_(std::move(record_event_callback)),
           text_(text),
           frame_(frame),
@@ -897,11 +1232,41 @@ private:
 
     PrgValue evaluate_function(const std::string& identifier, const std::vector<PrgValue>& arguments) {
         const std::string function = normalize_identifier(identifier);
+        const auto member_separator = function.find('.');
+        if (member_separator != std::string::npos) {
+            const std::string base_name = function.substr(0U, member_separator);
+            const std::string member_path = function.substr(member_separator + 1U);
+            return ole_invoke_callback_(base_name, member_path, arguments);
+        }
         if (function == "select") {
             if (arguments.empty()) {
                 return make_number_value(static_cast<double>(current_work_area_));
             }
-            return make_number_value(static_cast<double>(select_work_area_callback_(static_cast<int>(std::llround(value_as_number(arguments[0]))))));
+            if (arguments[0].kind == PrgValueKind::string) {
+                return make_number_value(static_cast<double>(resolve_work_area_callback_(value_as_string(arguments[0]))));
+            }
+            const int requested = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            return make_number_value(static_cast<double>(requested == 0 ? next_free_work_area_callback_() : resolve_work_area_callback_(std::to_string(requested))));
+        }
+        if (function == "alias") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_string_value(alias_lookup_callback_(designator));
+        }
+        if (function == "reccount") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_number_value(static_cast<double>(record_count_callback_(designator)));
+        }
+        if (function == "recno") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_number_value(static_cast<double>(recno_callback_(designator)));
+        }
+        if (function == "eof") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_boolean_value(eof_callback_(designator));
+        }
+        if (function == "bof") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_boolean_value(bof_callback_(designator));
         }
         if (function == "file" && !arguments.empty()) {
             std::filesystem::path path(value_as_string(arguments[0]));
@@ -982,7 +1347,8 @@ private:
         if (function == "sqlexec" && arguments.size() >= 2U) {
             const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
             const std::string command = value_as_string(arguments[1]);
-            return make_number_value(sql_exec_callback_(handle, command) ? 1.0 : -1.0);
+            const std::string cursor_alias = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+            return make_number_value(static_cast<double>(sql_exec_callback_(handle, command, cursor_alias)));
         }
         if (function == "sqldisconnect" && !arguments.empty()) {
             const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
@@ -1004,6 +1370,9 @@ private:
         const auto global = globals_.find(normalized);
         if (global != globals_.end()) {
             return global->second;
+        }
+        if (normalized.find('.') != std::string::npos) {
+            return ole_property_callback_(normalized);
         }
         return {};
     }
@@ -1080,11 +1449,19 @@ private:
     }
 
     int current_work_area_ = 1;
-    std::function<int(int)> select_work_area_callback_;
+    std::function<int()> next_free_work_area_callback_;
+    std::function<int(const std::string&)> resolve_work_area_callback_;
+    std::function<std::string(const std::string&)> alias_lookup_callback_;
+    std::function<std::size_t(const std::string&)> record_count_callback_;
+    std::function<std::size_t(const std::string&)> recno_callback_;
+    std::function<bool(const std::string&)> eof_callback_;
+    std::function<bool(const std::string&)> bof_callback_;
     std::function<int(const std::string&, const std::string&)> sql_connect_callback_;
-    std::function<bool(int, const std::string&)> sql_exec_callback_;
+    std::function<int(int, const std::string&, const std::string&)> sql_exec_callback_;
     std::function<bool(int)> sql_disconnect_callback_;
     std::function<int(const std::string&, const std::string&)> register_ole_callback_;
+    std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback_;
+    std::function<PrgValue(const std::string&)> ole_property_callback_;
     std::function<void(const std::string&, const std::string&)> record_event_callback_;
     const std::string& text_;
     const Frame& frame_;
@@ -1105,21 +1482,95 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
         default_directory,
         last_error_message,
         error_handler,
-        selected_work_area,
-        [this](int requested_area) {
-            return select_work_area(requested_area);
+        current_selected_work_area(),
+        [this]() {
+            return allocate_work_area();
+        },
+        [this](const std::string& designator) {
+            if (designator.empty()) {
+                return current_selected_work_area();
+            }
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? 0 : cursor->work_area;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? std::string{} : cursor->alias;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? 0U : cursor->record_count;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? 0U : cursor->recno;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? true : cursor->eof;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? true : cursor->bof;
         },
         [this](const std::string& target, const std::string& provider) {
             return sql_connect(target, provider);
         },
-        [this](int handle, const std::string& command) {
-            return sql_exec(handle, command);
+        [this](int handle, const std::string& command, const std::string& cursor_alias) {
+            return sql_exec(handle, command, cursor_alias);
         },
         [this](int handle) {
             return sql_disconnect(handle);
         },
         [this](const std::string& prog_id, const std::string& source) {
             return register_ole_object(prog_id, source);
+        },
+        [this, &frame](const std::string& base_name, const std::string& member_path, const std::vector<PrgValue>& arguments) {
+            const PrgValue object_value = lookup_variable(frame, base_name);
+            auto object = resolve_ole_object(object_value);
+            if (!object.has_value()) {
+                return make_empty_value();
+            }
+
+            RuntimeOleObjectState* runtime_object = *object;
+            runtime_object->last_action = member_path + "()";
+            ++runtime_object->action_count;
+            events.push_back({
+                .category = "ole.invoke",
+                .detail = runtime_object->prog_id + "." + member_path,
+                .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+            });
+
+            const std::string leaf = member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U);
+            if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item") {
+                return make_string_value("object:" + runtime_object->prog_id + "." + member_path + "#" + std::to_string(runtime_object->handle));
+            }
+            if (arguments.empty()) {
+                return make_string_value("ole:" + runtime_object->prog_id + "." + member_path);
+            }
+            return arguments.front();
+        },
+        [this, &frame](const std::string& property_path) {
+            const auto separator = property_path.find('.');
+            if (separator == std::string::npos) {
+                return make_empty_value();
+            }
+
+            const PrgValue object_value = lookup_variable(frame, property_path.substr(0U, separator));
+            auto object = resolve_ole_object(object_value);
+            if (!object.has_value()) {
+                return make_empty_value();
+            }
+
+            RuntimeOleObjectState* runtime_object = *object;
+            runtime_object->last_action = property_path.substr(separator + 1U);
+            ++runtime_object->action_count;
+            events.push_back({
+                .category = "ole.get",
+                .detail = runtime_object->prog_id + "." + property_path.substr(separator + 1U),
+                .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+            });
+            return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
         },
         [this](const std::string& category, const std::string& detail) {
             events.push_back({
@@ -1189,9 +1640,31 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         .location = statement.location
     });
 
+    try {
     switch (statement.kind) {
         case StatementKind::assignment:
-            assign_variable(frame, statement.identifier, evaluate_expression(statement.expression, frame));
+            if (statement.identifier.find('.') != std::string::npos) {
+                const auto separator = statement.identifier.find('.');
+                const PrgValue object_value = lookup_variable(frame, statement.identifier.substr(0U, separator));
+                auto object = resolve_ole_object(object_value);
+                if (!object.has_value()) {
+                    last_error_message = "OLE object not found for property assignment: " + statement.identifier;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                RuntimeOleObjectState* runtime_object = *object;
+                runtime_object->last_action = statement.identifier.substr(separator + 1U) + " = " + value_as_string(evaluate_expression(statement.expression, frame));
+                ++runtime_object->action_count;
+                events.push_back({
+                    .category = "ole.set",
+                    .detail = runtime_object->prog_id + "." + runtime_object->last_action,
+                    .location = statement.location
+                });
+            } else {
+                assign_variable(frame, statement.identifier, evaluate_expression(statement.expression, frame));
+            }
             return {};
         case StatementKind::expression:
             if (!statement.expression.empty()) {
@@ -1223,6 +1696,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             if (!std::filesystem::exists(target_path)) {
                 last_error_message = "Unable to resolve DO target: " + target;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
 
@@ -1337,7 +1812,10 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         case StatementKind::select_command: {
-            const std::string selection = trim_copy(statement.expression);
+            std::string selection = trim_copy(value_as_string(evaluate_expression(statement.expression, frame)));
+            if (selection.empty()) {
+                selection = trim_copy(statement.expression);
+            }
             if (selection.empty()) {
                 return {};
             }
@@ -1349,18 +1827,53 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             if (numeric_selection) {
                 target_area = std::stoi(selection);
             } else {
-                const std::string normalized = normalize_identifier(selection);
-                const auto found = std::find_if(work_area_aliases.begin(), work_area_aliases.end(), [&](const auto& pair) {
-                    return normalize_identifier(pair.second) == normalized;
-                });
-                target_area = found == work_area_aliases.end() ? allocate_work_area() : found->first;
-                work_area_aliases[target_area] = selection;
+                const CursorState* existing = find_cursor_by_alias(selection);
+                target_area = existing == nullptr ? allocate_work_area() : existing->work_area;
             }
 
             const int selected = select_work_area(target_area);
             events.push_back({
                 .category = "runtime.select",
                 .detail = "work area " + std::to_string(selected),
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::use_command: {
+            if (statement.expression.empty() && statement.secondary_expression.empty()) {
+                close_cursor(std::to_string(current_selected_work_area()));
+                events.push_back({
+                    .category = "runtime.use.close",
+                    .detail = "current work area",
+                    .location = statement.location
+                });
+                return {};
+            }
+            if (statement.expression.empty()) {
+                close_cursor(statement.secondary_expression);
+                events.push_back({
+                    .category = "runtime.use.close",
+                    .detail = trim_copy(statement.secondary_expression),
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            const std::string target = value_as_string(evaluate_expression(statement.expression, frame));
+            std::string alias = statement.identifier.empty()
+                ? std::filesystem::path(unquote_string(target)).stem().string()
+                : value_as_string(evaluate_expression(statement.identifier, frame));
+            if (alias.empty() && !statement.identifier.empty()) {
+                alias = unquote_string(statement.identifier);
+            }
+            if (!open_table_cursor(target, alias, statement.secondary_expression, false, 0, {}, 0U)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.use.open",
+                .detail = alias.empty() ? target : alias + " <- " + target,
                 .location = statement.location
             });
             return {};
@@ -1376,6 +1889,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::set_datasession: {
             const int session_id = static_cast<int>(std::llround(value_as_number(evaluate_expression(statement.expression, frame))));
             current_data_session = std::max(1, session_id);
+            (void)current_session_state();
             events.push_back({
                 .category = "runtime.datasession",
                 .detail = "SET DATASESSION TO " + std::to_string(current_data_session),
@@ -1407,6 +1921,27 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         case StatementKind::no_op:
             return {};
+    }
+    } catch (const std::exception& error) {
+        last_error_message = std::string("Runtime fault: ") + error.what();
+        last_fault_location = statement.location;
+        last_fault_statement = statement.text;
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = statement.location
+        });
+        return {.ok = false, .message = last_error_message};
+    } catch (...) {
+        last_error_message = "Runtime fault: unknown exception";
+        last_fault_location = statement.location;
+        last_fault_statement = statement.text;
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = statement.location
+        });
+        return {.ok = false, .message = last_error_message};
     }
 
     return {};
@@ -1519,6 +2054,7 @@ PrgRuntimeSession PrgRuntimeSession::create(const RuntimeSessionOptions& options
     impl->default_directory = options.working_directory.empty()
         ? std::filesystem::path(options.startup_path).parent_path().string()
         : normalize_path(options.working_directory);
+    impl->data_sessions.try_emplace(1);
     impl->push_main_frame(options.startup_path);
     impl->entry_pause_pending = options.stop_on_entry;
     return PrgRuntimeSession(std::move(impl));
