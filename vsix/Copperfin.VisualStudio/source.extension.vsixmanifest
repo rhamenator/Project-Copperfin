@@ -26,5 +26,6 @@
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" Path="|%CurrentProject%|" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" Path="|%CurrentProject%|" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011" />
   </Assets>
 </PackageManifest>

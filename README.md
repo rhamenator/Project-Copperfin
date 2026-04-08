@@ -91,6 +91,7 @@ Current runnable artifacts:
   - now emits richer debug state including call stack, locals, globals, and runtime events for debugger surfaces in Visual Studio and standalone Studio
   - now tracks richer VFP-style compatibility state for work areas, aliases, table cursors, data sessions, SQL pass-through cursors, and OLE automation objects in debug output
   - runtime faults now pause on the offending source line and keep the host session alive for continued debugging
+  - the VSIX now registers a FoxPro text content type for `PRG`, `H`, `QPR`, `MPR`, and `SPR` files with project-aware statement completion and first-pass hover help in Visual Studio
   - now bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers
   - now boots runnable `FRX/LBX` startup assets into direct preview/event-loop mode instead of treating them as inert metadata
   - packaged `SCX/VCX` startup assets now stage their memo sidecars and can launch from packaged content instead of only from source trees

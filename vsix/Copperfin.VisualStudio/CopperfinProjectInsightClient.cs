@@ -246,7 +246,7 @@ internal static class CopperfinProjectInsightClient
 
         if (Path.IsPathRooted(homeDirectory) && Directory.Exists(homeDirectory))
         {
-            return homeDirectory;
+            return homeDirectory!;
         }
 
         var combined = Path.GetFullPath(Path.Combine(projectDirectory, homeDirectory));
@@ -267,7 +267,7 @@ internal static class CopperfinProjectInsightClient
 
         if (!string.IsNullOrWhiteSpace(entry.Name))
         {
-            return Path.GetFullPath(Path.Combine(projectRoot, Path.GetFileName(entry.Name)));
+            return Path.GetFullPath(Path.Combine(projectRoot, Path.GetFileName(entry.Name) ?? string.Empty));
         }
 
         return string.Empty;

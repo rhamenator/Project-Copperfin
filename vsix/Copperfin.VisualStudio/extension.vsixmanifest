@@ -25,5 +25,6 @@
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.VsPackage" Path="Copperfin.VisualStudio.dll" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="Copperfin.VisualStudio.dll" />
   </Assets>
 </PackageManifest>

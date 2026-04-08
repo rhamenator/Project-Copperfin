@@ -8,6 +8,9 @@ Current scope:
 - builds an installable VSIX at `bin\Release\net472\Copperfin.VisualStudio.vsix`
 - builds a standalone Windows shell at `..\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`
 - builds UI smoke tests at `..\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
+- registers a FoxPro text content type for `PRG`, `H`, `QPR`, `MPR`, and `SPR`
+- adds project-aware IntelliSense/statement-completion for FoxPro code files, including keywords, common functions, project symbols, aliases, and asset names
+- adds first-pass Quick Info hover help for FoxPro keywords, functions, aliases, symbols, and asset names
 - registers a `Copperfin Visual Designer` editor for `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, and `MNX`
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus

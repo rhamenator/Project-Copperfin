@@ -56,6 +56,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private CopperfinProjectInsights? currentProjectInsights;
     private bool suppressSelectionSync;
     private bool embeddedStudioShell;
+    private int loadGeneration;
 
     public bool EmbeddedStudioShell
     {
@@ -537,6 +538,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     public void LoadDocument(string path)
     {
+        loadGeneration++;
         currentPath = path;
 
         var info = new FileInfo(path);
@@ -579,14 +581,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private async Task LoadSnapshotAsync(string path)
     {
+        var expectedGeneration = loadGeneration;
         var snapshotResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoad(path));
-        if (IsDisposed || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+        if (IsDisposed || Disposing || expectedGeneration != loadGeneration || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        BeginInvoke((Action)(() =>
+        PostToUi(() =>
         {
+            if (IsDisposed || Disposing || expectedGeneration != loadGeneration || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
             if (!snapshotResult.Success || snapshotResult.Document is null)
             {
                 snapshotStatusLabel.Text = "Snapshot unavailable: " + snapshotResult.Error;
@@ -601,7 +609,38 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             PopulateSectionList();
             PopulateObjectList();
             LoadSurface();
-        }));
+        });
+    }
+
+    private void PostToUi(Action action)
+    {
+        if (IsDisposed || Disposing)
+        {
+            return;
+        }
+
+        if (!IsHandleCreated)
+        {
+            return;
+        }
+
+        try
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(action);
+            }
+            else
+            {
+                action();
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     private void PopulateSectionList()

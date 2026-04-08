@@ -82,7 +82,6 @@ internal sealed class StudioMainForm : Form
             Dock = DockStyle.Fill,
             EmbeddedStudioShell = true
         };
-        editorControl.LoadDocument(normalizedPath);
 
         var page = new TabPage(Path.GetFileName(normalizedPath))
         {
@@ -92,6 +91,7 @@ internal sealed class StudioMainForm : Form
         documentTabs.TabPages.Add(page);
         documentTabs.SelectedTab = page;
         openDocuments[normalizedPath] = page;
+        editorControl.LoadDocument(normalizedPath);
 
         Text = $"Copperfin Studio - {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}";
         UpdateStatus($"{normalizedPath}   |   {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}   |   Open tabs: {documentTabs.TabPages.Count}");

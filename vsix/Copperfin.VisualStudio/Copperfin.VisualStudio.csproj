@@ -33,6 +33,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Design" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
