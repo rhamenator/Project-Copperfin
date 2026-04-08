@@ -31,6 +31,7 @@ Contents:
 
 - [`LICENSE`](E:/Project-Copperfin/LICENSE)
 - [`SECURITY.md`](E:/Project-Copperfin/SECURITY.md)
+- [`remaining-work.md`](E:/Project-Copperfin/remaining-work.md)
 - [`docs/01-product-charter.md`](E:/Project-Copperfin/docs/01-product-charter.md)
 - [`docs/02-architecture.md`](E:/Project-Copperfin/docs/02-architecture.md)
 - [`docs/03-compatibility-and-migration.md`](E:/Project-Copperfin/docs/03-compatibility-and-migration.md)

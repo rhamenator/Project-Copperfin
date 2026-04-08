@@ -1,0 +1,346 @@
+# Remaining Work
+
+This file is the working guide for the remaining Copperfin implementation effort.
+
+It is intentionally ordered by dependency depth:
+
+1. deepest shared engine layers first
+2. runtime semantics next
+3. designer/runtime integration after that
+4. IDE shells and workflow surfaces on top
+5. portability after the Windows-first product is genuinely solid
+
+The goal is not merely feature count. The goal is to finish the stack in an order where each completed layer reduces risk for the layers above it.
+
+## North Star
+
+Copperfin should eventually provide:
+
+- full behavioral compatibility with the parts of `vfp9.exe` that FoxPro developers expect in real projects
+- a full Visual Studio 2022+ experience for FoxPro/VFP assets and code
+- a full standalone Copperfin IDE experience
+- native security and policy controls
+- first-class .NET interoperability
+- modern database federation
+- modern AI/MCP/polyglot workflows where they add value
+- a future path to macOS and Linux without poisoning the Windows-first core
+
+## Working Rules
+
+- Keep the trusted runtime, data engine, and compatibility core native-first.
+- Do not let designer or shell shortcuts dictate runtime semantics.
+- Treat XSharp as an accelerator for language-service, project-system, and modern tooling ideas.
+- Treat VFPX as an accelerator for FoxPro-specific workflow, tooling, and parity expectations.
+- Reuse ideas and reference behavior aggressively, but keep Copperfin implementation clean-room.
+- Do not start real cross-platform host work until the Windows runtime and standalone IDE core are stable enough to port.
+
+## Priority Ladder
+
+The implementation order should be:
+
+1. Data fidelity and execution engine
+2. Compatibility semantics and runtime safety
+3. Report/form/menu/class runtime parity
+4. Compiler/build/debug pipeline completion
+5. Shared design model and visual-designer fidelity
+6. Visual Studio and standalone IDE parity
+7. Modernization layers: database federation, AI/MCP, polyglot, security polish
+8. Portability work for standalone IDE and core runtime
+
+## Phase A: Core Data And Compatibility Engine
+
+This is the deepest layer and should continue to absorb the most effort until it is boringly reliable.
+
+### A1. File And Index Fidelity
+
+- Finish first-class read/write fidelity for `DBF`, `FPT`, `CDX`, `DCX`, `IDX`, `NDX`, `MDX`, and `DBC`.
+- Add broader validation and repair logic for damaged or inconsistent xBase assets.
+- Strengthen round-trip confidence on real-world FoxPro and dBase datasets.
+- Expand metadata coverage for edge-case field types, memo storage, and index expressions.
+
+### A2. Work Areas, Sessions, And Cursor Semantics
+
+- Finish `USE`, `USE IN`, `SELECT`, `SELECT()`, `ALIAS()`, `RECCOUNT()`, `RECNO()`, `EOF()`, `BOF()`, and related work-area behavior.
+- Finish alias scoping and work-area selection behavior to match VFP expectations.
+- Deepen data-session isolation, switching, restoration, and nested behavior.
+- Support remote cursors and result cursors with behavior closer to SQL pass-through in VFP.
+
+### A3. Command And Expression Surface
+
+- Expand the native execution engine from `PRG-first` into a broader FoxPro/VFP command surface.
+- Keep closing gaps in command semantics, expression evaluation, macro/eval behavior, and runtime state changes.
+- Build a compatibility corpus from the installed VFP tree, `E:\VFPSource`, your legacy projects, and regression samples.
+
+### A4. Automation And Interop Semantics
+
+- Deepen OLE/COM behavior beyond current object/property/method handling.
+- Improve `CREATEOBJECT()` and `GETOBJECT()` parity.
+- Preserve host stability when automation calls fail or behave unexpectedly.
+
+## Phase B: Runtime Safety, Fault Tolerance, And Crash Containment
+
+This layer protects real users working with broken legacy code.
+
+### B1. Fault Isolation
+
+- Keep runtime faults non-fatal to the host wherever possible.
+- Pause execution at the offending statement with useful debugger context.
+- Preserve runtime/session state well enough for diagnosis after failure.
+
+### B2. Debug Metadata And Diagnostics
+
+- Improve stack traces, statement context, variable inspection, and event traces.
+- Capture richer runtime diagnostics for xAsset execution, report preview, menu flow, and data operations.
+- Make error messages and pause reasons feel like a serious developer tool, not a prototype host.
+
+## Phase C: Asset Runtime Parity
+
+This is where Copperfin stops being only an engine and starts being a FoxPro application platform.
+
+### C1. Forms And Classes
+
+- Finish `SCX/SCT` and `VCX/VCT` event/lifecycle fidelity.
+- Implement more realistic container, object, and data-environment behavior.
+- Improve extracted `METHODS` execution so form/class runtime behavior is closer to VFP rather than only bootstrapped.
+
+### C2. Reports And Labels
+
+- Finish `FRX/FRT` and `LBX/LBT` runtime behavior.
+- Improve expression evaluation, preview fidelity, output generation, and report object behavior.
+- Build the output/export pipeline as a real subsystem, not only a preview shell.
+
+### C3. Menus
+
+- Finish `MNX/MNT` runtime fidelity beyond startup and first nested dispatch.
+- Improve popup/menu navigation, routing, state handling, and event semantics.
+
+### C4. Projects
+
+- Strengthen `PJX/PJT` project interpretation and startup/build behavior.
+- Reduce heuristic-driven planning and move toward a fuller project execution model.
+
+## Phase D: Build, Compiler, And Debug Pipeline Completion
+
+This phase should build directly on the engine/runtime work, not the other way around.
+
+### D1. Compiler And Package Model
+
+- Evolve the current manifest/package flow into a fuller compiler/runtime contract.
+- Improve executable generation and `.NET`-friendly outputs.
+- Replace temporary heuristics where a true Copperfin build model is required.
+
+### D2. Debugger Completion
+
+- Add real watches, locals, breakpoint management, richer stepping, and runtime inspection.
+- Improve linkage between debugger state and source/design surfaces.
+- Add coverage and diagnostic tooling that is useful in day-to-day work.
+
+### D3. Build/Run/Deploy Workflow
+
+- Tighten build/run/debug orchestration in both shells.
+- Improve deployment/runtime redistribution and packaging behavior.
+- Add migration-aware build/reporting workflows for imported projects.
+
+## Phase E: Shared Design Model And Visual Designer Fidelity
+
+The design model should be completed before polishing host-specific shells.
+
+### E1. Shared Design Model
+
+- Finish high-fidelity normalized models for forms, classes, reports, labels, menus, and projects.
+- Improve memo-heavy asset decoding and round-trip preservation.
+- Make the shared design model strong enough that both Visual Studio and the standalone IDE can rely on the same core.
+
+### E2. Designer Interaction
+
+- Add toolbox-driven creation and editing of controls and designer objects.
+- Improve drag/drop, resize, alignment, grouping, container editing, and property-grid fidelity.
+- Add builders, wizards, and context-aware editors where FoxPro developers expect them.
+
+### E3. Report And Label Designer Completion
+
+- Finish section-aware editing so it behaves like a real modern report designer.
+- Keep the visual direction modern, but preserve VFP workflow expectations.
+
+## Phase F: IDE Parity On Top Of The Shared Core
+
+This phase should consume the completed runtime and design model rather than inventing substitutes.
+
+### F1. Visual Studio Extension
+
+- Finish in-IDE design fidelity for `SCX/VCX/FRX/LBX/MNX/PJX`.
+- Tighten build/run/debug integration so the extension feels native, not bolted on.
+- Finish utility panes as real tools: Project Explorer, Data Explorer, Object Browser, Coverage, Builders, Toolbox, Task List, Code References.
+- Strengthen the FoxPro language service.
+
+### F2. Standalone Copperfin IDE
+
+- Turn the current shell into a full standalone IDE.
+- Match core workflows available in Visual Studio where appropriate.
+- Own the complete designer/debug/project experience without needing Visual Studio.
+
+## Phase G: Language Service Completion
+
+This can progress in parallel with shell work, but it should still depend on the runtime and project index becoming stronger.
+
+### G1. Editor Semantics
+
+- Improve symbol resolution across includes, defines, dotted/member contexts, and project boundaries.
+- Add signature help for project-defined procedures and methods.
+- Improve completions using project symbols, open cursors, DBC metadata, and object members.
+
+### G2. Navigation And Refactoring
+
+- Add better definition resolution, peek-style workflows, references, and rename/refactor support.
+- Build more semantic editor behavior inspired by XSharp without forcing Copperfin into XSharp’s runtime model.
+
+### G3. IntelliSense Inputs
+
+- Investigate a FOXCODE-style or metadata-driven catalog for richer completion and hints.
+- Incorporate relevant ideas from `FoxcodePlus`, `GoToDefinition`, `foxref`, and `GoFish`.
+
+## Phase H: Database Federation And Modern App Platform
+
+This sits above the core engine. It should not destabilize parity work underneath.
+
+### H1. Relational Backends
+
+- Finish deterministic translation and provider behavior for SQLite, PostgreSQL, SQL Server, and Oracle.
+- Make FoxPro-style data access work naturally against those backends where possible.
+
+### H2. Document And Vector Backends
+
+- Build the backend translation layer for JSON/document/vector stores.
+- Define where deterministic translation is sufficient and where AI-assisted planning is optional.
+- Keep AI assistance policy-controlled and user-selectable rather than mandatory.
+
+### H3. Modern Integration Surface
+
+- Improve `.NET` output and consumption paths.
+- Add real MCP/AI integration hooks in the product, not only in docs and shells.
+- Add practical Python/R sidecar workflows for data science scenarios without making them part of the trusted core.
+
+## Phase I: Security Completion
+
+Security should keep growing throughout the project, but these remaining items deserve their own completion pass.
+
+### I1. Runtime And Project Security
+
+- Deepen native RBAC, policy enforcement, secrets handling, and audit behavior across the runtime and project model.
+- Ensure generated applications can opt into native security controls cleanly.
+
+### I2. Extension And Host Security
+
+- Lock down managed-extension loading, interop boundaries, and external process policy.
+- Make AI/MCP integration policy-aware and enterprise-friendly.
+
+## Phase J: Portability
+
+Do not start broad host-porting work until the Windows-first stack is solid.
+
+### J1. Portable Core
+
+- Keep core runtime, data engine, parser, and connector abstractions portable by boundary.
+- Isolate Windows-only functionality behind shell, printing, OLE, COM, and CLR-host seams.
+
+### J2. macOS
+
+- Port the standalone IDE and portable core.
+- Do not assume Visual Studio extension portability because VS 2022+ is Windows-only.
+- If a future macOS code editor integration is needed, treat it as a separate host strategy.
+
+### J3. Linux
+
+- Port the standalone IDE and portable core for Red Hat/Fedora and Debian-family targets first.
+- Do not couple Linux progress to Visual Studio-specific assumptions.
+
+## XSharp Incorporation Plan
+
+XSharp may save substantial tooling time, but it should be used selectively.
+
+### Use XSharp As A Model For
+
+- language-service structure
+- project-system layering
+- IntelliSense architecture
+- signature help and navigation patterns
+- debugger/tool-window organization
+- modern xBase-family tooling strategy inside Visual Studio
+
+### Do Not Blindly Import From XSharp
+
+- runtime semantics
+- compiler behavior
+- language differences where XSharp diverges from VFP
+- assumptions that would distort FoxPro/VFP compatibility
+
+### Immediate XSharp Follow-Up
+
+- audit the XSharp language-service and project-system layers for concepts we still lack
+- identify which pieces can be mirrored clean-room in Copperfin
+- prefer architecture and workflow ideas over direct feature cloning
+
+## VFPX Incorporation Plan
+
+VFPX should continue to inform FoxPro-specific parity and workflows.
+
+### Highest-Value VFPX Inputs
+
+- `GoToDefinition`
+- `FoxcodePlus`
+- `Project Explorer`
+- `DataExplorer`
+- `Toolbox`
+- `Code References`
+- `GoFish`
+- `FoxBin2Prg`
+- `PEM Editor`
+- `Thor`
+- `Automated Test Harness`
+- `FoxUnit`
+- `DeployFox`
+
+### Local Source Trees To Continue Mining
+
+- `E:\VFPSource\foxref`
+- `E:\VFPSource\DataExplorer`
+- `E:\VFPSource\toolbox`
+- `E:\VFPSource\tasklist`
+- `E:\VFPSource\taskpane`
+- `E:\VFPSource\coverage`
+- `E:\VFPSource\obrowser`
+- `E:\VFPSource\builders`
+- `E:\VFPSource\ReportBuilder`
+
+## Agent Guidance
+
+When spawning agents, assign them work that respects the dependency order above.
+
+Good agent tasks:
+
+- deepen one runtime subsystem without touching host UX
+- improve one data/index format implementation
+- improve one designer family on top of an already-stable model
+- strengthen one language-service feature against the shared project index
+- extract lessons from one XSharp or VFPX subsystem into a clean-room implementation note
+
+Bad agent tasks:
+
+- polishing shell UX before the shared model is ready
+- building cross-platform host layers before Windows parity is credible
+- inventing ad hoc designer logic outside the shared design model
+- adding AI workflows into trusted runtime code paths
+
+## Definition Of Done For The Windows-First Product
+
+The Windows-first product is not done until:
+
+- representative VFP applications can be opened, edited, built, run, and debugged
+- runtime crashes are contained and diagnosable
+- designers are truly useful, not just inspectable
+- Visual Studio and standalone Copperfin Studio are both credible daily-driver environments
+- native security is optional but real
+- .NET interoperability is practical and documented
+- modern database backends work without sacrificing core FoxPro compatibility
+
+At that point, portability becomes a product-expansion effort instead of a moving target.
