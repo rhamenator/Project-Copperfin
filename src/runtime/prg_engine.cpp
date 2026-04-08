@@ -126,6 +126,15 @@ struct IndexedCandidate {
     std::size_t recno = 0;
 };
 
+struct CursorPositionSnapshot {
+    std::size_t recno = 0;
+    bool found = false;
+    bool bof = true;
+    bool eof = true;
+    std::string active_order_name;
+    std::string active_order_expression;
+};
+
 struct DataSessionState {
     int selected_work_area = 1;
     int next_work_area = 1;
@@ -1208,6 +1217,104 @@ struct PrgRuntimeSession::Impl {
         return false;
     }
 
+    CursorPositionSnapshot capture_cursor_snapshot(const CursorState& cursor) const {
+        return {
+            .recno = cursor.recno,
+            .found = cursor.found,
+            .bof = cursor.bof,
+            .eof = cursor.eof,
+            .active_order_name = cursor.active_order_name,
+            .active_order_expression = cursor.active_order_expression
+        };
+    }
+
+    void restore_cursor_snapshot(CursorState& cursor, const CursorPositionSnapshot& snapshot) const {
+        cursor.recno = snapshot.recno;
+        cursor.found = snapshot.found;
+        cursor.bof = snapshot.bof;
+        cursor.eof = snapshot.eof;
+        cursor.active_order_name = snapshot.active_order_name;
+        cursor.active_order_expression = snapshot.active_order_expression;
+    }
+
+    bool execute_seek(
+        CursorState& cursor,
+        const std::string& search_key,
+        bool move_pointer,
+        const std::string& order_designator,
+        std::string* error_message = nullptr) {
+        const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+        if (!trim_copy(order_designator).empty() && !activate_order(cursor, order_designator)) {
+            if (error_message != nullptr) {
+                *error_message = last_error_message;
+            }
+            restore_cursor_snapshot(cursor, original);
+            return false;
+        }
+
+        const bool found = seek_in_cursor(cursor, search_key);
+        const std::string runtime_error = last_error_message;
+        if (!move_pointer || !found) {
+            cursor.recno = original.recno;
+            cursor.bof = original.bof;
+            cursor.eof = original.eof;
+            if (!move_pointer) {
+                cursor.found = original.found;
+            }
+        }
+        cursor.active_order_name = original.active_order_name;
+        cursor.active_order_expression = original.active_order_expression;
+
+        if (!found && error_message != nullptr && !runtime_error.empty()) {
+            *error_message = runtime_error;
+        }
+
+        return found;
+    }
+
+    std::string order_function_value(const std::string& designator, bool include_path) const {
+        const CursorState* cursor = resolve_cursor_target(designator);
+        if (cursor == nullptr || cursor->active_order_name.empty()) {
+            return {};
+        }
+
+        if (!include_path) {
+            return uppercase_copy(cursor->active_order_name);
+        }
+
+        if (!cursor->source_path.empty()) {
+            std::filesystem::path cdx_path(cursor->source_path);
+            cdx_path.replace_extension(".cdx");
+            return uppercase_copy(cdx_path.string());
+        }
+
+        return uppercase_copy(cursor->active_order_name);
+    }
+
+    std::string tag_function_value(const std::string& cdx_file_name, std::size_t tag_number, const std::string& designator) const {
+        const CursorState* cursor = resolve_cursor_target(designator);
+        if (cursor == nullptr || cursor->orders.empty()) {
+            return {};
+        }
+
+        std::size_t resolved_index = tag_number == 0U ? 0U : tag_number - 1U;
+        if (resolved_index >= cursor->orders.size()) {
+            return {};
+        }
+
+        if (!trim_copy(cdx_file_name).empty()) {
+            const std::string normalized_file = collapse_identifier(std::filesystem::path(cdx_file_name).stem().string());
+            const auto found = std::find_if(cursor->orders.begin(), cursor->orders.end(), [&](const CursorState::OrderState& order) {
+                return collapse_identifier(order.name) == normalized_file;
+            });
+            if (found != cursor->orders.end()) {
+                return uppercase_copy(found->name);
+            }
+        }
+
+        return uppercase_copy(cursor->orders[resolved_index].name);
+    }
+
     bool open_table_cursor(
         const std::string& raw_path,
         const std::string& requested_alias,
@@ -1561,6 +1668,10 @@ public:
         std::function<bool(const std::string&)> found_callback,
         std::function<bool(const std::string&)> eof_callback,
         std::function<bool(const std::string&)> bof_callback,
+        std::function<std::string(const std::string&, bool)> order_callback,
+        std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback,
+        std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback,
+        std::function<bool(const std::string&, bool, const std::string&, const std::string&)> indexseek_callback,
         std::function<int(const std::string&, const std::string&)> sql_connect_callback,
         std::function<int(int, const std::string&, const std::string&)> sql_exec_callback,
         std::function<bool(int)> sql_disconnect_callback,
@@ -1580,6 +1691,10 @@ public:
           found_callback_(std::move(found_callback)),
           eof_callback_(std::move(eof_callback)),
           bof_callback_(std::move(bof_callback)),
+          order_callback_(std::move(order_callback)),
+          tag_callback_(std::move(tag_callback)),
+          seek_callback_(std::move(seek_callback)),
+          indexseek_callback_(std::move(indexseek_callback)),
           sql_connect_callback_(std::move(sql_connect_callback)),
           sql_exec_callback_(std::move(sql_exec_callback)),
           sql_disconnect_callback_(std::move(sql_disconnect_callback)),
@@ -1755,6 +1870,49 @@ private:
         if (function == "bof") {
             const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
             return make_boolean_value(bof_callback_(designator));
+        }
+        if (function == "order") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            const bool include_path = arguments.size() >= 2U && std::abs(value_as_number(arguments[1])) > 0.000001;
+            return make_string_value(order_callback_(designator, include_path));
+        }
+        if (function == "tag") {
+            const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            std::size_t tag_number = 1U;
+            std::string designator;
+            std::string cdx_file_name;
+
+            if (!first.empty() && first.find(".cdx") != std::string::npos) {
+                cdx_file_name = first;
+                if (arguments.size() >= 2U) {
+                    tag_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                }
+                if (arguments.size() >= 3U) {
+                    designator = value_as_string(arguments[2]);
+                }
+            } else {
+                if (!first.empty()) {
+                    tag_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[0])));
+                }
+                if (arguments.size() >= 2U) {
+                    designator = value_as_string(arguments[1]);
+                }
+            }
+
+            return make_string_value(tag_callback_(cdx_file_name, tag_number, designator));
+        }
+        if (function == "seek" && !arguments.empty()) {
+            const std::string search_key = value_as_string(arguments[0]);
+            const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+            const std::string order_designator = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+            return make_boolean_value(seek_callback_(search_key, true, designator, order_designator));
+        }
+        if (function == "indexseek" && !arguments.empty()) {
+            const std::string search_key = value_as_string(arguments[0]);
+            const bool move_pointer = arguments.size() >= 2U && value_as_bool(arguments[1]);
+            const std::string designator = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+            const std::string order_designator = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
+            return make_boolean_value(indexseek_callback_(search_key, move_pointer, designator, order_designator));
         }
         if (function == "file" && !arguments.empty()) {
             std::filesystem::path path(value_as_string(arguments[0]));
@@ -1948,6 +2106,10 @@ private:
     std::function<bool(const std::string&)> found_callback_;
     std::function<bool(const std::string&)> eof_callback_;
     std::function<bool(const std::string&)> bof_callback_;
+    std::function<std::string(const std::string&, bool)> order_callback_;
+    std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback_;
+    std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback_;
+    std::function<bool(const std::string&, bool, const std::string&, const std::string&)> indexseek_callback_;
     std::function<int(const std::string&, const std::string&)> sql_connect_callback_;
     std::function<int(int, const std::string&, const std::string&)> sql_exec_callback_;
     std::function<bool(int)> sql_disconnect_callback_;
@@ -2019,6 +2181,26 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
         [this](const std::string& designator) {
             const CursorState* cursor = resolve_cursor_target(designator);
             return cursor == nullptr ? true : cursor->bof;
+        },
+        [this](const std::string& designator, bool include_path) {
+            return order_function_value(designator, include_path);
+        },
+        [this](const std::string& cdx_file_name, std::size_t tag_number, const std::string& designator) {
+            return tag_function_value(cdx_file_name, tag_number, designator);
+        },
+        [this](const std::string& search_key, bool move_pointer, const std::string& designator, const std::string& order_designator) {
+            CursorState* cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr) {
+                return false;
+            }
+            return execute_seek(*cursor, search_key, move_pointer, order_designator);
+        },
+        [this](const std::string& search_key, bool move_pointer, const std::string& designator, const std::string& order_designator) {
+            CursorState* cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr) {
+                return false;
+            }
+            return execute_seek(*cursor, search_key, move_pointer, order_designator);
         },
         [this](const std::string& target, const std::string& provider) {
             return sql_connect(target, provider);

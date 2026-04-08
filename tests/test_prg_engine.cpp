@@ -918,6 +918,97 @@ void test_set_near_changes_seek_failure_position() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_related_index_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_functions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_functions.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "cOrder1 = ORDER()\n"
+        "cOrder2 = ORDER('People', 1)\n"
+        "cTag1 = TAG(1, 'People')\n"
+        "lSeekFn = SEEK('BRAVO', 'People', 'NAME')\n"
+        "nSeekRec = RECNO()\n"
+        "GO TOP\n"
+        "lIndexNoMove = INDEXSEEK('CHARLIE', .F., 'People', 'NAME')\n"
+        "nAfterNoMove = RECNO()\n"
+        "lIndexMove = INDEXSEEK('CHARLIE', .T., 'People', 'NAME')\n"
+        "nAfterMove = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "seek/index helper script should complete");
+
+    const auto order1 = state.globals.find("corder1");
+    const auto order2 = state.globals.find("corder2");
+    const auto tag1 = state.globals.find("ctag1");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_rec = state.globals.find("nseekrec");
+    const auto index_no_move = state.globals.find("lindexnomove");
+    const auto after_no_move = state.globals.find("nafternomove");
+    const auto index_move = state.globals.find("lindexmove");
+    const auto after_move = state.globals.find("naftermove");
+
+    expect(order1 != state.globals.end(), "ORDER() should be captured");
+    expect(order2 != state.globals.end(), "ORDER(alias, pathFlag) should be captured");
+    expect(tag1 != state.globals.end(), "TAG() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() should be captured");
+    expect(seek_rec != state.globals.end(), "RECNO() after SEEK() should be captured");
+    expect(index_no_move != state.globals.end(), "INDEXSEEK(.F.) should be captured");
+    expect(after_no_move != state.globals.end(), "RECNO() after INDEXSEEK(.F.) should be captured");
+    expect(index_move != state.globals.end(), "INDEXSEEK(.T.) should be captured");
+    expect(after_move != state.globals.end(), "RECNO() after INDEXSEEK(.T.) should be captured");
+
+    if (order1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order1->second) == "NAME", "ORDER() should expose the controlling tag");
+    }
+    if (order2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(order2->second).find("PEOPLE.CDX") != std::string::npos,
+            "ORDER(alias, pathFlag) should expose the controlling index path");
+    }
+    if (tag1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(tag1->second) == "NAME", "TAG() should expose the first open tag");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should return true for a match");
+    }
+    if (seek_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_rec->second) == "2", "SEEK() should move the record pointer to the matching row");
+    }
+    if (index_no_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_no_move->second) == "true", "INDEXSEEK(.F.) should report matches");
+    }
+    if (after_no_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_no_move->second) == "1", "INDEXSEEK(.F.) should not move the record pointer");
+    }
+    if (index_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_move->second) == "true", "INDEXSEEK(.T.) should report matches");
+    }
+    if (after_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_move->second) == "3", "INDEXSEEK(.T.) should move the record pointer to the match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_again_and_alias_collision_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again";
@@ -1138,6 +1229,7 @@ int main() {
     test_cursor_identity_functions_for_sql_result_cursors();
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
+    test_seek_related_index_functions();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
