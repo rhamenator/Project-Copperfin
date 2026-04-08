@@ -259,6 +259,90 @@ void test_do_form_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_work_area_and_data_session_compatibility() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_workareas";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "workarea.prg";
+    write_text(
+        main_path,
+        "SELECT 0\n"
+        "nArea = SELECT()\n"
+        "SET DATASESSION TO 3\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "work area script should complete");
+    expect(state.work_area.selected == 1, "SELECT 0 should allocate and select work area 1 in a fresh session");
+    expect(state.work_area.data_session == 3, "SET DATASESSION TO should update compatibility state");
+    const auto area = state.globals.find("narea");
+    expect(area != state.globals.end(), "SELECT() result should be available to PRG code");
+    if (area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area->second) == "1", "SELECT() should return the current work area");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_and_ole_compatibility_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_ole";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "interop.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers')\n"
+        "nDisc = SQLDISCONNECT(nConn)\n"
+        "oExcel = CREATEOBJECT('Excel.Application')\n"
+        "oRunning = GETOBJECT('Word.Application')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "interop script should complete");
+    const auto conn = state.globals.find("nconn");
+    expect(conn != state.globals.end(), "SQLCONNECT should return a handle");
+    if (conn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(conn->second) == "1", "first SQLCONNECT handle should be 1");
+    }
+    const auto exec = state.globals.find("nexec");
+    expect(exec != state.globals.end(), "SQLEXEC should return a result code");
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should report success for a known handle");
+    }
+    const auto disc = state.globals.find("ndisc");
+    expect(disc != state.globals.end(), "SQLDISCONNECT should return a result code");
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should report success for a known handle");
+    }
+    expect(state.sql_connections.empty(), "SQLDISCONNECT should clear tracked SQL connections");
+    expect(state.ole_objects.size() == 2U, "CREATEOBJECT and GETOBJECT should register OLE compatibility objects");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "sql.connect"; }),
+        "SQLCONNECT should emit a sql.connect event");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.createobject"; }),
+        "CREATEOBJECT should emit an ole.createobject event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -269,6 +353,8 @@ int main() {
     test_local_variables_in_stack_frame();
     test_report_form_pause();
     test_do_form_pause();
+    test_work_area_and_data_session_compatibility();
+    test_sql_and_ole_compatibility_functions();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -63,6 +63,24 @@ struct RuntimeEvent {
     SourceLocation location{};
 };
 
+struct RuntimeWorkAreaState {
+    int selected = 1;
+    int data_session = 1;
+    std::map<int, std::string> aliases;
+};
+
+struct RuntimeSqlConnectionState {
+    int handle = 0;
+    std::string target;
+    std::string provider;
+};
+
+struct RuntimeOleObjectState {
+    int handle = 0;
+    std::string prog_id;
+    std::string source;
+};
+
 struct RuntimePauseState {
     bool paused = false;
     bool completed = false;
@@ -74,6 +92,9 @@ struct RuntimePauseState {
     std::vector<RuntimeStackFrame> call_stack;
     std::map<std::string, PrgValue> globals;
     std::vector<RuntimeEvent> events;
+    RuntimeWorkAreaState work_area{};
+    std::vector<RuntimeSqlConnectionState> sql_connections;
+    std::vector<RuntimeOleObjectState> ole_objects;
     std::size_t executed_statement_count = 0;
 };
 

@@ -144,6 +144,19 @@ void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
     std::cout << "debug.message: " << state.message << "\n";
     std::cout << "debug.stack.depth: " << state.call_stack.size() << "\n";
     std::cout << "debug.executed.statements: " << state.executed_statement_count << "\n";
+    std::cout << "debug.workarea.selected: " << state.work_area.selected << "\n";
+    std::cout << "debug.datasession.current: " << state.work_area.data_session << "\n";
+    for (const auto& [area, alias] : state.work_area.aliases) {
+        std::cout << "debug.workarea[" << area << "].alias: " << alias << "\n";
+    }
+    for (const auto& connection : state.sql_connections) {
+        std::cout << "debug.sql[" << connection.handle << "].target: " << connection.target << "\n";
+        std::cout << "debug.sql[" << connection.handle << "].provider: " << connection.provider << "\n";
+    }
+    for (const auto& object : state.ole_objects) {
+        std::cout << "debug.ole[" << object.handle << "].progid: " << object.prog_id << "\n";
+        std::cout << "debug.ole[" << object.handle << "].source: " << object.source << "\n";
+    }
     for (std::size_t index = 0; index < state.call_stack.size(); ++index) {
         const auto& frame = state.call_stack[index];
         std::cout << "debug.frame[" << index << "]: " << frame.routine_name << "@" << frame.file_path << ":" << frame.line << "\n";

@@ -89,6 +89,7 @@ Current runnable artifacts:
   - reads `app.cfmanifest` and now executes `PRG` startup code through a native xBase runtime session
   - supports real breakpoint and step-debugging actions for `PRG` startup paths
   - now emits richer debug state including call stack, locals, globals, and runtime events for debugger surfaces in Visual Studio and standalone Studio
+  - now tracks first-pass VFP-style compatibility state for work-area selection, data sessions, SQL handles, and OLE automation objects in debug output
   - now bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers
   - now boots runnable `FRX/LBX` startup assets into direct preview/event-loop mode instead of treating them as inert metadata
   - packaged `SCX/VCX` startup assets now stage their memo sidecars and can launch from packaged content instead of only from source trees
