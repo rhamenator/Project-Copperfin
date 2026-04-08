@@ -80,6 +80,63 @@ void write_simple_dbf(const std::filesystem::path& path, const std::vector<std::
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_people_dbf(
+    const std::filesystem::path& path,
+    const std::vector<std::pair<std::string, int>>& records) {
+    constexpr std::size_t name_length = 10U;
+    constexpr std::size_t age_length = 3U;
+    constexpr std::size_t header_length = 32U + 32U + 32U + 1U;
+    constexpr std::size_t record_length = 1U + name_length + age_length;
+    std::vector<std::uint8_t> bytes(header_length + (records.size() * record_length) + 1U, 0U);
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, static_cast<std::uint32_t>(records.size()));
+    write_le_u16(bytes, 8U, static_cast<std::uint16_t>(header_length));
+    write_le_u16(bytes, 10U, static_cast<std::uint16_t>(record_length));
+
+    const char name_field[] = "NAME";
+    for (std::size_t index = 0; index < 4U; ++index) {
+        bytes[32U + index] = static_cast<std::uint8_t>(name_field[index]);
+    }
+    bytes[32U + 11U] = static_cast<std::uint8_t>('C');
+    write_le_u32(bytes, 32U + 12U, 1U);
+    bytes[32U + 16U] = static_cast<std::uint8_t>(name_length);
+
+    const char age_field[] = "AGE";
+    for (std::size_t index = 0; index < 3U; ++index) {
+        bytes[64U + index] = static_cast<std::uint8_t>(age_field[index]);
+    }
+    bytes[64U + 11U] = static_cast<std::uint8_t>('N');
+    write_le_u32(bytes, 64U + 12U, 1U + static_cast<std::uint32_t>(name_length));
+    bytes[64U + 16U] = static_cast<std::uint8_t>(age_length);
+    bytes[96U] = 0x0DU;
+
+    for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
+        const std::size_t offset = header_length + (record_index * record_length);
+        bytes[offset] = 0x20U;
+
+        const std::string name = records[record_index].first.substr(0U, name_length);
+        for (std::size_t index = 0; index < name.size(); ++index) {
+            bytes[offset + 1U + index] = static_cast<std::uint8_t>(name[index]);
+        }
+        for (std::size_t index = name.size(); index < name_length; ++index) {
+            bytes[offset + 1U + index] = 0x20U;
+        }
+
+        const std::string age = std::to_string(records[record_index].second);
+        const std::size_t padding = age.size() >= age_length ? 0U : age_length - age.size();
+        for (std::size_t index = 0; index < padding; ++index) {
+            bytes[offset + 1U + name_length + index] = 0x20U;
+        }
+        for (std::size_t index = 0; index < age.size() && index < age_length; ++index) {
+            bytes[offset + 1U + name_length + padding + index] = static_cast<std::uint8_t>(age[index]);
+        }
+    }
+
+    bytes.back() = 0x1AU;
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
 void write_synthetic_cdx(const std::filesystem::path& path, const std::string& tag_name, const std::string& expression) {
     std::vector<std::uint8_t> bytes(4096U, 0U);
     write_le_u16(bytes, 0U, 1024U);
@@ -1366,6 +1423,415 @@ void test_runtime_fault_containment() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_table_mutation_and_scan_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_mutation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "mutation.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "cFound = NAME\n"
+        "nFoundAge = AGE\n"
+        "REPLACE AGE WITH 21, NAME WITH 'BRAVOX'\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'DELTA', AGE WITH 40\n"
+        "GO TOP\n"
+        "nTotal = 0\n"
+        "cNames = ''\n"
+        "nScanCount = 0\n"
+        "SCAN FOR AGE >= 21\n"
+        "    nTotal = nTotal + AGE\n"
+        "    nScanCount = nScanCount + 1\n"
+        "    IF nScanCount = 1\n"
+        "        cNames = NAME\n"
+        "    ELSE\n"
+        "        cNames = cNames + ',' + NAME\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "GO 2\n"
+        "DELETE\n"
+        "lDeleted = DELETED()\n"
+        "RECALL\n"
+        "lRecalled = DELETED()\n"
+        "DELETE FOR AGE = 40\n"
+        "LOCATE FOR DELETED()\n"
+        "cDeletedName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "mutation/scan script should complete");
+
+    const auto found = state.globals.find("cfound");
+    const auto found_age = state.globals.find("nfoundage");
+    const auto total = state.globals.find("ntotal");
+    const auto names = state.globals.find("cnames");
+    const auto deleted = state.globals.find("ldeleted");
+    const auto recalled = state.globals.find("lrecalled");
+    const auto deleted_name = state.globals.find("cdeletedname");
+
+    expect(found != state.globals.end(), "LOCATE should expose the found NAME field");
+    expect(found_age != state.globals.end(), "LOCATE should expose the found AGE field");
+    expect(total != state.globals.end(), "SCAN aggregate should be captured");
+    expect(names != state.globals.end(), "SCAN field concatenation should be captured");
+    expect(deleted != state.globals.end(), "DELETE state should be captured");
+    expect(recalled != state.globals.end(), "RECALL state should be captured");
+    expect(deleted_name != state.globals.end(), "LOCATE FOR DELETED() should identify the tombstoned record");
+
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "BRAVO", "LOCATE should position the matching record before REPLACE");
+    }
+    if (found_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_age->second) == "20", "field resolution should expose numeric record values before mutation");
+    }
+    if (total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(total->second) == "91", "SCAN should iterate the mutated matching records and sum AGE");
+    }
+    if (names != state.globals.end()) {
+        expect(copperfin::runtime::format_value(names->second) == "BRAVOX,CHARLIE,DELTA", "SCAN FOR should iterate the matching records in table order");
+    }
+    if (deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted->second) == "true", "DELETE should tombstone the current record");
+    }
+    if (recalled != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recalled->second) == "false", "RECALL should clear the tombstone flag");
+    }
+    if (deleted_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_name->second) == "DELTA", "DELETE FOR should tombstone the matching appended record");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.locate"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.scan"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.replace"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.append_blank"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
+        "mutation/query commands should emit runtime events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_filter_scopes_local_cursor_visibility() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "set_filter.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT People\n"
+        "SET FILTER TO AGE >= 30\n"
+        "GO TOP\n"
+        "cTopFiltered = NAME\n"
+        "SKIP\n"
+        "cNextFiltered = NAME\n"
+        "SKIP\n"
+        "lFilteredEof = EOF()\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "lFilteredFound = FOUND()\n"
+        "lFilteredLocateEof = EOF()\n"
+        "SELECT Other\n"
+        "GO TOP\n"
+        "cOtherTop = NAME\n"
+        "SELECT People\n"
+        "SET FILTER OFF\n"
+        "GO TOP\n"
+        "cTopUnfiltered = NAME\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "cLocateUnfiltered = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET FILTER script should complete");
+
+    const auto top_filtered = state.globals.find("ctopfiltered");
+    const auto next_filtered = state.globals.find("cnextfiltered");
+    const auto filtered_eof = state.globals.find("lfilteredeof");
+    const auto filtered_found = state.globals.find("lfilteredfound");
+    const auto filtered_locate_eof = state.globals.find("lfilteredlocateeof");
+    const auto other_top = state.globals.find("cothertop");
+    const auto top_unfiltered = state.globals.find("ctopunfiltered");
+    const auto locate_unfiltered = state.globals.find("clocateunfiltered");
+
+    expect(top_filtered != state.globals.end(), "filtered GO TOP should expose the first visible record");
+    expect(next_filtered != state.globals.end(), "filtered SKIP should expose the next visible record");
+    expect(filtered_eof != state.globals.end(), "filtered SKIP past the last visible row should update EOF()");
+    expect(filtered_found != state.globals.end(), "filtered LOCATE should expose FOUND()");
+    expect(filtered_locate_eof != state.globals.end(), "filtered LOCATE miss should expose EOF()");
+    expect(other_top != state.globals.end(), "filters should not bleed into a second alias/work area");
+    expect(top_unfiltered != state.globals.end(), "SET FILTER OFF should restore unfiltered navigation");
+    expect(locate_unfiltered != state.globals.end(), "SET FILTER OFF should restore unfiltered LOCATE behavior");
+
+    if (top_filtered != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_filtered->second) == "CHARLIE", "GO TOP should land on the first filtered-visible row");
+    }
+    if (next_filtered != state.globals.end()) {
+        expect(copperfin::runtime::format_value(next_filtered->second) == "DELTA", "SKIP should move among filtered-visible rows");
+    }
+    if (filtered_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_eof->second) == "true", "SKIP past the filtered-visible tail should reach EOF");
+    }
+    if (filtered_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_found->second) == "false", "LOCATE should not find rows excluded by the active filter");
+    }
+    if (filtered_locate_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_locate_eof->second) == "true", "LOCATE misses within a filtered set should leave the cursor at EOF");
+    }
+    if (other_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_top->second) == "ALPHA", "SET FILTER should remain scoped to the targeted cursor/work area");
+    }
+    if (top_unfiltered != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_unfiltered->second) == "ALPHA", "SET FILTER OFF should restore full-table GO TOP semantics");
+    }
+    if (locate_unfiltered != state.globals.end()) {
+        expect(copperfin::runtime::format_value(locate_unfiltered->second) == "BRAVO", "SET FILTER OFF should restore full-table LOCATE behavior");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail.find("AGE >= 30") != std::string::npos; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail == "OFF"; }),
+        "SET FILTER changes should emit runtime.filter events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_while_and_loop_control_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_while";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 21}, {"BRAVO", 28}, {"CHARLIE", 33}, {"DELTA", 44}});
+
+    const fs::path main_path = temp_root / "control.prg";
+    write_text(
+        main_path,
+        "nWhile = 0\n"
+        "i = 0\n"
+        "DO WHILE i < 5\n"
+        "    i = i + 1\n"
+        "    IF i = 2\n"
+        "        CONTINUE\n"
+        "    ENDIF\n"
+        "    nWhile = nWhile + i\n"
+        "    IF i = 4\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDDO\n"
+        "nNested = 0\n"
+        "outer = 0\n"
+        "DO WHILE outer < 2\n"
+        "    outer = outer + 1\n"
+        "    inner = 0\n"
+        "    DO WHILE inner < 3\n"
+        "        inner = inner + 1\n"
+        "        IF inner = 2\n"
+        "            CONTINUE\n"
+        "        ENDIF\n"
+        "        nNested = nNested + 1\n"
+        "    ENDDO\n"
+        "ENDDO\n"
+        "nFor = 0\n"
+        "FOR j = 1 TO 5\n"
+        "    IF j = 2\n"
+        "        LOOP\n"
+        "    ENDIF\n"
+        "    nFor = nFor + j\n"
+        "    IF j = 4\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDFOR\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT People\n"
+        "nScan = 0\n"
+        "SCAN\n"
+        "    IF NAME = 'BRAVO'\n"
+        "        LOOP\n"
+        "    ENDIF\n"
+        "    nScan = nScan + 1\n"
+        "    IF NAME = 'CHARLIE'\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "cAfterScan = NAME\n"
+        "nAfterWhileIndex = i\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO WHILE/loop control script should complete");
+
+    const auto while_total = state.globals.find("nwhile");
+    const auto nested_total = state.globals.find("nnested");
+    const auto for_total = state.globals.find("nfor");
+    const auto scan_total = state.globals.find("nscan");
+    const auto after_scan = state.globals.find("cafterscan");
+    const auto after_while_index = state.globals.find("nafterwhileindex");
+
+    expect(while_total != state.globals.end(), "DO WHILE should leave its accumulator in globals");
+    expect(nested_total != state.globals.end(), "nested DO WHILE loops should leave their accumulator in globals");
+    expect(for_total != state.globals.end(), "FOR with LOOP/EXIT should leave its accumulator in globals");
+    expect(scan_total != state.globals.end(), "SCAN with LOOP/EXIT should leave its accumulator in globals");
+    expect(after_scan != state.globals.end(), "SCAN EXIT should leave the current record available");
+    expect(after_while_index != state.globals.end(), "DO WHILE EXIT should preserve the exiting iteration state");
+
+    if (while_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(while_total->second) == "8", "DO WHILE should honor CONTINUE and EXIT");
+    }
+    if (nested_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nested_total->second) == "4", "nested DO WHILE loops should reevaluate each loop independently");
+    }
+    if (for_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(for_total->second) == "8", "LOOP and EXIT should apply to FOR loops");
+    }
+    if (scan_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_total->second) == "2", "LOOP and EXIT should apply to SCAN loops");
+    }
+    if (after_scan != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan->second) == "CHARLIE", "EXIT inside SCAN should leave the cursor on the exiting record");
+    }
+    if (after_while_index != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_while_index->second) == "4", "EXIT inside DO WHILE should leave the current iteration state intact");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_case_control_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_case";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "do_case.prg";
+    write_text(
+        main_path,
+        "nValue = 2\n"
+        "cBranch = ''\n"
+        "DO CASE\n"
+        "    CASE nValue = 1\n"
+        "        cBranch = 'ONE'\n"
+        "    CASE nValue = 2\n"
+        "        cBranch = 'TWO'\n"
+        "    OTHERWISE\n"
+        "        cBranch = 'OTHER'\n"
+        "ENDCASE\n"
+        "nNoMatch = 0\n"
+        "DO CASE\n"
+        "    CASE .F.\n"
+        "        nNoMatch = 1\n"
+        "ENDCASE\n"
+        "cNested = ''\n"
+        "DO CASE\n"
+        "    CASE .T.\n"
+        "        DO CASE\n"
+        "            CASE 1 = 2\n"
+        "                cNested = 'BAD'\n"
+        "            CASE 2 = 2\n"
+        "                cNested = 'INNER'\n"
+        "            OTHERWISE\n"
+        "                cNested = 'MISS'\n"
+        "        ENDCASE\n"
+        "    OTHERWISE\n"
+        "        cNested = 'OUTER'\n"
+        "ENDCASE\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT People\n"
+        "nTagged = 0\n"
+        "SCAN\n"
+        "    DO CASE\n"
+        "        CASE AGE < 20\n"
+        "            cTag = 'YOUNG'\n"
+        "        CASE AGE < 35\n"
+        "            cTag = 'MID'\n"
+        "        OTHERWISE\n"
+        "            cTag = 'SENIOR'\n"
+        "    ENDCASE\n"
+        "    IF cTag = 'MID'\n"
+        "        nTagged = nTagged + 1\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "cAfterScan = cTag\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO CASE script should complete");
+
+    const auto branch = state.globals.find("cbranch");
+    const auto no_match = state.globals.find("nnomatch");
+    const auto nested = state.globals.find("cnested");
+    const auto tagged = state.globals.find("ntagged");
+    const auto after_scan = state.globals.find("cafterscan");
+
+    expect(branch != state.globals.end(), "DO CASE should expose the selected branch result");
+    expect(no_match != state.globals.end(), "DO CASE without OTHERWISE should complete without mutating unmatched state");
+    expect(nested != state.globals.end(), "nested DO CASE blocks should execute correctly");
+    expect(tagged != state.globals.end(), "DO CASE inside SCAN should participate in cursor-backed logic");
+    expect(after_scan != state.globals.end(), "DO CASE inside SCAN should leave the last computed branch value");
+
+    if (branch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(branch->second) == "TWO", "DO CASE should execute the first matching CASE branch only");
+    }
+    if (no_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(no_match->second) == "0", "DO CASE with no match and no OTHERWISE should fall through cleanly");
+    }
+    if (nested != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nested->second) == "INNER", "nested DO CASE blocks should honor inner matching semantics");
+    }
+    if (tagged != state.globals.end()) {
+        expect(copperfin::runtime::format_value(tagged->second) == "2", "DO CASE inside SCAN should classify matching rows without fall-through");
+    }
+    if (after_scan != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan->second) == "SENIOR", "DO CASE should preserve the last branch result inside loop-driven execution");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1390,6 +1856,10 @@ int main() {
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
+    test_local_table_mutation_and_scan_flow();
+    test_set_filter_scopes_local_cursor_visibility();
+    test_do_while_and_loop_control_flow();
+    test_do_case_control_flow();
     test_runtime_fault_containment();
 
     if (failures != 0) {

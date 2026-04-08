@@ -26,6 +26,10 @@ enum class StatementKind {
     assignment,
     expression,
     do_command,
+    do_while_statement,
+    do_case_statement,
+    case_statement,
+    otherwise_statement,
     do_form,
     report_form,
     label_form,
@@ -37,9 +41,20 @@ enum class StatementKind {
     endif_statement,
     for_statement,
     endfor_statement,
+    loop_statement,
+    exit_statement,
+    enddo_statement,
+    endcase_statement,
     read_events,
     clear_events,
     seek_command,
+    locate_command,
+    scan_statement,
+    endscan_statement,
+    replace_command,
+    append_blank_command,
+    delete_command,
+    recall_command,
     go_command,
     skip_command,
     select_command,
@@ -79,9 +94,28 @@ struct Program {
 
 struct LoopState {
     std::size_t for_statement_index = 0;
+    std::size_t endfor_statement_index = 0;
     std::string variable_name;
     double end_value = 0.0;
     double step_value = 1.0;
+};
+
+struct ScanState {
+    std::size_t scan_statement_index = 0;
+    std::size_t endscan_statement_index = 0;
+    int work_area = 0;
+    std::string for_expression;
+};
+
+struct WhileState {
+    std::size_t do_while_statement_index = 0;
+    std::size_t enddo_statement_index = 0;
+};
+
+struct CaseState {
+    std::size_t do_case_statement_index = 0;
+    std::size_t endcase_statement_index = 0;
+    bool matched = false;
 };
 
 struct Frame {
@@ -92,6 +126,9 @@ struct Frame {
     std::map<std::string, PrgValue> locals;
     std::set<std::string> local_names;
     std::vector<LoopState> loops;
+    std::vector<ScanState> scans;
+    std::vector<WhileState> whiles;
+    std::vector<CaseState> cases;
 };
 
 struct ExecutionOutcome {
@@ -122,6 +159,7 @@ struct CursorState {
     std::vector<OrderState> orders;
     std::string active_order_name;
     std::string active_order_expression;
+    std::string filter_expression;
 };
 
 struct IndexedCandidate {
@@ -136,6 +174,11 @@ struct CursorPositionSnapshot {
     bool eof = true;
     std::string active_order_name;
     std::string active_order_expression;
+};
+
+struct ReplaceAssignment {
+    std::string field_name;
+    std::string expression;
 };
 
 struct RegisteredApiFunction {
@@ -497,6 +540,67 @@ std::vector<std::string> split_csv_like(const std::string& text) {
     return parts;
 }
 
+std::size_t find_keyword_top_level(const std::string& text, const std::string& keyword) {
+    const std::string upper = uppercase_copy(text);
+    const std::string target = uppercase_copy(keyword);
+    int nesting = 0;
+    bool in_string = false;
+
+    for (std::size_t index = 0; index < upper.size(); ++index) {
+        const char ch = upper[index];
+        if (ch == '\'') {
+            in_string = !in_string;
+            continue;
+        }
+        if (in_string) {
+            continue;
+        }
+        if (ch == '(') {
+            ++nesting;
+            continue;
+        }
+        if (ch == ')' && nesting > 0) {
+            --nesting;
+            continue;
+        }
+        if (nesting != 0) {
+            continue;
+        }
+        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
+            upper.compare(index, target.size(), target) == 0) {
+            const std::size_t tail = index + target.size();
+            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
+                return index;
+            }
+        }
+    }
+
+    return std::string::npos;
+}
+
+std::string trim_command_keyword(const std::string& text, const std::string& keyword) {
+    const std::size_t position = find_keyword_top_level(text, keyword);
+    if (position == std::string::npos) {
+        return {};
+    }
+    return trim_copy(text.substr(position + keyword.size()));
+}
+
+std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text) {
+    std::vector<ReplaceAssignment> assignments;
+    for (const std::string& part : split_csv_like(text)) {
+        const std::size_t with_position = find_keyword_top_level(part, "WITH");
+        if (with_position == std::string::npos) {
+            continue;
+        }
+        assignments.push_back({
+            .field_name = trim_copy(part.substr(0U, with_position)),
+            .expression = trim_copy(part.substr(with_position + 4U))
+        });
+    }
+    return assignments;
+}
+
 Program parse_program(const std::string& path) {
     Program program;
     program.path = normalize_path(path);
@@ -530,6 +634,13 @@ Program parse_program(const std::string& path) {
         if (starts_with_insensitive(line, "IF ")) {
             statement.kind = StatementKind::if_statement;
             statement.expression = trim_copy(line.substr(3U));
+        } else if (upper == "DO CASE") {
+            statement.kind = StatementKind::do_case_statement;
+        } else if (starts_with_insensitive(line, "CASE ")) {
+            statement.kind = StatementKind::case_statement;
+            statement.expression = trim_copy(line.substr(5U));
+        } else if (upper == "OTHERWISE") {
+            statement.kind = StatementKind::otherwise_statement;
         } else if (upper == "ELSE") {
             statement.kind = StatementKind::else_statement;
         } else if (upper == "ENDIF") {
@@ -550,8 +661,19 @@ Program parse_program(const std::string& path) {
                     statement.tertiary_expression = trim_copy(body.substr(step_position + 6U));
                 }
             }
+        } else if (starts_with_insensitive(line, "DO WHILE ")) {
+            statement.kind = StatementKind::do_while_statement;
+            statement.expression = trim_copy(line.substr(9U));
         } else if (upper == "ENDFOR") {
             statement.kind = StatementKind::endfor_statement;
+        } else if (upper == "ENDDO") {
+            statement.kind = StatementKind::enddo_statement;
+        } else if (upper == "ENDCASE") {
+            statement.kind = StatementKind::endcase_statement;
+        } else if (upper == "LOOP" || upper == "CONTINUE") {
+            statement.kind = StatementKind::loop_statement;
+        } else if (upper == "EXIT") {
+            statement.kind = StatementKind::exit_statement;
         } else if (starts_with_insensitive(line, "DO FORM ")) {
             statement.kind = StatementKind::do_form;
             statement.identifier = trim_copy(line.substr(8U));
@@ -595,6 +717,40 @@ Program parse_program(const std::string& path) {
                 statement.expression = trim_copy(body.substr(0U, in_position));
                 statement.secondary_expression = trim_copy(body.substr(in_position + 4U));
             }
+        } else if (upper == "LOCATE" || starts_with_insensitive(line, "LOCATE ")) {
+            statement.kind = StatementKind::locate_command;
+            const std::string body = upper == "LOCATE" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = trim_command_keyword(body, "FOR");
+            statement.secondary_expression = trim_command_keyword(body, "IN");
+        } else if (upper == "SCAN" || starts_with_insensitive(line, "SCAN ")) {
+            statement.kind = StatementKind::scan_statement;
+            const std::string body = upper == "SCAN" ? std::string{} : trim_copy(line.substr(5U));
+            statement.expression = trim_command_keyword(body, "FOR");
+            statement.secondary_expression = trim_command_keyword(body, "IN");
+        } else if (upper == "ENDSCAN") {
+            statement.kind = StatementKind::endscan_statement;
+        } else if (upper == "APPEND BLANK") {
+            statement.kind = StatementKind::append_blank_command;
+        } else if (starts_with_insensitive(line, "REPLACE ")) {
+            statement.kind = StatementKind::replace_command;
+            const std::string body = trim_copy(line.substr(8U));
+            const std::size_t in_position = find_keyword_top_level(body, "IN");
+            if (in_position == std::string::npos) {
+                statement.expression = body;
+            } else {
+                statement.expression = trim_copy(body.substr(0U, in_position));
+                statement.secondary_expression = trim_copy(body.substr(in_position + 2U));
+            }
+        } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
+            statement.kind = StatementKind::delete_command;
+            const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = trim_command_keyword(body, "FOR");
+            statement.secondary_expression = trim_command_keyword(body, "IN");
+        } else if (upper == "RECALL" || starts_with_insensitive(line, "RECALL ")) {
+            statement.kind = StatementKind::recall_command;
+            const std::string body = upper == "RECALL" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = trim_command_keyword(body, "FOR");
+            statement.secondary_expression = trim_command_keyword(body, "IN");
         } else if (starts_with_insensitive(line, "GOTO ") || starts_with_insensitive(line, "GO ")) {
             statement.kind = StatementKind::go_command;
             const std::string body = starts_with_insensitive(line, "GOTO ")
@@ -870,6 +1026,7 @@ struct PrgRuntimeSession::Impl {
                 .alias = cursor.alias,
                 .source_path = cursor.source_path,
                 .source_kind = cursor.source_kind,
+                .filter_expression = cursor.filter_expression,
                 .remote = cursor.remote,
                 .record_count = cursor.record_count,
                 .recno = cursor.recno,
@@ -1281,6 +1438,281 @@ struct PrgRuntimeSession::Impl {
         cursor.eof = snapshot.eof;
         cursor.active_order_name = snapshot.active_order_name;
         cursor.active_order_expression = snapshot.active_order_expression;
+    }
+
+    bool current_record_matches_visibility(const CursorState& cursor, const Frame& frame, const std::string& extra_expression) {
+        const auto record = current_record(cursor);
+        if (!record.has_value()) {
+            return false;
+        }
+        if (is_set_enabled("deleted") && record->deleted) {
+            return false;
+        }
+        if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame))) {
+            return false;
+        }
+        if (!extra_expression.empty() && !value_as_bool(evaluate_expression(extra_expression, frame))) {
+            return false;
+        }
+        return true;
+    }
+
+    bool seek_visible_record(
+        CursorState& cursor,
+        const Frame& frame,
+        long long start_recno,
+        int direction,
+        const std::string& extra_expression,
+        bool preserve_on_failure) {
+        const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+        const long long first = direction >= 0 ? std::max<long long>(1, start_recno) : std::min<long long>(start_recno, static_cast<long long>(cursor.record_count));
+        for (long long recno = first;
+             recno >= 1 && recno <= static_cast<long long>(cursor.record_count);
+             recno += direction) {
+            move_cursor_to(cursor, recno);
+            if (current_record_matches_visibility(cursor, frame, extra_expression)) {
+                return true;
+            }
+        }
+
+        if (preserve_on_failure) {
+            restore_cursor_snapshot(cursor, original);
+        } else if (direction >= 0) {
+            move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));
+        } else {
+            move_cursor_to(cursor, 0);
+        }
+        return false;
+    }
+
+    bool move_by_visible_records(CursorState& cursor, const Frame& frame, long long delta) {
+        if (delta == 0) {
+            return current_record_matches_visibility(cursor, frame, {});
+        }
+
+        const int direction = delta > 0 ? 1 : -1;
+        long long remaining = std::llabs(delta);
+        long long next_start = static_cast<long long>(cursor.recno) + direction;
+        while (remaining > 0) {
+            if (!seek_visible_record(cursor, frame, next_start, direction, {}, false)) {
+                return false;
+            }
+            --remaining;
+            next_start = static_cast<long long>(cursor.recno) + direction;
+        }
+        return true;
+    }
+
+    std::optional<vfp::DbfRecord> current_record(const CursorState& cursor) const {
+        if (cursor.remote || cursor.source_path.empty() || cursor.recno == 0U || cursor.eof) {
+            return std::nullopt;
+        }
+
+        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
+        if (!table_result.ok || cursor.recno > table_result.table.records.size()) {
+            return std::nullopt;
+        }
+
+        return table_result.table.records[cursor.recno - 1U];
+    }
+
+    std::optional<PrgValue> resolve_field_value(const std::string& identifier, const CursorState* preferred_cursor) const {
+        const auto value_from_record = [&](const CursorState* cursor, const std::string& field_name) -> std::optional<PrgValue> {
+            if (cursor == nullptr) {
+                return std::nullopt;
+            }
+            const auto record = current_record(*cursor);
+            if (!record.has_value()) {
+                return std::nullopt;
+            }
+            if (collapse_identifier(field_name) == "DELETED") {
+                return make_boolean_value(record->deleted);
+            }
+            const auto field_value = record_field_value(*record, field_name);
+            if (!field_value.has_value()) {
+                return std::nullopt;
+            }
+
+            const auto raw_field = std::find_if(record->values.begin(), record->values.end(), [&](const vfp::DbfRecordValue& value) {
+                return collapse_identifier(value.field_name) == collapse_identifier(field_name);
+            });
+            if (raw_field == record->values.end()) {
+                return make_string_value(*field_value);
+            }
+
+            switch (raw_field->field_type) {
+                case 'L':
+                    return make_boolean_value(normalize_index_value(*field_value) == "true");
+                case 'N':
+                case 'F':
+                case 'I':
+                case 'Y':
+                    if (trim_copy(*field_value).empty()) {
+                        return make_number_value(0.0);
+                    }
+                    return make_number_value(std::stod(trim_copy(*field_value)));
+                default:
+                    return make_string_value(*field_value);
+            }
+        };
+
+        const auto separator = identifier.find('.');
+        if (separator != std::string::npos) {
+            const std::string designator = identifier.substr(0U, separator);
+            const std::string field_name = identifier.substr(separator + 1U);
+            if (auto value = value_from_record(resolve_cursor_target(designator), field_name)) {
+                return value;
+            }
+        }
+
+        if (auto value = value_from_record(preferred_cursor, identifier)) {
+            return value;
+        }
+
+        return value_from_record(resolve_cursor_target({}), identifier);
+    }
+
+    std::optional<std::size_t> find_matching_endscan(const Frame& frame, std::size_t pc) const {
+        if (frame.routine == nullptr) {
+            return std::nullopt;
+        }
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::scan_statement) {
+                ++depth;
+            } else if (kind == StatementKind::endscan_statement) {
+                if (depth == 0) {
+                    return index;
+                }
+                --depth;
+            }
+        }
+        return std::nullopt;
+    }
+
+    bool locate_next_matching_record(
+        CursorState& cursor,
+        const std::string& for_expression,
+        const Frame& frame,
+        std::size_t start_recno) {
+        if (cursor.remote) {
+            last_error_message = "This command is not yet supported on remote SQL cursors";
+            return false;
+        }
+        if (cursor.source_path.empty()) {
+            last_error_message = "This command requires a local table-backed cursor";
+            return false;
+        }
+
+        const bool found = seek_visible_record(
+            cursor,
+            frame,
+            static_cast<long long>(start_recno),
+            1,
+            for_expression,
+            false);
+        cursor.found = found;
+        return true;
+    }
+
+    bool replace_current_record_fields(
+        CursorState& cursor,
+        const std::vector<ReplaceAssignment>& assignments,
+        const Frame& frame) {
+        if (cursor.remote) {
+            last_error_message = "REPLACE is not yet supported on remote SQL cursors";
+            return false;
+        }
+        if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof) {
+            last_error_message = "REPLACE requires a current local record";
+            return false;
+        }
+
+        for (const auto& assignment : assignments) {
+            const PrgValue value = evaluate_expression(assignment.expression, frame);
+            const auto result = vfp::replace_record_field_value(
+                cursor.source_path,
+                cursor.recno - 1U,
+                assignment.field_name,
+                value_as_string(value));
+            if (!result.ok) {
+                last_error_message = result.error;
+                return false;
+            }
+            cursor.record_count = result.record_count;
+        }
+        return true;
+    }
+
+    bool append_blank_record(CursorState& cursor) {
+        if (cursor.remote) {
+            last_error_message = "APPEND BLANK is not yet supported on remote SQL cursors";
+            return false;
+        }
+        if (cursor.source_path.empty()) {
+            last_error_message = "APPEND BLANK requires a local table-backed cursor";
+            return false;
+        }
+
+        const auto result = vfp::append_blank_record_to_file(cursor.source_path);
+        if (!result.ok) {
+            last_error_message = result.error;
+            return false;
+        }
+
+        cursor.record_count = result.record_count;
+        move_cursor_to(cursor, static_cast<long long>(result.record_count));
+        cursor.found = false;
+        return true;
+    }
+
+    bool set_deleted_flag(CursorState& cursor, const Frame& frame, const std::string& for_expression, bool deleted) {
+        if (cursor.remote) {
+            last_error_message = deleted
+                ? "DELETE is not yet supported on remote SQL cursors"
+                : "RECALL is not yet supported on remote SQL cursors";
+            return false;
+        }
+        if (cursor.source_path.empty()) {
+            last_error_message = "This command requires a local table-backed cursor";
+            return false;
+        }
+
+        std::vector<std::size_t> target_records;
+        if (for_expression.empty()) {
+            if (cursor.recno == 0U || cursor.eof) {
+                last_error_message = "This command requires a current local record";
+                return false;
+            }
+            target_records.push_back(cursor.recno);
+        } else {
+            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+            if (!table_result.ok) {
+                last_error_message = table_result.error;
+                return false;
+            }
+
+            const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            for (const auto& record : table_result.table.records) {
+                move_cursor_to(cursor, static_cast<long long>(record.record_index + 1U));
+                if (current_record_matches_visibility(cursor, frame, for_expression)) {
+                    target_records.push_back(record.record_index + 1U);
+                }
+            }
+            restore_cursor_snapshot(cursor, original);
+        }
+
+        for (const std::size_t recno : target_records) {
+            const auto result = vfp::set_record_deleted_flag(cursor.source_path, recno - 1U, deleted);
+            if (!result.ok) {
+                last_error_message = result.error;
+                return false;
+            }
+            cursor.record_count = result.record_count;
+        }
+
+        return true;
     }
 
     bool execute_seek(
@@ -1708,6 +2140,165 @@ struct PrgRuntimeSession::Impl {
         return std::nullopt;
     }
 
+    std::optional<std::size_t> find_matching_enddo(const Frame& frame, std::size_t pc) const {
+        if (frame.routine == nullptr) {
+            return std::nullopt;
+        }
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::do_while_statement) {
+                ++depth;
+            } else if (kind == StatementKind::enddo_statement) {
+                if (depth == 0) {
+                    return index;
+                }
+                --depth;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<std::size_t> find_matching_endcase(const Frame& frame, std::size_t pc) const {
+        if (frame.routine == nullptr) {
+            return std::nullopt;
+        }
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::do_case_statement) {
+                ++depth;
+            } else if (kind == StatementKind::endcase_statement) {
+                if (depth == 0) {
+                    return index;
+                }
+                --depth;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<std::size_t> find_next_case_clause(const Frame& frame, std::size_t pc) const {
+        if (frame.routine == nullptr) {
+            return std::nullopt;
+        }
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::do_case_statement) {
+                ++depth;
+            } else if (kind == StatementKind::endcase_statement) {
+                if (depth == 0) {
+                    return index;
+                }
+                --depth;
+            } else if (depth == 0 && (kind == StatementKind::case_statement || kind == StatementKind::otherwise_statement)) {
+                return index;
+            }
+        }
+        return std::nullopt;
+    }
+
+    enum class ActiveLoopKind {
+        for_loop,
+        scan_loop,
+        while_loop
+    };
+
+    struct ActiveLoop {
+        ActiveLoopKind kind = ActiveLoopKind::for_loop;
+        std::size_t start_statement_index = 0;
+        std::size_t end_statement_index = 0;
+    };
+
+    std::optional<ActiveLoop> find_innermost_active_loop(const Frame& frame) const {
+        std::optional<ActiveLoop> active;
+        const auto consider = [&](ActiveLoop candidate) {
+            if (!active.has_value() || candidate.start_statement_index > active->start_statement_index) {
+                active = candidate;
+            }
+        };
+
+        if (!frame.loops.empty()) {
+            const LoopState& loop = frame.loops.back();
+            consider({
+                .kind = ActiveLoopKind::for_loop,
+                .start_statement_index = loop.for_statement_index,
+                .end_statement_index = loop.endfor_statement_index
+            });
+        }
+        if (!frame.scans.empty()) {
+            const ScanState& scan = frame.scans.back();
+            consider({
+                .kind = ActiveLoopKind::scan_loop,
+                .start_statement_index = scan.scan_statement_index,
+                .end_statement_index = scan.endscan_statement_index
+            });
+        }
+        if (!frame.whiles.empty()) {
+            const WhileState& loop = frame.whiles.back();
+            consider({
+                .kind = ActiveLoopKind::while_loop,
+                .start_statement_index = loop.do_while_statement_index,
+                .end_statement_index = loop.enddo_statement_index
+            });
+        }
+
+        return active;
+    }
+
+    ExecutionOutcome continue_for_loop(Frame& frame, const Statement&, bool jump_after_completion) {
+        if (frame.loops.empty()) {
+            return {};
+        }
+
+        LoopState& loop = frame.loops.back();
+        const double next_value = value_as_number(lookup_variable(frame, loop.variable_name)) + loop.step_value;
+        assign_variable(frame, loop.variable_name, make_number_value(next_value));
+        const bool should_continue = loop.step_value >= 0.0
+            ? next_value <= loop.end_value
+            : next_value >= loop.end_value;
+        if (should_continue) {
+            frame.pc = loop.for_statement_index + 1U;
+        } else {
+            const std::size_t completion_pc = loop.endfor_statement_index + 1U;
+            frame.loops.pop_back();
+            if (jump_after_completion) {
+                frame.pc = completion_pc;
+            }
+        }
+        return {};
+    }
+
+    ExecutionOutcome continue_scan_loop(Frame& frame, const Statement& statement, bool jump_after_completion) {
+        if (frame.scans.empty()) {
+            return {};
+        }
+
+        ScanState scan = frame.scans.back();
+        CursorState* cursor = find_cursor_by_area(scan.work_area);
+        if (cursor == nullptr) {
+            frame.scans.pop_back();
+            return {};
+        }
+
+        if (!locate_next_matching_record(*cursor, scan.for_expression, frame, cursor->recno + 1U)) {
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            return {.ok = false, .message = last_error_message};
+        }
+
+        if (cursor->found) {
+            frame.pc = scan.scan_statement_index + 1U;
+        } else {
+            frame.scans.pop_back();
+            if (jump_after_completion) {
+                frame.pc = scan.endscan_statement_index + 1U;
+            }
+        }
+        return {};
+    }
+
     std::filesystem::path resolve_asset_path(const std::string& raw_path, const char* extension) const {
         std::filesystem::path asset_path(unquote_string(take_first_token(raw_path)));
         if (asset_path.extension().empty()) {
@@ -1786,6 +2377,7 @@ public:
         std::function<bool(const std::string&)> found_callback,
         std::function<bool(const std::string&)> eof_callback,
         std::function<bool(const std::string&)> bof_callback,
+        std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback,
         std::function<std::string(const std::string&, bool)> order_callback,
         std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback,
         std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback,
@@ -1813,6 +2405,7 @@ public:
           found_callback_(std::move(found_callback)),
           eof_callback_(std::move(eof_callback)),
           bof_callback_(std::move(bof_callback)),
+          field_lookup_callback_(std::move(field_lookup_callback)),
           order_callback_(std::move(order_callback)),
           tag_callback_(std::move(tag_callback)),
           seek_callback_(std::move(seek_callback)),
@@ -1998,6 +2591,10 @@ private:
             const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
             return make_boolean_value(bof_callback_(designator));
         }
+        if (function == "deleted") {
+            const auto deleted_value = field_lookup_callback_(arguments.empty() ? std::string{"deleted"} : value_as_string(arguments[0]) + ".deleted");
+            return deleted_value.has_value() ? *deleted_value : make_boolean_value(false);
+        }
         if (function == "order") {
             const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
             const bool include_path = arguments.size() >= 2U && std::abs(value_as_number(arguments[1])) > 0.000001;
@@ -2167,6 +2764,9 @@ private:
         if (global != globals_.end()) {
             return global->second;
         }
+        if (const auto field = field_lookup_callback_(identifier)) {
+            return *field;
+        }
         if (normalized.find('.') != std::string::npos) {
             return ole_property_callback_(normalized);
         }
@@ -2261,6 +2861,7 @@ private:
     std::function<bool(const std::string&)> found_callback_;
     std::function<bool(const std::string&)> eof_callback_;
     std::function<bool(const std::string&)> bof_callback_;
+    std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback_;
     std::function<std::string(const std::string&, bool)> order_callback_;
     std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback_;
     std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback_;
@@ -2342,6 +2943,10 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
         [this](const std::string& designator) {
             const CursorState* cursor = resolve_cursor_target(designator);
             return cursor == nullptr ? true : cursor->bof;
+        },
+        [this](const std::string& identifier) {
+            const CursorState* current_cursor = resolve_cursor_target({});
+            return resolve_field_value(identifier, current_cursor);
         },
         [this](const std::string& designator, bool include_path) {
             return order_function_value(designator, include_path);
@@ -2607,6 +3212,48 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::return_statement:
             stack.pop_back();
             return {.frame_returned = true};
+        case StatementKind::do_case_statement:
+            frame.cases.push_back({
+                .do_case_statement_index = frame.pc - 1U,
+                .endcase_statement_index = find_matching_endcase(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                .matched = false
+            });
+            return {};
+        case StatementKind::case_statement: {
+            if (frame.cases.empty()) {
+                return {};
+            }
+
+            CaseState& active_case = frame.cases.back();
+            if (active_case.matched) {
+                const std::size_t next_pc = active_case.endcase_statement_index + 1U;
+                frame.cases.pop_back();
+                frame.pc = next_pc;
+                return {};
+            }
+
+            if (value_as_bool(evaluate_expression(statement.expression, frame))) {
+                active_case.matched = true;
+                return {};
+            }
+
+            if (const auto destination = find_next_case_clause(frame, frame.pc - 1U)) {
+                frame.pc = *destination;
+            }
+            return {};
+        }
+        case StatementKind::otherwise_statement:
+            if (frame.cases.empty()) {
+                return {};
+            }
+            if (frame.cases.back().matched) {
+                const std::size_t next_pc = frame.cases.back().endcase_statement_index + 1U;
+                frame.cases.pop_back();
+                frame.pc = next_pc;
+                return {};
+            }
+            frame.cases.back().matched = true;
+            return {};
         case StatementKind::if_statement:
             if (!value_as_bool(evaluate_expression(statement.expression, frame))) {
                 if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true)) {
@@ -2635,31 +3282,94 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 }
                 return {};
             }
+            const auto existing = std::find_if(frame.loops.rbegin(), frame.loops.rend(), [&](const LoopState& loop) {
+                return loop.for_statement_index == (frame.pc - 1U);
+            });
+            if (existing != frame.loops.rend()) {
+                return {};
+            }
             frame.loops.push_back({
                 .for_statement_index = frame.pc - 1U,
+                .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
                 .variable_name = normalize_identifier(statement.identifier),
                 .end_value = end_value,
                 .step_value = step_value
             });
             return {};
         }
-        case StatementKind::endfor_statement: {
-            if (frame.loops.empty()) {
-                return {};
-            }
-            LoopState& loop = frame.loops.back();
-            const double next_value = value_as_number(lookup_variable(frame, loop.variable_name)) + loop.step_value;
-            assign_variable(frame, loop.variable_name, make_number_value(next_value));
-            const bool should_continue = loop.step_value >= 0.0
-                ? next_value <= loop.end_value
-                : next_value >= loop.end_value;
+        case StatementKind::do_while_statement: {
+            const bool should_continue = value_as_bool(evaluate_expression(statement.expression, frame));
+            const auto existing = std::find_if(frame.whiles.rbegin(), frame.whiles.rend(), [&](const WhileState& loop) {
+                return loop.do_while_statement_index == (frame.pc - 1U);
+            });
             if (should_continue) {
-                frame.pc = loop.for_statement_index + 1U;
+                if (existing == frame.whiles.rend()) {
+                    frame.whiles.push_back({
+                        .do_while_statement_index = frame.pc - 1U,
+                        .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U)
+                    });
+                }
             } else {
-                frame.loops.pop_back();
+                if (existing != frame.whiles.rend()) {
+                    frame.whiles.erase(std::next(existing).base());
+                }
+                if (const auto destination = find_matching_enddo(frame, frame.pc - 1U)) {
+                    frame.pc = *destination + 1U;
+                }
             }
             return {};
         }
+        case StatementKind::endfor_statement:
+            return continue_for_loop(frame, statement, false);
+        case StatementKind::loop_statement: {
+            const auto active_loop = find_innermost_active_loop(frame);
+            if (!active_loop.has_value()) {
+                return {};
+            }
+
+            switch (active_loop->kind) {
+                case ActiveLoopKind::for_loop:
+                    return continue_for_loop(frame, statement, true);
+                case ActiveLoopKind::scan_loop:
+                    return continue_scan_loop(frame, statement, true);
+                case ActiveLoopKind::while_loop:
+                    frame.pc = active_loop->start_statement_index;
+                    return {};
+            }
+            return {};
+        }
+        case StatementKind::exit_statement: {
+            const auto active_loop = find_innermost_active_loop(frame);
+            if (!active_loop.has_value()) {
+                return {};
+            }
+
+            switch (active_loop->kind) {
+                case ActiveLoopKind::for_loop:
+                    frame.loops.pop_back();
+                    frame.pc = active_loop->end_statement_index + 1U;
+                    return {};
+                case ActiveLoopKind::scan_loop:
+                    frame.scans.pop_back();
+                    frame.pc = active_loop->end_statement_index + 1U;
+                    return {};
+                case ActiveLoopKind::while_loop:
+                    frame.whiles.pop_back();
+                    frame.pc = active_loop->end_statement_index + 1U;
+                    return {};
+            }
+            return {};
+        }
+        case StatementKind::enddo_statement:
+            if (!frame.whiles.empty()) {
+                frame.pc = frame.whiles.back().do_while_statement_index;
+            }
+            return {};
+        case StatementKind::endcase_statement:
+            if (!frame.cases.empty()) {
+                frame.cases.pop_back();
+            }
+            return {};
         case StatementKind::read_events:
             waiting_for_events = true;
             events.push_back({
@@ -2696,6 +3406,158 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         }
+        case StatementKind::locate_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "LOCATE target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            if (!locate_next_matching_record(*cursor, statement.expression, frame, 1U)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.locate",
+                .detail = statement.expression.empty() ? "ALL" : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::scan_statement: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "SCAN target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const std::size_t start_recno = cursor->recno == 0U ? 1U : cursor->recno;
+            if (!locate_next_matching_record(*cursor, statement.expression, frame, start_recno)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            if (!cursor->found) {
+                if (const auto destination = find_matching_endscan(frame, frame.pc - 1U)) {
+                    frame.pc = *destination + 1U;
+                }
+                return {};
+            }
+
+            frame.scans.push_back({
+                .scan_statement_index = frame.pc - 1U,
+                .endscan_statement_index = find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                .work_area = cursor->work_area,
+                .for_expression = statement.expression
+            });
+            events.push_back({
+                .category = "runtime.scan",
+                .detail = statement.expression.empty() ? "ALL" : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::endscan_statement:
+            return continue_scan_loop(frame, statement, false);
+        case StatementKind::replace_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "REPLACE target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const std::vector<ReplaceAssignment> assignments = parse_replace_assignments(statement.expression);
+            if (assignments.empty()) {
+                last_error_message = "REPLACE requires at least one FIELD WITH expression assignment";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!replace_current_record_fields(*cursor, assignments, frame)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.replace",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::append_blank_command: {
+            CursorState* cursor = resolve_cursor_target({});
+            if (cursor == nullptr) {
+                last_error_message = "APPEND BLANK requires a selected work area";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!append_blank_record(*cursor)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.append_blank",
+                .detail = cursor->alias,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::delete_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "DELETE target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!set_deleted_flag(*cursor, frame, statement.expression, true)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.delete",
+                .detail = statement.expression.empty() ? cursor->alias : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::recall_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "RECALL target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!set_deleted_flag(*cursor, frame, statement.expression, false)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.recall",
+                .detail = statement.expression.empty() ? cursor->alias : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
         case StatementKind::go_command: {
             CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
             if (cursor == nullptr) {
@@ -2707,9 +3569,13 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
             const std::string destination = uppercase_copy(trim_copy(statement.expression));
             if (destination == "TOP") {
-                move_cursor_to(*cursor, 1);
+                if (!seek_visible_record(*cursor, frame, 1, 1, {}, false) && cursor->record_count == 0U) {
+                    move_cursor_to(*cursor, 0);
+                }
             } else if (destination == "BOTTOM") {
-                move_cursor_to(*cursor, static_cast<long long>(cursor->record_count));
+                if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, false) && cursor->record_count == 0U) {
+                    move_cursor_to(*cursor, 0);
+                }
             } else {
                 const long long requested = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
                 move_cursor_to(*cursor, requested);
@@ -2732,7 +3598,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
 
             const long long delta = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
-            move_cursor_to(*cursor, static_cast<long long>(cursor->recno) + delta);
+            if (!move_by_visible_records(*cursor, frame, delta)) {
+                cursor->found = false;
+            }
             events.push_back({
                 .category = "runtime.skip",
                 .detail = statement.expression,
@@ -2840,6 +3708,36 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         {
             const auto [option_name, option_value] = split_first_word(statement.expression);
             const std::string normalized_name = normalize_identifier(option_name);
+            if (normalized_name == "filter") {
+                CursorState* cursor = resolve_cursor_target({});
+                if (cursor == nullptr) {
+                    last_error_message = "SET FILTER requires a selected work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::string filter_value = trim_copy(option_value);
+                if (starts_with_insensitive(filter_value, "TO ")) {
+                    filter_value = trim_copy(filter_value.substr(3U));
+                }
+                if (normalize_identifier(filter_value) == "off") {
+                    filter_value.clear();
+                }
+
+                cursor->filter_expression = filter_value;
+                if (!cursor->filter_expression.empty() && cursor->record_count > 0U &&
+                    !current_record_matches_visibility(*cursor, frame, {})) {
+                    (void)seek_visible_record(*cursor, frame, static_cast<long long>(cursor->recno), 1, {}, false);
+                }
+
+                events.push_back({
+                    .category = "runtime.filter",
+                    .detail = cursor->filter_expression.empty() ? "OFF" : cursor->filter_expression,
+                    .location = statement.location
+                });
+                return {};
+            }
             if (!normalized_name.empty()) {
                 current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
             } else {

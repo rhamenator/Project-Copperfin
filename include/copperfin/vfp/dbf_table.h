@@ -41,6 +41,22 @@ struct DbfTableParseResult {
     std::string error;
 };
 
+struct DbfWriteResult {
+    bool ok = false;
+    std::string error;
+    std::size_t record_count = 0;
+};
+
 DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size_t max_records = 10U);
+DbfWriteResult append_blank_record_to_file(const std::string& path);
+DbfWriteResult replace_record_field_value(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value);
+DbfWriteResult set_record_deleted_flag(
+    const std::string& path,
+    std::size_t record_index,
+    bool deleted);
 
 }  // namespace copperfin::vfp

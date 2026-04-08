@@ -129,10 +129,70 @@ void test_parse_dbf_table_with_memo_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_mutate_and_append_dbf_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_write_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "people.dbf";
+    std::vector<std::uint8_t> table_bytes(97U + (2U * 14U) + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 2U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 14U);
+
+    write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 10U);
+    write_field_descriptor(table_bytes, 64U, "AGE", 'N', 11U, 3U);
+    table_bytes[96U] = 0x0DU;
+
+    table_bytes[97U] = 0x20U;
+    write_ascii(table_bytes, 98U, "ALPHA     ");
+    write_ascii(table_bytes, 108U, " 10");
+
+    table_bytes[111U] = 0x20U;
+    write_ascii(table_bytes, 112U, "BRAVO     ");
+    write_ascii(table_bytes, 122U, " 20");
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto replace_name = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "NAME", "BRAVOX");
+    expect(replace_name.ok, "replace_record_field_value should update character fields");
+
+    const auto replace_age = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "AGE", "21");
+    expect(replace_age.ok, "replace_record_field_value should update numeric fields");
+
+    const auto append = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append.ok, "append_blank_record_to_file should append a new row");
+    expect(append.record_count == 3U, "append_blank_record_to_file should grow the record count");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(table_path.string(), 2U, true);
+    expect(delete_result.ok, "set_record_deleted_flag should tombstone records");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "the mutated DBF should remain readable");
+    expect(parse_result.table.records.size() == 3U, "mutated DBF should expose the appended record");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVOX", "character updates should persist");
+        expect(parse_result.table.records[1].values[1].display_value == "21", "numeric updates should persist");
+        expect(parse_result.table.records[2].deleted, "deleted-flag updates should persist");
+        expect(parse_result.table.records[2].values[0].display_value.empty(), "blank appended character fields should start empty");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_dbf_table_with_memo_sidecar();
+    test_mutate_and_append_dbf_table();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -74,6 +74,7 @@ struct RuntimeCursorState {
     std::string alias;
     std::string source_path;
     std::string source_kind;
+    std::string filter_expression;
     bool remote = false;
     std::size_t record_count = 0;
     std::size_t recno = 0;

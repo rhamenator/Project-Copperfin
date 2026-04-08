@@ -47,12 +47,42 @@ The implementation order should be:
 7. Modernization layers: database federation, AI/MCP, polyglot, security polish
 8. Portability work for standalone IDE and core runtime
 
+## Gap Matrix
+
+Current repo status against the Windows-first product goal:
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| DBF/FPT basic read fidelity | Implemented | Real DBF parsing, memo decoding, and inspector/design-surface consumption are in place for representative assets. |
+| DBF local-table mutation core | Partial | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, but broader field-type coverage, repair, and transactional safety still need work. |
+| CDX/DCX inspection | Partial | Tag and expression hints are surfaced, but write fidelity and richer order/collation behavior remain incomplete. |
+| DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
+| Work areas and data sessions | Partial | `SELECT`, `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, and first indexed search semantics are working, but broader alias/session edge cases remain. |
+| Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, and first-pass `SET FILTER TO/OFF` now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
+| SQL pass-through/remote cursor behavior | Partial | Synthetic SQL cursor/session plumbing exists, but remote cursor semantics are still far from VFP parity. |
+| PRG execution engine | Partial | Structured stepping, breakpoints, fault containment, first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, and `LOOP`/`CONTINUE`/`EXIT` control now exist, but the runtime is still well short of the practical full FoxPro/VFP surface. |
+| Forms/classes runtime parity | Partial | Bootstrapped `SCX/VCX` startup and extracted method dispatch exist, but lifecycle/container/data-environment fidelity is still incomplete. |
+| Reports/labels runtime parity | Partial | `FRX/LBX` preview/event-loop launch works, but real report execution/output semantics remain incomplete. |
+| Menus runtime parity | Partial | Startup activation and action dispatch work, but richer menu navigation/state semantics are still unfinished. |
+| Build/package/debug pipeline | Partial | Native build/package/runtime/debug hosts are wired end to end, but the compiler/runtime contract still relies on heuristics and line-based manifests. |
+| Shared designers | Partial | Shared VS/Studio designer shells exist for major asset families, but fidelity and round-trip depth are not yet production grade. |
+| Visual Studio integration | Partial | Asset editors, project panes, and first-pass FoxPro language assistance exist, but the IDE story is not yet full-fidelity. |
+| Standalone Copperfin IDE | Partial | The managed Studio shell is usable for early workflows, but it is not yet the finished standalone IDE. |
+| Language service | Partial | Completion, hover, call signatures, and go-to-definition exist, but semantic resolution, references, and refactoring remain incomplete. |
+| .NET interoperability | Partial | Build-time launcher generation and documented architecture exist, but broad first-class runtime interop is still incomplete. |
+| Database federation | Missing | Platform models exist, but deterministic backend translators are not yet implemented. |
+| Security/policy controls | Partial | Project/workspace security models exist, but runtime-enforced policy and enterprise controls are not complete. |
+
 ## Phase A: Core Data And Compatibility Engine
 
 This is the deepest layer and should continue to absorb the most effort until it is boringly reliable.
 
 ### Progress Notes
 
+- 2026-04-08: native PRG branching now covers first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, including nested case blocks and case-driven execution inside `SCAN`, with focused runtime regression coverage.
+- 2026-04-08: native PRG control flow now covers first-pass `DO WHILE/ENDDO` plus shared `LOOP`/`CONTINUE`/`EXIT` behavior across `DO WHILE`, `FOR`, and `SCAN`, with focused regression coverage for nested loops and cursor-backed iteration.
+- 2026-04-08: persistent cursor filtering now has a first native runtime slice. `SET FILTER TO/OFF` is now cursor-scoped for local DBF-backed work areas, and `GO TOP/BOTTOM`, `SKIP`, `LOCATE`, `SCAN`, and `DELETE/RECALL FOR` now honor active filter visibility with regression coverage.
+- 2026-04-08: local-table mutation/query flow moved forward materially in the native PRG engine. `LOCATE`, `SCAN ... ENDSCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL` now work against local DBF-backed cursors with persisted table writes, current-record field resolution, and regression coverage in both the DBF layer and runtime layer.
 - 2026-04-08: `CDX/DCX` inspection moved beyond header-only probing. Copperfin now enumerates first-pass tag/expression hints from real file contents and surfaces them through the asset inspector and CLI.
 - 2026-04-08: `GO`, `GOTO`, and `SKIP` cursor navigation now have runtime coverage in the native `PRG` engine tests, which closes one more piece of work-area behavior before broader table/session semantics.
 - 2026-04-08: `USED()`, `DBF()`, and `FCOUNT()` now participate in the native cursor/session model for both local tables and synthetic SQL result cursors, with explicit regression coverage for data-session isolation and `USE IN`.

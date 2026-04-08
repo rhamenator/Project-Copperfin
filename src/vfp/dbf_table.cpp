@@ -5,6 +5,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <unordered_map>
 
@@ -34,6 +35,13 @@ std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
 std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint16_t>((static_cast<std::uint16_t>(bytes[offset]) << 8U) |
                                       static_cast<std::uint16_t>(bytes[offset + 1]));
+}
+
+void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
+    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
+    bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
 }
 
 std::string trim_right(std::string text) {
@@ -76,6 +84,16 @@ std::string load_file_string(const std::string& path) {
     };
 }
 
+bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    if (!output) {
+        return false;
+    }
+
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    return static_cast<bool>(output);
+}
+
 std::string infer_memo_sidecar_path(const std::string& path) {
     std::filesystem::path file_path(path);
     const std::string ext = file_path.extension().string();
@@ -105,6 +123,166 @@ std::string infer_memo_sidecar_path(const std::string& path) {
         return file_path.replace_extension(".fpt").string();
     }
     return {};
+}
+
+struct RawFieldDescriptor {
+    std::string name;
+    char type = '\0';
+    std::uint32_t offset = 0;
+    std::uint8_t length = 0;
+    std::uint8_t decimal_count = 0;
+};
+
+std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes) {
+    std::vector<RawFieldDescriptor> fields;
+    std::size_t descriptor_offset = 32U;
+    while ((descriptor_offset + 32U) <= table_bytes.size() && table_bytes[descriptor_offset] != 0x0DU) {
+        fields.push_back({
+            .name = read_ascii_name(table_bytes, descriptor_offset, 11U),
+            .type = static_cast<char>(table_bytes[descriptor_offset + 11U]),
+            .offset = read_le_u32(table_bytes, descriptor_offset + 12U),
+            .length = table_bytes[descriptor_offset + 16U],
+            .decimal_count = table_bytes[descriptor_offset + 17U]
+        });
+        descriptor_offset += 32U;
+    }
+    return fields;
+}
+
+std::optional<char> normalize_logical_value(std::string value) {
+    value = trim_both(std::move(value));
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+
+    if (value.empty() || value == "null" || value == "?") {
+        return '?';
+    }
+    if (value == "t" || value == "true" || value == "y" || value == "yes" || value == ".t.") {
+        return 'T';
+    }
+    if (value == "f" || value == "false" || value == "n" || value == "no" || value == ".f.") {
+        return 'F';
+    }
+    return std::nullopt;
+}
+
+std::optional<RawFieldDescriptor> find_raw_field(
+    const std::vector<RawFieldDescriptor>& fields,
+    const std::string& field_name) {
+    const std::string normalized = trim_both(field_name);
+    const auto found = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return trim_both(field.name) == normalized;
+    });
+    if (found == fields.end()) {
+        return std::nullopt;
+    }
+    return *found;
+}
+
+DbfWriteResult write_field_bytes(
+    std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    std::size_t record_index,
+    const RawFieldDescriptor& field,
+    const std::string& value) {
+    if (record_index >= header.record_count) {
+        return {.ok = false, .error = "Record index is out of range.", .record_count = header.record_count};
+    }
+
+    const std::size_t record_offset = header.header_length + (record_index * header.record_length);
+    const std::size_t field_offset = record_offset + field.offset;
+    if ((field_offset + field.length) > table_bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated.", .record_count = header.record_count};
+    }
+
+    std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
+
+    switch (field.type) {
+        case 'C': {
+            const std::string text = trim_both(value);
+            if (text.size() > field.length) {
+                return {.ok = false, .error = "Character value is too large for the target field.", .record_count = header.record_count};
+            }
+            std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            break;
+        }
+        case 'N':
+        case 'F': {
+            const std::string text = trim_both(value);
+            if (!text.empty()) {
+                if (text.size() > field.length) {
+                    return {.ok = false, .error = "Numeric value is too large for the target field.", .record_count = header.record_count};
+                }
+                const auto padding = static_cast<std::ptrdiff_t>(field.length - text.size());
+                std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset) + padding);
+            }
+            break;
+        }
+        case 'L': {
+            const auto logical_value = normalize_logical_value(value);
+            if (!logical_value.has_value()) {
+                return {.ok = false, .error = "Logical fields only accept true/false values.", .record_count = header.record_count};
+            }
+            table_bytes[field_offset] = static_cast<std::uint8_t>(*logical_value);
+            break;
+        }
+        case 'D': {
+            std::string text = trim_both(value);
+            text.erase(std::remove(text.begin(), text.end(), '-'), text.end());
+            if (!text.empty() && text.size() != 8U) {
+                return {.ok = false, .error = "Date values must be empty or formatted as YYYYMMDD/YYYY-MM-DD.", .record_count = header.record_count};
+            }
+            std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            break;
+        }
+        default:
+            return {.ok = false, .error = "Direct updates are not implemented for this field type yet.", .record_count = header.record_count};
+    }
+
+    return {.ok = true, .record_count = header.record_count};
+}
+
+DbfWriteResult append_blank_record_bytes(
+    std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
+    const std::vector<RawFieldDescriptor>& fields) {
+    const std::size_t insert_offset = header.header_length + (static_cast<std::size_t>(header.record_count) * header.record_length);
+    if (insert_offset > table_bytes.size()) {
+        return {.ok = false, .error = "Table data is truncated.", .record_count = header.record_count};
+    }
+
+    const bool had_eof_marker = !table_bytes.empty() && table_bytes.back() == 0x1AU;
+    if (had_eof_marker) {
+        table_bytes.pop_back();
+    }
+
+    table_bytes.resize(table_bytes.size() + header.record_length, static_cast<std::uint8_t>(' '));
+    const std::size_t record_offset = insert_offset;
+    table_bytes[record_offset] = 0x20U;
+
+    for (const auto& field : fields) {
+        const std::size_t field_offset = record_offset + field.offset;
+        if ((field_offset + field.length) > table_bytes.size()) {
+            return {.ok = false, .error = "Table field layout exceeds the record size.", .record_count = header.record_count};
+        }
+
+        switch (field.type) {
+            case 'L':
+                table_bytes[field_offset] = static_cast<std::uint8_t>('?');
+                break;
+            default:
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(' '));
+                break;
+        }
+    }
+
+    table_bytes.push_back(0x1AU);
+    write_le_u32(table_bytes, 4U, header.record_count + 1U);
+    return {.ok = true, .record_count = header.record_count + 1U};
 }
 
 class MemoReader {
@@ -361,6 +539,104 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     }
 
     return {.ok = true, .table = std::move(table)};
+}
+
+DbfWriteResult append_blank_record_to_file(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    std::vector<std::uint8_t> bytes = {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    DbfWriteResult result = append_blank_record_bytes(bytes, header_result.header, fields);
+    if (!result.ok) {
+        return result;
+    }
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+    }
+    return result;
+}
+
+DbfWriteResult replace_record_field_value(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    std::vector<std::uint8_t> bytes = {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    const auto field = find_raw_field(fields, field_name);
+    if (!field.has_value()) {
+        return {.ok = false, .error = "The target field was not found in the table.", .record_count = header_result.header.record_count};
+    }
+
+    DbfWriteResult result = write_field_bytes(bytes, header_result.header, record_index, *field, value);
+    if (!result.ok) {
+        return result;
+    }
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+    }
+    return result;
+}
+
+DbfWriteResult set_record_deleted_flag(
+    const std::string& path,
+    std::size_t record_index,
+    bool deleted) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    std::vector<std::uint8_t> bytes = {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+    if (record_index >= header_result.header.record_count) {
+        return {.ok = false, .error = "Record index is out of range.", .record_count = header_result.header.record_count};
+    }
+
+    const std::size_t record_offset = header_result.header.header_length + (record_index * header_result.header.record_length);
+    if (record_offset >= bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated.", .record_count = header_result.header.record_count};
+    }
+
+    bytes[record_offset] = deleted ? 0x2AU : 0x20U;
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+    }
+
+    return {.ok = true, .record_count = header_result.header.record_count};
 }
 
 }  // namespace copperfin::vfp
