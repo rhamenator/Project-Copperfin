@@ -214,7 +214,9 @@ Invoke-Step -Name "Run menu xAsset smoke test" -Action {
         "--manifest", $manifestPath,
         "--debug",
         "--debug-command", "continue",
-        "--debug-command", "select:shortcut.item1"
+        "--debug-command", "select:shortcut.item1",
+        "--debug-command", "select:shortcut.item3",
+        "--debug-command", "select:thisitemha.item3"
     )
 }
 

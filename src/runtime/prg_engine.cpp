@@ -894,7 +894,11 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
 std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap(
     const std::string& asset_path,
     bool include_read_events) {
-    const auto open_result = studio::open_document({.path = asset_path, .read_only = true});
+    const auto open_result = studio::open_document({
+        .path = asset_path,
+        .read_only = true,
+        .load_full_table = true
+    });
     if (!open_result.ok) {
         last_error_message = open_result.error;
         return std::nullopt;

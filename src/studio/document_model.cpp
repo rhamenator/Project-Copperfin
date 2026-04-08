@@ -244,7 +244,10 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.inspection = inspection;
 
     if (inspection.header_available) {
-        const auto table_result = vfp::parse_dbf_table_from_file(request.path, 8U);
+        const std::size_t max_records = request.load_full_table
+            ? inspection.header.record_count
+            : 8U;
+        const auto table_result = vfp::parse_dbf_table_from_file(request.path, max_records);
         if (table_result.ok) {
             document.table_preview_available = true;
             document.table_preview = std::move(table_result.table);

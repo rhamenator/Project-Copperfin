@@ -33,6 +33,7 @@ struct StudioOpenRequest {
     std::size_t record_index = 0;
     bool launched_from_visual_studio = false;
     bool read_only = false;
+    bool load_full_table = false;
     bool apply_property_update = false;
 };
 

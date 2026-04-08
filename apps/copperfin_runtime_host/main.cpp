@@ -163,7 +163,11 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_source,
     bool include_read_events) {
     XAssetBootstrapResult result;
-    const auto open_result = copperfin::studio::open_document({.path = startup_source, .read_only = true});
+    const auto open_result = copperfin::studio::open_document({
+        .path = startup_source,
+        .read_only = true,
+        .load_full_table = true
+    });
     if (!open_result.ok) {
         result.error = open_result.error;
         return result;
