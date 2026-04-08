@@ -8,6 +8,10 @@ $vsixProject = Join-Path $vsixDir "Copperfin.VisualStudio\Copperfin.VisualStudio
 $studioProject = Join-Path $vsixDir "Copperfin.Studio\Copperfin.Studio.csproj"
 $smokeProject = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj"
 $smokeExe = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe"
+$sampleProject = "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx"
+$runtimeSmokeRoot = Join-Path $repoRoot "artifacts\runtime-smoke-validation"
+$buildHostExe = Join-Path $buildDir "Release\copperfin_build_host.exe"
+$runtimeHostExe = Join-Path $buildDir "Release\copperfin_runtime_host.exe"
 
 function Invoke-Step {
     param(
@@ -63,6 +67,34 @@ Invoke-Step -Name "Build designer smoke tests" -Action {
 
 Invoke-Step -Name "Run designer smoke tests" -Action {
     Invoke-Checked -FilePath $smokeExe
+}
+
+Invoke-Step -Name "Run runtime package smoke test" -Action {
+    Remove-Item -Recurse -Force $runtimeSmokeRoot -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $runtimeSmokeRoot | Out-Null
+
+    Invoke-Checked -FilePath $buildHostExe -ArgumentList @(
+        "build",
+        "--project", $sampleProject,
+        "--output-dir", $runtimeSmokeRoot,
+        "--configuration", "debug",
+        "--enable-security",
+        "--emit-dotnet-launcher",
+        "--runtime-host", $runtimeHostExe
+    )
+
+    $packagedRoot = Join-Path $runtimeSmokeRoot "SOLUTION"
+    $launcherExe = Join-Path $packagedRoot "SOLUTION.exe"
+    $manifestPath = Join-Path $packagedRoot "app.cfmanifest"
+
+    if (-not (Test-Path $launcherExe)) {
+        throw "Expected generated launcher was not found: $launcherExe"
+    }
+    if (-not (Test-Path $manifestPath)) {
+        throw "Expected runtime manifest was not found: $manifestPath"
+    }
+
+    Invoke-Checked -FilePath $launcherExe -ArgumentList @("--debug")
 }
 
 Write-Host ""

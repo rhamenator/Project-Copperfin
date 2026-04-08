@@ -77,10 +77,44 @@ void test_build_project_workspace() {
     expect(forms_group != workspace.groups.end(), "workspace should include a forms group");
 }
 
+void test_build_project_workspace_with_excluded_assets() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\legacy.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LEGACYAPP"},
+            {.field_name = "HOMEDIR", .field_type = 'M', .display_value = R"(D:\OLD\APP)"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = "<memo block 918>"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\legacy.scx"},
+            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "true"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LEGACY"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "legacy project workspace should still be available");
+    expect(
+        workspace.build_plan.output_path == R"(E:\Project-Copperfin\samples\LEGACYAPP.exe)",
+        "workspace should fall back to a default output path when the stored memo output is unresolved");
+    expect(
+        workspace.build_plan.startup_item == R"(forms\legacy.scx)",
+        "workspace should choose a real asset as startup even when every asset is excluded");
+    expect(
+        workspace.build_plan.startup_record_index == 1U,
+        "workspace should keep the excluded asset record index when it becomes the startup fallback");
+}
+
 }  // namespace
 
 int main() {
     test_build_project_workspace();
+    test_build_project_workspace_with_excluded_assets();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

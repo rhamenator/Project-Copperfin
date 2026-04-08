@@ -1,4 +1,5 @@
 /build/
+/artifacts/
 /.vs/
 /vsix/**/bin/
 /vsix/**/obj/

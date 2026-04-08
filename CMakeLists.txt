@@ -66,6 +66,28 @@ add_library(cf_design_model
     src/studio/vs_launch_contract.cpp
 )
 
+add_library(cf_runtime_pipeline
+    src/runtime/runtime_pipeline.cpp
+)
+
+target_include_directories(cf_runtime_pipeline
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(cf_runtime_pipeline
+    PUBLIC
+        cf_design_model
+        cf_security
+        cf_platform_profile
+)
+
+if(MSVC)
+    target_compile_options(cf_runtime_pipeline PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_runtime_pipeline PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 target_include_directories(cf_design_model
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -101,6 +123,28 @@ if(MSVC)
     target_compile_options(copperfin_studio_host PRIVATE /W4 /permissive-)
 else()
     target_compile_options(copperfin_studio_host PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(copperfin_runtime_host
+    apps/copperfin_runtime_host/main.cpp
+)
+
+if(MSVC)
+    target_compile_options(copperfin_runtime_host PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(copperfin_runtime_host PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(copperfin_build_host
+    apps/copperfin_build_host/main.cpp
+)
+
+target_link_libraries(copperfin_build_host PRIVATE cf_runtime_pipeline)
+
+if(MSVC)
+    target_compile_options(copperfin_build_host PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(copperfin_build_host PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 if(COPPERFIN_BUILD_TESTS)
@@ -217,4 +261,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_platform_models COMMAND $<TARGET_FILE:test_platform_models>)
+
+    add_executable(test_runtime_pipeline
+        tests/test_runtime_pipeline.cpp
+    )
+
+    target_link_libraries(test_runtime_pipeline PRIVATE cf_runtime_pipeline)
+
+    if(MSVC)
+        target_compile_options(test_runtime_pipeline PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_runtime_pipeline PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_runtime_pipeline COMMAND $<TARGET_FILE:test_runtime_pipeline>)
 endif()

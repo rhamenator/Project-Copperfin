@@ -48,6 +48,7 @@ Contents:
 - [`docs/17-modern-designer-direction.md`](E:/Project-Copperfin/docs/17-modern-designer-direction.md)
 - [`docs/18-native-security-and-rbac.md`](E:/Project-Copperfin/docs/18-native-security-and-rbac.md)
 - [`docs/19-polyglot-and-ai-subprojects.md`](E:/Project-Copperfin/docs/19-polyglot-and-ai-subprojects.md)
+- [`docs/20-runtime-build-and-debug-pipeline.md`](E:/Project-Copperfin/docs/20-runtime-build-and-debug-pipeline.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:
@@ -76,6 +77,12 @@ Current runnable artifacts:
   - now supports `--json` snapshots for Visual Studio designer integration
   - now supports `--list-subsystems` to inspect the planned VFP 9-equivalent Copperfin subsystem map
   - now emits a structured `reportLayout` snapshot for `FRX/FRT` and `LBX/LBT` assets with named sections and placed objects
+- `build\Release\copperfin_build_host.exe`
+  - native package/build pipeline entry point for `PJX/PJT` projects
+  - stages project assets, emits runtime and debug manifests, bundles the runtime host, and can publish a generated `.NET` launcher
+- `build\Release\copperfin_runtime_host.exe`
+  - native runtime/debug launch host for packaged Copperfin applications
+  - reads `app.cfmanifest` and prepares compatibility-mode runtime/debug execution
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
@@ -100,6 +107,7 @@ Quick examples:
 E:\Project-Copperfin\build\Release\copperfin_studio_host.exe --from-vs --path "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx"
 E:\Project-Copperfin\build\Release\copperfin_studio_host.exe "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx"
 E:\Project-Copperfin\build\Release\copperfin_inspect.exe "E:\DBASE\DBFS\CHNGREAS.NDX"
+E:\Project-Copperfin\build\Release\copperfin_build_host.exe build --project "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx" --output-dir "E:\Project-Copperfin\artifacts\runtime-smoke" --configuration debug --enable-security --emit-dotnet-launcher
 E:\Project-Copperfin\scripts\validate-windows.ps1
 ```
 
@@ -113,5 +121,5 @@ Current MVP scope:
 Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
-- the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, but it still does not provide full VFP 9-style design fidelity or executable compilation for Copperfin applications
+- the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, and the native build pipeline can now package projects into a runtime/debug artifact with an optional `.NET` launcher, but it still does not provide full VFP 9-style design fidelity or a full xBase compiler/runtime/debugger
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE
