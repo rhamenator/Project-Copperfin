@@ -11,6 +11,8 @@ Current scope:
 - registers a FoxPro text content type for `PRG`, `H`, `QPR`, `MPR`, and `SPR`
 - adds project-aware IntelliSense/statement-completion for FoxPro code files, including keywords, common functions, project symbols, aliases, and asset names
 - adds first-pass Quick Info hover help for FoxPro keywords, functions, aliases, symbols, and asset names
+- adds first-pass FoxPro call-signature help for common runtime functions such as `SELECT()`, `ALIAS()`, `SQLCONNECT()`, `SQLEXEC()`, `CREATEOBJECT()`, and `SYS()`
+- adds `F12` go-to-definition navigation for indexed project procedures, functions, classes, defines, aliases, and common asset names
 - registers a `Copperfin Visual Designer` editor for `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, and `MNX`
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus
@@ -43,6 +45,7 @@ Current limitations:
 - the debugger pane is a first runtime-facing surface, not yet the finished VFP 9-level watch/coverage/task-window experience
 - the new project utility panes are still summary-first panes, not yet the full interactive VFP 9-equivalent Project Explorer/Data Explorer/Object Browser/Coverage toolchain
 - database federation and polyglot query translation are now modeled in the shell, but the actual backend translators still need deeper implementation beyond the current architectural contract
+- FoxPro editor assistance is still a first pass inspired by VFPX and XSharp patterns, not yet a full semantic language service with rename, refactor, or complete symbol resolution
 
 Why VS 2022 as the baseline:
 

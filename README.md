@@ -106,6 +106,7 @@ Current runnable artifacts:
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
   - registers a first `Copperfin Visual Designer` document shell for `PJX/SCX/VCX/FRX/LBX/MNX`
+  - now provides first-pass FoxPro editor assistance for `PRG/H/QPR/MPR/SPR`, including project-aware completion, Quick Info, call signature help, and `F12` definition navigation for indexed project symbols and assets
   - current shell shows object/property snapshots sourced from the native Studio host
   - current `SCX/SCT` and `VCX/VCT` slices expose flattened VFP `PROPERTIES` data for inline object selection, design-surface layout, drag-move, and safe property edits
   - current `FRX/FRT` and `LBX/LBT` slices now surface named report sections in a more modern Visual Studio-style designer shell, with section-aware layout editing for `HPOS/VPOS/WIDTH/HEIGHT` plus key expression/font fields

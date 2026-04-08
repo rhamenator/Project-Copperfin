@@ -51,7 +51,7 @@ internal sealed class FoxProQuickInfoSource : IQuickInfoSource
 
         var snapshot = triggerPoint.Value.Snapshot;
         var position = triggerPoint.Value.Position;
-        var span = FindTokenSpan(snapshot, position);
+        var span = FoxProTextUtilities.FindTokenSpan(snapshot, position);
         if (span.Length == 0)
         {
             return;
@@ -83,43 +83,5 @@ internal sealed class FoxProQuickInfoSource : IQuickInfoSource
         return textDocumentFactoryService.TryGetTextDocument(textBuffer, out var document)
             ? document.FilePath
             : null;
-    }
-
-    private static Span FindTokenSpan(ITextSnapshot snapshot, int position)
-    {
-        if (snapshot.Length == 0)
-        {
-            return new Span(0, 0);
-        }
-
-        var adjustedPosition = Math.Max(0, Math.Min(position, snapshot.Length - 1));
-        if (!IsTokenCharacter(snapshot[adjustedPosition]) && adjustedPosition > 0 && IsTokenCharacter(snapshot[adjustedPosition - 1]))
-        {
-            adjustedPosition--;
-        }
-
-        if (!IsTokenCharacter(snapshot[adjustedPosition]))
-        {
-            return new Span(position, 0);
-        }
-
-        var start = adjustedPosition;
-        while (start > 0 && IsTokenCharacter(snapshot[start - 1]))
-        {
-            start--;
-        }
-
-        var end = adjustedPosition;
-        while (end < snapshot.Length && IsTokenCharacter(snapshot[end]))
-        {
-            end++;
-        }
-
-        return Span.FromBounds(start, end);
-    }
-
-    private static bool IsTokenCharacter(char value)
-    {
-        return char.IsLetterOrDigit(value) || value == '_' || value == '.' || value == '#';
     }
 }

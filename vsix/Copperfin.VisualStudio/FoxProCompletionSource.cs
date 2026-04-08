@@ -52,7 +52,7 @@ internal sealed class FoxProCompletionSource : ICompletionSource
 
         var snapshot = triggerPoint.Value.Snapshot;
         var position = triggerPoint.Value.Position;
-        var span = FindTokenSpan(snapshot, position);
+        var span = FoxProTextUtilities.FindTokenSpan(snapshot, position);
         var tokenPrefix = snapshot.GetText(span);
         var line = snapshot.GetLineFromPosition(position);
         var linePrefix = snapshot.GetText(Span.FromBounds(line.Start.Position, position));
@@ -88,27 +88,6 @@ internal sealed class FoxProCompletionSource : ICompletionSource
             : null;
     }
 
-    private static Span FindTokenSpan(ITextSnapshot snapshot, int position)
-    {
-        var start = position;
-        while (start > 0 && IsTokenCharacter(snapshot[start - 1]))
-        {
-            start--;
-        }
-
-        var end = position;
-        while (end < snapshot.Length && IsTokenCharacter(snapshot[end]))
-        {
-            end++;
-        }
-
-        return Span.FromBounds(start, end);
-    }
-
-    private static bool IsTokenCharacter(char value)
-    {
-        return char.IsLetterOrDigit(value) || value == '_' || value == '.' || value == '#';
-    }
 }
 
 [Export(typeof(IVsTextViewCreationListener))]
@@ -122,6 +101,12 @@ internal sealed class FoxProCompletionHandlerProvider : IVsTextViewCreationListe
     [Import]
     internal ICompletionBroker CompletionBroker = null!;
 
+    [Import]
+    internal ISignatureHelpBroker SignatureHelpBroker = null!;
+
+    [Import]
+    internal ITextDocumentFactoryService TextDocumentFactoryService = null!;
+
     public void VsTextViewCreated(Microsoft.VisualStudio.TextManager.Interop.IVsTextView textViewAdapter)
     {
         var textView = AdapterService.GetWpfTextView(textViewAdapter);
@@ -130,7 +115,7 @@ internal sealed class FoxProCompletionHandlerProvider : IVsTextViewCreationListe
             return;
         }
 
-        var commandHandler = new FoxProCompletionCommandHandler(textViewAdapter, textView, CompletionBroker);
+        var commandHandler = new FoxProCompletionCommandHandler(textViewAdapter, textView, CompletionBroker, SignatureHelpBroker, TextDocumentFactoryService);
         textView.Properties.AddProperty(typeof(FoxProCompletionCommandHandler), commandHandler);
     }
 }

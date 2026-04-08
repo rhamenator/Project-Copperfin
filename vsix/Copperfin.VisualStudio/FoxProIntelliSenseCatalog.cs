@@ -15,6 +15,30 @@ internal sealed class FoxProCompletionEntry
     public string Kind { get; set; } = string.Empty;
 }
 
+internal sealed class FoxProParameterEntry
+{
+    public string Name { get; set; } = string.Empty;
+    public string Documentation { get; set; } = string.Empty;
+}
+
+internal sealed class FoxProSignatureEntry
+{
+    public string Name { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string Documentation { get; set; } = string.Empty;
+    public IReadOnlyList<FoxProParameterEntry> Parameters { get; set; } = Array.Empty<FoxProParameterEntry>();
+}
+
+internal sealed class FoxProDefinitionLocation
+{
+    public string Name { get; set; } = string.Empty;
+    public string Kind { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public int LineNumber { get; set; }
+    public int ColumnNumber { get; set; }
+    public string Description { get; set; } = string.Empty;
+}
+
 internal static class FoxProIntelliSenseCatalog
 {
     private static readonly string[] TextExtensions = { ".prg", ".h", ".hpp", ".ch", ".qpr", ".mpr", ".spr" };
@@ -121,6 +145,30 @@ internal static class FoxProIntelliSenseCatalog
         ("ActiveWorkbook", "Common Excel automation property."),
         ("Documents", "Common Office automation collection.")
     };
+
+    private static readonly FoxProSignatureEntry[] SignatureEntries =
+    {
+        CreateSignature("ALIAS", "ALIAS([nWorkArea | cAlias])", "Returns the alias for the current or specified work area.", ("nWorkArea | cAlias", "Optional work area number or alias to resolve.")),
+        CreateSignature("SELECT", "SELECT([nWorkArea | cAlias])", "Returns or resolves a work area by number or alias.", ("nWorkArea | cAlias", "Optional work area number or alias.")),
+        CreateSignature("RECCOUNT", "RECCOUNT([cAlias])", "Returns the number of records in the current or named work area.", ("cAlias", "Optional alias to inspect.")),
+        CreateSignature("RECNO", "RECNO([cAlias])", "Returns the current record number in the current or named work area.", ("cAlias", "Optional alias to inspect.")),
+        CreateSignature("EOF", "EOF([cAlias])", "Returns .T. when positioned after the last record.", ("cAlias", "Optional alias to inspect.")),
+        CreateSignature("BOF", "BOF([cAlias])", "Returns .T. when positioned before the first record.", ("cAlias", "Optional alias to inspect.")),
+        CreateSignature("CREATEOBJECT", "CREATEOBJECT(cClass [, eInitParameter1 [, eInitParameterN]])", "Creates a COM or Copperfin automation object.", ("cClass", "ProgID or class name to instantiate."), ("eInitParameter1", "Optional constructor-style argument."), ("eInitParameterN", "Additional optional constructor-style arguments.")),
+        CreateSignature("GETOBJECT", "GETOBJECT([cFileName] [, cClass])", "Binds to an existing automation object or document moniker.", ("cFileName", "Optional document path or moniker."), ("cClass", "Optional class or ProgID filter.")),
+        CreateSignature("SQLCONNECT", "SQLCONNECT(cDataSourceName [, cUserId [, cPassword [, lShared]]])", "Opens an ODBC or connection-manager session for SQL pass-through.", ("cDataSourceName", "DSN or connection identifier."), ("cUserId", "Optional user name."), ("cPassword", "Optional password."), ("lShared", "Optional shared-connection flag.")),
+        CreateSignature("SQLSTRINGCONNECT", "SQLSTRINGCONNECT(cConnectString [, lShared])", "Opens SQL pass-through with a raw connection string.", ("cConnectString", "Raw ODBC-style connection string."), ("lShared", "Optional shared-connection flag.")),
+        CreateSignature("SQLEXEC", "SQLEXEC(nConnectionHandle, cCommand [, cCursorName])", "Executes SQL pass-through and optionally materializes a result cursor.", ("nConnectionHandle", "Connection handle returned by SQLCONNECT or SQLSTRINGCONNECT."), ("cCommand", "SQL text to execute."), ("cCursorName", "Optional target cursor alias.")),
+        CreateSignature("SQLDISCONNECT", "SQLDISCONNECT([nConnectionHandle])", "Closes one SQL pass-through connection or all of them.", ("nConnectionHandle", "Optional connection handle to close.")),
+        CreateSignature("CURSORGETPROP", "CURSORGETPROP(cProperty [, cCursorName])", "Returns metadata for a cursor or remote view.", ("cProperty", "Property name to query."), ("cCursorName", "Optional cursor alias.")),
+        CreateSignature("MESSAGEBOX", "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])", "Displays a modal dialog and returns the pressed button.", ("cMessage", "Message text to display."), ("nDialogBoxType", "Optional button/icon/style flags."), ("cTitleBarText", "Optional dialog title.")),
+        CreateSignature("SYS", "SYS(nFunction [, eExpression1 [, eExpressionN]])", "Calls a Visual FoxPro system service by numeric identifier.", ("nFunction", "System function number."), ("eExpression1", "Optional first argument."), ("eExpressionN", "Additional optional arguments.")),
+        CreateSignature("IIF", "IIF(lExpression, eTrueValue, eFalseValue)", "Returns one of two expressions based on a condition.", ("lExpression", "Condition to evaluate."), ("eTrueValue", "Value when the condition is true."), ("eFalseValue", "Value when the condition is false."))
+    };
+
+    private static readonly Dictionary<string, IReadOnlyList<FoxProSignatureEntry>> SignatureLookup =
+        SignatureEntries.GroupBy(entry => NormalizeLookupToken(entry.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<FoxProSignatureEntry>)group.ToList(), StringComparer.OrdinalIgnoreCase);
 
     private static readonly ConcurrentDictionary<string, ProjectSymbolIndex> Cache = new(StringComparer.OrdinalIgnoreCase);
 
@@ -252,6 +300,58 @@ internal static class FoxProIntelliSenseCatalog
         return string.Empty;
     }
 
+    public static IReadOnlyList<FoxProSignatureEntry> GetSignatures(string? filePath, string invocationName)
+    {
+        var key = NormalizeLookupToken(invocationName);
+        if (SignatureLookup.TryGetValue(key, out var signatures))
+        {
+            return signatures;
+        }
+
+        if (invocationName.Contains('.'))
+        {
+            var memberName = invocationName.Split('.').Last();
+            if (SignatureLookup.TryGetValue(NormalizeLookupToken(memberName), out signatures))
+            {
+                return signatures;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            var index = GetProjectIndex(filePath!);
+            if (index.Classes.Contains(key) || index.Procedures.Contains(key))
+            {
+                return Array.Empty<FoxProSignatureEntry>();
+            }
+        }
+
+        return Array.Empty<FoxProSignatureEntry>();
+    }
+
+    public static bool TryResolveDefinition(string? filePath, string token, out FoxProDefinitionLocation definition)
+    {
+        definition = new FoxProDefinitionLocation();
+        if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(token))
+        {
+            return false;
+        }
+
+        var index = GetProjectIndex(filePath!);
+        if (TryResolveDefinition(index, NormalizeLookupToken(token), out definition))
+        {
+            return true;
+        }
+
+        if (token.Contains('.'))
+        {
+            var memberName = token.Split('.').Last();
+            return TryResolveDefinition(index, NormalizeLookupToken(memberName), out definition);
+        }
+
+        return false;
+    }
+
     private static void AddContextualProjectEntries(
         IDictionary<string, FoxProCompletionEntry> completions,
         ProjectSymbolIndex index,
@@ -359,27 +459,27 @@ internal static class FoxProIntelliSenseCatalog
             var extension = Path.GetExtension(file);
             if (FormExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                index.Forms.Add(Path.GetFileNameWithoutExtension(file));
+                AddAsset(index.Forms, index, Path.GetFileNameWithoutExtension(file), "form asset", file, "Project form asset.");
                 continue;
             }
             if (ReportExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                index.Reports.Add(Path.GetFileNameWithoutExtension(file));
+                AddAsset(index.Reports, index, Path.GetFileNameWithoutExtension(file), "report asset", file, "Project report asset.");
                 continue;
             }
             if (LabelExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                index.Labels.Add(Path.GetFileNameWithoutExtension(file));
+                AddAsset(index.Labels, index, Path.GetFileNameWithoutExtension(file), "label asset", file, "Project label asset.");
                 continue;
             }
             if (MenuExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                index.Menus.Add(Path.GetFileNameWithoutExtension(file));
+                AddAsset(index.Menus, index, Path.GetFileNameWithoutExtension(file), "menu asset", file, "Project menu asset.");
                 continue;
             }
             if (TableExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                index.Tables.Add(Path.GetFileNameWithoutExtension(file));
+                AddAsset(index.Tables, index, Path.GetFileNameWithoutExtension(file), "table asset", file, "Project table or database asset.");
                 continue;
             }
             if (!TextExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
@@ -405,27 +505,39 @@ internal static class FoxProIntelliSenseCatalog
             return;
         }
 
-        foreach (var line in lines)
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
-            AddMatch(index.Procedures, ProcedureRegex, line);
-            AddMatch(index.Procedures, FunctionRegex, line);
-            AddMatch(index.Defines, DefineRegex, line);
-            AddMatch(index.Aliases, UseAliasRegex, line);
+            var line = lines[lineIndex];
+            AddMatch(index.Procedures, index.Definitions, ProcedureRegex, line, path, lineIndex + 1, "procedure", "Project procedure symbol.");
+            AddMatch(index.Procedures, index.Definitions, FunctionRegex, line, path, lineIndex + 1, "function", "Project function symbol.");
+            AddMatch(index.Defines, index.Definitions, DefineRegex, line, path, lineIndex + 1, "define", "Project preprocessor symbol.");
+            AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, path, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
 
             var classMatch = DefineClassRegex.Match(line);
             if (classMatch.Success)
             {
                 index.Classes.Add(classMatch.Groups[1].Value);
+                TryAddDefinition(index.Definitions, classMatch.Groups[1].Value, "class", path, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
             }
         }
     }
 
-    private static void AddMatch(ISet<string> bucket, Regex regex, string line)
+    private static void AddMatch(
+        ISet<string> bucket,
+        IDictionary<string, FoxProDefinitionLocation> definitions,
+        Regex regex,
+        string line,
+        string path,
+        int lineNumber,
+        string kind,
+        string description)
     {
         var match = regex.Match(line);
         if (match.Success)
         {
-            bucket.Add(match.Groups[1].Value);
+            var name = match.Groups[1].Value;
+            bucket.Add(name);
+            TryAddDefinition(definitions, name, kind, path, lineNumber, match.Groups[1].Index + 1, description);
         }
     }
 
@@ -518,7 +630,8 @@ internal static class FoxProIntelliSenseCatalog
 
     private static string NormalizeLookupToken(string token)
     {
-        return token.Trim().TrimEnd('(', ')');
+        var normalized = token.Trim().TrimEnd('(', ')');
+        return normalized.StartsWith("#", StringComparison.Ordinal) ? normalized : normalized.TrimStart('&');
     }
 
     private static bool TokenMatches(string candidate, string key)
@@ -530,6 +643,69 @@ internal static class FoxProIntelliSenseCatalog
 
         var normalizedCandidate = NormalizeLookupToken(candidate);
         return string.Equals(normalizedCandidate, key, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryResolveDefinition(ProjectSymbolIndex index, string key, out FoxProDefinitionLocation definition)
+    {
+        if (index.Definitions.TryGetValue(key, out definition!))
+        {
+            return true;
+        }
+
+        definition = new FoxProDefinitionLocation();
+        return false;
+    }
+
+    private static void AddAsset(
+        ISet<string> bucket,
+        ProjectSymbolIndex index,
+        string name,
+        string kind,
+        string path,
+        string description)
+    {
+        bucket.Add(name);
+        TryAddDefinition(index.Definitions, name, kind, path, 1, 1, description);
+    }
+
+    private static void TryAddDefinition(
+        IDictionary<string, FoxProDefinitionLocation> definitions,
+        string name,
+        string kind,
+        string path,
+        int lineNumber,
+        int columnNumber,
+        string description)
+    {
+        if (string.IsNullOrWhiteSpace(name) || definitions.ContainsKey(name))
+        {
+            return;
+        }
+
+        definitions[name] = new FoxProDefinitionLocation
+        {
+            Name = name,
+            Kind = kind,
+            FilePath = path,
+            LineNumber = lineNumber,
+            ColumnNumber = Math.Max(1, columnNumber),
+            Description = description
+        };
+    }
+
+    private static FoxProSignatureEntry CreateSignature(string name, string content, string documentation, params (string Name, string Documentation)[] parameters)
+    {
+        return new FoxProSignatureEntry
+        {
+            Name = name,
+            Content = content,
+            Documentation = documentation,
+            Parameters = parameters.Select(parameter => new FoxProParameterEntry
+            {
+                Name = parameter.Name,
+                Documentation = parameter.Documentation
+            }).ToList()
+        };
     }
 
     private sealed class ProjectSymbolIndex
@@ -545,6 +721,7 @@ internal static class FoxProIntelliSenseCatalog
         public HashSet<string> Reports { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Labels { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Menus { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, FoxProDefinitionLocation> Definitions { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public bool ShouldRefresh => (DateTime.UtcNow - BuiltAtUtc) > TimeSpan.FromSeconds(15);
     }
