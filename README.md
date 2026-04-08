@@ -84,7 +84,9 @@ Current runnable artifacts:
   - native runtime/debug launch host for packaged Copperfin applications
   - reads `app.cfmanifest` and now executes `PRG` startup code through a native xBase runtime session
   - supports real breakpoint and step-debugging actions for `PRG` startup paths
-  - still reports compatibility-mode launch information for non-`PRG` startup assets while those runtimes are under construction
+  - now bootstraps runnable `SCX/VCX` startup methods through generated `PRG` wrappers
+  - packaged `SCX/VCX` startup assets now stage their memo sidecars and can launch from packaged content instead of only from source trees
+  - still reports compatibility-mode launch information for non-runnable xAssets and other startup assets while those runtimes are under construction
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
   - current output: `vsix\Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix`
@@ -124,4 +126,5 @@ Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
 - the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, and the native build pipeline can now package projects into a runtime/debug artifact with an optional `.NET` launcher plus a real `PRG` execution/debugger slice, but it still does not provide full VFP 9-style design fidelity or the full FoxPro/VFP runtime surface
+- packaged runtime output is now good enough to launch runnable `SCX/VCX` startup assets from staged package content, but broader asset-family execution and deeper event/lifecycle fidelity still need work
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE

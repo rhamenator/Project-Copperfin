@@ -1,4 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/studio/document_model.h"
 
 #include <algorithm>
 #include <cctype>
@@ -138,6 +140,68 @@ void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
     }
 }
 
+std::optional<std::string> materialize_xasset_bootstrap(
+    const std::string& startup_source,
+    bool include_read_events,
+    std::string& error) {
+    const auto open_result = copperfin::studio::open_document({.path = startup_source, .read_only = true});
+    if (!open_result.ok) {
+        error = open_result.error;
+        return std::nullopt;
+    }
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(open_result.document);
+    if (!model.ok || !model.runnable_startup) {
+        error = model.error.empty()
+            ? "No runnable startup methods were found in asset."
+            : model.error;
+        return std::nullopt;
+    }
+
+    const std::filesystem::path startup_path(startup_source);
+    const std::filesystem::path bootstrap_path =
+        std::filesystem::temp_directory_path() /
+        (startup_path.stem().string() + "_copperfin_host_bootstrap.prg");
+
+    std::ofstream output(bootstrap_path, std::ios::binary);
+    output << copperfin::runtime::build_xasset_bootstrap_source(model, include_read_events);
+    output.close();
+    if (!output.good()) {
+        error = "Unable to materialize xAsset bootstrap.";
+        return std::nullopt;
+    }
+
+    return bootstrap_path.string();
+}
+
+std::string resolve_startup_source(const ManifestMap& manifest) {
+    const std::string startup_source = first_value(manifest, "startup_source");
+    if (!startup_source.empty() && std::filesystem::exists(startup_source)) {
+        return std::filesystem::path(startup_source).lexically_normal().string();
+    }
+
+    const std::string startup_item = first_value(manifest, "startup_item");
+    const std::string working_directory = first_value(manifest, "working_directory");
+    if (!startup_item.empty() && !working_directory.empty()) {
+        const std::filesystem::path candidate =
+            (std::filesystem::path(working_directory) / startup_item).lexically_normal();
+        if (std::filesystem::exists(candidate)) {
+            return candidate.string();
+        }
+    }
+
+    const std::string content_root = first_value(manifest, "content_root");
+    if (!startup_item.empty() && !content_root.empty()) {
+        const std::filesystem::path candidate =
+            (std::filesystem::path(content_root) / startup_item).lexically_normal();
+        if (std::filesystem::exists(candidate)) {
+            return candidate.string();
+        }
+    }
+
+    return startup_source;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -184,7 +248,7 @@ int main(int argc, char** argv) {
 
     const auto assets = all_values(manifest, "asset");
     const auto warnings = all_values(manifest, "warning");
-    const std::string startup_source = first_value(manifest, "startup_source");
+    const std::string startup_source = resolve_startup_source(manifest);
     const std::string working_directory = first_value(manifest, "working_directory");
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
     const bool prg_startup = startup_extension == ".prg";
@@ -200,26 +264,35 @@ int main(int argc, char** argv) {
     std::cout << "asset.count: " << assets.size() << "\n";
     std::cout << "warning.count: " << warnings.size() << "\n";
 
+    std::string effective_startup_source = startup_source;
+    std::string runtime_mode = "prg-engine";
     if (!prg_startup) {
-        std::cout << "runtime.mode: compatibility-launcher\n";
-        std::cout << "launch.note: Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\n";
-        std::cout << "debug.breakpoint_support: false\n";
-        std::cout << "debug.step_support: false\n";
-        return 0;
+        std::string bootstrap_error;
+        const auto bootstrap_path = materialize_xasset_bootstrap(startup_source, true, bootstrap_error);
+        if (!bootstrap_path.has_value()) {
+            std::cout << "runtime.mode: compatibility-launcher\n";
+            std::cout << "launch.note: Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\n";
+            std::cout << "launch.note: " << bootstrap_error << "\n";
+            std::cout << "debug.breakpoint_support: false\n";
+            std::cout << "debug.step_support: false\n";
+            return 0;
+        }
+        effective_startup_source = *bootstrap_path;
+        runtime_mode = "xasset-bootstrap";
     }
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = startup_source,
+        .startup_path = effective_startup_source,
         .working_directory = working_directory,
         .stop_on_entry = false
     });
     for (const auto& breakpoint_arg : breakpoint_args) {
-        if (const auto breakpoint = parse_breakpoint(breakpoint_arg, startup_source)) {
+        if (const auto breakpoint = parse_breakpoint(breakpoint_arg, effective_startup_source)) {
             session.add_breakpoint(*breakpoint);
         }
     }
 
-    std::cout << "runtime.mode: prg-engine\n";
+    std::cout << "runtime.mode: " << runtime_mode << "\n";
     std::cout << "debug.breakpoint_support: true\n";
     std::cout << "debug.step_support: true\n";
 

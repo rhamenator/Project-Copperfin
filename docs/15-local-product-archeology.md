@@ -211,7 +211,19 @@ Use local references like this:
 - inspect `vfp9.exe` and the shared VFP DLLs for host/runtime boundaries
 - inspect shipped `.app` modules to identify product subsystems we must replace
 - inspect `Ffc`, `Wizards`, `Tools`, and `Samples` for workflow and behavior
+- inspect source helpers like `scctext.prg` and `genmenu.prg` for clean-room clues about where executable behavior actually lives inside `SCX/VCX/MNX` assets
 - use `C:\vDosPlus` mainly for older behavior/migration archaeology, not as the main IDE model
+
+Concrete runtime guidance already surfaced from the local source tree:
+
+- `scctext.prg`
+  - treats `METHODS` as the textual source of behavior in `SCX/VCX`
+  - explicitly excludes `OBJCODE` from the source-control text representation for `VCX`
+  - that makes `METHODS` the safer clean-room execution seed for Copperfin
+- `genmenu.prg`
+  - shows `MNX` behavior is not modeled like forms/classes
+  - menu procedure bodies live in menu-specific fields and generation paths rather than a simple `METHODS` blob
+  - that is a strong clue that menu runtime parity will need a dedicated execution path
 
 The key conclusion is simple:
 

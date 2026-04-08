@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 namespace copperfin::runtime {
@@ -36,6 +37,13 @@ std::string trim_copy(std::string value) {
     while (!value.empty() && is_space(static_cast<unsigned char>(value.back()))) {
         value.pop_back();
     }
+    return value;
+}
+
+std::string lowercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
     return value;
 }
 
@@ -233,7 +241,74 @@ std::string join_strings(const std::vector<std::string>& values) {
 }
 
 bool is_prg_path(const std::string& value) {
-    return std::filesystem::path(value).extension() == ".prg";
+    return trim_copy(std::filesystem::path(value).extension().string()) == ".prg";
+}
+
+bool is_xasset_path(const std::string& value) {
+    const std::string extension = trim_copy(std::filesystem::path(value).extension().string());
+    return extension == ".scx" ||
+        extension == ".vcx" ||
+        extension == ".frx" ||
+        extension == ".lbx" ||
+        extension == ".mnx";
+}
+
+bool should_stage_asset(const RuntimePackageAsset& asset) {
+    return asset.exists && (!asset.excluded || asset.required_for_runtime);
+}
+
+std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source) {
+    std::vector<std::filesystem::path> companions;
+    const std::string extension = trim_copy(lowercase_copy(source.extension().string()));
+    const auto same_stem = [&](const char* companion_extension) {
+        auto path = source;
+        path.replace_extension(companion_extension);
+        return path;
+    };
+
+    if (extension == ".pjx") {
+        companions.push_back(same_stem(".pjt"));
+    } else if (extension == ".scx") {
+        companions.push_back(same_stem(".sct"));
+    } else if (extension == ".vcx") {
+        companions.push_back(same_stem(".vct"));
+    } else if (extension == ".frx") {
+        companions.push_back(same_stem(".frt"));
+    } else if (extension == ".lbx") {
+        companions.push_back(same_stem(".lbt"));
+    } else if (extension == ".mnx") {
+        companions.push_back(same_stem(".mnt"));
+    } else if (extension == ".dbf") {
+        companions.push_back(same_stem(".fpt"));
+        companions.push_back(same_stem(".cdx"));
+        companions.push_back(same_stem(".idx"));
+        companions.push_back(same_stem(".ndx"));
+        companions.push_back(same_stem(".mdx"));
+    } else if (extension == ".dbc") {
+        companions.push_back(same_stem(".dct"));
+        companions.push_back(same_stem(".dcx"));
+    }
+
+    return companions;
+}
+
+void copy_companion_files_if_present(
+    const RuntimePackageAsset& asset,
+    std::vector<std::string>& warnings) {
+    const std::filesystem::path source(asset.source_path);
+    const std::filesystem::path staged(asset.staged_path);
+    for (const auto& companion_source : infer_companion_source_paths(source)) {
+        if (!std::filesystem::exists(companion_source)) {
+            continue;
+        }
+
+        auto companion_destination = staged;
+        companion_destination.replace_extension(companion_source.extension().string());
+        std::string error;
+        if (!copy_file_if_exists(companion_source, companion_destination, error)) {
+            warnings.push_back(error);
+        }
+    }
 }
 
 }  // namespace
@@ -302,6 +377,7 @@ RuntimePackagePlan create_runtime_package_plan(
         asset.excluded = entry.excluded;
         asset.exists = !asset.source_path.empty() && std::filesystem::exists(asset.source_path);
         if (entry.record_index == workspace.build_plan.startup_record_index) {
+            asset.required_for_runtime = true;
             plan.startup_source_path = asset.staged_path;
             plan.debug_plan.startup_source_path = asset.source_path;
         }
@@ -325,8 +401,10 @@ RuntimePackagePlan create_runtime_package_plan(
         source_working_directory,
         plan.content_root
     };
-    plan.debug_plan.supports_breakpoints = is_prg_path(plan.debug_plan.startup_source_path);
-    plan.debug_plan.supports_step_debugging = is_prg_path(plan.debug_plan.startup_source_path);
+    plan.debug_plan.supports_breakpoints =
+        is_prg_path(plan.debug_plan.startup_source_path) ||
+        is_xasset_path(plan.debug_plan.startup_source_path);
+    plan.debug_plan.supports_step_debugging = plan.debug_plan.supports_breakpoints;
 
     if (enable_security && !security_profile.available) {
         plan.warnings.push_back("Security was requested but no native security profile is available.");
@@ -417,7 +495,7 @@ RuntimeMaterializeResult materialize_runtime_package(
 
     RuntimePackagePlan materialized_plan = plan;
     for (auto& asset : materialized_plan.assets) {
-        if (!asset.exists || asset.excluded) {
+        if (!should_stage_asset(asset)) {
             continue;
         }
 
@@ -427,6 +505,7 @@ RuntimeMaterializeResult materialize_runtime_package(
             materialized_plan.warnings.push_back(error);
             continue;
         }
+        copy_companion_files_if_present(asset, materialized_plan.warnings);
         asset.copied = true;
     }
 

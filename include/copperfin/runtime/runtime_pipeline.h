@@ -24,6 +24,7 @@ struct RuntimePackageAsset {
     std::string type_title;
     bool excluded = false;
     bool exists = false;
+    bool required_for_runtime = false;
     bool copied = false;
 };
 

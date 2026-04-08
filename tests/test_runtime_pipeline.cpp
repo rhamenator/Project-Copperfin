@@ -109,10 +109,71 @@ void test_materialize_runtime_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_materialize_excluded_xasset_startup_package() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_xasset_tests";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = temp_root / "copperfin_runtime_host.exe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "startup.scx", "synthetic form table");
+    write_text(project_dir / "startup.sct", "synthetic form memo");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DemoXAsset";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "DemoXAsset";
+    workspace.build_plan.output_path = (output_dir / "DemoXAsset.exe").string();
+    workspace.build_plan.startup_item = "startup.scx";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "xasset runtime package plan should be created");
+    expect(plan.debug_plan.supports_breakpoints, "xasset startup should advertise breakpoint support");
+    expect(plan.debug_plan.supports_step_debugging, "xasset startup should advertise step debugging");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "xasset runtime package should materialize");
+    if (result.ok) {
+        expect(fs::exists(fs::path(result.plan.content_root) / "startup.scx"), "packaged xasset startup should be staged even if excluded");
+        expect(fs::exists(fs::path(result.plan.content_root) / "startup.sct"), "packaged xasset memo sidecar should be staged");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_materialize_runtime_package();
+    test_materialize_excluded_xasset_startup_package();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

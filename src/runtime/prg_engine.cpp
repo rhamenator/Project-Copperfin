@@ -1,10 +1,13 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/studio/document_model.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -26,6 +29,7 @@ enum class StatementKind {
     endfor_statement,
     read_events,
     clear_events,
+    set_command,
     set_default,
     on_error,
     public_declaration,
@@ -298,6 +302,9 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SET DEFAULT TO ")) {
             statement.kind = StatementKind::set_default;
             statement.expression = trim_copy(line.substr(15U));
+        } else if (starts_with_insensitive(line, "SET ")) {
+            statement.kind = StatementKind::set_command;
+            statement.expression = trim_copy(line.substr(4U));
         } else if (starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
             statement.expression = trim_copy(line.substr(9U));
@@ -421,6 +428,7 @@ struct PrgRuntimeSession::Impl {
     std::string default_directory;
     std::string last_error_message;
     std::string error_handler;
+    std::map<std::string, std::string> set_state;
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
     std::size_t executed_statement_count = 0;
@@ -497,6 +505,7 @@ struct PrgRuntimeSession::Impl {
     }
 
     PrgValue evaluate_expression(const std::string& expression, const Frame& frame);
+    std::optional<std::string> materialize_xasset_bootstrap(const std::string& asset_path, bool include_read_events);
 
     void assign_variable(Frame& frame, const std::string& name, const PrgValue& value) {
         const std::string normalized = normalize_identifier(name);
@@ -861,6 +870,39 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
     return parser.parse();
 }
 
+std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap(
+    const std::string& asset_path,
+    bool include_read_events) {
+    const auto open_result = studio::open_document({.path = asset_path, .read_only = true});
+    if (!open_result.ok) {
+        last_error_message = open_result.error;
+        return std::nullopt;
+    }
+
+    const XAssetExecutableModel model = build_xasset_executable_model(open_result.document);
+    if (!model.ok || !model.runnable_startup) {
+        last_error_message = model.error.empty()
+            ? "No runnable startup methods were found in asset: " + asset_path
+            : model.error;
+        return std::nullopt;
+    }
+
+    const std::filesystem::path asset_file(asset_path);
+    const std::filesystem::path bootstrap_path =
+        std::filesystem::temp_directory_path() /
+        (asset_file.stem().string() + "_copperfin_bootstrap.prg");
+
+    std::ofstream output(bootstrap_path, std::ios::binary);
+    output << build_xasset_bootstrap_source(model, include_read_events);
+    output.close();
+    if (!output.good()) {
+        last_error_message = "Unable to materialize xAsset bootstrap for: " + asset_path;
+        return std::nullopt;
+    }
+
+    return bootstrap_path.string();
+}
+
 ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
     if (stack.empty()) {
         return {};
@@ -935,6 +977,11 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .detail = form_path.lexically_normal().string(),
                 .location = statement.location
             });
+            if (std::filesystem::exists(form_path)) {
+                if (const auto bootstrap_path = materialize_xasset_bootstrap(form_path.string(), false)) {
+                    push_main_frame(*bootstrap_path);
+                }
+            }
             return {};
         }
         case StatementKind::return_statement:
@@ -1006,6 +1053,14 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = "runtime.event_loop",
                 .detail = "CLEAR EVENTS",
+                .location = statement.location
+            });
+            return {};
+        case StatementKind::set_command:
+            set_state[normalize_identifier(statement.expression)] = "true";
+            events.push_back({
+                .category = "runtime.set",
+                .detail = statement.expression,
                 .location = statement.location
             });
             return {};

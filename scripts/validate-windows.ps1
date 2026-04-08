@@ -141,5 +141,34 @@ Invoke-Step -Name "Run PRG debugger smoke test" -Action {
     )
 }
 
+Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
+    $xassetSmokeRoot = Join-Path $repoRoot "artifacts\xasset-debug-smoke"
+    Remove-Item -Recurse -Force $xassetSmokeRoot -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $xassetSmokeRoot | Out-Null
+
+    $manifestPath = Join-Path $xassetSmokeRoot "app.cfmanifest"
+    @(
+        "manifest_version=1",
+        "project_title=XASSETDEBUG",
+        "project_path=E:\Project-Copperfin\xasset-smoke.pjx",
+        "package_root=$xassetSmokeRoot",
+        "content_root=$xassetSmokeRoot",
+        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms",
+        "startup_item=books.scx",
+        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx",
+        "configuration=debug",
+        "security_enabled=false",
+        "security_mode=off",
+        "dotnet_enabled=false",
+        "dotnet_story="
+    ) | Set-Content -Path $manifestPath
+
+    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
+        "--manifest", $manifestPath,
+        "--debug",
+        "--debug-command", "continue"
+    )
+}
+
 Write-Host ""
 Write-Host "Validation complete." -ForegroundColor Green

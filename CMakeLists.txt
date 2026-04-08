@@ -72,11 +72,17 @@ add_library(cf_runtime_pipeline
 
 add_library(cf_xbase_runtime
     src/runtime/prg_engine.cpp
+    src/runtime/xasset_methods.cpp
 )
 
 target_include_directories(cf_xbase_runtime
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(cf_xbase_runtime
+    PUBLIC
+        cf_design_model
 )
 
 if(MSVC)
@@ -306,4 +312,18 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_prg_engine COMMAND $<TARGET_FILE:test_prg_engine>)
+
+    add_executable(test_xasset_methods
+        tests/test_xasset_methods.cpp
+    )
+
+    target_link_libraries(test_xasset_methods PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_xasset_methods PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_xasset_methods PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_xasset_methods COMMAND $<TARGET_FILE:test_xasset_methods>)
 endif()
