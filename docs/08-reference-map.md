@@ -29,6 +29,9 @@ Legacy/reference code on `E:\`:
 
 ## Web References
 
+- [Microsoft Learn VFP language reference](https://learn.microsoft.com/en-us/previous-versions/visualstudio/foxpro/dd5f4hyy(v=vs.71))
+- [Microsoft Learn VFP general reference](https://learn.microsoft.com/en-us/previous-versions/visualstudio/foxpro/h9f898ae(v=vs.71))
+- [Microsoft Learn VFP home page](https://learn.microsoft.com/en-us/previous-versions/visualstudio/foxpro/mt490117(v=msdn.10))
 - [VFPX project index](https://vfpx.github.io/projects/)
 - [VFPX FFC](https://github.com/VFPX/FFC)
 - [VFPX ReportingApps](https://github.com/VFPX/ReportingApps)
@@ -59,6 +62,7 @@ Legacy/reference code on `E:\`:
 - ReportingApps proves reporting deserves its own maintained subsystem.
 - Local `ReportBuilder`, `DataExplorer`, `taskpane`, `toolbox`, `obrowser`, and `foxref` source trees are direct clean-room guidance for Copperfin report surfaces, data explorer tooling, task panes, toolbox UX, object browsing, and code/reference search.
 - HelpFile shows documentation gaps become operational risk.
+- The official Learn language reference is now the canonical command/function inventory for Copperfin parity planning, with local VFP help and `FOXHELP.DBF` serving as fallbacks when individual pages are incomplete or inaccessible.
 - The VFPX project index highlights community successors for project explorer, data explorer, toolbox/task panes, code references, and automated testing, which are all directly relevant to Copperfin's missing parity surfaces.
 - The broader VFPX ecosystem also highlights project hooks, source-control-friendly serializers, property/method tooling, automated testing, deployment helpers, and PDF/report adjuncts that Copperfin should treat as real subsystem inputs rather than optional trivia.
 - `GoToDefinition` and `FoxcodePlus` are especially relevant to the editor parity story: they validate definition navigation, richer member hints, error-list-style assistance, and deeper IntelliSense as expected IDE behavior for FoxPro developers.
