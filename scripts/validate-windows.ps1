@@ -39,7 +39,24 @@ function Invoke-Checked {
     }
 }
 
-$msbuild = (Get-Command MSBuild.exe -ErrorAction Stop).Source
+function Resolve-MSBuild {
+    $command = Get-Command MSBuild.exe -ErrorAction SilentlyContinue
+    if ($null -ne $command) {
+        return $command.Source
+    }
+
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $resolved = & $vswhere -latest -requires Microsoft.Component.MSBuild -find "MSBuild\**\Bin\MSBuild.exe" | Select-Object -First 1
+        if (-not [string]::IsNullOrWhiteSpace($resolved)) {
+            return $resolved
+        }
+    }
+
+    throw "MSBuild.exe could not be located. Install Visual Studio Build Tools or run from a Developer PowerShell."
+}
+
+$msbuild = Resolve-MSBuild
 
 Invoke-Step -Name "Configure native build" -Action {
     Invoke-Checked -FilePath "cmake" -ArgumentList @("-S", $nativeProject, "-B", $buildDir)
@@ -166,7 +183,8 @@ Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
     Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
         "--manifest", $manifestPath,
         "--debug",
-        "--debug-command", "continue"
+        "--debug-command", "continue",
+        "--debug-command", "invoke:frmbooks.release"
     )
 }
 
@@ -195,7 +213,8 @@ Invoke-Step -Name "Run menu xAsset smoke test" -Action {
     Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
         "--manifest", $manifestPath,
         "--debug",
-        "--debug-command", "continue"
+        "--debug-command", "continue",
+        "--debug-command", "select:shortcut.item1"
     )
 }
 

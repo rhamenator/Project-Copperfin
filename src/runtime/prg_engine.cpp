@@ -449,6 +449,8 @@ struct PrgRuntimeSession::Impl {
     std::map<std::string, std::string> set_state;
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
+    std::optional<std::size_t> event_dispatch_return_depth;
+    bool restore_event_loop_after_dispatch = false;
     std::size_t executed_statement_count = 0;
 
     Program& load_program(const std::string& path) {
@@ -592,6 +594,7 @@ struct PrgRuntimeSession::Impl {
         return std::nullopt;
     }
 
+    bool dispatch_event_handler(const std::string& routine_name);
     ExecutionOutcome execute_current_statement();
     RuntimePauseState run(DebugResumeAction action);
 };
@@ -1084,6 +1087,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {.waiting_for_events = true};
         case StatementKind::clear_events:
             waiting_for_events = false;
+            restore_event_loop_after_dispatch = false;
             events.push_back({
                 .category = "runtime.event_loop",
                 .detail = "CLEAR EVENTS",
@@ -1127,6 +1131,34 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
     return {};
 }
 
+bool PrgRuntimeSession::Impl::dispatch_event_handler(const std::string& routine_name) {
+    if (!waiting_for_events || stack.empty()) {
+        return false;
+    }
+
+    const std::string normalized_target = normalize_identifier(routine_name);
+    for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator) {
+        Program& program = load_program(iterator->file_path);
+        const auto found = program.routines.find(normalized_target);
+        if (found == program.routines.end()) {
+            continue;
+        }
+
+        waiting_for_events = false;
+        event_dispatch_return_depth = stack.size();
+        restore_event_loop_after_dispatch = true;
+        push_routine_frame(program.path, found->second);
+        events.push_back({
+            .category = "runtime.dispatch",
+            .detail = found->second.name,
+            .location = {}
+        });
+        return true;
+    }
+
+    return false;
+}
+
 RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
     if (entry_pause_pending) {
         entry_pause_pending = false;
@@ -1144,6 +1176,15 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
         while (!stack.empty() &&
                (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size())) {
             stack.pop_back();
+        }
+        if (event_dispatch_return_depth.has_value() && stack.size() <= *event_dispatch_return_depth) {
+            event_dispatch_return_depth.reset();
+            if (restore_event_loop_after_dispatch) {
+                restore_event_loop_after_dispatch = false;
+                waiting_for_events = true;
+                return build_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+            }
+            restore_event_loop_after_dispatch = false;
         }
         if (stack.empty()) {
             return build_pause_state(DebugPauseReason::completed, "Execution completed.");
@@ -1211,6 +1252,10 @@ void PrgRuntimeSession::add_breakpoint(const RuntimeBreakpoint& breakpoint) {
 
 void PrgRuntimeSession::clear_breakpoints() {
     impl_->breakpoints.clear();
+}
+
+bool PrgRuntimeSession::dispatch_event_handler(const std::string& routine_name) {
+    return impl_->dispatch_event_handler(routine_name);
 }
 
 RuntimePauseState PrgRuntimeSession::run(DebugResumeAction action) {

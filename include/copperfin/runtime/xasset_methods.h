@@ -15,6 +15,14 @@ struct XAssetMethod {
     std::string source_text;
 };
 
+struct XAssetActionBinding {
+    std::size_t record_index = 0;
+    std::string action_id;
+    std::string title;
+    std::string kind;
+    std::string routine_name;
+};
+
 struct XAssetExecutableModel {
     bool ok = false;
     bool runnable_startup = false;
@@ -25,6 +33,7 @@ struct XAssetExecutableModel {
     std::string activation_target;
     std::string error;
     std::vector<XAssetMethod> methods;
+    std::vector<XAssetActionBinding> actions;
     std::vector<std::string> startup_routines;
     std::vector<std::string> startup_lines;
 };

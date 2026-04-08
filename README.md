@@ -87,6 +87,9 @@ Current runnable artifacts:
   - now bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers
   - packaged `SCX/VCX` startup assets now stage their memo sidecars and can launch from packaged content instead of only from source trees
   - now recognizes `ACTIVATE MENU` / `ACTIVATE POPUP` as real event-loop runtime operations
+  - now supports dispatching runtime actions back into waiting xAssets through `--debug-command select:<action-id>` and `--debug-command invoke:<action-id>`
+  - menu startup assets can now dispatch real menu-item selections while paused in the event loop
+  - form/class/report/label method surfaces now expose dispatchable runtime actions derived from extracted xBase methods
   - still reports compatibility-mode launch information for non-runnable xAssets and other startup assets while those runtimes are under construction
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
@@ -128,4 +131,5 @@ Known limitation:
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
 - the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, and the native build pipeline can now package projects into a runtime/debug artifact with an optional `.NET` launcher plus a real `PRG` execution/debugger slice, but it still does not provide full VFP 9-style design fidelity or the full FoxPro/VFP runtime surface
 - packaged runtime output is now good enough to launch runnable `SCX/VCX/MNX` startup assets from staged package content, but broader asset-family execution and deeper event/lifecycle fidelity still need work
+- runtime action dispatch now covers menu selection and extracted method invocation, but higher-fidelity form/report object lifecycle, richer UI event simulation, and broader runtime semantics still need work
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE

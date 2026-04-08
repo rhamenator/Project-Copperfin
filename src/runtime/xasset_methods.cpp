@@ -243,6 +243,21 @@ XAssetMethod make_wrapped_method(
     return method;
 }
 
+XAssetActionBinding make_action_binding(
+    std::size_t record_index,
+    std::string action_id,
+    std::string title,
+    std::string kind,
+    std::string routine_name) {
+    XAssetActionBinding binding;
+    binding.record_index = record_index;
+    binding.action_id = lowercase_copy(trim_copy(std::move(action_id)));
+    binding.title = trim_copy(std::move(title));
+    binding.kind = trim_copy(std::move(kind));
+    binding.routine_name = trim_copy(std::move(routine_name));
+    return binding;
+}
+
 std::vector<XAssetMethod> parse_field_as_routines(
     std::size_t record_index,
     const std::string& object_path,
@@ -288,6 +303,10 @@ bool has_object_type(const studio::StudioDocumentModel& document, int expected_t
     });
 }
 
+bool is_menu_item_record(const copperfin::vfp::DbfRecord& record) {
+    return numeric_value_or_default(record, "OBJTYPE") == 3;
+}
+
 std::optional<std::string> find_first_menu_container_name(const studio::StudioDocumentModel& document) {
     for (const auto& record : document.table_preview.records) {
         if (numeric_value_or_default(record, "OBJTYPE") != 2) {
@@ -299,6 +318,50 @@ std::optional<std::string> find_first_menu_container_name(const studio::StudioDo
         }
     }
     return std::nullopt;
+}
+
+std::optional<std::string> find_following_submenu_name(
+    const studio::StudioDocumentModel& document,
+    std::size_t record_position) {
+    for (std::size_t index = record_position + 1U; index < document.table_preview.records.size(); ++index) {
+        const auto& record = document.table_preview.records[index];
+        if (numeric_value_or_default(record, "OBJTYPE") != 2) {
+            continue;
+        }
+
+        const std::string name = trim_copy(value_or_empty(record, "NAME"));
+        if (!name.empty()) {
+            return name;
+        }
+
+        const std::string level_name = trim_copy(value_or_empty(record, "LEVELNAME"));
+        if (!level_name.empty()) {
+            return level_name;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<std::string> find_menu_action_routine(
+    const std::vector<XAssetMethod>& methods,
+    const std::string& object_path) {
+    std::string routine_name;
+    if (has_method(methods, object_path, "command", routine_name)) {
+        return routine_name;
+    }
+
+    const std::string normalized_object = lowercase_copy(object_path);
+    const auto found = std::find_if(methods.begin(), methods.end(), [&](const XAssetMethod& method) {
+        if (lowercase_copy(method.object_path) != normalized_object) {
+            return false;
+        }
+        const std::string normalized_method = lowercase_copy(method.method_name);
+        return normalized_method != "setup" && normalized_method != "cleanup";
+    });
+    if (found == methods.end()) {
+        return std::nullopt;
+    }
+    return found->routine_name;
 }
 
 }  // namespace
@@ -323,7 +386,8 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         return model;
     }
 
-    for (const auto& record : document.table_preview.records) {
+    for (std::size_t record_position = 0; record_position < document.table_preview.records.size(); ++record_position) {
+        const auto& record = document.table_preview.records[record_position];
         const std::string object_path = document.kind == studio::StudioAssetKind::menu
             ? build_menu_owner_path(record)
             : build_object_path(record);
@@ -333,6 +397,36 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
             append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "command", value_or_empty(record, "COMMAND")));
             append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "procedure", value_or_empty(record, "PROCEDURE")));
             append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "cleanup", value_or_empty(record, "CLEANUP")));
+
+            if (is_menu_item_record(record)) {
+                std::optional<std::string> action_routine = find_menu_action_routine(model.methods, object_path);
+                std::string action_kind = "command";
+                if (!action_routine.has_value()) {
+                    if (const auto submenu_name = find_following_submenu_name(document, record_position)) {
+                        const auto wrapped = make_wrapped_method(
+                            record.record_index,
+                            object_path,
+                            "activate_popup",
+                            "ACTIVATE POPUP " + *submenu_name);
+                        action_routine = wrapped.routine_name;
+                        action_kind = "submenu";
+                        model.methods.push_back(wrapped);
+                    }
+                }
+
+                if (action_routine.has_value()) {
+                    std::string title = trim_copy(value_or_empty(record, "PROMPT"));
+                    if (title.empty()) {
+                        title = object_path;
+                    }
+                    model.actions.push_back(make_action_binding(
+                        record.record_index,
+                        object_path,
+                        title,
+                        action_kind,
+                        *action_routine));
+                }
+            }
         } else {
             const std::string methods_blob = value_or_empty(record, "METHODS");
             if (!methods_blob.empty()) {
@@ -392,6 +486,23 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         }
 
         model.runnable_startup = !model.startup_lines.empty();
+    }
+
+    if (document.kind != studio::StudioAssetKind::menu) {
+        for (const auto& method : model.methods) {
+            std::string title = method.object_path;
+            if (!title.empty()) {
+                title += ".";
+            }
+            title += method.method_name;
+
+            model.actions.push_back(make_action_binding(
+                method.record_index,
+                title,
+                title,
+                "method",
+                method.routine_name));
+        }
     }
 
     model.ok = true;

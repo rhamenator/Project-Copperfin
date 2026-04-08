@@ -55,6 +55,12 @@ void test_build_xasset_executable_model() {
     expect(model.runnable_startup, "form model should be runnable when startup methods exist");
     expect(model.root_object_path == "frmDemo", "root object path should identify the root form");
     expect(model.methods.size() == 3U, "all methods should be extracted");
+    expect(model.actions.size() == 3U, "form model should expose all extracted methods as runtime actions");
+    if (model.actions.size() == 3U) {
+        expect(model.actions[0].action_id == "dataenvironment.beforeopentables", "data environment startup should be dispatchable");
+        expect(model.actions[1].action_id == "frmdemo.init", "root form init should be dispatchable");
+        expect(model.actions[2].action_id == "frmdemo.pgfmain.page2.activate", "nested page methods should be dispatchable");
+    }
     expect(model.startup_routines.size() == 2U, "startup should include data environment and form init methods");
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
@@ -93,6 +99,18 @@ void test_build_menu_xasset_executable_model() {
             {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  2"},
             {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "PROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC"}
+        }),
+        make_record(4, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  3"},
+            {.field_name = "PROMPT", .field_type = 'M', .display_value = "More"}
+        }),
+        make_record(5, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "Thisitemha"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Thisitemha"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  0"}
         })
     };
 
@@ -103,13 +121,21 @@ void test_build_menu_xasset_executable_model() {
     expect(model.activation_target == "Shortcut", "shortcut menus should target the first popup/submenu name");
     expect(model.startup_enters_event_loop, "menu startup should enter the runtime event loop");
     expect(model.startup_lines.size() >= 2U, "menu startup should include setup and activation lines");
-    expect(model.methods.size() >= 3U, "menu methods should include wrapped setup/command/procedure code");
+    expect(model.methods.size() >= 4U, "menu methods should include wrapped setup/command/procedure code");
+    expect(model.actions.size() >= 3U, "menu model should expose runnable menu actions");
+    if (model.actions.size() >= 3U) {
+        expect(model.actions[0].action_id == "shortcut.item1", "first action should expose the item1 action id");
+        expect(model.actions[1].action_id == "shortcut.item2", "second action should expose the item2 action id");
+        expect(model.actions[2].action_id == "shortcut.item3", "third action should expose the submenu action id");
+        expect(model.actions[2].kind == "submenu", "submenu item should be tagged as a submenu action");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("DO __cf_shortcut_setup") != std::string::npos, "menu bootstrap should call setup code");
     expect(bootstrap.find("ACTIVATE POPUP Shortcut") != std::string::npos, "menu bootstrap should activate the popup");
     expect(bootstrap.find("PROCEDURE __cf_Shortcut_item1_command") != std::string::npos, "menu bootstrap should materialize command routines");
     expect(bootstrap.find("PROCEDURE __cf_Shortcut_item2_ItemAction") != std::string::npos, "menu bootstrap should materialize embedded snippet procedures");
+    expect(bootstrap.find("PROCEDURE __cf_Shortcut_item3_activate_popup") != std::string::npos, "menu bootstrap should materialize submenu activation routines");
     expect(bootstrap.find("READ EVENTS") == std::string::npos, "menu bootstrap should not append READ EVENTS when activation already enters the event loop");
 }
 

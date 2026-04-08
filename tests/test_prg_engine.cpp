@@ -122,12 +122,50 @@ void test_activate_popup_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dispatch_event_handler() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dispatch";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "dispatch.prg";
+    write_text(
+        main_path,
+        "PUBLIC x\n"
+        "ACTIVATE POPUP Shortcut\n"
+        "RETURN\n"
+        "PROCEDURE item1\n"
+        "x = 7\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "startup popup activation should pause in the event loop");
+    expect(session.dispatch_event_handler("item1"), "dispatch_event_handler should find the target routine while waiting for events");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "dispatching an event handler should return to the event loop");
+    const auto x = state.globals.find("x");
+    expect(x != state.globals.end(), "dispatched routine should be able to set global variables");
+    if (x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(x->second) == "7", "dispatched routine should update x before returning to the event loop");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_breakpoints_and_stepping();
     test_read_events_pause();
     test_activate_popup_pause();
+    test_dispatch_event_handler();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

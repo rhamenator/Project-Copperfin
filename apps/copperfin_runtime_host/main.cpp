@@ -31,6 +31,19 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
+    if (value.size() < prefix.size()) {
+        return false;
+    }
+    for (std::size_t index = 0; index < prefix.size(); ++index) {
+        if (std::tolower(static_cast<unsigned char>(value[index])) !=
+            std::tolower(static_cast<unsigned char>(prefix[index]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::string unescape_manifest_value(std::string value) {
     std::string result;
     result.reserve(value.size());
@@ -92,7 +105,7 @@ std::vector<std::string> all_values(const ManifestMap& values, const std::string
 }
 
 void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out>]\n";
+    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|select:<action-id>|invoke:<action-id>>]\n";
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -140,22 +153,28 @@ void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
     }
 }
 
-std::optional<std::string> materialize_xasset_bootstrap(
+struct XAssetBootstrapResult {
+    std::optional<std::string> bootstrap_path;
+    copperfin::runtime::XAssetExecutableModel model;
+    std::string error;
+};
+
+XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_source,
-    bool include_read_events,
-    std::string& error) {
+    bool include_read_events) {
+    XAssetBootstrapResult result;
     const auto open_result = copperfin::studio::open_document({.path = startup_source, .read_only = true});
     if (!open_result.ok) {
-        error = open_result.error;
-        return std::nullopt;
+        result.error = open_result.error;
+        return result;
     }
 
-    const auto model = copperfin::runtime::build_xasset_executable_model(open_result.document);
-    if (!model.ok || !model.runnable_startup) {
-        error = model.error.empty()
+    result.model = copperfin::runtime::build_xasset_executable_model(open_result.document);
+    if (!result.model.ok || !result.model.runnable_startup) {
+        result.error = result.model.error.empty()
             ? "No runnable startup methods were found in asset."
-            : model.error;
-        return std::nullopt;
+            : result.model.error;
+        return result;
     }
 
     const std::filesystem::path startup_path(startup_source);
@@ -164,14 +183,37 @@ std::optional<std::string> materialize_xasset_bootstrap(
         (startup_path.stem().string() + "_copperfin_host_bootstrap.prg");
 
     std::ofstream output(bootstrap_path, std::ios::binary);
-    output << copperfin::runtime::build_xasset_bootstrap_source(model, include_read_events);
+    output << copperfin::runtime::build_xasset_bootstrap_source(result.model, include_read_events);
     output.close();
     if (!output.good()) {
-        error = "Unable to materialize xAsset bootstrap.";
+        result.error = "Unable to materialize xAsset bootstrap.";
+        return result;
+    }
+
+    result.bootstrap_path = bootstrap_path.string();
+    return result;
+}
+
+std::optional<std::string> resolve_action_routine_name(
+    const copperfin::runtime::XAssetExecutableModel& model,
+    const std::string& command) {
+    std::size_t prefix_length = 0;
+    if (starts_with_insensitive(command, "select:")) {
+        prefix_length = 7U;
+    } else if (starts_with_insensitive(command, "invoke:")) {
+        prefix_length = 7U;
+    } else {
         return std::nullopt;
     }
 
-    return bootstrap_path.string();
+    const std::string action_id = lowercase_copy(trim_copy(command.substr(prefix_length)));
+    const auto found = std::find_if(model.actions.begin(), model.actions.end(), [&](const copperfin::runtime::XAssetActionBinding& action) {
+        return lowercase_copy(action.action_id) == action_id;
+    });
+    if (found == model.actions.end()) {
+        return std::nullopt;
+    }
+    return found->routine_name;
 }
 
 std::string resolve_startup_source(const ManifestMap& manifest) {
@@ -252,6 +294,7 @@ int main(int argc, char** argv) {
     const std::string working_directory = first_value(manifest, "working_directory");
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
     const bool prg_startup = startup_extension == ".prg";
+    copperfin::runtime::XAssetExecutableModel xasset_model;
 
     std::cout << "status: ok\n";
     std::cout << "project.title: " << first_value(manifest, "project_title") << "\n";
@@ -267,17 +310,17 @@ int main(int argc, char** argv) {
     std::string effective_startup_source = startup_source;
     std::string runtime_mode = "prg-engine";
     if (!prg_startup) {
-        std::string bootstrap_error;
-        const auto bootstrap_path = materialize_xasset_bootstrap(startup_source, true, bootstrap_error);
-        if (!bootstrap_path.has_value()) {
+        const auto bootstrap = materialize_xasset_bootstrap(startup_source, true);
+        xasset_model = bootstrap.model;
+        if (!bootstrap.bootstrap_path.has_value()) {
             std::cout << "runtime.mode: compatibility-launcher\n";
             std::cout << "launch.note: Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\n";
-            std::cout << "launch.note: " << bootstrap_error << "\n";
+            std::cout << "launch.note: " << bootstrap.error << "\n";
             std::cout << "debug.breakpoint_support: false\n";
             std::cout << "debug.step_support: false\n";
             return 0;
         }
-        effective_startup_source = *bootstrap_path;
+        effective_startup_source = *bootstrap.bootstrap_path;
         runtime_mode = "xasset-bootstrap";
     }
 
@@ -304,8 +347,24 @@ int main(int argc, char** argv) {
         print_pause_state(state);
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
-            state = session.run(parse_resume_action(debug_commands[index]));
-            std::cout << "debug.command[" << index << "]: " << debug_commands[index] << "\n";
+            const std::string& command = debug_commands[index];
+            if (starts_with_insensitive(command, "select:") || starts_with_insensitive(command, "invoke:")) {
+                const auto action_routine = resolve_action_routine_name(xasset_model, command);
+                if (!action_routine.has_value()) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unknown xAsset action: " << command << "\n";
+                    return 5;
+                }
+                if (!session.dispatch_event_handler(*action_routine)) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unable to dispatch xAsset action: " << command << "\n";
+                    return 5;
+                }
+                state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            } else {
+                state = session.run(parse_resume_action(command));
+            }
+            std::cout << "debug.command[" << index << "]: " << command << "\n";
             print_pause_state(state);
             if (state.completed || state.reason == copperfin::runtime::DebugPauseReason::error) {
                 break;
