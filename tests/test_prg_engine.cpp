@@ -1832,6 +1832,126 @@ void test_do_case_control_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_aggregate_functions_respect_visibility() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "aggregates.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nCountAll = COUNT()\n"
+        "nSumAll = SUM(AGE)\n"
+        "nAvgAll = AVG(AGE)\n"
+        "nMinAll = MIN(AGE)\n"
+        "nMaxAll = MAX(AGE)\n"
+        "SET FILTER TO AGE >= 20\n"
+        "DELETE FOR AGE = 40\n"
+        "SET DELETED ON\n"
+        "nCountVisible = COUNT()\n"
+        "nCountConditional = COUNT(AGE >= 30)\n"
+        "nSumVisible = SUM(AGE)\n"
+        "nSumConditional = SUM(AGE, AGE >= 30)\n"
+        "nAverageVisible = AVERAGE(AGE)\n"
+        "nMinVisible = MIN(AGE)\n"
+        "nMaxVisible = MAX(AGE)\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "nCountPeopleAlias = COUNT(AGE >= 20, 'People')\n"
+        "nSumPeopleAlias = SUM(AGE, AGE >= 20, 'People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "aggregate script should complete");
+
+    const auto count_all = state.globals.find("ncountall");
+    const auto sum_all = state.globals.find("nsumall");
+    const auto avg_all = state.globals.find("navgall");
+    const auto min_all = state.globals.find("nminall");
+    const auto max_all = state.globals.find("nmaxall");
+    const auto count_visible = state.globals.find("ncountvisible");
+    const auto count_conditional = state.globals.find("ncountconditional");
+    const auto sum_visible = state.globals.find("nsumvisible");
+    const auto sum_conditional = state.globals.find("nsumconditional");
+    const auto avg_visible = state.globals.find("naveragevisible");
+    const auto min_visible = state.globals.find("nminvisible");
+    const auto max_visible = state.globals.find("nmaxvisible");
+    const auto count_alias = state.globals.find("ncountpeoplealias");
+    const auto sum_alias = state.globals.find("nsumpeoplealias");
+
+    expect(count_all != state.globals.end(), "COUNT() should be captured");
+    expect(sum_all != state.globals.end(), "SUM() should be captured");
+    expect(avg_all != state.globals.end(), "AVG() should be captured");
+    expect(min_all != state.globals.end(), "MIN() should be captured");
+    expect(max_all != state.globals.end(), "MAX() should be captured");
+    expect(count_visible != state.globals.end(), "COUNT() should respect active visibility rules");
+    expect(count_conditional != state.globals.end(), "COUNT(condition) should be captured");
+    expect(sum_visible != state.globals.end(), "SUM() should respect active visibility rules");
+    expect(sum_conditional != state.globals.end(), "SUM(value, condition) should be captured");
+    expect(avg_visible != state.globals.end(), "AVERAGE() should be captured");
+    expect(min_visible != state.globals.end(), "MIN() under filter should be captured");
+    expect(max_visible != state.globals.end(), "MAX() under filter should be captured");
+    expect(count_alias != state.globals.end(), "COUNT(condition, alias) should be captured");
+    expect(sum_alias != state.globals.end(), "SUM(value, condition, alias) should be captured");
+
+    if (count_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_all->second) == "4", "COUNT() should count all visible rows before filters");
+    }
+    if (sum_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_all->second) == "100", "SUM() should total numeric field values across the current cursor");
+    }
+    if (avg_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(avg_all->second) == "25", "AVG() should compute the mean across visible rows");
+    }
+    if (min_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(min_all->second) == "10", "MIN() should capture the smallest visible value");
+    }
+    if (max_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(max_all->second) == "40", "MAX() should capture the largest visible value");
+    }
+    if (count_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_visible->second) == "2", "COUNT() should respect SET FILTER TO and SET DELETED ON");
+    }
+    if (count_conditional != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_conditional->second) == "1", "COUNT(condition) should evaluate an additional aggregate condition");
+    }
+    if (sum_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_visible->second) == "50", "SUM() should total only currently visible rows");
+    }
+    if (sum_conditional != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_conditional->second) == "30", "SUM(value, condition) should apply the extra condition after visibility filtering");
+    }
+    if (avg_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(avg_visible->second) == "25", "AVERAGE() should compute the mean over visible rows");
+    }
+    if (min_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(min_visible->second) == "20", "MIN() should respect active visibility rules");
+    }
+    if (max_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(max_visible->second) == "30", "MAX() should respect active visibility rules");
+    }
+    if (count_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_alias->second) == "2", "COUNT(condition, alias) should target a non-selected cursor");
+    }
+    if (sum_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_alias->second) == "50", "SUM(value, condition, alias) should target a non-selected cursor");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1860,6 +1980,7 @@ int main() {
     test_set_filter_scopes_local_cursor_visibility();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
+    test_aggregate_functions_respect_visibility();
     test_runtime_fault_containment();
 
     if (failures != 0) {

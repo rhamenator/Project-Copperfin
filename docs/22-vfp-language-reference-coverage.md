@@ -88,6 +88,7 @@ The expression/function layer currently has first-pass support for these VFP-fac
 
 - `SELECT()`, `ALIAS()`, `USED()`, `DBF()`, `FCOUNT()`
 - `RECCOUNT()`, `RECNO()`, `FOUND()`, `EOF()`, `BOF()`, `DELETED()`
+- `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
 - `CREATEOBJECT()`, `GETOBJECT()`
 - utility coverage already used by shipped tests and bootstrap paths, including `AT()`, `RAT()`, `SUBSTR()`, `ALLTRIM()`, `STR()`, `CHR()`, `FILE()`, `SYS()`, `MESSAGE()`, `ERROR()`, `VERSION()`, `ON()`, and `MESSAGEBOX()`
@@ -106,7 +107,7 @@ The official command inventory is much larger than the current runtime. The deep
 ### Local Table Mutation And Query Flow
 
 - add the table-editing and table-browse commands needed for real legacy business applications
-- extend the shipped filtering, locating, scanning, replacing, appending, deleting, and recalling record families toward broader xBase parity
+- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, and aggregate-query families toward broader xBase parity
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 
 ### Native Control Flow

@@ -58,7 +58,7 @@ Current repo status against the Windows-first product goal:
 | CDX/DCX inspection | Partial | Tag and expression hints are surfaced, but write fidelity and richer order/collation behavior remain incomplete. |
 | DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
 | Work areas and data sessions | Partial | `SELECT`, `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, and first indexed search semantics are working, but broader alias/session edge cases remain. |
-| Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, and first-pass `SET FILTER TO/OFF` now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
+| Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, first-pass `SET FILTER TO/OFF`, and first aggregate built-ins now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
 | SQL pass-through/remote cursor behavior | Partial | Synthetic SQL cursor/session plumbing exists, but remote cursor semantics are still far from VFP parity. |
 | PRG execution engine | Partial | Structured stepping, breakpoints, fault containment, first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, and `LOOP`/`CONTINUE`/`EXIT` control now exist, but the runtime is still well short of the practical full FoxPro/VFP surface. |
 | Forms/classes runtime parity | Partial | Bootstrapped `SCX/VCX` startup and extracted method dispatch exist, but lifecycle/container/data-environment fidelity is still incomplete. |
@@ -79,6 +79,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-08: first-pass aggregate built-ins now exist in the native PRG runtime for local DBF-backed cursors. `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, and `MAX()` now evaluate across visible rows, respect `SET FILTER TO/OFF`, honor `SET DELETED ON`, and can target a named alias with focused regression coverage.
 - 2026-04-08: native PRG branching now covers first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, including nested case blocks and case-driven execution inside `SCAN`, with focused runtime regression coverage.
 - 2026-04-08: native PRG control flow now covers first-pass `DO WHILE/ENDDO` plus shared `LOOP`/`CONTINUE`/`EXIT` behavior across `DO WHILE`, `FOR`, and `SCAN`, with focused regression coverage for nested loops and cursor-backed iteration.
 - 2026-04-08: persistent cursor filtering now has a first native runtime slice. `SET FILTER TO/OFF` is now cursor-scoped for local DBF-backed work areas, and `GO TOP/BOTTOM`, `SKIP`, `LOCATE`, `SCAN`, and `DELETE/RECALL FOR` now honor active filter visibility with regression coverage.

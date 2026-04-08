@@ -1448,10 +1448,10 @@ struct PrgRuntimeSession::Impl {
         if (is_set_enabled("deleted") && record->deleted) {
             return false;
         }
-        if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame))) {
+        if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame, &cursor))) {
             return false;
         }
-        if (!extra_expression.empty() && !value_as_bool(evaluate_expression(extra_expression, frame))) {
+        if (!extra_expression.empty() && !value_as_bool(evaluate_expression(extra_expression, frame, &cursor))) {
             return false;
         }
         return true;
@@ -1713,6 +1713,125 @@ struct PrgRuntimeSession::Impl {
         }
 
         return true;
+    }
+
+    std::string try_parse_designator_argument(const std::string& raw_argument, const Frame& frame) {
+        if (raw_argument.empty()) {
+            return {};
+        }
+
+        const PrgValue evaluated = evaluate_expression(raw_argument, frame);
+        const std::string designator = trim_copy(value_as_string(evaluated));
+        return resolve_cursor_target(designator) == nullptr ? std::string{} : designator;
+    }
+
+    PrgValue aggregate_function_value(
+        const std::string& function,
+        const std::vector<std::string>& raw_arguments,
+        const Frame& frame) {
+        std::string value_expression;
+        std::string condition_expression;
+        std::string designator;
+
+        if (function == "count") {
+            if (raw_arguments.size() == 1U) {
+                designator = try_parse_designator_argument(raw_arguments[0], frame);
+                if (designator.empty()) {
+                    condition_expression = raw_arguments[0];
+                }
+            } else if (raw_arguments.size() >= 2U) {
+                condition_expression = raw_arguments[0];
+                designator = try_parse_designator_argument(raw_arguments[1], frame);
+            }
+        } else {
+            if (!raw_arguments.empty()) {
+                value_expression = raw_arguments[0];
+            }
+            if (raw_arguments.size() == 2U) {
+                designator = try_parse_designator_argument(raw_arguments[1], frame);
+                if (designator.empty()) {
+                    condition_expression = raw_arguments[1];
+                }
+            } else if (raw_arguments.size() >= 3U) {
+                condition_expression = raw_arguments[1];
+                designator = try_parse_designator_argument(raw_arguments[2], frame);
+            }
+        }
+
+        CursorState* cursor = resolve_cursor_target(designator);
+        if (cursor == nullptr) {
+            return make_number_value(0.0);
+        }
+
+        if (cursor->remote) {
+            if (function == "count" && condition_expression.empty()) {
+                return make_number_value(static_cast<double>(cursor->record_count));
+            }
+            return make_number_value(0.0);
+        }
+
+        if (cursor->source_path.empty() || cursor->record_count == 0U) {
+            return make_number_value(0.0);
+        }
+
+        const CursorPositionSnapshot original = capture_cursor_snapshot(*cursor);
+        double sum = 0.0;
+        double min_value = 0.0;
+        double max_value = 0.0;
+        std::size_t matched_count = 0U;
+
+        for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno) {
+            move_cursor_to(*cursor, static_cast<long long>(recno));
+            if (!current_record_matches_visibility(*cursor, frame, condition_expression)) {
+                continue;
+            }
+
+            if (function == "count") {
+                ++matched_count;
+                continue;
+            }
+
+            const PrgValue value = evaluate_expression(value_expression, frame, cursor);
+            if (value.kind == PrgValueKind::empty) {
+                continue;
+            }
+            if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty()) {
+                continue;
+            }
+
+            const double numeric_value = value_as_number(value);
+            if (matched_count == 0U) {
+                min_value = numeric_value;
+                max_value = numeric_value;
+            } else {
+                min_value = std::min(min_value, numeric_value);
+                max_value = std::max(max_value, numeric_value);
+            }
+            sum += numeric_value;
+            ++matched_count;
+        }
+
+        restore_cursor_snapshot(*cursor, original);
+
+        if (function == "count") {
+            return make_number_value(static_cast<double>(matched_count));
+        }
+        if (matched_count == 0U) {
+            return make_number_value(0.0);
+        }
+        if (function == "sum") {
+            return make_number_value(sum);
+        }
+        if (function == "avg" || function == "average") {
+            return make_number_value(sum / static_cast<double>(matched_count));
+        }
+        if (function == "min") {
+            return make_number_value(min_value);
+        }
+        if (function == "max") {
+            return make_number_value(max_value);
+        }
+        return make_number_value(0.0);
     }
 
     bool execute_seek(
@@ -2071,6 +2190,7 @@ struct PrgRuntimeSession::Impl {
     }
 
     PrgValue evaluate_expression(const std::string& expression, const Frame& frame);
+    PrgValue evaluate_expression(const std::string& expression, const Frame& frame, const CursorState* preferred_cursor);
     std::optional<std::string> materialize_xasset_bootstrap(const std::string& asset_path, bool include_read_events);
 
     void assign_variable(Frame& frame, const std::string& name, const PrgValue& value) {
@@ -2378,6 +2498,7 @@ public:
         std::function<bool(const std::string&)> eof_callback,
         std::function<bool(const std::string&)> bof_callback,
         std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback,
+        std::function<PrgValue(const std::string&, const std::vector<std::string>&)> aggregate_callback,
         std::function<std::string(const std::string&, bool)> order_callback,
         std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback,
         std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback,
@@ -2406,6 +2527,7 @@ public:
           eof_callback_(std::move(eof_callback)),
           bof_callback_(std::move(bof_callback)),
           field_lookup_callback_(std::move(field_lookup_callback)),
+          aggregate_callback_(std::move(aggregate_callback)),
           order_callback_(std::move(order_callback)),
           tag_callback_(std::move(tag_callback)),
           seek_callback_(std::move(seek_callback)),
@@ -2520,10 +2642,13 @@ private:
         skip_whitespace();
         if (match("(")) {
             std::vector<PrgValue> arguments;
+            std::vector<std::string> raw_arguments;
             skip_whitespace();
             if (!match(")")) {
                 while (true) {
+                    const std::size_t argument_start = position_;
                     arguments.push_back(parse_comparison());
+                    raw_arguments.push_back(trim_copy(text_.substr(argument_start, position_ - argument_start)));
                     skip_whitespace();
                     if (match(")")) {
                         break;
@@ -2531,19 +2656,25 @@ private:
                     match(",");
                 }
             }
-            return evaluate_function(identifier, arguments);
+            return evaluate_function(identifier, arguments, raw_arguments);
         }
 
         return resolve_identifier(identifier);
     }
 
-    PrgValue evaluate_function(const std::string& identifier, const std::vector<PrgValue>& arguments) {
+    PrgValue evaluate_function(
+        const std::string& identifier,
+        const std::vector<PrgValue>& arguments,
+        const std::vector<std::string>& raw_arguments) {
         const std::string function = normalize_identifier(identifier);
         const auto member_separator = function.find('.');
         if (member_separator != std::string::npos) {
             const std::string base_name = function.substr(0U, member_separator);
             const std::string member_path = function.substr(member_separator + 1U);
             return ole_invoke_callback_(base_name, member_path, arguments);
+        }
+        if (function == "count" || function == "sum" || function == "avg" || function == "average" || function == "min" || function == "max") {
+            return aggregate_callback_(function, raw_arguments);
         }
         if (function == "select") {
             if (arguments.empty()) {
@@ -2862,6 +2993,7 @@ private:
     std::function<bool(const std::string&)> eof_callback_;
     std::function<bool(const std::string&)> bof_callback_;
     std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback_;
+    std::function<PrgValue(const std::string&, const std::vector<std::string>&)> aggregate_callback_;
     std::function<std::string(const std::string&, bool)> order_callback_;
     std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback_;
     std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback_;
@@ -2890,6 +3022,13 @@ private:
 }  // namespace
 
 PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& expression, const Frame& frame) {
+    return evaluate_expression(expression, frame, resolve_cursor_target({}));
+}
+
+PrgValue PrgRuntimeSession::Impl::evaluate_expression(
+    const std::string& expression,
+    const Frame& frame,
+    const CursorState* preferred_cursor) {
     ExpressionParser parser(
         expression,
         frame,
@@ -2944,9 +3083,12 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
             const CursorState* cursor = resolve_cursor_target(designator);
             return cursor == nullptr ? true : cursor->bof;
         },
-        [this](const std::string& identifier) {
-            const CursorState* current_cursor = resolve_cursor_target({});
+        [this, preferred_cursor](const std::string& identifier) {
+            const CursorState* current_cursor = preferred_cursor == nullptr ? resolve_cursor_target({}) : preferred_cursor;
             return resolve_field_value(identifier, current_cursor);
+        },
+        [this, &frame](const std::string& function_name, const std::vector<std::string>& raw_arguments) {
+            return aggregate_function_value(function_name, raw_arguments, frame);
         },
         [this](const std::string& designator, bool include_path) {
             return order_function_value(designator, include_path);
