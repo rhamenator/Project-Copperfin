@@ -34,8 +34,8 @@ Current inspector behavior:
 
 Local reality checks used during implementation:
 
-- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Data\customer.cdx`
-- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Data\customer.dbf`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\customer.cdx`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\customer.dbf`
 - `E:\DBASE\DBFS\CHNGREAS.NDX`
 
 Reference docs used to keep the probe rules grounded:

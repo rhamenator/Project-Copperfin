@@ -53,6 +53,32 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
+std::string collapse_identifier(const std::string& value) {
+    std::string normalized;
+    normalized.reserve(value.size());
+
+    for (char ch : value) {
+        if (!is_identifier_char(ch)) {
+            continue;
+        }
+
+        if (ch == '_') {
+            continue;
+        }
+
+        normalized.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(ch))));
+    }
+
+    return normalized;
+}
+
 std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
     std::vector<PrintableRun> runs;
 
@@ -176,15 +202,209 @@ std::vector<PrintableRun> collect_expression_runs(const std::vector<std::uint8_t
     return expressions;
 }
 
+bool looks_like_tag_name_candidate(const std::string& text) {
+    if (text.size() < 4U || text.size() > 10U) {
+        return false;
+    }
+
+    bool saw_alpha = false;
+    for (unsigned char ch : text) {
+        if (!is_identifier_char(static_cast<char>(ch))) {
+            return false;
+        }
+        if (std::isalpha(ch) != 0) {
+            saw_alpha = true;
+            if (std::toupper(ch) != ch) {
+                return false;
+            }
+        }
+    }
+
+    return saw_alpha;
+}
+
+std::vector<CdxTagDescriptor> collect_tail_tag_candidates(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t page_size) {
+    std::vector<CdxTagDescriptor> tags;
+    std::set<std::string> seen_names;
+    const std::size_t page_count = bytes.size() / page_size;
+
+    for (std::size_t page_index = 1; page_index < page_count; ++page_index) {
+        const std::size_t page_start = page_index * page_size;
+        const std::size_t tail_start = page_start + page_size - 32U;
+
+        std::string tail;
+        tail.reserve(32U);
+        for (std::size_t offset = tail_start; offset < page_start + page_size; ++offset) {
+            const char ch = static_cast<char>(bytes[offset]);
+            tail.push_back(is_identifier_char(ch) ? ch : ' ');
+        }
+
+        std::size_t start = 0;
+        while (start < tail.size()) {
+            while (start < tail.size() && tail[start] == ' ') {
+                ++start;
+            }
+
+            std::size_t end = start;
+            while (end < tail.size() && tail[end] != ' ') {
+                ++end;
+            }
+
+            const std::string run = tail.substr(start, end - start);
+            if (run.size() >= 4U) {
+                std::size_t remainder = run.size() % 10U;
+                if (run.size() > 10U && remainder > 0U && remainder < 4U) {
+                    remainder += 10U;
+                }
+
+                std::size_t chunk_start = 0;
+                if (run.size() > 10U && remainder > 0U && remainder < run.size()) {
+                    const std::string chunk = run.substr(0U, remainder);
+                    if (looks_like_tag_name_candidate(chunk) && seen_names.insert(chunk).second) {
+                        tags.push_back({
+                            .name_hint = chunk,
+                            .name_offset_hint = static_cast<std::uint32_t>(tail_start + start),
+                            .inferred_name = false
+                        });
+                    }
+                    chunk_start = remainder;
+                }
+
+                for (; chunk_start < run.size(); chunk_start += 10U) {
+                    const std::string chunk = run.substr(
+                        chunk_start,
+                        std::min<std::size_t>(10U, run.size() - chunk_start));
+                    if (!looks_like_tag_name_candidate(chunk) || !seen_names.insert(chunk).second) {
+                        continue;
+                    }
+
+                    tags.push_back({
+                        .name_hint = chunk,
+                        .name_offset_hint = static_cast<std::uint32_t>(tail_start + start + chunk_start),
+                        .inferred_name = false
+                    });
+                }
+            }
+
+            start = end + 1U;
+        }
+    }
+
+    return tags;
+}
+
+std::vector<std::string> expression_symbols(const std::string& expression) {
+    static const std::set<std::string> ignored_symbols{
+        "UPPER", "LOWER", "ALLTRIM", "LTRIM", "RTRIM", "PADR", "PADL", "TRANSFORM"
+    };
+
+    std::vector<std::string> symbols;
+    std::string current;
+
+    const auto flush = [&]() {
+        if (current.empty()) {
+            return;
+        }
+
+        const std::string upper = uppercase_copy(current);
+        if (ignored_symbols.find(upper) == ignored_symbols.end()) {
+            symbols.push_back(current);
+        }
+        current.clear();
+    };
+
+    for (char ch : expression) {
+        if (is_identifier_char(ch)) {
+            current.push_back(ch);
+        } else {
+            flush();
+        }
+    }
+    flush();
+    return symbols;
+}
+
+int expression_match_score(const std::string& tag_name, const std::string& expression) {
+    const std::string normalized_tag = collapse_identifier(tag_name);
+    if (normalized_tag.empty()) {
+        return 0;
+    }
+
+    int best_score = 0;
+    const auto score_candidate = [&](const std::string& candidate) {
+        const std::string normalized_candidate = collapse_identifier(candidate);
+        if (normalized_candidate.empty()) {
+            return;
+        }
+
+        if (normalized_candidate == normalized_tag) {
+            best_score = std::max(best_score, 100);
+        } else if (normalized_candidate.starts_with(normalized_tag) ||
+                   normalized_tag.starts_with(normalized_candidate)) {
+            best_score = std::max(best_score, 90);
+        } else if (normalized_candidate.find(normalized_tag) != std::string::npos ||
+                   normalized_tag.find(normalized_candidate) != std::string::npos) {
+            best_score = std::max(best_score, 70);
+        } else if (normalized_candidate.size() > 1U &&
+                   normalized_candidate.substr(1U) == normalized_tag) {
+            best_score = std::max(best_score, 65);
+        } else if (normalized_tag.size() > 1U &&
+                   normalized_tag.substr(1U) == normalized_candidate) {
+            best_score = std::max(best_score, 65);
+        }
+    };
+
+    score_candidate(expression);
+    for (const std::string& symbol : expression_symbols(expression)) {
+        score_candidate(symbol);
+    }
+
+    return best_score;
+}
+
 std::vector<CdxTagDescriptor> extract_tag_descriptors(
     const std::vector<std::uint8_t>& bytes,
-    std::size_t /*page_size*/) {
-    std::vector<CdxTagDescriptor> tags;
-    for (const PrintableRun& expression : collect_expression_runs(bytes)) {
+    std::size_t page_size) {
+    const std::vector<PrintableRun> expressions = collect_expression_runs(bytes);
+    std::vector<CdxTagDescriptor> tags = collect_tail_tag_candidates(bytes, page_size);
+    std::vector<bool> used(expressions.size(), false);
+
+    for (CdxTagDescriptor& tag : tags) {
+        int best_score = 0;
+        std::size_t best_index = std::numeric_limits<std::size_t>::max();
+
+        for (std::size_t index = 0; index < expressions.size(); ++index) {
+            if (used[index]) {
+                continue;
+            }
+
+            const int score = expression_match_score(tag.name_hint, expressions[index].text);
+            if (score > best_score) {
+                best_score = score;
+                best_index = index;
+            }
+        }
+
+        if (best_index == std::numeric_limits<std::size_t>::max() || best_score < 60) {
+            continue;
+        }
+
+        used[best_index] = true;
+        tag.key_expression_hint = expressions[best_index].text;
+        tag.key_expression_offset_hint = static_cast<std::uint32_t>(expressions[best_index].offset);
+    }
+
+    for (std::size_t index = 0; index < expressions.size(); ++index) {
+        if (used[index]) {
+            continue;
+        }
+
         CdxTagDescriptor tag;
-        tag.key_expression_hint = expression.text;
-        tag.key_expression_offset_hint = static_cast<std::uint32_t>(expression.offset);
-        tag.name_hint = derive_name_from_expression(expression.text);
+        tag.key_expression_hint = expressions[index].text;
+        tag.key_expression_offset_hint = static_cast<std::uint32_t>(expressions[index].offset);
+        tag.name_hint = derive_name_from_expression(expressions[index].text);
         tag.inferred_name = !tag.name_hint.empty();
         tags.push_back(std::move(tag));
     }
