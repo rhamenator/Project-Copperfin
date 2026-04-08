@@ -1009,6 +1009,76 @@ void test_seek_related_index_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_foxtools_registration_and_call_bridge() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_foxtools";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "foxtools.prg";
+    write_text(
+        main_path,
+        "SET LIBRARY TO 'Foxtools'\n"
+        "cFoxTools = FoxToolVer()\n"
+        "nMain = MainHwnd()\n"
+        "hPid = RegFn32('GetCurrentProcessId', '', 'I', 'kernel32.dll')\n"
+        "nPid = CallFn(hPid)\n"
+        "hLen = RegFn32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
+        "nLen = CallFn(hLen, 'Copperfin')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Foxtools bridge script should complete");
+
+    const auto foxtools = state.globals.find("cfoxtools");
+    const auto main = state.globals.find("nmain");
+    const auto hpid = state.globals.find("hpid");
+    const auto pid = state.globals.find("npid");
+    const auto hlen = state.globals.find("hlen");
+    const auto length = state.globals.find("nlen");
+
+    expect(foxtools != state.globals.end(), "FoxToolVer() should be captured");
+    expect(main != state.globals.end(), "MainHwnd() should be captured");
+    expect(hpid != state.globals.end(), "RegFn32 handle should be captured");
+    expect(pid != state.globals.end(), "CallFn(handle) should be captured");
+    expect(hlen != state.globals.end(), "second RegFn32 handle should be captured");
+    expect(length != state.globals.end(), "CallFn(string) should be captured");
+
+    if (foxtools != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(foxtools->second).empty(), "FoxToolVer() should return a non-empty version string");
+    }
+    if (main != state.globals.end()) {
+        expect(copperfin::runtime::format_value(main->second) == "1001", "MainHwnd() should expose the placeholder host window handle");
+    }
+    if (hpid != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hpid->second) == "1", "first RegFn32 call should allocate handle 1");
+    }
+    if (pid != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pid->second) != "0", "CallFn(GetCurrentProcessId) should return a non-zero process id");
+    }
+    if (hlen != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hlen->second) == "2", "second RegFn32 call should allocate handle 2");
+    }
+    if (length != state.globals.end()) {
+        expect(copperfin::runtime::format_value(length->second) == "9", "CallFn(lstrlenA, 'Copperfin') should return the string length");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.library"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.regfn"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.callfn"; }),
+        "Foxtools bridge should emit library, registration, and call events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_again_and_alias_collision_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again";
@@ -1230,6 +1300,7 @@ int main() {
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
     test_seek_related_index_functions();
+    test_foxtools_registration_and_call_bridge();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();

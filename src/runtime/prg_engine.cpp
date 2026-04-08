@@ -8,10 +8,12 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <optional>
+#include <process.h>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -44,6 +46,7 @@ enum class StatementKind {
     use_command,
     set_order,
     set_command,
+    set_library,
     set_datasession,
     set_default,
     on_error,
@@ -133,6 +136,15 @@ struct CursorPositionSnapshot {
     bool eof = true;
     std::string active_order_name;
     std::string active_order_expression;
+};
+
+struct RegisteredApiFunction {
+    int handle = 0;
+    std::string variant;
+    std::string function_name;
+    std::string argument_types;
+    std::string return_type;
+    std::string dll_name;
 };
 
 struct DataSessionState {
@@ -617,6 +629,9 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SET DATASESSION TO ")) {
             statement.kind = StatementKind::set_datasession;
             statement.expression = trim_copy(line.substr(19U));
+        } else if (starts_with_insensitive(line, "SET LIBRARY TO ")) {
+            statement.kind = StatementKind::set_library;
+            statement.expression = trim_copy(line.substr(15U));
         } else if (starts_with_insensitive(line, "SET ORDER TO ")) {
             statement.kind = StatementKind::set_order;
             const std::string body = trim_copy(line.substr(13U));
@@ -766,6 +781,9 @@ struct PrgRuntimeSession::Impl {
     std::map<int, DataSessionState> data_sessions;
     std::map<int, RuntimeSqlConnectionState> sql_connections;
     std::map<int, RuntimeOleObjectState> ole_objects;
+    std::set<std::string> loaded_libraries;
+    int next_api_handle = 1;
+    std::map<int, RegisteredApiFunction> registered_api_functions;
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
     std::optional<std::size_t> event_dispatch_return_depth;
@@ -1315,6 +1333,76 @@ struct PrgRuntimeSession::Impl {
         return uppercase_copy(cursor->orders[resolved_index].name);
     }
 
+    bool is_library_loaded(const std::string& library_name) const {
+        return loaded_libraries.contains(normalize_identifier(library_name));
+    }
+
+    int register_api_function(
+        const std::string& variant,
+        const std::string& function_name,
+        const std::string& argument_types,
+        const std::string& return_type,
+        const std::string& dll_name) {
+        if (!is_library_loaded("foxtools")) {
+            last_error_message = "FOXTOOLS is not loaded";
+            return -1;
+        }
+
+        const int handle = next_api_handle++;
+        registered_api_functions.emplace(handle, RegisteredApiFunction{
+            .handle = handle,
+            .variant = variant,
+            .function_name = function_name,
+            .argument_types = argument_types,
+            .return_type = return_type,
+            .dll_name = dll_name
+        });
+        events.push_back({
+            .category = "interop.regfn",
+            .detail = variant + ":" + function_name + "@" + dll_name + " -> " + std::to_string(handle),
+            .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+        });
+        return handle;
+    }
+
+    PrgValue call_registered_api_function(int handle, const std::vector<PrgValue>& arguments) {
+        const auto found = registered_api_functions.find(handle);
+        if (found == registered_api_functions.end()) {
+            last_error_message = "Registered API handle not found: " + std::to_string(handle);
+            return make_number_value(-1.0);
+        }
+
+        const RegisteredApiFunction& function = found->second;
+        events.push_back({
+            .category = "interop.callfn",
+            .detail = function.function_name + " (" + std::to_string(arguments.size()) + " args)",
+            .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+        });
+
+        const std::string normalized_name = normalize_identifier(function.function_name);
+        if (normalized_name == "getcurrentprocessid") {
+            return make_number_value(static_cast<double>(_getpid()));
+        }
+        if ((normalized_name == "lstrlena" || normalized_name == "lstrlenw") && !arguments.empty()) {
+            return make_number_value(static_cast<double>(value_as_string(arguments.front()).size()));
+        }
+        if ((normalized_name == "messageboxa" || normalized_name == "messageboxw")) {
+            return make_number_value(1.0);
+        }
+        if ((normalized_name == "getmodulehandlea" || normalized_name == "getmodulehandlew")) {
+            return make_number_value(1.0);
+        }
+
+        const std::string normalized_return = normalize_identifier(function.return_type);
+        if (normalized_return == "c") {
+            return make_string_value({});
+        }
+        if (normalized_return == "f" || normalized_return == "d") {
+            return make_number_value(0.0);
+        }
+        return make_number_value(0.0);
+    }
+
     bool open_table_cursor(
         const std::string& raw_path,
         const std::string& requested_alias,
@@ -1672,6 +1760,10 @@ public:
         std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback,
         std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback,
         std::function<bool(const std::string&, bool, const std::string&, const std::string&)> indexseek_callback,
+        std::function<std::string()> foxtoolver_callback,
+        std::function<int()> mainhwnd_callback,
+        std::function<int(const std::string&, const std::string&, const std::string&, const std::string&, const std::string&)> regfn_callback,
+        std::function<PrgValue(int, const std::vector<PrgValue>&)> callfn_callback,
         std::function<int(const std::string&, const std::string&)> sql_connect_callback,
         std::function<int(int, const std::string&, const std::string&)> sql_exec_callback,
         std::function<bool(int)> sql_disconnect_callback,
@@ -1695,6 +1787,10 @@ public:
           tag_callback_(std::move(tag_callback)),
           seek_callback_(std::move(seek_callback)),
           indexseek_callback_(std::move(indexseek_callback)),
+          foxtoolver_callback_(std::move(foxtoolver_callback)),
+          mainhwnd_callback_(std::move(mainhwnd_callback)),
+          regfn_callback_(std::move(regfn_callback)),
+          callfn_callback_(std::move(callfn_callback)),
           sql_connect_callback_(std::move(sql_connect_callback)),
           sql_exec_callback_(std::move(sql_exec_callback)),
           sql_disconnect_callback_(std::move(sql_disconnect_callback)),
@@ -1914,6 +2010,29 @@ private:
             const std::string order_designator = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
             return make_boolean_value(indexseek_callback_(search_key, move_pointer, designator, order_designator));
         }
+        if (function == "foxtoolver") {
+            return make_string_value(foxtoolver_callback_());
+        }
+        if (function == "mainhwnd") {
+            return make_number_value(static_cast<double>(mainhwnd_callback_()));
+        }
+        if ((function == "regfn" || function == "regfn32") && arguments.size() >= 3U) {
+            const std::string function_name = value_as_string(arguments[0]);
+            const std::string argument_types = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+            const std::string return_type = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+            const std::string dll_name = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
+            return make_number_value(static_cast<double>(
+                regfn_callback_(function, function_name, argument_types, return_type, dll_name)));
+        }
+        if (function == "callfn" && !arguments.empty()) {
+            const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            std::vector<PrgValue> call_arguments;
+            call_arguments.reserve(arguments.size() > 0U ? arguments.size() - 1U : 0U);
+            for (std::size_t index = 1U; index < arguments.size(); ++index) {
+                call_arguments.push_back(arguments[index]);
+            }
+            return callfn_callback_(handle, call_arguments);
+        }
         if (function == "file" && !arguments.empty()) {
             std::filesystem::path path(value_as_string(arguments[0]));
             if (path.is_relative()) {
@@ -2110,6 +2229,10 @@ private:
     std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback_;
     std::function<bool(const std::string&, bool, const std::string&, const std::string&)> seek_callback_;
     std::function<bool(const std::string&, bool, const std::string&, const std::string&)> indexseek_callback_;
+    std::function<std::string()> foxtoolver_callback_;
+    std::function<int()> mainhwnd_callback_;
+    std::function<int(const std::string&, const std::string&, const std::string&, const std::string&, const std::string&)> regfn_callback_;
+    std::function<PrgValue(int, const std::vector<PrgValue>&)> callfn_callback_;
     std::function<int(const std::string&, const std::string&)> sql_connect_callback_;
     std::function<int(int, const std::string&, const std::string&)> sql_exec_callback_;
     std::function<bool(int)> sql_disconnect_callback_;
@@ -2201,6 +2324,22 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
                 return false;
             }
             return execute_seek(*cursor, search_key, move_pointer, order_designator);
+        },
+        [this]() {
+            return std::string("FOXTOOLS:9.0");
+        },
+        []() {
+            return 1001;
+        },
+        [this](const std::string& variant,
+               const std::string& function_name,
+               const std::string& argument_types,
+               const std::string& return_type,
+               const std::string& dll_name) {
+            return register_api_function(variant, function_name, argument_types, return_type, dll_name);
+        },
+        [this](int handle, const std::vector<PrgValue>& arguments) {
+            return call_registered_api_function(handle, arguments);
         },
         [this](const std::string& target, const std::string& provider) {
             return sql_connect(target, provider);
@@ -2670,6 +2809,18 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             events.push_back({
                 .category = "runtime.set",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::set_library: {
+            const std::string library_name = normalize_identifier(value_as_string(evaluate_expression(statement.expression, frame)));
+            if (!library_name.empty()) {
+                loaded_libraries.insert(library_name);
+            }
+            events.push_back({
+                .category = "runtime.library",
                 .detail = statement.expression,
                 .location = statement.location
             });
