@@ -21,6 +21,8 @@ enum class StatementKind {
     expression,
     do_command,
     do_form,
+    activate_surface,
+    release_surface,
     return_statement,
     if_statement,
     else_statement,
@@ -292,6 +294,22 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "DO FORM ")) {
             statement.kind = StatementKind::do_form;
             statement.identifier = trim_copy(line.substr(8U));
+        } else if (starts_with_insensitive(line, "ACTIVATE POPUP ")) {
+            statement.kind = StatementKind::activate_surface;
+            statement.identifier = "popup";
+            statement.expression = trim_copy(line.substr(15U));
+        } else if (starts_with_insensitive(line, "ACTIVATE MENU ")) {
+            statement.kind = StatementKind::activate_surface;
+            statement.identifier = "menu";
+            statement.expression = trim_copy(line.substr(14U));
+        } else if (starts_with_insensitive(line, "RELEASE POPUP ")) {
+            statement.kind = StatementKind::release_surface;
+            statement.identifier = "popup";
+            statement.expression = trim_copy(line.substr(14U));
+        } else if (starts_with_insensitive(line, "RELEASE MENU ")) {
+            statement.kind = StatementKind::release_surface;
+            statement.identifier = "menu";
+            statement.expression = trim_copy(line.substr(13U));
         } else if (starts_with_insensitive(line, "DO ")) {
             statement.kind = StatementKind::do_command;
             statement.identifier = trim_copy(line.substr(3U));
@@ -984,6 +1002,22 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             return {};
         }
+        case StatementKind::activate_surface:
+            waiting_for_events = true;
+            events.push_back({
+                .category = statement.identifier + ".activate",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {.waiting_for_events = true};
+        case StatementKind::release_surface:
+            waiting_for_events = false;
+            events.push_back({
+                .category = statement.identifier + ".release",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
         case StatementKind::return_statement:
             stack.pop_back();
             return {.frame_returned = true};

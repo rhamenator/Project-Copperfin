@@ -96,11 +96,38 @@ void test_read_events_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_activate_popup_pause() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_popup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "popup.prg";
+    write_text(
+        main_path,
+        "ACTIVATE POPUP Shortcut\n"
+        "x = 2\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "ACTIVATE POPUP should pause the runtime in event-loop mode");
+    expect(state.waiting_for_events, "popup activation should report waiting_for_events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_breakpoints_and_stepping();
     test_read_events_pause();
+    test_activate_popup_pause();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -15,7 +15,8 @@ Current native components:
   - reads the Copperfin runtime manifest
   - executes `PRG` startup code through a native xBase runtime session
   - supports real breakpoints plus `step`, `next`, and `out` debugger actions for `PRG` execution
-  - now also bootstraps runnable `SCX/VCX` startup methods through generated `PRG` wrappers
+  - now also bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers
+  - now treats `ACTIVATE MENU` and `ACTIVATE POPUP` as event-loop operations in the native runtime
   - still falls back to compatibility-mode launch reporting for non-runnable xAssets and other non-`PRG` startup assets
 
 Current package layout:
@@ -68,6 +69,7 @@ Current behavior:
 - debug manifests keep source-side paths so Visual Studio and the standalone Studio shell can debug against the editable source tree
 - `PRG` startup paths now advertise real breakpoint and step-debugging support in the debug manifest
 - runnable `SCX/VCX` startup assets can now be executed through generated method bootstraps from both source trees and packaged content
+- runnable `MNX/MNT` startup assets can now execute setup code and activate shortcut/menu event loops through a dedicated menu bootstrap model
 - startup assets that legacy projects mark as excluded are now still staged when they are required for runtime startup
 - packaged xAsset startup paths now carry their memo sidecars forward so the bootstrap runtime can open real designer assets instead of dead table shells
 
@@ -75,7 +77,8 @@ Current limitations:
 
 - the native execution engine is `PRG-first`, not yet the full FoxPro/VFP command/runtime surface
 - xBase code embedded in `SCX/VCX` assets is now partially executable through `METHODS` bootstrapping, but deeper event/lifecycle fidelity still needs work
-- `FRX/LBX/MNX` method extraction exists as a model, but those designer/runtime families are not yet executed directly
+- `MNX` startup activation now has a dedicated execution path, but rich menu interaction/selection dispatch is still incomplete
+- `FRX/LBX` method extraction exists as a model, but those designer/runtime families are not yet executed directly
 - package manifests are line-based metadata, not the finished long-term runtime format
 - build output planning is still driven by current `PJX` heuristics rather than a fully compatible FoxPro compiler/runtime
 

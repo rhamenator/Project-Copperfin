@@ -170,5 +170,34 @@ Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
     )
 }
 
+Invoke-Step -Name "Run menu xAsset smoke test" -Action {
+    $menuSmokeRoot = Join-Path $repoRoot "artifacts\menu-debug-smoke"
+    Remove-Item -Recurse -Force $menuSmokeRoot -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $menuSmokeRoot | Out-Null
+
+    $manifestPath = Join-Path $menuSmokeRoot "app.cfmanifest"
+    @(
+        "manifest_version=1",
+        "project_title=MENUDEBUG",
+        "project_path=E:\Project-Copperfin\menu-smoke.pjx",
+        "package_root=$menuSmokeRoot",
+        "content_root=$menuSmokeRoot",
+        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Toledo",
+        "startup_item=systray_shortcut.mnx",
+        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Toledo\systray_shortcut.mnx",
+        "configuration=debug",
+        "security_enabled=false",
+        "security_mode=off",
+        "dotnet_enabled=false",
+        "dotnet_story="
+    ) | Set-Content -Path $manifestPath
+
+    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
+        "--manifest", $manifestPath,
+        "--debug",
+        "--debug-command", "continue"
+    )
+}
+
 Write-Host ""
 Write-Host "Validation complete." -ForegroundColor Green

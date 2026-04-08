@@ -64,10 +64,60 @@ void test_build_xasset_executable_model() {
     expect(bootstrap.find("READ EVENTS") != std::string::npos, "bootstrap should optionally include READ EVENTS");
 }
 
+void test_build_menu_xasset_executable_model() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\shortcut.mnx)";
+    document.kind = copperfin::studio::StudioAssetKind::menu;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4"},
+            {.field_name = "SETUP", .field_type = 'M', .display_value = "PARAMETERS Param1\nParam1 = 'ready'"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  0"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "Shortcut"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+            {.field_name = "NUMITEMS", .field_type = 'N', .display_value = "2"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  0"}
+        }),
+        make_record(2, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  1"},
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "CLEAR EVENTS"}
+        }),
+        make_record(3, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  2"},
+            {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "PROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "xAsset executable model should be created for menus");
+    expect(model.runnable_startup, "menu model should be runnable when activation can be derived");
+    expect(model.activation_kind == "popup", "shortcut menus should activate as popups");
+    expect(model.activation_target == "Shortcut", "shortcut menus should target the first popup/submenu name");
+    expect(model.startup_enters_event_loop, "menu startup should enter the runtime event loop");
+    expect(model.startup_lines.size() >= 2U, "menu startup should include setup and activation lines");
+    expect(model.methods.size() >= 3U, "menu methods should include wrapped setup/command/procedure code");
+
+    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    expect(bootstrap.find("DO __cf_shortcut_setup") != std::string::npos, "menu bootstrap should call setup code");
+    expect(bootstrap.find("ACTIVATE POPUP Shortcut") != std::string::npos, "menu bootstrap should activate the popup");
+    expect(bootstrap.find("PROCEDURE __cf_Shortcut_item1_command") != std::string::npos, "menu bootstrap should materialize command routines");
+    expect(bootstrap.find("PROCEDURE __cf_Shortcut_item2_ItemAction") != std::string::npos, "menu bootstrap should materialize embedded snippet procedures");
+    expect(bootstrap.find("READ EVENTS") == std::string::npos, "menu bootstrap should not append READ EVENTS when activation already enters the event loop");
+}
+
 }  // namespace
 
 int main() {
     test_build_xasset_executable_model();
+    test_build_menu_xasset_executable_model();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

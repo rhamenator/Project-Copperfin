@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
+#include <optional>
 #include <sstream>
 #include <string_view>
 
@@ -45,6 +47,13 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
     if (value.size() < prefix.size()) {
         return false;
@@ -81,6 +90,58 @@ std::string build_object_path(const copperfin::vfp::DbfRecord& record) {
         return object_name;
     }
     return parent + "." + object_name;
+}
+
+int numeric_value_or_default(const copperfin::vfp::DbfRecord& record, std::string_view field_name, int fallback = 0) {
+    const std::string value = trim_copy(value_or_empty(record, field_name));
+    if (value.empty()) {
+        return fallback;
+    }
+    try {
+        return std::stoi(value);
+    } catch (...) {
+        return fallback;
+    }
+}
+
+std::string build_menu_owner_path(const copperfin::vfp::DbfRecord& record) {
+    const int object_type = numeric_value_or_default(record, "OBJTYPE");
+    const std::string name = trim_copy(value_or_empty(record, "NAME"));
+    const std::string level_name = trim_copy(value_or_empty(record, "LEVELNAME"));
+    const std::string item_number = trim_copy(value_or_empty(record, "ITEMNUM"));
+    const std::string prompt = trim_copy(value_or_empty(record, "PROMPT"));
+
+    if (object_type == 4) {
+        return name.empty() ? "shortcut" : name;
+    }
+    if (object_type == 5) {
+        return name.empty() ? "sdi_menu" : name;
+    }
+    if (object_type == 1) {
+        return name.empty() ? "menu" : name;
+    }
+    if (object_type == 2) {
+        if (!name.empty()) {
+            return name;
+        }
+        if (!level_name.empty()) {
+            return level_name;
+        }
+        return "submenu";
+    }
+    if (!name.empty()) {
+        return name;
+    }
+    if (!level_name.empty() && !item_number.empty() && item_number != "0" && item_number != "00" && item_number != "000") {
+        return level_name + ".item" + item_number;
+    }
+    if (!level_name.empty()) {
+        return level_name;
+    }
+    if (!prompt.empty()) {
+        return prompt;
+    }
+    return "menu_record_" + std::to_string(record.record_index);
 }
 
 std::pair<std::string, std::string> split_owner_and_method(const std::string& raw_name, const std::string& record_object_path) {
@@ -161,6 +222,44 @@ std::vector<XAssetMethod> parse_methods_blob(
     return methods;
 }
 
+std::vector<XAssetMethod> parse_embedded_routines(
+    std::size_t record_index,
+    const std::string& object_path,
+    const std::string& blob) {
+    return parse_methods_blob(record_index, object_path, blob);
+}
+
+XAssetMethod make_wrapped_method(
+    std::size_t record_index,
+    const std::string& object_path,
+    std::string method_name,
+    std::string source_text) {
+    XAssetMethod method;
+    method.record_index = record_index;
+    method.object_path = object_path;
+    method.method_name = std::move(method_name);
+    method.routine_name = sanitize_routine_name("__cf_" + object_path + "_" + method.method_name);
+    method.source_text = trim_copy(std::move(source_text));
+    return method;
+}
+
+std::vector<XAssetMethod> parse_field_as_routines(
+    std::size_t record_index,
+    const std::string& object_path,
+    const std::string& field_role,
+    const std::string& blob) {
+    const std::string trimmed = trim_copy(blob);
+    if (trimmed.empty()) {
+        return {};
+    }
+
+    if (starts_with_insensitive(trimmed, "PROCEDURE ") || starts_with_insensitive(trimmed, "FUNCTION ")) {
+        return parse_embedded_routines(record_index, object_path, trimmed);
+    }
+
+    return {make_wrapped_method(record_index, object_path, field_role, trimmed)};
+}
+
 bool has_method(
     const std::vector<XAssetMethod>& methods,
     const std::string& object_path,
@@ -177,6 +276,29 @@ bool has_method(
     }
     routine_name = found->routine_name;
     return true;
+}
+
+void append_methods(std::vector<XAssetMethod>& destination, const std::vector<XAssetMethod>& methods) {
+    destination.insert(destination.end(), methods.begin(), methods.end());
+}
+
+bool has_object_type(const studio::StudioDocumentModel& document, int expected_type) {
+    return std::any_of(document.table_preview.records.begin(), document.table_preview.records.end(), [&](const copperfin::vfp::DbfRecord& record) {
+        return numeric_value_or_default(record, "OBJTYPE") == expected_type;
+    });
+}
+
+std::optional<std::string> find_first_menu_container_name(const studio::StudioDocumentModel& document) {
+    for (const auto& record : document.table_preview.records) {
+        if (numeric_value_or_default(record, "OBJTYPE") != 2) {
+            continue;
+        }
+        const std::string name = trim_copy(value_or_empty(record, "NAME"));
+        if (!name.empty()) {
+            return name;
+        }
+    }
+    return std::nullopt;
 }
 
 }  // namespace
@@ -202,21 +324,30 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
     }
 
     for (const auto& record : document.table_preview.records) {
-        const std::string object_path = build_object_path(record);
-        const std::string methods_blob = value_or_empty(record, "METHODS");
-        if (!methods_blob.empty()) {
-            auto parsed = parse_methods_blob(record.record_index, object_path, methods_blob);
-            model.methods.insert(model.methods.end(), parsed.begin(), parsed.end());
-        }
+        const std::string object_path = document.kind == studio::StudioAssetKind::menu
+            ? build_menu_owner_path(record)
+            : build_object_path(record);
 
-        const std::string baseclass = lowercase_copy(trim_copy(value_or_empty(record, "BASECLASS")));
-        const std::string platform = lowercase_copy(trim_copy(value_or_empty(record, "PLATFORM")));
-        if (model.root_object_path.empty() &&
-            platform != "comment" &&
-            baseclass != "dataenvironment" &&
-            !object_path.empty() &&
-            trim_copy(value_or_empty(record, "PARENT")).empty()) {
-            model.root_object_path = object_path;
+        if (document.kind == studio::StudioAssetKind::menu) {
+            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "setup", value_or_empty(record, "SETUP")));
+            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "command", value_or_empty(record, "COMMAND")));
+            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "procedure", value_or_empty(record, "PROCEDURE")));
+            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "cleanup", value_or_empty(record, "CLEANUP")));
+        } else {
+            const std::string methods_blob = value_or_empty(record, "METHODS");
+            if (!methods_blob.empty()) {
+                append_methods(model.methods, parse_methods_blob(record.record_index, object_path, methods_blob));
+            }
+
+            const std::string baseclass = lowercase_copy(trim_copy(value_or_empty(record, "BASECLASS")));
+            const std::string platform = lowercase_copy(trim_copy(value_or_empty(record, "PLATFORM")));
+            if (model.root_object_path.empty() &&
+                platform != "comment" &&
+                baseclass != "dataenvironment" &&
+                !object_path.empty() &&
+                trim_copy(value_or_empty(record, "PARENT")).empty()) {
+                model.root_object_path = object_path;
+            }
         }
     }
 
@@ -231,7 +362,36 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         if (!model.root_object_path.empty() && has_method(model.methods, model.root_object_path, "Init", routine_name)) {
             model.startup_routines.push_back(routine_name);
         }
+        for (const auto& startup_routine : model.startup_routines) {
+            model.startup_lines.push_back("DO " + startup_routine);
+        }
         model.runnable_startup = !model.startup_routines.empty();
+    } else if (document.kind == studio::StudioAssetKind::menu) {
+        for (const auto& method : model.methods) {
+            if (lowercase_copy(method.method_name) == "setup") {
+                model.startup_routines.push_back(method.routine_name);
+                model.startup_lines.push_back("DO " + method.routine_name);
+            }
+        }
+
+        const bool shortcut_menu = has_object_type(document, 4);
+        model.activation_kind = shortcut_menu ? "popup" : "menu";
+        if (shortcut_menu) {
+            if (const auto first_container_name = find_first_menu_container_name(document)) {
+                model.activation_target = *first_container_name;
+            } else {
+                model.activation_target = "shortcut";
+            }
+        } else {
+            model.activation_target = std::filesystem::path(document.path).stem().string();
+        }
+
+        if (!model.activation_target.empty()) {
+            model.startup_lines.push_back("ACTIVATE " + uppercase_copy(model.activation_kind) + " " + model.activation_target);
+            model.startup_enters_event_loop = true;
+        }
+
+        model.runnable_startup = !model.startup_lines.empty();
     }
 
     model.ok = true;
@@ -241,10 +401,10 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 std::string build_xasset_bootstrap_source(const XAssetExecutableModel& model, bool include_read_events) {
     std::ostringstream stream;
     stream << "* Copperfin generated xAsset bootstrap\n";
-    for (const auto& routine_name : model.startup_routines) {
-        stream << "DO " << routine_name << "\n";
+    for (const auto& line : model.startup_lines) {
+        stream << line << "\n";
     }
-    if (include_read_events) {
+    if (include_read_events && !model.startup_enters_event_loop) {
         stream << "READ EVENTS\n";
     }
     stream << "RETURN\n";

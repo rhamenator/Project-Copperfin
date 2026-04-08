@@ -18,11 +18,15 @@ struct XAssetMethod {
 struct XAssetExecutableModel {
     bool ok = false;
     bool runnable_startup = false;
+    bool startup_enters_event_loop = false;
     std::string asset_path;
     std::string root_object_path;
+    std::string activation_kind;
+    std::string activation_target;
     std::string error;
     std::vector<XAssetMethod> methods;
     std::vector<std::string> startup_routines;
+    std::vector<std::string> startup_lines;
 };
 
 XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);
