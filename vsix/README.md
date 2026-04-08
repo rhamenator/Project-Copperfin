@@ -19,6 +19,7 @@ Current scope:
 - supports inline editable `FRX/FRT` and `LBX/LBT` layout slices for `HPOS`, `VPOS`, `WIDTH`, `HEIGHT`, `EXPR`, and key font fields
 - now uses a section-aware report/label shell with named bands, a modernized design surface, and a dedicated left-pane section explorer instead of treating reports and labels as flat record lists
 - reuses the same shared WinForms designer controls in the standalone Copperfin Studio shell
+- the standalone Copperfin Studio shell now opens multiple assets as tabs in one session instead of forcing one-document-at-a-time editing
 - includes automated UI smoke tests that render the shared design surface and load real VFP sample assets
 - supports asset-aware property-grid editing for `MNX/MNT` menu items
 - now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing
@@ -27,6 +28,7 @@ Current scope:
 Current limitations:
 
 - the registered document surface is still a first designer shell, not yet a full inline VFP 9-fidelity designer across all asset families
+- the standalone Studio shell is still a managed host around the shared designer controls, not the finished native IDE experience
 - the highest-fidelity inline layout experience is still in the form/class/report/label families rather than project-system tooling
 - it does not yet own project build/debug/run pipelines for Copperfin applications
 - it does not yet render forms/reports inline inside the Visual Studio document with full VFP 9 fidelity, even though reports and labels now have a section-aware designer shape

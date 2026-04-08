@@ -104,6 +104,7 @@ Current runnable artifacts:
   - project workspaces now also surface the platform's native security/RBAC posture and `.NET`/Python/MCP extensibility story
 - `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
   - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
+  - now opens multiple assets as tabs so the managed shell feels more like an IDE workspace instead of a single-document dialog
   - current output: `vsix\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`
 - `vsix\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj`
   - automated WinForms smoke tests for the shared designer UI
@@ -135,3 +136,4 @@ Known limitation:
 - runtime action dispatch now covers menu selection and extracted method invocation, but higher-fidelity form/report object lifecycle, richer UI event simulation, and broader runtime semantics still need work
 - runtime execution no longer truncates to the Studio preview record limit, which improves parity for deeper `MNX` submenu trees and other larger xAssets
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE
+- the standalone Studio shell now supports tabbed multi-document editing, but it still needs richer IDE chrome and workflow parity before it feels like the full VFP 9 experience

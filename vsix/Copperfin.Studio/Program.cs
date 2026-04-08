@@ -11,11 +11,15 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        var initialPath = args.Length > 0 ? args[0] : string.Empty;
         using var form = new StudioMainForm();
-        if (!string.IsNullOrWhiteSpace(initialPath))
+        foreach (var candidate in args)
         {
-            form.OpenDocument(initialPath);
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            form.OpenDocument(candidate);
         }
 
         Application.Run(form);

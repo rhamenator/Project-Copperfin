@@ -1,14 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
 internal sealed class StudioMainForm : Form
 {
-    private readonly CopperfinAssetEditorControl editorControl;
+    private readonly TabControl documentTabs;
     private readonly ToolStripStatusLabel statusLabel;
+    private readonly Dictionary<string, TabPage> openDocuments = new(StringComparer.OrdinalIgnoreCase);
 
     public StudioMainForm()
     {
@@ -27,10 +30,21 @@ internal sealed class StudioMainForm : Form
         menuStrip.Items.Add(fileMenu);
         MainMenuStrip = menuStrip;
 
-        editorControl = new CopperfinAssetEditorControl
+        documentTabs = new TabControl
         {
             Dock = DockStyle.Fill,
-            EmbeddedStudioShell = true
+            Alignment = TabAlignment.Top,
+            Multiline = true
+        };
+        documentTabs.SelectedIndexChanged += (_, _) =>
+        {
+            if (documentTabs.SelectedTab is null)
+            {
+                UpdateStatus("Open one or more VFP assets to inspect and edit them in Copperfin Studio.");
+                return;
+            }
+
+            UpdateStatus(documentTabs.SelectedTab.ToolTipText ?? documentTabs.SelectedTab.Text);
         };
 
         var statusStrip = new StatusStrip();
@@ -40,9 +54,11 @@ internal sealed class StudioMainForm : Form
         };
         statusStrip.Items.Add(statusLabel);
 
-        Controls.Add(editorControl);
+        Controls.Add(documentTabs);
         Controls.Add(statusStrip);
         Controls.Add(menuStrip);
+
+        UpdateStatus("Open one or more VFP assets to inspect and edit them in Copperfin Studio.");
     }
 
     public void OpenDocument(string path)
@@ -53,9 +69,32 @@ internal sealed class StudioMainForm : Form
             return;
         }
 
-        editorControl.LoadDocument(path);
-        Text = $"Copperfin Studio - {CopperfinStudioHostBridge.DescribeAssetKind(path)}";
-        statusLabel.Text = path;
+        var normalizedPath = Path.GetFullPath(path);
+        if (openDocuments.TryGetValue(normalizedPath, out var existingPage))
+        {
+            documentTabs.SelectedTab = existingPage;
+            UpdateStatus(existingPage.Text);
+            return;
+        }
+
+        var editorControl = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill,
+            EmbeddedStudioShell = true
+        };
+        editorControl.LoadDocument(normalizedPath);
+
+        var page = new TabPage(Path.GetFileName(normalizedPath))
+        {
+            ToolTipText = normalizedPath
+        };
+        page.Controls.Add(editorControl);
+        documentTabs.TabPages.Add(page);
+        documentTabs.SelectedTab = page;
+        openDocuments[normalizedPath] = page;
+
+        Text = $"Copperfin Studio - {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}";
+        UpdateStatus($"{normalizedPath}   |   {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}   |   Open tabs: {documentTabs.TabPages.Count}");
     }
 
     private void OpenFromPicker()
@@ -72,5 +111,10 @@ internal sealed class StudioMainForm : Form
         {
             OpenDocument(dialog.FileName);
         }
+    }
+
+    private void UpdateStatus(string text)
+    {
+        statusLabel.Text = text;
     }
 }

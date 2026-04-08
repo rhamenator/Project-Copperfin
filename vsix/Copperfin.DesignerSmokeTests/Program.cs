@@ -28,6 +28,9 @@ internal static class Program
         SmokeProjectEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx",
             expectGroup: "Forms");
+        SmokeStandaloneStudioWithMultipleAssets(
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx",
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx");
 
         if (failures != 0)
         {
@@ -204,6 +207,53 @@ internal static class Program
         hostForm.Hide();
     }
 
+    private static void SmokeStandaloneStudioWithMultipleAssets(string firstPath, string secondPath)
+    {
+        if (!File.Exists(firstPath) || !File.Exists(secondPath))
+        {
+            Console.WriteLine($"SKIP: {firstPath} or {secondPath} not found.");
+            return;
+        }
+
+        using var form = new StudioMainForm
+        {
+            Width = 1500,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        form.Show();
+        Application.DoEvents();
+        form.OpenDocument(firstPath);
+        form.OpenDocument(secondPath);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(10),
+            () => FindTabControls(form).Any(tab => tab.TabPages.Count >= 2) &&
+                  FindTabControls(form).SelectMany(tab => tab.TabPages.Cast<TabPage>())
+                      .Any(page => page.Text.Equals(Path.GetFileName(firstPath), StringComparison.OrdinalIgnoreCase)) &&
+                  FindTabControls(form).SelectMany(tab => tab.TabPages.Cast<TabPage>())
+                      .Any(page => page.Text.Equals(Path.GetFileName(secondPath), StringComparison.OrdinalIgnoreCase)));
+        Expect(loaded, "standalone Studio should open multiple assets as separate tabs");
+
+        var tabControl = FindTabControls(form).FirstOrDefault();
+        Expect(tabControl is not null, "standalone Studio should surface a document tab control");
+        if (tabControl is not null)
+        {
+            var beforeDuplicateOpen = tabControl.TabPages.Count;
+            form.OpenDocument(firstPath);
+            Application.DoEvents();
+            Expect(tabControl.TabPages.Count == beforeDuplicateOpen, "opening an already open asset should not duplicate tabs");
+            Expect(tabControl.SelectedTab is not null, "standalone Studio should keep a selected tab");
+            Expect(tabControl.SelectedTab?.Text == Path.GetFileName(firstPath) || tabControl.SelectedTab?.Text == Path.GetFileName(secondPath),
+                "standalone Studio should keep a valid selected asset tab");
+        }
+
+        form.Hide();
+    }
+
     private static bool WaitUntil(TimeSpan timeout, Func<bool> condition)
     {
         var deadline = DateTime.UtcNow + timeout;
@@ -267,6 +317,22 @@ internal static class Program
             }
 
             foreach (var nested in FindRichTextBoxes(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
+    private static IEnumerable<TabControl> FindTabControls(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is TabControl tabControl)
+            {
+                yield return tabControl;
+            }
+
+            foreach (var nested in FindTabControls(child))
             {
                 yield return nested;
             }
