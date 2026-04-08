@@ -212,6 +212,22 @@ internal static class Program
                 $"project workspace summary should include .NET/extensibility guidance for {path}");
         }
 
+        var taskListSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Task List", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(taskListSummary is not null, $"project editor should surface a task-list pane for {path}");
+
+        var codeReferenceSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Code References", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(codeReferenceSummary is not null, $"project editor should surface a code-references pane for {path}");
+
+        var dataExplorerSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Data Explorer", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(dataExplorerSummary is not null, $"project editor should surface a data-explorer pane for {path}");
+
+        var objectBrowserSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Object Browser", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(objectBrowserSummary is not null, $"project editor should surface an object-browser pane for {path}");
+
         hostForm.Hide();
     }
 

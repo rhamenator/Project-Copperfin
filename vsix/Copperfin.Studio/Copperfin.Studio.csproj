@@ -23,6 +23,8 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.cs" Link="Shared\CopperfinAssetEditorControl.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignSurfaceControl.cs" Link="Shared\CopperfinDesignSurfaceControl.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightClient.cs" Link="Shared\CopperfinProjectInsightClient.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightModels.cs" Link="Shared\CopperfinProjectInsightModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectWorkflow.cs" Link="Shared\CopperfinProjectWorkflow.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinRuntimeDebugClient.cs" Link="Shared\CopperfinRuntimeDebugClient.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinRuntimeDebugModels.cs" Link="Shared\CopperfinRuntimeDebugModels.cs" />

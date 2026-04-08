@@ -6,6 +6,7 @@ Copperfin should stay native-first in its trusted core while still being useful 
 
 - `.NET`
 - Python
+- R
 - native extension languages
 - AI-assisted workflows
 - MCP-compatible tool ecosystems
@@ -46,6 +47,23 @@ Recommended rule:
 - make it policy-controlled and auditable
 - do not let it become the trusted runtime boundary
 
+## R Story
+
+R should follow the same boundary as Python.
+
+Strong use cases:
+
+- statistical workloads
+- reproducible research pipelines
+- analyst-authored reports
+- data-frame and model-serving jobs
+
+Recommended rule:
+
+- run R out-of-process
+- keep it policy-controlled and auditable
+- treat it as a sidecar/job boundary rather than the trusted runtime
+
 ## Other Language Story
 
 Acceptable extension modes:
@@ -67,6 +85,9 @@ Copperfin should eventually have a dedicated MCP host surface so developers can 
 - report/query design assistance
 - diagnostics
 - documentation lookup
+- debugger assistance
+
+Developers should be able to choose the model used for AI-assisted debugging and coding help, subject to organization policy.
 
 Recommended rules:
 
@@ -75,6 +96,7 @@ Recommended rules:
 - policy-controlled
 - auditable
 - able to use local or enterprise models
+- allow user-selected models within administrator-approved provider/model policy
 
 ## Why This Matters
 

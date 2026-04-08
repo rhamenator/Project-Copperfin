@@ -29,6 +29,8 @@ Important note:
 
 Contents:
 
+- [`LICENSE`](E:/Project-Copperfin/LICENSE)
+- [`SECURITY.md`](E:/Project-Copperfin/SECURITY.md)
 - [`docs/01-product-charter.md`](E:/Project-Copperfin/docs/01-product-charter.md)
 - [`docs/02-architecture.md`](E:/Project-Copperfin/docs/02-architecture.md)
 - [`docs/03-compatibility-and-migration.md`](E:/Project-Copperfin/docs/03-compatibility-and-migration.md)
@@ -106,6 +108,8 @@ Current runnable artifacts:
   - current `PJX/PJT` slices now surface a grouped project workspace with project-item grouping, startup/build-plan summary, and project-entry property editing
   - project workspaces now also surface the platform's native security/RBAC posture and `.NET`/Python/MCP extensibility story
   - project workspaces now include a first integrated debugger pane backed by the native runtime host, with pause reason, call stack, locals, globals, and runtime-event summaries
+  - project workspaces now include first shared `Task List`, `Code References`, `Data Explorer`, and `Object Browser` panes so the IDE surface is moving toward classic VFP utility windows instead of only showing a build summary
+  - project workspaces now explicitly surface user-selected AI debugging assistance plus Python/R data-science sidecar guidance inside the modern extensibility story
 - `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
   - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
   - now opens multiple assets as tabs so the managed shell feels more like an IDE workspace instead of a single-document dialog
@@ -115,7 +119,7 @@ Current runnable artifacts:
   - automated WinForms smoke tests for the shared designer UI
   - current output: `vsix\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
   - exercises synthetic rendering plus real `invoice.frx`, `cust.lbx`, and `solution.pjx` assets from the local VFP 9 sample tree
-  - now smoke-tests the shared project debugger surface against a real VFP sample project
+  - now smoke-tests the shared project debugger, task list, code references, data explorer, and object browser surfaces against a real VFP sample project
 
 Quick examples:
 
@@ -144,3 +148,4 @@ Known limitation:
 - runtime execution no longer truncates to the Studio preview record limit, which improves parity for deeper `MNX` submenu trees and other larger xAssets
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE
 - the standalone Studio shell now supports tabbed multi-document editing, but it still needs richer IDE chrome and workflow parity before it feels like the full VFP 9 experience
+- the new project utility panes are strong parity progress, but they are still summary-driven surfaces rather than the full interactive VFP 9 Project Manager, Data Explorer, Object Browser, Coverage, and builder ecosystem
