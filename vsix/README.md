@@ -26,8 +26,9 @@ Current scope:
 - now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing
 - now surfaces the platform's native security/RBAC stance and `.NET`/Python/MCP extensibility story inside project workspaces
 - now surfaces a shared project debugger pane for `PJX` workflows, backed by the native runtime host and showing pause reason, call stack, locals, globals, and runtime events
-- now surfaces shared `Task List`, `Code References`, `Data Explorer`, and `Object Browser` panes for project workspaces so Visual Studio and standalone Studio share more VFP-style utility-window behavior
+- now surfaces shared `Task List`, `Code References`, `Data Explorer`, `Object Browser`, `Toolbox`, `Builders`, `Coverage`, and `Database` panes for project workspaces so Visual Studio and standalone Studio share more VFP-style utility-window behavior
 - now makes the modern extensibility story more explicit inside project workspaces, including Python/R sidecars plus user-selected AI debugging assistance through policy-controlled AI/MCP integrations
+- now carries a native database-federation profile into the shared shells so relational, document, and vector query-planning stories show up beside classic project tooling
 
 Current limitations:
 
@@ -38,6 +39,7 @@ Current limitations:
 - it does not yet render forms/reports inline inside the Visual Studio document with full VFP 9 fidelity, even though reports and labels now have a section-aware designer shape
 - the debugger pane is a first runtime-facing surface, not yet the finished VFP 9-level watch/coverage/task-window experience
 - the new project utility panes are still summary-first panes, not yet the full interactive VFP 9-equivalent Project Explorer/Data Explorer/Object Browser/Coverage toolchain
+- database federation and polyglot query translation are now modeled in the shell, but the actual backend translators still need deeper implementation beyond the current architectural contract
 
 Why VS 2022 as the baseline:
 

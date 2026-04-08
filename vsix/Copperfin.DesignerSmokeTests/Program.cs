@@ -151,7 +151,7 @@ internal static class Program
             Expect(CountNonWhitePixels(bitmap) > 5000, $"design surface should render visible content for {path}");
         }
 
-        hostForm.Hide();
+        TearDownForm(hostForm);
     }
 
     private static void SmokeProjectEditorWithRealAsset(string path, string expectGroup)
@@ -228,7 +228,24 @@ internal static class Program
             .FirstOrDefault(box => box.Text.IndexOf("Copperfin Object Browser", StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(objectBrowserSummary is not null, $"project editor should surface an object-browser pane for {path}");
 
-        hostForm.Hide();
+        var toolboxSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Toolbox And Add-ins", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(toolboxSummary is not null, $"project editor should surface a toolbox pane for {path}");
+
+        var buildersSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Builders", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(buildersSummary is not null, $"project editor should surface a builders pane for {path}");
+
+        var coverageSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Coverage", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                   box.Text.IndexOf("runtime coverage signals", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(coverageSummary is not null, $"project editor should surface a coverage pane for {path}");
+
+        var databaseSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Database Federation", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(databaseSummary is not null, $"project editor should surface a database pane for {path}");
+
+        TearDownForm(hostForm);
     }
 
     private static void SmokeProjectDebuggerWithRealAsset(string path)
@@ -266,7 +283,7 @@ internal static class Program
         var debugButton = FindButtons(control).FirstOrDefault(button => button.Text == "Debug Copperfin Project");
         if (debugButton is null)
         {
-            hostForm.Hide();
+            TearDownForm(hostForm);
             return;
         }
 
@@ -289,7 +306,7 @@ internal static class Program
                 $"project debugger should include runtime events for {path}");
         }
 
-        hostForm.Hide();
+        TearDownForm(hostForm);
     }
 
     private static void SmokeStandaloneStudioWithMultipleAssets(string firstPath, string secondPath)
@@ -336,7 +353,22 @@ internal static class Program
                 "standalone Studio should keep a valid selected asset tab");
         }
 
+        TearDownForm(form);
+    }
+
+    private static void TearDownForm(Form form)
+    {
+        if (form.IsDisposed)
+        {
+            return;
+        }
+
         form.Hide();
+        Application.DoEvents();
+        Thread.Sleep(150);
+        Application.DoEvents();
+        form.Close();
+        Application.DoEvents();
     }
 
     private static bool WaitUntil(TimeSpan timeout, Func<bool> condition)

@@ -24,6 +24,7 @@ else()
 endif()
 
 add_library(cf_platform_profile
+    src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
 )
 

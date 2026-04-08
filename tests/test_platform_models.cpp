@@ -1,3 +1,4 @@
+#include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/security/security_model.h"
 
@@ -52,11 +53,35 @@ void test_default_extensibility_profile() {
     expect(mcp != profile.ai_features.end(), "extensibility profile should include MCP hosting");
 }
 
+void test_default_database_profile() {
+    const auto profile = copperfin::platform::default_database_federation_profile();
+    expect(profile.available, "database profile should be available");
+    expect(!profile.connectors.empty(), "database profile should define connectors");
+    expect(!profile.query_paths.empty(), "database profile should define query translation paths");
+
+    const auto sqlite = std::find_if(profile.connectors.begin(), profile.connectors.end(), [](const auto& connector) {
+        return connector.id == "sqlite";
+    });
+    expect(sqlite != profile.connectors.end(), "database profile should include SQLite");
+    if (sqlite != profile.connectors.end()) {
+        expect(sqlite->fox_sql_translation_direct, "SQLite should support direct Fox SQL translation");
+    }
+
+    const auto mongodb = std::find_if(profile.connectors.begin(), profile.connectors.end(), [](const auto& connector) {
+        return connector.id == "mongodb";
+    });
+    expect(mongodb != profile.connectors.end(), "database profile should include document database guidance");
+    if (mongodb != profile.connectors.end()) {
+        expect(mongodb->ai_query_planning_optional, "document database planning should allow optional AI assistance");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_default_security_profile();
     test_default_extensibility_profile();
+    test_default_database_profile();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

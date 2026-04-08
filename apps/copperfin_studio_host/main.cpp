@@ -1,4 +1,5 @@
 #include "copperfin/studio/document_model.h"
+#include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
@@ -73,6 +74,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
     const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto database_profile = copperfin::platform::default_database_federation_profile();
     const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
 
     std::cout << "{\n";
@@ -518,6 +520,80 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     for (std::size_t guardrail_index = 0; guardrail_index < extensibility_profile.guardrails.size(); ++guardrail_index) {
         print_json_string(extensibility_profile.guardrails[guardrail_index]);
         if ((guardrail_index + 1U) != extensibility_profile.guardrails.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]\n";
+    std::cout << "    },\n";
+    std::cout << "    \"databaseProfile\": {\n";
+    std::cout << "      \"available\": " << (database_profile.available ? "true" : "false") << ",\n";
+    std::cout << "      \"connectors\": [\n";
+    for (std::size_t connector_index = 0; connector_index < database_profile.connectors.size(); ++connector_index) {
+        const auto& connector = database_profile.connectors[connector_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(connector.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(connector.title);
+        std::cout << ",\n";
+        std::cout << "          \"family\": ";
+        print_json_string(connector.family);
+        std::cout << ",\n";
+        std::cout << "          \"accessMode\": ";
+        print_json_string(connector.access_mode);
+        std::cout << ",\n";
+        std::cout << "          \"schemaShape\": ";
+        print_json_string(connector.schema_shape);
+        std::cout << ",\n";
+        std::cout << "          \"translationStory\": ";
+        print_json_string(connector.translation_story);
+        std::cout << ",\n";
+        std::cout << "          \"xbaseCommandsFirstClass\": " << (connector.xbase_commands_first_class ? "true" : "false") << ",\n";
+        std::cout << "          \"foxSqlTranslationDirect\": " << (connector.fox_sql_translation_direct ? "true" : "false") << ",\n";
+        std::cout << "          \"aiQueryPlanningOptional\": " << (connector.ai_query_planning_optional ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((connector_index + 1U) != database_profile.connectors.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"queryPaths\": [\n";
+    for (std::size_t path_index = 0; path_index < database_profile.query_paths.size(); ++path_index) {
+        const auto& path = database_profile.query_paths[path_index];
+        std::cout << "        {\n";
+        std::cout << "          \"id\": ";
+        print_json_string(path.id);
+        std::cout << ",\n";
+        std::cout << "          \"title\": ";
+        print_json_string(path.title);
+        std::cout << ",\n";
+        std::cout << "          \"sourceShape\": ";
+        print_json_string(path.source_shape);
+        std::cout << ",\n";
+        std::cout << "          \"targetShape\": ";
+        print_json_string(path.target_shape);
+        std::cout << ",\n";
+        std::cout << "          \"complexity\": ";
+        print_json_string(path.complexity);
+        std::cout << ",\n";
+        std::cout << "          \"strategy\": ";
+        print_json_string(path.strategy);
+        std::cout << ",\n";
+        std::cout << "          \"deterministicFirst\": " << (path.deterministic_first ? "true" : "false") << ",\n";
+        std::cout << "          \"aiOptional\": " << (path.ai_optional ? "true" : "false") << "\n";
+        std::cout << "        }";
+        if ((path_index + 1U) != database_profile.query_paths.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "      ],\n";
+    std::cout << "      \"guardrails\": [";
+    for (std::size_t guardrail_index = 0; guardrail_index < database_profile.guardrails.size(); ++guardrail_index) {
+        print_json_string(database_profile.guardrails[guardrail_index]);
+        if ((guardrail_index + 1U) != database_profile.guardrails.size()) {
             std::cout << ", ";
         }
     }

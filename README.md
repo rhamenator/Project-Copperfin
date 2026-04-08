@@ -51,6 +51,7 @@ Contents:
 - [`docs/18-native-security-and-rbac.md`](E:/Project-Copperfin/docs/18-native-security-and-rbac.md)
 - [`docs/19-polyglot-and-ai-subprojects.md`](E:/Project-Copperfin/docs/19-polyglot-and-ai-subprojects.md)
 - [`docs/20-runtime-build-and-debug-pipeline.md`](E:/Project-Copperfin/docs/20-runtime-build-and-debug-pipeline.md)
+- [`docs/21-database-federation-and-query-translation.md`](E:/Project-Copperfin/docs/21-database-federation-and-query-translation.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:
@@ -79,6 +80,7 @@ Current runnable artifacts:
   - now supports `--json` snapshots for Visual Studio designer integration
   - now supports `--list-subsystems` to inspect the planned VFP 9-equivalent Copperfin subsystem map
   - now emits a structured `reportLayout` snapshot for `FRX/FRT` and `LBX/LBT` assets with named sections and placed objects
+  - now emits native database-federation metadata for relational, document, and vector connector planning in the shared VS/Studio shells
 - `build\Release\copperfin_build_host.exe`
   - native package/build pipeline entry point for `PJX/PJT` projects
   - stages project assets, emits runtime and debug manifests, bundles the runtime host, and can publish a generated `.NET` launcher
@@ -108,8 +110,9 @@ Current runnable artifacts:
   - current `PJX/PJT` slices now surface a grouped project workspace with project-item grouping, startup/build-plan summary, and project-entry property editing
   - project workspaces now also surface the platform's native security/RBAC posture and `.NET`/Python/MCP extensibility story
   - project workspaces now include a first integrated debugger pane backed by the native runtime host, with pause reason, call stack, locals, globals, and runtime-event summaries
-  - project workspaces now include first shared `Task List`, `Code References`, `Data Explorer`, and `Object Browser` panes so the IDE surface is moving toward classic VFP utility windows instead of only showing a build summary
+  - project workspaces now include shared `Task List`, `Code References`, `Data Explorer`, `Object Browser`, `Toolbox`, `Builders`, `Coverage`, and `Database` panes so the IDE surface is moving toward classic VFP utility windows instead of only showing a build summary
   - project workspaces now explicitly surface user-selected AI debugging assistance plus Python/R data-science sidecar guidance inside the modern extensibility story
+  - project workspaces now expose a native database-federation profile that distinguishes deterministic relational translation from optional AI-assisted document/vector planning
 - `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
   - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
   - now opens multiple assets as tabs so the managed shell feels more like an IDE workspace instead of a single-document dialog
@@ -119,7 +122,7 @@ Current runnable artifacts:
   - automated WinForms smoke tests for the shared designer UI
   - current output: `vsix\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
   - exercises synthetic rendering plus real `invoice.frx`, `cust.lbx`, and `solution.pjx` assets from the local VFP 9 sample tree
-  - now smoke-tests the shared project debugger, task list, code references, data explorer, and object browser surfaces against a real VFP sample project
+  - now smoke-tests the shared project debugger, task list, code references, data explorer, object browser, toolbox, builders, coverage, and database surfaces against a real VFP sample project
 
 Quick examples:
 

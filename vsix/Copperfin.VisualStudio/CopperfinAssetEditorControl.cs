@@ -41,6 +41,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox codeReferencesSummaryBox;
     private readonly RichTextBox dataExplorerSummaryBox;
     private readonly RichTextBox objectBrowserSummaryBox;
+    private readonly RichTextBox toolboxSummaryBox;
+    private readonly RichTextBox buildersSummaryBox;
+    private readonly RichTextBox coverageSummaryBox;
+    private readonly RichTextBox databaseSummaryBox;
+    private readonly TextBox dataExplorerFilterBox;
+    private readonly TextBox objectBrowserFilterBox;
+    private readonly CheckBox objectBrowserHideProjectCheckBox;
     private readonly Label debuggerStatusLabel;
 
     private string? currentPath;
@@ -304,6 +311,66 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = "Copperfin object-browser insights will appear here when a project is loaded."
         };
 
+        toolboxSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Copperfin toolbox insights will appear here when a project is loaded."
+        };
+
+        buildersSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Copperfin builder insights will appear here when a project is loaded."
+        };
+
+        coverageSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Start a Copperfin debug session to inspect runtime coverage signals."
+        };
+
+        databaseSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Copperfin database-federation guidance will appear here when a project is loaded."
+        };
+
+        dataExplorerFilterBox = new TextBox
+        {
+            Dock = DockStyle.Top
+        };
+        dataExplorerFilterBox.TextChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
+
+        objectBrowserFilterBox = new TextBox
+        {
+            Dock = DockStyle.Top
+        };
+        objectBrowserFilterBox.TextChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
+
+        objectBrowserHideProjectCheckBox = new CheckBox
+        {
+            AutoSize = true,
+            Text = "Hide project records",
+            Padding = new Padding(8, 6, 8, 6)
+        };
+        objectBrowserHideProjectCheckBox.CheckedChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
+
         debuggerStatusLabel = new Label
         {
             AutoSize = true,
@@ -355,16 +422,49 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         taskListPage.Controls.Add(taskListSummaryBox);
         var codeReferencesPage = new TabPage("Code References");
         codeReferencesPage.Controls.Add(codeReferencesSummaryBox);
+        var dataExplorerPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        dataExplorerPageHost.Controls.Add(dataExplorerSummaryBox);
+        dataExplorerPageHost.Controls.Add(dataExplorerFilterBox);
         var dataExplorerPage = new TabPage("Data Explorer");
-        dataExplorerPage.Controls.Add(dataExplorerSummaryBox);
+        dataExplorerPage.Controls.Add(dataExplorerPageHost);
+        var objectBrowserOptionsPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false
+        };
+        objectBrowserOptionsPanel.Controls.Add(objectBrowserHideProjectCheckBox);
+        var objectBrowserPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        objectBrowserPageHost.Controls.Add(objectBrowserSummaryBox);
+        objectBrowserPageHost.Controls.Add(objectBrowserOptionsPanel);
+        objectBrowserPageHost.Controls.Add(objectBrowserFilterBox);
         var objectBrowserPage = new TabPage("Object Browser");
-        objectBrowserPage.Controls.Add(objectBrowserSummaryBox);
+        objectBrowserPage.Controls.Add(objectBrowserPageHost);
+        var toolboxPage = new TabPage("Toolbox");
+        toolboxPage.Controls.Add(toolboxSummaryBox);
+        var buildersPage = new TabPage("Builders");
+        buildersPage.Controls.Add(buildersSummaryBox);
+        var coveragePage = new TabPage("Coverage");
+        coveragePage.Controls.Add(coverageSummaryBox);
+        var databasePage = new TabPage("Database");
+        databasePage.Controls.Add(databaseSummaryBox);
         projectWorkspaceTabs.TabPages.Add(summaryPage);
         projectWorkspaceTabs.TabPages.Add(debuggerPage);
         projectWorkspaceTabs.TabPages.Add(taskListPage);
         projectWorkspaceTabs.TabPages.Add(codeReferencesPage);
         projectWorkspaceTabs.TabPages.Add(dataExplorerPage);
         projectWorkspaceTabs.TabPages.Add(objectBrowserPage);
+        projectWorkspaceTabs.TabPages.Add(toolboxPage);
+        projectWorkspaceTabs.TabPages.Add(buildersPage);
+        projectWorkspaceTabs.TabPages.Add(coveragePage);
+        projectWorkspaceTabs.TabPages.Add(databasePage);
 
         var surfaceHost = new Panel
         {
@@ -462,6 +562,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         codeReferencesSummaryBox.Text = "Copperfin code-reference insights will appear here when a project is loaded.";
         dataExplorerSummaryBox.Text = "Copperfin data-explorer insights will appear here when a project is loaded.";
         objectBrowserSummaryBox.Text = "Copperfin object-browser insights will appear here when a project is loaded.";
+        toolboxSummaryBox.Text = "Copperfin toolbox insights will appear here when a project is loaded.";
+        buildersSummaryBox.Text = "Copperfin builder insights will appear here when a project is loaded.";
+        coverageSummaryBox.Text = "Start a Copperfin debug session to inspect runtime coverage signals.";
+        databaseSummaryBox.Text = "Copperfin database-federation guidance will appear here when a project is loaded.";
+        dataExplorerFilterBox.Text = string.Empty;
+        objectBrowserFilterBox.Text = string.Empty;
+        objectBrowserHideProjectCheckBox.Checked = false;
         debuggerStatusLabel.Text = "Debugger ready.";
         SetDebuggerButtonsEnabled(false);
         designSurface.Visible = true;
@@ -716,11 +823,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
         {
             currentProjectInsights = CopperfinProjectInsightClient.BuildInsights(currentSnapshot);
-            workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
-            taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
-            codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
-            dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights);
-            objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights);
+            RefreshProjectWorkspaceInsightViews();
             workspaceSummaryBox.Visible = true;
             projectWorkspaceTabs.Visible = true;
             projectWorkspaceTabs.SelectedIndex = 0;
@@ -737,6 +840,24 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         designSurface.Visible = true;
         designSurface.LoadObjects(currentSnapshot?.AssetFamily ?? string.Empty, objects);
         UpdateProjectCommandVisibility();
+    }
+
+    private void RefreshProjectWorkspaceInsightViews()
+    {
+        if (currentSnapshot?.ProjectWorkspace is null || currentSnapshot.AssetFamily != "project")
+        {
+            return;
+        }
+
+        workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
+        taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
+        codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
+        dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights, dataExplorerFilterBox.Text);
+        objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
+        toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
+        buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
+        coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
+        databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
     }
 
     private string BuildGuidanceText(string assetFamily)
@@ -901,6 +1022,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             debuggerStatusLabel.Text = session.State.Message;
             debuggerSummaryBox.Text = BuildDebugSessionSummary(session);
+            if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
+            {
+                coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, session);
+            }
             if (projectWorkspaceTabs.Visible)
             {
                 projectWorkspaceTabs.SelectedIndex = 1;
@@ -1060,6 +1185,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             {
                 summary.AppendLine($"- AI Model Selection: {modelSelection.Description}");
             }
+        }
+
+        if (snapshot.DatabaseProfile.Available)
+        {
+            summary.AppendLine();
+            summary.AppendLine("Database Federation:");
+            summary.AppendLine($"- Connectors: {snapshot.DatabaseProfile.Connectors.Count}");
+            summary.AppendLine($"- Query Paths: {snapshot.DatabaseProfile.QueryPaths.Count}");
+            var directRelational = snapshot.DatabaseProfile.Connectors.Count(connector => connector.FoxSqlTranslationDirect);
+            summary.AppendLine($"- Direct Fox SQL Targets: {directRelational}");
+            var aiOptional = snapshot.DatabaseProfile.QueryPaths.Count(path => path.AiOptional);
+            summary.AppendLine($"- Optional AI Planning Paths: {aiOptional}");
         }
 
         return summary.ToString();
@@ -1235,7 +1372,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private static string BuildDataExplorerSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    private static string BuildDataExplorerSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter)
     {
         var summary = new StringBuilder();
         summary.AppendLine("Copperfin Data Explorer");
@@ -1247,15 +1384,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return summary.ToString();
         }
 
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        var filteredAssets = insights.DataAssets
+            .Where(asset =>
+                string.IsNullOrWhiteSpace(normalizedFilter) ||
+                asset.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                asset.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
         summary.AppendLine($"Discovered Data Assets: {insights.DataAssets.Count}");
-        summary.AppendLine();
-        if (insights.DataAssets.Count == 0)
+        if (!string.IsNullOrWhiteSpace(normalizedFilter))
         {
-            summary.AppendLine("No DBF/DBC/query assets were discovered in the current project workspace.");
+            summary.AppendLine($"Filter: {normalizedFilter}");
+        }
+        summary.AppendLine();
+        if (filteredAssets.Count == 0)
+        {
+            summary.AppendLine(string.IsNullOrWhiteSpace(normalizedFilter)
+                ? "No DBF/DBC/query assets were discovered in the current project workspace."
+                : "No data assets matched the current filter.");
         }
         else
         {
-            foreach (var asset in insights.DataAssets.Take(40))
+            foreach (var asset in filteredAssets.Take(40))
             {
                 var excludedSuffix = asset.Excluded ? " [excluded]" : string.Empty;
                 summary.AppendLine($"- [{asset.Kind}] {asset.Title}{excludedSuffix}");
@@ -1264,9 +1416,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     summary.AppendLine($"  {asset.FilePath}");
                 }
             }
-            if (insights.DataAssets.Count > 40)
+            if (filteredAssets.Count > 40)
             {
-                summary.AppendLine($"... {insights.DataAssets.Count - 40} more data asset(s)");
+                summary.AppendLine($"... {filteredAssets.Count - 40} more data asset(s)");
             }
         }
 
@@ -1277,7 +1429,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private static string BuildObjectBrowserSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    private static string BuildObjectBrowserSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter, bool hideProjectRecords)
     {
         var summary = new StringBuilder();
         summary.AppendLine("Copperfin Object Browser");
@@ -1289,16 +1441,35 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return summary.ToString();
         }
 
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        var filteredNodes = insights.ObjectNodes
+            .Where(node =>
+                (!hideProjectRecords || !string.Equals(node.Kind, "Project Header", StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(normalizedFilter) ||
+                 node.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
+            .ToList();
+
         summary.AppendLine($"Object Nodes: {insights.ObjectNodes.Count}");
         summary.AppendLine($"Definitions: {insights.DefinedSymbols.Count}");
-        summary.AppendLine();
-        if (insights.ObjectNodes.Count == 0)
+        if (!string.IsNullOrWhiteSpace(normalizedFilter))
         {
-            summary.AppendLine("No object-browser nodes were discovered in the current project workspace.");
+            summary.AppendLine($"Filter: {normalizedFilter}");
+        }
+        if (hideProjectRecords)
+        {
+            summary.AppendLine("Project records hidden: true");
+        }
+        summary.AppendLine();
+        if (filteredNodes.Count == 0)
+        {
+            summary.AppendLine("No object-browser nodes matched the current view.");
         }
         else
         {
-            foreach (var node in insights.ObjectNodes.Take(50))
+            foreach (var node in filteredNodes.Take(50))
             {
                 summary.AppendLine($"- [{node.Kind}] {node.Title}");
                 if (!string.IsNullOrWhiteSpace(node.Detail))
@@ -1310,15 +1481,181 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     summary.AppendLine($"  {Path.GetFileName(node.FilePath)}");
                 }
             }
-            if (insights.ObjectNodes.Count > 50)
+            if (filteredNodes.Count > 50)
             {
-                summary.AppendLine($"... {insights.ObjectNodes.Count - 50} more object node(s)");
+                summary.AppendLine($"... {filteredNodes.Count - 50} more object node(s)");
             }
         }
 
         summary.AppendLine();
         summary.AppendLine("Next browser step:");
         summary.AppendLine("- Promote these summaries into navigable designers and code-navigation surfaces shared by Visual Studio and Copperfin Studio.");
+        return summary.ToString();
+    }
+
+    private static string BuildToolboxSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    {
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Toolbox And Add-ins");
+        summary.AppendLine();
+        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine($"Workspace Groups: {snapshot.ProjectWorkspace?.Groups.Count ?? 0}");
+        summary.AppendLine($"Language Integrations: {snapshot.ExtensibilityProfile.Languages.Count}");
+        summary.AppendLine($"AI/MCP Features: {snapshot.ExtensibilityProfile.AiFeatures.Count}");
+        summary.AppendLine();
+        summary.AppendLine("Suggested Toolbox Seeds:");
+        foreach (var group in snapshot.ProjectWorkspace?.Groups.Take(8) ?? Enumerable.Empty<CopperfinStudioProjectGroup>())
+        {
+            summary.AppendLine($"- {group.Title}: {group.ItemCount} project item(s)");
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Add-in Surfaces:");
+        foreach (var feature in snapshot.ExtensibilityProfile.AiFeatures.Take(6))
+        {
+            summary.AppendLine($"- {feature.Title}: {feature.Description}");
+        }
+
+        if (insights is not null && insights.RuntimeReferences.Count > 0)
+        {
+            summary.AppendLine();
+            summary.AppendLine("High-value shortcuts:");
+            foreach (var reference in insights.RuntimeReferences.Take(6))
+            {
+                summary.AppendLine($"- [{reference.Kind}] {reference.Name}");
+            }
+        }
+
+        return summary.ToString();
+    }
+
+    private static string BuildBuilderSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    {
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Builders");
+        summary.AppendLine();
+        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine("Recommended Builder Contexts:");
+        summary.AppendLine("- Form/Class designers: property sheet, event wiring, and layout helpers");
+        summary.AppendLine("- Report/Label designers: band, expression, print, and export helpers");
+        summary.AppendLine("- Menus/Projects: startup, deployment, and migration helpers");
+        summary.AppendLine("- Security/AI/MCP: policy-controlled setup builders");
+
+        if (insights is not null)
+        {
+            summary.AppendLine();
+            summary.AppendLine("Current Builder Targets:");
+            foreach (var node in insights.ObjectNodes.Take(8))
+            {
+                summary.AppendLine($"- [{node.Kind}] {node.Title}");
+            }
+        }
+
+        return summary.ToString();
+    }
+
+    private static string BuildCoverageSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinRuntimeDebugSession? session)
+    {
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Coverage");
+        summary.AppendLine();
+        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        if (session is null || !session.Success)
+        {
+            summary.AppendLine("Start a Copperfin debug session to collect first-pass runtime coverage signals.");
+            return summary.ToString();
+        }
+
+        var state = session.State;
+        var executedLocations = state.Events
+            .Where(runtimeEvent => !string.IsNullOrWhiteSpace(runtimeEvent.Location))
+            .Select(runtimeEvent => runtimeEvent.Location)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        summary.AppendLine($"Pause Reason: {state.Reason}");
+        summary.AppendLine($"Executed Statements: {state.ExecutedStatements}");
+        summary.AppendLine($"Distinct Runtime Locations: {executedLocations.Count}");
+        summary.AppendLine();
+        summary.AppendLine("Recent Coverage Signals:");
+        foreach (var location in executedLocations.Take(12))
+        {
+            summary.AppendLine($"- {location}");
+        }
+
+        if (executedLocations.Count == 0)
+        {
+            summary.AppendLine("- No runtime locations captured yet.");
+        }
+
+        return summary.ToString();
+    }
+
+    private static string BuildDatabaseFederationSummary(CopperfinStudioSnapshotDocument snapshot, string? filter)
+    {
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Database Federation");
+        summary.AppendLine();
+        if (!snapshot.DatabaseProfile.Available)
+        {
+            summary.AppendLine("Database federation metadata is unavailable.");
+            return summary.ToString();
+        }
+
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        var filteredConnectors = snapshot.DatabaseProfile.Connectors
+            .Where(connector =>
+                string.IsNullOrWhiteSpace(normalizedFilter) ||
+                connector.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                connector.Family.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                connector.SchemaShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+        var filteredPaths = snapshot.DatabaseProfile.QueryPaths
+            .Where(path =>
+                string.IsNullOrWhiteSpace(normalizedFilter) ||
+                path.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                path.SourceShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                path.TargetShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        summary.AppendLine($"Connectors: {snapshot.DatabaseProfile.Connectors.Count}");
+        summary.AppendLine($"Query Paths: {snapshot.DatabaseProfile.QueryPaths.Count}");
+        if (!string.IsNullOrWhiteSpace(normalizedFilter))
+        {
+            summary.AppendLine($"Filter: {normalizedFilter}");
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Connector Targets:");
+        foreach (var connector in filteredConnectors.Take(10))
+        {
+            summary.AppendLine($"- [{connector.Family}] {connector.Title}");
+            summary.AppendLine($"  {connector.TranslationStory}");
+        }
+        if (filteredConnectors.Count == 0)
+        {
+            summary.AppendLine("- No connector targets matched the current filter.");
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Query Translation Paths:");
+        foreach (var path in filteredPaths.Take(8))
+        {
+            summary.AppendLine($"- {path.Title} ({path.Complexity})");
+            summary.AppendLine($"  {path.Strategy}");
+        }
+        if (filteredPaths.Count == 0)
+        {
+            summary.AppendLine("- No query translation paths matched the current filter.");
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Guardrails:");
+        foreach (var guardrail in snapshot.DatabaseProfile.Guardrails.Take(6))
+        {
+            summary.AppendLine($"- {guardrail}");
+        }
+
         return summary.ToString();
     }
 }

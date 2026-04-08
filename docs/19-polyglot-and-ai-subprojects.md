@@ -97,6 +97,8 @@ Recommended rules:
 - auditable
 - able to use local or enterprise models
 - allow user-selected models within administrator-approved provider/model policy
+- keep ordinary relational query execution deterministic so AI is optional for the straightforward path
+- reserve AI planning for ambiguous document/vector query synthesis, explanation, and debugging help
 
 ## Why This Matters
 

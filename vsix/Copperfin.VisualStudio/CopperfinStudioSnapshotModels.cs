@@ -27,6 +27,7 @@ internal sealed class CopperfinStudioSnapshotDocument
     public CopperfinStudioProjectWorkspace? ProjectWorkspace { get; set; }
     public CopperfinStudioSecurityProfile SecurityProfile { get; set; } = new();
     public CopperfinStudioExtensibilityProfile ExtensibilityProfile { get; set; } = new();
+    public CopperfinStudioDatabaseFederationProfile DatabaseProfile { get; set; } = new();
     public List<CopperfinStudioSnapshotObject> Objects { get; set; } = new();
 }
 
@@ -225,6 +226,39 @@ internal sealed class CopperfinStudioDotNetOutputProfile
     public bool ManagedWrappers { get; set; }
     public bool NugetSdk { get; set; }
     public string PrimaryStory { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioDatabaseFederationProfile
+{
+    public bool Available { get; set; }
+    public List<CopperfinStudioDatabaseConnector> Connectors { get; set; } = new();
+    public List<CopperfinStudioQueryTranslationPath> QueryPaths { get; set; } = new();
+    public List<string> Guardrails { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioDatabaseConnector
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Family { get; set; } = string.Empty;
+    public string AccessMode { get; set; } = string.Empty;
+    public string SchemaShape { get; set; } = string.Empty;
+    public string TranslationStory { get; set; } = string.Empty;
+    public bool XbaseCommandsFirstClass { get; set; }
+    public bool FoxSqlTranslationDirect { get; set; }
+    public bool AiQueryPlanningOptional { get; set; }
+}
+
+internal sealed class CopperfinStudioQueryTranslationPath
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string SourceShape { get; set; } = string.Empty;
+    public string TargetShape { get; set; } = string.Empty;
+    public string Complexity { get; set; } = string.Empty;
+    public string Strategy { get; set; } = string.Empty;
+    public bool DeterministicFirst { get; set; }
+    public bool AiOptional { get; set; }
 }
 
 internal sealed class CopperfinStudioSnapshotResult
