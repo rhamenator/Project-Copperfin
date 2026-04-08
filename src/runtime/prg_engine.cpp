@@ -774,7 +774,7 @@ struct PrgRuntimeSession::Impl {
     SourceLocation last_fault_location{};
     std::string last_fault_statement;
     std::string error_handler;
-    std::map<std::string, std::string> set_state;
+    std::map<int, std::map<std::string, std::string>> set_state_by_session;
     int current_data_session = 1;
     int next_sql_handle = 1;
     int next_ole_handle = 1;
@@ -1085,13 +1085,33 @@ struct PrgRuntimeSession::Impl {
     }
 
     bool is_set_enabled(const std::string& option_name) const {
-        const auto found = set_state.find(normalize_identifier(option_name));
-        if (found == set_state.end()) {
+        const auto session_found = set_state_by_session.find(current_data_session);
+        if (session_found == set_state_by_session.end()) {
+            return false;
+        }
+
+        const auto found = session_found->second.find(normalize_identifier(option_name));
+        if (found == session_found->second.end()) {
             return false;
         }
 
         const std::string normalized_value = normalize_identifier(found->second);
         return normalized_value != "off" && normalized_value != "false" && normalized_value != "0";
+    }
+
+    std::map<std::string, std::string>& current_set_state() {
+        auto [iterator, _] = set_state_by_session.try_emplace(current_data_session);
+        return iterator->second;
+    }
+
+    const std::map<std::string, std::string>& current_set_state() const {
+        const auto found = set_state_by_session.find(current_data_session);
+        if (found != set_state_by_session.end()) {
+            return found->second;
+        }
+
+        static const std::map<std::string, std::string> empty_state;
+        return empty_state;
     }
 
     void move_cursor_to(CursorState& cursor, long long target_recno) {
@@ -1219,7 +1239,15 @@ struct PrgRuntimeSession::Impl {
                 return candidate.key < value;
             });
 
-        if (lower != candidates.end() && lower->key == normalized_target) {
+        const bool exact_match_required = is_set_enabled("exact");
+        const auto is_match = [&](const std::string& candidate) {
+            if (exact_match_required) {
+                return candidate == normalized_target;
+            }
+            return candidate.rfind(normalized_target, 0U) == 0U;
+        };
+
+        if (lower != candidates.end() && is_match(lower->key)) {
             move_cursor_to(cursor, static_cast<long long>(lower->recno));
             cursor.found = true;
             return true;
@@ -1259,6 +1287,7 @@ struct PrgRuntimeSession::Impl {
         CursorState& cursor,
         const std::string& search_key,
         bool move_pointer,
+        bool preserve_pointer_on_miss,
         const std::string& order_designator,
         std::string* error_message = nullptr) {
         const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
@@ -1272,7 +1301,7 @@ struct PrgRuntimeSession::Impl {
 
         const bool found = seek_in_cursor(cursor, search_key);
         const std::string runtime_error = last_error_message;
-        if (!move_pointer || !found) {
+        if (!move_pointer || (!found && preserve_pointer_on_miss)) {
             cursor.recno = original.recno;
             cursor.bof = original.bof;
             cursor.eof = original.eof;
@@ -1744,6 +1773,7 @@ public:
         const std::string& default_directory,
         const std::string& last_error_message,
         const std::string& error_handler,
+        bool exact_string_compare,
         int current_work_area,
         std::function<int()> next_free_work_area_callback,
         std::function<int(const std::string&)> resolve_work_area_callback,
@@ -1803,7 +1833,8 @@ public:
           globals_(globals),
           default_directory_(default_directory),
           last_error_message_(last_error_message),
-          error_handler_(error_handler) {
+          error_handler_(error_handler),
+          exact_string_compare_(exact_string_compare) {
     }
 
     PrgValue parse() {
@@ -2203,9 +2234,14 @@ private:
         }
     }
 
-    static bool values_equal(const PrgValue& left, const PrgValue& right) {
+    bool values_equal(const PrgValue& left, const PrgValue& right) const {
         if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
-            return value_as_string(left) == value_as_string(right);
+            const std::string left_value = value_as_string(left);
+            const std::string right_value = value_as_string(right);
+            if (exact_string_compare_) {
+                return trim_copy(left_value) == trim_copy(right_value);
+            }
+            return left_value.rfind(right_value, 0U) == 0U;
         }
         if (left.kind == PrgValueKind::boolean || right.kind == PrgValueKind::boolean) {
             return value_as_bool(left) == value_as_bool(right);
@@ -2246,6 +2282,7 @@ private:
     const std::string& default_directory_;
     const std::string& last_error_message_;
     const std::string& error_handler_;
+    bool exact_string_compare_ = false;
     std::size_t position_ = 0;
 };
 
@@ -2259,6 +2296,7 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
         default_directory,
         last_error_message,
         error_handler,
+        is_set_enabled("exact"),
         current_selected_work_area(),
         [this]() {
             return allocate_work_area();
@@ -2316,14 +2354,14 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
             if (cursor == nullptr) {
                 return false;
             }
-            return execute_seek(*cursor, search_key, move_pointer, order_designator);
+            return execute_seek(*cursor, search_key, move_pointer, false, order_designator);
         },
         [this](const std::string& search_key, bool move_pointer, const std::string& designator, const std::string& order_designator) {
             CursorState* cursor = resolve_cursor_target(designator);
             if (cursor == nullptr) {
                 return false;
             }
-            return execute_seek(*cursor, search_key, move_pointer, order_designator);
+            return execute_seek(*cursor, search_key, move_pointer, true, order_designator);
         },
         [this]() {
             return std::string("FOXTOOLS:9.0");
@@ -2803,9 +2841,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             const auto [option_name, option_value] = split_first_word(statement.expression);
             const std::string normalized_name = normalize_identifier(option_name);
             if (!normalized_name.empty()) {
-                set_state[normalized_name] = option_value.empty() ? "on" : option_value;
+                current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
             } else {
-                set_state[normalize_identifier(statement.expression)] = "true";
+                current_set_state()[normalize_identifier(statement.expression)] = "true";
             }
             events.push_back({
                 .category = "runtime.set",

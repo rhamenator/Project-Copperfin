@@ -1079,6 +1079,91 @@ void test_foxtools_registration_and_call_bridge() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_exact_affects_comparisons_and_seek() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_exact";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "set_exact.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "lEqOff = 'CHARLIE' = 'CHAR'\n"
+        "lSeekOff = SEEK('BR')\n"
+        "nRecOff = RECNO()\n"
+        "SET EXACT ON\n"
+        "lEqOn = 'CHARLIE' = 'CHAR'\n"
+        "lSeekOn = SEEK('BR')\n"
+        "lEofOn = EOF()\n"
+        "SET DATASESSION TO 2\n"
+        "lEqSession2 = 'CHARLIE' = 'CHAR'\n"
+        "SET DATASESSION TO 1\n"
+        "lEqBack = 'CHARLIE' = 'CHAR'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET EXACT script should complete");
+
+    const auto eq_off = state.globals.find("leqoff");
+    const auto seek_off = state.globals.find("lseekoff");
+    const auto rec_off = state.globals.find("nrecoff");
+    const auto eq_on = state.globals.find("leqon");
+    const auto seek_on = state.globals.find("lseekon");
+    const auto eof_on = state.globals.find("leofon");
+    const auto eq_session2 = state.globals.find("leqsession2");
+    const auto eq_back = state.globals.find("leqback");
+
+    expect(eq_off != state.globals.end(), "SET EXACT OFF comparison result should be captured");
+    expect(seek_off != state.globals.end(), "SET EXACT OFF seek result should be captured");
+    expect(rec_off != state.globals.end(), "SET EXACT OFF RECNO() should be captured");
+    expect(eq_on != state.globals.end(), "SET EXACT ON comparison result should be captured");
+    expect(seek_on != state.globals.end(), "SET EXACT ON seek result should be captured");
+    expect(eof_on != state.globals.end(), "SET EXACT ON EOF() should be captured");
+    expect(eq_session2 != state.globals.end(), "session 2 comparison result should be captured");
+    expect(eq_back != state.globals.end(), "session 1 restored comparison result should be captured");
+
+    if (eq_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eq_off->second) == "true", "SET EXACT OFF should allow right-side prefix string comparison");
+    }
+    if (seek_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_off->second) == "true", "SET EXACT OFF should allow prefix seeks");
+    }
+    if (rec_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_off->second) == "2", "SET EXACT OFF seek should land on the matching prefix row");
+    }
+    if (eq_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eq_on->second) == "false", "SET EXACT ON should require full string equality");
+    }
+    if (seek_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_on->second) == "false", "SET EXACT ON should reject prefix seeks");
+    }
+    if (eof_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_on->second) == "true", "SET EXACT ON failed seek should leave the cursor at EOF");
+    }
+    if (eq_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eq_session2->second) == "true", "SET EXACT should be scoped to the current data session");
+    }
+    if (eq_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eq_back->second) == "false", "restoring the original data session should restore its SET EXACT state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_again_and_alias_collision_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again";
@@ -1301,6 +1386,7 @@ int main() {
     test_set_near_changes_seek_failure_position();
     test_seek_related_index_functions();
     test_foxtools_registration_and_call_bridge();
+    test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
