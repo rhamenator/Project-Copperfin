@@ -72,6 +72,26 @@ void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
         if (!probe.for_expression_hint.empty()) {
             std::cout << "index[" << index << "].for_expression_hint: " << probe.for_expression_hint << "\n";
         }
+        for (std::size_t tag_index = 0; tag_index < probe.tags.size(); ++tag_index) {
+            const auto& tag = probe.tags[tag_index];
+            std::cout << "index[" << index << "].tag[" << tag_index << "].name_hint: " << tag.name_hint << "\n";
+            std::cout << "index[" << index << "].tag[" << tag_index << "].key_expression_hint: "
+                      << tag.key_expression_hint << "\n";
+            std::cout << "index[" << index << "].tag[" << tag_index << "].name_offset_hint: "
+                      << tag.name_offset_hint << "\n";
+            std::cout << "index[" << index << "].tag[" << tag_index << "].key_expression_offset_hint: "
+                      << tag.key_expression_offset_hint << "\n";
+            std::cout << "index[" << index << "].tag[" << tag_index << "].inferred_name: "
+                      << (tag.inferred_name ? "true" : "false") << "\n";
+            if (!tag.for_expression_hint.empty()) {
+                std::cout << "index[" << index << "].tag[" << tag_index << "].for_expression_hint: "
+                          << tag.for_expression_hint << "\n";
+            }
+            if (tag.for_expression_offset_hint != 0U) {
+                std::cout << "index[" << index << "].tag[" << tag_index << "].for_expression_offset_hint: "
+                          << tag.for_expression_offset_hint << "\n";
+            }
+        }
     }
 }
 

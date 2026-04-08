@@ -37,6 +37,10 @@ std::vector<std::uint8_t> make_vfp_header() {
     return bytes;
 }
 
+void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value);
+void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
+void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value);
+
 void test_parse_dbf_header() {
     const auto bytes = make_vfp_header();
     const auto result = copperfin::vfp::parse_dbf_header(bytes);
@@ -77,12 +81,14 @@ void test_asset_family_detection() {
 }
 
 void test_parse_index_probe_for_cdx() {
-    std::vector<std::uint8_t> bytes(16U, 0U);
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
     bytes[0] = 0x00U;
     bytes[1] = 0x04U;
     bytes[12] = 0x0AU;
     bytes[14] = 0xE0U;
     bytes[15] = 0x01U;
+    write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
+    write_ascii(bytes, 11U * 512U, "customer_id");
 
     const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::cdx);
     expect(result.ok, "parse_index_probe should succeed for a plausible synthetic CDX header");
@@ -90,6 +96,19 @@ void test_parse_index_probe_for_cdx() {
     expect(result.probe.key_length_hint == 10U, "CDX key length hint should be parsed");
     expect(result.probe.group_length_hint == 480U, "CDX key pool length hint should be parsed");
     expect(result.probe.multi_tag, "CDX should be treated as multi-tag");
+    expect(result.probe.tags.size() == 2U, "CDX probe should enumerate inferred tags from expression metadata");
+    if (result.probe.tags.size() >= 2U) {
+        expect(result.probe.tags[0].name_hint == "COMPANY_NA", "functional expressions should infer a tag-like name");
+        expect(
+            result.probe.tags[0].key_expression_hint == "UPPER(company_name)",
+            "CDX should expose the functional expression as a tag hint");
+        expect(result.probe.tags[0].inferred_name, "expression-derived tag names should be marked as inferred");
+        expect(result.probe.tags[1].name_hint == "CUSTOMER_I", "plain field expressions should infer a tag-like name");
+        expect(
+            result.probe.tags[1].key_expression_hint == "customer_id",
+            "CDX should expose the plain field expression as a tag hint");
+        expect(result.probe.tags[1].inferred_name, "plain field-derived names should be marked as inferred");
+    }
 }
 
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
@@ -207,6 +226,29 @@ void test_inspect_asset_collects_companion_indexes() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_parse_real_vfp_cdx_when_available() {
+    const std::filesystem::path sample_path =
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
+    if (!std::filesystem::exists(sample_path)) {
+        return;
+    }
+
+    const auto result = copperfin::vfp::parse_index_probe_from_file(sample_path.string());
+    expect(result.ok, "real VFP customer.cdx should parse as a CDX-family index");
+    expect(result.probe.kind == copperfin::vfp::IndexKind::cdx, "real VFP customer.cdx should stay typed as CDX");
+    expect(!result.probe.tags.empty(), "real VFP customer.cdx should expose at least one inferred tag");
+
+    bool saw_customer_id = false;
+    bool saw_company_name = false;
+    for (const auto& tag : result.probe.tags) {
+        saw_customer_id = saw_customer_id || tag.key_expression_hint == "customer_id";
+        saw_company_name = saw_company_name || tag.key_expression_hint == "UPPER(company_name)";
+    }
+
+    expect(saw_customer_id, "real VFP customer.cdx should expose the customer_id expression");
+    expect(saw_company_name, "real VFP customer.cdx should expose the UPPER(company_name) expression");
+}
+
 }  // namespace
 
 int main() {
@@ -217,6 +259,7 @@ int main() {
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
     test_inspect_asset_collects_companion_indexes();
+    test_parse_real_vfp_cdx_when_available();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

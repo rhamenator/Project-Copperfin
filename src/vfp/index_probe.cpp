@@ -71,6 +71,22 @@ IndexParseResult parse_cdx_family_probe(
     probe.free_node_offset_hint = cdx_result.header.next_free_node_offset;
     probe.key_length_hint = cdx_result.header.key_length_hint;
     probe.group_length_hint = cdx_result.header.key_pool_length_hint;
+    probe.tags.reserve(cdx_result.tags.size());
+    for (const CdxTagDescriptor& tag : cdx_result.tags) {
+        probe.tags.push_back({
+            .name_hint = tag.name_hint,
+            .key_expression_hint = tag.key_expression_hint,
+            .for_expression_hint = tag.for_expression_hint,
+            .name_offset_hint = tag.name_offset_hint,
+            .key_expression_offset_hint = tag.key_expression_offset_hint,
+            .for_expression_offset_hint = tag.for_expression_offset_hint,
+            .inferred_name = tag.inferred_name
+        });
+    }
+    if (!probe.tags.empty()) {
+        probe.key_expression_hint = probe.tags.front().key_expression_hint;
+        probe.for_expression_hint = probe.tags.front().for_expression_hint;
+    }
     probe.multi_tag = true;
     probe.production_candidate = (kind == IndexKind::cdx);
     return {.ok = true, .probe = probe};
@@ -276,7 +292,11 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
     }
 
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
-    std::vector<std::uint8_t> bytes(512U, 0U);
+    std::size_t probe_size = 512U;
+    if (kind == IndexKind::cdx || kind == IndexKind::dcx) {
+        probe_size = static_cast<std::size_t>(file_size);
+    }
+    std::vector<std::uint8_t> bytes(probe_size, 0U);
     input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 
     if (input.gcount() <= 0) {

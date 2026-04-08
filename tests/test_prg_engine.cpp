@@ -1,5 +1,7 @@
 #include "copperfin/runtime/prg_engine.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <cstdint>
 #include <filesystem>
@@ -16,6 +18,13 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::string lowercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
 }
 
 void write_text(const std::filesystem::path& path, const std::string& contents) {
@@ -69,6 +78,15 @@ void write_simple_dbf(const std::filesystem::path& path, const std::vector<std::
     bytes.back() = 0x1AU;
     std::ofstream output(path, std::ios::binary);
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+bool has_runtime_event(
+    const std::vector<copperfin::runtime::RuntimeEvent>& events,
+    const std::string& category,
+    const std::string& detail) {
+    return std::any_of(events.begin(), events.end(), [&](const copperfin::runtime::RuntimeEvent& event) {
+        return event.category == category && event.detail == detail;
+    });
 }
 
 void test_breakpoints_and_stepping() {
@@ -491,6 +509,244 @@ void test_use_and_data_session_isolation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_go_and_skip_cursor_navigation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+
+    const fs::path main_path = temp_root / "navigate.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO BOTTOM\n"
+        "nBottom = RECNO()\n"
+        "SKIP\n"
+        "lEof1 = EOF()\n"
+        "nAfterEof = RECNO()\n"
+        "SKIP -1\n"
+        "nBackOne = RECNO()\n"
+        "GO TOP\n"
+        "nTop = RECNO()\n"
+        "SKIP -1\n"
+        "lBof1 = BOF()\n"
+        "nAfterBof = RECNO()\n"
+        "GO 2\n"
+        "nMiddle = RECNO()\n"
+        "GO 99\n"
+        "lEof2 = EOF()\n"
+        "nAfterGoPastEnd = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "navigation script should complete");
+
+    const auto bottom = state.globals.find("nbottom");
+    const auto eof1 = state.globals.find("leof1");
+    const auto after_eof = state.globals.find("naftereof");
+    const auto back_one = state.globals.find("nbackone");
+    const auto top = state.globals.find("ntop");
+    const auto bof1 = state.globals.find("lbof1");
+    const auto after_bof = state.globals.find("nafterbof");
+    const auto middle = state.globals.find("nmiddle");
+    const auto eof2 = state.globals.find("leof2");
+    const auto after_go_past_end = state.globals.find("naftergopastend");
+
+    expect(bottom != state.globals.end(), "GO BOTTOM should affect RECNO()");
+    expect(eof1 != state.globals.end(), "SKIP past the end should affect EOF()");
+    expect(after_eof != state.globals.end(), "RECNO() after EOF should be captured");
+    expect(back_one != state.globals.end(), "SKIP -1 should recover from EOF");
+    expect(top != state.globals.end(), "GO TOP should affect RECNO()");
+    expect(bof1 != state.globals.end(), "SKIP -1 from the top should affect BOF()");
+    expect(after_bof != state.globals.end(), "RECNO() after BOF should be captured");
+    expect(middle != state.globals.end(), "GO 2 should move to the requested record");
+    expect(eof2 != state.globals.end(), "GO past the end should affect EOF()");
+    expect(after_go_past_end != state.globals.end(), "RECNO() after GO past the end should be captured");
+
+    if (bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom->second) == "3", "GO BOTTOM should move to the last record");
+    }
+    if (eof1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof1->second) == "true", "SKIP from the last record should move to EOF");
+    }
+    if (after_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_eof->second) == "4", "RECNO() at EOF should be record_count + 1");
+    }
+    if (back_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(back_one->second) == "3", "SKIP -1 from EOF should move back to the last record");
+    }
+    if (top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top->second) == "1", "GO TOP should move to the first record");
+    }
+    if (bof1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof1->second) == "true", "SKIP -1 from the first record should move to BOF");
+    }
+    if (after_bof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_bof->second) == "0", "RECNO() at BOF should be zero");
+    }
+    if (middle != state.globals.end()) {
+        expect(copperfin::runtime::format_value(middle->second) == "2", "GO 2 should move to the requested record number");
+    }
+    if (eof2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof2->second) == "true", "GO past the end should move to EOF");
+    }
+    if (after_go_past_end != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_go_past_end->second) == "4", "GO past the end should place RECNO() at record_count + 1");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.go", "BOTTOM") &&
+        has_runtime_event(state.events, "runtime.go", "TOP") &&
+        has_runtime_event(state.events, "runtime.skip", "1") &&
+        has_runtime_event(state.events, "runtime.skip", "-1"),
+        "navigation commands should emit runtime.go and runtime.skip events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_cursor_identity_functions_for_local_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_local";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "identity_local.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lUsed1 = USED()\n"
+        "lUsedPeople = USED('People')\n"
+        "cDbf1 = DBF()\n"
+        "cDbfPeople = DBF('People')\n"
+        "nFields1 = FCOUNT()\n"
+        "nFieldsPeople = FCOUNT('People')\n"
+        "SET DATASESSION TO 2\n"
+        "lUsed2 = USED('People')\n"
+        "SET DATASESSION TO 1\n"
+        "USE IN People\n"
+        "lUsedAfterClose = USED('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local cursor identity script should complete");
+
+    const auto used1 = state.globals.find("lused1");
+    const auto used_people = state.globals.find("lusedpeople");
+    const auto dbf1 = state.globals.find("cdbf1");
+    const auto dbf_people = state.globals.find("cdbfpeople");
+    const auto fields1 = state.globals.find("nfields1");
+    const auto fields_people = state.globals.find("nfieldspeople");
+    const auto used2 = state.globals.find("lused2");
+    const auto used_after_close = state.globals.find("lusedafterclose");
+
+    expect(used1 != state.globals.end(), "USED() should be captured for the current local cursor");
+    expect(used_people != state.globals.end(), "USED('People') should be captured for the named local cursor");
+    expect(dbf1 != state.globals.end(), "DBF() should be captured for the current local cursor");
+    expect(dbf_people != state.globals.end(), "DBF('People') should be captured for the named local cursor");
+    expect(fields1 != state.globals.end(), "FCOUNT() should be captured for the current local cursor");
+    expect(fields_people != state.globals.end(), "FCOUNT('People') should be captured for the named local cursor");
+    expect(used2 != state.globals.end(), "USED('People') in a different data session should be captured");
+    expect(used_after_close != state.globals.end(), "USED('People') after USE IN should be captured");
+
+    if (used1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used1->second) == "true", "USED() should report true for an open local cursor");
+    }
+    if (used_people != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_people->second) == "true", "USED('People') should report true for an open alias");
+    }
+    if (dbf1 != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(dbf1->second)).find("people.dbf") != std::string::npos,
+            "DBF() should expose the opened local table path");
+    }
+    if (dbf_people != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(dbf_people->second)).find("people.dbf") != std::string::npos,
+            "DBF('People') should expose the opened local table path");
+    }
+    if (fields1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields1->second) == "1", "FCOUNT() should reflect the local DBF schema");
+    }
+    if (fields_people != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields_people->second) == "1", "FCOUNT('People') should reflect the local DBF schema");
+    }
+    if (used2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used2->second) == "false", "data sessions should isolate USED('alias') state");
+    }
+    if (used_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_after_close->second) == "false", "USE IN should clear USED('alias') state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_cursor_identity_functions_for_sql_result_cursors() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_sql";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "identity_sql.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "lUsed = USED('sqlcust')\n"
+        "cDbf = DBF('sqlcust')\n"
+        "nFields = FCOUNT('sqlcust')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL cursor identity script should complete");
+
+    const auto used = state.globals.find("lused");
+    const auto dbf = state.globals.find("cdbf");
+    const auto fields = state.globals.find("nfields");
+
+    expect(used != state.globals.end(), "USED('sqlcust') should be captured for the SQL cursor");
+    expect(dbf != state.globals.end(), "DBF('sqlcust') should be captured for the SQL cursor");
+    expect(fields != state.globals.end(), "FCOUNT('sqlcust') should be captured for the SQL cursor");
+
+    if (used != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used->second) == "true", "USED('sqlcust') should report true for a materialized SQL cursor");
+    }
+    if (dbf != state.globals.end()) {
+        expect(copperfin::runtime::format_value(dbf->second) == "sqlcust", "DBF('sqlcust') should expose the runtime identity for a SQL cursor");
+    }
+    if (fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields->second) == "3", "FCOUNT('sqlcust') should expose the synthetic SQL cursor schema");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursors_and_ole_actions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sqlcursor";
@@ -612,6 +868,9 @@ int main() {
     test_work_area_and_data_session_compatibility();
     test_sql_and_ole_compatibility_functions();
     test_use_and_data_session_isolation();
+    test_go_and_skip_cursor_navigation();
+    test_cursor_identity_functions_for_local_tables();
+    test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursors_and_ole_actions();
     test_runtime_fault_containment();
 

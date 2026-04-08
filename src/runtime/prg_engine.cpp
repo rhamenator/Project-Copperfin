@@ -36,6 +36,8 @@ enum class StatementKind {
     endfor_statement,
     read_events,
     clear_events,
+    go_command,
+    skip_command,
     select_command,
     use_command,
     set_command,
@@ -97,8 +99,10 @@ struct CursorState {
     int work_area = 0;
     std::string alias;
     std::string source_path;
+    std::string dbf_identity;
     std::string source_kind;
     bool remote = false;
+    std::size_t field_count = 0;
     std::size_t record_count = 0;
     std::size_t recno = 0;
     bool bof = true;
@@ -409,6 +413,23 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {
             statement.kind = StatementKind::clear_events;
+        } else if (starts_with_insensitive(line, "GOTO ") || starts_with_insensitive(line, "GO ")) {
+            statement.kind = StatementKind::go_command;
+            const std::string body = starts_with_insensitive(line, "GOTO ")
+                ? trim_copy(line.substr(5U))
+                : trim_copy(line.substr(3U));
+            statement.expression = take_first_token(body);
+            statement.secondary_expression = take_keyword_value(body, "IN");
+        } else if (upper == "SKIP" || starts_with_insensitive(line, "SKIP ")) {
+            statement.kind = StatementKind::skip_command;
+            const std::string body = upper == "SKIP" ? std::string{} : trim_copy(line.substr(5U));
+            if (starts_with_insensitive(body, "IN ")) {
+                statement.expression = "1";
+                statement.secondary_expression = trim_copy(body.substr(3U));
+            } else {
+                statement.expression = body.empty() ? "1" : take_first_token(body);
+                statement.secondary_expression = take_keyword_value(body, "IN");
+            }
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;
             statement.expression = trim_copy(line.substr(7U));
@@ -797,6 +818,34 @@ struct PrgRuntimeSession::Impl {
         session.cursors.erase(cursor->work_area);
     }
 
+    void move_cursor_to(CursorState& cursor, long long target_recno) {
+        if (cursor.record_count == 0U) {
+            cursor.recno = 0U;
+            cursor.bof = true;
+            cursor.eof = true;
+            return;
+        }
+
+        if (target_recno <= 0) {
+            cursor.recno = 0U;
+            cursor.bof = true;
+            cursor.eof = false;
+            return;
+        }
+
+        const auto record_count = static_cast<long long>(cursor.record_count);
+        if (target_recno > record_count) {
+            cursor.recno = static_cast<std::size_t>(record_count + 1);
+            cursor.bof = false;
+            cursor.eof = true;
+            return;
+        }
+
+        cursor.recno = static_cast<std::size_t>(target_recno);
+        cursor.bof = false;
+        cursor.eof = false;
+    }
+
     bool open_table_cursor(
         const std::string& raw_path,
         const std::string& requested_alias,
@@ -808,6 +857,8 @@ struct PrgRuntimeSession::Impl {
         (void)sql_command;
         std::string alias = requested_alias;
         std::string resolved_path = raw_path;
+        std::string dbf_identity;
+        std::size_t field_count = 0;
         std::size_t record_count = synthetic_record_count;
 
         if (!remote) {
@@ -831,12 +882,18 @@ struct PrgRuntimeSession::Impl {
             }
 
             resolved_path = table_path.string();
+            dbf_identity = resolved_path;
+            field_count = table_result.table.fields.size();
             record_count = table_result.table.header.record_count;
             if (alias.empty()) {
                 alias = table_path.stem().string();
             }
         } else if (alias.empty()) {
             alias = "sqlresult" + std::to_string(current_session_state().next_work_area);
+        }
+        if (remote) {
+            dbf_identity = alias;
+            field_count = synthetic_record_count == 0U ? 0U : 3U;
         }
 
         int target_area = 0;
@@ -858,8 +915,10 @@ struct PrgRuntimeSession::Impl {
             .work_area = target_area,
             .alias = alias,
             .source_path = resolved_path,
+            .dbf_identity = dbf_identity,
             .source_kind = remote ? "sql-cursor" : "table",
             .remote = remote,
+            .field_count = field_count,
             .record_count = record_count,
             .recno = record_count == 0U ? 0U : 1U,
             .bof = record_count == 0U,
@@ -1089,6 +1148,9 @@ public:
         std::function<int()> next_free_work_area_callback,
         std::function<int(const std::string&)> resolve_work_area_callback,
         std::function<std::string(const std::string&)> alias_lookup_callback,
+        std::function<bool(const std::string&)> used_callback,
+        std::function<std::string(const std::string&)> dbf_lookup_callback,
+        std::function<std::size_t(const std::string&)> field_count_callback,
         std::function<std::size_t(const std::string&)> record_count_callback,
         std::function<std::size_t(const std::string&)> recno_callback,
         std::function<bool(const std::string&)> eof_callback,
@@ -1104,6 +1166,9 @@ public:
           next_free_work_area_callback_(std::move(next_free_work_area_callback)),
           resolve_work_area_callback_(std::move(resolve_work_area_callback)),
           alias_lookup_callback_(std::move(alias_lookup_callback)),
+          used_callback_(std::move(used_callback)),
+          dbf_lookup_callback_(std::move(dbf_lookup_callback)),
+          field_count_callback_(std::move(field_count_callback)),
           record_count_callback_(std::move(record_count_callback)),
           recno_callback_(std::move(recno_callback)),
           eof_callback_(std::move(eof_callback)),
@@ -1251,6 +1316,18 @@ private:
         if (function == "alias") {
             const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
             return make_string_value(alias_lookup_callback_(designator));
+        }
+        if (function == "used") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_boolean_value(used_callback_(designator));
+        }
+        if (function == "dbf") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_string_value(dbf_lookup_callback_(designator));
+        }
+        if (function == "fcount") {
+            const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+            return make_number_value(static_cast<double>(field_count_callback_(designator)));
         }
         if (function == "reccount") {
             const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
@@ -1452,6 +1529,9 @@ private:
     std::function<int()> next_free_work_area_callback_;
     std::function<int(const std::string&)> resolve_work_area_callback_;
     std::function<std::string(const std::string&)> alias_lookup_callback_;
+    std::function<bool(const std::string&)> used_callback_;
+    std::function<std::string(const std::string&)> dbf_lookup_callback_;
+    std::function<std::size_t(const std::string&)> field_count_callback_;
     std::function<std::size_t(const std::string&)> record_count_callback_;
     std::function<std::size_t(const std::string&)> recno_callback_;
     std::function<bool(const std::string&)> eof_callback_;
@@ -1496,6 +1576,17 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(const std::string& express
         [this](const std::string& designator) {
             const CursorState* cursor = resolve_cursor_target(designator);
             return cursor == nullptr ? std::string{} : cursor->alias;
+        },
+        [this](const std::string& designator) {
+            return resolve_cursor_target(designator) != nullptr;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? std::string{} : cursor->dbf_identity;
+        },
+        [this](const std::string& designator) {
+            const CursorState* cursor = resolve_cursor_target(designator);
+            return cursor == nullptr ? 0U : cursor->field_count;
         },
         [this](const std::string& designator) {
             const CursorState* cursor = resolve_cursor_target(designator);
@@ -1811,6 +1902,50 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .location = statement.location
             });
             return {};
+        case StatementKind::go_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "GO target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const std::string destination = uppercase_copy(trim_copy(statement.expression));
+            if (destination == "TOP") {
+                move_cursor_to(*cursor, 1);
+            } else if (destination == "BOTTOM") {
+                move_cursor_to(*cursor, static_cast<long long>(cursor->record_count));
+            } else {
+                const long long requested = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
+                move_cursor_to(*cursor, requested);
+            }
+
+            events.push_back({
+                .category = "runtime.go",
+                .detail = destination.empty() ? statement.expression : destination,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::skip_command: {
+            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            if (cursor == nullptr) {
+                last_error_message = "SKIP target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const long long delta = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
+            move_cursor_to(*cursor, static_cast<long long>(cursor->recno) + delta);
+            events.push_back({
+                .category = "runtime.skip",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
         case StatementKind::select_command: {
             std::string selection = trim_copy(value_as_string(evaluate_expression(statement.expression, frame)));
             if (selection.empty()) {

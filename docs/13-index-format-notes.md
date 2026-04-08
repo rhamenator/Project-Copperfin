@@ -7,6 +7,7 @@ Current coverage:
 - `CDX` and `DCX`
   - Minimal header probe for block size, root node offset, free node hint, key-length hint, and key-pool hint.
   - Treated as multi-tag index containers.
+  - First-pass tag enumeration now scans the full file for embedded expression metadata and exposes inferred tag names plus key-expression hints.
 - `IDX`
   - Visual FoxPro single-index header probe.
   - Extracts root, free-list, and EOF offsets plus key and `FOR` expression hints.
@@ -46,8 +47,8 @@ Reference docs used to keep the probe rules grounded:
 
 Next implementation steps:
 
-1. Parse index node pages and tag directories instead of only header records.
-2. Enumerate tags from `CDX/DCX/MDX`.
+1. Replace heuristic `CDX/DCX` tag discovery with real node-page and directory parsing.
+2. Extend multi-tag enumeration to `MDX`.
 3. Add expression normalization and collation metadata extraction.
 4. Correlate DBF field metadata with index expressions for migration planning.
 5. Build read-only reindex validation against real VFP and dBase fixtures.

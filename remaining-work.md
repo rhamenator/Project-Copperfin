@@ -51,6 +51,11 @@ The implementation order should be:
 
 This is the deepest layer and should continue to absorb the most effort until it is boringly reliable.
 
+### Progress Notes
+
+- 2026-04-08: `CDX/DCX` inspection moved beyond header-only probing. Copperfin now enumerates first-pass tag/expression hints from real file contents and surfaces them through the asset inspector and CLI.
+- 2026-04-08: `GO`, `GOTO`, and `SKIP` cursor navigation now have runtime coverage in the native `PRG` engine tests, which closes one more piece of work-area behavior before broader table/session semantics.
+
 ### A1. File And Index Fidelity
 
 - Finish first-class read/write fidelity for `DBF`, `FPT`, `CDX`, `DCX`, `IDX`, `NDX`, `MDX`, and `DBC`.

@@ -19,9 +19,20 @@ struct CdxHeader {
     [[nodiscard]] bool looks_like_cdx() const;
 };
 
+struct CdxTagDescriptor {
+    std::string name_hint;
+    std::string key_expression_hint;
+    std::string for_expression_hint;
+    std::uint32_t name_offset_hint = 0;
+    std::uint32_t key_expression_offset_hint = 0;
+    std::uint32_t for_expression_offset_hint = 0;
+    bool inferred_name = false;
+};
+
 struct CdxParseResult {
     bool ok = false;
     CdxHeader header{};
+    std::vector<CdxTagDescriptor> tags;
     std::string error;
 };
 
