@@ -456,6 +456,11 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         if (!model.root_object_path.empty() && has_method(model.methods, model.root_object_path, "Init", routine_name)) {
             model.startup_routines.push_back(routine_name);
         }
+        if (document.kind == studio::StudioAssetKind::form &&
+            !model.root_object_path.empty() &&
+            has_method(model.methods, model.root_object_path, "Activate", routine_name)) {
+            model.startup_routines.push_back(routine_name);
+        }
         for (const auto& startup_routine : model.startup_routines) {
             model.startup_lines.push_back("DO " + startup_routine);
         }
@@ -486,6 +491,15 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         }
 
         model.runnable_startup = !model.startup_lines.empty();
+    } else if (document.kind == studio::StudioAssetKind::report || document.kind == studio::StudioAssetKind::label) {
+        const std::string quoted_path = "'" + document.path + "'";
+        if (document.kind == studio::StudioAssetKind::report) {
+            model.startup_lines.push_back("REPORT FORM " + quoted_path + " PREVIEW");
+        } else {
+            model.startup_lines.push_back("LABEL FORM " + quoted_path + " PREVIEW");
+        }
+        model.startup_enters_event_loop = true;
+        model.runnable_startup = true;
     }
 
     if (document.kind != studio::StudioAssetKind::menu) {

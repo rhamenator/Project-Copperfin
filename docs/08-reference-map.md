@@ -58,6 +58,7 @@ Legacy/reference code on `E:\`:
 - HelpFile shows documentation gaps become operational risk.
 - The VFPX project index highlights community successors for project explorer, data explorer, toolbox/task panes, code references, and automated testing, which are all directly relevant to Copperfin's missing parity surfaces.
 - The broader VFPX ecosystem also highlights project hooks, source-control-friendly serializers, property/method tooling, automated testing, deployment helpers, and PDF/report adjuncts that Copperfin should treat as real subsystem inputs rather than optional trivia.
+- The local `foxref`, `DataExplorer`, `toolbox`, `tasklist`, `taskpane`, `coverage`, `obrowser`, and `builders` trees are now the clearest next-wave parity references for code references, data exploration, toolbox/task panes, coverage, object browsing, and builder workflows.
 - The wizard/template system shows productivity and scaffolding are core product value.
 - Your local xBase/FoxPro-era code provides a starting point for file engine and compatibility research.
 - A modern successor should not trap users on DBF alone; connector-based SQL support is part of the modernization value proposition.

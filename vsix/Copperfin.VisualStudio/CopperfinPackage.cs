@@ -27,5 +27,6 @@ public sealed class CopperfinPackage : AsyncPackage
         await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
         RegisterEditorFactory(new CopperfinAssetEditorFactory(this));
         await OpenInCopperfinStudioCommand.InitializeAsync(this);
+        await CopperfinProjectCommands.InitializeAsync(this);
     }
 }

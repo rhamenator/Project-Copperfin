@@ -139,11 +139,41 @@ void test_build_menu_xasset_executable_model() {
     expect(bootstrap.find("READ EVENTS") == std::string::npos, "menu bootstrap should not append READ EVENTS when activation already enters the event loop");
 }
 
+void test_build_report_xasset_executable_model() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\invoice.frx)";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "1"},
+            {.field_name = "EXPR", .field_type = 'M', .display_value = "ENVIRONMENT = 1"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "9"},
+            {.field_name = "OBJCODE", .field_type = 'N', .display_value = "4"},
+            {.field_name = "TOP", .field_type = 'N', .display_value = "0"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "xAsset executable model should be created for reports");
+    expect(model.runnable_startup, "report model should be runnable without embedded methods");
+    expect(model.startup_enters_event_loop, "report preview startup should enter the event loop");
+    expect(model.startup_lines.size() == 1U, "report startup should be a direct preview command");
+    expect(model.startup_lines[0].find("REPORT FORM") != std::string::npos, "report startup should preview the report");
+
+    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    expect(bootstrap.find("REPORT FORM 'E:\\Project-Copperfin\\samples\\invoice.frx' PREVIEW") != std::string::npos, "bootstrap should preview the report asset directly");
+    expect(bootstrap.find("READ EVENTS") == std::string::npos, "report preview bootstrap should not append a second event loop");
+}
+
 }  // namespace
 
 int main() {
     test_build_xasset_executable_model();
     test_build_menu_xasset_executable_model();
+    test_build_report_xasset_executable_model();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

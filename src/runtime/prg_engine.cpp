@@ -1,6 +1,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
+#include "copperfin/studio/report_layout.h"
 
 #include <algorithm>
 #include <cctype>
@@ -21,6 +22,8 @@ enum class StatementKind {
     expression,
     do_command,
     do_form,
+    report_form,
+    label_form,
     activate_surface,
     release_surface,
     return_statement,
@@ -131,6 +134,31 @@ std::string normalize_path(const std::string& value) {
         return {};
     }
     return std::filesystem::path(value).lexically_normal().string();
+}
+
+std::string unquote_string(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.size() >= 2U && value.front() == '\'' && value.back() == '\'') {
+        return value.substr(1U, value.size() - 2U);
+    }
+    return value;
+}
+
+std::string take_first_token(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.empty()) {
+        return value;
+    }
+    if (value.front() == '\'') {
+        const auto closing = value.find('\'', 1U);
+        if (closing != std::string::npos) {
+            return value.substr(0U, closing + 1U);
+        }
+        return value;
+    }
+
+    const auto separator = value.find(' ');
+    return separator == std::string::npos ? value : value.substr(0U, separator);
 }
 
 std::string strip_inline_comment(const std::string& line) {
@@ -294,6 +322,12 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "DO FORM ")) {
             statement.kind = StatementKind::do_form;
             statement.identifier = trim_copy(line.substr(8U));
+        } else if (starts_with_insensitive(line, "REPORT FORM ")) {
+            statement.kind = StatementKind::report_form;
+            statement.identifier = trim_copy(line.substr(12U));
+        } else if (starts_with_insensitive(line, "LABEL FORM ")) {
+            statement.kind = StatementKind::label_form;
+            statement.identifier = trim_copy(line.substr(11U));
         } else if (starts_with_insensitive(line, "ACTIVATE POPUP ")) {
             statement.kind = StatementKind::activate_surface;
             statement.identifier = "popup";
@@ -592,6 +626,51 @@ struct PrgRuntimeSession::Impl {
             }
         }
         return std::nullopt;
+    }
+
+    std::filesystem::path resolve_asset_path(const std::string& raw_path, const char* extension) const {
+        std::filesystem::path asset_path(unquote_string(take_first_token(raw_path)));
+        if (asset_path.extension().empty()) {
+            asset_path += extension;
+        }
+        if (asset_path.is_relative()) {
+            asset_path = std::filesystem::path(default_directory) / asset_path;
+        }
+        return asset_path.lexically_normal();
+    }
+
+    ExecutionOutcome open_report_surface(const Statement& statement, const char* extension, const char* category) {
+        const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
+        if (!std::filesystem::exists(asset_path)) {
+            last_error_message = std::string("Unable to resolve report asset: ") + asset_path.string();
+            return {.ok = false, .message = last_error_message};
+        }
+
+        const auto open_result = studio::open_document({
+            .path = asset_path.string(),
+            .read_only = true,
+            .load_full_table = true
+        });
+        if (!open_result.ok) {
+            last_error_message = open_result.error;
+            return {.ok = false, .message = last_error_message};
+        }
+
+        const auto layout = studio::build_report_layout(open_result.document);
+        waiting_for_events = true;
+        events.push_back({
+            .category = category,
+            .detail = asset_path.string(),
+            .location = statement.location
+        });
+        if (layout.available) {
+            events.push_back({
+                .category = std::string(category) + ".layout",
+                .detail = std::to_string(layout.sections.size()) + " sections",
+                .location = statement.location
+            });
+        }
+        return {.waiting_for_events = true};
     }
 
     bool dispatch_event_handler(const std::string& routine_name);
@@ -990,25 +1069,23 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::do_form: {
-            std::filesystem::path form_path(statement.identifier);
-            if (form_path.extension().empty()) {
-                form_path += ".scx";
-            }
-            if (form_path.is_relative()) {
-                form_path = std::filesystem::path(default_directory) / form_path;
-            }
+            const std::filesystem::path form_path = resolve_asset_path(statement.identifier, ".scx");
             events.push_back({
                 .category = "form.open",
                 .detail = form_path.lexically_normal().string(),
                 .location = statement.location
             });
             if (std::filesystem::exists(form_path)) {
-                if (const auto bootstrap_path = materialize_xasset_bootstrap(form_path.string(), false)) {
+                if (const auto bootstrap_path = materialize_xasset_bootstrap(form_path.string(), true)) {
                     push_main_frame(*bootstrap_path);
                 }
             }
             return {};
         }
+        case StatementKind::report_form:
+            return open_report_surface(statement, ".frx", "report.preview");
+        case StatementKind::label_form:
+            return open_report_surface(statement, ".lbx", "label.preview");
         case StatementKind::activate_surface:
             waiting_for_events = true;
             events.push_back({

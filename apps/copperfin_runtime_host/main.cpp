@@ -147,9 +147,18 @@ void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
     for (std::size_t index = 0; index < state.call_stack.size(); ++index) {
         const auto& frame = state.call_stack[index];
         std::cout << "debug.frame[" << index << "]: " << frame.routine_name << "@" << frame.file_path << ":" << frame.line << "\n";
+        for (const auto& [name, value] : frame.locals) {
+            std::cout << "debug.frame[" << index << "].local." << name << ": " << copperfin::runtime::format_value(value) << "\n";
+        }
     }
     for (const auto& [name, value] : state.globals) {
         std::cout << "debug.global." << name << ": " << copperfin::runtime::format_value(value) << "\n";
+    }
+    for (std::size_t index = 0; index < state.events.size(); ++index) {
+        const auto& event = state.events[index];
+        std::cout << "debug.event[" << index << "].category: " << event.category << "\n";
+        std::cout << "debug.event[" << index << "].detail: " << event.detail << "\n";
+        std::cout << "debug.event[" << index << "].location: " << event.location.file_path << ":" << event.location.line << "\n";
     }
 }
 

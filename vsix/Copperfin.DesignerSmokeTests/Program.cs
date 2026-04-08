@@ -28,6 +28,8 @@ internal static class Program
         SmokeProjectEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx",
             expectGroup: "Forms");
+        SmokeProjectDebuggerWithRealAsset(
+            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx");
         SmokeStandaloneStudioWithMultipleAssets(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx",
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx");
@@ -190,7 +192,13 @@ internal static class Program
             .Any(item => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase));
         Expect(groupFound, $"project editor should surface group '{expectGroup}' for {path}");
 
-        var summary = FindRichTextBoxes(control).FirstOrDefault();
+        var projectButtons = FindButtons(control).Select(button => button.Text).ToList();
+        Expect(projectButtons.Contains("Build Copperfin Project"), $"project editor should expose a build command for {path}");
+        Expect(projectButtons.Contains("Run Copperfin Project"), $"project editor should expose a run command for {path}");
+        Expect(projectButtons.Contains("Debug Copperfin Project"), $"project editor should expose a debug command for {path}");
+
+        var summary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Project Workspace", StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(summary is not null, $"project editor should surface a workspace summary for {path}");
         if (summary is not null)
         {
@@ -202,6 +210,67 @@ internal static class Program
                 $"project workspace summary should include native security for {path}");
             Expect(summary.Text.IndexOf(".NET And Extensibility:", StringComparison.OrdinalIgnoreCase) >= 0,
                 $"project workspace summary should include .NET/extensibility guidance for {path}");
+        }
+
+        hostForm.Hide();
+    }
+
+    private static void SmokeProjectDebuggerWithRealAsset(string path)
+    {
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {path} not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(path);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => FindButtons(control).Any(button => button.Text == "Debug Copperfin Project"));
+        Expect(loaded, $"project debugger command should load for {path}");
+
+        var debugButton = FindButtons(control).FirstOrDefault(button => button.Text == "Debug Copperfin Project");
+        if (debugButton is null)
+        {
+            hostForm.Hide();
+            return;
+        }
+
+        debugButton.PerformClick();
+        var debugLoaded = WaitUntil(
+            TimeSpan.FromSeconds(30),
+            () => FindRichTextBoxes(control)
+                .Any(box => box.Text.IndexOf("Copperfin Debug Session", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                            box.Text.IndexOf("Pause Reason:", StringComparison.OrdinalIgnoreCase) >= 0));
+        Expect(debugLoaded, $"project debugger should surface a runtime pause state for {path}");
+
+        var debuggerSummary = FindRichTextBoxes(control)
+            .FirstOrDefault(box => box.Text.IndexOf("Copperfin Debug Session", StringComparison.OrdinalIgnoreCase) >= 0);
+        Expect(debuggerSummary is not null, $"project debugger should surface a debug summary for {path}");
+        if (debuggerSummary is not null)
+        {
+            Expect(debuggerSummary.Text.IndexOf("Call Stack:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project debugger should include a call stack for {path}");
+            Expect(debuggerSummary.Text.IndexOf("Runtime Events:", StringComparison.OrdinalIgnoreCase) >= 0,
+                $"project debugger should include runtime events for {path}");
         }
 
         hostForm.Hide();
@@ -354,6 +423,22 @@ internal static class Program
         }
 
         return count;
+    }
+
+    private static IEnumerable<Button> FindButtons(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is Button button)
+            {
+                yield return button;
+            }
+
+            foreach (var nested in FindButtons(child))
+            {
+                yield return nested;
+            }
+        }
     }
 
     private static void Expect(bool condition, string message)

@@ -11,6 +11,7 @@ Current scope:
 - registers a `Copperfin Visual Designer` editor for `PJX`, `SCX`, `VCX`, `FRX`, `LBX`, and `MNX`
 - adds an `Open In Copperfin Studio` command under `Tools`
 - adds the same command to Solution Explorer item context menus
+- adds PJX-aware `Build`, `Run`, and `Debug` commands under `Tools` and the Solution Explorer item context menu
 - opens a Copperfin document surface inside Visual Studio for registered asset types
 - loads a structured object/property snapshot from the native Studio host for the open asset
 - lets that document surface launch the native `copperfin_studio_host.exe`
@@ -24,15 +25,16 @@ Current scope:
 - supports asset-aware property-grid editing for `MNX/MNT` menu items
 - now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing
 - now surfaces the platform's native security/RBAC stance and `.NET`/Python/MCP extensibility story inside project workspaces
+- now surfaces a shared project debugger pane for `PJX` workflows, backed by the native runtime host and showing pause reason, call stack, locals, globals, and runtime events
 
 Current limitations:
 
 - the registered document surface is still a first designer shell, not yet a full inline VFP 9-fidelity designer across all asset families
 - the standalone Studio shell is still a managed host around the shared designer controls, not the finished native IDE experience
 - the highest-fidelity inline layout experience is still in the form/class/report/label families rather than project-system tooling
-- it does not yet own project build/debug/run pipelines for Copperfin applications
+- it still relies on the external native build/runtime hosts for project build/debug/run workflows instead of owning a full in-process Copperfin compiler/debugger inside Visual Studio
 - it does not yet render forms/reports inline inside the Visual Studio document with full VFP 9 fidelity, even though reports and labels now have a section-aware designer shape
-- it does not yet compile Copperfin executables from inside Visual Studio
+- the debugger pane is a first runtime-facing surface, not yet the finished VFP 9-level watch/coverage/task-window experience
 
 Why VS 2022 as the baseline:
 

@@ -21,15 +21,27 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button launchButton;
     private readonly Button revealButton;
     private readonly Button refreshButton;
+    private readonly Button buildButton;
+    private readonly Button runButton;
+    private readonly Button debugButton;
+    private readonly Button debugRestartButton;
+    private readonly Button debugContinueButton;
+    private readonly Button debugStepButton;
+    private readonly Button debugNextButton;
+    private readonly Button debugOutButton;
     private readonly SplitContainer leftExplorerSplit;
     private readonly ListView sectionListView;
     private readonly ListView objectListView;
     private readonly PropertyGrid propertyGrid;
     private readonly CopperfinDesignSurfaceControl designSurface;
     private readonly RichTextBox workspaceSummaryBox;
+    private readonly TabControl projectWorkspaceTabs;
+    private readonly RichTextBox debuggerSummaryBox;
+    private readonly Label debuggerStatusLabel;
 
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
+    private CopperfinRuntimeDebugSession? currentDebugSession;
     private bool suppressSelectionSync;
     private bool embeddedStudioShell;
 
@@ -113,6 +125,65 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
         };
 
+        buildButton = new Button
+        {
+            AutoSize = true,
+            Text = "Build Copperfin Project",
+            Visible = false
+        };
+        buildButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Build);
+
+        runButton = new Button
+        {
+            AutoSize = true,
+            Text = "Run Copperfin Project",
+            Visible = false
+        };
+        runButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Run);
+
+        debugButton = new Button
+        {
+            AutoSize = true,
+            Text = "Debug Copperfin Project",
+            Visible = false
+        };
+        debugButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Debug);
+
+        debugRestartButton = new Button
+        {
+            AutoSize = true,
+            Text = "Start Session"
+        };
+        debugRestartButton.Click += async (_, _) => await StartDebugSessionAsync();
+
+        debugContinueButton = new Button
+        {
+            AutoSize = true,
+            Text = "Continue"
+        };
+        debugContinueButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.ContinueAsync);
+
+        debugStepButton = new Button
+        {
+            AutoSize = true,
+            Text = "Step"
+        };
+        debugStepButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepIntoAsync);
+
+        debugNextButton = new Button
+        {
+            AutoSize = true,
+            Text = "Next"
+        };
+        debugNextButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOverAsync);
+
+        debugOutButton = new Button
+        {
+            AutoSize = true,
+            Text = "Out"
+        };
+        debugOutButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOutAsync);
+
         snapshotStatusLabel = new Label
         {
             AutoSize = true,
@@ -178,11 +249,71 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Visible = false
         };
 
+        debuggerSummaryBox = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.None,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Start a Copperfin debug session to inspect call stack, locals, globals, and runtime events."
+        };
+
+        debuggerStatusLabel = new Label
+        {
+            AutoSize = true,
+            MaximumSize = new Size(960, 0),
+            Font = new Font("Segoe UI", 9.0F, FontStyle.Regular, GraphicsUnit.Point),
+            Text = "Debugger ready."
+        };
+
+        var debuggerButtonPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(8)
+        };
+        debuggerButtonPanel.Controls.Add(debugRestartButton);
+        debuggerButtonPanel.Controls.Add(debugContinueButton);
+        debuggerButtonPanel.Controls.Add(debugStepButton);
+        debuggerButtonPanel.Controls.Add(debugNextButton);
+        debuggerButtonPanel.Controls.Add(debugOutButton);
+
+        var debuggerStatusPanel = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 34,
+            Padding = new Padding(8, 8, 8, 0)
+        };
+        debuggerStatusPanel.Controls.Add(debuggerStatusLabel);
+
+        var debuggerPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        debuggerPageHost.Controls.Add(debuggerSummaryBox);
+        debuggerPageHost.Controls.Add(debuggerStatusPanel);
+        debuggerPageHost.Controls.Add(debuggerButtonPanel);
+
+        projectWorkspaceTabs = new TabControl
+        {
+            Dock = DockStyle.Fill,
+            Visible = false
+        };
+        var summaryPage = new TabPage("Summary");
+        summaryPage.Controls.Add(workspaceSummaryBox);
+        var debuggerPage = new TabPage("Debugger");
+        debuggerPage.Controls.Add(debuggerPageHost);
+        projectWorkspaceTabs.TabPages.Add(summaryPage);
+        projectWorkspaceTabs.TabPages.Add(debuggerPage);
+
         var surfaceHost = new Panel
         {
             Dock = DockStyle.Fill
         };
-        surfaceHost.Controls.Add(workspaceSummaryBox);
+        surfaceHost.Controls.Add(projectWorkspaceTabs);
         surfaceHost.Controls.Add(designSurface);
 
         var rightSplit = new SplitContainer
@@ -222,6 +353,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(launchButton);
         buttonPanel.Controls.Add(revealButton);
         buttonPanel.Controls.Add(refreshButton);
+        buttonPanel.Controls.Add(buildButton);
+        buttonPanel.Controls.Add(runButton);
+        buttonPanel.Controls.Add(debugButton);
 
         var stack = new FlowLayoutPanel
         {
@@ -257,14 +391,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         revealButton.Enabled = true;
         refreshButton.Enabled = true;
         currentSnapshot = null;
+        currentDebugSession = null;
         sectionListView.Items.Clear();
         objectListView.Items.Clear();
         propertyGrid.SelectedObject = null;
         designSurface.LoadObjects(string.Empty, Array.Empty<CopperfinStudioSnapshotObject>());
         workspaceSummaryBox.Text = string.Empty;
         workspaceSummaryBox.Visible = false;
+        projectWorkspaceTabs.Visible = false;
+        debuggerSummaryBox.Text = "Start a Copperfin debug session to inspect call stack, locals, globals, and runtime events.";
+        debuggerStatusLabel.Text = "Debugger ready.";
+        SetDebuggerButtonsEnabled(false);
         designSurface.Visible = true;
         snapshotStatusLabel.Text = "Loading Copperfin Studio snapshot...";
+        UpdateProjectCommandVisibility();
         _ = LoadSnapshotAsync(path);
     }
 
@@ -288,6 +428,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapshotStatusLabel.Text =
                 $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes.";
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
+            UpdateProjectCommandVisibility();
             PopulateSectionList();
             PopulateObjectList();
             LoadSurface();
@@ -514,7 +655,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
             workspaceSummaryBox.Visible = true;
+            projectWorkspaceTabs.Visible = true;
+            projectWorkspaceTabs.SelectedIndex = 0;
             designSurface.Visible = false;
+            UpdateProjectCommandVisibility();
             return;
         }
 
@@ -522,8 +666,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ? (IReadOnlyList<CopperfinStudioSnapshotObject>)Array.Empty<CopperfinStudioSnapshotObject>()
             : currentSnapshot.Objects;
         workspaceSummaryBox.Visible = false;
+        projectWorkspaceTabs.Visible = false;
         designSurface.Visible = true;
         designSurface.LoadObjects(currentSnapshot?.AssetFamily ?? string.Empty, objects);
+        UpdateProjectCommandVisibility();
     }
 
     private string BuildGuidanceText(string assetFamily)
@@ -591,9 +737,136 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private void ApplyHostMode()
     {
         launchButton.Visible = !embeddedStudioShell;
+        buildButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+        runButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+        debugButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         subtitleLabel.Text = embeddedStudioShell
             ? "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack."
             : "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.";
+    }
+
+    private async Task RunProjectWorkflowAsync(CopperfinProjectOperation operation)
+    {
+        if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath))
+        {
+            MessageBox.Show(this, "Open a Copperfin PJX project first.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (operation == CopperfinProjectOperation.Debug)
+        {
+            await StartDebugSessionAsync();
+            return;
+        }
+
+        var result = await CopperfinProjectWorkflow.ExecuteAsync(currentPath!, operation);
+        snapshotStatusLabel.Text = result.Message;
+        if (!result.Success)
+        {
+            MessageBox.Show(this, result.Message, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (operation == CopperfinProjectOperation.Build)
+        {
+            MessageBox.Show(
+                this,
+                result.Message + "\n\nLauncher: " + result.LauncherPath,
+                "Copperfin",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+    }
+
+    private async Task StartDebugSessionAsync()
+    {
+        if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath))
+        {
+            return;
+        }
+
+        debuggerStatusLabel.Text = "Building project and starting Copperfin debugger...";
+        SetDebuggerButtonsEnabled(false);
+        var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!);
+        if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
+        {
+            return;
+        }
+        ApplyDebugSession(session);
+    }
+
+    private async Task AdvanceDebugSessionAsync(Func<CopperfinRuntimeDebugSession, Task<CopperfinRuntimeDebugSession>> action)
+    {
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            MessageBox.Show(this, "Start a Copperfin debug session first.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        debuggerStatusLabel.Text = "Updating debugger state...";
+        SetDebuggerButtonsEnabled(false);
+        var session = await action(currentDebugSession);
+        if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
+        {
+            return;
+        }
+        ApplyDebugSession(session);
+    }
+
+    private void ApplyDebugSession(CopperfinRuntimeDebugSession session)
+    {
+        try
+        {
+            if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed || debuggerSummaryBox.IsDisposed || debuggerStatusLabel.IsDisposed)
+            {
+                return;
+            }
+
+            currentDebugSession = session;
+            if (!session.Success)
+            {
+                debuggerStatusLabel.Text = "Debugger unavailable.";
+                debuggerSummaryBox.Text = session.Error;
+                SetDebuggerButtonsEnabled(false);
+                MessageBox.Show(this, session.Error, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            debuggerStatusLabel.Text = session.State.Message;
+            debuggerSummaryBox.Text = BuildDebugSessionSummary(session);
+            if (projectWorkspaceTabs.Visible)
+            {
+                projectWorkspaceTabs.SelectedIndex = 1;
+            }
+
+            var canContinue = !string.Equals(session.State.Reason, "completed", StringComparison.OrdinalIgnoreCase) &&
+                              !string.Equals(session.State.Reason, "error", StringComparison.OrdinalIgnoreCase);
+            SetDebuggerButtonsEnabled(canContinue);
+            debugRestartButton.Enabled = true;
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private void SetDebuggerButtonsEnabled(bool enabled)
+    {
+        debugContinueButton.Enabled = enabled;
+        debugStepButton.Enabled = enabled;
+        debugNextButton.Enabled = enabled;
+        debugOutButton.Enabled = enabled;
+        debugRestartButton.Enabled = CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+    }
+
+    private void UpdateProjectCommandVisibility()
+    {
+        var showProjectActions = CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+        buildButton.Visible = showProjectActions;
+        runButton.Visible = showProjectActions;
+        debugButton.Visible = showProjectActions;
+        buildButton.Enabled = showProjectActions;
+        runButton.Enabled = showProjectActions;
+        debugButton.Enabled = showProjectActions;
     }
 
     private void ConfigureObjectColumns()
@@ -664,7 +937,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         summary.AppendLine();
         summary.AppendLine("Next build-workflow step:");
-        summary.AppendLine("Copperfin can now inspect the project structure and derive a build plan, but executable generation still needs the runtime/compiler pipeline behind this workspace.");
+        summary.AppendLine("Copperfin can now inspect the project structure, launch build/run workflows, and surface a first integrated debugger pane from the shared project workspace.");
         return summary.ToString();
     }
 
@@ -703,6 +976,75 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             if (mcp is not null)
             {
                 summary.AppendLine($"- MCP: {mcp.Description}");
+            }
+        }
+
+        return summary.ToString();
+    }
+
+    private static string BuildDebugSessionSummary(CopperfinRuntimeDebugSession session)
+    {
+        var state = session.State;
+        var summary = new StringBuilder();
+        summary.AppendLine("Copperfin Debug Session");
+        summary.AppendLine();
+        summary.AppendLine($"Pause Reason: {state.Reason}");
+        summary.AppendLine($"Location: {state.Location}");
+        summary.AppendLine($"Statement: {state.Statement}");
+        summary.AppendLine($"Message: {state.Message}");
+        summary.AppendLine($"Executed Statements: {state.ExecutedStatements}");
+        summary.AppendLine($"Command History: {string.Join(", ", session.Commands)}");
+
+        summary.AppendLine();
+        summary.AppendLine("Call Stack:");
+        if (state.Frames.Count == 0)
+        {
+            summary.AppendLine("- (no frames)");
+        }
+        else
+        {
+            foreach (var frame in state.Frames)
+            {
+                summary.AppendLine($"- {frame.RoutineName} @ {frame.Location}");
+                if (frame.Locals.Count == 0)
+                {
+                    summary.AppendLine("  locals: (none)");
+                }
+                else
+                {
+                    foreach (var local in frame.Locals)
+                    {
+                        summary.AppendLine($"  local {local.Name} = {local.Value}");
+                    }
+                }
+            }
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Globals:");
+        if (state.Globals.Count == 0)
+        {
+            summary.AppendLine("- (none)");
+        }
+        else
+        {
+            foreach (var global in state.Globals)
+            {
+                summary.AppendLine($"- {global.Name} = {global.Value}");
+            }
+        }
+
+        summary.AppendLine();
+        summary.AppendLine("Runtime Events:");
+        if (state.Events.Count == 0)
+        {
+            summary.AppendLine("- (none)");
+        }
+        else
+        {
+            foreach (var runtimeEvent in state.Events)
+            {
+                summary.AppendLine($"- [{runtimeEvent.Category}] {runtimeEvent.Detail} @ {runtimeEvent.Location}");
             }
         }
 

@@ -159,6 +159,106 @@ void test_dispatch_event_handler() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_variables_in_stack_frame() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_locals";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "locals.prg";
+    write_text(
+        main_path,
+        "DO localproc\n"
+        "RETURN\n"
+        "PROCEDURE localproc\n"
+        "LOCAL itemCount\n"
+        "itemCount = 9\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    session.add_breakpoint({.file_path = main_path.string(), .line = 5});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::breakpoint, "local-variable test should stop on the itemCount assignment");
+    expect(!state.call_stack.empty(), "local-variable test should include a stack frame");
+    if (!state.call_stack.empty()) {
+        const auto local = state.call_stack.front().locals.find("itemcount");
+        expect(local != state.call_stack.front().locals.end(), "stack frame should expose declared LOCAL variables");
+        if (local != state.call_stack.front().locals.end()) {
+            expect(copperfin::runtime::format_value(local->second) == "", "LOCAL variables should exist before assignment");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_report_form_pause() {
+    namespace fs = std::filesystem;
+    const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
+    if (!fs::exists(report_path)) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_report";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "report.prg";
+    write_text(
+        main_path,
+        "REPORT FORM '" + report_path.string() + "' PREVIEW\n"
+        "x = 2\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "REPORT FORM PREVIEW should pause in the event loop");
+    expect(state.waiting_for_events, "report preview should report waiting_for_events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_form_pause() {
+    namespace fs = std::filesystem;
+    const fs::path form_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx)";
+    if (!fs::exists(form_path)) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_doform";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "doform.prg";
+    write_text(
+        main_path,
+        "DO FORM '" + form_path.string() + "'\n"
+        "x = 2\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "DO FORM should now enter the event loop for runnable forms");
+    expect(state.waiting_for_events, "form launch should report waiting_for_events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -166,6 +266,9 @@ int main() {
     test_read_events_pause();
     test_activate_popup_pause();
     test_dispatch_event_handler();
+    test_local_variables_in_stack_frame();
+    test_report_form_pause();
+    test_do_form_pause();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

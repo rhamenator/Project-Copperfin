@@ -188,6 +188,35 @@ Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
     )
 }
 
+Invoke-Step -Name "Run report xAsset smoke test" -Action {
+    $reportSmokeRoot = Join-Path $repoRoot "artifacts\report-debug-smoke"
+    Remove-Item -Recurse -Force $reportSmokeRoot -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force $reportSmokeRoot | Out-Null
+
+    $manifestPath = Join-Path $reportSmokeRoot "app.cfmanifest"
+    @(
+        "manifest_version=1",
+        "project_title=REPORTDEBUG",
+        "project_path=E:\Project-Copperfin\report-smoke.pjx",
+        "package_root=$reportSmokeRoot",
+        "content_root=$reportSmokeRoot",
+        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports",
+        "startup_item=invoice.frx",
+        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
+        "configuration=debug",
+        "security_enabled=false",
+        "security_mode=off",
+        "dotnet_enabled=false",
+        "dotnet_story="
+    ) | Set-Content -Path $manifestPath
+
+    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
+        "--manifest", $manifestPath,
+        "--debug",
+        "--debug-command", "continue"
+    )
+}
+
 Invoke-Step -Name "Run menu xAsset smoke test" -Action {
     $menuSmokeRoot = Join-Path $repoRoot "artifacts\menu-debug-smoke"
     Remove-Item -Recurse -Force $menuSmokeRoot -ErrorAction SilentlyContinue

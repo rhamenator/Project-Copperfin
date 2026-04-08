@@ -84,13 +84,16 @@ Current runnable artifacts:
   - native runtime/debug launch host for packaged Copperfin applications
   - reads `app.cfmanifest` and now executes `PRG` startup code through a native xBase runtime session
   - supports real breakpoint and step-debugging actions for `PRG` startup paths
+  - now emits richer debug state including call stack, locals, globals, and runtime events for debugger surfaces in Visual Studio and standalone Studio
   - now bootstraps runnable `SCX/VCX/MNX` startup behavior through generated `PRG` wrappers
+  - now boots runnable `FRX/LBX` startup assets into direct preview/event-loop mode instead of treating them as inert metadata
   - packaged `SCX/VCX` startup assets now stage their memo sidecars and can launch from packaged content instead of only from source trees
   - now recognizes `ACTIVATE MENU` / `ACTIVATE POPUP` as real event-loop runtime operations
   - now supports dispatching runtime actions back into waiting xAssets through `--debug-command select:<action-id>` and `--debug-command invoke:<action-id>`
   - menu startup assets can now dispatch real menu-item selections while paused in the event loop
   - runtime xAsset execution now loads the full backing table instead of only the small Studio preview slice, so deeper menu trees and later records can participate in execution
   - form/class/report/label method surfaces now expose dispatchable runtime actions derived from extracted xBase methods
+  - `DO FORM` now resolves quoted paths cleanly and launches runnable forms into the event loop instead of treating them like one-shot helper scripts
   - still reports compatibility-mode launch information for non-runnable xAssets and other startup assets while those runtimes are under construction
 - `vsix\Copperfin.VisualStudio\Copperfin.VisualStudio.csproj`
   - installable Visual Studio extension baseline for VS 2022+
@@ -102,14 +105,17 @@ Current runnable artifacts:
   - current `MNX/MNT` slices support asset-aware property-grid editing for menu metadata
   - current `PJX/PJT` slices now surface a grouped project workspace with project-item grouping, startup/build-plan summary, and project-entry property editing
   - project workspaces now also surface the platform's native security/RBAC posture and `.NET`/Python/MCP extensibility story
+  - project workspaces now include a first integrated debugger pane backed by the native runtime host, with pause reason, call stack, locals, globals, and runtime-event summaries
 - `vsix\Copperfin.Studio\Copperfin.Studio.csproj`
   - standalone Windows shell that reuses the same shared report/label/form/menu/project designer controls outside Visual Studio
   - now opens multiple assets as tabs so the managed shell feels more like an IDE workspace instead of a single-document dialog
+  - now shares the same first integrated project debugger pane used by the Visual Studio designer shell
   - current output: `vsix\Copperfin.Studio\bin\Release\net472\Copperfin.Studio.exe`
 - `vsix\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj`
   - automated WinForms smoke tests for the shared designer UI
   - current output: `vsix\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
   - exercises synthetic rendering plus real `invoice.frx`, `cust.lbx`, and `solution.pjx` assets from the local VFP 9 sample tree
+  - now smoke-tests the shared project debugger surface against a real VFP sample project
 
 Quick examples:
 
@@ -131,8 +137,9 @@ Current MVP scope:
 Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
-- the Visual Studio extension now provides a registered designer shell with usable editable slices across `SCX`, `VCX`, `FRX`, `LBX`, `MNX`, and `PJX`, and the native build pipeline can now package projects into a runtime/debug artifact with an optional `.NET` launcher plus a real `PRG` execution/debugger slice, but it still does not provide full VFP 9-style design fidelity or the full FoxPro/VFP runtime surface
+- the Visual Studio extension and standalone Studio now provide a shared project debugger pane on top of the native runtime/debug host, but they still do not provide full VFP 9-style design fidelity or the full FoxPro/VFP runtime surface
 - packaged runtime output is now good enough to launch runnable `SCX/VCX/MNX` startup assets from staged package content, but broader asset-family execution and deeper event/lifecycle fidelity still need work
+- packaged runtime output is now good enough to launch runnable `SCX/VCX/MNX/FRX/LBX` startup assets from staged package content, but deeper event/lifecycle fidelity still needs work
 - runtime action dispatch now covers menu selection and extracted method invocation, but higher-fidelity form/report object lifecycle, richer UI event simulation, and broader runtime semantics still need work
 - runtime execution no longer truncates to the Studio preview record limit, which improves parity for deeper `MNX` submenu trees and other larger xAssets
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE
