@@ -274,6 +274,11 @@ bool supports_table_field_storage(char field_type) {
     return supports_direct_field_writes(field_type) || field_type == 'M';
 }
 
+bool supports_blank_field_initialization(char field_type) {
+    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'D' || field_type == 'L' ||
+           field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'M';
+}
+
 std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
     std::vector<std::uint8_t> bytes(block_size, 0U);
     write_be_u32(bytes, 0U, 1U);
@@ -598,6 +603,9 @@ DbfWriteResult append_blank_record_bytes(
         const std::size_t field_offset = record_offset + field.offset;
         if ((field_offset + field.length) > table_bytes.size()) {
             return {.ok = false, .error = "Table field layout exceeds the record size.", .record_count = header.record_count};
+        }
+        if (!supports_blank_field_initialization(field.type)) {
+            return {.ok = false, .error = "APPEND BLANK is not yet supported for one or more field types in this table.", .record_count = header.record_count};
         }
 
         switch (field.type) {

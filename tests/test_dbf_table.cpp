@@ -455,6 +455,41 @@ void test_currency_and_datetime_field_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_append_blank_rejects_unsupported_field_layouts_without_changing_file() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_append_guard_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "unsupported.dbf";
+    std::vector<std::uint8_t> table_bytes(97U + 9U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 9U);
+
+    write_field_descriptor(table_bytes, 32U, "VALUE", 'B', 1U, 8U);
+    table_bytes[64U] = 0x0DU;
+    table_bytes[65U] = 0x20U;
+    write_ascii(table_bytes, 66U, "12345678");
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto original_bytes = read_binary_file(table_path);
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(!append_result.ok, "append_blank_record_to_file should reject unsupported binary field layouts");
+    expect(append_result.error.find("APPEND BLANK is not yet supported") != std::string::npos, "unsupported APPEND BLANK rejection should mention unsupported field types");
+    expect(read_binary_file(table_path) == original_bytes, "unsupported APPEND BLANK rejection should leave the DBF bytes unchanged");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -465,6 +500,7 @@ int main() {
     test_indexed_table_mutations_fail_fast_without_changing_files();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
+    test_append_blank_rejects_unsupported_field_layouts_without_changing_file();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

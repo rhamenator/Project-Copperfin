@@ -2073,6 +2073,73 @@ void test_indexed_table_mutation_surfaces_runtime_error() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_blank_for_unsupported_field_layout_surfaces_runtime_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_blank_unsupported_layout";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "unsupported.dbf";
+    std::vector<std::uint8_t> table_bytes(65U + 9U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 9U);
+    const char value_field[] = "VALUE";
+    for (std::size_t index = 0; index < 5U; ++index) {
+        table_bytes[32U + index] = static_cast<std::uint8_t>(value_field[index]);
+    }
+    table_bytes[32U + 11U] = static_cast<std::uint8_t>('B');
+    write_le_u32(table_bytes, 32U + 12U, 1U);
+    table_bytes[32U + 16U] = 8U;
+    table_bytes[64U] = 0x0DU;
+    table_bytes[65U] = 0x20U;
+    for (std::size_t index = 0; index < 8U; ++index) {
+        table_bytes[66U + index] = static_cast<std::uint8_t>('0' + index);
+    }
+    table_bytes.back() = 0x1AU;
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto original_size = std::filesystem::file_size(table_path);
+
+    const fs::path main_path = temp_root / "append_blank_unsupported.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Weird IN 0\n"
+        "APPEND BLANK\n"
+        "xAfterError = 17\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "unsupported-layout APPEND BLANK should pause with an error");
+    expect(state.location.line == 2U, "unsupported-layout APPEND BLANK should highlight the mutation statement");
+    expect(
+        state.message.find("APPEND BLANK is not yet supported") != std::string::npos,
+        "unsupported-layout APPEND BLANK should explain the unsupported field layout");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after unsupported-layout APPEND BLANK failure should keep the session alive");
+    const auto after_error = state.globals.find("xaftererror");
+    expect(after_error != state.globals.end(), "post-error statements should still execute after unsupported-layout APPEND BLANK failure");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "17", "post-error execution should preserve later statements after unsupported-layout APPEND BLANK failure");
+    }
+
+    expect(std::filesystem::file_size(table_path) == original_size, "unsupported-layout APPEND BLANK should not change the DBF size");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_filter_scopes_local_cursor_visibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter";
@@ -2917,6 +2984,7 @@ int main() {
     test_total_command_for_local_tables();
     test_runtime_fault_containment();
     test_indexed_table_mutation_surfaces_runtime_error();
+    test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
