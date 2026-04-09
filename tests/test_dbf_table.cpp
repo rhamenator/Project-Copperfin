@@ -225,12 +225,64 @@ void test_create_dbf_table_file_round_trips() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_memo_field_create_replace_and_append_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_memo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "notes.dbf";
+    const fs::path memo_path = temp_dir / "notes.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TITLE", .type = 'C', .length = 12U},
+        {.name = "BODY", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"FIRST", "First memo body"},
+        {"SECOND", "Second memo body"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support memo-backed schemas");
+    expect(fs::exists(memo_path), "memo-backed table creation should also create the FPT sidecar");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "memo-backed created tables should remain readable");
+    expect(parse_result.table.records.size() == 2U, "memo-backed created tables should persist record rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "FIRST", "memo-backed created character fields should persist");
+        expect(parse_result.table.records[0].values[1].display_value == "First memo body", "memo-backed created memo fields should round-trip through the sidecar");
+        expect(parse_result.table.records[1].values[1].display_value == "Second memo body", "later memo rows should also round-trip");
+    }
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated first memo");
+    expect(replace_result.ok, "replace_record_field_value should support memo-backed fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support memo-backed tables");
+    expect(append_result.record_count == 3U, "memo-backed append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "memo-backed mutated tables should remain readable");
+    expect(parse_result.table.records.size() == 3U, "memo-backed tables should expose appended records");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[0].values[1].display_value == "Updated first memo", "memo field replacements should persist through the shared DBF layer");
+        expect(parse_result.table.records[2].values[0].display_value.empty(), "blank appended character fields in memo-backed tables should start empty");
+        expect(parse_result.table.records[2].values[1].display_value.empty(), "blank appended memo fields should start with an empty pointer");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_dbf_table_with_memo_sidecar();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
+    test_memo_field_create_replace_and_append_round_trip();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

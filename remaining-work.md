@@ -54,7 +54,7 @@ Current repo status against the Windows-first product goal:
 | Area | Status | Notes |
 | --- | --- | --- |
 | DBF/FPT basic read fidelity | Implemented | Real DBF parsing, memo decoding, and inspector/design-surface consumption are in place for representative assets. |
-| DBF local-table mutation core | Partial | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, but broader field-type coverage, repair, and transactional safety still need work. |
+| DBF local-table mutation core | Partial | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, including first-pass shared memo-backed `M` field persistence via FoxPro-compatible sidecars, but broader field-type coverage, repair, and transactional safety still need work. |
 | CDX/DCX inspection | Partial | Tag and expression hints are surfaced, but write fidelity and richer order/collation behavior remain incomplete. |
 | DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
 | Work areas and data sessions | Partial | `SELECT`, plain `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, session-scoped synthetic SQL cursors and SQL handles, strict `USE ... IN <alias>` targeting plus first-pass non-selected-target preservation, and first indexed search semantics are working, but broader alias/session edge cases remain. |
@@ -79,6 +79,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-09: the shared DBF layer now has first-pass memo write fidelity for `M` fields. `create_dbf_table_file()` and `replace_record_field_value()` can now persist FoxPro-compatible memo sidecars, blank memo fields append with zero pointers instead of corrupted placeholders, and focused DBF round-trip coverage now exercises memo-backed create/update/append flows.
 - 2026-04-09: `SET NEAR` now has focused data-session restoration coverage. Missed-`SEEK` behavior is locked down across `SET DATASESSION` switches so session-local nearest-record behavior stays independent and restores correctly after returning to the original session.
 - 2026-04-09: `SQLCONNECT()` handle numbering now restarts per data session instead of sharing one global handle sequence. Combined with the prior session-scoped SQL handle storage, this keeps synthetic SQL connection lifecycles closer to the local cursor/session model and adds focused regression coverage for cross-session handle lookup and restored SQL cursor visibility.
 - 2026-04-09: synthetic SQL result cursors now have stronger data-session isolation. SQL connection handles are now scoped per data session instead of globally, and focused runtime coverage now locks down cross-session `SQLEXEC`/`SQLDISCONNECT` isolation plus restored SQL cursor lookup after `SET DATASESSION` switches.

@@ -42,11 +42,23 @@ std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t of
                                       static_cast<std::uint16_t>(bytes[offset + 1]));
 }
 
+void write_be_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
+    bytes[offset] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>(value & 0xFFU);
+}
+
 void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
     bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
     bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
     bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
+}
+
+void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
+    bytes[offset] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
+    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
 }
 
 std::string trim_right(std::string text) {
@@ -83,6 +95,18 @@ std::string load_file_string(const std::string& path) {
     if (!input) {
         return {};
     }
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
+std::vector<std::uint8_t> read_binary_file(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {};
+    }
+
     return {
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
@@ -189,6 +213,79 @@ bool supports_direct_field_writes(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D';
 }
 
+bool supports_table_field_storage(char field_type) {
+    return supports_direct_field_writes(field_type) || field_type == 'M';
+}
+
+std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
+    std::vector<std::uint8_t> bytes(block_size, 0U);
+    write_be_u32(bytes, 0U, 1U);
+    write_be_u16(bytes, 6U, block_size);
+    return bytes;
+}
+
+DbfWriteResult write_memo_field_bytes(
+    std::vector<std::uint8_t>& table_bytes,
+    std::size_t field_offset,
+    std::vector<std::uint8_t>& memo_bytes,
+    const std::string& value,
+    std::size_t record_count) {
+    if ((field_offset + 4U) > table_bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated.", .record_count = record_count};
+    }
+
+    const std::string memo_value = value;
+    if (memo_value.empty()) {
+        write_le_u32(table_bytes, field_offset, 0U);
+        return {.ok = true, .record_count = record_count};
+    }
+
+    if (memo_bytes.size() < 8U) {
+        memo_bytes = create_empty_memo_sidecar();
+    }
+
+    std::uint16_t block_size = read_be_u16(memo_bytes, 6U);
+    if (block_size == 0U) {
+        block_size = 512U;
+        if (memo_bytes.size() < block_size) {
+            memo_bytes.resize(block_size, 0U);
+        }
+        write_be_u16(memo_bytes, 6U, block_size);
+    }
+
+    std::uint32_t next_free_block = read_be_u32(memo_bytes, 0U);
+    if (next_free_block == 0U) {
+        next_free_block = 1U;
+        write_be_u32(memo_bytes, 0U, next_free_block);
+    }
+
+    const auto required_bytes = static_cast<std::size_t>(8U + memo_value.size());
+    const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
+    const std::size_t block_offset = static_cast<std::size_t>(next_free_block) * block_size;
+    const std::size_t new_total_size = block_offset + (static_cast<std::size_t>(required_blocks) * block_size);
+    if (memo_bytes.size() < new_total_size) {
+        memo_bytes.resize(new_total_size, 0U);
+    }
+
+    for (std::size_t index = 0; index < 4U; ++index) {
+        memo_bytes[block_offset + index] = 0U;
+    }
+    memo_bytes[block_offset + 3U] = 1U;
+    write_be_u32(memo_bytes, block_offset + 4U, static_cast<std::uint32_t>(memo_value.size()));
+    std::fill(
+        memo_bytes.begin() + static_cast<std::ptrdiff_t>(block_offset + 8U),
+        memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_total_size),
+        static_cast<std::uint8_t>(0U));
+    std::copy(
+        memo_value.begin(),
+        memo_value.end(),
+        memo_bytes.begin() + static_cast<std::ptrdiff_t>(block_offset + 8U));
+
+    write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);
+    write_le_u32(table_bytes, field_offset, next_free_block);
+    return {.ok = true, .record_count = record_count};
+}
+
 DbfWriteResult write_field_bytes(
     std::vector<std::uint8_t>& table_bytes,
     const DbfHeader& header,
@@ -279,6 +376,12 @@ DbfWriteResult append_blank_record_bytes(
         switch (field.type) {
             case 'L':
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
+                break;
+            case 'M':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
                 break;
             default:
                 std::fill_n(
@@ -561,6 +664,7 @@ DbfWriteResult create_dbf_table_file(
     std::vector<RawFieldDescriptor> raw_fields;
     raw_fields.reserve(fields.size());
     std::uint32_t next_offset = 1U;
+    bool has_memo_fields = false;
     for (const auto& field : fields) {
         if (trim_both(field.name).empty()) {
             return {.ok = false, .error = "Field names cannot be empty."};
@@ -568,8 +672,14 @@ DbfWriteResult create_dbf_table_file(
         if (field.length == 0U) {
             return {.ok = false, .error = "Field lengths must be greater than zero."};
         }
-        if (!supports_direct_field_writes(field.type)) {
+        if (!supports_table_field_storage(field.type)) {
             return {.ok = false, .error = "Table creation is not implemented for one or more field types yet."};
+        }
+        if (field.type == 'M') {
+            if (field.length < 4U) {
+                return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
+            }
+            has_memo_fields = true;
         }
 
         raw_fields.push_back({
@@ -618,6 +728,8 @@ DbfWriteResult create_dbf_table_file(
         .code_page_mark = 0U
     };
 
+    std::vector<std::uint8_t> memo_bytes = has_memo_fields ? create_empty_memo_sidecar() : std::vector<std::uint8_t>{};
+
     for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
         if (records[record_index].size() != raw_fields.size()) {
             return {.ok = false, .error = "Record field counts must match the DBF schema.", .record_count = records.size()};
@@ -626,12 +738,22 @@ DbfWriteResult create_dbf_table_file(
         const std::size_t record_offset = header.header_length + (record_index * header.record_length);
         bytes[record_offset] = 0x20U;
         for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
-            const DbfWriteResult write_result = write_field_bytes(
-                bytes,
-                header,
-                record_index,
-                raw_fields[field_index],
-                records[record_index][field_index]);
+            DbfWriteResult write_result;
+            if (raw_fields[field_index].type == 'M') {
+                write_result = write_memo_field_bytes(
+                    bytes,
+                    record_offset + raw_fields[field_index].offset,
+                    memo_bytes,
+                    records[record_index][field_index],
+                    records.size());
+            } else {
+                write_result = write_field_bytes(
+                    bytes,
+                    header,
+                    record_index,
+                    raw_fields[field_index],
+                    records[record_index][field_index]);
+            }
             if (!write_result.ok) {
                 return write_result;
             }
@@ -640,6 +762,9 @@ DbfWriteResult create_dbf_table_file(
 
     if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = records.size()};
+    }
+    if (has_memo_fields && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
+        return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = records.size()};
     }
 
     return {.ok = true, .record_count = records.size()};
@@ -698,12 +823,31 @@ DbfWriteResult replace_record_field_value(
         return {.ok = false, .error = "The target field was not found in the table.", .record_count = header_result.header.record_count};
     }
 
-    DbfWriteResult result = write_field_bytes(bytes, header_result.header, record_index, *field, value);
+    DbfWriteResult result;
+    std::vector<std::uint8_t> memo_bytes;
+    if (field->type == 'M') {
+        const std::string memo_path = infer_memo_sidecar_path(path);
+        if (memo_path.empty()) {
+            return {.ok = false, .error = "No memo sidecar path could be inferred for the table.", .record_count = header_result.header.record_count};
+        }
+        memo_bytes = read_binary_file(memo_path);
+        result = write_memo_field_bytes(
+            bytes,
+            header_result.header.header_length + (record_index * header_result.header.record_length) + field->offset,
+            memo_bytes,
+            value,
+            header_result.header.record_count);
+    } else {
+        result = write_field_bytes(bytes, header_result.header, record_index, *field, value);
+    }
     if (!result.ok) {
         return result;
     }
     if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+    }
+    if (field->type == 'M' && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
+        return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = header_result.header.record_count};
     }
     return result;
 }
