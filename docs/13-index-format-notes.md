@@ -15,8 +15,8 @@ Current coverage:
   - dBase-style single-index header probe.
   - Extracts root and EOF block hints, key length, maximum key count, group length, uniqueness flag, and key expression hint.
 - `MDX`
-  - Structural recognition and file-level probe only for now.
-  - Treated as a production multi-tag index container pending deeper directory/tag parsing.
+  - First-pass block-level probe with printable-run tag hint enumeration.
+  - Treated as a production multi-tag index container pending deeper layout, expression, and write parsing.
 
 Current inspector behavior:
 
@@ -48,7 +48,7 @@ Reference docs used to keep the probe rules grounded:
 Next implementation steps:
 
 1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
-2. Extend multi-tag enumeration to `MDX`.
+2. Deepen `MDX` parsing beyond printable tag hints into real layout and expression metadata extraction.
 3. Add expression normalization and collation metadata extraction.
 4. Correlate DBF field metadata with index expressions for migration planning.
 5. Build read-only reindex validation against real VFP and dBase fixtures.

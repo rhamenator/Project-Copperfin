@@ -211,6 +211,23 @@ void test_parse_index_probe_for_ndx() {
     expect(result.probe.key_expression_hint == "CODE", "NDX expression should be extracted");
 }
 
+void test_parse_index_probe_for_mdx() {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_ascii(bytes, 512U, "NAME_TAG");
+    write_ascii(bytes, 640U, "CITYSTATE");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 1024U, copperfin::vfp::IndexKind::mdx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible dBase MDX file");
+    expect(result.probe.kind == copperfin::vfp::IndexKind::mdx, "MDX probe kind should be preserved");
+    expect(result.probe.multi_tag, "MDX should be treated as multi-tag");
+    expect(result.probe.production_candidate, "MDX should be treated as a production index candidate");
+    expect(result.probe.tags.size() == 2U, "MDX probe should enumerate first-pass tag hints");
+    if (result.probe.tags.size() >= 2U) {
+        expect(result.probe.tags[0].name_hint == "NAME_TAG", "MDX probe should expose the first tag hint");
+        expect(result.probe.tags[1].name_hint == "CITYSTATE", "MDX probe should expose the second tag hint");
+    }
+}
+
 void test_inspect_asset_collects_companion_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_assets_tests";
@@ -247,7 +264,9 @@ void test_inspect_asset_collects_companion_indexes() {
     }
 
     {
-        std::vector<std::uint8_t> bytes(512U, 0U);
+        std::vector<std::uint8_t> bytes(1024U, 0U);
+        write_ascii(bytes, 512U, "NAME_TAG");
+        write_ascii(bytes, 640U, "CITYSTATE");
         std::ofstream output(mdx_path, std::ios::binary);
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
@@ -270,6 +289,13 @@ void test_inspect_asset_collects_companion_indexes() {
                 expect(index.probe.tags.front().name_hint == "NAME", "inspect_asset should expose the real CDX tag name");
                 expect(index.probe.tags.front().key_expression_hint == "UPPER(NAME)", "inspect_asset should expose the CDX expression hint");
                 expect(index.probe.tags.front().for_expression_hint == "DELETED() = .F.", "inspect_asset should expose the CDX FOR expression hint");
+            }
+        }
+        if (index.probe.kind == copperfin::vfp::IndexKind::mdx) {
+            expect(index.probe.tags.size() == 2U, "inspect_asset should expose first-pass MDX tag hints");
+            if (index.probe.tags.size() >= 2U) {
+                expect(index.probe.tags[0].name_hint == "NAME_TAG", "inspect_asset should expose the first MDX tag hint");
+                expect(index.probe.tags[1].name_hint == "CITYSTATE", "inspect_asset should expose the second MDX tag hint");
             }
         }
     }
@@ -364,6 +390,7 @@ int main() {
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
+    test_parse_index_probe_for_mdx();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
     test_parse_real_vfp_cdx_when_available();

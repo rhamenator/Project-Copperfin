@@ -6,6 +6,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <set>
 
 namespace copperfin::vfp {
 
@@ -42,6 +43,99 @@ std::string read_ascii_hint(const std::vector<std::uint8_t>& bytes, std::size_t 
     }
 
     return value;
+}
+
+struct PrintableRun {
+    std::size_t offset = 0;
+    std::string text;
+};
+
+bool is_identifier_char(char ch) {
+    const auto raw = static_cast<unsigned char>(ch);
+    return std::isalnum(raw) != 0 || ch == '_';
+}
+
+std::string trim_copy(std::string value) {
+    const auto first = std::find_if(value.begin(), value.end(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    });
+    value.erase(value.begin(), first);
+
+    const auto last = std::find_if(value.rbegin(), value.rend(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    });
+    value.erase(last.base(), value.end());
+    return value;
+}
+
+std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
+    std::vector<PrintableRun> runs;
+
+    for (std::size_t index = 0; index < bytes.size();) {
+        const auto raw = static_cast<unsigned char>(bytes[index]);
+        if (std::isprint(raw) == 0) {
+            ++index;
+            continue;
+        }
+
+        const std::size_t start = index;
+        std::string text;
+        while (index < bytes.size()) {
+            const auto current = static_cast<unsigned char>(bytes[index]);
+            if (std::isprint(current) == 0) {
+                break;
+            }
+            text.push_back(static_cast<char>(current));
+            ++index;
+        }
+
+        if (text.size() >= 2U) {
+            runs.push_back({.offset = start, .text = std::move(text)});
+        }
+    }
+
+    return runs;
+}
+
+bool looks_like_mdx_tag_name_candidate(const std::string& text) {
+    if (text.size() < 2U || text.size() > 10U) {
+        return false;
+    }
+
+    bool saw_alpha = false;
+    for (unsigned char ch : text) {
+        if (!is_identifier_char(static_cast<char>(ch))) {
+            return false;
+        }
+        if (std::isalpha(ch) != 0) {
+            saw_alpha = true;
+            if (std::toupper(ch) != ch) {
+                return false;
+            }
+        }
+    }
+
+    return saw_alpha;
+}
+
+std::vector<IndexTagProbe> collect_mdx_tag_hints(const std::vector<std::uint8_t>& bytes) {
+    std::vector<IndexTagProbe> tags;
+    std::set<std::string> seen_names;
+
+    for (const PrintableRun& run : collect_printable_runs(bytes)) {
+        const std::string candidate = trim_copy(run.text);
+        if (!looks_like_mdx_tag_name_candidate(candidate) || !seen_names.insert(candidate).second) {
+            continue;
+        }
+
+        tags.push_back({
+            .name_hint = candidate,
+            .name_offset_hint = static_cast<std::uint32_t>(run.offset),
+            .inferred_name = false
+        });
+    }
+
+    return tags;
 }
 
 bool is_valid_optional_offset(std::uint32_t offset, std::uint32_t block_size, std::uint64_t file_size) {
@@ -194,6 +288,7 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     IndexProbe probe;
     probe.kind = IndexKind::mdx;
     probe.file_size = file_size;
+    probe.block_size = 512U;
     probe.multi_tag = true;
     probe.production_candidate = true;
 
@@ -204,6 +299,8 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
             .error = "Header values do not look like a block-oriented dBase MDX file."
         };
     }
+
+    probe.tags = collect_mdx_tag_hints(bytes);
 
     return {.ok = true, .probe = probe};
 }
@@ -298,7 +395,7 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
 
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
     std::size_t probe_size = 512U;
-    if (kind == IndexKind::cdx || kind == IndexKind::dcx) {
+    if (kind == IndexKind::cdx || kind == IndexKind::dcx || kind == IndexKind::mdx) {
         probe_size = static_cast<std::size_t>(file_size);
     }
     std::vector<std::uint8_t> bytes(probe_size, 0U);
