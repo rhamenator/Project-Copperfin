@@ -5,6 +5,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <unordered_map>
@@ -243,7 +244,7 @@ std::optional<RawFieldDescriptor> find_raw_field(
 }
 
 bool supports_direct_field_writes(char field_type) {
-    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D';
+    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'I';
 }
 
 bool supports_table_field_storage(char field_type) {
@@ -375,6 +376,31 @@ DbfWriteResult write_field_bytes(
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
         }
+        case 'I': {
+            const std::string text = trim_both(value);
+            if (text.empty()) {
+                write_le_u32(table_bytes, field_offset, 0U);
+                break;
+            }
+
+            std::size_t consumed = 0U;
+            long long parsed = 0;
+            try {
+                parsed = std::stoll(text, &consumed, 10);
+            } catch (const std::exception&) {
+                return {.ok = false, .error = "Integer fields only accept whole-number values.", .record_count = header.record_count};
+            }
+            if (consumed != text.size()) {
+                return {.ok = false, .error = "Integer fields only accept whole-number values.", .record_count = header.record_count};
+            }
+            if (parsed < static_cast<long long>(std::numeric_limits<std::int32_t>::min()) ||
+                parsed > static_cast<long long>(std::numeric_limits<std::int32_t>::max())) {
+                return {.ok = false, .error = "Integer value is too large for the target field.", .record_count = header.record_count};
+            }
+
+            write_le_u32(table_bytes, field_offset, static_cast<std::uint32_t>(static_cast<std::int32_t>(parsed)));
+            break;
+        }
         default:
             return {.ok = false, .error = "Direct updates are not implemented for this field type yet.", .record_count = header.record_count};
     }
@@ -409,6 +435,12 @@ DbfWriteResult append_blank_record_bytes(
         switch (field.type) {
             case 'L':
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
+                break;
+            case 'I':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
                 break;
             case 'M':
                 std::fill_n(
@@ -716,6 +748,8 @@ DbfWriteResult create_dbf_table_file(
                 return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
             }
             has_memo_fields = true;
+        } else if (field.type == 'I' && field.length != 4U) {
+            return {.ok = false, .error = "Integer fields require a width of exactly 4 bytes."};
         }
 
         raw_fields.push_back({

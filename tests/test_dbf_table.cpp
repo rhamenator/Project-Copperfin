@@ -353,6 +353,54 @@ void test_indexed_table_mutations_fail_fast_without_changing_files() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_integer_field_create_replace_and_append_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_integer_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "numbers.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "COUNT", .type = 'I', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"ALPHA", "10"},
+        {"BRAVO", "-20"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support Integer (I) fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Integer-backed DBFs should remain readable after creation");
+    expect(parse_result.table.records.size() == 2U, "Integer-backed DBFs should expose created rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "10", "created Integer fields should round-trip positive values");
+        expect(parse_result.table.records[1].values[1].display_value == "-20", "created Integer fields should round-trip negative values");
+    }
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "COUNT", "21");
+    expect(replace_result.ok, "replace_record_field_value should support Integer (I) fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support Integer (I) fields");
+    expect(append_result.record_count == 3U, "Integer-backed append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Integer-backed DBFs should remain readable after mutation");
+    expect(parse_result.table.records.size() == 3U, "Integer-backed DBFs should expose appended rows");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[1].values[1].display_value == "21", "Integer field replacements should persist");
+        expect(parse_result.table.records[2].values[0].display_value.empty(), "blank appended character fields beside Integer fields should start empty");
+        expect(parse_result.table.records[2].values[1].display_value == "0", "blank appended Integer fields should initialize to zero");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -361,6 +409,7 @@ int main() {
     test_create_dbf_table_file_round_trips();
     test_memo_field_create_replace_and_append_round_trip();
     test_indexed_table_mutations_fail_fast_without_changing_files();
+    test_integer_field_create_replace_and_append_round_trip();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
