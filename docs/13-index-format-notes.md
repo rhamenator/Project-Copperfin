@@ -7,7 +7,7 @@ Current coverage:
 - `CDX` and `DCX`
   - Minimal header probe for block size, root node offset, free node hint, key-length hint, and key-pool hint.
   - Treated as multi-tag index containers.
-  - First-pass directory leaf-page parsing now surfaces stored tag names from plausible node pages, and first-pass page-local key/`FOR` expression hints are attached on top of that parser.
+  - First-pass directory leaf-page parsing now surfaces stored tag names from plausible node pages, first-pass page-local key/`FOR` expression hints are attached on top of that parser, and focused regression coverage now exercises both direct `.dcx` probing and `DBC` companion discovery.
 - `IDX`
   - Visual FoxPro single-index header probe.
   - Extracts root, free-list, and EOF offsets plus key and `FOR` expression hints.
@@ -49,7 +49,6 @@ Next implementation steps:
 
 1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
 2. Extend multi-tag enumeration to `MDX`.
-3. Add explicit regression coverage for `.dcx` assets on the shared CDX-family parser path.
-4. Add expression normalization and collation metadata extraction.
-5. Correlate DBF field metadata with index expressions for migration planning.
-6. Build read-only reindex validation against real VFP and dBase fixtures.
+3. Add expression normalization and collation metadata extraction.
+4. Correlate DBF field metadata with index expressions for migration planning.
+5. Build read-only reindex validation against real VFP and dBase fixtures.

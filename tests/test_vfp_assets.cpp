@@ -136,6 +136,22 @@ void test_parse_index_probe_for_cdx() {
     }
 }
 
+void test_parse_index_probe_for_dcx() {
+    const auto bytes = make_synthetic_cdx_family_bytes(false, true);
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::dcx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible synthetic DCX header");
+    expect(result.probe.kind == copperfin::vfp::IndexKind::dcx, "DCX probe kind should be preserved");
+    expect(result.probe.multi_tag, "DCX should be treated as multi-tag");
+    expect(!result.probe.production_candidate, "DCX should not be flagged as a table production index");
+    expect(result.probe.tags.size() == 1U, "DCX probe should reuse the shared CDX-family tag parser");
+    if (!result.probe.tags.empty()) {
+        expect(result.probe.tags.front().name_hint == "NAME", "DCX probe should preserve the stored tag name");
+        expect(result.probe.tags.front().key_expression_hint == "UPPER(NAME)", "DCX probe should expose the key expression hint");
+        expect(result.probe.tags.front().for_expression_hint == "DELETED() = .F.", "DCX probe should expose the FOR expression hint");
+    }
+}
+
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
     bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
@@ -270,6 +286,45 @@ void test_inspect_asset_collects_companion_indexes() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_inspect_database_container_collects_dcx_companion() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_assets_tests";
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "sample.dbc";
+    const fs::path dcx_path = temp_dir / "sample.dcx";
+
+    {
+        auto bytes = make_vfp_header();
+        std::ofstream output(dbc_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    {
+        const auto bytes = make_synthetic_cdx_family_bytes(false, true);
+        std::ofstream output(dcx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::inspect_asset(dbc_path.string());
+    expect(result.ok, "inspect_asset should succeed for a synthetic DBC with a companion DCX");
+    expect(result.header_available, "inspect_asset should expose the DBC header");
+    expect(result.indexes.size() == 1U, "inspect_asset should collect the same-base DCX companion");
+    if (result.indexes.size() == 1U) {
+        expect(result.indexes.front().probe.kind == copperfin::vfp::IndexKind::dcx, "DBC companion probe should stay typed as DCX");
+        expect(!result.indexes.front().probe.tags.empty(), "DBC companion inspection should parse DCX tags");
+        if (!result.indexes.front().probe.tags.empty()) {
+            expect(result.indexes.front().probe.tags.front().name_hint == "NAME", "DBC companion inspection should expose the DCX tag name");
+            expect(result.indexes.front().probe.tags.front().key_expression_hint == "UPPER(NAME)", "DBC companion inspection should expose the DCX key expression");
+        }
+    }
+
+    std::error_code ignored;
+    fs::remove(dbc_path, ignored);
+    fs::remove(dcx_path, ignored);
+    fs::remove(temp_dir, ignored);
+}
+
 void test_parse_real_vfp_cdx_when_available() {
     const std::filesystem::path sample_path =
         "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
@@ -306,9 +361,11 @@ int main() {
     test_parse_dbf_header_rejects_short_input();
     test_asset_family_detection();
     test_parse_index_probe_for_cdx();
+    test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
     test_inspect_asset_collects_companion_indexes();
+    test_inspect_database_container_collects_dcx_companion();
     test_parse_real_vfp_cdx_when_available();
 
     if (failures != 0) {
