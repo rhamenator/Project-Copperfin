@@ -401,6 +401,60 @@ void test_integer_field_create_replace_and_append_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_currency_and_datetime_field_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_currency_datetime_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "ledger.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "BALANCE", .type = 'Y', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"ALPHA", "123.4500", "julian:2460401 millis:12345"},
+        {"BRAVO", "-2.5000", "julian:2460402 millis:67890"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support Currency (Y) and DateTime (T) fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Currency/DateTime-backed DBFs should remain readable after creation");
+    expect(parse_result.table.records.size() == 2U, "Currency/DateTime-backed DBFs should expose created rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "123.4500", "created Currency fields should preserve four-decimal formatting");
+        expect(parse_result.table.records[0].values[2].display_value == "julian:2460401 millis:12345", "created DateTime fields should round-trip through the shared storage contract");
+        expect(parse_result.table.records[1].values[1].display_value == "-2.5000", "negative Currency fields should round-trip");
+    }
+
+    const auto replace_currency = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "BALANCE", "42.0001");
+    expect(replace_currency.ok, "replace_record_field_value should support Currency (Y) fields");
+
+    const auto replace_datetime = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "STAMP", "julian:2460403 millis:222");
+    expect(replace_datetime.ok, "replace_record_field_value should support DateTime (T) fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support Currency/DateTime-backed tables");
+    expect(append_result.record_count == 3U, "Currency/DateTime append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Currency/DateTime-backed DBFs should remain readable after mutation");
+    expect(parse_result.table.records.size() == 3U, "Currency/DateTime-backed DBFs should expose appended rows");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[1].values[1].display_value == "42.0001", "Currency field replacements should persist");
+        expect(parse_result.table.records[1].values[2].display_value == "julian:2460403 millis:222", "DateTime field replacements should persist");
+        expect(parse_result.table.records[2].values[1].display_value == "0.0000", "blank appended Currency fields should initialize to zero");
+        expect(parse_result.table.records[2].values[2].display_value == "julian:0 millis:0", "blank appended DateTime fields should initialize to zero storage");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -410,6 +464,7 @@ int main() {
     test_memo_field_create_replace_and_append_round_trip();
     test_indexed_table_mutations_fail_fast_without_changing_files();
     test_integer_field_create_replace_and_append_round_trip();
+    test_currency_and_datetime_field_round_trip();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

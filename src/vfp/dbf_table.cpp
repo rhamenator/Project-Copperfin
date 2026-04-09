@@ -55,6 +55,21 @@ void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
     bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
 }
 
+std::int64_t read_le_i64(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    std::uint64_t value = 0U;
+    for (std::size_t index = 0; index < 8U; ++index) {
+        value |= static_cast<std::uint64_t>(bytes[offset + index]) << (index * 8U);
+    }
+    return static_cast<std::int64_t>(value);
+}
+
+void write_le_i64(std::vector<std::uint8_t>& bytes, std::size_t offset, std::int64_t value) {
+    const std::uint64_t raw = static_cast<std::uint64_t>(value);
+    for (std::size_t index = 0; index < 8U; ++index) {
+        bytes[offset + index] = static_cast<std::uint8_t>((raw >> (index * 8U)) & 0xFFU);
+    }
+}
+
 void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
     bytes[offset] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
@@ -75,6 +90,13 @@ std::string trim_both(std::string text) {
         return std::isspace(ch) == 0;
     });
     text.erase(text.begin(), first);
+    return text;
+}
+
+std::string lowercase_copy(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
     return text;
 }
 
@@ -244,7 +266,8 @@ std::optional<RawFieldDescriptor> find_raw_field(
 }
 
 bool supports_direct_field_writes(char field_type) {
-    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'I';
+    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'I' ||
+           field_type == 'Y' || field_type == 'T';
 }
 
 bool supports_table_field_storage(char field_type) {
@@ -256,6 +279,134 @@ std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 5
     write_be_u32(bytes, 0U, 1U);
     write_be_u16(bytes, 6U, block_size);
     return bytes;
+}
+
+std::optional<std::int64_t> parse_scaled_currency_value(const std::string& value) {
+    std::string text = trim_both(value);
+    if (text.empty()) {
+        return static_cast<std::int64_t>(0);
+    }
+
+    bool negative = false;
+    if (!text.empty() && (text.front() == '+' || text.front() == '-')) {
+        negative = text.front() == '-';
+        text.erase(text.begin());
+    }
+    if (text.empty()) {
+        return std::nullopt;
+    }
+
+    const std::size_t dot = text.find('.');
+    if (dot != text.rfind('.')) {
+        return std::nullopt;
+    }
+
+    std::string whole_text = dot == std::string::npos ? text : text.substr(0U, dot);
+    std::string frac_text = dot == std::string::npos ? std::string{} : text.substr(dot + 1U);
+    if (whole_text.empty()) {
+        whole_text = "0";
+    }
+    if (whole_text.find_first_not_of("0123456789") != std::string::npos ||
+        frac_text.find_first_not_of("0123456789") != std::string::npos ||
+        frac_text.size() > 4U) {
+        return std::nullopt;
+    }
+
+    long long whole = 0;
+    try {
+        whole = std::stoll(whole_text);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+
+    while (frac_text.size() < 4U) {
+        frac_text.push_back('0');
+    }
+
+    long long fractional = 0;
+    try {
+        fractional = frac_text.empty() ? 0LL : std::stoll(frac_text);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+
+    constexpr long long scale = 10000LL;
+    if (whole > (std::numeric_limits<long long>::max() / scale)) {
+        return std::nullopt;
+    }
+
+    long long scaled = (whole * scale) + fractional;
+    if (negative) {
+        scaled = -scaled;
+    }
+    return static_cast<std::int64_t>(scaled);
+}
+
+std::optional<std::pair<std::uint32_t, std::uint32_t>> parse_datetime_storage_value(const std::string& value) {
+    const std::string text = trim_both(value);
+    if (text.empty()) {
+        return std::pair<std::uint32_t, std::uint32_t>{0U, 0U};
+    }
+
+    const std::string lowered = lowercase_copy(text);
+    constexpr const char* julian_prefix = "julian:";
+    constexpr const char* millis_prefix = "millis:";
+    if (lowered.rfind(julian_prefix, 0U) != 0U) {
+        return std::nullopt;
+    }
+
+    const std::size_t millis_pos = lowered.find(millis_prefix);
+    if (millis_pos == std::string::npos || millis_pos <= 7U) {
+        return std::nullopt;
+    }
+
+    const std::string julian_text = trim_both(text.substr(7U, millis_pos - 7U));
+    const std::string millis_text = trim_both(text.substr(millis_pos + 7U));
+    if (julian_text.empty() || millis_text.empty()) {
+        return std::nullopt;
+    }
+
+    std::size_t consumed = 0U;
+    unsigned long julian = 0;
+    unsigned long millis = 0;
+    try {
+        julian = std::stoul(julian_text, &consumed, 10);
+        if (consumed != julian_text.size()) {
+            return std::nullopt;
+        }
+        millis = std::stoul(millis_text, &consumed, 10);
+        if (consumed != millis_text.size()) {
+            return std::nullopt;
+        }
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+
+    if (julian > std::numeric_limits<std::uint32_t>::max() || millis > std::numeric_limits<std::uint32_t>::max()) {
+        return std::nullopt;
+    }
+    return std::pair<std::uint32_t, std::uint32_t>{
+        static_cast<std::uint32_t>(julian),
+        static_cast<std::uint32_t>(millis)
+    };
+}
+
+std::string format_currency_display_value(std::int64_t scaled) {
+    const bool negative = scaled < 0;
+    const std::uint64_t magnitude = negative
+        ? static_cast<std::uint64_t>(-(scaled + 1)) + 1U
+        : static_cast<std::uint64_t>(scaled);
+
+    std::ostringstream stream;
+    if (negative && magnitude != 0U) {
+        stream << '-';
+    }
+    stream << (magnitude / 10000U) << '.';
+    const std::uint64_t fractional = magnitude % 10000U;
+    stream.width(4);
+    stream.fill('0');
+    stream << fractional;
+    return stream.str();
 }
 
 DbfWriteResult write_memo_field_bytes(
@@ -401,6 +552,23 @@ DbfWriteResult write_field_bytes(
             write_le_u32(table_bytes, field_offset, static_cast<std::uint32_t>(static_cast<std::int32_t>(parsed)));
             break;
         }
+        case 'Y': {
+            const auto scaled = parse_scaled_currency_value(value);
+            if (!scaled.has_value()) {
+                return {.ok = false, .error = "Currency fields only accept signed decimal values with up to four fractional digits.", .record_count = header.record_count};
+            }
+            write_le_i64(table_bytes, field_offset, *scaled);
+            break;
+        }
+        case 'T': {
+            const auto datetime = parse_datetime_storage_value(value);
+            if (!datetime.has_value()) {
+                return {.ok = false, .error = "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.", .record_count = header.record_count};
+            }
+            write_le_u32(table_bytes, field_offset, datetime->first);
+            write_le_u32(table_bytes, field_offset + 4U, datetime->second);
+            break;
+        }
         default:
             return {.ok = false, .error = "Direct updates are not implemented for this field type yet.", .record_count = header.record_count};
     }
@@ -437,6 +605,13 @@ DbfWriteResult append_blank_record_bytes(
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
                 break;
             case 'I':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
+                break;
+            case 'Y':
+            case 'T':
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
                     field.length,
@@ -626,12 +801,7 @@ std::string decode_value(
             if (raw.size() < 8U) {
                 return {};
             }
-            const std::int64_t low = static_cast<std::uint64_t>(read_le_u32(raw, 0U));
-            const std::int64_t high = static_cast<std::uint64_t>(read_le_u32(raw, 4U));
-            const std::int64_t scaled = (high << 32U) | low;
-            std::ostringstream stream;
-            stream << (scaled / 10000) << "." << std::abs(static_cast<int>(scaled % 10000));
-            return stream.str();
+            return format_currency_display_value(read_le_i64(raw, 0U));
         }
         case '0': {
             is_null = true;
@@ -750,6 +920,8 @@ DbfWriteResult create_dbf_table_file(
             has_memo_fields = true;
         } else if (field.type == 'I' && field.length != 4U) {
             return {.ok = false, .error = "Integer fields require a width of exactly 4 bytes."};
+        } else if ((field.type == 'Y' || field.type == 'T') && field.length != 8U) {
+            return {.ok = false, .error = std::string(1U, field.type) + " fields require a width of exactly 8 bytes."};
         }
 
         raw_fields.push_back({
