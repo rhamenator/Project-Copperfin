@@ -2022,6 +2022,57 @@ void test_local_table_mutation_and_scan_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_indexed_table_mutation_surfaces_runtime_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_indexed_mutation_guard";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const auto original_table_bytes = std::filesystem::file_size(table_path);
+
+    const fs::path main_path = temp_root / "indexed_mutation_guard.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "APPEND BLANK\n"
+        "xAfterError = 11\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "indexed-table APPEND BLANK should pause with an error");
+    expect(state.location.line == 2U, "indexed-table APPEND BLANK should highlight the mutation statement");
+    expect(
+        state.message.find("Indexed DBF mutation is not yet supported") != std::string::npos,
+        "indexed-table APPEND BLANK should explain that structural index writes are not supported");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after indexed-table mutation failure should keep the session alive");
+    const auto after_error = state.globals.find("xaftererror");
+    expect(after_error != state.globals.end(), "post-error statements should still execute after indexed-table mutation failure");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "11", "post-error execution should preserve later statements");
+    }
+
+    expect(!std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.append_blank";
+    }), "failed indexed-table APPEND BLANK should not emit a success append event");
+    expect(std::filesystem::file_size(table_path) == original_table_bytes, "failed indexed-table APPEND BLANK should not change the DBF size");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_filter_scopes_local_cursor_visibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter";
@@ -2865,6 +2916,7 @@ int main() {
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
     test_runtime_fault_containment();
+    test_indexed_table_mutation_surfaces_runtime_error();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

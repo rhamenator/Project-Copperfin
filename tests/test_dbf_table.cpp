@@ -65,6 +65,14 @@ void write_field_descriptor(
     bytes[offset + 17U] = decimal_count;
 }
 
+std::vector<std::uint8_t> read_binary_file(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
 void test_parse_dbf_table_with_memo_sidecar() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -276,6 +284,75 @@ void test_memo_field_create_replace_and_append_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_indexed_table_mutations_fail_fast_without_changing_files() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_index_guard_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto write_people_table = [](const fs::path& path, std::uint8_t table_flags) {
+        std::vector<std::uint8_t> table_bytes(97U + (2U * 14U) + 1U, 0U);
+        table_bytes[0] = 0x30U;
+        write_le_u32(table_bytes, 4U, 2U);
+        write_le_u16(table_bytes, 8U, 97U);
+        write_le_u16(table_bytes, 10U, 14U);
+        table_bytes[28U] = table_flags;
+
+        write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 10U);
+        write_field_descriptor(table_bytes, 64U, "AGE", 'N', 11U, 3U);
+        table_bytes[96U] = 0x0DU;
+
+        table_bytes[97U] = 0x20U;
+        write_ascii(table_bytes, 98U, "ALPHA     ");
+        write_ascii(table_bytes, 108U, " 10");
+
+        table_bytes[111U] = 0x20U;
+        write_ascii(table_bytes, 112U, "BRAVO     ");
+        write_ascii(table_bytes, 122U, " 20");
+        table_bytes.back() = 0x1AU;
+
+        std::ofstream output(path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    };
+
+    const fs::path flagged_table_path = temp_dir / "flagged.dbf";
+    write_people_table(flagged_table_path, 0x01U);
+    const auto flagged_original = read_binary_file(flagged_table_path);
+
+    const auto flagged_replace = copperfin::vfp::replace_record_field_value(flagged_table_path.string(), 0U, "NAME", "OMEGA");
+    expect(!flagged_replace.ok, "replace_record_field_value should reject DBFs marked with production indexes");
+    expect(flagged_replace.error.find("Indexed DBF mutation") != std::string::npos, "production-index rejection should mention indexed DBF mutation");
+
+    const auto flagged_append = copperfin::vfp::append_blank_record_to_file(flagged_table_path.string());
+    expect(!flagged_append.ok, "append_blank_record_to_file should reject DBFs marked with production indexes");
+
+    const auto flagged_delete = copperfin::vfp::set_record_deleted_flag(flagged_table_path.string(), 0U, true);
+    expect(!flagged_delete.ok, "set_record_deleted_flag should reject DELETE-style writes on production-index DBFs");
+
+    const auto flagged_recall = copperfin::vfp::set_record_deleted_flag(flagged_table_path.string(), 0U, false);
+    expect(!flagged_recall.ok, "set_record_deleted_flag should reject RECALL-style writes on production-index DBFs");
+
+    expect(read_binary_file(flagged_table_path) == flagged_original, "production-index rejection should leave the DBF bytes unchanged");
+
+    const fs::path companion_table_path = temp_dir / "companion.dbf";
+    const fs::path companion_cdx_path = temp_dir / "companion.cdx";
+    write_people_table(companion_table_path, 0x00U);
+    {
+        std::ofstream output(companion_cdx_path, std::ios::binary);
+        output << "synthetic companion index";
+    }
+    const auto companion_original = read_binary_file(companion_table_path);
+
+    const auto companion_append = copperfin::vfp::append_blank_record_to_file(companion_table_path.string());
+    expect(!companion_append.ok, "append_blank_record_to_file should reject DBFs with a same-base companion CDX");
+    expect(companion_append.error.find("Indexed DBF mutation") != std::string::npos, "companion-CDX rejection should mention indexed DBF mutation");
+    expect(read_binary_file(companion_table_path) == companion_original, "companion-CDX rejection should leave the DBF bytes unchanged");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -283,6 +360,7 @@ int main() {
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_memo_field_create_replace_and_append_round_trip();
+    test_indexed_table_mutations_fail_fast_without_changing_files();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
