@@ -66,6 +66,10 @@ The native runtime/parser currently has first-pass support for these command fam
 - `LOOP`, `CONTINUE`, `EXIT`
 - `LOCATE`
 - `SCAN/ENDSCAN`
+- `CALCULATE`
+- `COUNT`
+- `SUM`
+- `AVERAGE`
 - `READ EVENTS`, `CLEAR EVENTS`
 - `REPLACE`
 - `APPEND BLANK`
@@ -99,7 +103,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Work Areas, Sessions, And Indexed Data
 
-- finish alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions
+- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass
 - deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together
 - use the command inventory to pull the next search/index/data-session commands in families instead of one at a time
@@ -107,7 +111,7 @@ The official command inventory is much larger than the current runtime. The deep
 ### Local Table Mutation And Query Flow
 
 - add the table-editing and table-browse commands needed for real legacy business applications
-- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, and aggregate-query families toward broader xBase parity
+- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`, and `CALCULATE` families toward broader xBase parity
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 
 ### Native Control Flow

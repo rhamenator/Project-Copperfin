@@ -30,6 +30,10 @@ enum class StatementKind {
     do_case_statement,
     case_statement,
     otherwise_statement,
+    calculate_command,
+    count_command,
+    sum_command,
+    average_command,
     do_form,
     report_form,
     label_form,
@@ -179,6 +183,23 @@ struct CursorPositionSnapshot {
 struct ReplaceAssignment {
     std::string field_name;
     std::string expression;
+};
+
+struct CalculateAssignment {
+    std::string aggregate_expression;
+    std::string variable_name;
+};
+
+enum class AggregateScopeKind {
+    all_records,
+    rest_records,
+    next_records,
+    record
+};
+
+struct AggregateScopeClause {
+    AggregateScopeKind kind = AggregateScopeKind::all_records;
+    std::string raw_value;
 };
 
 struct RegisteredApiFunction {
@@ -586,6 +607,97 @@ std::string trim_command_keyword(const std::string& text, const std::string& key
     return trim_copy(text.substr(position + keyword.size()));
 }
 
+std::size_t find_keyword_top_level_from(
+    const std::string& text,
+    const std::string& keyword,
+    std::size_t start_index) {
+    const std::string upper = uppercase_copy(text);
+    const std::string target = uppercase_copy(keyword);
+
+    bool in_string = false;
+    int nesting = 0;
+    for (std::size_t index = start_index; index < upper.size(); ++index) {
+        const char ch = upper[index];
+        if (ch == '\'' && (index == 0U || upper[index - 1U] != '\\')) {
+            in_string = !in_string;
+            continue;
+        }
+        if (in_string) {
+            continue;
+        }
+        if (ch == '(') {
+            ++nesting;
+            continue;
+        }
+        if (ch == ')' && nesting > 0) {
+            --nesting;
+            continue;
+        }
+        if (nesting != 0) {
+            continue;
+        }
+        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
+            upper.compare(index, target.size(), target) == 0) {
+            const std::size_t tail = index + target.size();
+            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
+                return index;
+            }
+        }
+    }
+
+    return std::string::npos;
+}
+
+std::size_t find_first_keyword_top_level(
+    const std::string& text,
+    std::initializer_list<std::string> keywords,
+    std::size_t start_index = 0U) {
+    std::size_t result = std::string::npos;
+    for (const std::string& keyword : keywords) {
+        const std::size_t position = find_keyword_top_level_from(text, keyword, start_index);
+        if (position == std::string::npos) {
+            continue;
+        }
+        result = result == std::string::npos ? position : std::min(result, position);
+    }
+    return result;
+}
+
+std::size_t find_last_keyword_top_level(
+    const std::string& text,
+    std::initializer_list<std::string> keywords) {
+    std::size_t result = std::string::npos;
+    for (const std::string& keyword : keywords) {
+        std::size_t search_index = 0U;
+        while (search_index < text.size()) {
+            const std::size_t position = find_keyword_top_level_from(text, keyword, search_index);
+            if (position == std::string::npos) {
+                break;
+            }
+            result = result == std::string::npos ? position : std::max(result, position);
+            search_index = position + 1U;
+        }
+    }
+    return result;
+}
+
+std::string extract_command_clause(
+    const std::string& text,
+    const std::string& keyword,
+    std::initializer_list<std::string> stop_keywords = {}) {
+    const std::size_t position = find_keyword_top_level(text, keyword);
+    if (position == std::string::npos) {
+        return {};
+    }
+
+    const std::size_t value_start = position + keyword.size();
+    const std::size_t value_end = find_first_keyword_top_level(text, stop_keywords, value_start);
+    if (value_end == std::string::npos) {
+        return trim_copy(text.substr(value_start));
+    }
+    return trim_copy(text.substr(value_start, value_end - value_start));
+}
+
 std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text) {
     std::vector<ReplaceAssignment> assignments;
     for (const std::string& part : split_csv_like(text)) {
@@ -599,6 +711,68 @@ std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text
         });
     }
     return assignments;
+}
+
+std::vector<CalculateAssignment> parse_calculate_assignments(const std::string& text) {
+    std::vector<CalculateAssignment> assignments;
+    for (const std::string& part : split_csv_like(text)) {
+        std::size_t to_position = find_keyword_top_level(part, "INTO");
+        std::size_t keyword_length = 4U;
+        if (to_position == std::string::npos) {
+            to_position = find_keyword_top_level(part, "TO");
+            keyword_length = 2U;
+        }
+        if (to_position == std::string::npos) {
+            continue;
+        }
+        assignments.push_back({
+            .aggregate_expression = trim_copy(part.substr(0U, to_position)),
+            .variable_name = trim_copy(part.substr(to_position + keyword_length))
+        });
+    }
+    return assignments;
+}
+
+AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::string& expression_text) {
+    AggregateScopeClause scope;
+    expression_text = trim_copy(text);
+    if (expression_text.empty()) {
+        return scope;
+    }
+
+    const std::size_t keyword_position = find_last_keyword_top_level(expression_text, {"NEXT", "RECORD", "REST", "ALL"});
+    if (keyword_position == std::string::npos) {
+        return scope;
+    }
+
+    const std::string keyword_and_tail = trim_copy(expression_text.substr(keyword_position));
+    const auto [keyword, tail] = split_first_word(keyword_and_tail);
+    const std::string normalized_keyword = normalize_identifier(keyword);
+
+    if ((normalized_keyword == "all" || normalized_keyword == "rest") && !tail.empty()) {
+        return scope;
+    }
+    if ((normalized_keyword == "next" || normalized_keyword == "record") && tail.empty()) {
+        return scope;
+    }
+    if (normalized_keyword != "all" &&
+        normalized_keyword != "rest" &&
+        normalized_keyword != "next" &&
+        normalized_keyword != "record") {
+        return scope;
+    }
+
+    expression_text = trim_copy(expression_text.substr(0U, keyword_position));
+    if (normalized_keyword == "rest") {
+        scope.kind = AggregateScopeKind::rest_records;
+    } else if (normalized_keyword == "next") {
+        scope.kind = AggregateScopeKind::next_records;
+        scope.raw_value = tail;
+    } else if (normalized_keyword == "record") {
+        scope.kind = AggregateScopeKind::record;
+        scope.raw_value = tail;
+    }
+    return scope;
 }
 
 Program parse_program(const std::string& path) {
@@ -717,16 +891,65 @@ Program parse_program(const std::string& path) {
                 statement.expression = trim_copy(body.substr(0U, in_position));
                 statement.secondary_expression = trim_copy(body.substr(in_position + 4U));
             }
+        } else if (starts_with_insensitive(line, "CALCULATE ")) {
+            statement.kind = StatementKind::calculate_command;
+            const std::string body = trim_copy(line.substr(10U));
+            const std::size_t for_position = find_keyword_top_level(body, "FOR");
+            const std::size_t in_position = find_keyword_top_level(body, "IN");
+            std::size_t tail_start = std::string::npos;
+            if (for_position != std::string::npos && in_position != std::string::npos) {
+                tail_start = std::min(for_position, in_position);
+            } else if (for_position != std::string::npos) {
+                tail_start = for_position;
+            } else if (in_position != std::string::npos) {
+                tail_start = in_position;
+            }
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.tertiary_expression = extract_command_clause(body, "IN");
+        } else if (upper == "COUNT" || starts_with_insensitive(line, "COUNT ")) {
+            statement.kind = StatementKind::count_command;
+            const std::string body = upper == "COUNT" ? std::string{} : trim_copy(line.substr(6U));
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            if (statement.identifier.empty()) {
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            }
+        } else if (upper == "SUM" || starts_with_insensitive(line, "SUM ")) {
+            statement.kind = StatementKind::sum_command;
+            const std::string body = upper == "SUM" ? std::string{} : trim_copy(line.substr(4U));
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            if (statement.identifier.empty()) {
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            }
+        } else if (upper == "AVERAGE" || starts_with_insensitive(line, "AVERAGE ")) {
+            statement.kind = StatementKind::average_command;
+            const std::string body = upper == "AVERAGE" ? std::string{} : trim_copy(line.substr(8U));
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            if (statement.identifier.empty()) {
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            }
         } else if (upper == "LOCATE" || starts_with_insensitive(line, "LOCATE ")) {
             statement.kind = StatementKind::locate_command;
             const std::string body = upper == "LOCATE" ? std::string{} : trim_copy(line.substr(7U));
-            statement.expression = trim_command_keyword(body, "FOR");
-            statement.secondary_expression = trim_command_keyword(body, "IN");
+            statement.expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "SCAN" || starts_with_insensitive(line, "SCAN ")) {
             statement.kind = StatementKind::scan_statement;
             const std::string body = upper == "SCAN" ? std::string{} : trim_copy(line.substr(5U));
-            statement.expression = trim_command_keyword(body, "FOR");
-            statement.secondary_expression = trim_command_keyword(body, "IN");
+            statement.expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "ENDSCAN") {
             statement.kind = StatementKind::endscan_statement;
         } else if (upper == "APPEND BLANK") {
@@ -1141,13 +1364,18 @@ struct PrgRuntimeSession::Impl {
             return find_cursor_by_area(current_selected_work_area());
         }
 
-        const bool numeric_selection = std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char ch) {
+        const std::string normalized_designator =
+            trimmed.size() >= 2U && trimmed.front() == '\'' && trimmed.back() == '\''
+            ? unquote_string(trimmed)
+            : trimmed;
+
+        const bool numeric_selection = std::all_of(normalized_designator.begin(), normalized_designator.end(), [](unsigned char ch) {
             return std::isdigit(ch) != 0;
         });
         if (numeric_selection) {
-            return find_cursor_by_area(std::stoi(trimmed));
+            return find_cursor_by_area(std::stoi(normalized_designator));
         }
-        return find_cursor_by_alias(trimmed);
+        return find_cursor_by_alias(normalized_designator);
     }
 
     const CursorState* resolve_cursor_target(const std::string& designator) const {
@@ -1156,13 +1384,18 @@ struct PrgRuntimeSession::Impl {
             return find_cursor_by_area(current_selected_work_area());
         }
 
-        const bool numeric_selection = std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char ch) {
+        const std::string normalized_designator =
+            trimmed.size() >= 2U && trimmed.front() == '\'' && trimmed.back() == '\''
+            ? unquote_string(trimmed)
+            : trimmed;
+
+        const bool numeric_selection = std::all_of(normalized_designator.begin(), normalized_designator.end(), [](unsigned char ch) {
             return std::isdigit(ch) != 0;
         });
         if (numeric_selection) {
-            return find_cursor_by_area(std::stoi(trimmed));
+            return find_cursor_by_area(std::stoi(normalized_designator));
         }
-        return find_cursor_by_alias(trimmed);
+        return find_cursor_by_alias(normalized_designator);
     }
 
     void close_cursor(const std::string& designator) {
@@ -1239,6 +1472,47 @@ struct PrgRuntimeSession::Impl {
         }
 
         return true;
+    }
+
+    std::optional<int> resolve_use_target_work_area(const std::string& in_expression) {
+        const std::string trimmed_expression = trim_copy(in_expression);
+        if (trimmed_expression.empty()) {
+            return 0;
+        }
+
+        std::string area_text;
+        if (trimmed_expression.size() >= 2U && trimmed_expression.front() == '\'' && trimmed_expression.back() == '\'') {
+            area_text = unquote_string(trimmed_expression);
+        } else {
+            const PrgValue area_value = evaluate_expression(trimmed_expression, stack.back());
+            area_text = trim_copy(value_as_string(area_value));
+            if (area_text.empty()) {
+                const bool bare_identifier = std::all_of(trimmed_expression.begin(), trimmed_expression.end(), [](unsigned char ch) {
+                    return std::isalnum(ch) != 0 || ch == '_';
+                });
+                if (bare_identifier) {
+                    area_text = trimmed_expression;
+                }
+            }
+        }
+        if (area_text.empty()) {
+            return 0;
+        }
+
+        const bool numeric_selection = std::all_of(area_text.begin(), area_text.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        });
+        if (numeric_selection) {
+            return std::stoi(area_text);
+        }
+
+        CursorState* existing = find_cursor_by_alias(area_text);
+        if (existing == nullptr) {
+            last_error_message = "USE target work area not found: " + area_text;
+            return std::nullopt;
+        }
+
+        return existing->work_area;
     }
 
     bool is_set_enabled(const std::string& option_name) const {
@@ -1834,6 +2108,272 @@ struct PrgRuntimeSession::Impl {
         return make_number_value(0.0);
     }
 
+    std::vector<std::size_t> collect_aggregate_scope_records(
+        CursorState& cursor,
+        const Frame& frame,
+        const AggregateScopeClause& scope,
+        const std::string& for_expression,
+        const std::string& while_expression) {
+        std::vector<std::size_t> records;
+        if (cursor.record_count == 0U) {
+            return records;
+        }
+
+        std::size_t start_recno = 1U;
+        std::size_t end_recno = cursor.record_count;
+        switch (scope.kind) {
+            case AggregateScopeKind::all_records:
+                break;
+            case AggregateScopeKind::rest_records:
+                if (cursor.eof || cursor.recno > cursor.record_count) {
+                    return records;
+                }
+                start_recno = cursor.recno == 0U ? 1U : cursor.recno;
+                break;
+            case AggregateScopeKind::next_records: {
+                const long long requested = static_cast<long long>(std::llround(value_as_number(evaluate_expression(scope.raw_value, frame, &cursor))));
+                if (requested <= 0) {
+                    return records;
+                }
+                if (cursor.eof || cursor.recno > cursor.record_count) {
+                    return records;
+                }
+                start_recno = cursor.recno == 0U ? 1U : cursor.recno;
+                end_recno = std::min(cursor.record_count, start_recno + static_cast<std::size_t>(requested - 1LL));
+                break;
+            }
+            case AggregateScopeKind::record: {
+                const long long requested = static_cast<long long>(std::llround(value_as_number(evaluate_expression(scope.raw_value, frame, &cursor))));
+                if (requested < 1LL || requested > static_cast<long long>(cursor.record_count)) {
+                    return records;
+                }
+                start_recno = static_cast<std::size_t>(requested);
+                end_recno = start_recno;
+                break;
+            }
+        }
+
+        const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+        for (std::size_t recno = start_recno; recno <= end_recno; ++recno) {
+            move_cursor_to(cursor, static_cast<long long>(recno));
+            if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor))) {
+                break;
+            }
+            if (current_record_matches_visibility(cursor, frame, for_expression)) {
+                records.push_back(recno);
+            }
+        }
+        restore_cursor_snapshot(cursor, original);
+
+        return records;
+    }
+
+    PrgValue aggregate_record_values(
+        CursorState& cursor,
+        const std::string& function,
+        const std::string& value_expression,
+        const std::vector<std::size_t>& records,
+        const Frame& frame) {
+        if (function == "count") {
+            return make_number_value(static_cast<double>(records.size()));
+        }
+        if (records.empty()) {
+            return make_number_value(0.0);
+        }
+
+        const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+        double sum = 0.0;
+        double min_value = 0.0;
+        double max_value = 0.0;
+        std::size_t matched_count = 0U;
+
+        for (const std::size_t recno : records) {
+            move_cursor_to(cursor, static_cast<long long>(recno));
+            const PrgValue value = evaluate_expression(value_expression, frame, &cursor);
+            if (value.kind == PrgValueKind::empty) {
+                continue;
+            }
+            if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty()) {
+                continue;
+            }
+
+            const double numeric_value = value_as_number(value);
+            if (matched_count == 0U) {
+                min_value = numeric_value;
+                max_value = numeric_value;
+            } else {
+                min_value = std::min(min_value, numeric_value);
+                max_value = std::max(max_value, numeric_value);
+            }
+            sum += numeric_value;
+            ++matched_count;
+        }
+
+        restore_cursor_snapshot(cursor, original);
+
+        if (matched_count == 0U) {
+            return make_number_value(0.0);
+        }
+        if (function == "sum") {
+            return make_number_value(sum);
+        }
+        if (function == "avg" || function == "average") {
+            return make_number_value(sum / static_cast<double>(matched_count));
+        }
+        if (function == "min") {
+            return make_number_value(min_value);
+        }
+        if (function == "max") {
+            return make_number_value(max_value);
+        }
+        return make_number_value(0.0);
+    }
+
+    bool execute_calculate_command(
+        const Statement& statement,
+        Frame& frame,
+        std::string& error_message) {
+        const std::vector<CalculateAssignment> assignments = parse_calculate_assignments(statement.expression);
+        if (assignments.empty()) {
+            error_message = "CALCULATE requires one or more aggregate TO/INTO assignments";
+            return false;
+        }
+
+        for (const auto& assignment : assignments) {
+            const std::size_t open_paren = assignment.aggregate_expression.find('(');
+            const std::size_t close_paren = assignment.aggregate_expression.rfind(')');
+            if (open_paren == std::string::npos || close_paren == std::string::npos || close_paren <= open_paren) {
+                error_message = "CALCULATE requires aggregate expressions like COUNT() or SUM(field)";
+                return false;
+            }
+
+            const std::string function = normalize_identifier(assignment.aggregate_expression.substr(0U, open_paren));
+            const std::string inner = trim_copy(assignment.aggregate_expression.substr(open_paren + 1U, close_paren - open_paren - 1U));
+            std::vector<std::string> raw_arguments;
+            if (!inner.empty()) {
+                raw_arguments = split_csv_like(inner);
+            }
+            if (!statement.secondary_expression.empty()) {
+                if (function == "count") {
+                    if (raw_arguments.empty()) {
+                        raw_arguments.push_back(statement.secondary_expression);
+                    } else {
+                        raw_arguments[0] = "(" + raw_arguments[0] + ") AND (" + statement.secondary_expression + ")";
+                    }
+                } else if (raw_arguments.size() < 2U) {
+                    raw_arguments.push_back(statement.secondary_expression);
+                } else {
+                    raw_arguments[1] = "(" + raw_arguments[1] + ") AND (" + statement.secondary_expression + ")";
+                }
+            }
+            if (!statement.tertiary_expression.empty()) {
+                raw_arguments.push_back(statement.tertiary_expression);
+            }
+
+            assign_variable(frame, assignment.variable_name, aggregate_function_value(function, raw_arguments, frame));
+        }
+
+        return true;
+    }
+
+    bool execute_command_aggregate(
+        const Statement& statement,
+        Frame& frame,
+        const std::string& function,
+        std::string& error_message) {
+        if (starts_with_insensitive(statement.identifier, "ARRAY ")) {
+            error_message = uppercase_copy(function) + " TO ARRAY is not implemented yet";
+            return false;
+        }
+
+        CursorState* cursor = resolve_cursor_target({});
+        if (cursor == nullptr) {
+            error_message = uppercase_copy(function) + " requires a selected work area";
+            return false;
+        }
+        if (cursor->remote) {
+            error_message = uppercase_copy(function) + " is not implemented for remote SQL cursors yet";
+            return false;
+        }
+
+        std::vector<std::string> targets;
+        if (!statement.identifier.empty()) {
+            targets = split_csv_like(statement.identifier);
+        }
+        for (std::string& target : targets) {
+            target = trim_copy(std::move(target));
+        }
+
+        std::string expression_text;
+        const AggregateScopeClause scope = parse_aggregate_scope_clause(statement.expression, expression_text);
+
+        if (function == "count") {
+            const std::string normalized_expression = normalize_identifier(expression_text);
+            if (!expression_text.empty() && normalized_expression != "all") {
+                error_message = "COUNT only supports the first-pass ALL/FOR/TO forms right now";
+                return false;
+            }
+            if (targets.size() > 1U) {
+                error_message = "COUNT TO only accepts a single variable target";
+                return false;
+            }
+
+            const std::vector<std::size_t> records = collect_aggregate_scope_records(
+                *cursor,
+                frame,
+                scope,
+                statement.secondary_expression,
+                statement.tertiary_expression);
+            const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
+            if (!targets.empty()) {
+                assign_variable(frame, targets.front(), result);
+            }
+            return true;
+        }
+
+        if (normalize_identifier(expression_text) == "all") {
+            error_message = uppercase_copy(function) + " without explicit expressions is not implemented yet";
+            return false;
+        }
+        if (expression_text.empty()) {
+            error_message = uppercase_copy(function) + " requires one or more expressions";
+            return false;
+        }
+
+        std::vector<std::string> expressions = split_csv_like(expression_text);
+        for (std::string& expression : expressions) {
+            expression = trim_copy(std::move(expression));
+        }
+        expressions.erase(
+            std::remove_if(expressions.begin(), expressions.end(), [](const std::string& expression) {
+                return expression.empty();
+            }),
+            expressions.end());
+        if (expressions.empty()) {
+            error_message = uppercase_copy(function) + " requires one or more expressions";
+            return false;
+        }
+        if (!targets.empty() && targets.size() != expressions.size()) {
+            error_message = uppercase_copy(function) + " TO requires one variable per aggregate expression";
+            return false;
+        }
+
+        const std::vector<std::size_t> records = collect_aggregate_scope_records(
+            *cursor,
+            frame,
+            scope,
+            statement.secondary_expression,
+            statement.tertiary_expression);
+        for (std::size_t index = 0; index < expressions.size(); ++index) {
+            const PrgValue result = aggregate_record_values(*cursor, function, expressions[index], records, frame);
+            if (!targets.empty()) {
+                assign_variable(frame, targets[index], result);
+            }
+        }
+
+        return true;
+    }
+
     bool execute_seek(
         CursorState& cursor,
         const std::string& search_key,
@@ -2028,17 +2568,11 @@ struct PrgRuntimeSession::Impl {
                 alias = table_path.stem().string();
             }
 
-            int target_area = 0;
-            if (!trim_copy(in_expression).empty()) {
-                const PrgValue area_value = evaluate_expression(in_expression, stack.back());
-                const std::string area_text = trim_copy(value_as_string(area_value));
-                if (std::all_of(area_text.begin(), area_text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
-                    target_area = std::stoi(area_text);
-                } else if (!area_text.empty()) {
-                    CursorState* existing = find_cursor_by_alias(area_text);
-                    target_area = existing == nullptr ? 0 : existing->work_area;
-                }
+            const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression);
+            if (!requested_target_area.has_value()) {
+                return false;
             }
+            int target_area = *requested_target_area;
             target_area = select_work_area(target_area);
 
             if (!can_open_table_cursor(resolved_path, alias, false, allow_again, target_area)) {
@@ -2071,17 +2605,11 @@ struct PrgRuntimeSession::Impl {
             field_count = synthetic_record_count == 0U ? 0U : 3U;
         }
 
-        int target_area = 0;
-        if (!trim_copy(in_expression).empty()) {
-            const PrgValue area_value = evaluate_expression(in_expression, stack.back());
-            const std::string area_text = trim_copy(value_as_string(area_value));
-            if (std::all_of(area_text.begin(), area_text.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
-                target_area = std::stoi(area_text);
-            } else if (!area_text.empty()) {
-                CursorState* existing = find_cursor_by_alias(area_text);
-                target_area = existing == nullptr ? 0 : existing->work_area;
-            }
+        const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression);
+        if (!requested_target_area.has_value()) {
+            return false;
         }
+        int target_area = *requested_target_area;
         target_area = select_work_area(target_area);
 
         if (!can_open_table_cursor(resolved_path, alias, remote, allow_again, target_area)) {
@@ -2583,18 +3111,32 @@ private:
     }
 
     PrgValue parse_additive() {
-        PrgValue left = parse_unary();
+        PrgValue left = parse_multiplicative();
         while (true) {
             skip_whitespace();
             if (match("+")) {
-                PrgValue right = parse_unary();
+                PrgValue right = parse_multiplicative();
                 if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
                     left = make_string_value(value_as_string(left) + value_as_string(right));
                 } else {
                     left = make_number_value(value_as_number(left) + value_as_number(right));
                 }
             } else if (match("-")) {
-                left = make_number_value(value_as_number(left) - value_as_number(parse_unary()));
+                left = make_number_value(value_as_number(left) - value_as_number(parse_multiplicative()));
+            } else {
+                return left;
+            }
+        }
+    }
+
+    PrgValue parse_multiplicative() {
+        PrgValue left = parse_unary();
+        while (true) {
+            skip_whitespace();
+            if (match("*")) {
+                left = make_number_value(value_as_number(left) * value_as_number(parse_unary()));
+            } else if (match("/")) {
+                left = make_number_value(value_as_number(left) / value_as_number(parse_unary()));
             } else {
                 return left;
             }
@@ -3329,6 +3871,48 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     push_main_frame(*bootstrap_path);
                 }
             }
+            return {};
+        }
+        case StatementKind::calculate_command: {
+            std::string error_message;
+            if (!execute_calculate_command(statement, frame, error_message)) {
+                last_error_message = error_message;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.calculate",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::count_command:
+        case StatementKind::sum_command:
+        case StatementKind::average_command: {
+            std::string function = "count";
+            std::string category = "runtime.count";
+            if (statement.kind == StatementKind::sum_command) {
+                function = "sum";
+                category = "runtime.sum";
+            } else if (statement.kind == StatementKind::average_command) {
+                function = "average";
+                category = "runtime.average";
+            }
+
+            std::string error_message;
+            if (!execute_command_aggregate(statement, frame, function, error_message)) {
+                last_error_message = error_message;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = category,
+                .detail = statement.text,
+                .location = statement.location
+            });
             return {};
         }
         case StatementKind::report_form:

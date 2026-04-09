@@ -57,8 +57,8 @@ Current repo status against the Windows-first product goal:
 | DBF local-table mutation core | Partial | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, but broader field-type coverage, repair, and transactional safety still need work. |
 | CDX/DCX inspection | Partial | Tag and expression hints are surfaced, but write fidelity and richer order/collation behavior remain incomplete. |
 | DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
-| Work areas and data sessions | Partial | `SELECT`, `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, and first indexed search semantics are working, but broader alias/session edge cases remain. |
-| Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, first-pass `SET FILTER TO/OFF`, and first aggregate built-ins now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
+| Work areas and data sessions | Partial | `SELECT`, `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, strict `USE ... IN <alias>` targeting, and first indexed search semantics are working, but broader alias/session edge cases remain. |
+| Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, first-pass `SET FILTER TO/OFF`, aggregate built-ins, first-pass `CALCULATE`, and first-pass command-level `COUNT`/`SUM`/`AVERAGE` with basic scope/`WHILE` support now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
 | SQL pass-through/remote cursor behavior | Partial | Synthetic SQL cursor/session plumbing exists, but remote cursor semantics are still far from VFP parity. |
 | PRG execution engine | Partial | Structured stepping, breakpoints, fault containment, first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, and `LOOP`/`CONTINUE`/`EXIT` control now exist, but the runtime is still well short of the practical full FoxPro/VFP surface. |
 | Forms/classes runtime parity | Partial | Bootstrapped `SCX/VCX` startup and extracted method dispatch exist, but lifecycle/container/data-environment fidelity is still incomplete. |
@@ -79,6 +79,9 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-08: aggregate command follow-through now covers first-pass scope-clause and `WHILE` semantics for command-level `COUNT`, `SUM`, and `AVERAGE`. `ALL`, `REST`, `NEXT n`, and `RECORD n` now run through the native visibility-aware cursor engine, preserve the selected record position, and have focused regression coverage.
+- 2026-04-08: command-level aggregate follow-through now exists in the native PRG runtime. First-pass `COUNT`, `SUM`, and `AVERAGE` commands can assign visibility-aware results into variables with `FOR`/`TO`, the expression parser now handles multiplicative arithmetic needed by multi-expression aggregates, and quoted `IN` alias targets now resolve cleanly across adjacent aggregate/search commands such as `USE`, `CALCULATE`, `LOCATE`, and `SCAN`.
+- 2026-04-08: first-pass command-level aggregates now exist in the native PRG runtime. `CALCULATE` can assign `COUNT()`, `SUM()`, `AVG()`, `MIN()`, and `MAX()` results into variables, supports `TO`/`INTO`, optional `FOR`, optional `IN` alias targeting, and reuses the shipped visibility-aware aggregate semantics with focused regression coverage.
 - 2026-04-08: first-pass aggregate built-ins now exist in the native PRG runtime for local DBF-backed cursors. `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, and `MAX()` now evaluate across visible rows, respect `SET FILTER TO/OFF`, honor `SET DELETED ON`, and can target a named alias with focused regression coverage.
 - 2026-04-08: native PRG branching now covers first-pass `DO CASE/CASE/OTHERWISE/ENDCASE`, including nested case blocks and case-driven execution inside `SCAN`, with focused runtime regression coverage.
 - 2026-04-08: native PRG control flow now covers first-pass `DO WHILE/ENDDO` plus shared `LOOP`/`CONTINUE`/`EXIT` behavior across `DO WHILE`, `FOR`, and `SCAN`, with focused regression coverage for nested loops and cursor-backed iteration.
@@ -105,7 +108,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### A2. Work Areas, Sessions, And Cursor Semantics
 
-- Finish alias scoping and work-area selection behavior to match VFP expectations.
+- Finish the remaining alias scoping and work-area selection behavior to match VFP expectations.
 - Deepen data-session isolation, switching, restoration, and nested behavior.
 - Extend indexed lookup beyond the first-pass `SET ORDER TO TAG` / `SEEK` / `FOUND()` slice into richer order, collation, and search behavior.
 - Support remote cursors and result cursors with behavior closer to SQL pass-through in VFP.

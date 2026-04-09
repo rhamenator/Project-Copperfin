@@ -585,6 +585,72 @@ void test_use_and_data_session_isolation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_in_existing_alias_reuses_target_work_area() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_in_existing_alias";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "TOKYO"});
+
+    const fs::path main_path = temp_root / "use_in_existing_alias.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "nAreaBefore = SELECT()\n"
+        "cAliasBefore = ALIAS()\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN People\n"
+        "nAreaAfter = SELECT()\n"
+        "cAliasAfter = ALIAS()\n"
+        "cTopName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "USE ... IN existing alias script should complete");
+    expect(state.work_area.selected == 1, "USE ... IN alias should keep the targeted work area selected");
+    expect(state.work_area.aliases.size() == 1U, "USE ... IN alias should replace the target work area instead of allocating a new one");
+
+    const auto area_before = state.globals.find("nareabefore");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto area_after = state.globals.find("nareaafter");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto top_name = state.globals.find("ctopname");
+
+    expect(area_before != state.globals.end(), "initial SELECT() should be captured");
+    expect(alias_before != state.globals.end(), "initial ALIAS() should be captured");
+    expect(area_after != state.globals.end(), "SELECT() after USE ... IN alias should be captured");
+    expect(alias_after != state.globals.end(), "ALIAS() after USE ... IN alias should be captured");
+    expect(top_name != state.globals.end(), "replacement cursor fields should be available after USE ... IN alias");
+
+    if (area_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_before->second) == "1", "initial USE IN 0 should allocate work area 1");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_before->second) == "People", "initial alias should be visible before replacement");
+    }
+    if (area_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_after->second) == "1", "USE ... IN alias should reuse the alias target's work area");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after->second) == "Cities", "USE ... IN alias should replace the target work area's alias");
+    }
+    if (top_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_name->second) == "OSLO", "USE ... IN alias should expose the replacement table's current record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_go_and_skip_cursor_navigation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
@@ -1315,6 +1381,48 @@ void test_select_missing_alias_is_an_error() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_in_missing_alias_is_an_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_in_missing_alias";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "use_in_missing_alias.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN MissingAlias\n"
+        "xAfterError = 11\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "USE ... IN MissingAlias should pause with an error");
+    expect(state.location.line == 1U, "USE ... IN MissingAlias should highlight the failing line");
+    expect(
+        state.message.find("USE target work area not found") != std::string::npos,
+        "USE ... IN MissingAlias should report a missing-target message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a USE ... IN alias error should keep the host alive");
+    const auto after_error = state.globals.find("xaftererror");
+    expect(after_error != state.globals.end(), "post-error statements should still run after USE ... IN alias errors");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "11", "post-error statements should still update globals after USE ... IN alias errors");
+    }
+    expect(state.work_area.aliases.empty(), "USE ... IN MissingAlias should not open a fallback work area");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursors_and_ole_actions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sqlcursor";
@@ -1952,6 +2060,280 @@ void test_aggregate_functions_respect_visibility() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_calculate_command_aggregates() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_calculate";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "calculate.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "CALCULATE COUNT() TO nCountAll, SUM(AGE) TO nSumAll, AVG(AGE) TO nAvgAll\n"
+        "SET FILTER TO AGE >= 20\n"
+        "DELETE FOR AGE = 40\n"
+        "SET DELETED ON\n"
+        "CALCULATE COUNT() TO nCountVisible, SUM(AGE) TO nSumVisible, MIN(AGE) TO nMinVisible, MAX(AGE) TO nMaxVisible\n"
+        "CALCULATE COUNT() TO nCountConditional, SUM(AGE) TO nSumConditional FOR AGE >= 30\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "CALCULATE COUNT() TO nCountPeopleAlias, SUM(AGE) TO nSumPeopleAlias FOR AGE >= 20 IN 'People'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CALCULATE script should complete");
+
+    const auto count_all = state.globals.find("ncountall");
+    const auto sum_all = state.globals.find("nsumall");
+    const auto avg_all = state.globals.find("navgall");
+    const auto count_visible = state.globals.find("ncountvisible");
+    const auto sum_visible = state.globals.find("nsumvisible");
+    const auto min_visible = state.globals.find("nminvisible");
+    const auto max_visible = state.globals.find("nmaxvisible");
+    const auto count_conditional = state.globals.find("ncountconditional");
+    const auto sum_conditional = state.globals.find("nsumconditional");
+    const auto count_alias = state.globals.find("ncountpeoplealias");
+    const auto sum_alias = state.globals.find("nsumpeoplealias");
+
+    expect(count_all != state.globals.end(), "CALCULATE COUNT() should assign into a variable");
+    expect(sum_all != state.globals.end(), "CALCULATE SUM() should assign into a variable");
+    expect(avg_all != state.globals.end(), "CALCULATE AVG() should assign into a variable");
+    expect(count_visible != state.globals.end(), "CALCULATE should respect current visibility rules");
+    expect(sum_visible != state.globals.end(), "CALCULATE SUM() should respect current visibility rules");
+    expect(min_visible != state.globals.end(), "CALCULATE MIN() should assign into a variable");
+    expect(max_visible != state.globals.end(), "CALCULATE MAX() should assign into a variable");
+    expect(count_conditional != state.globals.end(), "CALCULATE FOR should assign into a variable");
+    expect(sum_conditional != state.globals.end(), "CALCULATE FOR should constrain SUM() results");
+    expect(count_alias != state.globals.end(), "CALCULATE IN alias should target a non-selected cursor");
+    expect(sum_alias != state.globals.end(), "CALCULATE IN alias should sum against a non-selected cursor");
+
+    if (count_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_all->second) == "4", "CALCULATE COUNT() should count all rows before filters");
+    }
+    if (sum_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_all->second) == "100", "CALCULATE SUM() should total numeric field values");
+    }
+    if (avg_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(avg_all->second) == "25", "CALCULATE AVG() should compute a mean");
+    }
+    if (count_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_visible->second) == "2", "CALCULATE should respect SET FILTER TO and SET DELETED ON");
+    }
+    if (sum_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_visible->second) == "50", "CALCULATE SUM() should total only visible rows");
+    }
+    if (min_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(min_visible->second) == "20", "CALCULATE MIN() should respect visibility rules");
+    }
+    if (max_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(max_visible->second) == "30", "CALCULATE MAX() should respect visibility rules");
+    }
+    if (count_conditional != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_conditional->second) == "1", "CALCULATE FOR should apply an additional condition to COUNT()");
+    }
+    if (sum_conditional != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_conditional->second) == "30", "CALCULATE FOR should apply an additional condition to SUM()");
+    }
+    if (count_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_alias->second) == "2", "CALCULATE IN alias should use the targeted cursor context");
+    }
+    if (sum_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_alias->second) == "50", "CALCULATE IN alias should sum visible rows from the targeted cursor");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.calculate"; }),
+        "CALCULATE should emit runtime.calculate events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_command_level_aggregate_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_command_aggregates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "command_aggregates.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FILTER TO AGE >= 20\n"
+        "DELETE FOR AGE = 40\n"
+        "SET DELETED ON\n"
+        "GO TOP\n"
+        "COUNT TO nCountVisible\n"
+        "COUNT FOR AGE >= 30 TO nCountConditional\n"
+        "SUM AGE, AGE * 2 TO nSumAge, nSumDouble\n"
+        "AVERAGE AGE TO nAvgVisible\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "nOtherScanHits = 0\n"
+        "LOCATE FOR AGE = 30 IN 'Other'\n"
+        "nOtherLocate = RECNO('Other')\n"
+        "SCAN FOR AGE >= 30 IN 'Other'\n"
+        "    nOtherScanHits = nOtherScanHits + 1\n"
+        "ENDSCAN\n"
+        "nPeopleRec = RECNO('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "command-level aggregate script should complete");
+
+    const auto count_visible = state.globals.find("ncountvisible");
+    const auto count_conditional = state.globals.find("ncountconditional");
+    const auto sum_age = state.globals.find("nsumage");
+    const auto sum_double = state.globals.find("nsumdouble");
+    const auto avg_visible = state.globals.find("navgvisible");
+    const auto other_locate = state.globals.find("notherlocate");
+    const auto other_scan_hits = state.globals.find("notherscanhits");
+    const auto people_rec = state.globals.find("npeoplerec");
+
+    expect(count_visible != state.globals.end(), "COUNT TO should assign into a variable");
+    expect(count_conditional != state.globals.end(), "COUNT FOR TO should assign into a variable");
+    expect(sum_age != state.globals.end(), "SUM TO should assign into a variable");
+    expect(sum_double != state.globals.end(), "SUM with multiple expressions should assign into variables");
+    expect(avg_visible != state.globals.end(), "AVERAGE TO should assign into a variable");
+    expect(other_locate != state.globals.end(), "LOCATE FOR ... IN alias should update the targeted cursor");
+    expect(other_scan_hits != state.globals.end(), "SCAN FOR ... IN alias should execute against the targeted cursor");
+    expect(people_rec != state.globals.end(), "targeted alias scans should preserve the selected cursor position");
+
+    if (count_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_visible->second) == "2", "COUNT should respect SET FILTER TO and SET DELETED ON");
+    }
+    if (count_conditional != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_conditional->second) == "1", "COUNT FOR should apply an additional condition");
+    }
+    if (sum_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_age->second) == "50", "SUM should total visible numeric values");
+    }
+    if (sum_double != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_double->second) == "100", "SUM should evaluate numeric expressions per visible row");
+    }
+    if (avg_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(avg_visible->second) == "25", "AVERAGE should compute the mean across visible rows");
+    }
+    if (other_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_locate->second) == "3", "LOCATE FOR ... IN alias should position the targeted cursor");
+    }
+    if (other_scan_hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_scan_hits->second) == "1", "SCAN FOR ... IN alias should honor the targeted cursor visibility rules");
+    }
+    if (people_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec->second) == "2", "aggregate commands and IN-targeted scans should preserve the selected cursor state");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.count"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.sum"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.average"; }),
+        "command-level aggregate commands should emit runtime aggregate events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_command_level_aggregate_scope_and_while_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_command_aggregate_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "command_aggregate_scope.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FILTER TO AGE >= 20\n"
+        "DELETE FOR AGE = 40\n"
+        "SET DELETED ON\n"
+        "GO TOP\n"
+        "COUNT REST TO nCountRest\n"
+        "COUNT NEXT 2 TO nCountNextTwo\n"
+        "COUNT RECORD 4 TO nCountRecordFour\n"
+        "SUM AGE REST TO nSumRest\n"
+        "SUM AGE, AGE * 2 NEXT 3 TO nSumNextThree, nSumDoubleNextThree\n"
+        "AVERAGE AGE WHILE AGE < 40 TO nAvgWhile\n"
+        "nPeopleRec = RECNO('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "aggregate scope/WHILE script should complete");
+
+    const auto count_rest = state.globals.find("ncountrest");
+    const auto count_next_two = state.globals.find("ncountnexttwo");
+    const auto count_record_four = state.globals.find("ncountrecordfour");
+    const auto sum_rest = state.globals.find("nsumrest");
+    const auto sum_next_three = state.globals.find("nsumnextthree");
+    const auto sum_double_next_three = state.globals.find("nsumdoublenextthree");
+    const auto avg_while = state.globals.find("navgwhile");
+    const auto people_rec = state.globals.find("npeoplerec");
+
+    expect(count_rest != state.globals.end(), "COUNT REST should assign into a variable");
+    expect(count_next_two != state.globals.end(), "COUNT NEXT should assign into a variable");
+    expect(count_record_four != state.globals.end(), "COUNT RECORD should assign into a variable");
+    expect(sum_rest != state.globals.end(), "SUM REST should assign into a variable");
+    expect(sum_next_three != state.globals.end(), "SUM NEXT should assign into a variable");
+    expect(sum_double_next_three != state.globals.end(), "SUM NEXT should support multiple expressions");
+    expect(avg_while != state.globals.end(), "AVERAGE WHILE should assign into a variable");
+    expect(people_rec != state.globals.end(), "aggregate scope commands should preserve the selected cursor position");
+
+    if (count_rest != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_rest->second) == "2", "COUNT REST should respect the current record and visibility rules");
+    }
+    if (count_next_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_next_two->second) == "2", "COUNT NEXT should apply scope before visibility filtering");
+    }
+    if (count_record_four != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_record_four->second) == "0", "COUNT RECORD should still respect deleted/filter visibility");
+    }
+    if (sum_rest != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_rest->second) == "50", "SUM REST should total visible rows from the current record forward");
+    }
+    if (sum_next_three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_next_three->second) == "50", "SUM NEXT should total only visible rows within the raw scope");
+    }
+    if (sum_double_next_three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_double_next_three->second) == "100", "SUM NEXT should evaluate each numeric expression within scope");
+    }
+    if (avg_while != state.globals.end()) {
+        expect(copperfin::runtime::format_value(avg_while->second) == "25", "AVERAGE WHILE should stop when the WHILE condition becomes false");
+    }
+    if (people_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec->second) == "2", "aggregate scope commands should restore the current selected record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1965,6 +2347,7 @@ int main() {
     test_work_area_and_data_session_compatibility();
     test_sql_and_ole_compatibility_functions();
     test_use_and_data_session_isolation();
+    test_use_in_existing_alias_reuses_target_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
@@ -1975,12 +2358,16 @@ int main() {
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
+    test_use_in_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
     test_aggregate_functions_respect_visibility();
+    test_calculate_command_aggregates();
+    test_command_level_aggregate_commands();
+    test_command_level_aggregate_scope_and_while_semantics();
     test_runtime_fault_containment();
 
     if (failures != 0) {
