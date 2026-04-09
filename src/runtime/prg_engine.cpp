@@ -83,6 +83,7 @@ struct Statement {
     std::string expression;
     std::string secondary_expression;
     std::string tertiary_expression;
+    std::string quaternary_expression;
     std::vector<std::string> names;
 };
 
@@ -210,6 +211,7 @@ struct TotalCommandPlan {
     AggregateScopeClause scope;
     std::string for_expression;
     std::string while_expression;
+    std::string in_expression;
 };
 
 struct RegisteredApiFunction {
@@ -798,8 +800,8 @@ std::string format_total_numeric_value(double value, std::uint8_t decimal_count)
 std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body, std::string& error_message) {
     TotalCommandPlan plan;
     plan.target_expression = extract_command_clause(body, "TO", {"ON"});
-    plan.on_field_name = extract_command_clause(body, "ON", {"FIELDS", "FOR", "WHILE", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
-    const std::string fields_text = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
+    plan.on_field_name = extract_command_clause(body, "ON", {"FIELDS", "FOR", "WHILE", "IN", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
+    const std::string fields_text = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "IN", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
     if (!fields_text.empty()) {
         plan.field_names = split_csv_like(fields_text);
         for (std::string& field_name : plan.field_names) {
@@ -812,11 +814,12 @@ std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body
             plan.field_names.end());
     }
 
-    plan.for_expression = extract_command_clause(body, "FOR", {"WHILE", "NOOPTIMIZE"});
-    plan.while_expression = extract_command_clause(body, "WHILE", {"NOOPTIMIZE"});
+    plan.for_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "NOOPTIMIZE"});
+    plan.while_expression = extract_command_clause(body, "WHILE", {"IN", "NOOPTIMIZE"});
+    plan.in_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
 
     std::string scope_text = trim_copy(body);
-    const std::size_t for_position = find_first_keyword_top_level(scope_text, {"FOR", "WHILE", "NOOPTIMIZE"});
+    const std::size_t for_position = find_first_keyword_top_level(scope_text, {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
     if (for_position != std::string::npos) {
         scope_text = trim_copy(scope_text.substr(0U, for_position));
     }
@@ -969,35 +972,38 @@ Program parse_program(const std::string& path) {
         } else if (upper == "COUNT" || starts_with_insensitive(line, "COUNT ")) {
             statement.kind = StatementKind::count_command;
             const std::string body = upper == "COUNT" ? std::string{} : trim_copy(line.substr(6U));
-            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "IN", "NOOPTIMIZE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
-            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
-            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.quaternary_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             if (statement.identifier.empty()) {
-                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             }
         } else if (upper == "SUM" || starts_with_insensitive(line, "SUM ")) {
             statement.kind = StatementKind::sum_command;
             const std::string body = upper == "SUM" ? std::string{} : trim_copy(line.substr(4U));
-            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "IN", "NOOPTIMIZE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
-            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
-            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.quaternary_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             if (statement.identifier.empty()) {
-                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             }
         } else if (upper == "AVERAGE" || starts_with_insensitive(line, "AVERAGE ")) {
             statement.kind = StatementKind::average_command;
             const std::string body = upper == "AVERAGE" ? std::string{} : trim_copy(line.substr(8U));
-            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "NOOPTIMIZE"});
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "TO", "INTO", "WHILE", "IN", "NOOPTIMIZE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "NOOPTIMIZE"});
-            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "NOOPTIMIZE"});
-            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "NOOPTIMIZE"});
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"TO", "INTO", "IN", "NOOPTIMIZE"});
+            statement.quaternary_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
+            statement.identifier = extract_command_clause(body, "INTO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             if (statement.identifier.empty()) {
-                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
+                statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
             }
         } else if (upper == "TOTAL" || starts_with_insensitive(line, "TOTAL ")) {
             statement.kind = StatementKind::total_command;
@@ -2300,9 +2306,12 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
-        CursorState* cursor = resolve_cursor_target({});
+        const TotalCommandPlan& plan = *parsed;
+        CursorState* cursor = resolve_cursor_target(plan.in_expression);
         if (cursor == nullptr) {
-            error_message = "TOTAL requires a selected work area";
+            error_message = plan.in_expression.empty()
+                ? "TOTAL requires a selected work area"
+                : "TOTAL target work area not found";
             return false;
         }
         if (cursor->remote) {
@@ -2320,7 +2329,6 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
-        const TotalCommandPlan& plan = *parsed;
         const auto field_by_name = [&](const std::string& field_name) -> const vfp::DbfFieldDescriptor* {
             const auto found = std::find_if(
                 table_result.table.fields.begin(),
@@ -2500,9 +2508,11 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
-        CursorState* cursor = resolve_cursor_target({});
+        CursorState* cursor = resolve_cursor_target(statement.quaternary_expression);
         if (cursor == nullptr) {
-            error_message = uppercase_copy(function) + " requires a selected work area";
+            error_message = statement.quaternary_expression.empty()
+                ? uppercase_copy(function) + " requires a selected work area"
+                : uppercase_copy(function) + " target work area not found";
             return false;
         }
         if (cursor->remote) {

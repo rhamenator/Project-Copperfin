@@ -112,7 +112,7 @@ The official command inventory is much larger than the current runtime. The deep
 ### Local Table Mutation And Query Flow
 
 - add the table-editing and table-browse commands needed for real legacy business applications
-- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`, first-pass `TOTAL`, and `CALCULATE` families toward broader xBase parity
+- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN`, first-pass `TOTAL` with `IN` targeting, and `CALCULATE` families toward broader xBase parity
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 
 ### Native Control Flow

@@ -2183,6 +2183,14 @@ void test_command_level_aggregate_commands() {
         "SUM AGE, AGE * 2 TO nSumAge, nSumDouble\n"
         "AVERAGE AGE TO nAvgVisible\n"
         "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "SET FILTER TO AGE >= 30\n"
+        "GO TOP\n"
+        "SELECT People\n"
+        "COUNT TO nOtherCount IN 'Other'\n"
+        "SUM AGE TO nOtherSum IN 'Other'\n"
+        "AVERAGE AGE TO nOtherAvg IN 'Other'\n"
+        "nOtherRec = RECNO('Other')\n"
         "nOtherScanHits = 0\n"
         "LOCATE FOR AGE = 30 IN 'Other'\n"
         "nOtherLocate = RECNO('Other')\n"
@@ -2206,6 +2214,10 @@ void test_command_level_aggregate_commands() {
     const auto sum_age = state.globals.find("nsumage");
     const auto sum_double = state.globals.find("nsumdouble");
     const auto avg_visible = state.globals.find("navgvisible");
+    const auto other_count = state.globals.find("nothercount");
+    const auto other_sum = state.globals.find("nothersum");
+    const auto other_avg = state.globals.find("notheravg");
+    const auto other_rec = state.globals.find("notherrec");
     const auto other_locate = state.globals.find("notherlocate");
     const auto other_scan_hits = state.globals.find("notherscanhits");
     const auto people_rec = state.globals.find("npeoplerec");
@@ -2215,6 +2227,10 @@ void test_command_level_aggregate_commands() {
     expect(sum_age != state.globals.end(), "SUM TO should assign into a variable");
     expect(sum_double != state.globals.end(), "SUM with multiple expressions should assign into variables");
     expect(avg_visible != state.globals.end(), "AVERAGE TO should assign into a variable");
+    expect(other_count != state.globals.end(), "COUNT IN alias should assign into a variable");
+    expect(other_sum != state.globals.end(), "SUM IN alias should assign into a variable");
+    expect(other_avg != state.globals.end(), "AVERAGE IN alias should assign into a variable");
+    expect(other_rec != state.globals.end(), "aggregate IN alias commands should preserve the targeted cursor position");
     expect(other_locate != state.globals.end(), "LOCATE FOR ... IN alias should update the targeted cursor");
     expect(other_scan_hits != state.globals.end(), "SCAN FOR ... IN alias should execute against the targeted cursor");
     expect(people_rec != state.globals.end(), "targeted alias scans should preserve the selected cursor position");
@@ -2233,6 +2249,18 @@ void test_command_level_aggregate_commands() {
     }
     if (avg_visible != state.globals.end()) {
         expect(copperfin::runtime::format_value(avg_visible->second) == "25", "AVERAGE should compute the mean across visible rows");
+    }
+    if (other_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_count->second) == "1", "COUNT IN alias should use the targeted cursor visibility rules");
+    }
+    if (other_sum != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_sum->second) == "30", "SUM IN alias should total values from the targeted cursor");
+    }
+    if (other_avg != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_avg->second) == "30", "AVERAGE IN alias should evaluate against the targeted cursor");
+    }
+    if (other_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec->second) == "3", "aggregate IN alias commands should restore the targeted cursor record");
     }
     if (other_locate != state.globals.end()) {
         expect(copperfin::runtime::format_value(other_locate->second) == "3", "LOCATE FOR ... IN alias should position the targeted cursor");
@@ -2364,8 +2392,14 @@ void test_total_command_for_local_tables() {
         "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
         "SET FILTER TO QTY >= 2\n"
         "GO TOP\n"
-        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS AMOUNT, QTY REST FOR AMOUNT >= 8\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "SET FILTER TO QTY >= 4\n"
+        "GO TOP\n"
+        "SELECT Sales\n"
+        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS AMOUNT, QTY REST FOR AMOUNT >= 8 IN 'Other'\n"
         "nSalesRec = RECNO('Sales')\n"
+        "nOtherRec = RECNO('Other')\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -2377,9 +2411,14 @@ void test_total_command_for_local_tables() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TOTAL script should complete");
     const auto sales_rec = state.globals.find("nsalesrec");
+    const auto other_rec = state.globals.find("notherrec");
     expect(sales_rec != state.globals.end(), "TOTAL script should capture the current selected record");
+    expect(other_rec != state.globals.end(), "TOTAL IN alias should preserve the targeted cursor position");
     if (sales_rec != state.globals.end()) {
         expect(copperfin::runtime::format_value(sales_rec->second) == "2", "TOTAL should preserve the selected cursor position");
+    }
+    if (other_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec->second) == "3", "TOTAL IN alias should restore the targeted cursor record");
     }
     expect(
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.total"; }),
@@ -2388,14 +2427,11 @@ void test_total_command_for_local_tables() {
     const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
     expect(totals_result.ok, "TOTAL should write a readable output DBF");
     expect(totals_result.table.fields.size() == 3U, "TOTAL output should include the group field plus requested numeric fields");
-    expect(totals_result.table.records.size() == 2U, "TOTAL should group consecutive visible records by ON field");
-    if (totals_result.table.records.size() == 2U) {
-        expect(totals_result.table.records[0].values[0].display_value == "EAST", "TOTAL should keep the first group key");
-        expect(totals_result.table.records[0].values[1].display_value == "15", "TOTAL should sum numeric fields for the first group");
-        expect(totals_result.table.records[0].values[2].display_value == "2", "TOTAL should sum each requested numeric field");
-        expect(totals_result.table.records[1].values[0].display_value == "WEST", "TOTAL should emit later group keys");
-        expect(totals_result.table.records[1].values[1].display_value == "20", "TOTAL should aggregate later groups");
-        expect(totals_result.table.records[1].values[2].display_value == "9", "TOTAL should sum later-group quantities");
+    expect(totals_result.table.records.size() == 1U, "TOTAL IN alias should aggregate only the targeted cursor's visible rows");
+    if (totals_result.table.records.size() == 1U) {
+        expect(totals_result.table.records[0].values[0].display_value == "WEST", "TOTAL IN alias should keep the targeted cursor's group key");
+        expect(totals_result.table.records[0].values[1].display_value == "20", "TOTAL IN alias should sum numeric fields for the targeted cursor");
+        expect(totals_result.table.records[0].values[2].display_value == "9", "TOTAL IN alias should sum each requested numeric field");
     }
 
     fs::remove_all(temp_root, ignored);
