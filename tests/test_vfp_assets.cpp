@@ -41,6 +41,33 @@ void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
 void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
 void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value);
 
+std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, include_second_tag ? 2U : 1U);
+
+    if (include_second_tag) {
+        write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
+        write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
+        write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
+        write_ascii(bytes, 11U * 512U, "customer_id");
+    } else {
+        write_ascii(bytes, (3U * 512U) - 10U, "NAME");
+        write_ascii(bytes, 4U * 512U, "UPPER(NAME)");
+    }
+
+    if (include_for_expression) {
+        write_ascii(bytes, 5U * 512U, "DELETED() = .F.");
+    }
+
+    return bytes;
+}
+
 void test_parse_dbf_header() {
     const auto bytes = make_vfp_header();
     const auto result = copperfin::vfp::parse_dbf_header(bytes);
@@ -81,18 +108,7 @@ void test_asset_family_detection() {
 }
 
 void test_parse_index_probe_for_cdx() {
-    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
-    bytes[0] = 0x00U;
-    bytes[1] = 0x04U;
-    bytes[12] = 0x0AU;
-    bytes[14] = 0xE0U;
-    bytes[15] = 0x01U;
-    bytes[1024U] = 0x03U;
-    bytes[1026U] = 0x02U;
-    write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
-    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
-    write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
-    write_ascii(bytes, 11U * 512U, "customer_id");
+    const auto bytes = make_synthetic_cdx_family_bytes(true, true);
 
     const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::cdx);
     expect(result.ok, "parse_index_probe should succeed for a plausible synthetic CDX header");
@@ -101,16 +117,21 @@ void test_parse_index_probe_for_cdx() {
     expect(result.probe.group_length_hint == 480U, "CDX key pool length hint should be parsed");
     expect(result.probe.multi_tag, "CDX should be treated as multi-tag");
     expect(result.probe.tags.size() == 2U, "CDX probe should enumerate tags from directory leaf pages");
+    expect(result.probe.for_expression_hint == "DELETED() = .F.", "CDX probe should surface the first tag FOR expression");
     if (result.probe.tags.size() >= 2U) {
         expect(result.probe.tags[0].name_hint == "CUSTOMER_I", "directory leaf parsing should preserve the first stored tag name");
         expect(
             result.probe.tags[0].key_expression_hint == "customer_id",
             "directory tag names should still bind to the matching plain-field expression");
+        expect(result.probe.tags[0].for_expression_hint.empty(), "tags should not borrow FOR expressions from a different key-expression span");
         expect(!result.probe.tags[0].inferred_name, "directory-derived tag names should not be marked as inferred");
         expect(result.probe.tags[1].name_hint == "COMPANY_NA", "directory leaf parsing should preserve the second stored tag name");
         expect(
             result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
             "directory tag names should still bind to the matching functional expression");
+        expect(
+            result.probe.tags[1].for_expression_hint == "DELETED() = .F.",
+            "page-local FOR expressions should attach to the matching CDX tag");
         expect(!result.probe.tags[1].inferred_name, "directory-derived tag names should not be marked as inferred");
     }
 }
@@ -191,17 +212,7 @@ void test_inspect_asset_collects_companion_indexes() {
     }
 
     {
-        std::vector<std::uint8_t> bytes(4096U, 0U);
-        bytes[0] = 0x00U;
-        bytes[1] = 0x04U;
-        bytes[12] = 0x0AU;
-        bytes[14] = 0xE0U;
-        bytes[15] = 0x01U;
-        bytes[1024U] = 0x03U;
-        bytes[1026U] = 0x01U;
-        write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-        write_ascii(bytes, 4U * 512U, "UPPER(NAME)");
-
+        const auto bytes = make_synthetic_cdx_family_bytes(false, true);
         std::ofstream output(cdx_path, std::ios::binary);
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
@@ -242,6 +253,7 @@ void test_inspect_asset_collects_companion_indexes() {
             if (!index.probe.tags.empty()) {
                 expect(index.probe.tags.front().name_hint == "NAME", "inspect_asset should expose the real CDX tag name");
                 expect(index.probe.tags.front().key_expression_hint == "UPPER(NAME)", "inspect_asset should expose the CDX expression hint");
+                expect(index.probe.tags.front().for_expression_hint == "DELETED() = .F.", "inspect_asset should expose the CDX FOR expression hint");
             }
         }
     }
@@ -268,7 +280,7 @@ void test_parse_real_vfp_cdx_when_available() {
     const auto result = copperfin::vfp::parse_index_probe_from_file(sample_path.string());
     expect(result.ok, "real VFP customer.cdx should parse as a CDX-family index");
     expect(result.probe.kind == copperfin::vfp::IndexKind::cdx, "real VFP customer.cdx should stay typed as CDX");
-    expect(!result.probe.tags.empty(), "real VFP customer.cdx should expose at least one inferred tag");
+    expect(!result.probe.tags.empty(), "real VFP customer.cdx should expose at least one parsed tag");
 
     bool saw_customer_id = false;
     bool saw_company_name = false;

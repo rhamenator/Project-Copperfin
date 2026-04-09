@@ -85,7 +85,12 @@ IndexParseResult parse_cdx_family_probe(
     }
     if (!probe.tags.empty()) {
         probe.key_expression_hint = probe.tags.front().key_expression_hint;
-        probe.for_expression_hint = probe.tags.front().for_expression_hint;
+        for (const IndexTagProbe& tag : probe.tags) {
+            if (!tag.for_expression_hint.empty()) {
+                probe.for_expression_hint = tag.for_expression_hint;
+                break;
+            }
+        }
     }
     probe.multi_tag = true;
     probe.production_candidate = (kind == IndexKind::cdx);

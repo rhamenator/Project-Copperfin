@@ -140,6 +140,23 @@ bool looks_like_expression_candidate(const std::string& text) {
     return has_parens || (has_lowercase && (has_underscore || has_operator));
 }
 
+bool looks_like_for_expression_candidate(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+
+    const std::string upper = uppercase_copy(text);
+    return text.find('=') != std::string::npos ||
+           text.find('<') != std::string::npos ||
+           text.find('>') != std::string::npos ||
+           upper.find(".T.") != std::string::npos ||
+           upper.find(".F.") != std::string::npos ||
+           upper.starts_with("DELETED(") ||
+           upper.find(" AND ") != std::string::npos ||
+           upper.find(" OR ") != std::string::npos ||
+           upper.starts_with("NOT ");
+}
+
 std::string derive_name_from_expression(const std::string& expression) {
     std::string candidate = trim_copy(expression);
     const auto open = candidate.find('(');
@@ -386,6 +403,53 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
         used[best_index] = true;
         tag.key_expression_hint = expressions[best_index].text;
         tag.key_expression_offset_hint = static_cast<std::uint32_t>(expressions[best_index].offset);
+    }
+
+    std::vector<std::size_t> keyed_tag_indexes;
+    keyed_tag_indexes.reserve(tags.size());
+    for (std::size_t index = 0; index < tags.size(); ++index) {
+        if (tags[index].key_expression_offset_hint != 0U) {
+            keyed_tag_indexes.push_back(index);
+        }
+    }
+
+    std::sort(keyed_tag_indexes.begin(), keyed_tag_indexes.end(), [&](std::size_t left, std::size_t right) {
+        return tags[left].key_expression_offset_hint < tags[right].key_expression_offset_hint;
+    });
+
+    const std::size_t max_for_distance = std::max<std::size_t>(page_size * 2U, 512U);
+    for (std::size_t tag_order = 0; tag_order < keyed_tag_indexes.size(); ++tag_order) {
+        CdxTagDescriptor& tag = tags[keyed_tag_indexes[tag_order]];
+        const std::size_t start_offset = tag.key_expression_offset_hint;
+        const std::size_t end_offset = (tag_order + 1U) < keyed_tag_indexes.size()
+            ? static_cast<std::size_t>(tags[keyed_tag_indexes[tag_order + 1U]].key_expression_offset_hint)
+            : bytes.size();
+
+        std::size_t best_index = std::numeric_limits<std::size_t>::max();
+        for (std::size_t expression_index = 0; expression_index < expressions.size(); ++expression_index) {
+            if (used[expression_index] || !looks_like_for_expression_candidate(expressions[expression_index].text)) {
+                continue;
+            }
+
+            const std::size_t offset = expressions[expression_index].offset;
+            if (offset <= start_offset || offset >= end_offset) {
+                continue;
+            }
+            if ((offset - start_offset) > max_for_distance) {
+                continue;
+            }
+
+            best_index = expression_index;
+            break;
+        }
+
+        if (best_index == std::numeric_limits<std::size_t>::max()) {
+            continue;
+        }
+
+        used[best_index] = true;
+        tag.for_expression_hint = expressions[best_index].text;
+        tag.for_expression_offset_hint = static_cast<std::uint32_t>(expressions[best_index].offset);
     }
 
     for (std::size_t index = 0; index < expressions.size(); ++index) {
