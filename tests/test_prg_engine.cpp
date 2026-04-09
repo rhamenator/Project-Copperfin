@@ -1424,6 +1424,103 @@ void test_seek_related_index_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_near_is_scoped_by_data_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near_datasession";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "set_near_datasession.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SET NEAR ON\n"
+        "SEEK 'BRAVO'\n"
+        "lNear1Found = FOUND()\n"
+        "lNear1Eof = EOF()\n"
+        "nNear1Rec = RECNO()\n"
+        "SET DATASESSION TO 2\n"
+        "USE '" + table_path.string() + "' ALIAS PeopleTwo IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SEEK 'BRAVO'\n"
+        "lNear2Found = FOUND()\n"
+        "lNear2Eof = EOF()\n"
+        "nNear2Rec = RECNO()\n"
+        "SET DATASESSION TO 1\n"
+        "GO TOP\n"
+        "SEEK 'BRAVO'\n"
+        "lNear1BackFound = FOUND()\n"
+        "lNear1BackEof = EOF()\n"
+        "nNear1BackRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET NEAR data-session script should complete");
+
+    const auto near1_found = state.globals.find("lnear1found");
+    const auto near1_eof = state.globals.find("lnear1eof");
+    const auto near1_rec = state.globals.find("nnear1rec");
+    const auto near2_found = state.globals.find("lnear2found");
+    const auto near2_eof = state.globals.find("lnear2eof");
+    const auto near2_rec = state.globals.find("nnear2rec");
+    const auto near1_back_found = state.globals.find("lnear1backfound");
+    const auto near1_back_eof = state.globals.find("lnear1backeof");
+    const auto near1_back_rec = state.globals.find("nnear1backrec");
+
+    expect(near1_found != state.globals.end(), "session-1 SET NEAR FOUND() should be captured");
+    expect(near1_eof != state.globals.end(), "session-1 SET NEAR EOF() should be captured");
+    expect(near1_rec != state.globals.end(), "session-1 SET NEAR RECNO() should be captured");
+    expect(near2_found != state.globals.end(), "session-2 SEEK FOUND() should be captured");
+    expect(near2_eof != state.globals.end(), "session-2 SEEK EOF() should be captured");
+    expect(near2_rec != state.globals.end(), "session-2 SEEK RECNO() should be captured");
+    expect(near1_back_found != state.globals.end(), "restored session-1 SEEK FOUND() should be captured");
+    expect(near1_back_eof != state.globals.end(), "restored session-1 SEEK EOF() should be captured");
+    expect(near1_back_rec != state.globals.end(), "restored session-1 SEEK RECNO() should be captured");
+
+    if (near1_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_found->second) == "false", "SET NEAR ON should still leave FOUND() false on a missed seek");
+    }
+    if (near1_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_eof->second) == "false", "SET NEAR ON in session 1 should keep the cursor off EOF");
+    }
+    if (near1_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_rec->second) == "2", "SET NEAR ON in session 1 should move to the nearest ordered row");
+    }
+    if (near2_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_found->second) == "false", "a fresh second data session should still report a missed seek");
+    }
+    if (near2_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_eof->second) == "true", "SET NEAR should not bleed into a fresh second data session");
+    }
+    if (near2_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_rec->second) == "4", "a fresh second data session should keep the default SET NEAR OFF seek position");
+    }
+    if (near1_back_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_found->second) == "false", "restoring session 1 should preserve missed-seek FOUND() behavior");
+    }
+    if (near1_back_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_eof->second) == "false", "restoring session 1 should restore its SET NEAR ON behavior");
+    }
+    if (near1_back_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_rec->second) == "2", "restoring session 1 should restore its nearest-record seek position");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_foxtools_registration_and_call_bridge() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_foxtools";
@@ -2750,6 +2847,7 @@ int main() {
     test_sql_result_cursors_are_isolated_by_data_session();
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
+    test_set_near_is_scoped_by_data_session();
     test_seek_related_index_functions();
     test_foxtools_registration_and_call_bridge();
     test_set_exact_affects_comparisons_and_seek();
