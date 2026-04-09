@@ -652,6 +652,101 @@ void test_use_in_existing_alias_reuses_target_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_in_nonselected_alias_preserves_selected_work_area() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_in_nonselected_alias";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    const fs::path orders_path = temp_root / "orders.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "TOKYO"});
+    write_simple_dbf(orders_path, {"ORD100", "ORD200"});
+
+    const fs::path main_path = temp_root / "use_in_nonselected_alias.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN 0\n"
+        "SELECT People\n"
+        "nSelectedBefore = SELECT()\n"
+        "cAliasBefore = ALIAS()\n"
+        "USE '" + orders_path.string() + "' ALIAS Orders IN Cities\n"
+        "nSelectedAfterReplace = SELECT()\n"
+        "cAliasAfterReplace = ALIAS()\n"
+        "nOrdersArea = SELECT('Orders')\n"
+        "cOrdersDbf = DBF('Orders')\n"
+        "USE IN Orders\n"
+        "nSelectedAfterClose = SELECT()\n"
+        "cAliasAfterClose = ALIAS()\n"
+        "lOrdersOpenAfterClose = USED('Orders')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "USE ... IN non-selected alias script should complete");
+    expect(state.work_area.selected == 1, "replacing and closing a non-selected alias should preserve the selected work area");
+    expect(state.work_area.aliases.size() == 1U, "closing the non-selected replacement alias should leave only the selected alias open");
+
+    const auto selected_before = state.globals.find("nselectedbefore");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto selected_after_replace = state.globals.find("nselectedafterreplace");
+    const auto alias_after_replace = state.globals.find("caliasafterreplace");
+    const auto orders_area = state.globals.find("nordersarea");
+    const auto orders_dbf = state.globals.find("cordersdbf");
+    const auto selected_after_close = state.globals.find("nselectedafterclose");
+    const auto alias_after_close = state.globals.find("caliasafterclose");
+    const auto orders_open_after_close = state.globals.find("lordersopenafterclose");
+
+    expect(selected_before != state.globals.end(), "initial selected work area should be captured");
+    expect(alias_before != state.globals.end(), "initial selected alias should be captured");
+    expect(selected_after_replace != state.globals.end(), "selected work area after non-selected replacement should be captured");
+    expect(alias_after_replace != state.globals.end(), "selected alias after non-selected replacement should be captured");
+    expect(orders_area != state.globals.end(), "replacement alias work area should be discoverable");
+    expect(orders_dbf != state.globals.end(), "replacement alias DBF identity should be captured");
+    expect(selected_after_close != state.globals.end(), "selected work area after closing the non-selected alias should be captured");
+    expect(alias_after_close != state.globals.end(), "selected alias after closing the non-selected alias should be captured");
+    expect(orders_open_after_close != state.globals.end(), "USED('Orders') after close should be captured");
+
+    if (selected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_before->second) == "1", "People should remain selected before the non-selected replacement");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_before->second) == "People", "People should be the selected alias before replacement");
+    }
+    if (selected_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_replace->second) == "1", "USE ... IN a non-selected alias should preserve the selected work area");
+    }
+    if (alias_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_replace->second) == "People", "USE ... IN a non-selected alias should preserve the selected alias");
+    }
+    if (orders_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_area->second) == "2", "the replacement alias should still reuse the targeted non-selected work area");
+    }
+    if (orders_dbf != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_dbf->second) == orders_path.lexically_normal().string(), "the replacement alias should point at the new table");
+    }
+    if (selected_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_close->second) == "1", "closing a non-selected alias should preserve the selected work area");
+    }
+    if (alias_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_close->second) == "People", "closing a non-selected alias should preserve the selected alias");
+    }
+    if (orders_open_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_open_after_close->second) == "false", "closing the replacement alias should clear its USED() state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_go_and_skip_cursor_navigation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
@@ -2451,6 +2546,7 @@ int main() {
     test_sql_and_ole_compatibility_functions();
     test_use_and_data_session_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
+    test_use_in_nonselected_alias_preserves_selected_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();

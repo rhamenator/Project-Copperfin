@@ -104,7 +104,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Work Areas, Sessions, And Indexed Data
 
-- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass
+- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass and first-pass non-selected target preservation
 - deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together
 - use the command inventory to pull the next search/index/data-session commands in families instead of one at a time

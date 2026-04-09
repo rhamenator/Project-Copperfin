@@ -1371,13 +1371,20 @@ struct PrgRuntimeSession::Impl {
         return allocated;
     }
 
-    int select_work_area(int requested_area) {
+    int reserve_work_area(int requested_area) {
         DataSessionState& session = current_session_state();
         if (requested_area <= 0) {
-            requested_area = allocate_work_area();
-        } else if (requested_area >= session.next_work_area) {
+            return allocate_work_area();
+        }
+        if (requested_area >= session.next_work_area) {
             session.next_work_area = requested_area + 1;
         }
+        return requested_area;
+    }
+
+    int select_work_area(int requested_area) {
+        DataSessionState& session = current_session_state();
+        requested_area = reserve_work_area(requested_area);
         session.selected_work_area = requested_area;
         return session.selected_work_area;
     }
@@ -2797,7 +2804,13 @@ struct PrgRuntimeSession::Impl {
                 return false;
             }
             int target_area = *requested_target_area;
-            target_area = select_work_area(target_area);
+            const bool preserve_selected_work_area =
+                !trim_copy(in_expression).empty() &&
+                target_area > 0 &&
+                target_area != current_selected_work_area();
+            target_area = preserve_selected_work_area
+                ? reserve_work_area(target_area)
+                : select_work_area(target_area);
 
             if (!can_open_table_cursor(resolved_path, alias, false, allow_again, target_area)) {
                 return false;
@@ -2834,7 +2847,13 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
         int target_area = *requested_target_area;
-        target_area = select_work_area(target_area);
+        const bool preserve_selected_work_area =
+            !trim_copy(in_expression).empty() &&
+            target_area > 0 &&
+            target_area != current_selected_work_area();
+        target_area = preserve_selected_work_area
+            ? reserve_work_area(target_area)
+            : select_work_area(target_area);
 
         if (!can_open_table_cursor(resolved_path, alias, remote, allow_again, target_area)) {
             return false;
