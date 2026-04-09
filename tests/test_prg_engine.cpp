@@ -1081,12 +1081,12 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
         "lUsedSession2Before = USED('sqlcust')\n"
         "nAreaSession2Before = SELECT('sqlcust')\n"
         "nExecCrossSession = SQLEXEC(nConn1, 'select * from orders', 'sqlcust2')\n"
+        "lDisconnectSession2BeforeConnect = SQLDISCONNECT(nConn1)\n"
         "nConn2 = SQLCONNECT('dsn=SessionTwo')\n"
         "nExec2 = SQLEXEC(nConn2, 'select * from orders', 'sqlother')\n"
         "lUsedSession2After = USED('sqlother')\n"
         "nAreaSession2After = SELECT('sqlother')\n"
         "lDisconnectSession2Own = SQLDISCONNECT(nConn2)\n"
-        "lDisconnectSession2Cross = SQLDISCONNECT(nConn1)\n"
         "SET DATASESSION TO 1\n"
         "lUsedSession1Back = USED('sqlcust')\n"
         "nAreaSession1Back = SELECT('sqlcust')\n"
@@ -1109,11 +1109,12 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     const auto used_session2_before = state.globals.find("lusedsession2before");
     const auto area_session2_before = state.globals.find("nareasession2before");
     const auto exec_cross_session = state.globals.find("nexeccrosssession");
+    const auto disconnect_session2_before_connect = state.globals.find("ldisconnectsession2beforeconnect");
+    const auto conn2 = state.globals.find("nconn2");
     const auto exec2 = state.globals.find("nexec2");
     const auto used_session2_after = state.globals.find("lusedsession2after");
     const auto area_session2_after = state.globals.find("nareasession2after");
     const auto disconnect_session2_own = state.globals.find("ldisconnectsession2own");
-    const auto disconnect_session2_cross = state.globals.find("ldisconnectsession2cross");
     const auto used_session1_back = state.globals.find("lusedsession1back");
     const auto area_session1_back = state.globals.find("nareasession1back");
     const auto used_session1_other = state.globals.find("lusedsession1other");
@@ -1123,11 +1124,12 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     expect(used_session2_before != state.globals.end(), "session-2 preexisting SQL cursor visibility should be captured");
     expect(area_session2_before != state.globals.end(), "session-2 preexisting SQL cursor area should be captured");
     expect(exec_cross_session != state.globals.end(), "cross-session SQLEXEC result should be captured");
+    expect(disconnect_session2_before_connect != state.globals.end(), "cross-session SQLDISCONNECT before a local connect should be captured");
+    expect(conn2 != state.globals.end(), "session-2 SQLCONNECT handle should be captured");
     expect(exec2 != state.globals.end(), "session-2 SQLEXEC result should be captured");
     expect(used_session2_after != state.globals.end(), "session-2 SQL cursor visibility should be captured");
     expect(area_session2_after != state.globals.end(), "session-2 SQL cursor area should be captured");
     expect(disconnect_session2_own != state.globals.end(), "session-2 SQLDISCONNECT result should be captured");
-    expect(disconnect_session2_cross != state.globals.end(), "cross-session SQLDISCONNECT result should be captured");
     expect(used_session1_back != state.globals.end(), "restored session-1 SQL cursor visibility should be captured");
     expect(area_session1_back != state.globals.end(), "restored session-1 SQL cursor area should be captured");
     expect(used_session1_other != state.globals.end(), "restored session-1 visibility for session-2 alias should be captured");
@@ -1145,6 +1147,12 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     if (exec_cross_session != state.globals.end()) {
         expect(copperfin::runtime::format_value(exec_cross_session->second) == "-1", "SQLEXEC should reject a SQL handle from another data session");
     }
+    if (disconnect_session2_before_connect != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_session2_before_connect->second) == "-1", "SQLDISCONNECT should reject a SQL handle from another data session before the session creates its own handle");
+    }
+    if (conn2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(conn2->second) == "1", "the first SQLCONNECT handle in a fresh data session should restart at 1");
+    }
     if (exec2 != state.globals.end()) {
         expect(copperfin::runtime::format_value(exec2->second) == "1", "session 2 should still be able to create its own SQL cursor");
     }
@@ -1155,10 +1163,7 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
         expect(copperfin::runtime::format_value(area_session2_after->second) == "1", "session 2 should resolve its own SQL cursor area");
     }
     if (disconnect_session2_own != state.globals.end()) {
-        expect(copperfin::runtime::format_value(disconnect_session2_own->second) == "true", "session 2 should disconnect its own SQL handle");
-    }
-    if (disconnect_session2_cross != state.globals.end()) {
-        expect(copperfin::runtime::format_value(disconnect_session2_cross->second) == "false", "session 2 should not disconnect a session-1 SQL handle");
+        expect(copperfin::runtime::format_value(disconnect_session2_own->second) == "1", "session 2 should disconnect its own SQL handle");
     }
     if (used_session1_back != state.globals.end()) {
         expect(copperfin::runtime::format_value(used_session1_back->second) == "true", "restoring session 1 should restore its SQL cursor visibility");
@@ -1170,7 +1175,7 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
         expect(copperfin::runtime::format_value(used_session1_other->second) == "false", "session-2 SQL aliases should stay hidden after restoring session 1");
     }
     if (disconnect_session1_own != state.globals.end()) {
-        expect(copperfin::runtime::format_value(disconnect_session1_own->second) == "true", "session 1 should disconnect its own SQL handle");
+        expect(copperfin::runtime::format_value(disconnect_session1_own->second) == "1", "session 1 should disconnect its own SQL handle");
     }
 
     fs::remove_all(temp_root, ignored);

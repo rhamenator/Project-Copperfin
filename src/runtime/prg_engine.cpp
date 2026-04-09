@@ -1223,7 +1223,7 @@ struct PrgRuntimeSession::Impl {
     std::string error_handler;
     std::map<int, std::map<std::string, std::string>> set_state_by_session;
     int current_data_session = 1;
-    int next_sql_handle = 1;
+    std::map<int, int> next_sql_handle_by_session;
     int next_ole_handle = 1;
     std::map<int, DataSessionState> data_sessions;
     std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
@@ -1310,6 +1310,12 @@ struct PrgRuntimeSession::Impl {
 
         static const std::map<int, RuntimeSqlConnectionState> empty_connections;
         return empty_connections;
+    }
+
+    int& current_sql_handle_counter() {
+        auto [iterator, _] = next_sql_handle_by_session.try_emplace(current_data_session, 1);
+        iterator->second = std::max(1, iterator->second);
+        return iterator->second;
     }
 
     RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {}) {
@@ -2902,7 +2908,8 @@ struct PrgRuntimeSession::Impl {
     }
 
     int sql_connect(const std::string& target, const std::string& provider) {
-        const int handle = next_sql_handle++;
+        int& next_handle = current_sql_handle_counter();
+        const int handle = next_handle++;
         current_sql_connections().emplace(handle, RuntimeSqlConnectionState{
             .handle = handle,
             .target = target,
