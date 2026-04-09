@@ -48,6 +48,10 @@ struct DbfWriteResult {
 };
 
 DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size_t max_records = 10U);
+DbfWriteResult create_dbf_table_file(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records);
 DbfWriteResult append_blank_record_to_file(const std::string& path);
 DbfWriteResult replace_record_field_value(
     const std::string& path,

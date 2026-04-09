@@ -34,6 +34,7 @@ enum class StatementKind {
     count_command,
     sum_command,
     average_command,
+    total_command,
     do_form,
     report_form,
     label_form,
@@ -200,6 +201,15 @@ enum class AggregateScopeKind {
 struct AggregateScopeClause {
     AggregateScopeKind kind = AggregateScopeKind::all_records;
     std::string raw_value;
+};
+
+struct TotalCommandPlan {
+    std::string target_expression;
+    std::string on_field_name;
+    std::vector<std::string> field_names;
+    AggregateScopeClause scope;
+    std::string for_expression;
+    std::string while_expression;
 };
 
 struct RegisteredApiFunction {
@@ -775,6 +785,55 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
     return scope;
 }
 
+std::string format_total_numeric_value(double value, std::uint8_t decimal_count) {
+    std::ostringstream stream;
+    if (decimal_count == 0U) {
+        stream << static_cast<long long>(std::llround(value));
+    } else {
+        stream << std::fixed << std::setprecision(decimal_count) << value;
+    }
+    return stream.str();
+}
+
+std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body, std::string& error_message) {
+    TotalCommandPlan plan;
+    plan.target_expression = extract_command_clause(body, "TO", {"ON"});
+    plan.on_field_name = extract_command_clause(body, "ON", {"FIELDS", "FOR", "WHILE", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
+    const std::string fields_text = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
+    if (!fields_text.empty()) {
+        plan.field_names = split_csv_like(fields_text);
+        for (std::string& field_name : plan.field_names) {
+            field_name = trim_copy(std::move(field_name));
+        }
+        plan.field_names.erase(
+            std::remove_if(plan.field_names.begin(), plan.field_names.end(), [](const std::string& field_name) {
+                return field_name.empty();
+            }),
+            plan.field_names.end());
+    }
+
+    plan.for_expression = extract_command_clause(body, "FOR", {"WHILE", "NOOPTIMIZE"});
+    plan.while_expression = extract_command_clause(body, "WHILE", {"NOOPTIMIZE"});
+
+    std::string scope_text = trim_copy(body);
+    const std::size_t for_position = find_first_keyword_top_level(scope_text, {"FOR", "WHILE", "NOOPTIMIZE"});
+    if (for_position != std::string::npos) {
+        scope_text = trim_copy(scope_text.substr(0U, for_position));
+    }
+    std::string ignored_expression;
+    plan.scope = parse_aggregate_scope_clause(scope_text, ignored_expression);
+
+    if (plan.target_expression.empty()) {
+        error_message = "TOTAL requires a TO target";
+        return std::nullopt;
+    }
+    if (plan.on_field_name.empty()) {
+        error_message = "TOTAL requires an ON field";
+        return std::nullopt;
+    }
+    return plan;
+}
+
 Program parse_program(const std::string& path) {
     Program program;
     program.path = normalize_path(path);
@@ -940,6 +999,9 @@ Program parse_program(const std::string& path) {
             if (statement.identifier.empty()) {
                 statement.identifier = extract_command_clause(body, "TO", {"FOR", "WHILE", "NOOPTIMIZE"});
             }
+        } else if (upper == "TOTAL" || starts_with_insensitive(line, "TOTAL ")) {
+            statement.kind = StatementKind::total_command;
+            statement.expression = upper == "TOTAL" ? std::string{} : trim_copy(line.substr(6U));
         } else if (upper == "LOCATE" || starts_with_insensitive(line, "LOCATE ")) {
             statement.kind = StatementKind::locate_command;
             const std::string body = upper == "LOCATE" ? std::string{} : trim_copy(line.substr(7U));
@@ -2227,6 +2289,158 @@ struct PrgRuntimeSession::Impl {
             return make_number_value(max_value);
         }
         return make_number_value(0.0);
+    }
+
+    bool execute_total_command(
+        const Statement& statement,
+        Frame& frame,
+        std::string& error_message) {
+        const auto parsed = parse_total_command_plan(statement.expression, error_message);
+        if (!parsed.has_value()) {
+            return false;
+        }
+
+        CursorState* cursor = resolve_cursor_target({});
+        if (cursor == nullptr) {
+            error_message = "TOTAL requires a selected work area";
+            return false;
+        }
+        if (cursor->remote) {
+            error_message = "TOTAL is not implemented for remote SQL cursors yet";
+            return false;
+        }
+        if (cursor->source_path.empty()) {
+            error_message = "TOTAL requires a local table-backed cursor";
+            return false;
+        }
+
+        const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, cursor->record_count);
+        if (!table_result.ok) {
+            error_message = table_result.error;
+            return false;
+        }
+
+        const TotalCommandPlan& plan = *parsed;
+        const auto field_by_name = [&](const std::string& field_name) -> const vfp::DbfFieldDescriptor* {
+            const auto found = std::find_if(
+                table_result.table.fields.begin(),
+                table_result.table.fields.end(),
+                [&](const vfp::DbfFieldDescriptor& field) {
+                    return collapse_identifier(field.name) == collapse_identifier(field_name);
+                });
+            return found == table_result.table.fields.end() ? nullptr : &*found;
+        };
+
+        const vfp::DbfFieldDescriptor* on_field = field_by_name(plan.on_field_name);
+        if (on_field == nullptr) {
+            error_message = "TOTAL ON field was not found";
+            return false;
+        }
+
+        std::vector<const vfp::DbfFieldDescriptor*> total_fields;
+        if (plan.field_names.empty()) {
+            for (const auto& field : table_result.table.fields) {
+                if ((field.type == 'N' || field.type == 'F') &&
+                    collapse_identifier(field.name) != collapse_identifier(on_field->name)) {
+                    total_fields.push_back(&field);
+                }
+            }
+        } else {
+            for (const std::string& field_name : plan.field_names) {
+                const vfp::DbfFieldDescriptor* field = field_by_name(field_name);
+                if (field == nullptr) {
+                    error_message = "TOTAL field was not found: " + field_name;
+                    return false;
+                }
+                if (field->type != 'N' && field->type != 'F') {
+                    error_message = "TOTAL only supports numeric FIELDS in the first pass";
+                    return false;
+                }
+                total_fields.push_back(field);
+            }
+        }
+        if (total_fields.empty()) {
+            error_message = "TOTAL requires at least one numeric field to total";
+            return false;
+        }
+
+        std::vector<std::size_t> records = collect_aggregate_scope_records(
+            *cursor,
+            frame,
+            plan.scope,
+            plan.for_expression,
+            plan.while_expression);
+        if (records.empty()) {
+            const std::string target_path = value_as_string(evaluate_expression(plan.target_expression, frame));
+            std::vector<vfp::DbfFieldDescriptor> output_fields;
+            output_fields.push_back(*on_field);
+            for (const auto* field : total_fields) {
+                vfp::DbfFieldDescriptor output_field = *field;
+                output_field.length = static_cast<std::uint8_t>(std::max<int>(output_field.length, output_field.decimal_count == 0U ? 18 : 20));
+                output_fields.push_back(output_field);
+            }
+            const auto create_result = vfp::create_dbf_table_file(target_path, output_fields, {});
+            if (!create_result.ok) {
+                error_message = create_result.error;
+                return false;
+            }
+            return true;
+        }
+
+        struct TotalGroup {
+            std::string group_value;
+            std::vector<double> sums;
+        };
+
+        std::vector<TotalGroup> groups;
+        const auto append_record_to_group = [&](const vfp::DbfRecord& record) {
+            const std::string group_value = record_field_value(record, on_field->name).value_or(std::string{});
+            if (groups.empty() || groups.back().group_value != group_value) {
+                groups.push_back({.group_value = group_value, .sums = std::vector<double>(total_fields.size(), 0.0)});
+            }
+
+            for (std::size_t index = 0; index < total_fields.size(); ++index) {
+                const std::string value_text = trim_copy(record_field_value(record, total_fields[index]->name).value_or(std::string{}));
+                if (!value_text.empty()) {
+                    groups.back().sums[index] += std::stod(value_text);
+                }
+            }
+        };
+
+        for (const std::size_t recno : records) {
+            if (recno == 0U || recno > table_result.table.records.size()) {
+                continue;
+            }
+            append_record_to_group(table_result.table.records[recno - 1U]);
+        }
+
+        std::vector<vfp::DbfFieldDescriptor> output_fields;
+        output_fields.push_back(*on_field);
+        for (const auto* field : total_fields) {
+            vfp::DbfFieldDescriptor output_field = *field;
+            output_field.length = static_cast<std::uint8_t>(std::max<int>(output_field.length, output_field.decimal_count == 0U ? 18 : 20));
+            output_fields.push_back(output_field);
+        }
+
+        std::vector<std::vector<std::string>> output_records;
+        output_records.reserve(groups.size());
+        for (const auto& group : groups) {
+            std::vector<std::string> record;
+            record.push_back(group.group_value);
+            for (std::size_t index = 0; index < total_fields.size(); ++index) {
+                record.push_back(format_total_numeric_value(group.sums[index], total_fields[index]->decimal_count));
+            }
+            output_records.push_back(std::move(record));
+        }
+
+        const std::string target_path = value_as_string(evaluate_expression(plan.target_expression, frame));
+        const auto create_result = vfp::create_dbf_table_file(target_path, output_fields, output_records);
+        if (!create_result.ok) {
+            error_message = create_result.error;
+            return false;
+        }
+
+        return true;
     }
 
     bool execute_calculate_command(
@@ -3910,6 +4124,21 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             events.push_back({
                 .category = category,
+                .detail = statement.text,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::total_command: {
+            std::string error_message;
+            if (!execute_total_command(statement, frame, error_message)) {
+                last_error_message = error_message;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.total",
                 .detail = statement.text,
                 .location = statement.location
             });

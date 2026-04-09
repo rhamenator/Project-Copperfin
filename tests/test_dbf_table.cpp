@@ -188,11 +188,49 @@ void test_mutate_and_append_dbf_table() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_dbf_table_file_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "totals.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 6U},
+        {.name = "QTY", .type = 'N', .length = 3U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"EAST", "25", "3"},
+        {"WEST", "8", "4"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should write a new DBF table");
+    expect(create_result.record_count == 2U, "create_dbf_table_file should report the written record count");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "created DBF tables should round-trip through the parser");
+    expect(parse_result.table.fields.size() == 3U, "created DBF tables should persist field descriptors");
+    expect(parse_result.table.records.size() == 2U, "created DBF tables should persist record rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "EAST", "created character fields should persist");
+        expect(parse_result.table.records[0].values[1].display_value == "25", "created numeric totals should persist");
+        expect(parse_result.table.records[1].values[0].display_value == "WEST", "later created rows should persist");
+        expect(parse_result.table.records[1].values[2].display_value == "4", "created numeric fields should round-trip");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_dbf_table_with_memo_sidecar();
     test_mutate_and_append_dbf_table();
+    test_create_dbf_table_file_round_trips();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -1,4 +1,5 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
 #include <cctype>
@@ -2334,6 +2335,72 @@ void test_command_level_aggregate_scope_and_while_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_total_command_for_local_tables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_command";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 6U},
+        {.name = "QTY", .type = 'N', .length = 3U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"EAST", "10", "1"},
+        {"EAST", "15", "2"},
+        {"WEST", "8", "4"},
+        {"WEST", "12", "5"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "sales DBF fixture should be created");
+
+    const fs::path output_path = temp_root / "totals.dbf";
+    const fs::path main_path = temp_root / "total.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "SET FILTER TO QTY >= 2\n"
+        "GO TOP\n"
+        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS AMOUNT, QTY REST FOR AMOUNT >= 8\n"
+        "nSalesRec = RECNO('Sales')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TOTAL script should complete");
+    const auto sales_rec = state.globals.find("nsalesrec");
+    expect(sales_rec != state.globals.end(), "TOTAL script should capture the current selected record");
+    if (sales_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sales_rec->second) == "2", "TOTAL should preserve the selected cursor position");
+    }
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.total"; }),
+        "TOTAL should emit runtime.total events");
+
+    const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
+    expect(totals_result.ok, "TOTAL should write a readable output DBF");
+    expect(totals_result.table.fields.size() == 3U, "TOTAL output should include the group field plus requested numeric fields");
+    expect(totals_result.table.records.size() == 2U, "TOTAL should group consecutive visible records by ON field");
+    if (totals_result.table.records.size() == 2U) {
+        expect(totals_result.table.records[0].values[0].display_value == "EAST", "TOTAL should keep the first group key");
+        expect(totals_result.table.records[0].values[1].display_value == "15", "TOTAL should sum numeric fields for the first group");
+        expect(totals_result.table.records[0].values[2].display_value == "2", "TOTAL should sum each requested numeric field");
+        expect(totals_result.table.records[1].values[0].display_value == "WEST", "TOTAL should emit later group keys");
+        expect(totals_result.table.records[1].values[1].display_value == "20", "TOTAL should aggregate later groups");
+        expect(totals_result.table.records[1].values[2].display_value == "9", "TOTAL should sum later-group quantities");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -2368,6 +2435,7 @@ int main() {
     test_calculate_command_aggregates();
     test_command_level_aggregate_commands();
     test_command_level_aggregate_scope_and_while_semantics();
+    test_total_command_for_local_tables();
     test_runtime_fault_containment();
 
     if (failures != 0) {

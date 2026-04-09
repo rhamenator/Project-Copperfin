@@ -32,6 +32,11 @@ std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
            static_cast<std::uint32_t>(bytes[offset + 3]);
 }
 
+void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
+    bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+}
+
 std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint16_t>((static_cast<std::uint16_t>(bytes[offset]) << 8U) |
                                       static_cast<std::uint16_t>(bytes[offset + 1]));
@@ -178,6 +183,10 @@ std::optional<RawFieldDescriptor> find_raw_field(
         return std::nullopt;
     }
     return *found;
+}
+
+bool supports_direct_field_writes(char field_type) {
+    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D';
 }
 
 DbfWriteResult write_field_bytes(
@@ -539,6 +548,101 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     }
 
     return {.ok = true, .table = std::move(table)};
+}
+
+DbfWriteResult create_dbf_table_file(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records) {
+    if (fields.empty()) {
+        return {.ok = false, .error = "At least one field is required to create a DBF table."};
+    }
+
+    std::vector<RawFieldDescriptor> raw_fields;
+    raw_fields.reserve(fields.size());
+    std::uint32_t next_offset = 1U;
+    for (const auto& field : fields) {
+        if (trim_both(field.name).empty()) {
+            return {.ok = false, .error = "Field names cannot be empty."};
+        }
+        if (field.length == 0U) {
+            return {.ok = false, .error = "Field lengths must be greater than zero."};
+        }
+        if (!supports_direct_field_writes(field.type)) {
+            return {.ok = false, .error = "Table creation is not implemented for one or more field types yet."};
+        }
+
+        raw_fields.push_back({
+            .name = trim_both(field.name),
+            .type = field.type,
+            .offset = next_offset,
+            .length = field.length,
+            .decimal_count = field.decimal_count
+        });
+        next_offset += field.length;
+    }
+
+    const std::uint16_t header_length = static_cast<std::uint16_t>(32U + (raw_fields.size() * 32U) + 1U);
+    const std::uint16_t record_length = static_cast<std::uint16_t>(next_offset);
+    std::vector<std::uint8_t> bytes(
+        static_cast<std::size_t>(header_length) + (records.size() * static_cast<std::size_t>(record_length)) + 1U,
+        0U);
+
+    bytes[0] = 0x30U;
+    write_le_u32(bytes, 4U, static_cast<std::uint32_t>(records.size()));
+    write_le_u16(bytes, 8U, header_length);
+    write_le_u16(bytes, 10U, record_length);
+
+    std::size_t descriptor_offset = 32U;
+    for (const auto& field : raw_fields) {
+        const std::string field_name = field.name.substr(0U, 11U);
+        std::copy(field_name.begin(), field_name.end(), bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_offset));
+        bytes[descriptor_offset + 11U] = static_cast<std::uint8_t>(field.type);
+        write_le_u32(bytes, descriptor_offset + 12U, field.offset);
+        bytes[descriptor_offset + 16U] = field.length;
+        bytes[descriptor_offset + 17U] = field.decimal_count;
+        descriptor_offset += 32U;
+    }
+    bytes[descriptor_offset] = 0x0DU;
+    bytes.back() = 0x1AU;
+
+    const DbfHeader header{
+        .version = bytes[0],
+        .last_update_year = 0U,
+        .last_update_month = 0U,
+        .last_update_day = 0U,
+        .record_count = static_cast<std::uint32_t>(records.size()),
+        .header_length = header_length,
+        .record_length = record_length,
+        .table_flags = 0U,
+        .code_page_mark = 0U
+    };
+
+    for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
+        if (records[record_index].size() != raw_fields.size()) {
+            return {.ok = false, .error = "Record field counts must match the DBF schema.", .record_count = records.size()};
+        }
+
+        const std::size_t record_offset = header.header_length + (record_index * header.record_length);
+        bytes[record_offset] = 0x20U;
+        for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
+            const DbfWriteResult write_result = write_field_bytes(
+                bytes,
+                header,
+                record_index,
+                raw_fields[field_index],
+                records[record_index][field_index]);
+            if (!write_result.ok) {
+                return write_result;
+            }
+        }
+    }
+
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = records.size()};
+    }
+
+    return {.ok = true, .record_count = records.size()};
 }
 
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
