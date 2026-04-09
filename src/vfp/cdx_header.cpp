@@ -15,6 +15,9 @@ std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t of
            (static_cast<std::uint16_t>(bytes[offset + 1]) << 8U);
 }
 
+constexpr std::uint16_t cdx_leaf_flag = 0x0001U;
+constexpr std::uint16_t cdx_directory_flag = 0x0002U;
+
 struct PrintableRun {
     std::size_t offset = 0;
     std::string text;
@@ -223,72 +226,60 @@ bool looks_like_tag_name_candidate(const std::string& text) {
     return saw_alpha;
 }
 
-std::vector<CdxTagDescriptor> collect_tail_tag_candidates(
+std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
     const std::vector<std::uint8_t>& bytes,
-    std::size_t page_size) {
+    std::size_t page_size,
+    std::size_t key_length) {
     std::vector<CdxTagDescriptor> tags;
     std::set<std::string> seen_names;
-    const std::size_t page_count = bytes.size() / page_size;
+    if (page_size == 0U || key_length == 0U || key_length > page_size) {
+        return tags;
+    }
 
+    const std::size_t page_count = bytes.size() / page_size;
     for (std::size_t page_index = 1; page_index < page_count; ++page_index) {
         const std::size_t page_start = page_index * page_size;
-        const std::size_t tail_start = page_start + page_size - 32U;
-
-        std::string tail;
-        tail.reserve(32U);
-        for (std::size_t offset = tail_start; offset < page_start + page_size; ++offset) {
-            const char ch = static_cast<char>(bytes[offset]);
-            tail.push_back(is_identifier_char(ch) ? ch : ' ');
+        if ((page_start + 4U) > bytes.size()) {
+            break;
         }
 
-        std::size_t start = 0;
-        while (start < tail.size()) {
-            while (start < tail.size() && tail[start] == ' ') {
-                ++start;
+        const std::uint16_t flags = read_le_u16(bytes, page_start);
+        const std::uint16_t entry_count = read_le_u16(bytes, page_start + 2U);
+        if ((flags & (cdx_leaf_flag | cdx_directory_flag)) != (cdx_leaf_flag | cdx_directory_flag)) {
+            continue;
+        }
+        if (entry_count == 0U) {
+            continue;
+        }
+
+        const std::size_t tail_bytes = static_cast<std::size_t>(entry_count) * key_length;
+        if (tail_bytes > (page_size - 4U)) {
+            continue;
+        }
+
+        const std::size_t tail_start = page_start + page_size - tail_bytes;
+        for (std::size_t index = 0; index < entry_count; ++index) {
+            const std::size_t name_offset = tail_start + (index * key_length);
+            std::string chunk;
+            chunk.reserve(key_length);
+            for (std::size_t char_index = 0; char_index < key_length && (name_offset + char_index) < bytes.size(); ++char_index) {
+                const char ch = static_cast<char>(bytes[name_offset + char_index]);
+                if (ch == '\0') {
+                    break;
+                }
+                chunk.push_back(ch);
             }
 
-            std::size_t end = start;
-            while (end < tail.size() && tail[end] != ' ') {
-                ++end;
+            chunk = trim_copy(chunk);
+            if (!looks_like_tag_name_candidate(chunk) || !seen_names.insert(chunk).second) {
+                continue;
             }
 
-            const std::string run = tail.substr(start, end - start);
-            if (run.size() >= 4U) {
-                std::size_t remainder = run.size() % 10U;
-                if (run.size() > 10U && remainder > 0U && remainder < 4U) {
-                    remainder += 10U;
-                }
-
-                std::size_t chunk_start = 0;
-                if (run.size() > 10U && remainder > 0U && remainder < run.size()) {
-                    const std::string chunk = run.substr(0U, remainder);
-                    if (looks_like_tag_name_candidate(chunk) && seen_names.insert(chunk).second) {
-                        tags.push_back({
-                            .name_hint = chunk,
-                            .name_offset_hint = static_cast<std::uint32_t>(tail_start + start),
-                            .inferred_name = false
-                        });
-                    }
-                    chunk_start = remainder;
-                }
-
-                for (; chunk_start < run.size(); chunk_start += 10U) {
-                    const std::string chunk = run.substr(
-                        chunk_start,
-                        std::min<std::size_t>(10U, run.size() - chunk_start));
-                    if (!looks_like_tag_name_candidate(chunk) || !seen_names.insert(chunk).second) {
-                        continue;
-                    }
-
-                    tags.push_back({
-                        .name_hint = chunk,
-                        .name_offset_hint = static_cast<std::uint32_t>(tail_start + start + chunk_start),
-                        .inferred_name = false
-                    });
-                }
-            }
-
-            start = end + 1U;
+            tags.push_back({
+                .name_hint = chunk,
+                .name_offset_hint = static_cast<std::uint32_t>(name_offset),
+                .inferred_name = false
+            });
         }
     }
 
@@ -366,9 +357,10 @@ int expression_match_score(const std::string& tag_name, const std::string& expre
 
 std::vector<CdxTagDescriptor> extract_tag_descriptors(
     const std::vector<std::uint8_t>& bytes,
-    std::size_t page_size) {
+    std::size_t page_size,
+    std::size_t key_length) {
     const std::vector<PrintableRun> expressions = collect_expression_runs(bytes);
-    std::vector<CdxTagDescriptor> tags = collect_tail_tag_candidates(bytes, page_size);
+    std::vector<CdxTagDescriptor> tags = collect_directory_leaf_tags(bytes, page_size, key_length);
     std::vector<bool> used(expressions.size(), false);
 
     for (CdxTagDescriptor& tag : tags) {
@@ -450,7 +442,7 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
 
     CdxParseResult result{.ok = true, .header = header};
     if (bytes.size() > 16U) {
-        result.tags = extract_tag_descriptors(bytes, header.page_size);
+        result.tags = extract_tag_descriptors(bytes, header.page_size, header.key_length_hint);
     }
     return result;
 }

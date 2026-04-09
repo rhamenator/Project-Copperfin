@@ -87,6 +87,10 @@ void test_parse_index_probe_for_cdx() {
     bytes[12] = 0x0AU;
     bytes[14] = 0xE0U;
     bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    bytes[1026U] = 0x02U;
+    write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
+    write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
     write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
     write_ascii(bytes, 11U * 512U, "customer_id");
 
@@ -96,18 +100,18 @@ void test_parse_index_probe_for_cdx() {
     expect(result.probe.key_length_hint == 10U, "CDX key length hint should be parsed");
     expect(result.probe.group_length_hint == 480U, "CDX key pool length hint should be parsed");
     expect(result.probe.multi_tag, "CDX should be treated as multi-tag");
-    expect(result.probe.tags.size() == 2U, "CDX probe should enumerate inferred tags from expression metadata");
+    expect(result.probe.tags.size() == 2U, "CDX probe should enumerate tags from directory leaf pages");
     if (result.probe.tags.size() >= 2U) {
-        expect(result.probe.tags[0].name_hint == "COMPANY_NA", "functional expressions should infer a tag-like name");
+        expect(result.probe.tags[0].name_hint == "CUSTOMER_I", "directory leaf parsing should preserve the first stored tag name");
         expect(
-            result.probe.tags[0].key_expression_hint == "UPPER(company_name)",
-            "CDX should expose the functional expression as a tag hint");
-        expect(result.probe.tags[0].inferred_name, "expression-derived tag names should be marked as inferred");
-        expect(result.probe.tags[1].name_hint == "CUSTOMER_I", "plain field expressions should infer a tag-like name");
+            result.probe.tags[0].key_expression_hint == "customer_id",
+            "directory tag names should still bind to the matching plain-field expression");
+        expect(!result.probe.tags[0].inferred_name, "directory-derived tag names should not be marked as inferred");
+        expect(result.probe.tags[1].name_hint == "COMPANY_NA", "directory leaf parsing should preserve the second stored tag name");
         expect(
-            result.probe.tags[1].key_expression_hint == "customer_id",
-            "CDX should expose the plain field expression as a tag hint");
-        expect(result.probe.tags[1].inferred_name, "plain field-derived names should be marked as inferred");
+            result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
+            "directory tag names should still bind to the matching functional expression");
+        expect(!result.probe.tags[1].inferred_name, "directory-derived tag names should not be marked as inferred");
     }
 }
 
@@ -176,12 +180,29 @@ void test_inspect_asset_collects_companion_indexes() {
     fs::create_directories(temp_dir);
 
     const fs::path table_path = temp_dir / "sample.dbf";
+    const fs::path cdx_path = temp_dir / "sample.cdx";
     const fs::path ndx_path = temp_dir / "sample.ndx";
     const fs::path mdx_path = temp_dir / "sample.mdx";
 
     {
         auto bytes = make_vfp_header();
         std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    {
+        std::vector<std::uint8_t> bytes(4096U, 0U);
+        bytes[0] = 0x00U;
+        bytes[1] = 0x04U;
+        bytes[12] = 0x0AU;
+        bytes[14] = 0xE0U;
+        bytes[15] = 0x01U;
+        bytes[1024U] = 0x03U;
+        bytes[1026U] = 0x01U;
+        write_ascii(bytes, (3U * 512U) - 10U, "NAME");
+        write_ascii(bytes, 4U * 512U, "UPPER(NAME)");
+
+        std::ofstream output(cdx_path, std::ios::binary);
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
 
@@ -207,20 +228,31 @@ void test_inspect_asset_collects_companion_indexes() {
     const auto result = copperfin::vfp::inspect_asset(table_path.string());
     expect(result.ok, "inspect_asset should succeed for a synthetic DBF with companion indexes");
     expect(result.header_available, "inspect_asset should expose the DBF header");
-    expect(result.indexes.size() == 2U, "inspect_asset should collect same-base NDX and MDX companions");
+    expect(result.indexes.size() == 3U, "inspect_asset should collect same-base CDX, NDX, and MDX companions");
 
+    bool saw_cdx = false;
     bool saw_ndx = false;
     bool saw_mdx = false;
     for (const auto& index : result.indexes) {
+        saw_cdx = saw_cdx || index.probe.kind == copperfin::vfp::IndexKind::cdx;
         saw_ndx = saw_ndx || index.probe.kind == copperfin::vfp::IndexKind::ndx;
         saw_mdx = saw_mdx || index.probe.kind == copperfin::vfp::IndexKind::mdx;
+        if (index.probe.kind == copperfin::vfp::IndexKind::cdx) {
+            expect(!index.probe.tags.empty(), "inspect_asset should parse CDX companion tags");
+            if (!index.probe.tags.empty()) {
+                expect(index.probe.tags.front().name_hint == "NAME", "inspect_asset should expose the real CDX tag name");
+                expect(index.probe.tags.front().key_expression_hint == "UPPER(NAME)", "inspect_asset should expose the CDX expression hint");
+            }
+        }
     }
 
+    expect(saw_cdx, "inspect_asset should identify CDX companions");
     expect(saw_ndx, "inspect_asset should identify NDX companions");
     expect(saw_mdx, "inspect_asset should identify MDX companions");
 
     std::error_code ignored;
     fs::remove(table_path, ignored);
+    fs::remove(cdx_path, ignored);
     fs::remove(ndx_path, ignored);
     fs::remove(mdx_path, ignored);
     fs::remove(temp_dir, ignored);
@@ -240,13 +272,19 @@ void test_parse_real_vfp_cdx_when_available() {
 
     bool saw_customer_id = false;
     bool saw_company_name = false;
+    bool saw_customer_tag = false;
+    bool saw_company_tag = false;
     for (const auto& tag : result.probe.tags) {
         saw_customer_id = saw_customer_id || tag.key_expression_hint == "customer_id";
         saw_company_name = saw_company_name || tag.key_expression_hint == "UPPER(company_name)";
+        saw_customer_tag = saw_customer_tag || tag.name_hint == "CUSTOMER_I";
+        saw_company_tag = saw_company_tag || tag.name_hint == "COMPANY_NA";
     }
 
     expect(saw_customer_id, "real VFP customer.cdx should expose the customer_id expression");
     expect(saw_company_name, "real VFP customer.cdx should expose the UPPER(company_name) expression");
+    expect(saw_customer_tag, "real VFP customer.cdx should expose the CUSTOMER_I tag from directory pages");
+    expect(saw_company_tag, "real VFP customer.cdx should expose the COMPANY_NA tag from directory pages");
 }
 
 }  // namespace

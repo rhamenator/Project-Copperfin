@@ -143,12 +143,14 @@ void write_synthetic_cdx(const std::filesystem::path& path, const std::string& t
     write_le_u16(bytes, 0U, 1024U);
     write_le_u16(bytes, 12U, 10U);
     write_le_u16(bytes, 14U, 480U);
+    write_le_u16(bytes, 1024U, 0x0003U);
+    write_le_u16(bytes, 1026U, 0x0001U);
 
     for (std::size_t index = 0; index < expression.size(); ++index) {
-        bytes[1024U + index] = static_cast<std::uint8_t>(expression[index]);
+        bytes[2048U + index] = static_cast<std::uint8_t>(expression[index]);
     }
 
-    const std::size_t tail_offset = 512U + 480U;
+    const std::size_t tail_offset = (3U * 512U) - 10U;
     for (std::size_t index = 0; index < tag_name.size(); ++index) {
         bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
     }
