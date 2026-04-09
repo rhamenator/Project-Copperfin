@@ -1064,6 +1064,118 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursors_are_isolated_by_data_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_datasession";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_datasession.prg";
+    write_text(
+        main_path,
+        "nConn1 = SQLCONNECT('dsn=Northwind')\n"
+        "nExec1 = SQLEXEC(nConn1, 'select * from customers', 'sqlcust')\n"
+        "nArea1 = SELECT('sqlcust')\n"
+        "SET DATASESSION TO 2\n"
+        "lUsedSession2Before = USED('sqlcust')\n"
+        "nAreaSession2Before = SELECT('sqlcust')\n"
+        "nExecCrossSession = SQLEXEC(nConn1, 'select * from orders', 'sqlcust2')\n"
+        "nConn2 = SQLCONNECT('dsn=SessionTwo')\n"
+        "nExec2 = SQLEXEC(nConn2, 'select * from orders', 'sqlother')\n"
+        "lUsedSession2After = USED('sqlother')\n"
+        "nAreaSession2After = SELECT('sqlother')\n"
+        "lDisconnectSession2Own = SQLDISCONNECT(nConn2)\n"
+        "lDisconnectSession2Cross = SQLDISCONNECT(nConn1)\n"
+        "SET DATASESSION TO 1\n"
+        "lUsedSession1Back = USED('sqlcust')\n"
+        "nAreaSession1Back = SELECT('sqlcust')\n"
+        "lUsedSession1Other = USED('sqlother')\n"
+        "lDisconnectSession1Own = SQLDISCONNECT(nConn1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL data-session isolation script should complete");
+    expect(state.work_area.data_session == 1, "SQL data-session isolation script should restore data session 1");
+    expect(state.sql_connections.empty(), "all session-local SQL connections should be disconnected by the end of the script");
+
+    const auto area1 = state.globals.find("narea1");
+    const auto used_session2_before = state.globals.find("lusedsession2before");
+    const auto area_session2_before = state.globals.find("nareasession2before");
+    const auto exec_cross_session = state.globals.find("nexeccrosssession");
+    const auto exec2 = state.globals.find("nexec2");
+    const auto used_session2_after = state.globals.find("lusedsession2after");
+    const auto area_session2_after = state.globals.find("nareasession2after");
+    const auto disconnect_session2_own = state.globals.find("ldisconnectsession2own");
+    const auto disconnect_session2_cross = state.globals.find("ldisconnectsession2cross");
+    const auto used_session1_back = state.globals.find("lusedsession1back");
+    const auto area_session1_back = state.globals.find("nareasession1back");
+    const auto used_session1_other = state.globals.find("lusedsession1other");
+    const auto disconnect_session1_own = state.globals.find("ldisconnectsession1own");
+
+    expect(area1 != state.globals.end(), "session-1 SQL cursor area should be captured");
+    expect(used_session2_before != state.globals.end(), "session-2 preexisting SQL cursor visibility should be captured");
+    expect(area_session2_before != state.globals.end(), "session-2 preexisting SQL cursor area should be captured");
+    expect(exec_cross_session != state.globals.end(), "cross-session SQLEXEC result should be captured");
+    expect(exec2 != state.globals.end(), "session-2 SQLEXEC result should be captured");
+    expect(used_session2_after != state.globals.end(), "session-2 SQL cursor visibility should be captured");
+    expect(area_session2_after != state.globals.end(), "session-2 SQL cursor area should be captured");
+    expect(disconnect_session2_own != state.globals.end(), "session-2 SQLDISCONNECT result should be captured");
+    expect(disconnect_session2_cross != state.globals.end(), "cross-session SQLDISCONNECT result should be captured");
+    expect(used_session1_back != state.globals.end(), "restored session-1 SQL cursor visibility should be captured");
+    expect(area_session1_back != state.globals.end(), "restored session-1 SQL cursor area should be captured");
+    expect(used_session1_other != state.globals.end(), "restored session-1 visibility for session-2 alias should be captured");
+    expect(disconnect_session1_own != state.globals.end(), "session-1 SQLDISCONNECT result should be captured");
+
+    if (area1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area1->second) == "1", "session 1 should materialize its SQL cursor in work area 1");
+    }
+    if (used_session2_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_session2_before->second) == "false", "switching to a fresh data session should hide session-1 SQL cursors");
+    }
+    if (area_session2_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_session2_before->second) == "0", "SELECT('alias') should not resolve a SQL cursor from another data session");
+    }
+    if (exec_cross_session != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cross_session->second) == "-1", "SQLEXEC should reject a SQL handle from another data session");
+    }
+    if (exec2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec2->second) == "1", "session 2 should still be able to create its own SQL cursor");
+    }
+    if (used_session2_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_session2_after->second) == "true", "session 2 should see its own SQL cursor");
+    }
+    if (area_session2_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_session2_after->second) == "1", "session 2 should resolve its own SQL cursor area");
+    }
+    if (disconnect_session2_own != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_session2_own->second) == "true", "session 2 should disconnect its own SQL handle");
+    }
+    if (disconnect_session2_cross != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_session2_cross->second) == "false", "session 2 should not disconnect a session-1 SQL handle");
+    }
+    if (used_session1_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_session1_back->second) == "true", "restoring session 1 should restore its SQL cursor visibility");
+    }
+    if (area_session1_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_session1_back->second) == "1", "restoring session 1 should restore its SQL cursor work area");
+    }
+    if (used_session1_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_session1_other->second) == "false", "session-2 SQL aliases should stay hidden after restoring session 1");
+    }
+    if (disconnect_session1_own != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_session1_own->second) == "true", "session 1 should disconnect its own SQL handle");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
@@ -2630,6 +2742,7 @@ int main() {
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
+    test_sql_result_cursors_are_isolated_by_data_session();
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
     test_seek_related_index_functions();

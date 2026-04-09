@@ -1226,7 +1226,7 @@ struct PrgRuntimeSession::Impl {
     int next_sql_handle = 1;
     int next_ole_handle = 1;
     std::map<int, DataSessionState> data_sessions;
-    std::map<int, RuntimeSqlConnectionState> sql_connections;
+    std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
     std::map<int, RuntimeOleObjectState> ole_objects;
     std::set<std::string> loaded_libraries;
     int next_api_handle = 1;
@@ -1297,6 +1297,21 @@ struct PrgRuntimeSession::Impl {
         return current_session_state().selected_work_area;
     }
 
+    std::map<int, RuntimeSqlConnectionState>& current_sql_connections() {
+        auto [iterator, _] = sql_connections_by_session.try_emplace(current_data_session);
+        return iterator->second;
+    }
+
+    const std::map<int, RuntimeSqlConnectionState>& current_sql_connections() const {
+        const auto found = sql_connections_by_session.find(current_data_session);
+        if (found != sql_connections_by_session.end()) {
+            return found->second;
+        }
+
+        static const std::map<int, RuntimeSqlConnectionState> empty_connections;
+        return empty_connections;
+    }
+
     RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {}) {
         RuntimePauseState state;
         state.paused = reason != DebugPauseReason::completed;
@@ -1325,7 +1340,7 @@ struct PrgRuntimeSession::Impl {
                 .eof = cursor.eof
             });
         }
-        for (const auto& [_, connection] : sql_connections) {
+        for (const auto& [_, connection] : current_sql_connections()) {
             state.sql_connections.push_back(connection);
         }
         for (const auto& [_, object] : ole_objects) {
@@ -2876,8 +2891,9 @@ struct PrgRuntimeSession::Impl {
             .eof = record_count == 0U
         };
         if (remote && sql_handle > 0) {
-            auto found = sql_connections.find(sql_handle);
-            if (found != sql_connections.end()) {
+            auto& connections = current_sql_connections();
+            auto found = connections.find(sql_handle);
+            if (found != connections.end()) {
                 found->second.last_cursor_alias = alias;
                 found->second.last_result_count = record_count;
             }
@@ -2887,7 +2903,7 @@ struct PrgRuntimeSession::Impl {
 
     int sql_connect(const std::string& target, const std::string& provider) {
         const int handle = next_sql_handle++;
-        sql_connections.emplace(handle, RuntimeSqlConnectionState{
+        current_sql_connections().emplace(handle, RuntimeSqlConnectionState{
             .handle = handle,
             .target = target,
             .provider = provider,
@@ -2898,12 +2914,13 @@ struct PrgRuntimeSession::Impl {
     }
 
     bool sql_disconnect(int handle) {
-        return sql_connections.erase(handle) > 0;
+        return current_sql_connections().erase(handle) > 0;
     }
 
     int sql_exec(int handle, const std::string& command, const std::string& cursor_alias) {
-        const auto found = sql_connections.find(handle);
-        if (found == sql_connections.end()) {
+        auto& connections = current_sql_connections();
+        const auto found = connections.find(handle);
+        if (found == connections.end()) {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
             return -1;
         }
