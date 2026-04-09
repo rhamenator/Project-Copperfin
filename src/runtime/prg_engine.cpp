@@ -1552,7 +1552,7 @@ struct PrgRuntimeSession::Impl {
     std::optional<int> resolve_use_target_work_area(const std::string& in_expression) {
         const std::string trimmed_expression = trim_copy(in_expression);
         if (trimmed_expression.empty()) {
-            return 0;
+            return current_selected_work_area();
         }
 
         std::string area_text;

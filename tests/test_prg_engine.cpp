@@ -747,6 +747,85 @@ void test_use_in_nonselected_alias_preserves_selected_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_plain_use_reuses_current_selected_work_area() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_plain_use_current_area";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "TOKYO"});
+
+    const fs::path main_path = temp_root / "plain_use_current_area.prg";
+    write_text(
+        main_path,
+        "SELECT 0\n"
+        "nAreaEmpty = SELECT()\n"
+        "USE '" + people_path.string() + "' ALIAS People\n"
+        "nAreaAfterFirstUse = SELECT()\n"
+        "cAliasAfterFirstUse = ALIAS()\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities\n"
+        "nAreaAfterReplace = SELECT()\n"
+        "cAliasAfterReplace = ALIAS()\n"
+        "cDbfAfterReplace = DBF()\n"
+        "nPeopleAreaAfterReplace = SELECT('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "plain USE current-area script should complete");
+    expect(state.work_area.selected == 1, "plain USE should keep using the current selected work area");
+    expect(state.work_area.aliases.size() == 1U, "plain USE replacement should reuse the selected work area instead of allocating another one");
+
+    const auto area_empty = state.globals.find("nareaempty");
+    const auto area_after_first_use = state.globals.find("nareaafterfirstuse");
+    const auto alias_after_first_use = state.globals.find("caliasafterfirstuse");
+    const auto area_after_replace = state.globals.find("nareaafterreplace");
+    const auto alias_after_replace = state.globals.find("caliasafterreplace");
+    const auto dbf_after_replace = state.globals.find("cdbfafterreplace");
+    const auto people_area_after_replace = state.globals.find("npeopleareaafterreplace");
+
+    expect(area_empty != state.globals.end(), "selected empty area should be captured");
+    expect(area_after_first_use != state.globals.end(), "plain USE on an empty selected area should be captured");
+    expect(alias_after_first_use != state.globals.end(), "alias after the first plain USE should be captured");
+    expect(area_after_replace != state.globals.end(), "plain USE replacement area should be captured");
+    expect(alias_after_replace != state.globals.end(), "alias after plain USE replacement should be captured");
+    expect(dbf_after_replace != state.globals.end(), "DBF() after plain USE replacement should be captured");
+    expect(people_area_after_replace != state.globals.end(), "SELECT('People') after plain USE replacement should be captured");
+
+    if (area_empty != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_empty->second) == "1", "SELECT 0 should choose work area 1 in a fresh session");
+    }
+    if (area_after_first_use != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_after_first_use->second) == "1", "plain USE should fill the currently selected empty work area");
+    }
+    if (alias_after_first_use != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_first_use->second) == "People", "plain USE should establish its alias in the current work area");
+    }
+    if (area_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_after_replace->second) == "1", "plain USE replacement should stay in the selected work area");
+    }
+    if (alias_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_replace->second) == "Cities", "plain USE replacement should swap the alias in place");
+    }
+    if (dbf_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(dbf_after_replace->second) == cities_path.lexically_normal().string(), "plain USE replacement should point at the replacement table");
+    }
+    if (people_area_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_area_after_replace->second) == "0", "plain USE replacement should remove the replaced alias from SELECT('alias') lookup");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_go_and_skip_cursor_navigation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
@@ -2547,6 +2626,7 @@ int main() {
     test_use_and_data_session_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();
+    test_plain_use_reuses_current_selected_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
