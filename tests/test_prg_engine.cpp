@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 namespace {
@@ -31,6 +32,13 @@ std::string lowercase_copy(std::string value) {
 void write_text(const std::filesystem::path& path, const std::string& contents) {
     std::ofstream output(path, std::ios::binary);
     output << contents;
+}
+
+std::string read_text(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    std::ostringstream buffer;
+    buffer << input.rdbuf();
+    return buffer.str();
 }
 
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
@@ -153,6 +161,20 @@ void write_synthetic_cdx(const std::filesystem::path& path, const std::string& t
     const std::size_t tail_offset = (3U * 512U) - 10U;
     for (std::size_t index = 0; index < tag_name.size(); ++index) {
         bytes[tail_offset + index] = static_cast<std::uint8_t>(tag_name[index]);
+    }
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+void write_synthetic_idx(const std::filesystem::path& path, const std::string& expression) {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u32(bytes, 0U, 512U);
+    write_le_u32(bytes, 4U, 0U);
+    write_le_u32(bytes, 8U, 1024U);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(std::min<std::size_t>(expression.size(), 220U)));
+    for (std::size_t index = 0; index < expression.size() && index < 220U; ++index) {
+        bytes[16U + index] = static_cast<std::uint8_t>(expression[index]);
     }
 
     std::ofstream output(path, std::ios::binary);
@@ -406,6 +428,91 @@ void test_do_form_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_export_vfp_compatibility_corpus_script() {
+    namespace fs = std::filesystem;
+    const fs::path script_path = R"(E:\Project-Copperfin\scripts\export-vfp-compatibility-corpus.ps1)";
+    const fs::path fixture_root = R"(E:\Project-Copperfin\build\compatibility_corpus_fixture)";
+    const fs::path output_root = R"(E:\Project-Copperfin\build\compatibility_corpus_output)";
+    const fs::path installed_root = fixture_root / "installed";
+    const fs::path vfp_source_root = fixture_root / "vfpsource";
+    const fs::path legacy_root = fixture_root / "legacy";
+    const fs::path regression_root = fixture_root / "regression";
+
+    std::error_code ignored;
+    fs::remove_all(fixture_root, ignored);
+    fs::remove_all(output_root, ignored);
+
+    fs::create_directories(installed_root / "Samples" / "Solution" / "Reports");
+    fs::create_directories(installed_root / "Wizards" / "Template" / "Books" / "Forms");
+    fs::create_directories(vfp_source_root / "ReportBuilder");
+    fs::create_directories(legacy_root / "Legacy");
+    fs::create_directories(regression_root / "runtime");
+
+    write_text(installed_root / "Samples" / "Solution" / "Reports" / "invoice.frx", "report fixture");
+    write_text(installed_root / "Wizards" / "Template" / "Books" / "Forms" / "books.scx", "form fixture");
+    write_text(vfp_source_root / "ReportBuilder" / "builder.prg", "PROCEDURE builder\nRETURN\n");
+    write_text(legacy_root / "Legacy" / "sample.pjx", "project fixture");
+    write_text(regression_root / "runtime" / "macro.spr", "SCREEN fixture");
+    write_text(vfp_source_root / "ReportBuilder" / "ignore.txt", "not a FoxPro asset");
+
+    const std::string command =
+        "powershell -NoProfile -ExecutionPolicy Bypass -File \"" + script_path.string() +
+        "\" -OutputDirectory \"" + output_root.string() +
+        "\" -InstalledVfpRoots \"" + installed_root.string() +
+        "\" -VfpSourceRoots \"" + vfp_source_root.string() +
+        "\" -LegacyProjectRoots \"" + legacy_root.string() +
+        "\" -RegressionSampleRoots \"" + regression_root.string() + "\"";
+
+    const int exit_code = std::system(command.c_str());
+    expect(exit_code == 0, "compatibility corpus exporter should succeed for synthetic fixture roots");
+
+    const fs::path manifest_path = output_root / "vfp-compatibility-corpus.json";
+    const fs::path summary_path = output_root / "vfp-compatibility-corpus-summary.json";
+    expect(fs::exists(manifest_path), "compatibility corpus exporter should write the manifest JSON");
+    expect(fs::exists(summary_path), "compatibility corpus exporter should write the summary JSON");
+    if (!fs::exists(manifest_path) || !fs::exists(summary_path)) {
+        fs::remove_all(fixture_root, ignored);
+        fs::remove_all(output_root, ignored);
+        return;
+    }
+
+    const std::string manifest = read_text(manifest_path);
+    const std::string summary = read_text(summary_path);
+
+    expect(manifest.find(R"(Samples\\Solution\\Reports\\invoice.frx)") != std::string::npos,
+           "manifest should include installed VFP sample report assets");
+    expect(manifest.find(R"(Wizards\\Template\\Books\\Forms\\books.scx)") != std::string::npos,
+           "manifest should include installed VFP wizard form assets");
+    expect(manifest.find(R"(ReportBuilder\\builder.prg)") != std::string::npos,
+           "manifest should include local VFP source PRGs");
+    expect(manifest.find(R"(Legacy\\sample.pjx)") != std::string::npos,
+           "manifest should include legacy project assets");
+    expect(manifest.find(R"(runtime\\macro.spr)") != std::string::npos,
+           "manifest should include regression sample assets");
+    expect(manifest.find("\"assetCategory\":  \"designer\"") != std::string::npos,
+           "manifest should classify designer assets");
+    expect(manifest.find("\"assetCategory\":  \"code\"") != std::string::npos,
+           "manifest should classify code assets");
+    expect(manifest.find("\"assetCategory\":  \"application\"") != std::string::npos,
+           "manifest should classify project and app assets");
+    expect(manifest.find("ignore.txt") == std::string::npos,
+           "manifest should ignore unsupported file extensions");
+
+    expect(summary.find("\"totalEntries\":  5") != std::string::npos,
+           "summary should report the exported entry count");
+    expect(summary.find("\"installed-vfp\":  2") != std::string::npos,
+           "summary should count installed VFP assets");
+    expect(summary.find("\"local-vfp-source\":  1") != std::string::npos,
+           "summary should count VFP source assets");
+    expect(summary.find("\"legacy-project\":  1") != std::string::npos,
+           "summary should count legacy project assets");
+    expect(summary.find("\"regression-sample\":  1") != std::string::npos,
+           "summary should count regression sample assets");
+
+    fs::remove_all(fixture_root, ignored);
+    fs::remove_all(output_root, ignored);
+}
+
 void test_work_area_and_data_session_compatibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_workareas";
@@ -435,6 +542,117 @@ void test_work_area_and_data_session_compatibility() {
     expect(area != state.globals.end(), "SELECT() result should be available to PRG code");
     if (area != state.globals.end()) {
         expect(copperfin::runtime::format_value(area->second) == "1", "SELECT() should return the current work area");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_eval_macro_and_runtime_state_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_eval_macro_state";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path new_default = temp_root / "workspace";
+    fs::create_directories(new_default);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "eval_macro_state.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cAliasExpr = 'People'\n"
+        "cFieldExpr = 'NAME'\n"
+        "cEvalExpr = 'AGE + 5'\n"
+        "cNearBefore = SET('NEAR')\n"
+        "SET NEAR ON\n"
+        "cNearAfter = SET('NEAR')\n"
+        "cDefaultBefore = SET('DEFAULT')\n"
+        "SET DEFAULT TO '" + new_default.string() + "'\n"
+        "cDefaultAfter = SET('DEFAULT')\n"
+        "cAliasFromEval = EVAL('ALIAS()')\n"
+        "cNameFromMacro = &cFieldExpr\n"
+        "nEvalAge = EVAL(cEvalExpr)\n"
+        "USE IN &cAliasExpr\n"
+        "lUsedAfterClose = USED('People')\n"
+        "nAreaAfterClose = SELECT('People')\n"
+        "SET DATASESSION TO 2\n"
+        "cNearSession2 = SET('NEAR')\n"
+        "SET DATASESSION TO 1\n"
+        "cNearRestored = SET('NEAR')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "eval/macro/state script should complete");
+
+    const auto near_before = state.globals.find("cnearbefore");
+    const auto near_after = state.globals.find("cnearafter");
+    const auto default_before = state.globals.find("cdefaultbefore");
+    const auto default_after = state.globals.find("cdefaultafter");
+    const auto alias_from_eval = state.globals.find("caliasfromeval");
+    const auto name_from_macro = state.globals.find("cnamefrommacro");
+    const auto eval_age = state.globals.find("nevalage");
+    const auto used_after_close = state.globals.find("lusedafterclose");
+    const auto area_after_close = state.globals.find("nareaafterclose");
+    const auto near_session2 = state.globals.find("cnearsession2");
+    const auto near_restored = state.globals.find("cnearrestored");
+
+    expect(near_before != state.globals.end(), "SET('NEAR') before enabling it should be captured");
+    expect(near_after != state.globals.end(), "SET('NEAR') after enabling it should be captured");
+    expect(default_before != state.globals.end(), "SET('DEFAULT') before change should be captured");
+    expect(default_after != state.globals.end(), "SET('DEFAULT') after change should be captured");
+    expect(alias_from_eval != state.globals.end(), "EVAL() should be able to evaluate runtime-state expressions");
+    expect(name_from_macro != state.globals.end(), "&macro field resolution should be captured");
+    expect(eval_age != state.globals.end(), "EVAL() of a stored expression should be captured");
+    expect(used_after_close != state.globals.end(), "USE IN <expr> close semantics should be captured");
+    expect(area_after_close != state.globals.end(), "SELECT('alias') after USE IN <expr> should be captured");
+    expect(near_session2 != state.globals.end(), "SET('NEAR') in a fresh second session should be captured");
+    expect(near_restored != state.globals.end(), "SET('NEAR') after restoring the original session should be captured");
+
+    if (near_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_before->second) == "OFF", "SET('NEAR') should report OFF before it is enabled");
+    }
+    if (near_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_after->second) == "ON", "SET('NEAR') should report ON after SET NEAR ON");
+    }
+    if (default_before != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(default_before->second)) == lowercase_copy(temp_root.string()),
+            "SET('DEFAULT') should expose the startup working directory before changes");
+    }
+    if (default_after != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(default_after->second)) == lowercase_copy(new_default.string()),
+            "SET('DEFAULT') should expose the updated default directory");
+    }
+    if (alias_from_eval != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_from_eval->second) == "People", "EVAL('ALIAS()') should evaluate in the current runtime context");
+    }
+    if (name_from_macro != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name_from_macro->second) == "ALPHA", "&macro should substitute a stored field name inside expressions");
+    }
+    if (eval_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eval_age->second) == "15", "EVAL() should evaluate stored arithmetic expressions against the current record");
+    }
+    if (used_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_after_close->second) == "false", "USE IN <expr> should close the targeted alias");
+    }
+    if (area_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_after_close->second) == "0", "closing an alias through USE IN <expr> should clear SELECT('alias') lookup");
+    }
+    if (near_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_session2->second) == "OFF", "SET() state should stay isolated in a fresh data session");
+    }
+    if (near_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_restored->second) == "ON", "restoring the original data session should restore its SET() state");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -828,6 +1046,73 @@ void test_plain_use_reuses_current_selected_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_select_zero_and_use_in_zero_reuse_closed_work_area() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_select_zero_reuse";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "TOKYO"});
+
+    const fs::path main_path = temp_root / "select_zero_reuse.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE IN People\n"
+        "nSelectedAfterClose = SELECT()\n"
+        "nNextFreeBeforeReuse = SELECT(0)\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN 0\n"
+        "nCitiesArea = SELECT('Cities')\n"
+        "nSelectedAfterReuse = SELECT()\n"
+        "nNextFreeAfterReuse = SELECT(0)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SELECT(0) reuse script should complete");
+    expect(state.work_area.selected == 1, "reopening through IN 0 should keep the reused work area selected");
+    expect(state.work_area.aliases.size() == 1U, "reopening through IN 0 should reuse the freed work area instead of allocating a new one");
+
+    const auto selected_after_close = state.globals.find("nselectedafterclose");
+    const auto next_free_before_reuse = state.globals.find("nnextfreebeforereuse");
+    const auto cities_area = state.globals.find("ncitiesarea");
+    const auto selected_after_reuse = state.globals.find("nselectedafterreuse");
+    const auto next_free_after_reuse = state.globals.find("nnextfreeafterreuse");
+
+    expect(selected_after_close != state.globals.end(), "selected work area after closing the cursor should be captured");
+    expect(next_free_before_reuse != state.globals.end(), "SELECT(0) before reopening should be captured");
+    expect(cities_area != state.globals.end(), "SELECT('Cities') after reopening should be captured");
+    expect(selected_after_reuse != state.globals.end(), "selected work area after reopening should be captured");
+    expect(next_free_after_reuse != state.globals.end(), "SELECT(0) after reopening should be captured");
+
+    if (selected_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_close->second) == "1", "closing the selected alias should leave the same work area selected");
+    }
+    if (next_free_before_reuse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(next_free_before_reuse->second) == "1", "SELECT(0) should report the freed work area without consuming it");
+    }
+    if (cities_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cities_area->second) == "1", "USE ... IN 0 should reuse the freed work area");
+    }
+    if (selected_after_reuse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_reuse->second) == "1", "reopening through IN 0 should keep the reused work area selected");
+    }
+    if (next_free_after_reuse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(next_free_after_reuse->second) == "2", "SELECT(0) should advance only after the freed work area is reused");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_go_and_skip_cursor_navigation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
@@ -1183,6 +1468,108 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_auto_allocation_tracks_session_selection_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_selection_flow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_selection_flow.prg";
+    write_text(
+        main_path,
+        "nConn1 = SQLCONNECT('dsn=Northwind')\n"
+        "SELECT 0\n"
+        "nSession1SelectedBefore = SELECT()\n"
+        "nExec1 = SQLEXEC(nConn1, 'select * from customers', 'sqlcust1')\n"
+        "nSession1Area = SELECT('sqlcust1')\n"
+        "nSession1SelectedAfter = SELECT()\n"
+        "SET DATASESSION TO 2\n"
+        "nConn2 = SQLCONNECT('dsn=SessionTwo')\n"
+        "SELECT 0\n"
+        "SELECT 0\n"
+        "nSession2SelectedBefore = SELECT()\n"
+        "nExec2 = SQLEXEC(nConn2, 'select * from orders', 'sqlcust2')\n"
+        "nSession2Area = SELECT('sqlcust2')\n"
+        "nSession2SelectedAfter = SELECT()\n"
+        "lDisc2 = SQLDISCONNECT(nConn2)\n"
+        "SET DATASESSION TO 1\n"
+        "nSession1AreaBack = SELECT('sqlcust1')\n"
+        "lDisc1 = SQLDISCONNECT(nConn1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL selection-flow script should complete");
+    expect(state.work_area.data_session == 1, "SQL selection-flow script should restore data session 1");
+    expect(state.sql_connections.empty(), "SQL selection-flow script should disconnect all session-local handles");
+
+    const auto session1_selected_before = state.globals.find("nsession1selectedbefore");
+    const auto exec1 = state.globals.find("nexec1");
+    const auto session1_area = state.globals.find("nsession1area");
+    const auto session1_selected_after = state.globals.find("nsession1selectedafter");
+    const auto session2_selected_before = state.globals.find("nsession2selectedbefore");
+    const auto exec2 = state.globals.find("nexec2");
+    const auto session2_area = state.globals.find("nsession2area");
+    const auto session2_selected_after = state.globals.find("nsession2selectedafter");
+    const auto session1_area_back = state.globals.find("nsession1areaback");
+    const auto disc2 = state.globals.find("ldisc2");
+    const auto disc1 = state.globals.find("ldisc1");
+
+    expect(session1_selected_before != state.globals.end(), "session-1 selected area before SQLEXEC should be captured");
+    expect(exec1 != state.globals.end(), "session-1 SQLEXEC result should be captured");
+    expect(session1_area != state.globals.end(), "session-1 SQL cursor area should be captured");
+    expect(session1_selected_after != state.globals.end(), "session-1 selected area after SQLEXEC should be captured");
+    expect(session2_selected_before != state.globals.end(), "session-2 selected area before SQLEXEC should be captured");
+    expect(exec2 != state.globals.end(), "session-2 SQLEXEC result should be captured");
+    expect(session2_area != state.globals.end(), "session-2 SQL cursor area should be captured");
+    expect(session2_selected_after != state.globals.end(), "session-2 selected area after SQLEXEC should be captured");
+    expect(session1_area_back != state.globals.end(), "session-1 SQL cursor area after restoring the session should be captured");
+    expect(disc2 != state.globals.end(), "session-2 SQLDISCONNECT result should be captured");
+    expect(disc1 != state.globals.end(), "session-1 SQLDISCONNECT result should be captured");
+
+    if (session1_selected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_before->second) == "1", "session 1 should auto-select work area 1 before its first SQLEXEC");
+    }
+    if (exec1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec1->second) == "1", "session 1 SQLEXEC should succeed");
+    }
+    if (session1_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_area->second) == "1", "session 1 SQLEXEC should reuse the selected empty work area");
+    }
+    if (session1_selected_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_after->second) == "1", "session 1 should keep the SQL cursor on its selected work area");
+    }
+    if (session2_selected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_selected_before->second) == "2", "session 2 should preserve its own current SELECT 0 flow before SQLEXEC");
+    }
+    if (exec2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec2->second) == "1", "session 2 SQLEXEC should succeed");
+    }
+    if (session2_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_area->second) == "2", "session 2 SQLEXEC should reuse that session's selected empty work area");
+    }
+    if (session2_selected_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_selected_after->second) == "2", "session 2 should keep its SQL cursor on the selected work area");
+    }
+    if (session1_area_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_area_back->second) == "1", "restoring session 1 should keep its SQL cursor bound to session 1's selection flow");
+    }
+    if (disc2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc2->second) == "1", "session 2 should disconnect its own SQL handle");
+    }
+    if (disc1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc1->second) == "1", "session 1 should disconnect its own SQL handle");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
@@ -1335,6 +1722,58 @@ void test_set_near_changes_seek_failure_position() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_command_accepts_tag_override_without_set_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_tag_override";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_tag_override.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SEEK 'BRAVO' TAG NAME\n"
+        "lFound = FOUND()\n"
+        "nRec = RECNO()\n"
+        "cOrderAfter = ORDER()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SEEK ... TAG script should complete");
+
+    const auto found = state.globals.find("lfound");
+    const auto rec = state.globals.find("nrec");
+    const auto order_after = state.globals.find("corderafter");
+
+    expect(found != state.globals.end(), "SEEK ... TAG should expose FOUND()");
+    expect(rec != state.globals.end(), "SEEK ... TAG should expose RECNO()");
+    expect(order_after != state.globals.end(), "SEEK ... TAG should leave ORDER() observable");
+
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true", "SEEK ... TAG should find matches using the named tag");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "2", "SEEK ... TAG should position the cursor on the matching row");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "SEEK ... TAG should not permanently change the controlling order");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_related_index_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_functions";
@@ -1421,6 +1860,68 @@ void test_seek_related_index_functions() {
     }
     if (after_move != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_move->second) == "3", "INDEXSEEK(.T.) should move the record pointer to the match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_order_and_tag_preserve_index_file_identity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_idx_identity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_idx(idx_path, "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "idx_identity.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "cOrderPath = ORDER('People', 1)\n"
+        "cTagFromIdx = TAG('" + idx_path.string() + "', 1, 'People')\n"
+        "lSeek = SEEK('CHARLIE', 'People')\n"
+        "nSeekRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "idx identity script should complete");
+
+    const auto order_path = state.globals.find("corderpath");
+    const auto tag_from_idx = state.globals.find("ctagfromidx");
+    const auto seek_value = state.globals.find("lseek");
+    const auto seek_rec = state.globals.find("nseekrec");
+
+    expect(order_path != state.globals.end(), "ORDER(alias, pathFlag) should be captured for IDX-backed orders");
+    expect(tag_from_idx != state.globals.end(), "TAG(indexFile, tagNumber, alias) should be captured for IDX-backed orders");
+    expect(seek_value != state.globals.end(), "SEEK() should be captured for IDX-backed orders");
+    expect(seek_rec != state.globals.end(), "RECNO() after IDX-backed SEEK() should be captured");
+
+    if (order_path != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(order_path->second).find("PEOPLE.IDX") != std::string::npos,
+            "ORDER(alias, pathFlag) should preserve the actual IDX file identity");
+    }
+    if (tag_from_idx != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(tag_from_idx->second) == "PEOPLE",
+            "TAG(indexFile, tagNumber, alias) should resolve the order from the actual IDX file");
+    }
+    if (seek_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_value->second) == "true", "SEEK() should work with the loaded IDX order");
+    }
+    if (seek_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_rec->second) == "3", "SEEK() should move to the matching record when using the IDX order");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1589,6 +2090,73 @@ void test_foxtools_registration_and_call_bridge() {
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.regfn"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.callfn"; }),
         "Foxtools bridge should emit library, registration, and call events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_foxtools_registration_is_scoped_by_data_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_foxtools_datasession";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "foxtools_datasession.prg";
+    write_text(
+        main_path,
+        "SET LIBRARY TO 'Foxtools'\n"
+        "hPid1 = RegFn32('GetCurrentProcessId', '', 'I', 'kernel32.dll')\n"
+        "SET DATASESSION TO 2\n"
+        "SET LIBRARY TO 'Foxtools'\n"
+        "nCrossCall = CallFn(hPid1)\n"
+        "hLen2 = RegFn32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
+        "nLen2 = CallFn(hLen2, 'AB')\n"
+        "SET DATASESSION TO 1\n"
+        "nPid1Back = CallFn(hPid1)\n"
+        "hLen1Back = RegFn32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Foxtools data-session script should complete");
+
+    const auto hpid1 = state.globals.find("hpid1");
+    const auto cross_call = state.globals.find("ncrosscall");
+    const auto hlen2 = state.globals.find("hlen2");
+    const auto len2 = state.globals.find("nlen2");
+    const auto pid1_back = state.globals.find("npid1back");
+    const auto hlen1_back = state.globals.find("hlen1back");
+
+    expect(hpid1 != state.globals.end(), "session-1 RegFn32 handle should be captured");
+    expect(cross_call != state.globals.end(), "cross-session CallFn result should be captured");
+    expect(hlen2 != state.globals.end(), "session-2 RegFn32 handle should be captured");
+    expect(len2 != state.globals.end(), "session-2 CallFn result should be captured");
+    expect(pid1_back != state.globals.end(), "restored session-1 CallFn result should be captured");
+    expect(hlen1_back != state.globals.end(), "restored session-1 RegFn32 handle should be captured");
+
+    if (hpid1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hpid1->second) == "1", "the first RegFn32 handle in session 1 should be 1");
+    }
+    if (cross_call != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cross_call->second) == "-1", "CallFn should reject a RegFn32 handle from another data session");
+    }
+    if (hlen2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hlen2->second) == "1", "the first RegFn32 handle in a fresh second data session should restart at 1");
+    }
+    if (len2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(len2->second) == "2", "session-2 CallFn should use its own registered handle");
+    }
+    if (pid1_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pid1_back->second) != "0", "restoring session 1 should restore its RegFn32 handle lookup");
+    }
+    if (hlen1_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hlen1_back->second) == "2", "restoring session 1 should restore its next RegFn32 handle allocation");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1881,6 +2449,120 @@ void test_sql_result_cursors_and_ole_actions() {
         "OLE property assignments should emit ole.set events");
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.invoke"; }),
         "OLE method calls should emit ole.invoke events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_read_only_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_read_only_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_read_only_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET FILTER TO ID >= 2\n"
+        "GO TOP\n"
+        "cTopName = NAME\n"
+        "LOCATE FOR AMOUNT = 20\n"
+        "lFound = FOUND()\n"
+        "nLocateRec = RECNO()\n"
+        "cLocateName = NAME\n"
+        "nCountVisible = COUNT()\n"
+        "nSumVisible = SUM(AMOUNT)\n"
+        "CALCULATE COUNT() TO nCalcCount, SUM(AMOUNT) TO nCalcSum\n"
+        "nCountAlias = COUNT(ID >= 2, 'sqlcust')\n"
+        "nSumAlias = SUM(AMOUNT, ID >= 2, 'sqlcust')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL read-only parity script should complete");
+    expect(state.sql_connections.empty(), "SQL read-only parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto top_name = state.globals.find("ctopname");
+    const auto found = state.globals.find("lfound");
+    const auto locate_rec = state.globals.find("nlocaterec");
+    const auto locate_name = state.globals.find("clocatename");
+    const auto count_visible = state.globals.find("ncountvisible");
+    const auto sum_visible = state.globals.find("nsumvisible");
+    const auto calc_count = state.globals.find("ncalccount");
+    const auto calc_sum = state.globals.find("ncalcsum");
+    const auto count_alias = state.globals.find("ncountalias");
+    const auto sum_alias = state.globals.find("nsumalias");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for the SQL read-only parity script");
+    expect(top_name != state.globals.end(), "filtered GO TOP should expose the current SQL cursor row");
+    expect(found != state.globals.end(), "LOCATE on a SQL cursor should expose FOUND()");
+    expect(locate_rec != state.globals.end(), "LOCATE on a SQL cursor should expose RECNO()");
+    expect(locate_name != state.globals.end(), "LOCATE on a SQL cursor should expose field values");
+    expect(count_visible != state.globals.end(), "COUNT() should work against a filtered SQL cursor");
+    expect(sum_visible != state.globals.end(), "SUM() should work against a filtered SQL cursor");
+    expect(calc_count != state.globals.end(), "CALCULATE COUNT() should work against a SQL cursor");
+    expect(calc_sum != state.globals.end(), "CALCULATE SUM() should work against a SQL cursor");
+    expect(count_alias != state.globals.end(), "COUNT(..., alias) should target a SQL cursor by alias");
+    expect(sum_alias != state.globals.end(), "SUM(..., alias) should target a SQL cursor by alias");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for the SQL read-only parity script");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before read-only SQL cursor checks");
+    }
+    if (top_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_name->second) == "BRAVO", "SET FILTER plus GO TOP should position a SQL cursor on the first visible synthetic row");
+    }
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true", "LOCATE should succeed on a SQL cursor when the synthetic row matches");
+    }
+    if (locate_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(locate_rec->second) == "2", "LOCATE should leave the SQL cursor on the matching synthetic row");
+    }
+    if (locate_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(locate_name->second) == "BRAVO", "SQL cursor field lookup should flow through the located synthetic row");
+    }
+    if (count_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_visible->second) == "2", "COUNT() should respect active SQL cursor filters");
+    }
+    if (sum_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_visible->second) == "50", "SUM() should aggregate visible synthetic SQL rows");
+    }
+    if (calc_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(calc_count->second) == "2", "CALCULATE COUNT() should respect active SQL cursor filters");
+    }
+    if (calc_sum != state.globals.end()) {
+        expect(copperfin::runtime::format_value(calc_sum->second) == "50", "CALCULATE SUM() should aggregate visible synthetic SQL rows");
+    }
+    if (count_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_alias->second) == "2", "COUNT(condition, alias) should resolve the SQL cursor by alias");
+    }
+    if (sum_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_alias->second) == "50", "SUM(value, condition, alias) should resolve the SQL cursor by alias");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should still succeed after read-only SQL cursor operations");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter"; }),
+        "SQL cursor filter changes should emit runtime.filter events");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.locate"; }),
+        "SQL cursor LOCATE should emit runtime.locate events");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.calculate"; }),
+        "SQL cursor CALCULATE should emit runtime.calculate events");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -2449,6 +3131,52 @@ void test_do_case_control_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_text_endtext_literal_blocks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_text_blocks";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "text_blocks.prg";
+    write_text(
+        main_path,
+        "TEXT TO cBody NOSHOW\n"
+        "Alpha\n"
+        "\n"
+        "* literal star line\n"
+        "&& literal ampersand line\n"
+        "ENDTEXT\n"
+        "TEXT TO cBody ADDITIVE NOSHOW\n"
+        "Bravo\n"
+        "ENDTEXT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TEXT/ENDTEXT script should complete");
+
+    const auto body = state.globals.find("cbody");
+    expect(body != state.globals.end(), "TEXT TO should assign the captured block into the target variable");
+    if (body != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(body->second) == "Alpha\n\n* literal star line\n&& literal ampersand line\nBravo\n",
+            "TEXT/ENDTEXT should preserve literal lines and ADDITIVE should append the next block");
+    }
+
+    const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.text";
+    }));
+    expect(text_events == 2, "each TEXT block should emit a runtime.text event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_aggregate_functions_respect_visibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregates";
@@ -2955,30 +3683,39 @@ int main() {
     test_local_variables_in_stack_frame();
     test_report_form_pause();
     test_do_form_pause();
+    test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
+    test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
     test_use_and_data_session_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();
     test_plain_use_reuses_current_selected_work_area();
+    test_select_zero_and_use_in_zero_reuse_closed_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursors_are_isolated_by_data_session();
+    test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
+    test_seek_command_accepts_tag_override_without_set_order();
     test_set_near_is_scoped_by_data_session();
     test_seek_related_index_functions();
+    test_order_and_tag_preserve_index_file_identity();
     test_foxtools_registration_and_call_bridge();
+    test_foxtools_registration_is_scoped_by_data_session();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
     test_select_missing_alias_is_an_error();
     test_use_in_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
+    test_sql_result_cursor_read_only_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
+    test_text_endtext_literal_blocks();
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
     test_command_level_aggregate_commands();

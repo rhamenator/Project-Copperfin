@@ -490,6 +490,90 @@ void test_append_blank_rejects_unsupported_field_layouts_without_changing_file()
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_parse_dbf_table_rejects_truncated_visual_asset() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_asset_validation_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "broken.scx";
+    std::vector<std::uint8_t> table_bytes(32U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 13U);
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(!parse_result.ok, "parse_dbf_table_from_file should reject truncated visual assets");
+    expect(parse_result.error == "Table file is shorter than its header length.", "truncated visual assets should report a header-length validation error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_visual_asset_memo_sidecar_repair_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_asset_repair_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "designer.scx";
+    const fs::path memo_path = temp_dir / "designer.sct";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 12U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtTitle", "Left = 10\r\nTop = 20\r\n"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support SCX/SCT-style memo assets");
+    expect(fs::exists(memo_path), "SCX-backed table creation should emit the SCT sidecar");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "synthetic SCX/SCT assets should parse before repair");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 2U) {
+        expect(parse_result.table.records[0].values[1].display_value.find("Left = 10") != std::string::npos,
+               "synthetic SCX/SCT assets should round-trip the initial memo payload");
+    }
+
+    {
+        std::vector<std::uint8_t> broken_memo(8U, 0U);
+        std::ofstream output(memo_path, std::ios::binary | std::ios::trunc);
+        output.write(reinterpret_cast<const char*>(broken_memo.data()), static_cast<std::streamsize>(broken_memo.size()));
+    }
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(),
+        0U,
+        "PROPERTIES",
+        "Left = 25\r\nTop = 20\r\nWidth = 40\r\n");
+    expect(replace_result.ok, "replace_record_field_value should repair an invalid SCT sidecar while updating memo-backed asset fields");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "synthetic SCX/SCT assets should parse after memo-sidecar repair");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 2U) {
+        expect(parse_result.table.records[0].values[1].display_value.find("Left = 25") != std::string::npos,
+               "memo-sidecar repair should preserve the updated asset memo payload");
+        expect(parse_result.table.records[0].values[1].display_value.find("Width = 40") != std::string::npos,
+               "memo-sidecar repair should keep the rewritten multi-line asset memo content readable");
+    }
+
+    const auto repaired_memo_bytes = read_binary_file(memo_path);
+    expect(repaired_memo_bytes.size() >= 1024U, "memo-sidecar repair should rebuild a valid SCT allocation block");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -501,6 +585,8 @@ int main() {
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
     test_append_blank_rejects_unsupported_field_layouts_without_changing_file();
+    test_parse_dbf_table_rejects_truncated_visual_asset();
+    test_visual_asset_memo_sidecar_repair_round_trip();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

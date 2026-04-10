@@ -7,3 +7,5 @@
 *.suo
 *.VC.db
 *.VC.opendb
+codex-resume-prompt.txt
+.codex-driver/

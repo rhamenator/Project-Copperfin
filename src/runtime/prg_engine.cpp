@@ -34,6 +34,7 @@ enum class StatementKind {
     count_command,
     sum_command,
     average_command,
+    text_command,
     total_command,
     do_form,
     report_form,
@@ -148,6 +149,7 @@ struct CursorState {
     struct OrderState {
         std::string name;
         std::string expression;
+        std::string index_path;
     };
 
     int work_area = 0;
@@ -165,6 +167,7 @@ struct CursorState {
     std::vector<OrderState> orders;
     std::string active_order_name;
     std::string active_order_expression;
+    std::string active_order_path;
     std::string filter_expression;
 };
 
@@ -180,6 +183,7 @@ struct CursorPositionSnapshot {
     bool eof = true;
     std::string active_order_name;
     std::string active_order_expression;
+    std::string active_order_path;
 };
 
 struct ReplaceAssignment {
@@ -221,6 +225,13 @@ struct RegisteredApiFunction {
     std::string argument_types;
     std::string return_type;
     std::string dll_name;
+};
+
+struct LogicalLine {
+    std::size_t line_number = 0;
+    std::string text;
+    bool is_text_block = false;
+    std::string block_text;
 };
 
 struct DataSessionState {
@@ -269,6 +280,12 @@ std::string normalize_path(const std::string& value) {
         return {};
     }
     return std::filesystem::path(value).lexically_normal().string();
+}
+
+bool is_index_file_path(const std::string& value) {
+    const std::string extension = lowercase_copy(std::filesystem::path(trim_copy(value)).extension().string());
+    return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||
+           extension == ".ndx" || extension == ".mdx";
 }
 
 std::string unquote_string(std::string value) {
@@ -332,6 +349,12 @@ std::string uppercase_copy(std::string value) {
     return value;
 }
 
+bool is_bare_identifier_text(const std::string& value) {
+    return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+        return std::isalnum(ch) != 0 || ch == '_';
+    });
+}
+
 std::string collapse_identifier(const std::string& value) {
     std::string normalized;
     normalized.reserve(value.size());
@@ -377,6 +400,31 @@ std::optional<std::string> record_field_value(const vfp::DbfRecord& record, cons
         }
     }
     return std::nullopt;
+}
+
+vfp::DbfRecord make_synthetic_sql_record(std::size_t recno) {
+    const auto synthetic_name = [&]() {
+        switch (recno) {
+            case 1U:
+                return std::string{"ALPHA"};
+            case 2U:
+                return std::string{"BRAVO"};
+            case 3U:
+                return std::string{"CHARLIE"};
+            default:
+                return "ROW" + std::to_string(recno);
+        }
+    };
+
+    return vfp::DbfRecord{
+        .record_index = recno - 1U,
+        .deleted = false,
+        .values = {
+            vfp::DbfRecordValue{.field_name = "ID", .field_type = 'N', .display_value = std::to_string(recno)},
+            vfp::DbfRecordValue{.field_name = "NAME", .field_type = 'C', .display_value = synthetic_name()},
+            vfp::DbfRecordValue{.field_name = "AMOUNT", .field_type = 'N', .display_value = std::to_string(recno * 10U)},
+        }
+    };
 }
 
 std::string evaluate_index_expression(const std::string& expression, const vfp::DbfRecord& record) {
@@ -485,9 +533,9 @@ std::string strip_inline_comment(const std::string& line) {
     return line;
 }
 
-std::vector<std::pair<std::size_t, std::string>> load_logical_lines(const std::string& path) {
+std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
-    std::vector<std::pair<std::size_t, std::string>> lines;
+    std::vector<LogicalLine> lines;
     if (!input) {
         return lines;
     }
@@ -502,6 +550,35 @@ std::vector<std::pair<std::size_t, std::string>> load_logical_lines(const std::s
         ++line_number;
         if (!raw_line.empty() && raw_line.back() == '\r') {
             raw_line.pop_back();
+        }
+
+        const std::string text_probe = trim_copy(strip_inline_comment(raw_line));
+        if (!continuing && (uppercase_copy(text_probe) == "TEXT" || starts_with_insensitive(text_probe, "TEXT "))) {
+            const std::size_t block_start = line_number;
+            std::string block_text;
+            while (std::getline(input, raw_line)) {
+                ++line_number;
+                if (!raw_line.empty() && raw_line.back() == '\r') {
+                    raw_line.pop_back();
+                }
+
+                if (uppercase_copy(trim_copy(strip_inline_comment(raw_line))) == "ENDTEXT") {
+                    break;
+                }
+
+                block_text += raw_line;
+                block_text += "\n";
+            }
+
+            lines.push_back({
+                .line_number = block_start,
+                .text = text_probe,
+                .is_text_block = true,
+                .block_text = std::move(block_text)
+            });
+            continuing = false;
+            current_text.clear();
+            continue;
         }
 
         std::string line = strip_inline_comment(raw_line);
@@ -523,11 +600,17 @@ std::vector<std::pair<std::size_t, std::string>> load_logical_lines(const std::s
         }
 
         continuing = false;
-        lines.emplace_back(current_start, trim_copy(current_text));
+        lines.push_back({
+            .line_number = current_start,
+            .text = trim_copy(current_text)
+        });
     }
 
     if (continuing && !current_text.empty()) {
-        lines.emplace_back(current_start, trim_copy(current_text));
+        lines.push_back({
+            .line_number = current_start,
+            .text = trim_copy(current_text)
+        });
     }
 
     return lines;
@@ -843,8 +926,9 @@ Program parse_program(const std::string& path) {
     program.main.name = "main";
 
     Routine* current = &program.main;
-    for (const auto& [line_number, raw_line] : load_logical_lines(path)) {
-        const std::string line = trim_copy(raw_line);
+    for (const auto& logical_line : load_logical_lines(path)) {
+        const std::size_t line_number = logical_line.line_number;
+        const std::string line = trim_copy(logical_line.text);
         if (line.empty()) {
             continue;
         }
@@ -945,13 +1029,15 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SEEK ")) {
             statement.kind = StatementKind::seek_command;
             const std::string body = trim_copy(line.substr(5U));
-            const std::string upper_body = uppercase_copy(body);
-            const auto in_position = upper_body.find(" IN ");
-            if (in_position == std::string::npos) {
-                statement.expression = body;
-            } else {
-                statement.expression = trim_copy(body.substr(0U, in_position));
-                statement.secondary_expression = trim_copy(body.substr(in_position + 4U));
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"ORDER", "TAG", "IN"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "IN", {"ORDER", "TAG"});
+            statement.tertiary_expression = extract_command_clause(body, "ORDER", {"TAG", "IN"});
+            if (statement.tertiary_expression.empty()) {
+                const std::string tag_name = extract_command_clause(body, "TAG", {"ORDER", "IN"});
+                if (!tag_name.empty()) {
+                    statement.tertiary_expression = "TAG " + tag_name;
+                }
             }
         } else if (starts_with_insensitive(line, "CALCULATE ")) {
             statement.kind = StatementKind::calculate_command;
@@ -1008,6 +1094,14 @@ Program parse_program(const std::string& path) {
         } else if (upper == "TOTAL" || starts_with_insensitive(line, "TOTAL ")) {
             statement.kind = StatementKind::total_command;
             statement.expression = upper == "TOTAL" ? std::string{} : trim_copy(line.substr(6U));
+        } else if (logical_line.is_text_block && (upper == "TEXT" || starts_with_insensitive(line, "TEXT "))) {
+            statement.kind = StatementKind::text_command;
+            const std::string body = upper == "TEXT" ? std::string{} : trim_copy(line.substr(4U));
+            statement.identifier = extract_command_clause(body, "TO", {"ADDITIVE", "NOSHOW", "TEXTMERGE", "PRETEXT"});
+            statement.expression = logical_line.block_text;
+            statement.secondary_expression = has_keyword(body, "ADDITIVE") ? "additive" : std::string{};
+            statement.tertiary_expression = has_keyword(body, "TEXTMERGE") ? "textmerge" : std::string{};
+            statement.quaternary_expression = has_keyword(body, "NOSHOW") ? "noshow" : std::string{};
         } else if (upper == "LOCATE" || starts_with_insensitive(line, "LOCATE ")) {
             statement.kind = StatementKind::locate_command;
             const std::string body = upper == "LOCATE" ? std::string{} : trim_copy(line.substr(7U));
@@ -1224,13 +1318,13 @@ struct PrgRuntimeSession::Impl {
     std::map<int, std::map<std::string, std::string>> set_state_by_session;
     int current_data_session = 1;
     std::map<int, int> next_sql_handle_by_session;
+    std::map<int, int> next_api_handle_by_session;
     int next_ole_handle = 1;
     std::map<int, DataSessionState> data_sessions;
     std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
     std::map<int, RuntimeOleObjectState> ole_objects;
     std::set<std::string> loaded_libraries;
-    int next_api_handle = 1;
-    std::map<int, RegisteredApiFunction> registered_api_functions;
+    std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
     std::optional<std::size_t> event_dispatch_return_depth;
@@ -1318,6 +1412,27 @@ struct PrgRuntimeSession::Impl {
         return iterator->second;
     }
 
+    int& current_api_handle_counter() {
+        auto [iterator, _] = next_api_handle_by_session.try_emplace(current_data_session, 1);
+        iterator->second = std::max(1, iterator->second);
+        return iterator->second;
+    }
+
+    std::map<int, RegisteredApiFunction>& current_registered_api_functions() {
+        auto [iterator, _] = registered_api_functions_by_session.try_emplace(current_data_session);
+        return iterator->second;
+    }
+
+    const std::map<int, RegisteredApiFunction>& current_registered_api_functions() const {
+        const auto found = registered_api_functions_by_session.find(current_data_session);
+        if (found != registered_api_functions_by_session.end()) {
+            return found->second;
+        }
+
+        static const std::map<int, RegisteredApiFunction> empty_registered_functions;
+        return empty_registered_functions;
+    }
+
     RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {}) {
         RuntimePauseState state;
         state.paused = reason != DebugPauseReason::completed;
@@ -1385,9 +1500,13 @@ struct PrgRuntimeSession::Impl {
         return state;
     }
 
+    int next_available_work_area() const {
+        return std::max(1, current_session_state().next_work_area);
+    }
+
     int allocate_work_area() {
         DataSessionState& session = current_session_state();
-        const int allocated = std::max(1, session.next_work_area);
+        const int allocated = next_available_work_area();
         session.next_work_area = allocated + 1;
         return allocated;
     }
@@ -1500,11 +1619,13 @@ struct PrgRuntimeSession::Impl {
         if (cursor == nullptr) {
             return;
         }
+        const int closed_work_area = cursor->work_area;
         if (session.selected_work_area == cursor->work_area) {
             session.selected_work_area = cursor->work_area;
         }
         session.aliases.erase(cursor->work_area);
         session.cursors.erase(cursor->work_area);
+        session.next_work_area = std::min(session.next_work_area, closed_work_area);
     }
 
     std::vector<CursorState::OrderState> load_cursor_orders(const std::string& table_path) const {
@@ -1522,7 +1643,8 @@ struct PrgRuntimeSession::Impl {
                     }
                     orders.push_back({
                         .name = tag.name_hint.empty() ? collapse_identifier(tag.key_expression_hint) : tag.name_hint,
-                        .expression = tag.key_expression_hint
+                        .expression = tag.key_expression_hint,
+                        .index_path = normalize_path(index_asset.path)
                     });
                 }
                 continue;
@@ -1532,7 +1654,8 @@ struct PrgRuntimeSession::Impl {
                 const std::string fallback_name = std::filesystem::path(index_asset.path).stem().string();
                 orders.push_back({
                     .name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
-                    .expression = index_asset.probe.key_expression_hint
+                    .expression = index_asset.probe.key_expression_hint,
+                    .index_path = normalize_path(index_asset.path)
                 });
             }
         }
@@ -1611,6 +1734,10 @@ struct PrgRuntimeSession::Impl {
         return existing->work_area;
     }
 
+    std::string resolve_sql_cursor_auto_target() {
+        return find_cursor_by_area(current_selected_work_area()) == nullptr ? std::string{} : "0";
+    }
+
     bool is_set_enabled(const std::string& option_name) const {
         const auto session_found = set_state_by_session.find(current_data_session);
         if (session_found == set_state_by_session.end()) {
@@ -1674,6 +1801,7 @@ struct PrgRuntimeSession::Impl {
         if (trimmed.empty() || trimmed == "0") {
             cursor.active_order_name.clear();
             cursor.active_order_expression.clear();
+            cursor.active_order_path.clear();
             return true;
         }
 
@@ -1694,6 +1822,7 @@ struct PrgRuntimeSession::Impl {
 
             cursor.active_order_name = cursor.orders[index].name;
             cursor.active_order_expression = cursor.orders[index].expression;
+            cursor.active_order_path = cursor.orders[index].index_path;
             return true;
         }
 
@@ -1708,6 +1837,7 @@ struct PrgRuntimeSession::Impl {
 
         cursor.active_order_name = found->name;
         cursor.active_order_expression = found->expression;
+        cursor.active_order_path = found->index_path;
         return true;
     }
 
@@ -1728,6 +1858,7 @@ struct PrgRuntimeSession::Impl {
             if (!cursor.orders.empty()) {
                 cursor.active_order_name = cursor.orders.front().name;
                 cursor.active_order_expression = cursor.orders.front().expression;
+                cursor.active_order_path = cursor.orders.front().index_path;
             } else {
                 last_error_message = "SEEK requires an active order";
                 return false;
@@ -1797,7 +1928,8 @@ struct PrgRuntimeSession::Impl {
             .bof = cursor.bof,
             .eof = cursor.eof,
             .active_order_name = cursor.active_order_name,
-            .active_order_expression = cursor.active_order_expression
+            .active_order_expression = cursor.active_order_expression,
+            .active_order_path = cursor.active_order_path
         };
     }
 
@@ -1808,6 +1940,7 @@ struct PrgRuntimeSession::Impl {
         cursor.eof = snapshot.eof;
         cursor.active_order_name = snapshot.active_order_name;
         cursor.active_order_expression = snapshot.active_order_expression;
+        cursor.active_order_path = snapshot.active_order_path;
     }
 
     bool current_record_matches_visibility(const CursorState& cursor, const Frame& frame, const std::string& extra_expression) {
@@ -1874,7 +2007,17 @@ struct PrgRuntimeSession::Impl {
     }
 
     std::optional<vfp::DbfRecord> current_record(const CursorState& cursor) const {
-        if (cursor.remote || cursor.source_path.empty() || cursor.recno == 0U || cursor.eof) {
+        if (cursor.recno == 0U || cursor.eof) {
+            return std::nullopt;
+        }
+
+        if (cursor.remote) {
+            if (cursor.recno > cursor.record_count) {
+                return std::nullopt;
+            }
+            return make_synthetic_sql_record(cursor.recno);
+        }
+        if (cursor.source_path.empty()) {
             return std::nullopt;
         }
 
@@ -1966,11 +2109,7 @@ struct PrgRuntimeSession::Impl {
         const std::string& for_expression,
         const Frame& frame,
         std::size_t start_recno) {
-        if (cursor.remote) {
-            last_error_message = "This command is not yet supported on remote SQL cursors";
-            return false;
-        }
-        if (cursor.source_path.empty()) {
+        if (!cursor.remote && cursor.source_path.empty()) {
             last_error_message = "This command requires a local table-backed cursor";
             return false;
         }
@@ -2085,13 +2224,33 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
+    std::string evaluate_cursor_designator_expression(const std::string& expression, const Frame& frame) {
+        const std::string trimmed_expression = trim_copy(expression);
+        if (trimmed_expression.empty()) {
+            return {};
+        }
+
+        if (trimmed_expression.size() >= 2U &&
+            ((trimmed_expression.front() == '\'' && trimmed_expression.back() == '\'') ||
+             (trimmed_expression.front() == '"' && trimmed_expression.back() == '"'))) {
+            return unquote_identifier(trimmed_expression);
+        }
+
+        const PrgValue evaluated = evaluate_expression(trimmed_expression, frame);
+        const std::string designator = trim_copy(value_as_string(evaluated));
+        if (!designator.empty()) {
+            return designator;
+        }
+
+        return is_bare_identifier_text(trimmed_expression) ? trimmed_expression : std::string{};
+    }
+
     std::string try_parse_designator_argument(const std::string& raw_argument, const Frame& frame) {
         if (raw_argument.empty()) {
             return {};
         }
 
-        const PrgValue evaluated = evaluate_expression(raw_argument, frame);
-        const std::string designator = trim_copy(value_as_string(evaluated));
+        const std::string designator = evaluate_cursor_designator_expression(raw_argument, frame);
         return resolve_cursor_target(designator) == nullptr ? std::string{} : designator;
     }
 
@@ -2133,14 +2292,7 @@ struct PrgRuntimeSession::Impl {
             return make_number_value(0.0);
         }
 
-        if (cursor->remote) {
-            if (function == "count" && condition_expression.empty()) {
-                return make_number_value(static_cast<double>(cursor->record_count));
-            }
-            return make_number_value(0.0);
-        }
-
-        if (cursor->source_path.empty() || cursor->record_count == 0U) {
+        if (cursor->record_count == 0U || (!cursor->remote && cursor->source_path.empty())) {
             return make_number_value(0.0);
         }
 
@@ -2543,11 +2695,6 @@ struct PrgRuntimeSession::Impl {
                 : uppercase_copy(function) + " target work area not found";
             return false;
         }
-        if (cursor->remote) {
-            error_message = uppercase_copy(function) + " is not implemented for remote SQL cursors yet";
-            return false;
-        }
-
         std::vector<std::string> targets;
         if (!statement.identifier.empty()) {
             targets = split_csv_like(statement.identifier);
@@ -2654,6 +2801,7 @@ struct PrgRuntimeSession::Impl {
         }
         cursor.active_order_name = original.active_order_name;
         cursor.active_order_expression = original.active_order_expression;
+        cursor.active_order_path = original.active_order_path;
 
         if (!found && error_message != nullptr && !runtime_error.empty()) {
             *error_message = runtime_error;
@@ -2672,34 +2820,40 @@ struct PrgRuntimeSession::Impl {
             return uppercase_copy(cursor->active_order_name);
         }
 
-        if (!cursor->source_path.empty()) {
-            std::filesystem::path cdx_path(cursor->source_path);
-            cdx_path.replace_extension(".cdx");
-            return uppercase_copy(cdx_path.string());
+        if (!cursor->active_order_path.empty()) {
+            return uppercase_copy(cursor->active_order_path);
         }
 
         return uppercase_copy(cursor->active_order_name);
     }
 
-    std::string tag_function_value(const std::string& cdx_file_name, std::size_t tag_number, const std::string& designator) const {
+    std::string tag_function_value(const std::string& index_file_name, std::size_t tag_number, const std::string& designator) const {
         const CursorState* cursor = resolve_cursor_target(designator);
         if (cursor == nullptr || cursor->orders.empty()) {
             return {};
         }
 
         std::size_t resolved_index = tag_number == 0U ? 0U : tag_number - 1U;
-        if (resolved_index >= cursor->orders.size()) {
+        if (!trim_copy(index_file_name).empty()) {
+            const std::string normalized_target_path = normalize_path(unquote_string(index_file_name));
+            const std::string normalized_target_name =
+                collapse_identifier(std::filesystem::path(normalized_target_path.empty() ? index_file_name : normalized_target_path).filename().string());
+            std::vector<const CursorState::OrderState*> matching_orders;
+            for (const CursorState::OrderState& order : cursor->orders) {
+                const std::string normalized_order_path = normalize_path(order.index_path);
+                if ((!normalized_target_path.empty() && normalized_order_path == normalized_target_path) ||
+                    collapse_identifier(std::filesystem::path(normalized_order_path).filename().string()) == normalized_target_name) {
+                    matching_orders.push_back(&order);
+                }
+            }
+            if (resolved_index < matching_orders.size()) {
+                return uppercase_copy(matching_orders[resolved_index]->name);
+            }
             return {};
         }
 
-        if (!trim_copy(cdx_file_name).empty()) {
-            const std::string normalized_file = collapse_identifier(std::filesystem::path(cdx_file_name).stem().string());
-            const auto found = std::find_if(cursor->orders.begin(), cursor->orders.end(), [&](const CursorState::OrderState& order) {
-                return collapse_identifier(order.name) == normalized_file;
-            });
-            if (found != cursor->orders.end()) {
-                return uppercase_copy(found->name);
-            }
+        if (resolved_index >= cursor->orders.size()) {
+            return {};
         }
 
         return uppercase_copy(cursor->orders[resolved_index].name);
@@ -2720,8 +2874,8 @@ struct PrgRuntimeSession::Impl {
             return -1;
         }
 
-        const int handle = next_api_handle++;
-        registered_api_functions.emplace(handle, RegisteredApiFunction{
+        const int handle = current_api_handle_counter()++;
+        current_registered_api_functions().emplace(handle, RegisteredApiFunction{
             .handle = handle,
             .variant = variant,
             .function_name = function_name,
@@ -2738,8 +2892,9 @@ struct PrgRuntimeSession::Impl {
     }
 
     PrgValue call_registered_api_function(int handle, const std::vector<PrgValue>& arguments) {
-        const auto found = registered_api_functions.find(handle);
-        if (found == registered_api_functions.end()) {
+        const auto& registered_functions = current_registered_api_functions();
+        const auto found = registered_functions.find(handle);
+        if (found == registered_functions.end()) {
             last_error_message = "Registered API handle not found: " + std::to_string(handle);
             return make_number_value(-1.0);
         }
@@ -2856,7 +3011,7 @@ struct PrgRuntimeSession::Impl {
             };
             return true;
         } else if (alias.empty()) {
-            alias = "sqlresult" + std::to_string(current_session_state().next_work_area);
+            alias = "sqlresult" + std::to_string(next_available_work_area());
         }
         if (remote) {
             dbf_identity = alias;
@@ -2939,7 +3094,7 @@ struct PrgRuntimeSession::Impl {
             const std::string alias = trim_copy(cursor_alias).empty()
                 ? "sqlresult" + std::to_string(handle)
                 : trim_copy(cursor_alias);
-            if (!open_table_cursor({}, alias, "0", true, true, handle, command, result_count)) {
+            if (!open_table_cursor({}, alias, resolve_sql_cursor_auto_target(), true, true, handle, command, result_count)) {
                 return -1;
             }
         }
@@ -3308,6 +3463,8 @@ public:
         std::function<int(const std::string&, const std::string&)> register_ole_callback,
         std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback,
         std::function<PrgValue(const std::string&)> ole_property_callback,
+        std::function<PrgValue(const std::string&)> eval_expression_callback,
+        std::function<std::string(const std::string&)> set_callback,
         std::function<void(const std::string&, const std::string&)> record_event_callback)
         : current_work_area_(current_work_area),
           next_free_work_area_callback_(std::move(next_free_work_area_callback)),
@@ -3337,6 +3494,8 @@ public:
           register_ole_callback_(std::move(register_ole_callback)),
           ole_invoke_callback_(std::move(ole_invoke_callback)),
           ole_property_callback_(std::move(ole_property_callback)),
+          eval_expression_callback_(std::move(eval_expression_callback)),
+          set_callback_(std::move(set_callback)),
           record_event_callback_(std::move(record_event_callback)),
           text_(text),
           frame_(frame),
@@ -3427,6 +3586,9 @@ private:
             PrgValue value = parse_comparison();
             match(")");
             return value;
+        }
+        if (match("&")) {
+            return parse_macro_reference();
         }
         if (peek() == '\'') {
             return make_string_value(parse_string());
@@ -3544,10 +3706,10 @@ private:
             const std::string first = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
             std::size_t tag_number = 1U;
             std::string designator;
-            std::string cdx_file_name;
+            std::string index_file_name;
 
-            if (!first.empty() && first.find(".cdx") != std::string::npos) {
-                cdx_file_name = first;
+            if (!first.empty() && is_index_file_path(first)) {
+                index_file_name = first;
                 if (arguments.size() >= 2U) {
                     tag_number = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
                 }
@@ -3563,7 +3725,7 @@ private:
                 }
             }
 
-            return make_string_value(tag_callback_(cdx_file_name, tag_number, designator));
+            return make_string_value(tag_callback_(index_file_name, tag_number, designator));
         }
         if (function == "seek" && !arguments.empty()) {
             const std::string search_key = value_as_string(arguments[0]);
@@ -3647,6 +3809,12 @@ private:
         if (function == "message") {
             return make_string_value(last_error_message_);
         }
+        if (function == "eval" && !arguments.empty()) {
+            return eval_expression_callback_(value_as_string(arguments[0]));
+        }
+        if (function == "set" && !arguments.empty()) {
+            return make_string_value(set_callback_(value_as_string(arguments[0])));
+        }
         if (function == "error") {
             return make_number_value(0.0);
         }
@@ -3725,6 +3893,40 @@ private:
             break;
         }
         return text_.substr(start, position_ - start);
+    }
+
+    PrgValue parse_macro_reference() {
+        skip_whitespace();
+        const std::size_t start = position_;
+        while (position_ < text_.size()) {
+            const char ch = text_[position_];
+            if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_') {
+                ++position_;
+                continue;
+            }
+            break;
+        }
+
+        const std::string macro_name = text_.substr(start, position_ - start);
+        if (macro_name.empty()) {
+            return make_empty_value();
+        }
+
+        if (peek() == '.') {
+            ++position_;
+        }
+
+        const std::string expanded = trim_copy(value_as_string(resolve_identifier(macro_name)));
+        if (expanded.empty()) {
+            return make_empty_value();
+        }
+
+        const PrgValue expanded_value = eval_expression_callback_(expanded);
+        if (expanded_value.kind != PrgValueKind::empty) {
+            return expanded_value;
+        }
+
+        return make_string_value(expanded);
     }
 
     std::string parse_string() {
@@ -3817,6 +4019,8 @@ private:
     std::function<int(const std::string&, const std::string&)> register_ole_callback_;
     std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback_;
     std::function<PrgValue(const std::string&)> ole_property_callback_;
+    std::function<PrgValue(const std::string&)> eval_expression_callback_;
+    std::function<std::string(const std::string&)> set_callback_;
     std::function<void(const std::string&, const std::string&)> record_event_callback_;
     const std::string& text_;
     const Frame& frame_;
@@ -3848,7 +4052,7 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         is_set_enabled("exact"),
         current_selected_work_area(),
         [this]() {
-            return allocate_work_area();
+            return next_available_work_area();
         },
         [this](const std::string& designator) {
             if (designator.empty()) {
@@ -3902,8 +4106,8 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         [this](const std::string& designator, bool include_path) {
             return order_function_value(designator, include_path);
         },
-        [this](const std::string& cdx_file_name, std::size_t tag_number, const std::string& designator) {
-            return tag_function_value(cdx_file_name, tag_number, designator);
+        [this](const std::string& index_file_name, std::size_t tag_number, const std::string& designator) {
+            return tag_function_value(index_file_name, tag_number, designator);
         },
         [this](const std::string& search_key, bool move_pointer, const std::string& designator, const std::string& order_designator) {
             CursorState* cursor = resolve_cursor_target(designator);
@@ -3993,6 +4197,29 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
                 .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
             });
             return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
+        },
+        [this, &frame, preferred_cursor](const std::string& nested_expression) {
+            return evaluate_expression(nested_expression, frame, preferred_cursor);
+        },
+        [this](const std::string& option_name) {
+            const std::string normalized_name = normalize_identifier(option_name);
+            if (normalized_name == "default") {
+                return default_directory;
+            }
+
+            const auto found = current_set_state().find(normalized_name);
+            if (found == current_set_state().end()) {
+                return std::string("OFF");
+            }
+
+            const std::string normalized_value = normalize_identifier(found->second);
+            if (normalized_value.empty() || normalized_value == "on" || normalized_value == "true" || normalized_value == "1") {
+                return std::string("ON");
+            }
+            if (normalized_value == "off" || normalized_value == "false" || normalized_value == "0") {
+                return std::string("OFF");
+            }
+            return uppercase_copy(found->second);
         },
         [this](const std::string& category, const std::string& detail) {
             events.push_back({
@@ -4178,6 +4405,33 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = category,
                 .detail = statement.text,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::text_command: {
+            if (statement.identifier.empty()) {
+                last_error_message = "TEXT requires TO <variable> in the current runtime slice";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (normalize_identifier(statement.tertiary_expression) == "textmerge") {
+                last_error_message = "TEXT TEXTMERGE is not yet supported";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            std::string text_value = statement.expression;
+            if (normalize_identifier(statement.secondary_expression) == "additive") {
+                text_value = value_as_string(lookup_variable(frame, statement.identifier)) + text_value;
+            }
+
+            assign_variable(frame, statement.identifier, make_string_value(std::move(text_value)));
+            events.push_back({
+                .category = "runtime.text",
+                .detail = statement.identifier,
                 .location = statement.location
             });
             return {};
@@ -4405,7 +4659,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
 
             const std::string search_key = value_as_string(evaluate_expression(statement.expression, frame));
-            const bool found = seek_in_cursor(*cursor, search_key);
+            const bool found = execute_seek(*cursor, search_key, true, false, statement.tertiary_expression);
             events.push_back({
                 .category = "runtime.seek",
                 .detail = (cursor->active_order_name.empty() ? std::string{"<default>"} : cursor->active_order_name) +
@@ -4683,7 +4937,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 return {};
             }
             if (statement.expression.empty()) {
-                close_cursor(statement.secondary_expression);
+                close_cursor(evaluate_cursor_designator_expression(statement.secondary_expression, frame));
                 events.push_back({
                     .category = "runtime.use.close",
                     .detail = trim_copy(statement.secondary_expression),

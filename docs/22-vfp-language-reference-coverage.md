@@ -64,6 +64,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `FOR/ENDFOR`
 - `DO WHILE/ENDDO`
 - `LOOP`, `CONTINUE`, `EXIT`
+- `TEXT/ENDTEXT` with first-pass literal `TEXT TO ... [ADDITIVE] [NOSHOW]` capture
 - `LOCATE`
 - `SCAN/ENDSCAN`
 - `CALCULATE`
@@ -89,14 +90,19 @@ The native runtime/parser currently has first-pass support for these command fam
 - `PUBLIC`
 - `LOCAL`
 
+The current indexed-search slice covers `SET ORDER TO TAG`, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
+
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
 - `SELECT()`, `ALIAS()`, `USED()`, `DBF()`, `FCOUNT()`
 - `RECCOUNT()`, `RECNO()`, `FOUND()`, `EOF()`, `BOF()`, `DELETED()`
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
+- `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
 - `CREATEOBJECT()`, `GETOBJECT()`
-- utility coverage already used by shipped tests and bootstrap paths, including `AT()`, `RAT()`, `SUBSTR()`, `ALLTRIM()`, `STR()`, `CHR()`, `FILE()`, `SYS()`, `MESSAGE()`, `ERROR()`, `VERSION()`, `ON()`, and `MESSAGEBOX()`
+- utility coverage already used by shipped tests and bootstrap paths, including `AT()`, `RAT()`, `SUBSTR()`, `ALLTRIM()`, `STR()`, `CHR()`, `FILE()`, `SYS()`, `MESSAGE()`, `ERROR()`, `VERSION()`, `ON()`, `SET()`, and `MESSAGEBOX()`
+
+That SQL slice now includes session-scoped synthetic cursor materialization that follows the current selected work-area flow for each data session when `SQLEXEC()` auto-opens a result cursor, plus a first-pass read-only remote-cursor layer where synthetic SQL rows participate in field lookup, filter-aware navigation, `LOCATE`, aggregate built-ins, and `CALCULATE`.
 
 ## Immediate Runtime Backlog Derived From The Official Reference
 
@@ -104,7 +110,8 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Work Areas, Sessions, And Indexed Data
 
-- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and broader session-local `SET` restoration coverage
+- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and broader session-local `SET` restoration coverage
+- keep closing expression-driven work-area targeting edges so `USE IN <expr>` and adjacent state-inspection paths behave like practical VFP code expects
 - deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together
 - use the command inventory to pull the next search/index/data-session commands in families instead of one at a time
@@ -118,7 +125,8 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Native Control Flow
 
-- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, and `LOOP`/`CONTINUE`/`EXIT` slices into the rest of the FoxPro control-flow surface
+- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `LOOP`/`CONTINUE`/`EXIT`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
+- keep tightening expression semantics around stored-expression evaluation, macro substitution, and runtime-state inspection beyond the first-pass `EVAL()` / `SET()` / `&macro` slice
 - add the next adjacent command families such as `TEXT/ENDTEXT`, `WITH/ENDWITH`, or other control/branch semantics in coherent batches
 
 ### SQL Pass-Through And Remote Cursor Behavior
