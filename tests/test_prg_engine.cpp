@@ -1378,6 +1378,8 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
         "lUsedSession1Back = USED('sqlcust')\n"
         "nAreaSession1Back = SELECT('sqlcust')\n"
         "lUsedSession1Other = USED('sqlother')\n"
+        "nConn1Again = SQLCONNECT('dsn=NorthwindAgain')\n"
+        "lDisconnectSession1Again = SQLDISCONNECT(nConn1Again)\n"
         "lDisconnectSession1Own = SQLDISCONNECT(nConn1)\n"
         "RETURN\n");
 
@@ -1405,6 +1407,8 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     const auto used_session1_back = state.globals.find("lusedsession1back");
     const auto area_session1_back = state.globals.find("nareasession1back");
     const auto used_session1_other = state.globals.find("lusedsession1other");
+    const auto conn1_again = state.globals.find("nconn1again");
+    const auto disconnect_session1_again = state.globals.find("ldisconnectsession1again");
     const auto disconnect_session1_own = state.globals.find("ldisconnectsession1own");
 
     expect(area1 != state.globals.end(), "session-1 SQL cursor area should be captured");
@@ -1420,6 +1424,8 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     expect(used_session1_back != state.globals.end(), "restored session-1 SQL cursor visibility should be captured");
     expect(area_session1_back != state.globals.end(), "restored session-1 SQL cursor area should be captured");
     expect(used_session1_other != state.globals.end(), "restored session-1 visibility for session-2 alias should be captured");
+    expect(conn1_again != state.globals.end(), "restored session-1 SQLCONNECT handle should be captured");
+    expect(disconnect_session1_again != state.globals.end(), "restored session-1 second SQLDISCONNECT result should be captured");
     expect(disconnect_session1_own != state.globals.end(), "session-1 SQLDISCONNECT result should be captured");
 
     if (area1 != state.globals.end()) {
@@ -1460,6 +1466,12 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     }
     if (used_session1_other != state.globals.end()) {
         expect(copperfin::runtime::format_value(used_session1_other->second) == "false", "session-2 SQL aliases should stay hidden after restoring session 1");
+    }
+    if (conn1_again != state.globals.end()) {
+        expect(copperfin::runtime::format_value(conn1_again->second) == "2", "restoring session 1 should resume that session's SQLCONNECT handle numbering");
+    }
+    if (disconnect_session1_again != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_session1_again->second) == "1", "session 1 should disconnect its later SQL handle after restoring the session");
     }
     if (disconnect_session1_own != state.globals.end()) {
         expect(copperfin::runtime::format_value(disconnect_session1_own->second) == "1", "session 1 should disconnect its own SQL handle");
