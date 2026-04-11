@@ -115,12 +115,50 @@ void test_open_document_infers_form_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_open_document_preserves_validation_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "missing_sidecar.scx";
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const copperfin::studio::StudioOpenRequest request{
+        .path = form_path.string(),
+        .launched_from_visual_studio = false,
+        .read_only = true
+    };
+
+    const auto result = copperfin::studio::open_document(request);
+    expect(result.ok, "open_document should still succeed for readable assets that carry validation findings");
+    expect(
+        result.document.inspection.has_validation_issues(),
+        "Studio documents should retain validation findings from asset inspection");
+    expect(
+        std::any_of(
+            result.document.inspection.validation_issues.begin(),
+            result.document.inspection.validation_issues.end(),
+            [](const copperfin::vfp::AssetValidationIssue& issue) {
+                return issue.code == "memo.sidecar_missing";
+            }),
+        "Studio documents should expose the missing-sidecar validation finding");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_launch_arguments();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_open_document_infers_form_sidecar();
+    test_open_document_preserves_validation_findings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

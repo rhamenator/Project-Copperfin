@@ -21,6 +21,7 @@ Current coverage:
 Current inspector behavior:
 
 - Direct inspection recognizes `CDX`, `DCX`, `IDX`, `NDX`, and `MDX`.
+- DBF/DBC-family inspection now reports structured validation findings when expected structural companion indexes are missing or when present companion indexes fail to parse.
 - Table inspection looks for same-base companion indexes:
   - `table.cdx`
   - `table.idx`

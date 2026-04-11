@@ -21,6 +21,25 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+bool has_validation_issue(
+    const copperfin::vfp::AssetInspectionResult& result,
+    const std::string& code,
+    const std::string& path_suffix = {}) {
+    return std::any_of(
+        result.validation_issues.begin(),
+        result.validation_issues.end(),
+        [&](const copperfin::vfp::AssetValidationIssue& issue) {
+            if (issue.code != code) {
+                return false;
+            }
+            if (path_suffix.empty()) {
+                return true;
+            }
+            return issue.path.size() >= path_suffix.size() &&
+                   issue.path.ends_with(path_suffix);
+        });
+}
+
 std::vector<std::uint8_t> make_vfp_header() {
     std::vector<std::uint8_t> bytes(32U, 0U);
     bytes[0] = 0x30U;
@@ -380,6 +399,123 @@ void test_parse_real_vfp_cdx_when_available() {
     expect(saw_company_tag, "real VFP customer.cdx should expose the COMPANY_NA tag from directory pages");
 }
 
+void test_inspect_asset_reports_dbf_storage_validation_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_asset_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path short_header_path = temp_dir / "short_header.dbf";
+    std::vector<std::uint8_t> short_header_bytes(32U, 0U);
+    short_header_bytes[0] = 0x30U;
+    write_le_u32(short_header_bytes, 4U, 1U);
+    write_le_u16(short_header_bytes, 8U, 97U);
+    write_le_u16(short_header_bytes, 10U, 13U);
+    {
+        std::ofstream output(short_header_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(short_header_bytes.data()), static_cast<std::streamsize>(short_header_bytes.size()));
+    }
+
+    const auto short_header_result = copperfin::vfp::inspect_asset(short_header_path.string());
+    expect(short_header_result.ok, "inspect_asset should still succeed when a DBF header can be parsed but the file is structurally short");
+    expect(short_header_result.header_available, "header metadata should still be available for a DBF with validation findings");
+    expect(
+        has_validation_issue(short_header_result, "dbf.header_length_exceeds_file_size", "short_header.dbf"),
+        "inspect_asset should report when the DBF header length exceeds the file size");
+
+    const fs::path truncated_records_path = temp_dir / "truncated_records.dbf";
+    std::vector<std::uint8_t> truncated_bytes(100U, 0U);
+    truncated_bytes[0] = 0x30U;
+    write_le_u32(truncated_bytes, 4U, 3U);
+    write_le_u16(truncated_bytes, 8U, 65U);
+    write_le_u16(truncated_bytes, 10U, 16U);
+    {
+        std::ofstream output(truncated_records_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(truncated_bytes.data()), static_cast<std::streamsize>(truncated_bytes.size()));
+    }
+
+    const auto truncated_result = copperfin::vfp::inspect_asset(truncated_records_path.string());
+    expect(truncated_result.ok, "inspect_asset should still succeed for DBFs with truncated record storage");
+    expect(
+        has_validation_issue(truncated_result, "dbf.record_storage_truncated", "truncated_records.dbf"),
+        "inspect_asset should report truncated DBF record storage");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_inspect_asset_reports_missing_companions_and_unparseable_indexes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_asset_companion_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "missing_sidecar.scx";
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto form_result = copperfin::vfp::inspect_asset(form_path.string());
+    expect(form_result.ok, "inspect_asset should succeed for a readable SCX even when its sidecar is missing");
+    expect(
+        has_validation_issue(form_result, "memo.sidecar_missing", "missing_sidecar.sct"),
+        "inspect_asset should report a missing SCX memo sidecar");
+
+    const fs::path table_path = temp_dir / "broken_index.dbf";
+    const fs::path bad_cdx_path = temp_dir / "broken_index.cdx";
+    {
+        auto bytes = make_vfp_header();
+        bytes[28] = 0x00U;
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+    {
+        std::ofstream output(bad_cdx_path, std::ios::binary);
+        output << "not a real index";
+    }
+
+    const auto table_result = copperfin::vfp::inspect_asset(table_path.string());
+    expect(table_result.ok, "inspect_asset should succeed for a readable DBF even when a companion index is malformed");
+    expect(
+        has_validation_issue(table_result, "index.companion_parse_failed", "broken_index.cdx"),
+        "inspect_asset should report malformed companion indexes as structured validation findings");
+
+    const fs::path indexed_table_path = temp_dir / "missing_structural_index.dbf";
+    {
+        auto bytes = make_vfp_header();
+        bytes[28] = 0x01U;
+        std::ofstream output(indexed_table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto indexed_table_result = copperfin::vfp::inspect_asset(indexed_table_path.string());
+    expect(indexed_table_result.ok, "inspect_asset should succeed for readable DBFs even when the structural index sidecar is missing");
+    expect(
+        has_validation_issue(indexed_table_result, "index.structural_sidecar_missing", "missing_structural_index.dbf"),
+        "inspect_asset should report a missing structural index companion when the DBF production-index flag is set");
+
+    const fs::path dbc_path = temp_dir / "missing_database_sidecars.dbc";
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(dbc_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto dbc_result = copperfin::vfp::inspect_asset(dbc_path.string());
+    expect(dbc_result.ok, "inspect_asset should succeed for a readable DBC even when companion files are missing");
+    expect(
+        has_validation_issue(dbc_result, "memo.sidecar_missing", "missing_database_sidecars.dct"),
+        "inspect_asset should report a missing DBC memo sidecar");
+    expect(
+        has_validation_issue(dbc_result, "index.structural_sidecar_missing", "missing_database_sidecars.dbc"),
+        "inspect_asset should report a missing DBC structural index companion");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -394,6 +530,8 @@ int main() {
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
     test_parse_real_vfp_cdx_when_available();
+    test_inspect_asset_reports_dbf_storage_validation_findings();
+    test_inspect_asset_reports_missing_companions_and_unparseable_indexes();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
