@@ -1355,6 +1355,16 @@ struct PrgRuntimeSession::Impl {
             return collapse_identifier(order.name) == normalized_target;
         });
         if (found == cursor.orders.end()) {
+            if (cursor.remote) {
+                cursor.active_order_name = uppercase_copy(target_name);
+                cursor.active_order_expression = target_name;
+                cursor.active_order_path.clear();
+                cursor.active_order_normalization_hint.clear();
+                cursor.active_order_collation_hint.clear();
+                cursor.active_order_key_domain_hint.clear();
+                cursor.active_order_descending = descending_override.value_or(false);
+                return true;
+            }
             last_error_message = "Requested order/tag was not found";
             return false;
         }
@@ -1371,13 +1381,7 @@ struct PrgRuntimeSession::Impl {
 
     bool seek_in_cursor(CursorState& cursor, const std::string& search_key) {
         cursor.found = false;
-        if (cursor.remote) {
-            last_error_message = "SEEK is not yet supported on remote SQL cursors";
-            move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));
-            return false;
-        }
-
-        if (cursor.source_path.empty()) {
+        if (!cursor.remote && cursor.source_path.empty()) {
             last_error_message = "SEEK requires a local table-backed cursor";
             return false;
         }
@@ -1397,23 +1401,33 @@ struct PrgRuntimeSession::Impl {
             }
         }
 
-        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
-        if (!table_result.ok) {
-            last_error_message = table_result.error;
-            return false;
-        }
-
         const std::string normalized_target = normalize_seek_key_for_order(
             evaluate_index_expression(search_key, vfp::DbfRecord{}),
             cursor.active_order_normalization_hint);
         std::vector<IndexedCandidate> candidates;
-        candidates.reserve(table_result.table.records.size());
+        if (cursor.remote) {
+            candidates.reserve(cursor.record_count);
+            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno) {
+                const vfp::DbfRecord record = make_synthetic_sql_record(recno);
+                candidates.push_back({
+                    .key = evaluate_index_expression(cursor.active_order_expression, record),
+                    .recno = recno
+                });
+            }
+        } else {
+            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+            if (!table_result.ok) {
+                last_error_message = table_result.error;
+                return false;
+            }
 
-        for (const auto& record : table_result.table.records) {
-            candidates.push_back({
-                .key = evaluate_index_expression(cursor.active_order_expression, record),
-                .recno = record.record_index + 1U
-            });
+            candidates.reserve(table_result.table.records.size());
+            for (const auto& record : table_result.table.records) {
+                candidates.push_back({
+                    .key = evaluate_index_expression(cursor.active_order_expression, record),
+                    .recno = record.record_index + 1U
+                });
+            }
         }
 
         std::sort(candidates.begin(), candidates.end(), [&](const IndexedCandidate& left, const IndexedCandidate& right) {
