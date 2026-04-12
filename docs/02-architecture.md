@@ -1,5 +1,98 @@
 # System Architecture
 
+## Detailed Architecture Status Diagram
+
+```mermaid
+flowchart LR
+	classDef done fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b;
+	classDef partial fill:#fef3c7,stroke:#92400e,stroke-width:2px,color:#78350f;
+	classDef missing fill:#fee2e2,stroke:#991b1b,stroke-width:2px,color:#7f1d1d;
+	classDef hub fill:#e0e7ff,stroke:#3730a3,stroke-width:2px,color:#1e1b4b;
+	classDef seam fill:#f3f4f6,stroke:#4b5563,stroke-dasharray: 5 3,color:#111827;
+
+	subgraph CoreNative[Native Core Boundary]
+		direction TB
+		CORE[copperfin-core]
+
+		subgraph DataPlane[Data Plane]
+			direction TB
+			DBF[DBF FPT Fidelity]
+			IDX[CDX DCX MDX Index Fidelity]
+			DBC[DBC Container Fidelity]
+			WS[Work Areas Data Sessions]
+			LQ[Local Query Mutation Commands]
+			SQ[SQL Pass-through Remote Cursors]
+		end
+
+		subgraph RuntimePlane[Execution Plane]
+			direction TB
+			PRG[PRG Execution Engine]
+			SEC[Security Policy Enforcement]
+		end
+	end
+
+	subgraph UXHosts[Designer And Host Surfaces]
+		direction TB
+		DES[Shared Designers]
+		FORMS[Forms Classes Runtime]
+		RPT[Reports Labels Runtime]
+		MENU[Menus Runtime]
+		VS[Visual Studio Integration]
+		IDE[Standalone Copperfin IDE]
+		LS[Language Service]
+	end
+
+	subgraph Toolchain[Build Packaging Debug]
+		direction TB
+		BLD[Build Pipeline]
+		DBG[Debug Runtime Host]
+		PKG[Packaging Distribution]
+	end
+
+	subgraph Platform[Interop And Federation]
+		direction TB
+		DOTNET[.NET Interoperability]
+		FED[Database Federation]
+	end
+
+	CORE --> DBF
+	CORE --> IDX
+	CORE --> DBC
+	DBF --> WS --> LQ --> PRG
+	IDX --> LQ
+	DBC --> WS
+	SQ --> PRG
+	PRG --> FORMS
+	PRG --> RPT
+	PRG --> MENU
+
+	PRG --> DES
+	DES --> VS
+	DES --> IDE
+	VS --> LS
+	IDE --> LS
+
+	PRG --> BLD --> DBG --> PKG
+	PRG --> DOTNET --> FED
+	PRG --> SEC
+
+	DBC -. container metadata gap blocks deep runtime parity .-> WS
+	FED -. federation translators missing .-> SQ
+	SQ -. broader remote writeback parity pending .-> RPT
+
+	class CORE hub;
+
+	class DBF done;
+
+	class IDX,WS,LQ,SQ,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
+
+	class DBC,FED missing;
+
+	class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
+```
+
+Status legend: green = implemented, amber = partial, red = missing.
+
 ## Top-Level Product Map
 
 Copperfin should be built as a set of modules with clear seams:

@@ -48,6 +48,77 @@ The implementation order should be:
 7. Modernization layers: database federation, AI/MCP, polyglot, security polish
 8. Portability work for standalone IDE and core runtime
 
+## Priority Architecture Diagram
+
+```mermaid
+flowchart TD
+	classDef done fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b;
+	classDef partial fill:#fef3c7,stroke:#92400e,stroke-width:2px,color:#78350f;
+	classDef missing fill:#fee2e2,stroke:#991b1b,stroke-width:2px,color:#7f1d1d;
+	classDef lane fill:#eef2ff,stroke:#4338ca,stroke-width:1px,color:#1e1b4b;
+
+	subgraph P1[Phase A - Data Fidelity And Execution Engine]
+		direction TB
+		A1[DBF/FPT Basic Read Fidelity]
+		A2[DBF Local-Table Mutation Core]
+		A3[CDX/DCX Inspection]
+		A4[MDX Inspection]
+		A5[DBC Container Fidelity]
+		B1[Work Areas And Data Sessions]
+		B2[Local Query And Mutation Commands]
+		B3[SQL Pass-Through And Remote Cursor Behavior]
+		B4[PRG Execution Engine]
+	end
+
+	subgraph P2[Phase B - Runtime Parity Surfaces]
+		direction TB
+		C1[Forms And Classes Runtime Parity]
+		C2[Reports And Labels Runtime Parity]
+		C3[Menus Runtime Parity]
+	end
+
+	subgraph P3[Phase C - Build, Designers, IDE]
+		direction TB
+		D1[Build Package Debug Pipeline]
+		D2[Shared Designers]
+		D3[Visual Studio Integration]
+		D4[Standalone Copperfin IDE]
+		D5[Language Service]
+	end
+
+	subgraph P4[Phase D - Platform And Enterprise]
+		direction TB
+		E1[.NET Interoperability]
+		E2[Database Federation]
+		E3[Security Policy Controls]
+	end
+
+	A1 --> A2 --> A3 --> A4 --> A5
+	A2 --> B2
+	A3 --> B1
+	B1 --> B2 --> B3 --> B4
+
+	B4 --> C1 --> C2 --> C3
+	B4 --> D1 --> D2 --> D3 --> D4
+	D3 --> D5
+	B4 --> E1 --> E2 --> E3
+
+	A5 -. blocks full metadata-runtime parity .-> B1
+	B3 -. blocks high-confidence report/form data behavior .-> C1
+	D2 -. required for production-grade IDE workflows .-> D3
+	D4 -. standalone delivery depends on shell + language maturity .-> D5
+
+	class A1 done;
+
+	class A2,A3,A4,B1,B2,B3,B4,C1,C2,C3,D1,D2,D3,D4,D5,E1,E3 partial;
+
+	class A5,E2 missing;
+
+	class P1,P2,P3,P4 lane;
+```
+
+Status legend: green = implemented, amber = partial, red = missing.
+
 ## Gap Matrix
 
 Current repo status against the Windows-first product goal:
