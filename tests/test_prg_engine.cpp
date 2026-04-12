@@ -159,6 +159,7 @@ void write_synthetic_cdx(const std::filesystem::path& path, const std::string& t
     write_le_u16(bytes, 14U, 480U);
     write_le_u16(bytes, 1024U, 0x0003U);
     write_le_u16(bytes, 1026U, 0x0001U);
+    write_le_u32(bytes, 1028U, 2048U);
 
     for (std::size_t index = 0; index < expression.size(); ++index) {
         bytes[2048U + index] = static_cast<std::uint8_t>(expression[index]);
@@ -2261,6 +2262,65 @@ void test_seek_supports_composite_tag_expressions() {
     }
     if (seek_fn_rec != state.globals.end()) {
         expect(copperfin::runtime::format_value(seek_fn_rec->second) == "1", "SEEK() should land on the requested composite-tag match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_seek_supports_left_function_tag_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_left";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME3", "UPPER(LEFT(NAME, 3))");
+
+    const fs::path main_path = temp_root / "seek_left.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME3\n"
+        "lSeekCmd = SEEK('cha')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK('bra', 'People', 'NAME3')\n"
+        "nSeekFnRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LEFT()-expression seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK on a LEFT() tag should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command LEFT() SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() on a LEFT() tag should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() LEFT() RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should match LEFT()-derived tag keys");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "3", "command SEEK should land on the LEFT()-derived exact match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should match LEFT()-derived tag keys");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "2", "SEEK() should land on the requested LEFT()-derived match");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -6309,6 +6369,7 @@ int main() {
     test_set_order_and_seek_for_local_tables();
     test_seek_uses_grounded_order_normalization_hints();
     test_seek_supports_composite_tag_expressions();
+    test_seek_supports_left_function_tag_expressions();
     test_set_near_changes_seek_failure_position();
     test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();

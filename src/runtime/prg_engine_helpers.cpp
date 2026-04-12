@@ -215,7 +215,7 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
     const std::string trimmed = trim_copy(expression);
     const std::string upper = uppercase_copy(trimmed);
 
-    const auto split_top_level_plus = [](const std::string& value) {
+    const auto split_top_level = [](const std::string& value, char delimiter) {
         std::vector<std::string> parts;
         std::string current;
         current.reserve(value.size());
@@ -244,7 +244,7 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
                 current.push_back(ch);
                 continue;
             }
-            if (ch == '+' && depth == 0) {
+            if (ch == delimiter && depth == 0) {
                 parts.push_back(trim_copy(current));
                 current.clear();
                 continue;
@@ -253,6 +253,22 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
         }
         parts.push_back(trim_copy(current));
         return parts;
+    };
+    const auto split_top_level_plus = [&](const std::string& value) {
+        return split_top_level(value, '+');
+    };
+    const auto parse_function_arguments = [&](const std::string& prefix) -> std::optional<std::vector<std::string>> {
+        if (!starts_with_insensitive(trimmed, prefix + "(") || trimmed.back() != ')') {
+            return std::nullopt;
+        }
+
+        std::vector<std::string> arguments = split_top_level(
+            trim_copy(trimmed.substr(prefix.size() + 1U, trimmed.size() - prefix.size() - 2U)),
+            ',');
+        for (std::string& argument : arguments) {
+            argument = trim_copy(std::move(argument));
+        }
+        return arguments;
     };
 
     std::function<bool(const std::string&)> is_concat_safe = [&](const std::string& candidate) {
@@ -285,12 +301,28 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             const std::string inner = trim_copy(part.substr(prefix.size() + 1U, part.size() - prefix.size() - 2U));
             return is_concat_safe(inner);
         };
+        const auto is_supported_binary_with_count = [&](const std::string& prefix) {
+            if (!starts_with_insensitive(part, prefix + "(") || part.back() != ')') {
+                return false;
+            }
+            const std::vector<std::string> arguments = split_top_level(
+                trim_copy(part.substr(prefix.size() + 1U, part.size() - prefix.size() - 2U)),
+                ',');
+            if (arguments.size() != 2U) {
+                return false;
+            }
+            if (!is_concat_safe(arguments[0])) {
+                return false;
+            }
+            return try_parse_numeric_index_value(evaluate_index_expression(arguments[1], record)).has_value();
+        };
 
         return is_supported_unary("UPPER") ||
             is_supported_unary("LOWER") ||
             is_supported_unary("ALLTRIM") ||
             is_supported_unary("LTRIM") ||
-            is_supported_unary("RTRIM");
+            is_supported_unary("RTRIM") ||
+            is_supported_binary_with_count("LEFT");
     };
 
     const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
@@ -335,6 +367,23 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             }
         })) {
         return *rtrim_value;
+    }
+    if (const auto left_args = parse_function_arguments("LEFT")) {
+        if (left_args->size() == 2U) {
+            std::string value = evaluate_index_expression((*left_args)[0], record);
+            const auto count = try_parse_numeric_index_value(evaluate_index_expression((*left_args)[1], record));
+            if (count.has_value()) {
+                const long long requested = static_cast<long long>(std::llround(*count));
+                if (requested <= 0LL) {
+                    return {};
+                }
+                const std::size_t length = static_cast<std::size_t>(requested);
+                if (value.size() > length) {
+                    value.resize(length);
+                }
+                return value;
+            }
+        }
     }
 
     const std::vector<std::string> concat_parts = split_top_level_plus(trimmed);
