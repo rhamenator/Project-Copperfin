@@ -44,6 +44,8 @@ struct IndexProbe {
     std::string for_expression_hint;
     std::string normalization_hint;
     std::string collation_hint;
+    std::string header_sort_marker_hint;
+    std::string key_domain_hint;
     std::vector<IndexTagProbe> tags;
     bool multi_tag = false;
     bool production_candidate = false;

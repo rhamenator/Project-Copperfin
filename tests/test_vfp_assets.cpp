@@ -297,7 +297,8 @@ void test_parse_index_probe_for_idx() {
     write_le_u32(bytes, 4U, 0xFFFFFFFFU);
     write_le_u32(bytes, 8U, 1024U);
     write_le_u16(bytes, 12U, 10U);
-    bytes[14] = 0x01U;
+    bytes[14] = 0x21U;
+    bytes[15] = 0x9AU;
     write_ascii(bytes, 16U, "UPPER(NAME)");
     write_ascii(bytes, 236U, "DELETED() = .F.");
 
@@ -311,14 +312,17 @@ void test_parse_index_probe_for_idx() {
     expect(result.probe.for_expression_hint == "DELETED() = .F.", "IDX FOR expression should be extracted");
     expect(result.probe.normalization_hint == "upper", "IDX probe should expose first-pass normalization hints");
     expect(result.probe.collation_hint == "case-folded", "IDX probe should expose first-pass collation hints");
+    expect(result.probe.header_sort_marker_hint == "sig:0x9A,flags:0x21", "IDX probe should expose an opaque header sort marker");
 }
 
 void test_parse_index_probe_for_ndx() {
     std::vector<std::uint8_t> bytes(512U, 0U);
     write_le_u32(bytes, 0U, 1U);
     write_le_u32(bytes, 4U, 2U);
+    write_le_u32(bytes, 8U, 0x00000034U);
     write_le_u16(bytes, 12U, 2U);
     write_le_u16(bytes, 14U, 42U);
+    write_le_u16(bytes, 16U, 1U);
     write_le_u16(bytes, 18U, 12U);
     write_le_u16(bytes, 22U, 1U);
     write_ascii(bytes, 24U, "CODE");
@@ -332,6 +336,26 @@ void test_parse_index_probe_for_ndx() {
     expect(result.probe.group_length_hint == 12U, "NDX group length should be parsed");
     expect(result.probe.flags == 0x01U, "NDX uniqueness flag should be projected into flags");
     expect(result.probe.key_expression_hint == "CODE", "NDX expression should be extracted");
+    expect(result.probe.header_sort_marker_hint == "ver:0x34", "NDX probe should expose an opaque header sort marker");
+    expect(result.probe.key_domain_hint == "numeric_or_date", "NDX probe should expose the numeric/date key domain hint");
+}
+
+void test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation() {
+    std::vector<std::uint8_t> bytes(512U, 0U);
+    write_le_u32(bytes, 0U, 1U);
+    write_le_u32(bytes, 4U, 2U);
+    write_le_u32(bytes, 8U, 0x0000007FU);
+    write_le_u16(bytes, 12U, 4U);
+    write_le_u16(bytes, 14U, 42U);
+    write_le_u16(bytes, 16U, 0U);
+    write_le_u16(bytes, 18U, 12U);
+    write_ascii(bytes, 24U, "CODE");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 1024U, copperfin::vfp::IndexKind::ndx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible dBase NDX header with a character key domain");
+    expect(result.probe.header_sort_marker_hint == "ver:0x7F", "NDX probe should preserve the raw opaque version marker");
+    expect(result.probe.key_domain_hint == "character", "NDX probe should expose the character key domain hint");
+    expect(result.probe.collation_hint.empty(), "NDX probe should not invent a named collation from the raw header marker alone");
 }
 
 void test_parse_index_probe_for_mdx() {
@@ -864,6 +888,7 @@ int main() {
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
+    test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();
     test_parse_index_probe_for_mdx();
     test_parse_index_probe_for_mdx_rejects_implausible_header();
     test_inspect_asset_collects_companion_indexes();

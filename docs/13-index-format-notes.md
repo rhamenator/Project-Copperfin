@@ -14,9 +14,11 @@ Current coverage:
   - Visual FoxPro single-index header probe.
   - Extracts root, free-list, and EOF offsets plus key and `FOR` expression hints.
   - First-pass expression-derived normalization/collation hints are now surfaced alongside the extracted key expression.
+  - An additive opaque header sort-marker hint is now surfaced from already-read header bytes, without mapping that marker to a named collation sequence yet.
 - `NDX`
   - dBase-style single-index header probe.
   - Extracts root and EOF block hints, key length, maximum key count, group length, uniqueness flag, and key expression hint.
+  - Additive opaque header sort-marker hints and a key-domain hint now surface from existing header bytes, again without mapping raw markers to named collations.
 - `MDX`
   - First-pass block-level probe with block-local tag hint enumeration from non-header metadata regions.
   - Minimal plausibility checks now require a non-empty header block plus at least one plausible non-header tag hint.
@@ -60,6 +62,6 @@ Next implementation steps:
 
 1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
 2. Deepen `MDX` parsing beyond block-local tag hints into real layout and expression metadata extraction.
-3. Move beyond first-pass expression-derived normalization/collation hints into more format-grounded metadata where the file layouts support it.
+3. Move beyond first-pass expression-derived normalization/collation hints and current opaque single-index header markers into more format-grounded metadata where the file layouts support it.
 4. Correlate DBF field metadata with index expressions for migration planning.
 5. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.

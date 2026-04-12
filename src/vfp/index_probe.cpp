@@ -101,6 +101,22 @@ std::string join_hints(const std::vector<std::string>& hints) {
     return joined;
 }
 
+std::string format_hex_byte(std::uint8_t value) {
+    static const char digits[] = "0123456789ABCDEF";
+    std::string text = "0x00";
+    text[2] = digits[(value >> 4U) & 0x0FU];
+    text[3] = digits[value & 0x0FU];
+    return text;
+}
+
+std::string make_idx_header_sort_marker(std::uint8_t signature, std::uint8_t flags) {
+    return "sig:" + format_hex_byte(signature) + ",flags:" + format_hex_byte(flags);
+}
+
+std::string make_ndx_header_sort_marker(std::uint8_t signature) {
+    return "ver:" + format_hex_byte(signature);
+}
+
 std::string derive_normalization_hint(const std::string& expression) {
     const std::string upper = uppercase_copy(trim_copy(expression));
     std::vector<std::string> hints;
@@ -310,6 +326,7 @@ IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std
     probe.for_expression_hint = read_ascii_hint(bytes, 236U, 220U);
     probe.normalization_hint = derive_normalization_hint(probe.key_expression_hint);
     probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
+    probe.header_sort_marker_hint = make_idx_header_sort_marker(probe.signature, probe.flags);
 
     const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
     const bool plausible_key = probe.key_length_hint > 0U && probe.key_length_hint <= 220U;
@@ -363,6 +380,8 @@ IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, s
     probe.key_expression_hint = read_ascii_hint(bytes, 24U, 100U);
     probe.normalization_hint = derive_normalization_hint(probe.key_expression_hint);
     probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
+    probe.header_sort_marker_hint = make_ndx_header_sort_marker(probe.signature);
+    probe.key_domain_hint = numeric_or_date_flag == 0U ? "character" : "numeric_or_date";
 
     const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
     const bool plausible_root = root_block > 0U && probe.root_node_offset_hint < file_size;
