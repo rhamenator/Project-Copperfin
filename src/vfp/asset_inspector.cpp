@@ -119,6 +119,18 @@ std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std
     return fields;
 }
 
+bool is_valid_field_name_char(char ch) {
+    const auto raw = static_cast<unsigned char>(ch);
+    return std::isalnum(raw) != 0 || ch == '_';
+}
+
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
 std::string memo_sidecar_path_for(const std::filesystem::path& path, AssetFamily family) {
     std::filesystem::path candidate = path;
     switch (family) {
@@ -323,6 +335,156 @@ void validate_dbf_storage(
             "dbf.record_storage_length_mismatch",
             path,
             "The DBF file contains extra bytes beyond the header-declared record storage.");
+    }
+}
+
+void validate_dbf_field_descriptors(
+    AssetInspectionResult& result,
+    const std::string& path,
+    const DbfHeader& header,
+    const std::vector<std::uint8_t>& table_bytes) {
+    if (table_bytes.size() < 32U) {
+        return;
+    }
+
+    const std::size_t descriptor_region_end = static_cast<std::size_t>(std::min<std::uint64_t>(header.header_length, table_bytes.size()));
+    if (descriptor_region_end <= 32U) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "dbf.descriptor_terminator_missing",
+            path,
+            "The DBF header does not leave room for a field-descriptor terminator.");
+        return;
+    }
+
+    const auto terminator = std::find(
+        table_bytes.begin() + static_cast<std::ptrdiff_t>(32U),
+        table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end),
+        static_cast<std::uint8_t>(0x0DU));
+    if (terminator == table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end)) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "dbf.descriptor_terminator_missing",
+            path,
+            "The DBF header does not contain a field-descriptor terminator within the declared header length.");
+        return;
+    }
+
+    const std::size_t terminator_offset = static_cast<std::size_t>(std::distance(table_bytes.begin(), terminator));
+    const std::size_t descriptor_span = terminator_offset - 32U;
+    if ((descriptor_span % 32U) != 0U) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "dbf.descriptor_span_misaligned",
+            path,
+            "The DBF field-descriptor span is not aligned to whole 32-byte descriptors.");
+        return;
+    }
+
+    if ((terminator_offset + 1U) != static_cast<std::size_t>(header.header_length)) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::warning,
+            "dbf.header_length_descriptor_mismatch",
+            path,
+            "The DBF header length does not match the field-descriptor terminator position.");
+    }
+
+    const auto fields = read_raw_field_descriptors(std::vector<std::uint8_t>(table_bytes.begin(), table_bytes.begin() + static_cast<std::ptrdiff_t>(terminator_offset + 1U)));
+    if (fields.empty()) {
+        return;
+    }
+
+    std::set<std::string> seen_names;
+    std::vector<RawFieldDescriptor> sorted_fields = fields;
+    std::sort(sorted_fields.begin(), sorted_fields.end(), [](const RawFieldDescriptor& left, const RawFieldDescriptor& right) {
+        if (left.offset != right.offset) {
+            return left.offset < right.offset;
+        }
+        return left.name < right.name;
+    });
+
+    std::uint32_t computed_record_length = 1U;
+    for (const RawFieldDescriptor& field : fields) {
+        const std::string trimmed_name = field.name;
+        if (trimmed_name.empty()) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "dbf.field_name_blank",
+                path,
+                "The DBF contains a blank field name.");
+        } else {
+            const std::string normalized_name = uppercase_copy(trimmed_name);
+            if (!seen_names.insert(normalized_name).second) {
+                append_validation_issue(
+                    result,
+                    AssetValidationSeverity::error,
+                    "dbf.field_name_duplicate",
+                    path,
+                    "The DBF contains duplicate field names.");
+            }
+
+            const bool valid_name =
+                trimmed_name.size() <= 10U &&
+                (std::isalpha(static_cast<unsigned char>(trimmed_name.front())) != 0 || trimmed_name.front() == '_') &&
+                std::all_of(trimmed_name.begin(), trimmed_name.end(), [](char ch) { return is_valid_field_name_char(ch); });
+            if (!valid_name) {
+                append_validation_issue(
+                    result,
+                    AssetValidationSeverity::warning,
+                    "dbf.field_name_invalid",
+                    path,
+                    "The DBF contains a field name that is blank, too long, or uses invalid identifier characters.");
+            }
+        }
+
+        if (field.offset < 1U) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "dbf.field_offset_invalid",
+                path,
+                "The DBF contains a field descriptor with an invalid record offset.");
+        }
+
+        const std::uint32_t field_end = field.offset + static_cast<std::uint32_t>(field.length);
+        if (field_end > header.record_length) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "dbf.field_layout_overflow",
+                path,
+                "The DBF contains a field descriptor that extends past the declared record length.");
+        }
+
+        computed_record_length += static_cast<std::uint32_t>(field.length);
+    }
+
+    for (std::size_t index = 1; index < sorted_fields.size(); ++index) {
+        const std::uint32_t previous_end =
+            sorted_fields[index - 1U].offset + static_cast<std::uint32_t>(sorted_fields[index - 1U].length);
+        if (sorted_fields[index].offset < previous_end) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "dbf.field_layout_overlap",
+                path,
+                "The DBF contains overlapping field descriptors.");
+            break;
+        }
+    }
+
+    if (computed_record_length != header.record_length) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::warning,
+            "dbf.record_length_mismatch",
+            path,
+            "The DBF header record length does not match the descriptor-derived field layout.");
     }
 }
 
@@ -599,6 +761,7 @@ AssetInspectionResult inspect_asset(const std::string& path) {
     const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
 
     validate_dbf_storage(result, path, result.header, file_size);
+    validate_dbf_field_descriptors(result, path, result.header, table_bytes);
     validate_expected_companions(result, path, result.family, result.header);
     validate_memo_sidecar(result, path, result.family, result.header, table_bytes);
 

@@ -247,6 +247,79 @@ void test_open_document_preserves_memo_validation_findings() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_open_document_preserves_dbf_descriptor_validation_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_descriptor_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "bad_fields.scx";
+    {
+        std::vector<std::uint8_t> bytes(129U, 0U);
+        bytes[0] = 0x30U;
+        bytes[1] = 126U;
+        bytes[2] = 4U;
+        bytes[3] = 11U;
+        bytes[4] = 0x01U;
+        bytes[8] = 97U;
+        bytes[10] = 17U;
+        bytes[11] = 0U;
+        bytes[28] = 0x00U;
+        bytes[29] = 0x03U;
+        bytes[32] = '1';
+        bytes[33] = '2';
+        bytes[34] = '3';
+        bytes[35] = 'B';
+        bytes[36] = 'A';
+        bytes[37] = 'D';
+        bytes[38] = 'N';
+        bytes[39] = 'A';
+        bytes[40] = 'M';
+        bytes[41] = 'E';
+        bytes[43] = 'C';
+        bytes[44] = 1U;
+        bytes[48] = 8U;
+        bytes[64] = '1';
+        bytes[65] = '2';
+        bytes[66] = '3';
+        bytes[67] = 'B';
+        bytes[68] = 'A';
+        bytes[69] = 'D';
+        bytes[70] = 'N';
+        bytes[71] = 'A';
+        bytes[72] = 'M';
+        bytes[73] = 'E';
+        bytes[75] = 'C';
+        bytes[76] = 9U;
+        bytes[80] = 8U;
+        bytes[96] = 0x0DU;
+        bytes[97] = 0x20U;
+        bytes[128] = 0x1AU;
+
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const copperfin::studio::StudioOpenRequest request{
+        .path = form_path.string(),
+        .read_only = true
+    };
+
+    const auto result = copperfin::studio::open_document(request);
+    expect(result.ok, "open_document should still succeed for assets with DBF descriptor validation findings");
+    expect(
+        std::any_of(
+            result.document.inspection.validation_issues.begin(),
+            result.document.inspection.validation_issues.end(),
+            [](const copperfin::vfp::AssetValidationIssue& issue) {
+                return issue.code == "dbf.field_name_duplicate";
+            }),
+        "Studio documents should preserve DBF descriptor validation findings");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -255,6 +328,7 @@ int main() {
     test_open_document_infers_form_sidecar();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();
+    test_open_document_preserves_dbf_descriptor_validation_findings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

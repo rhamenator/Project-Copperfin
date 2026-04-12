@@ -639,6 +639,88 @@ void test_inspect_asset_reports_malformed_memo_sidecar_findings() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_inspect_asset_reports_dbf_descriptor_validation_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_descriptor_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path missing_terminator_path = temp_dir / "missing_terminator.dbf";
+    {
+        std::vector<std::uint8_t> bytes(97U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u32(bytes, 4U, 1U);
+        write_le_u16(bytes, 8U, 97U);
+        write_le_u16(bytes, 10U, 16U);
+        write_field_descriptor(bytes, 32U, "NAME", 'C', 1U, 10U);
+        bytes[96U] = 0x20U;
+        std::ofstream output(missing_terminator_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto missing_terminator_result = copperfin::vfp::inspect_asset(missing_terminator_path.string());
+    expect(missing_terminator_result.ok, "inspect_asset should still succeed for DBFs with descriptor validation findings");
+    expect(
+        has_validation_issue(missing_terminator_result, "dbf.descriptor_terminator_missing", "missing_terminator.dbf"),
+        "inspect_asset should report missing DBF descriptor terminators");
+
+    const fs::path record_layout_path = temp_dir / "record_layout.dbf";
+    {
+        std::vector<std::uint8_t> bytes(129U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u32(bytes, 4U, 1U);
+        write_le_u16(bytes, 8U, 97U);
+        write_le_u16(bytes, 10U, 12U);
+        write_field_descriptor(bytes, 32U, "FIRST", 'C', 1U, 10U);
+        write_field_descriptor(bytes, 64U, "SECOND", 'C', 8U, 8U);
+        bytes[96U] = 0x0DU;
+        bytes[97U] = 0x20U;
+        bytes[128U] = 0x1AU;
+        std::ofstream output(record_layout_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto record_layout_result = copperfin::vfp::inspect_asset(record_layout_path.string());
+    expect(record_layout_result.ok, "inspect_asset should still succeed for DBFs with bad field layout metadata");
+    expect(
+        has_validation_issue(record_layout_result, "dbf.field_layout_overlap", "record_layout.dbf"),
+        "inspect_asset should report overlapping DBF field descriptors");
+    expect(
+        has_validation_issue(record_layout_result, "dbf.field_layout_overflow", "record_layout.dbf"),
+        "inspect_asset should report field descriptors that overflow the declared record length");
+    expect(
+        has_validation_issue(record_layout_result, "dbf.record_length_mismatch", "record_layout.dbf"),
+        "inspect_asset should report descriptor-derived record length mismatches");
+
+    const fs::path field_names_path = temp_dir / "field_names.dbf";
+    {
+        std::vector<std::uint8_t> bytes(129U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u32(bytes, 4U, 1U);
+        write_le_u16(bytes, 8U, 97U);
+        write_le_u16(bytes, 10U, 17U);
+        write_field_descriptor(bytes, 32U, "123BADNAME", 'C', 1U, 8U);
+        write_field_descriptor(bytes, 64U, "123BADNAME", 'C', 9U, 8U);
+        bytes[96U] = 0x0DU;
+        bytes[97U] = 0x20U;
+        bytes[128U] = 0x1AU;
+        std::ofstream output(field_names_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto field_names_result = copperfin::vfp::inspect_asset(field_names_path.string());
+    expect(field_names_result.ok, "inspect_asset should still succeed for DBFs with invalid field names");
+    expect(
+        has_validation_issue(field_names_result, "dbf.field_name_duplicate", "field_names.dbf"),
+        "inspect_asset should report duplicate DBF field names");
+    expect(
+        has_validation_issue(field_names_result, "dbf.field_name_invalid", "field_names.dbf"),
+        "inspect_asset should report invalid DBF field names");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -656,6 +738,7 @@ int main() {
     test_inspect_asset_reports_dbf_storage_validation_findings();
     test_inspect_asset_reports_missing_companions_and_unparseable_indexes();
     test_inspect_asset_reports_malformed_memo_sidecar_findings();
+    test_inspect_asset_reports_dbf_descriptor_validation_findings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
