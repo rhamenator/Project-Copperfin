@@ -3581,6 +3581,108 @@ void test_sql_result_cursor_command_seek_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_command_seek_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_command_seek_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_command_seek_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO NAME IN sqlcust\n"
+        "cCustOrder = ORDER('sqlcust')\n"
+        "cOtherOrder = ORDER('sqlother')\n"
+        "SEEK 'CHARLIE' IN sqlcust\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "SELECT sqlcust\n"
+        "nCustRecAfterSeek = RECNO()\n"
+        "cCustNameAfterSeek = NAME\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL command-path SEEK IN target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL command-path SEEK IN target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_order = state.globals.find("ccustorder");
+    const auto other_order = state.globals.find("cotherorder");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto cust_rec_after_seek = state.globals.find("ncustrecafterseek");
+    const auto cust_name_after_seek = state.globals.find("ccustnameafterseek");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL command-path SEEK IN target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL command-path SEEK IN target parity");
+    expect(other_rec_before != state.globals.end(), "RECNO() before targeted SQL SEEK should be captured");
+    expect(cust_order != state.globals.end(), "ORDER('sqlcust') after targeted SQL SET ORDER should be captured");
+    expect(other_order != state.globals.end(), "ORDER('sqlother') after targeted SQL SET ORDER should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted SQL SEEK should be captured");
+    expect(other_rec_after != state.globals.end(), "RECNO() on selected SQL cursor after targeted SEEK should be captured");
+    expect(cust_rec_after_seek != state.globals.end(), "RECNO() on targeted SQL cursor after targeted SEEK should be captured");
+    expect(cust_name_after_seek != state.globals.end(), "NAME on targeted SQL cursor after targeted SEEK should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL command-path SEEK IN target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL SEEK checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL SEEK checks");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "1", "selected SQL cursor should begin at first record");
+    }
+    if (cust_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_order->second) == "NAME", "SET ORDER TO ... IN sqlcust should affect the targeted SQL cursor");
+    }
+    if (other_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_order->second).empty(), "SET ORDER TO ... IN sqlcust should not alter the selected non-target SQL cursor");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "SQLOTHER", "SEEK ... IN sqlcust should preserve the current selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "1", "SEEK ... IN sqlcust should not move the selected non-target SQL cursor pointer");
+    }
+    if (cust_rec_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_seek->second) == "3", "SEEK ... IN sqlcust should move the targeted SQL cursor pointer to the match");
+    }
+    if (cust_name_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_name_after_seek->second) == "CHARLIE", "SEEK ... IN sqlcust should expose the targeted SQL row values");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL SEEK checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.order" && event.detail == "NAME";
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" && event.detail.find("NAME: CHARLIE -> found") != std::string::npos;
+        }),
+        "SQL command-path SET ORDER ... IN and SEEK ... IN should emit runtime.order and runtime.seek events for targeted SQL cursors");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_parity";
@@ -5209,6 +5311,7 @@ int main() {
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
     test_sql_result_cursor_command_seek_parity();
+    test_sql_result_cursor_command_seek_in_target_parity();
     test_sql_result_cursor_mutation_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
