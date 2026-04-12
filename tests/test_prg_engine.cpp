@@ -3980,6 +3980,165 @@ void test_sql_result_cursor_mutation_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_mutation_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_mutation_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "cAliasBefore = ALIAS()\n"
+        "nOtherRecBefore = RECNO()\n"
+        "GO BOTTOM IN sqlcust\n"
+        "nCustRecBefore = RECNO('sqlcust')\n"
+        "REPLACE NAME WITH 'CHARLIEX' IN sqlcust\n"
+        "cAliasAfterReplace = ALIAS()\n"
+        "nOtherRecAfterReplace = RECNO()\n"
+        "nCustRecAfterReplace = RECNO('sqlcust')\n"
+        "DELETE FOR NAME = 'BRAVO' IN sqlcust\n"
+        "cAliasAfterDelete = ALIAS()\n"
+        "nOtherRecAfterDelete = RECNO()\n"
+        "nCustRecAfterDelete = RECNO('sqlcust')\n"
+        "RECALL FOR NAME = 'BRAVO' IN sqlcust\n"
+        "cAliasAfterRecall = ALIAS()\n"
+        "nOtherRecAfterRecall = RECNO()\n"
+        "nCustRecAfterRecall = RECNO('sqlcust')\n"
+        "SELECT sqlcust\n"
+        "LOCATE FOR NAME = 'CHARLIEX'\n"
+        "cTargetReplacedName = NAME\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "lTargetBravoDeleted = DELETED()\n"
+        "SELECT sqlother\n"
+        "cAliasFinal = ALIAS()\n"
+        "nOtherRecFinal = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL mutation IN-target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL mutation IN-target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_before = state.globals.find("ncustrecbefore");
+    const auto alias_after_replace = state.globals.find("caliasafterreplace");
+    const auto other_rec_after_replace = state.globals.find("notherrecafterreplace");
+    const auto cust_rec_after_replace = state.globals.find("ncustrecafterreplace");
+    const auto alias_after_delete = state.globals.find("caliasafterdelete");
+    const auto other_rec_after_delete = state.globals.find("notherrecafterdelete");
+    const auto cust_rec_after_delete = state.globals.find("ncustrecafterdelete");
+    const auto alias_after_recall = state.globals.find("caliasafterrecall");
+    const auto other_rec_after_recall = state.globals.find("notherrecafterrecall");
+    const auto cust_rec_after_recall = state.globals.find("ncustrecafterrecall");
+    const auto target_replaced_name = state.globals.find("ctargetreplacedname");
+    const auto target_bravo_deleted = state.globals.find("ltargetbravodeleted");
+    const auto alias_final = state.globals.find("caliasfinal");
+    const auto other_rec_final = state.globals.find("notherrecfinal");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL mutation IN-target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL mutation IN-target parity");
+    expect(alias_before != state.globals.end(), "Selected alias before targeted SQL mutation commands should be captured");
+    expect(other_rec_before != state.globals.end(), "Selected SQL cursor RECNO() before targeted mutations should be captured");
+    expect(cust_rec_before != state.globals.end(), "Target SQL cursor RECNO() before targeted mutations should be captured");
+    expect(alias_after_replace != state.globals.end(), "Selected alias after REPLACE IN should be captured");
+    expect(other_rec_after_replace != state.globals.end(), "Selected SQL cursor RECNO() after REPLACE IN should be captured");
+    expect(cust_rec_after_replace != state.globals.end(), "Target SQL cursor RECNO() after REPLACE IN should be captured");
+    expect(alias_after_delete != state.globals.end(), "Selected alias after DELETE FOR ... IN should be captured");
+    expect(other_rec_after_delete != state.globals.end(), "Selected SQL cursor RECNO() after DELETE FOR ... IN should be captured");
+    expect(cust_rec_after_delete != state.globals.end(), "Target SQL cursor RECNO() after DELETE FOR ... IN should be captured");
+    expect(alias_after_recall != state.globals.end(), "Selected alias after RECALL FOR ... IN should be captured");
+    expect(other_rec_after_recall != state.globals.end(), "Selected SQL cursor RECNO() after RECALL FOR ... IN should be captured");
+    expect(cust_rec_after_recall != state.globals.end(), "Target SQL cursor RECNO() after RECALL FOR ... IN should be captured");
+    expect(target_replaced_name != state.globals.end(), "Target SQL cursor REPLACE IN field update should be captured");
+    expect(target_bravo_deleted != state.globals.end(), "Target SQL cursor DELETE/RECALL IN state should be captured");
+    expect(alias_final != state.globals.end(), "Selected alias after targeted SQL mutation verification should be captured");
+    expect(other_rec_final != state.globals.end(), "Selected SQL cursor RECNO() final position should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL mutation IN-target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL mutation checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL mutation checks");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_before->second)) == "SQLOTHER", "selected SQL alias should start on sqlother before targeted mutations");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before targeted mutations");
+    }
+    if (cust_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_before->second) == "3", "target SQL cursor should be positioned at bottom before REPLACE IN");
+    }
+    if (alias_after_replace != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_replace->second)) == "SQLOTHER", "REPLACE IN should preserve the selected SQL alias");
+    }
+    if (other_rec_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after_replace->second) == "3", "REPLACE IN should preserve the selected SQL cursor pointer");
+    }
+    if (cust_rec_after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_replace->second) == "3", "REPLACE IN should keep the targeted SQL cursor pointer on the current record");
+    }
+    if (alias_after_delete != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_delete->second)) == "SQLOTHER", "DELETE FOR ... IN should preserve the selected SQL alias");
+    }
+    if (other_rec_after_delete != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after_delete->second) == "3", "DELETE FOR ... IN should preserve the selected SQL cursor pointer");
+    }
+    if (cust_rec_after_delete != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_delete->second) == "3", "DELETE FOR ... IN should restore the targeted SQL cursor pointer");
+    }
+    if (alias_after_recall != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_recall->second)) == "SQLOTHER", "RECALL FOR ... IN should preserve the selected SQL alias");
+    }
+    if (other_rec_after_recall != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after_recall->second) == "3", "RECALL FOR ... IN should preserve the selected SQL cursor pointer");
+    }
+    if (cust_rec_after_recall != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_recall->second) == "3", "RECALL FOR ... IN should restore the targeted SQL cursor pointer");
+    }
+    if (target_replaced_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_replaced_name->second) == "CHARLIEX", "REPLACE IN should update the targeted SQL row fields");
+    }
+    if (target_bravo_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_bravo_deleted->second) == "false", "DELETE FOR ... IN followed by RECALL FOR ... IN should leave the targeted SQL row recalled");
+    }
+    if (alias_final != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_final->second)) == "SQLOTHER", "selected SQL alias should remain on sqlother at the end of targeted mutation checks");
+    }
+    if (other_rec_final != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_final->second) == "3", "selected SQL cursor pointer should remain unchanged at the end of targeted mutation checks");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL mutation checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.replace"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
+        "targeted SQL mutation commands should emit runtime.replace, runtime.delete, and runtime.recall events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_fault_containment() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faults";
@@ -5408,6 +5567,7 @@ int main() {
     test_sql_result_cursor_command_seek_in_target_parity();
     test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_mutation_parity();
+    test_sql_result_cursor_mutation_in_target_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
