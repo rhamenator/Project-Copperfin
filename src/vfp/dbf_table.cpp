@@ -540,8 +540,14 @@ DbfWriteResult write_field_bytes(
 
     std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
 
+    const std::string normalized_value = lowercase_copy(trim_both(value));
+    const bool is_null_token = normalized_value == "null";
+
     switch (field.type) {
         case 'C': {
+            if (is_null_token) {
+                break;
+            }
             const std::string text = trim_both(value);
             if (text.size() > field.length) {
                 return {.ok = false, .error = "Character value is too large for the target field.", .record_count = header.record_count};
@@ -551,6 +557,9 @@ DbfWriteResult write_field_bytes(
         }
         case 'N':
         case 'F': {
+            if (is_null_token) {
+                break;
+            }
             const std::string text = trim_both(value);
             if (!text.empty()) {
                 if (text.size() > field.length) {
@@ -562,6 +571,10 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'L': {
+            if (is_null_token) {
+                table_bytes[field_offset] = static_cast<std::uint8_t>('?');
+                break;
+            }
             const auto logical_value = normalize_logical_value(value);
             if (!logical_value.has_value()) {
                 return {.ok = false, .error = "Logical fields only accept true/false values.", .record_count = header.record_count};
@@ -570,6 +583,9 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'D': {
+            if (is_null_token) {
+                break;
+            }
             std::string text = trim_both(value);
             text.erase(std::remove(text.begin(), text.end(), '-'), text.end());
             if (!text.empty() && text.size() != 8U) {
@@ -579,6 +595,13 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'B': {
+            if (is_null_token) {
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
+                break;
+            }
             const std::string text = trim_both(value);
             double parsed = 0.0;
             if (!text.empty()) {
@@ -599,6 +622,10 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'I': {
+            if (is_null_token) {
+                write_le_u32(table_bytes, field_offset, 0U);
+                break;
+            }
             const std::string text = trim_both(value);
             if (text.empty()) {
                 write_le_u32(table_bytes, field_offset, 0U);
@@ -624,6 +651,10 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'Y': {
+            if (is_null_token) {
+                write_le_i64(table_bytes, field_offset, 0);
+                break;
+            }
             const auto scaled = parse_scaled_currency_value(value);
             if (!scaled.has_value()) {
                 return {.ok = false, .error = "Currency fields only accept signed decimal values with up to four fractional digits.", .record_count = header.record_count};
@@ -632,6 +663,11 @@ DbfWriteResult write_field_bytes(
             break;
         }
         case 'T': {
+            if (is_null_token) {
+                write_le_u32(table_bytes, field_offset, 0U);
+                write_le_u32(table_bytes, field_offset + 4U, 0U);
+                break;
+            }
             const auto datetime = parse_datetime_storage_value(value);
             if (!datetime.has_value()) {
                 return {.ok = false, .error = "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.", .record_count = header.record_count};
@@ -839,6 +875,9 @@ std::string decode_value(
         }
         case 'D': {
             const std::string value(raw.begin(), raw.end());
+            if (trim_both(value).empty()) {
+                return {};
+            }
             if (value.size() == 8U) {
                 return value.substr(0U, 4U) + "-" + value.substr(4U, 2U) + "-" + value.substr(6U, 2U);
             }

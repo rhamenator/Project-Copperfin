@@ -710,6 +710,87 @@ void test_memo_replace_recovers_directory_sidecar_path() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_replace_field_value_accepts_null_token_for_supported_types() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_null_token_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "nullable.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CVAL", .type = 'C', .length = 8U},
+        {.name = "NVAL", .type = 'N', .length = 6U},
+        {.name = "LVAL", .type = 'L', .length = 1U},
+        {.name = "DVAL", .type = 'D', .length = 8U},
+        {.name = "BVAL", .type = 'B', .length = 8U},
+        {.name = "IVAL", .type = 'I', .length = 4U},
+        {.name = "YVAL", .type = 'Y', .length = 8U},
+        {.name = "TVAL", .type = 'T', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"HELLO", "123", "true", "2026-04-12", "3.5", "7", "8.1250", "julian:2460412 millis:777"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "setup should create a mixed-type table for NULL-token mutation tests");
+
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "CVAL", "NULL").ok, "NULL token should be accepted for C fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NVAL", "NULL").ok, "NULL token should be accepted for N fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "LVAL", "NULL").ok, "NULL token should be accepted for L fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "DVAL", "NULL").ok, "NULL token should be accepted for D fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BVAL", "NULL").ok, "NULL token should be accepted for B fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "IVAL", "NULL").ok, "NULL token should be accepted for I fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "YVAL", "NULL").ok, "NULL token should be accepted for Y fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "TVAL", "NULL").ok, "NULL token should be accepted for T fields");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "NULL-token mutated table should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 8U) {
+        expect(parse_result.table.records[0].values[0].display_value.empty(), "C NULL token should clear character storage");
+        expect(parse_result.table.records[0].values[1].display_value.empty(), "N NULL token should clear numeric storage");
+        expect(parse_result.table.records[0].values[2].display_value == "?", "L NULL token should set unknown logical marker");
+        expect(parse_result.table.records[0].values[3].display_value.empty(), "D NULL token should clear date storage");
+        expect(parse_result.table.records[0].values[4].display_value == "0", "B NULL token should zero double storage");
+        expect(parse_result.table.records[0].values[5].display_value == "0", "I NULL token should zero integer storage");
+        expect(parse_result.table.records[0].values[6].display_value == "0.0000", "Y NULL token should zero currency storage");
+        expect(parse_result.table.records[0].values[7].display_value == "julian:0 millis:0", "T NULL token should zero datetime storage");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_staged_write_temp_artifacts_are_cleaned_up() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_staged_write_cleanup_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "cleanup.dbf";
+    const fs::path memo_path = temp_dir / "cleanup.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TITLE", .type = 'C', .length = 12U},
+        {.name = "BODY", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{{"FIRST", "Payload"}};
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "setup should create memo-backed table for staged-write cleanup tests");
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Payload after staged write");
+    expect(replace_result.ok, "memo replacement should succeed under staged-write path");
+
+    expect(!fs::exists(table_path.string() + ".cptmp"), "staged DBF write should remove temporary files");
+    expect(!fs::exists(table_path.string() + ".cpbak"), "staged DBF write should remove backup files");
+    expect(!fs::exists(memo_path.string() + ".cptmp"), "staged memo write should remove temporary files");
+    expect(!fs::exists(memo_path.string() + ".cpbak"), "staged memo write should remove backup files");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -726,6 +807,8 @@ int main() {
     test_parse_dbf_table_rejects_truncated_visual_asset();
     test_visual_asset_memo_sidecar_repair_round_trip();
     test_memo_replace_recovers_directory_sidecar_path();
+    test_replace_field_value_accepts_null_token_for_supported_types();
+    test_staged_write_temp_artifacts_are_cleaned_up();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
