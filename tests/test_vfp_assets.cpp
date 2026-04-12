@@ -80,11 +80,14 @@ std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_ta
     write_le_u16(bytes, 1026U, include_second_tag ? 2U : 1U);
 
     if (include_second_tag) {
+        write_le_u32(bytes, 1028U, 11U * 512U);
+        write_le_u32(bytes, 1032U, 4U * 512U);
         write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
         write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
         write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
         write_ascii(bytes, 11U * 512U, "customer_id");
     } else {
+        write_le_u32(bytes, 1028U, 4U * 512U);
         write_ascii(bytes, (3U * 512U) - 10U, "NAME");
         write_ascii(bytes, 4U * 512U, "UPPER(NAME)");
     }
@@ -93,6 +96,41 @@ std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_ta
         write_ascii(bytes, 5U * 512U, "DELETED() = .F.");
     }
 
+    return bytes;
+}
+
+std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 1U);
+    write_le_u32(bytes, 1028U, 11U * 512U);
+
+    write_ascii(bytes, (3U * 512U) - 10U, "CUSTOMER_I");
+    write_ascii(bytes, (3U * 512U) + 24U, "customer_invoice_id");
+    write_ascii(bytes, (4U * 512U) + 24U, "invoice_deleted = .F.");
+    write_ascii(bytes, 11U * 512U, "customer_id");
+    write_ascii(bytes, (12U * 512U) + 16U, "DELETED() = .F.");
+
+    return bytes;
+}
+
+std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
+    std::vector<std::uint8_t> bytes(3U * 512U, 0U);
+    write_le_u32(bytes, 0U, 2U);
+    write_le_u16(bytes, 4U, 0x0200U);
+    write_ascii(bytes, 16U, "MDXHDR");
+    write_ascii(bytes, (1U * 512U) + 32U, "NAME_TAG");
+    write_ascii(bytes, (2U * 512U) + 48U, "CITYSTATE");
+    if (include_decoy_text) {
+        write_ascii(bytes, 128U, "HEADER_TEXT_SHOULD_NOT_BE_A_TAG");
+        write_ascii(bytes, (1U * 512U) + 320U, "LATE_BLOCK_TEXT");
+        write_ascii(bytes, (2U * 512U) + 400U, "TRAILING_TEXT");
+    }
     return bytes;
 }
 
@@ -148,12 +186,14 @@ void test_parse_index_probe_for_cdx() {
     expect(result.probe.for_expression_hint == "DELETED() = .F.", "CDX probe should surface the first tag FOR expression");
     if (result.probe.tags.size() >= 2U) {
         expect(result.probe.tags[0].name_hint == "CUSTOMER_I", "directory leaf parsing should preserve the first stored tag name");
+        expect(result.probe.tags[0].tag_page_offset_hint == (11U * 512U), "CDX probe should surface the first tag page hint");
         expect(
             result.probe.tags[0].key_expression_hint == "customer_id",
             "directory tag names should still bind to the matching plain-field expression");
         expect(result.probe.tags[0].for_expression_hint.empty(), "tags should not borrow FOR expressions from a different key-expression span");
         expect(!result.probe.tags[0].inferred_name, "directory-derived tag names should not be marked as inferred");
         expect(result.probe.tags[1].name_hint == "COMPANY_NA", "directory leaf parsing should preserve the second stored tag name");
+        expect(result.probe.tags[1].tag_page_offset_hint == (4U * 512U), "CDX probe should surface the second tag page hint");
         expect(
             result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
             "directory tag names should still bind to the matching functional expression");
@@ -175,8 +215,30 @@ void test_parse_index_probe_for_dcx() {
     expect(result.probe.tags.size() == 1U, "DCX probe should reuse the shared CDX-family tag parser");
     if (!result.probe.tags.empty()) {
         expect(result.probe.tags.front().name_hint == "NAME", "DCX probe should preserve the stored tag name");
+        expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "DCX probe should preserve the stored tag page hint");
         expect(result.probe.tags.front().key_expression_hint == "UPPER(NAME)", "DCX probe should expose the key expression hint");
         expect(result.probe.tags.front().for_expression_hint == "DELETED() = .F.", "DCX probe should expose the FOR expression hint");
+    }
+}
+
+void test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions() {
+    const auto bytes = make_synthetic_cdx_bytes_with_decoys();
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::cdx);
+    expect(result.ok, "parse_index_probe should still succeed for a plausible CDX with stray printable expressions");
+    const auto tag = std::find_if(
+        result.probe.tags.begin(),
+        result.probe.tags.end(),
+        [](const copperfin::vfp::IndexTagProbe& candidate) { return candidate.name_hint == "CUSTOMER_I"; });
+    expect(tag != result.probe.tags.end(), "single-tag adversarial CDX probe should still expose the stored tag");
+    if (tag != result.probe.tags.end()) {
+        expect(tag->tag_page_offset_hint == (11U * 512U), "adversarial CDX probe should preserve the tag page hint");
+        expect(
+            tag->key_expression_hint == "customer_id",
+            "tag-page-local binding should ignore earlier decoy key expressions");
+        expect(
+            tag->for_expression_hint == "DELETED() = .F.",
+            "tag-page-local binding should ignore earlier decoy FOR expressions");
     }
 }
 
@@ -267,11 +329,9 @@ void test_parse_index_probe_for_ndx() {
 }
 
 void test_parse_index_probe_for_mdx() {
-    std::vector<std::uint8_t> bytes(1024U, 0U);
-    write_ascii(bytes, 512U, "NAME_TAG");
-    write_ascii(bytes, 640U, "CITYSTATE");
+    const auto bytes = make_synthetic_mdx_bytes(true);
 
-    const auto result = copperfin::vfp::parse_index_probe(bytes, 1024U, copperfin::vfp::IndexKind::mdx);
+    const auto result = copperfin::vfp::parse_index_probe(bytes, bytes.size(), copperfin::vfp::IndexKind::mdx);
     expect(result.ok, "parse_index_probe should succeed for a plausible dBase MDX file");
     expect(result.probe.kind == copperfin::vfp::IndexKind::mdx, "MDX probe kind should be preserved");
     expect(result.probe.multi_tag, "MDX should be treated as multi-tag");
@@ -281,6 +341,14 @@ void test_parse_index_probe_for_mdx() {
         expect(result.probe.tags[0].name_hint == "NAME_TAG", "MDX probe should expose the first tag hint");
         expect(result.probe.tags[1].name_hint == "CITYSTATE", "MDX probe should expose the second tag hint");
     }
+}
+
+void test_parse_index_probe_for_mdx_rejects_implausible_header() {
+    std::vector<std::uint8_t> bytes(2U * 512U, 0U);
+    write_ascii(bytes, 512U + 32U, "NAME_TAG");
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, bytes.size(), copperfin::vfp::IndexKind::mdx);
+    expect(!result.ok, "parse_index_probe should reject MDX files with an implausible all-zero header block");
 }
 
 void test_inspect_asset_collects_companion_indexes() {
@@ -319,9 +387,7 @@ void test_inspect_asset_collects_companion_indexes() {
     }
 
     {
-        std::vector<std::uint8_t> bytes(1024U, 0U);
-        write_ascii(bytes, 512U, "NAME_TAG");
-        write_ascii(bytes, 640U, "CITYSTATE");
+        const auto bytes = make_synthetic_mdx_bytes(true);
         std::ofstream output(mdx_path, std::ios::binary);
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
@@ -351,6 +417,7 @@ void test_inspect_asset_collects_companion_indexes() {
             if (index.probe.tags.size() >= 2U) {
                 expect(index.probe.tags[0].name_hint == "NAME_TAG", "inspect_asset should expose the first MDX tag hint");
                 expect(index.probe.tags[1].name_hint == "CITYSTATE", "inspect_asset should expose the second MDX tag hint");
+                expect(index.probe.tags[0].name_hint != "LATE_BLOCK_TEXT", "inspect_asset should not promote late block text into MDX tags");
             }
         }
     }
@@ -729,9 +796,11 @@ int main() {
     test_asset_family_detection();
     test_parse_index_probe_for_cdx();
     test_parse_index_probe_for_dcx();
+    test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
     test_parse_index_probe_for_mdx();
+    test_parse_index_probe_for_mdx_rejects_implausible_header();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
     test_parse_real_vfp_cdx_when_available();

@@ -7,7 +7,8 @@ Current coverage:
 - `CDX` and `DCX`
   - Minimal header probe for block size, root node offset, free node hint, key-length hint, and key-pool hint.
   - Treated as multi-tag index containers.
-  - First-pass directory leaf-page parsing now surfaces stored tag names from plausible node pages, first-pass page-local key/`FOR` expression hints are attached on top of that parser, and focused regression coverage now exercises both direct `.dcx` probing and `DBC` companion discovery.
+  - First-pass directory leaf-page parsing now surfaces stored tag names plus conservative per-tag page hints from plausible node pages, and page-local key/`FOR` expression hints now prefer the hinted tag-page neighborhood before falling back to whole-file heuristics.
+  - Focused regression coverage now exercises direct `.cdx`/`.dcx` probing, adversarial decoy-expression cases, and `DBC` companion discovery.
 - `IDX`
   - Visual FoxPro single-index header probe.
   - Extracts root, free-list, and EOF offsets plus key and `FOR` expression hints.
@@ -15,7 +16,8 @@ Current coverage:
   - dBase-style single-index header probe.
   - Extracts root and EOF block hints, key length, maximum key count, group length, uniqueness flag, and key expression hint.
 - `MDX`
-  - First-pass block-level probe with printable-run tag hint enumeration.
+  - First-pass block-level probe with block-local tag hint enumeration from non-header metadata regions.
+  - Minimal plausibility checks now require a non-empty header block plus at least one plausible non-header tag hint.
   - Treated as a production multi-tag index container pending deeper layout, expression, and write parsing.
 
 Current inspector behavior:
@@ -49,7 +51,7 @@ Reference docs used to keep the probe rules grounded:
 Next implementation steps:
 
 1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
-2. Deepen `MDX` parsing beyond printable tag hints into real layout and expression metadata extraction.
+2. Deepen `MDX` parsing beyond block-local tag hints into real layout and expression metadata extraction.
 3. Add expression normalization and collation metadata extraction.
 4. Correlate DBF field metadata with index expressions for migration planning.
 5. Build read-only reindex validation against real VFP and dBase fixtures.

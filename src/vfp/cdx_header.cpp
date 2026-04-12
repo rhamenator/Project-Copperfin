@@ -4,6 +4,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <set>
 
 namespace copperfin::vfp {
@@ -22,6 +23,22 @@ struct PrintableRun {
     std::size_t offset = 0;
     std::string text;
 };
+
+std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return static_cast<std::uint32_t>(bytes[offset]) |
+           (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
+           (static_cast<std::uint32_t>(bytes[offset + 2]) << 16U) |
+           (static_cast<std::uint32_t>(bytes[offset + 3]) << 24U);
+}
+
+std::vector<PrintableRun> collect_printable_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end);
+std::vector<PrintableRun> collect_expression_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end);
 
 bool is_identifier_char(char ch) {
     const auto raw = static_cast<unsigned char>(ch);
@@ -83,18 +100,26 @@ std::string collapse_identifier(const std::string& value) {
 }
 
 std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
-    std::vector<PrintableRun> runs;
+    return collect_printable_runs(bytes, 0U, bytes.size());
+}
 
-    for (std::size_t index = 0; index < bytes.size();) {
+std::vector<PrintableRun> collect_printable_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
+    std::vector<PrintableRun> runs;
+    const std::size_t bounded_end = std::min(end, bytes.size());
+
+    for (std::size_t index = std::min(start, bounded_end); index < bounded_end;) {
         const auto raw = static_cast<unsigned char>(bytes[index]);
         if (std::isprint(raw) == 0) {
             ++index;
             continue;
         }
 
-        const std::size_t start = index;
+        const std::size_t run_start = index;
         std::string text;
-        while (index < bytes.size()) {
+        while (index < bounded_end) {
             const auto current = static_cast<unsigned char>(bytes[index]);
             if (std::isprint(current) == 0) {
                 break;
@@ -104,7 +129,7 @@ std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>
         }
 
         if (text.size() >= 4U) {
-            runs.push_back({.offset = start, .text = std::move(text)});
+            runs.push_back({.offset = run_start, .text = std::move(text)});
         }
     }
 
@@ -202,10 +227,17 @@ std::string derive_name_from_expression(const std::string& expression) {
 }
 
 std::vector<PrintableRun> collect_expression_runs(const std::vector<std::uint8_t>& bytes) {
+    return collect_expression_runs(bytes, 0U, bytes.size());
+}
+
+std::vector<PrintableRun> collect_expression_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
     std::vector<PrintableRun> expressions;
     std::set<std::string> seen_expressions;
 
-    for (const PrintableRun& run : collect_printable_runs(bytes)) {
+    for (const PrintableRun& run : collect_printable_runs(bytes, start, end)) {
         const std::string candidate = trim_copy(run.text);
         if (!looks_like_expression_candidate(candidate)) {
             continue;
@@ -220,6 +252,36 @@ std::vector<PrintableRun> collect_expression_runs(const std::vector<std::uint8_t
     }
 
     return expressions;
+}
+
+std::vector<PrintableRun> merge_expression_runs(
+    const std::vector<PrintableRun>& primary,
+    const std::vector<PrintableRun>& secondary) {
+    std::vector<PrintableRun> merged = primary;
+    std::set<std::size_t> seen_offsets;
+    for (const PrintableRun& run : primary) {
+        seen_offsets.insert(run.offset);
+    }
+
+    for (const PrintableRun& run : secondary) {
+        if (seen_offsets.insert(run.offset).second) {
+            merged.push_back(run);
+        }
+    }
+
+    std::sort(merged.begin(), merged.end(), [](const PrintableRun& left, const PrintableRun& right) {
+        return left.offset < right.offset;
+    });
+    return merged;
+}
+
+bool looks_like_tag_page_offset(
+    std::uint32_t offset,
+    std::size_t page_size,
+    std::size_t file_size) {
+    return offset >= page_size &&
+           offset < file_size &&
+           (offset % page_size) == 0U;
 }
 
 bool looks_like_tag_name_candidate(const std::string& text) {
@@ -275,8 +337,13 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
         }
 
         const std::size_t tail_start = page_start + page_size - tail_bytes;
+        const std::size_t entry_bytes = static_cast<std::size_t>(entry_count) * 4U;
+        if ((page_start + 4U + entry_bytes) > tail_start) {
+            continue;
+        }
         for (std::size_t index = 0; index < entry_count; ++index) {
             const std::size_t name_offset = tail_start + (index * key_length);
+            const std::size_t page_hint_offset = page_start + 4U + (index * 4U);
             std::string chunk;
             chunk.reserve(key_length);
             for (std::size_t char_index = 0; char_index < key_length && (name_offset + char_index) < bytes.size(); ++char_index) {
@@ -294,6 +361,12 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
 
             tags.push_back({
                 .name_hint = chunk,
+                .tag_page_offset_hint = looks_like_tag_page_offset(
+                    read_le_u32(bytes, page_hint_offset),
+                    page_size,
+                    bytes.size())
+                    ? read_le_u32(bytes, page_hint_offset)
+                    : 0U,
                 .name_offset_hint = static_cast<std::uint32_t>(name_offset),
                 .inferred_name = false
             });
@@ -372,37 +445,86 @@ int expression_match_score(const std::string& tag_name, const std::string& expre
     return best_score;
 }
 
+std::vector<PrintableRun> collect_local_expression_runs(
+    const std::vector<std::uint8_t>& bytes,
+    const CdxTagDescriptor& tag,
+    std::size_t page_size) {
+    if (page_size == 0U) {
+        return {};
+    }
+
+    if (tag.tag_page_offset_hint != 0U) {
+        const std::size_t start = static_cast<std::size_t>(tag.tag_page_offset_hint);
+        const std::size_t end = std::min(bytes.size(), start + (page_size * 2U));
+        return collect_expression_runs(bytes, start, end);
+    }
+
+    if (tag.name_offset_hint != 0U) {
+        const std::size_t page_start =
+            (static_cast<std::size_t>(tag.name_offset_hint) / page_size) * page_size;
+        const std::size_t end = std::min(bytes.size(), page_start + (page_size * 2U));
+        return collect_expression_runs(bytes, page_start, end);
+    }
+
+    return {};
+}
+
+std::size_t binding_anchor_offset(const CdxTagDescriptor& tag, std::size_t page_size) {
+    if (tag.tag_page_offset_hint != 0U) {
+        return static_cast<std::size_t>(tag.tag_page_offset_hint);
+    }
+    if (tag.key_expression_offset_hint != 0U) {
+        return static_cast<std::size_t>(tag.key_expression_offset_hint);
+    }
+    if (tag.name_offset_hint != 0U && page_size != 0U) {
+        return (static_cast<std::size_t>(tag.name_offset_hint) / page_size) * page_size;
+    }
+    return 0U;
+}
+
 std::vector<CdxTagDescriptor> extract_tag_descriptors(
     const std::vector<std::uint8_t>& bytes,
     std::size_t page_size,
     std::size_t key_length) {
     const std::vector<PrintableRun> expressions = collect_expression_runs(bytes);
     std::vector<CdxTagDescriptor> tags = collect_directory_leaf_tags(bytes, page_size, key_length);
-    std::vector<bool> used(expressions.size(), false);
+    std::set<std::size_t> used_expression_offsets;
 
     for (CdxTagDescriptor& tag : tags) {
         int best_score = 0;
-        std::size_t best_index = std::numeric_limits<std::size_t>::max();
+        const std::vector<PrintableRun> local_expressions = collect_local_expression_runs(bytes, tag, page_size);
+        PrintableRun best_expression;
+        bool found_match = false;
 
-        for (std::size_t index = 0; index < expressions.size(); ++index) {
-            if (used[index]) {
-                continue;
-            }
+        const auto score_runs = [&](const std::vector<PrintableRun>& runs) {
+            for (const PrintableRun& run : runs) {
+                if (used_expression_offsets.find(run.offset) != used_expression_offsets.end()) {
+                    continue;
+                }
 
-            const int score = expression_match_score(tag.name_hint, expressions[index].text);
-            if (score > best_score) {
-                best_score = score;
-                best_index = index;
+                const int score = expression_match_score(tag.name_hint, run.text);
+                if (score > best_score) {
+                    best_score = score;
+                    best_expression = run;
+                    found_match = true;
+                }
             }
+        };
+
+        score_runs(local_expressions);
+        if (best_score < 60) {
+            best_score = 0;
+            found_match = false;
+            score_runs(expressions);
         }
 
-        if (best_index == std::numeric_limits<std::size_t>::max() || best_score < 60) {
+        if (!found_match || best_score < 60) {
             continue;
         }
 
-        used[best_index] = true;
-        tag.key_expression_hint = expressions[best_index].text;
-        tag.key_expression_offset_hint = static_cast<std::uint32_t>(expressions[best_index].offset);
+        used_expression_offsets.insert(best_expression.offset);
+        tag.key_expression_hint = best_expression.text;
+        tag.key_expression_offset_hint = static_cast<std::uint32_t>(best_expression.offset);
     }
 
     std::vector<std::size_t> keyed_tag_indexes;
@@ -424,36 +546,59 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
         const std::size_t end_offset = (tag_order + 1U) < keyed_tag_indexes.size()
             ? static_cast<std::size_t>(tags[keyed_tag_indexes[tag_order + 1U]].key_expression_offset_hint)
             : bytes.size();
+        const std::size_t anchor_offset = binding_anchor_offset(tag, page_size);
+        const std::vector<PrintableRun> local_expressions = collect_local_expression_runs(bytes, tag, page_size);
 
-        std::size_t best_index = std::numeric_limits<std::size_t>::max();
-        for (std::size_t expression_index = 0; expression_index < expressions.size(); ++expression_index) {
-            if (used[expression_index] || !looks_like_for_expression_candidate(expressions[expression_index].text)) {
-                continue;
-            }
+        PrintableRun best_expression;
+        std::size_t best_distance = std::numeric_limits<std::size_t>::max();
+        bool found_match = false;
 
-            const std::size_t offset = expressions[expression_index].offset;
-            if (offset <= start_offset || offset >= end_offset) {
-                continue;
-            }
-            if ((offset - start_offset) > max_for_distance) {
-                continue;
-            }
+        const auto score_for_runs = [&](const std::vector<PrintableRun>& runs, bool require_local_window) {
+            for (const PrintableRun& run : runs) {
+                if (used_expression_offsets.find(run.offset) != used_expression_offsets.end() ||
+                    !looks_like_for_expression_candidate(run.text)) {
+                    continue;
+                }
 
-            best_index = expression_index;
-            break;
+                const std::size_t offset = run.offset;
+                if (offset <= start_offset || offset >= end_offset) {
+                    continue;
+                }
+                if ((offset - start_offset) > max_for_distance) {
+                    continue;
+                }
+                if (require_local_window && anchor_offset != 0U) {
+                    const std::size_t local_end = std::min(bytes.size(), anchor_offset + (page_size * 2U));
+                    if (offset < anchor_offset || offset >= local_end) {
+                        continue;
+                    }
+                }
+
+                const std::size_t distance = offset - start_offset;
+                if (distance < best_distance) {
+                    best_distance = distance;
+                    best_expression = run;
+                    found_match = true;
+                }
+            }
+        };
+
+        score_for_runs(local_expressions, true);
+        if (!found_match) {
+            score_for_runs(expressions, false);
         }
 
-        if (best_index == std::numeric_limits<std::size_t>::max()) {
+        if (!found_match) {
             continue;
         }
 
-        used[best_index] = true;
-        tag.for_expression_hint = expressions[best_index].text;
-        tag.for_expression_offset_hint = static_cast<std::uint32_t>(expressions[best_index].offset);
+        used_expression_offsets.insert(best_expression.offset);
+        tag.for_expression_hint = best_expression.text;
+        tag.for_expression_offset_hint = static_cast<std::uint32_t>(best_expression.offset);
     }
 
     for (std::size_t index = 0; index < expressions.size(); ++index) {
-        if (used[index]) {
+        if (used_expression_offsets.find(expressions[index].offset) != used_expression_offsets.end()) {
             continue;
         }
 

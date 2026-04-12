@@ -50,6 +50,11 @@ struct PrintableRun {
     std::string text;
 };
 
+std::vector<PrintableRun> collect_printable_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end);
+
 bool is_identifier_char(char ch) {
     const auto raw = static_cast<unsigned char>(ch);
     return std::isalnum(raw) != 0 || ch == '_';
@@ -69,18 +74,26 @@ std::string trim_copy(std::string value) {
 }
 
 std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
-    std::vector<PrintableRun> runs;
+    return collect_printable_runs(bytes, 0U, bytes.size());
+}
 
-    for (std::size_t index = 0; index < bytes.size();) {
+std::vector<PrintableRun> collect_printable_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
+    std::vector<PrintableRun> runs;
+    const std::size_t bounded_end = std::min(end, bytes.size());
+
+    for (std::size_t index = std::min(start, bounded_end); index < bounded_end;) {
         const auto raw = static_cast<unsigned char>(bytes[index]);
         if (std::isprint(raw) == 0) {
             ++index;
             continue;
         }
 
-        const std::size_t start = index;
+        const std::size_t run_start = index;
         std::string text;
-        while (index < bytes.size()) {
+        while (index < bounded_end) {
             const auto current = static_cast<unsigned char>(bytes[index]);
             if (std::isprint(current) == 0) {
                 break;
@@ -90,7 +103,7 @@ std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>
         }
 
         if (text.size() >= 2U) {
-            runs.push_back({.offset = start, .text = std::move(text)});
+            runs.push_back({.offset = run_start, .text = std::move(text)});
         }
     }
 
@@ -121,18 +134,30 @@ bool looks_like_mdx_tag_name_candidate(const std::string& text) {
 std::vector<IndexTagProbe> collect_mdx_tag_hints(const std::vector<std::uint8_t>& bytes) {
     std::vector<IndexTagProbe> tags;
     std::set<std::string> seen_names;
+    constexpr std::size_t mdx_block_size = 512U;
+    constexpr std::size_t mdx_metadata_region_start = 16U;
+    constexpr std::size_t mdx_metadata_region_length = 160U;
 
-    for (const PrintableRun& run : collect_printable_runs(bytes)) {
-        const std::string candidate = trim_copy(run.text);
-        if (!looks_like_mdx_tag_name_candidate(candidate) || !seen_names.insert(candidate).second) {
-            continue;
+    const std::size_t block_count = bytes.size() / mdx_block_size;
+    for (std::size_t block_index = 1U; block_index < block_count; ++block_index) {
+        const std::size_t block_start = block_index * mdx_block_size;
+        const std::size_t scan_start = block_start + mdx_metadata_region_start;
+        const std::size_t scan_end = std::min(
+            block_start + mdx_metadata_region_start + mdx_metadata_region_length,
+            block_start + mdx_block_size);
+
+        for (const PrintableRun& run : collect_printable_runs(bytes, scan_start, scan_end)) {
+            const std::string candidate = trim_copy(run.text);
+            if (!looks_like_mdx_tag_name_candidate(candidate) || !seen_names.insert(candidate).second) {
+                continue;
+            }
+
+            tags.push_back({
+                .name_hint = candidate,
+                .name_offset_hint = static_cast<std::uint32_t>(run.offset),
+                .inferred_name = false
+            });
         }
-
-        tags.push_back({
-            .name_hint = candidate,
-            .name_offset_hint = static_cast<std::uint32_t>(run.offset),
-            .inferred_name = false
-        });
     }
 
     return tags;
@@ -171,6 +196,7 @@ IndexParseResult parse_cdx_family_probe(
             .name_hint = tag.name_hint,
             .key_expression_hint = tag.key_expression_hint,
             .for_expression_hint = tag.for_expression_hint,
+            .tag_page_offset_hint = tag.tag_page_offset_hint,
             .name_offset_hint = tag.name_offset_hint,
             .key_expression_offset_hint = tag.key_expression_offset_hint,
             .for_expression_offset_hint = tag.for_expression_offset_hint,
@@ -292,7 +318,19 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     probe.multi_tag = true;
     probe.production_candidate = true;
 
-    if (file_size < 512U || (file_size % 512U) != 0U) {
+    if (file_size < 1024U || (file_size % 512U) != 0U) {
+        return {
+            .ok = false,
+            .probe = probe,
+            .error = "Header values do not look like a block-oriented dBase MDX file."
+        };
+    }
+
+    const bool header_has_nonzero_bytes = std::any_of(
+        bytes.begin(),
+        bytes.begin() + std::min<std::size_t>(bytes.size(), 64U),
+        [](std::uint8_t value) { return value != 0U; });
+    if (!header_has_nonzero_bytes) {
         return {
             .ok = false,
             .probe = probe,
@@ -301,6 +339,13 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     }
 
     probe.tags = collect_mdx_tag_hints(bytes);
+    if (probe.tags.empty()) {
+        return {
+            .ok = false,
+            .probe = probe,
+            .error = "No plausible block-local MDX tag metadata was found."
+        };
+    }
 
     return {.ok = true, .probe = probe};
 }
