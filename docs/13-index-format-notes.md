@@ -38,6 +38,11 @@ Current inspector behavior:
 Local reality checks used during implementation:
 
 - `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\customer.cdx`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\Orders.CDX`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\tastrade.dcx`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Northwind\products.cdx`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Northwind\orderdetails.cdx`
+- `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Northwind\northwind.dcx`
 - `C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Tastrade\Data\customer.dbf`
 - `E:\DBASE\DBFS\CHNGREAS.NDX`
 
@@ -54,4 +59,4 @@ Next implementation steps:
 2. Deepen `MDX` parsing beyond block-local tag hints into real layout and expression metadata extraction.
 3. Add expression normalization and collation metadata extraction.
 4. Correlate DBF field metadata with index expressions for migration planning.
-5. Build read-only reindex validation against real VFP and dBase fixtures.
+5. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.

@@ -502,6 +502,65 @@ void test_parse_real_vfp_cdx_when_available() {
     expect(saw_company_tag, "real VFP customer.cdx should expose the COMPANY_NA tag from directory pages");
 }
 
+void test_parse_additional_real_vfp_cdx_samples_when_available() {
+    const std::vector<std::filesystem::path> sample_paths{
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\Orders.CDX",
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Northwind\\products.cdx",
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Northwind\\orderdetails.cdx"
+    };
+
+    for (const auto& sample_path : sample_paths) {
+        if (!std::filesystem::exists(sample_path)) {
+            continue;
+        }
+
+        const auto result = copperfin::vfp::parse_index_probe_from_file(sample_path.string());
+        expect(result.ok, "additional real VFP CDX samples should parse as CDX-family indexes");
+        expect(result.probe.kind == copperfin::vfp::IndexKind::cdx, "additional real VFP CDX samples should stay typed as CDX");
+        expect(!result.probe.tags.empty(), "additional real VFP CDX samples should expose at least one parsed tag");
+        if (!result.probe.tags.empty()) {
+            const bool saw_named_or_expression_tag = std::any_of(
+                result.probe.tags.begin(),
+                result.probe.tags.end(),
+                [](const copperfin::vfp::IndexTagProbe& tag) {
+                    return !tag.name_hint.empty() || !tag.key_expression_hint.empty();
+                });
+            expect(saw_named_or_expression_tag, "additional real VFP CDX samples should expose at least one named or expression-backed tag");
+        }
+    }
+}
+
+void test_parse_real_vfp_dcx_samples_when_available() {
+    const std::vector<std::filesystem::path> sample_paths{
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\tastrade.dcx",
+        "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Northwind\\northwind.dcx"
+    };
+
+    for (const auto& sample_path : sample_paths) {
+        if (!std::filesystem::exists(sample_path)) {
+            continue;
+        }
+
+        const auto result = copperfin::vfp::parse_index_probe_from_file(sample_path.string());
+        expect(result.ok, "real VFP DCX samples should parse as DCX-family indexes");
+        expect(result.probe.kind == copperfin::vfp::IndexKind::dcx, "real VFP DCX samples should stay typed as DCX");
+        expect(!result.probe.tags.empty(), "real VFP DCX samples should expose at least one parsed tag");
+    }
+}
+
+void test_parse_real_dbase_ndx_when_available() {
+    const std::filesystem::path sample_path = "E:\\DBASE\\DBFS\\CHNGREAS.NDX";
+    if (!std::filesystem::exists(sample_path)) {
+        return;
+    }
+
+    const auto result = copperfin::vfp::parse_index_probe_from_file(sample_path.string());
+    expect(result.ok, "real dBase NDX samples should parse as NDX-family indexes");
+    expect(result.probe.kind == copperfin::vfp::IndexKind::ndx, "real dBase NDX samples should stay typed as NDX");
+    expect(result.probe.root_node_offset_hint >= 512U, "real dBase NDX samples should expose a plausible root-node offset");
+    expect(!result.probe.key_expression_hint.empty(), "real dBase NDX samples should expose a key expression hint");
+}
+
 void test_inspect_asset_reports_dbf_storage_validation_findings() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_asset_validation_tests";
@@ -804,6 +863,9 @@ int main() {
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
     test_parse_real_vfp_cdx_when_available();
+    test_parse_additional_real_vfp_cdx_samples_when_available();
+    test_parse_real_vfp_dcx_samples_when_available();
+    test_parse_real_dbase_ndx_when_available();
     test_inspect_asset_reports_dbf_storage_validation_findings();
     test_inspect_asset_reports_missing_companions_and_unparseable_indexes();
     test_inspect_asset_reports_malformed_memo_sidecar_findings();
