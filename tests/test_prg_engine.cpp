@@ -1977,6 +1977,77 @@ void test_local_use_auto_allocation_tracks_session_selection_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_selected_empty_area_reuses_after_datasession_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_selection_reuse_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path orders_path = temp_root / "orders.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(orders_path, {"ORDER1", "ORDER2"});
+    write_simple_dbf(cities_path, {"OSLO", "TOKYO"});
+
+    const fs::path main_path = temp_root / "local_selection_reuse_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE IN People\n"
+        "nSession1SelectedAfterClose = SELECT()\n"
+        "nSession1NextFreeAfterClose = SELECT(0)\n"
+        "SET DATASESSION TO 2\n"
+        "USE '" + orders_path.string() + "' ALIAS Orders IN 0\n"
+        "SET DATASESSION TO 1\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities\n"
+        "nCitiesArea = SELECT('Cities')\n"
+        "nSession1SelectedAfterReuse = SELECT()\n"
+        "cSession1AliasAfterReuse = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local selection reuse round-trip script should complete");
+    expect(state.work_area.data_session == 1, "local selection reuse round-trip script should restore data session 1");
+
+    const auto session1_selected_after_close = state.globals.find("nsession1selectedafterclose");
+    const auto session1_next_free_after_close = state.globals.find("nsession1nextfreeafterclose");
+    const auto cities_area = state.globals.find("ncitiesarea");
+    const auto session1_selected_after_reuse = state.globals.find("nsession1selectedafterreuse");
+    const auto session1_alias_after_reuse = state.globals.find("csession1aliasafterreuse");
+
+    expect(session1_selected_after_close != state.globals.end(), "session-1 selected area after closing its alias should be captured");
+    expect(session1_next_free_after_close != state.globals.end(), "session-1 SELECT(0) after closing its alias should be captured");
+    expect(cities_area != state.globals.end(), "session-1 replacement local cursor area should be captured after restoring the session");
+    expect(session1_selected_after_reuse != state.globals.end(), "session-1 selected area after reuse should be captured");
+    expect(session1_alias_after_reuse != state.globals.end(), "session-1 alias after reuse should be captured");
+
+    if (session1_selected_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_after_close->second) == "1", "closing the selected alias should leave session 1 on that empty work area");
+    }
+    if (session1_next_free_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_next_free_after_close->second) == "1", "SELECT(0) should report the freed selected work area before the round trip");
+    }
+    if (cities_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cities_area->second) == "1", "restoring session 1 should let plain USE reuse that emptied selected work area");
+    }
+    if (session1_selected_after_reuse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_after_reuse->second) == "1", "restoring session 1 should keep the reused local cursor on the original selected work area");
+    }
+    if (session1_alias_after_reuse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_alias_after_reuse->second) == "Cities", "restoring session 1 should expose the replacement alias on the reused work area");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
@@ -6103,6 +6174,7 @@ int main() {
     test_sql_result_cursors_are_isolated_by_data_session();
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_local_use_auto_allocation_tracks_session_selection_flow();
+    test_local_selected_empty_area_reuses_after_datasession_round_trip();
     test_set_order_and_seek_for_local_tables();
     test_seek_uses_grounded_order_normalization_hints();
     test_set_near_changes_seek_failure_position();
