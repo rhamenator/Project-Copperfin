@@ -3576,6 +3576,85 @@ void test_sql_result_cursor_temporary_order_normalization_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_temporary_order_direction_suffix_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_direction_suffix_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_direction_suffix_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET NEAR ON\n"
+        "lSeekNearDesc = SEEK('beta', 'sqlcust', 'UPPER(NAME) DESCENDING')\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "lIndexMoveDesc = INDEXSEEK('beta', .T., 'sqlcust', 'UPPER(NAME) DESCENDING')\n"
+        "nIndexRec = RECNO()\n"
+        "cOrderAfter = ORDER()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL temporary-order direction-suffix parity script should complete");
+    expect(state.sql_connections.empty(), "SQL temporary-order direction-suffix parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_near_desc = state.globals.find("lseekneardesc");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto index_move_desc = state.globals.find("lindexmovedesc");
+    const auto index_rec = state.globals.find("nindexrec");
+    const auto order_after = state.globals.find("corderafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL temporary-order direction suffix parity");
+    expect(seek_near_desc != state.globals.end(), "SEEK() with UPPER(NAME) DESCENDING should be captured for a SQL cursor");
+    expect(near_found != state.globals.end(), "FOUND() after SQL descending SEEK() miss should be captured");
+    expect(near_rec != state.globals.end(), "RECNO() after SQL descending SEEK() miss should be captured");
+    expect(index_move_desc != state.globals.end(), "INDEXSEEK(.T.) with UPPER(NAME) DESCENDING should be captured");
+    expect(index_rec != state.globals.end(), "RECNO() after SQL descending INDEXSEEK(.T.) should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after SQL descending temporary-order probes should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL temporary-order direction suffix parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL temporary-order direction suffix checks");
+    }
+    if (seek_near_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_near_desc->second) == "false", "descending SQL SEEK() should still report a miss for an in-between key");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "FOUND() should stay false after a descending SQL SEEK() miss");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "1", "descending SQL SEEK() should near-position to the next row in descending order after case-folding");
+    }
+    if (index_move_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_move_desc->second) == "false", "descending SQL INDEXSEEK(.T.) should still report a miss for an in-between key");
+    }
+    if (index_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_rec->second) == "1", "descending SQL INDEXSEEK(.T.) should move to the descending near-match row after case-folding");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "one-off SQL descending temporary-order probes should not permanently change ORDER()");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should still succeed after SQL temporary-order direction suffix checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_command_seek_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_command_seek_parity";
@@ -5952,6 +6031,7 @@ int main() {
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
     test_sql_result_cursor_temporary_order_normalization_parity();
+    test_sql_result_cursor_temporary_order_direction_suffix_parity();
     test_sql_result_cursor_command_seek_parity();
     test_sql_result_cursor_command_seek_in_target_parity();
     test_sql_result_cursor_scan_in_target_parity();
