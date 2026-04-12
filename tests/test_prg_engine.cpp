@@ -3594,6 +3594,14 @@ void test_sql_result_cursor_mutation_parity() {
         "REPLACE AMOUNT WITH 21, NAME WITH 'BRAVOX'\n"
         "cAfterReplace = NAME\n"
         "nAfterReplace = AMOUNT\n"
+        "nBeforeAppend = RECCOUNT('sqlcust')\n"
+        "APPEND BLANK\n"
+        "nAfterAppend = RECCOUNT('sqlcust')\n"
+        "nRecAfterAppend = RECNO()\n"
+        "lAppendDeleted = DELETED()\n"
+        "REPLACE NAME WITH 'DELTA', AMOUNT WITH 40\n"
+        "cAppendedName = NAME\n"
+        "nAppendedAmount = AMOUNT\n"
         "DELETE\n"
         "lDeleted = DELETED()\n"
         "RECALL\n"
@@ -3620,6 +3628,12 @@ void test_sql_result_cursor_mutation_parity() {
     const auto found_amount = state.globals.find("nfoundamount");
     const auto after_replace = state.globals.find("cafterreplace");
     const auto after_replace_amount = state.globals.find("nafterreplace");
+    const auto before_append = state.globals.find("nbeforeappend");
+    const auto after_append = state.globals.find("nafterappend");
+    const auto rec_after_append = state.globals.find("nrecafterappend");
+    const auto append_deleted = state.globals.find("lappenddeleted");
+    const auto appended_name = state.globals.find("cappendedname");
+    const auto appended_amount = state.globals.find("nappendedamount");
     const auto deleted = state.globals.find("ldeleted");
     const auto recalled = state.globals.find("lrecalled");
     const auto deleted_name = state.globals.find("cdeletedname");
@@ -3631,6 +3645,12 @@ void test_sql_result_cursor_mutation_parity() {
     expect(found_amount != state.globals.end(), "LOCATE on a SQL cursor should expose the matching AMOUNT");
     expect(after_replace != state.globals.end(), "REPLACE on a SQL cursor should expose the updated NAME");
     expect(after_replace_amount != state.globals.end(), "REPLACE on a SQL cursor should expose the updated AMOUNT");
+    expect(before_append != state.globals.end(), "RECCOUNT() before SQL APPEND BLANK should be captured");
+    expect(after_append != state.globals.end(), "RECCOUNT() after SQL APPEND BLANK should be captured");
+    expect(rec_after_append != state.globals.end(), "RECNO() after SQL APPEND BLANK should be captured");
+    expect(append_deleted != state.globals.end(), "DELETED() after SQL APPEND BLANK should be captured");
+    expect(appended_name != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended NAME");
+    expect(appended_amount != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended AMOUNT");
     expect(deleted != state.globals.end(), "DELETE on a SQL cursor should expose DELETED()");
     expect(recalled != state.globals.end(), "RECALL on a SQL cursor should expose DELETED()");
     expect(deleted_name != state.globals.end(), "DELETE FOR on a SQL cursor should expose the tombstoned NAME");
@@ -3652,6 +3672,24 @@ void test_sql_result_cursor_mutation_parity() {
     if (after_replace_amount != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_replace_amount->second) == "21", "REPLACE should update synthetic SQL numeric fields in place");
     }
+    if (before_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_append->second) == "3", "synthetic SQL result cursors should start with three rows in this fixture");
+    }
+    if (after_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_append->second) == "4", "APPEND BLANK should add a new synthetic SQL row");
+    }
+    if (rec_after_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after_append->second) == "4", "APPEND BLANK should move the SQL cursor pointer to the appended row");
+    }
+    if (append_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(append_deleted->second) == "false", "APPEND BLANK should create a non-deleted synthetic SQL row");
+    }
+    if (appended_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(appended_name->second) == "DELTA", "REPLACE after APPEND BLANK should update the appended SQL row");
+    }
+    if (appended_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(appended_amount->second) == "40", "REPLACE after APPEND BLANK should update numeric fields on the appended SQL row");
+    }
     if (deleted != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted->second) == "true", "DELETE should tombstone the current synthetic SQL row");
     }
@@ -3671,6 +3709,7 @@ void test_sql_result_cursor_mutation_parity() {
     expect(
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.locate"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.replace"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.append_blank"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
         "SQL mutation commands should emit the same runtime events as local mutation commands");

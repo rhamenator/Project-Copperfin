@@ -1775,8 +1775,20 @@ struct PrgRuntimeSession::Impl {
 
     bool append_blank_record(CursorState& cursor) {
         if (cursor.remote) {
-            last_error_message = "APPEND BLANK is not yet supported on remote SQL cursors";
-            return false;
+            const std::size_t recno = cursor.remote_records.size() + 1U;
+            cursor.remote_records.push_back(vfp::DbfRecord{
+                .record_index = recno - 1U,
+                .deleted = false,
+                .values = {
+                    vfp::DbfRecordValue{.field_name = "ID", .field_type = 'N', .display_value = std::to_string(recno)},
+                    vfp::DbfRecordValue{.field_name = "NAME", .field_type = 'C', .display_value = ""},
+                    vfp::DbfRecordValue{.field_name = "AMOUNT", .field_type = 'N', .display_value = "0"},
+                }
+            });
+            cursor.record_count = cursor.remote_records.size();
+            move_cursor_to(cursor, static_cast<long long>(cursor.record_count));
+            cursor.found = false;
+            return true;
         }
         if (cursor.source_path.empty()) {
             last_error_message = "APPEND BLANK requires a local table-backed cursor";
