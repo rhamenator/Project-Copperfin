@@ -197,6 +197,8 @@ void test_parse_index_probe_for_cdx() {
         expect(
             result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
             "directory tag names should still bind to the matching functional expression");
+        expect(result.probe.tags[1].normalization_hint == "upper", "CDX probe should expose first-pass normalization hints");
+        expect(result.probe.tags[1].collation_hint == "case-folded", "CDX probe should expose first-pass collation hints");
         expect(
             result.probe.tags[1].for_expression_hint == "DELETED() = .F.",
             "page-local FOR expressions should attach to the matching CDX tag");
@@ -217,6 +219,8 @@ void test_parse_index_probe_for_dcx() {
         expect(result.probe.tags.front().name_hint == "NAME", "DCX probe should preserve the stored tag name");
         expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "DCX probe should preserve the stored tag page hint");
         expect(result.probe.tags.front().key_expression_hint == "UPPER(NAME)", "DCX probe should expose the key expression hint");
+        expect(result.probe.tags.front().normalization_hint == "upper", "DCX probe should expose first-pass normalization hints");
+        expect(result.probe.tags.front().collation_hint == "case-folded", "DCX probe should expose first-pass collation hints");
         expect(result.probe.tags.front().for_expression_hint == "DELETED() = .F.", "DCX probe should expose the FOR expression hint");
     }
 }
@@ -305,6 +309,8 @@ void test_parse_index_probe_for_idx() {
     expect(result.probe.key_length_hint == 10U, "IDX key length should be parsed");
     expect(result.probe.key_expression_hint == "UPPER(NAME)", "IDX key expression should be extracted");
     expect(result.probe.for_expression_hint == "DELETED() = .F.", "IDX FOR expression should be extracted");
+    expect(result.probe.normalization_hint == "upper", "IDX probe should expose first-pass normalization hints");
+    expect(result.probe.collation_hint == "case-folded", "IDX probe should expose first-pass collation hints");
 }
 
 void test_parse_index_probe_for_ndx() {

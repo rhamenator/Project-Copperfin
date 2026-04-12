@@ -150,6 +150,8 @@ struct CursorState {
         std::string name;
         std::string expression;
         std::string index_path;
+        std::string normalization_hint;
+        std::string collation_hint;
     };
 
     int work_area = 0;
@@ -168,6 +170,8 @@ struct CursorState {
     std::string active_order_name;
     std::string active_order_expression;
     std::string active_order_path;
+    std::string active_order_normalization_hint;
+    std::string active_order_collation_hint;
     std::string filter_expression;
 };
 
@@ -184,6 +188,8 @@ struct CursorPositionSnapshot {
     std::string active_order_name;
     std::string active_order_expression;
     std::string active_order_path;
+    std::string active_order_normalization_hint;
+    std::string active_order_collation_hint;
 };
 
 struct ReplaceAssignment {
@@ -1644,7 +1650,9 @@ struct PrgRuntimeSession::Impl {
                     orders.push_back({
                         .name = tag.name_hint.empty() ? collapse_identifier(tag.key_expression_hint) : tag.name_hint,
                         .expression = tag.key_expression_hint,
-                        .index_path = normalize_path(index_asset.path)
+                        .index_path = normalize_path(index_asset.path),
+                        .normalization_hint = tag.normalization_hint,
+                        .collation_hint = tag.collation_hint
                     });
                 }
                 continue;
@@ -1655,12 +1663,37 @@ struct PrgRuntimeSession::Impl {
                 orders.push_back({
                     .name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
                     .expression = index_asset.probe.key_expression_hint,
-                    .index_path = normalize_path(index_asset.path)
+                    .index_path = normalize_path(index_asset.path),
+                    .normalization_hint = index_asset.probe.normalization_hint,
+                    .collation_hint = index_asset.probe.collation_hint
                 });
             }
         }
 
         return orders;
+    }
+
+    std::string format_order_metadata_detail(
+        const std::string& order_name,
+        const std::string& normalization_hint,
+        const std::string& collation_hint) const {
+        std::string detail = order_name.empty() ? "0" : order_name;
+        if (!normalization_hint.empty() || !collation_hint.empty()) {
+            detail += " [";
+            bool needs_separator = false;
+            if (!normalization_hint.empty()) {
+                detail += "norm=" + normalization_hint;
+                needs_separator = true;
+            }
+            if (!collation_hint.empty()) {
+                if (needs_separator) {
+                    detail += ", ";
+                }
+                detail += "coll=" + collation_hint;
+            }
+            detail += "]";
+        }
+        return detail;
     }
 
     bool can_open_table_cursor(
@@ -1802,6 +1835,8 @@ struct PrgRuntimeSession::Impl {
             cursor.active_order_name.clear();
             cursor.active_order_expression.clear();
             cursor.active_order_path.clear();
+            cursor.active_order_normalization_hint.clear();
+            cursor.active_order_collation_hint.clear();
             return true;
         }
 
@@ -1823,6 +1858,8 @@ struct PrgRuntimeSession::Impl {
             cursor.active_order_name = cursor.orders[index].name;
             cursor.active_order_expression = cursor.orders[index].expression;
             cursor.active_order_path = cursor.orders[index].index_path;
+            cursor.active_order_normalization_hint = cursor.orders[index].normalization_hint;
+            cursor.active_order_collation_hint = cursor.orders[index].collation_hint;
             return true;
         }
 
@@ -1838,6 +1875,8 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_name = found->name;
         cursor.active_order_expression = found->expression;
         cursor.active_order_path = found->index_path;
+        cursor.active_order_normalization_hint = found->normalization_hint;
+        cursor.active_order_collation_hint = found->collation_hint;
         return true;
     }
 
@@ -1859,6 +1898,8 @@ struct PrgRuntimeSession::Impl {
                 cursor.active_order_name = cursor.orders.front().name;
                 cursor.active_order_expression = cursor.orders.front().expression;
                 cursor.active_order_path = cursor.orders.front().index_path;
+                cursor.active_order_normalization_hint = cursor.orders.front().normalization_hint;
+                cursor.active_order_collation_hint = cursor.orders.front().collation_hint;
             } else {
                 last_error_message = "SEEK requires an active order";
                 return false;
@@ -1929,7 +1970,9 @@ struct PrgRuntimeSession::Impl {
             .eof = cursor.eof,
             .active_order_name = cursor.active_order_name,
             .active_order_expression = cursor.active_order_expression,
-            .active_order_path = cursor.active_order_path
+            .active_order_path = cursor.active_order_path,
+            .active_order_normalization_hint = cursor.active_order_normalization_hint,
+            .active_order_collation_hint = cursor.active_order_collation_hint
         };
     }
 
@@ -1941,6 +1984,8 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_name = snapshot.active_order_name;
         cursor.active_order_expression = snapshot.active_order_expression;
         cursor.active_order_path = snapshot.active_order_path;
+        cursor.active_order_normalization_hint = snapshot.active_order_normalization_hint;
+        cursor.active_order_collation_hint = snapshot.active_order_collation_hint;
     }
 
     bool current_record_matches_visibility(const CursorState& cursor, const Frame& frame, const std::string& extra_expression) {
@@ -2779,7 +2824,10 @@ struct PrgRuntimeSession::Impl {
         bool move_pointer,
         bool preserve_pointer_on_miss,
         const std::string& order_designator,
-        std::string* error_message = nullptr) {
+        std::string* error_message = nullptr,
+        std::string* used_order_name = nullptr,
+        std::string* used_order_normalization_hint = nullptr,
+        std::string* used_order_collation_hint = nullptr) {
         const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
         if (!trim_copy(order_designator).empty() && !activate_order(cursor, order_designator)) {
             if (error_message != nullptr) {
@@ -2791,6 +2839,15 @@ struct PrgRuntimeSession::Impl {
 
         const bool found = seek_in_cursor(cursor, search_key);
         const std::string runtime_error = last_error_message;
+        if (used_order_name != nullptr) {
+            *used_order_name = cursor.active_order_name;
+        }
+        if (used_order_normalization_hint != nullptr) {
+            *used_order_normalization_hint = cursor.active_order_normalization_hint;
+        }
+        if (used_order_collation_hint != nullptr) {
+            *used_order_collation_hint = cursor.active_order_collation_hint;
+        }
         if (!move_pointer || (!found && preserve_pointer_on_miss)) {
             cursor.recno = original.recno;
             cursor.bof = original.bof;
@@ -2802,6 +2859,8 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_name = original.active_order_name;
         cursor.active_order_expression = original.active_order_expression;
         cursor.active_order_path = original.active_order_path;
+        cursor.active_order_normalization_hint = original.active_order_normalization_hint;
+        cursor.active_order_collation_hint = original.active_order_collation_hint;
 
         if (!found && error_message != nullptr && !runtime_error.empty()) {
             *error_message = runtime_error;
@@ -4659,10 +4718,25 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
 
             const std::string search_key = value_as_string(evaluate_expression(statement.expression, frame));
-            const bool found = execute_seek(*cursor, search_key, true, false, statement.tertiary_expression);
+            std::string used_order_name;
+            std::string used_order_normalization_hint;
+            std::string used_order_collation_hint;
+            const bool found = execute_seek(
+                *cursor,
+                search_key,
+                true,
+                false,
+                statement.tertiary_expression,
+                nullptr,
+                &used_order_name,
+                &used_order_normalization_hint,
+                &used_order_collation_hint);
             events.push_back({
                 .category = "runtime.seek",
-                .detail = (cursor->active_order_name.empty() ? std::string{"<default>"} : cursor->active_order_name) +
+                .detail = format_order_metadata_detail(
+                    used_order_name.empty() ? std::string{"<default>"} : used_order_name,
+                    used_order_normalization_hint,
+                    used_order_collation_hint) +
                     ": " + search_key + (found ? " -> found" : " -> not found"),
                 .location = statement.location
             });
@@ -4887,7 +4961,10 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
             events.push_back({
                 .category = "runtime.order",
-                .detail = cursor->active_order_name.empty() ? "0" : cursor->active_order_name,
+                .detail = format_order_metadata_detail(
+                    cursor->active_order_name,
+                    cursor->active_order_normalization_hint,
+                    cursor->active_order_collation_hint),
                 .location = statement.location
             });
             return {};

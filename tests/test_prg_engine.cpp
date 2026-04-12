@@ -1646,9 +1646,13 @@ void test_set_order_and_seek_for_local_tables() {
     }
 
     expect(
-        has_runtime_event(state.events, "runtime.order", "NAME") &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
-            return event.category == "runtime.seek" && event.detail.find("NAME: BRAVO -> found") != std::string::npos;
+            return event.category == "runtime.order" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded]") != std::string::npos;
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded]: BRAVO -> found") != std::string::npos;
         }),
         "SET ORDER and SEEK should emit runtime.order and runtime.seek events");
 
@@ -1782,6 +1786,13 @@ void test_seek_command_accepts_tag_override_without_set_order() {
     if (order_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(order_after->second).empty(), "SEEK ... TAG should not permanently change the controlling order");
     }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded]: BRAVO -> found") != std::string::npos;
+        }),
+        "SEEK ... TAG should expose the temporary order metadata in runtime.seek events");
 
     fs::remove_all(temp_root, ignored);
 }

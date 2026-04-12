@@ -19,6 +19,8 @@ struct IndexTagProbe {
     std::string name_hint;
     std::string key_expression_hint;
     std::string for_expression_hint;
+    std::string normalization_hint;
+    std::string collation_hint;
     std::uint32_t tag_page_offset_hint = 0;
     std::uint32_t name_offset_hint = 0;
     std::uint32_t key_expression_offset_hint = 0;
@@ -40,6 +42,8 @@ struct IndexProbe {
     std::uint8_t signature = 0;
     std::string key_expression_hint;
     std::string for_expression_hint;
+    std::string normalization_hint;
+    std::string collation_hint;
     std::vector<IndexTagProbe> tags;
     bool multi_tag = false;
     bool production_candidate = false;

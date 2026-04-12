@@ -73,6 +73,74 @@ std::string trim_copy(std::string value) {
     return value;
 }
 
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
+void append_hint_if_missing(std::vector<std::string>& hints, const std::string& hint) {
+    if (hint.empty()) {
+        return;
+    }
+
+    if (std::find(hints.begin(), hints.end(), hint) == hints.end()) {
+        hints.push_back(hint);
+    }
+}
+
+std::string join_hints(const std::vector<std::string>& hints) {
+    std::string joined;
+    for (const std::string& hint : hints) {
+        if (!joined.empty()) {
+            joined += "+";
+        }
+        joined += hint;
+    }
+    return joined;
+}
+
+std::string derive_normalization_hint(const std::string& expression) {
+    const std::string upper = uppercase_copy(trim_copy(expression));
+    std::vector<std::string> hints;
+    if (upper.find("UPPER(") != std::string::npos) {
+        append_hint_if_missing(hints, "upper");
+    }
+    if (upper.find("LOWER(") != std::string::npos) {
+        append_hint_if_missing(hints, "lower");
+    }
+    if (upper.find("ALLTRIM(") != std::string::npos) {
+        append_hint_if_missing(hints, "alltrim");
+    }
+    if (upper.find("LTRIM(") != std::string::npos) {
+        append_hint_if_missing(hints, "ltrim");
+    }
+    if (upper.find("RTRIM(") != std::string::npos) {
+        append_hint_if_missing(hints, "rtrim");
+    }
+    if (upper.find("PADL(") != std::string::npos) {
+        append_hint_if_missing(hints, "padl");
+    }
+    if (upper.find("PADR(") != std::string::npos) {
+        append_hint_if_missing(hints, "padr");
+    }
+    return join_hints(hints);
+}
+
+std::string derive_collation_hint(const std::string& expression, const std::string& normalization_hint) {
+    const std::string upper = uppercase_copy(trim_copy(expression));
+    if (upper.find("UPPER(") != std::string::npos || upper.find("LOWER(") != std::string::npos) {
+        return "case-folded";
+    }
+    if (upper.find("CHRTRAN(") != std::string::npos ||
+        upper.find("STRTRAN(") != std::string::npos ||
+        !normalization_hint.empty()) {
+        return "expression-normalized";
+    }
+    return {};
+}
+
 std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
     return collect_printable_runs(bytes, 0U, bytes.size());
 }
@@ -192,10 +260,14 @@ IndexParseResult parse_cdx_family_probe(
     probe.group_length_hint = cdx_result.header.key_pool_length_hint;
     probe.tags.reserve(cdx_result.tags.size());
     for (const CdxTagDescriptor& tag : cdx_result.tags) {
+        const std::string normalization_hint = derive_normalization_hint(tag.key_expression_hint);
+        const std::string collation_hint = derive_collation_hint(tag.key_expression_hint, normalization_hint);
         probe.tags.push_back({
             .name_hint = tag.name_hint,
             .key_expression_hint = tag.key_expression_hint,
             .for_expression_hint = tag.for_expression_hint,
+            .normalization_hint = normalization_hint,
+            .collation_hint = collation_hint,
             .tag_page_offset_hint = tag.tag_page_offset_hint,
             .name_offset_hint = tag.name_offset_hint,
             .key_expression_offset_hint = tag.key_expression_offset_hint,
@@ -205,6 +277,8 @@ IndexParseResult parse_cdx_family_probe(
     }
     if (!probe.tags.empty()) {
         probe.key_expression_hint = probe.tags.front().key_expression_hint;
+        probe.normalization_hint = probe.tags.front().normalization_hint;
+        probe.collation_hint = probe.tags.front().collation_hint;
         for (const IndexTagProbe& tag : probe.tags) {
             if (!tag.for_expression_hint.empty()) {
                 probe.for_expression_hint = tag.for_expression_hint;
@@ -234,6 +308,8 @@ IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std
     probe.signature = bytes[15];
     probe.key_expression_hint = read_ascii_hint(bytes, 16U, 220U);
     probe.for_expression_hint = read_ascii_hint(bytes, 236U, 220U);
+    probe.normalization_hint = derive_normalization_hint(probe.key_expression_hint);
+    probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
 
     const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
     const bool plausible_key = probe.key_length_hint > 0U && probe.key_length_hint <= 220U;
@@ -285,6 +361,8 @@ IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, s
     probe.flags = static_cast<std::uint8_t>(unique_flag != 0U ? 0x01U : 0x00U);
     probe.signature = static_cast<std::uint8_t>(version_hint & 0xFFU);
     probe.key_expression_hint = read_ascii_hint(bytes, 24U, 100U);
+    probe.normalization_hint = derive_normalization_hint(probe.key_expression_hint);
+    probe.collation_hint = derive_collation_hint(probe.key_expression_hint, probe.normalization_hint);
 
     const bool plausible_size = file_size >= probe.block_size && (file_size % probe.block_size) == 0U;
     const bool plausible_root = root_block > 0U && probe.root_node_offset_hint < file_size;

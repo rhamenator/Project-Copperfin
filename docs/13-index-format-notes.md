@@ -8,10 +8,12 @@ Current coverage:
   - Minimal header probe for block size, root node offset, free node hint, key-length hint, and key-pool hint.
   - Treated as multi-tag index containers.
   - First-pass directory leaf-page parsing now surfaces stored tag names plus conservative per-tag page hints from plausible node pages, and page-local key/`FOR` expression hints now prefer the hinted tag-page neighborhood before falling back to whole-file heuristics.
+  - First-pass expression-derived normalization/collation hints are now surfaced for tag expressions such as `UPPER(...)`/`LOWER(...)`, with the current implementation explicitly treated as heuristic metadata rather than true binary collation fidelity.
   - Focused regression coverage now exercises direct `.cdx`/`.dcx` probing, adversarial decoy-expression cases, and `DBC` companion discovery.
 - `IDX`
   - Visual FoxPro single-index header probe.
   - Extracts root, free-list, and EOF offsets plus key and `FOR` expression hints.
+  - First-pass expression-derived normalization/collation hints are now surfaced alongside the extracted key expression.
 - `NDX`
   - dBase-style single-index header probe.
   - Extracts root and EOF block hints, key length, maximum key count, group length, uniqueness flag, and key expression hint.
@@ -24,6 +26,7 @@ Current inspector behavior:
 
 - Direct inspection recognizes `CDX`, `DCX`, `IDX`, `NDX`, and `MDX`.
 - DBF/DBC-family inspection now reports structured validation findings when expected structural companion indexes are missing or when present companion indexes fail to parse.
+- The runtime order loader now preserves additive normalization/collation hints through `SET ORDER` and temporary `SEEK ... TAG` overrides, and emits those hints in `runtime.order` / `runtime.seek` event detail for verification.
 - Table inspection looks for same-base companion indexes:
   - `table.cdx`
   - `table.idx`
@@ -57,6 +60,6 @@ Next implementation steps:
 
 1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
 2. Deepen `MDX` parsing beyond block-local tag hints into real layout and expression metadata extraction.
-3. Add expression normalization and collation metadata extraction.
+3. Move beyond first-pass expression-derived normalization/collation hints into more format-grounded metadata where the file layouts support it.
 4. Correlate DBF field metadata with index expressions for migration planning.
 5. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.
