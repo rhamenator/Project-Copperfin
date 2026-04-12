@@ -3602,6 +3602,10 @@ void test_sql_result_cursor_mutation_parity() {
         "REPLACE NAME WITH 'DELTA', AMOUNT WITH 40\n"
         "cAppendedName = NAME\n"
         "nAppendedAmount = AMOUNT\n"
+        "SET ORDER TO NAME\n"
+        "lSeekDelta = SEEK('DELTA')\n"
+        "nSeekRec = RECNO()\n"
+        "cSeekName = NAME\n"
         "DELETE\n"
         "lDeleted = DELETED()\n"
         "RECALL\n"
@@ -3634,6 +3638,9 @@ void test_sql_result_cursor_mutation_parity() {
     const auto append_deleted = state.globals.find("lappenddeleted");
     const auto appended_name = state.globals.find("cappendedname");
     const auto appended_amount = state.globals.find("nappendedamount");
+    const auto seek_delta = state.globals.find("lseekdelta");
+    const auto seek_rec = state.globals.find("nseekrec");
+    const auto seek_name = state.globals.find("cseekname");
     const auto deleted = state.globals.find("ldeleted");
     const auto recalled = state.globals.find("lrecalled");
     const auto deleted_name = state.globals.find("cdeletedname");
@@ -3651,6 +3658,9 @@ void test_sql_result_cursor_mutation_parity() {
     expect(append_deleted != state.globals.end(), "DELETED() after SQL APPEND BLANK should be captured");
     expect(appended_name != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended NAME");
     expect(appended_amount != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended AMOUNT");
+    expect(seek_delta != state.globals.end(), "SEEK after SQL APPEND BLANK should expose whether the appended row is indexed");
+    expect(seek_rec != state.globals.end(), "RECNO() after SQL SEEK should be captured");
+    expect(seek_name != state.globals.end(), "SEEK after SQL APPEND BLANK should expose the matching NAME");
     expect(deleted != state.globals.end(), "DELETE on a SQL cursor should expose DELETED()");
     expect(recalled != state.globals.end(), "RECALL on a SQL cursor should expose DELETED()");
     expect(deleted_name != state.globals.end(), "DELETE FOR on a SQL cursor should expose the tombstoned NAME");
@@ -3689,6 +3699,15 @@ void test_sql_result_cursor_mutation_parity() {
     }
     if (appended_amount != state.globals.end()) {
         expect(copperfin::runtime::format_value(appended_amount->second) == "40", "REPLACE after APPEND BLANK should update numeric fields on the appended SQL row");
+    }
+    if (seek_delta != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_delta->second) == "true", "SEEK should find SQL rows appended and mutated in memory");
+    }
+    if (seek_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_rec->second) == "4", "SEEK should position to the appended SQL row when ordering by NAME");
+    }
+    if (seek_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_name->second) == "DELTA", "SEEK should expose the appended SQL row values after in-memory mutation");
     }
     if (deleted != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted->second) == "true", "DELETE should tombstone the current synthetic SQL row");
