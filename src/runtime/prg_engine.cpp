@@ -1485,7 +1485,7 @@ struct PrgRuntimeSession::Impl {
         }
 
         const std::string normalized_target = normalize_seek_key_for_order(
-            evaluate_index_expression(search_key, vfp::DbfRecord{}),
+            search_key,
             cursor.active_order_normalization_hint);
         std::vector<IndexedCandidate> candidates;
         if (cursor.remote) {
