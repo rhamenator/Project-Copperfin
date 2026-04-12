@@ -89,6 +89,8 @@ The native runtime/parser currently has first-pass support for these command fam
 - `ON ERROR`
 - `PUBLIC`
 - `LOCAL`
+- `PRIVATE`
+- `STORE`
 
 The current indexed-search slice covers `SET ORDER TO TAG`, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
 
