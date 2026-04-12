@@ -1680,6 +1680,10 @@ struct PrgRuntimeSession::Impl {
         return resolve_cursor_target(designator) == nullptr ? std::string{} : designator;
     }
 
+    CursorState* resolve_cursor_target_expression(const std::string& raw_designator, const Frame& frame) {
+        return resolve_cursor_target(evaluate_cursor_designator_expression(raw_designator, frame));
+    }
+
     PrgValue aggregate_function_value(
         const std::string& function,
         const std::vector<std::string>& raw_arguments,
@@ -1913,7 +1917,7 @@ struct PrgRuntimeSession::Impl {
         }
 
         const TotalCommandPlan& plan = *parsed;
-        CursorState* cursor = resolve_cursor_target(plan.in_expression);
+        CursorState* cursor = resolve_cursor_target_expression(plan.in_expression, frame);
         if (cursor == nullptr) {
             error_message = plan.in_expression.empty()
                 ? "TOTAL requires a selected work area"
@@ -2114,7 +2118,7 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
-        CursorState* cursor = resolve_cursor_target(statement.quaternary_expression);
+        CursorState* cursor = resolve_cursor_target_expression(statement.quaternary_expression, frame);
         if (cursor == nullptr) {
             error_message = statement.quaternary_expression.empty()
                 ? uppercase_copy(function) + " requires a selected work area"
@@ -4108,7 +4112,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         case StatementKind::seek_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "SEEK target work area not found";
                 last_fault_location = statement.location;
@@ -4142,7 +4146,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::locate_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "LOCATE target work area not found";
                 last_fault_location = statement.location;
@@ -4164,7 +4168,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::scan_statement: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "SCAN target work area not found";
                 last_fault_location = statement.location;
@@ -4202,7 +4206,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::endscan_statement:
             return continue_scan_loop(frame, statement, false);
         case StatementKind::replace_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "REPLACE target work area not found";
                 last_fault_location = statement.location;
@@ -4252,7 +4256,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::delete_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "DELETE target work area not found";
                 last_fault_location = statement.location;
@@ -4273,7 +4277,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::recall_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "RECALL target work area not found";
                 last_fault_location = statement.location;
@@ -4294,7 +4298,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::go_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "GO target work area not found";
                 last_fault_location = statement.location;
@@ -4324,7 +4328,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::skip_command: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "SKIP target work area not found";
                 last_fault_location = statement.location;
@@ -4344,7 +4348,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::set_order: {
-            CursorState* cursor = resolve_cursor_target(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "SET ORDER target work area not found";
                 last_fault_location = statement.location;

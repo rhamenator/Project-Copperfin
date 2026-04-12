@@ -1195,6 +1195,122 @@ void test_select_and_use_in_designator_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_expression_driven_in_targeting_across_local_data_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_in_target_commands";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    const fs::path orders_path = temp_root / "orders.dbf";
+    const fs::path people_cdx_path = temp_root / "people.cdx";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_people_dbf(cities_path, {{"OSLO", 1}, {"ROME", 2}});
+    write_people_dbf(orders_path, {{"ONE", 10}, {"TWO", 20}, {"THREE", 30}});
+    write_synthetic_cdx(people_cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "in_target_commands.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN 0\n"
+        "USE '" + orders_path.string() + "' ALIAS Orders IN 0\n"
+        "SELECT Cities\n"
+        "cOrderTarget = 'People'\n"
+        "cDataTarget = 'Orders'\n"
+        "cResolvedTargetAlias = ALIAS(cOrderTarget)\n"
+        "cPeopleTagBefore = TAG(1, 'People')\n"
+        "SET ORDER TO TAG NAME IN cOrderTarget\n"
+        "cPeopleOrder = ORDER('People')\n"
+        "cCitiesOrder = ORDER('Cities')\n"
+        "SEEK 'BRAVO' IN cOrderTarget\n"
+        "nPeopleRecAfterSeek = RECNO('People')\n"
+        "GO TOP IN cDataTarget\n"
+        "SKIP 1 IN cDataTarget\n"
+        "nOrdersRecAfterSkip = RECNO('Orders')\n"
+        "LOCATE FOR AGE = 30 IN cDataTarget\n"
+        "nOrdersRecAfterLocate = RECNO('Orders')\n"
+        "GO TOP IN cDataTarget\n"
+        "nScanHits = 0\n"
+        "SCAN FOR AGE >= 20 IN cDataTarget\n"
+        "  nScanHits = nScanHits + 1\n"
+        "ENDSCAN\n"
+        "GO BOTTOM IN cDataTarget\n"
+        "REPLACE AGE WITH 99 IN cDataTarget\n"
+        "DELETE FOR AGE = 99 IN cDataTarget\n"
+        "RECALL FOR AGE = 99 IN cDataTarget\n"
+        "nSelectedAfterCommands = SELECT()\n"
+        "cSelectedAfterCommands = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "expression-driven IN targeting script should complete");
+
+    const auto people_order = state.globals.find("cpeopleorder");
+    const auto cities_order = state.globals.find("ccitiesorder");
+    const auto people_rec_after_seek = state.globals.find("npeoplerecafterseek");
+    const auto orders_rec_after_skip = state.globals.find("nordersrecafterskip");
+    const auto orders_rec_after_locate = state.globals.find("nordersrecafterlocate");
+    const auto scan_hits = state.globals.find("nscanhits");
+    const auto selected_after_commands = state.globals.find("nselectedaftercommands");
+    const auto selected_alias_after_commands = state.globals.find("cselectedaftercommands");
+
+    expect(people_order != state.globals.end(), "SET ORDER TO ... IN cTarget should expose the targeted cursor order");
+    expect(cities_order != state.globals.end(), "SET ORDER TO ... IN cTarget should leave the selected cursor order unchanged");
+    expect(people_rec_after_seek != state.globals.end(), "SEEK ... IN cTarget should expose the targeted cursor position");
+    expect(orders_rec_after_skip != state.globals.end(), "GO/SKIP IN cTarget should expose the targeted cursor position");
+    expect(orders_rec_after_locate != state.globals.end(), "LOCATE ... IN cTarget should expose the targeted cursor position");
+    expect(scan_hits != state.globals.end(), "SCAN ... IN cTarget should expose the targeted cursor iteration count");
+    expect(selected_after_commands != state.globals.end(), "IN-targeted commands should preserve the current selected work area");
+    expect(selected_alias_after_commands != state.globals.end(), "IN-targeted commands should preserve the current selected alias");
+
+    if (people_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_order->second) == "NAME", "SET ORDER TO ... IN cTarget should affect the targeted non-selected cursor");
+    }
+    if (cities_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cities_order->second).empty(), "SET ORDER TO ... IN cTarget should not alter the selected cursor");
+    }
+    if (people_rec_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec_after_seek->second) == "2", "SEEK ... IN cTarget should position the targeted cursor");
+    }
+    if (orders_rec_after_skip != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_rec_after_skip->second) == "2", "GO/SKIP IN cTarget should navigate the targeted cursor");
+    }
+    if (orders_rec_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_rec_after_locate->second) == "3", "LOCATE ... IN cTarget should find records on the targeted cursor");
+    }
+    if (scan_hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_hits->second) == "2", "SCAN ... IN cTarget should iterate visible matches on the targeted cursor");
+    }
+    if (selected_after_commands != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_commands->second) == "2", "IN-targeted commands should preserve the selected work area");
+    }
+    if (selected_alias_after_commands != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_alias_after_commands->second) == "Cities", "IN-targeted commands should preserve the selected alias");
+    }
+
+    const auto orders_result = copperfin::vfp::parse_dbf_table_from_file(orders_path.string(), 3U);
+    expect(orders_result.ok, "Orders DBF should remain readable after IN-targeted mutation commands");
+    if (orders_result.ok) {
+        expect(orders_result.table.records.size() == 3U, "Orders DBF should still contain three records");
+        if (orders_result.table.records.size() >= 3U) {
+            expect(orders_result.table.records[2].values[0].display_value == "THREE", "targeted mutation flow should keep the THREE record");
+            expect(orders_result.table.records[2].values[1].display_value == "99", "REPLACE ... IN cTarget should update the targeted cursor record");
+            expect(!orders_result.table.records[2].deleted, "DELETE/RECALL ... IN cTarget should leave the targeted record recalled");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_select_zero_and_use_in_zero_reuse_closed_work_area() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_select_zero_reuse";
@@ -4120,6 +4236,7 @@ int main() {
     test_use_in_nonselected_alias_preserves_selected_work_area();
     test_plain_use_reuses_current_selected_work_area();
     test_select_and_use_in_designator_expressions();
+    test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();

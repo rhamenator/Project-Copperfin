@@ -115,7 +115,7 @@ The official command inventory is much larger than the current runtime. The deep
 ### Work Areas, Sessions, And Indexed Data
 
 - finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and the now-shipped session-local restoration coverage for `SET NEAR` and `SET DEFAULT TO`
-- keep closing the remaining expression-driven work-area targeting edges after the shared designator-expression path now covers `SET FILTER ... IN`, `SELECT <expr>`, and `USE ... IN <expr>` for core local-cursor flows
+- keep closing the remaining expression-driven work-area targeting edges after the shared designator-expression path now covers `SET FILTER ... IN`, `SELECT <expr>`, `USE ... IN <expr>`, and the shipped local `IN`-targeted data/search family (`SET ORDER`, `SEEK`, `LOCATE`, `SCAN`, `GO`, `SKIP`, `REPLACE`, `DELETE`, `RECALL`) for core local-cursor flows
 - deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together
 - use the command inventory to pull the next search/index/data-session commands in families instead of one at a time
