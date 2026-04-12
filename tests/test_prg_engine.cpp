@@ -2375,6 +2375,72 @@ void test_seek_related_index_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_function_accepts_direction_suffix_in_order_designator() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_direction_suffix";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_direction_suffix.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "lAscFound = SEEK('BRAVO', 'People', 'NAME')\n"
+        "nAscRec = RECNO()\n"
+        "GO TOP\n"
+        "lDescFound = SEEK('BRAVO', 'People', 'NAME DESCENDING')\n"
+        "nDescRec = RECNO()\n"
+        "cOrderAfter = ORDER()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SEEK() direction-suffix script should complete");
+
+    const auto asc_found = state.globals.find("lascfound");
+    const auto asc_rec = state.globals.find("nascrec");
+    const auto desc_found = state.globals.find("ldescfound");
+    const auto desc_rec = state.globals.find("ndescrec");
+    const auto order_after = state.globals.find("corderafter");
+
+    expect(asc_found != state.globals.end(), "ascending SEEK() result should be captured");
+    expect(asc_rec != state.globals.end(), "ascending SEEK() RECNO() should be captured");
+    expect(desc_found != state.globals.end(), "descending SEEK() result should be captured");
+    expect(desc_rec != state.globals.end(), "descending SEEK() RECNO() should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after SEEK() probes should be captured");
+
+    if (asc_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(asc_found->second) == "false", "ascending SEEK() should report a miss for an in-between key");
+    }
+    if (asc_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(asc_rec->second) == "2", "ascending SEEK() should move to the next row in ascending order");
+    }
+    if (desc_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(desc_found->second) == "false", "descending SEEK() should report a miss for an in-between key");
+    }
+    if (desc_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(desc_rec->second) == "1", "descending SEEK() should move to the next row in descending order");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "SEEK() order-designator override should not permanently change ORDER()");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_order_and_tag_preserve_index_file_identity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_idx_identity";
@@ -4473,6 +4539,7 @@ int main() {
     test_seek_command_accepts_descending_tag_override_without_set_order();
     test_set_near_is_scoped_by_data_session();
     test_seek_related_index_functions();
+    test_seek_function_accepts_direction_suffix_in_order_designator();
     test_order_and_tag_preserve_index_file_identity();
     test_ndx_numeric_domain_guides_seek_near_ordering();
     test_foxtools_registration_and_call_bridge();

@@ -1107,6 +1107,44 @@ struct PrgRuntimeSession::Impl {
         return std::nullopt;
     }
 
+    struct SeekFunctionOrderDesignator {
+        std::string order_designator;
+        std::optional<bool> descending_override;
+    };
+
+    SeekFunctionOrderDesignator parse_seek_function_order_designator(const std::string& raw_designator) const {
+        SeekFunctionOrderDesignator parsed{
+            .order_designator = trim_copy(raw_designator),
+            .descending_override = std::nullopt
+        };
+        if (parsed.order_designator.empty()) {
+            return parsed;
+        }
+
+        const std::string upper = uppercase_copy(parsed.order_designator);
+        constexpr const char* descending_suffix = " DESCENDING";
+        constexpr const char* ascending_suffix = " ASCENDING";
+
+        if (upper.size() > std::char_traits<char>::length(descending_suffix) &&
+            upper.rfind(descending_suffix) == upper.size() - std::char_traits<char>::length(descending_suffix)) {
+            parsed.order_designator = trim_copy(parsed.order_designator.substr(
+                0U,
+                parsed.order_designator.size() - std::char_traits<char>::length(descending_suffix)));
+            parsed.descending_override = true;
+            return parsed;
+        }
+
+        if (upper.size() > std::char_traits<char>::length(ascending_suffix) &&
+            upper.rfind(ascending_suffix) == upper.size() - std::char_traits<char>::length(ascending_suffix)) {
+            parsed.order_designator = trim_copy(parsed.order_designator.substr(
+                0U,
+                parsed.order_designator.size() - std::char_traits<char>::length(ascending_suffix)));
+            parsed.descending_override = false;
+        }
+
+        return parsed;
+    }
+
     int compare_order_keys(
         const std::string& left,
         const std::string& right,
@@ -3669,14 +3707,28 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
             if (cursor == nullptr) {
                 return false;
             }
-            return execute_seek(*cursor, search_key, move_pointer, false, order_designator);
+            const SeekFunctionOrderDesignator parsed_order = parse_seek_function_order_designator(order_designator);
+            return execute_seek(
+                *cursor,
+                search_key,
+                move_pointer,
+                false,
+                parsed_order.order_designator,
+                parsed_order.descending_override);
         },
         [this](const std::string& search_key, bool move_pointer, const std::string& designator, const std::string& order_designator) {
             CursorState* cursor = resolve_cursor_target(designator);
             if (cursor == nullptr) {
                 return false;
             }
-            return execute_seek(*cursor, search_key, move_pointer, true, order_designator);
+            const SeekFunctionOrderDesignator parsed_order = parse_seek_function_order_designator(order_designator);
+            return execute_seek(
+                *cursor,
+                search_key,
+                move_pointer,
+                true,
+                parsed_order.order_designator,
+                parsed_order.descending_override);
         },
         [this]() {
             return std::string("FOXTOOLS:9.0");
