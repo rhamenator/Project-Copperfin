@@ -284,6 +284,59 @@ void test_memo_field_create_replace_and_append_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_general_and_picture_memo_fields_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_gp_memo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "assets.dbf";
+    const fs::path memo_path = temp_dir / "assets.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TITLE", .type = 'C', .length = 12U},
+        {.name = "GENERAL", .type = 'G', .length = 4U},
+        {.name = "PICTURE", .type = 'P', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"FIRST", "General payload", "Picture payload"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support G/P memo-pointer fields");
+    expect(fs::exists(memo_path), "G/P-backed table creation should also create the FPT sidecar");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "G/P-backed tables should remain readable after creation");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 3U) {
+        expect(parse_result.table.records[0].values[1].display_value == "General payload", "created G fields should round-trip through memo sidecar storage");
+        expect(parse_result.table.records[0].values[2].display_value == "Picture payload", "created P fields should round-trip through memo sidecar storage");
+    }
+
+    const auto replace_general = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "GENERAL", "Updated general payload");
+    expect(replace_general.ok, "replace_record_field_value should support G fields");
+
+    const auto replace_picture = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "PICTURE", "Updated picture payload");
+    expect(replace_picture.ok, "replace_record_field_value should support P fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support G/P-backed tables");
+    expect(append_result.record_count == 2U, "G/P-backed append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "G/P-backed tables should remain readable after mutation");
+    expect(parse_result.table.records.size() == 2U, "G/P-backed tables should expose appended rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "Updated general payload", "G field replacements should persist");
+        expect(parse_result.table.records[0].values[2].display_value == "Updated picture payload", "P field replacements should persist");
+        expect(parse_result.table.records[1].values[1].display_value.empty(), "blank appended G fields should start with an empty pointer");
+        expect(parse_result.table.records[1].values[2].display_value.empty(), "blank appended P fields should start with an empty pointer");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_indexed_table_mutations_fail_fast_without_changing_files() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -628,6 +681,7 @@ int main() {
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_memo_field_create_replace_and_append_round_trip();
+    test_general_and_picture_memo_fields_round_trip();
     test_indexed_table_mutations_fail_fast_without_changing_files();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();

@@ -271,13 +271,17 @@ bool supports_direct_field_writes(char field_type) {
            field_type == 'Y' || field_type == 'T';
 }
 
+bool is_memo_pointer_field(char field_type) {
+    return field_type == 'M' || field_type == 'G' || field_type == 'P';
+}
+
 bool supports_table_field_storage(char field_type) {
-    return supports_direct_field_writes(field_type) || field_type == 'M';
+    return supports_direct_field_writes(field_type) || is_memo_pointer_field(field_type);
 }
 
 bool supports_blank_field_initialization(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'D' || field_type == 'L' ||
-           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'M';
+           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || is_memo_pointer_field(field_type);
 }
 
 std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
@@ -653,6 +657,8 @@ DbfWriteResult append_blank_record_bytes(
                     static_cast<std::uint8_t>(0U));
                 break;
             case 'M':
+            case 'G':
+            case 'P':
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
                     field.length,
@@ -961,7 +967,7 @@ DbfWriteResult create_dbf_table_file(
         if (!supports_table_field_storage(field.type)) {
             return {.ok = false, .error = "Table creation is not implemented for one or more field types yet."};
         }
-        if (field.type == 'M') {
+        if (is_memo_pointer_field(field.type)) {
             if (field.length < 4U) {
                 return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
             }
@@ -1031,7 +1037,7 @@ DbfWriteResult create_dbf_table_file(
         bytes[record_offset] = 0x20U;
         for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
             DbfWriteResult write_result;
-            if (raw_fields[field_index].type == 'M') {
+            if (is_memo_pointer_field(raw_fields[field_index].type)) {
                 write_result = write_memo_field_bytes(
                     bytes,
                     record_offset + raw_fields[field_index].offset,
@@ -1123,7 +1129,7 @@ DbfWriteResult replace_record_field_value(
 
     DbfWriteResult result;
     std::vector<std::uint8_t> memo_bytes;
-    if (field->type == 'M') {
+    if (is_memo_pointer_field(field->type)) {
         const std::string memo_path = infer_memo_sidecar_path(path);
         if (memo_path.empty()) {
             return {.ok = false, .error = "No memo sidecar path could be inferred for the table.", .record_count = header_result.header.record_count};
@@ -1144,7 +1150,7 @@ DbfWriteResult replace_record_field_value(
     if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
     }
-    if (field->type == 'M' && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
+    if (is_memo_pointer_field(field->type) && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
         return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = header_result.header.record_count};
     }
     return result;
