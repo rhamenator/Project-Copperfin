@@ -3777,6 +3777,92 @@ void test_sql_result_cursor_scan_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_order_direction_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_order_direction_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_order_direction_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO NAME IN sqlcust DESCENDING\n"
+        "SET NEAR ON\n"
+        "SEEK 'BETA' IN sqlcust\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "nCustRecAfterSeek = RECNO('sqlcust')\n"
+        "SET NEAR OFF\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL order direction IN-target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL order direction IN-target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto cust_rec_after_seek = state.globals.find("ncustrecafterseek");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL order direction IN-target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL order direction IN-target parity");
+    expect(other_rec_before != state.globals.end(), "Selected SQL cursor RECNO() before targeted descending seek should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted descending seek should be captured");
+    expect(other_rec_after != state.globals.end(), "Selected SQL cursor RECNO() after targeted descending seek should be captured");
+    expect(cust_rec_after_seek != state.globals.end(), "Target SQL cursor RECNO() after targeted descending seek should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL order direction IN-target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted descending seek checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted descending seek checks");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before targeted descending seek");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "SQLOTHER", "SEEK ... IN should preserve the selected SQL alias with descending order");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "SEEK ... IN should preserve selected SQL cursor pointer with descending order");
+    }
+    if (cust_rec_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_seek->second) == "1", "descending SET ORDER ... IN plus SET NEAR should position targeted SQL cursor on descending near-match record");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted descending seek checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.order";
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek";
+        }),
+        "targeted descending SQL order/seek flow should emit runtime.order and runtime.seek events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_parity";
@@ -5788,6 +5874,7 @@ int main() {
     test_sql_result_cursor_command_seek_parity();
     test_sql_result_cursor_command_seek_in_target_parity();
     test_sql_result_cursor_scan_in_target_parity();
+    test_sql_result_cursor_order_direction_in_target_parity();
     test_sql_result_cursor_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();
