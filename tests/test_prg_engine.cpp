@@ -601,8 +601,12 @@ void test_eval_macro_and_runtime_state_semantics() {
         "nAreaAfterClose = SELECT('People')\n"
         "SET DATASESSION TO 2\n"
         "cNearSession2 = SET('NEAR')\n"
+        "cDefaultSession2 = SET('DEFAULT')\n"
+        "lFileSession2 = FILE('people.dbf')\n"
         "SET DATASESSION TO 1\n"
         "cNearRestored = SET('NEAR')\n"
+        "cDefaultRestored = SET('DEFAULT')\n"
+        "lFileRestored = FILE('people.dbf')\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -624,7 +628,11 @@ void test_eval_macro_and_runtime_state_semantics() {
     const auto used_after_close = state.globals.find("lusedafterclose");
     const auto area_after_close = state.globals.find("nareaafterclose");
     const auto near_session2 = state.globals.find("cnearsession2");
+    const auto default_session2 = state.globals.find("cdefaultsession2");
+    const auto file_session2 = state.globals.find("lfilesession2");
     const auto near_restored = state.globals.find("cnearrestored");
+    const auto default_restored = state.globals.find("cdefaultrestored");
+    const auto file_restored = state.globals.find("lfilerestored");
 
     expect(near_before != state.globals.end(), "SET('NEAR') before enabling it should be captured");
     expect(near_after != state.globals.end(), "SET('NEAR') after enabling it should be captured");
@@ -636,7 +644,11 @@ void test_eval_macro_and_runtime_state_semantics() {
     expect(used_after_close != state.globals.end(), "USE IN <expr> close semantics should be captured");
     expect(area_after_close != state.globals.end(), "SELECT('alias') after USE IN <expr> should be captured");
     expect(near_session2 != state.globals.end(), "SET('NEAR') in a fresh second session should be captured");
+    expect(default_session2 != state.globals.end(), "SET('DEFAULT') in a fresh second session should be captured");
+    expect(file_session2 != state.globals.end(), "FILE() in a fresh second session should be captured");
     expect(near_restored != state.globals.end(), "SET('NEAR') after restoring the original session should be captured");
+    expect(default_restored != state.globals.end(), "SET('DEFAULT') after restoring the original session should be captured");
+    expect(file_restored != state.globals.end(), "FILE() after restoring the original session should be captured");
 
     if (near_before != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_before->second) == "OFF", "SET('NEAR') should report OFF before it is enabled");
@@ -672,8 +684,28 @@ void test_eval_macro_and_runtime_state_semantics() {
     if (near_session2 != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_session2->second) == "OFF", "SET() state should stay isolated in a fresh data session");
     }
+    if (default_session2 != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(default_session2->second)) == lowercase_copy(temp_root.string()),
+            "a fresh data session should start with the startup working directory as SET('DEFAULT')");
+    }
+    if (file_session2 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(file_session2->second) == "true",
+            "relative FILE() checks in a fresh data session should resolve against that session's default directory");
+    }
     if (near_restored != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_restored->second) == "ON", "restoring the original data session should restore its SET() state");
+    }
+    if (default_restored != state.globals.end()) {
+        expect(
+            lowercase_copy(copperfin::runtime::format_value(default_restored->second)) == lowercase_copy(new_default.string()),
+            "restoring the original data session should restore its changed SET('DEFAULT') value");
+    }
+    if (file_restored != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(file_restored->second) == "false",
+            "relative FILE() checks after restoring the original session should use that session's default directory");
     }
 
     fs::remove_all(temp_root, ignored);

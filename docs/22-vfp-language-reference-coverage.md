@@ -106,13 +106,15 @@ The expression/function layer currently has first-pass support for these VFP-fac
 
 That SQL slice now includes session-scoped synthetic cursor materialization that follows the current selected work-area flow for each data session when `SQLEXEC()` auto-opens a result cursor, plus a first-pass read-only remote-cursor layer where synthetic SQL rows participate in field lookup, filter-aware navigation, `LOCATE`, aggregate built-ins, and `CALCULATE`.
 
+The current session/runtime-state slice also now keeps `SET DEFAULT TO` data-session-local, so `SET('DEFAULT')` and relative path resolution restore correctly after `SET DATASESSION` switches instead of leaking one session's default directory into another.
+
 ## Immediate Runtime Backlog Derived From The Official Reference
 
 The official command inventory is much larger than the current runtime. The deepest next command groups should stay focused on data/runtime compatibility first:
 
 ### Work Areas, Sessions, And Indexed Data
 
-- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and broader session-local `SET` restoration coverage
+- finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and the now-shipped session-local restoration coverage for `SET NEAR` and `SET DEFAULT TO`
 - keep closing the remaining expression-driven work-area targeting edges after the shared designator-expression path now covers `SET FILTER ... IN`, `SELECT <expr>`, and `USE ... IN <expr>` for core local-cursor flows
 - deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together

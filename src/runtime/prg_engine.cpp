@@ -681,7 +681,7 @@ struct PrgRuntimeSession::Impl {
     std::vector<RuntimeBreakpoint> breakpoints;
     std::vector<RuntimeEvent> events;
     RuntimePauseState last_state{};
-    std::string default_directory;
+    std::string startup_default_directory;
     std::string last_error_message;
     SourceLocation last_fault_location{};
     std::string last_fault_statement;
@@ -692,6 +692,7 @@ struct PrgRuntimeSession::Impl {
     std::map<int, int> next_api_handle_by_session;
     int next_ole_handle = 1;
     std::map<int, DataSessionState> data_sessions;
+    std::map<int, std::string> default_directory_by_session;
     std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
     std::map<int, RuntimeOleObjectState> ole_objects;
     std::set<std::string> loaded_libraries;
@@ -760,6 +761,20 @@ struct PrgRuntimeSession::Impl {
 
     int current_selected_work_area() const {
         return current_session_state().selected_work_area;
+    }
+
+    std::string& current_default_directory() {
+        auto [iterator, _] = default_directory_by_session.try_emplace(current_data_session, startup_default_directory);
+        return iterator->second;
+    }
+
+    const std::string& current_default_directory() const {
+        const auto found = default_directory_by_session.find(current_data_session);
+        if (found != default_directory_by_session.end()) {
+            return found->second;
+        }
+
+        return startup_default_directory;
     }
 
     std::map<int, RuntimeSqlConnectionState>& current_sql_connections() {
@@ -2378,7 +2393,7 @@ struct PrgRuntimeSession::Impl {
                 table_path += ".dbf";
             }
             if (table_path.is_relative()) {
-                table_path = std::filesystem::path(default_directory) / table_path;
+                table_path = std::filesystem::path(current_default_directory()) / table_path;
             }
             table_path = table_path.lexically_normal();
             if (!std::filesystem::exists(table_path)) {
@@ -2818,7 +2833,7 @@ struct PrgRuntimeSession::Impl {
             asset_path += extension;
         }
         if (asset_path.is_relative()) {
-            asset_path = std::filesystem::path(default_directory) / asset_path;
+            asset_path = std::filesystem::path(current_default_directory()) / asset_path;
         }
         return asset_path.lexically_normal();
     }
@@ -3489,7 +3504,7 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         expression,
         frame,
         globals,
-        default_directory,
+        current_default_directory(),
         last_error_message,
         error_handler,
         is_set_enabled("exact"),
@@ -3647,7 +3662,7 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         [this](const std::string& option_name) {
             const std::string normalized_name = normalize_identifier(option_name);
             if (normalized_name == "default") {
-                return default_directory;
+                return current_default_directory();
             }
 
             const auto found = current_set_state().find(normalized_name);
@@ -3784,7 +3799,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 target_path += ".prg";
             }
             if (target_path.is_relative()) {
-                target_path = std::filesystem::path(default_directory) / target_path;
+                target_path = std::filesystem::path(current_default_directory()) / target_path;
             }
             if (!std::filesystem::exists(target_path)) {
                 last_error_message = "Unable to resolve DO target: " + target;
@@ -4508,7 +4523,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::set_default: {
             const std::string evaluated = value_as_string(evaluate_expression(statement.expression, frame));
             if (!evaluated.empty()) {
-                default_directory = normalize_path(evaluated);
+                current_default_directory() = normalize_path(evaluated);
             }
             return {};
         }
@@ -4679,9 +4694,10 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
 
 PrgRuntimeSession PrgRuntimeSession::create(const RuntimeSessionOptions& options) {
     auto impl = std::make_unique<Impl>(options);
-    impl->default_directory = options.working_directory.empty()
+    impl->startup_default_directory = options.working_directory.empty()
         ? std::filesystem::path(options.startup_path).parent_path().string()
         : normalize_path(options.working_directory);
+    impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
     impl->data_sessions.try_emplace(1);
     impl->push_main_frame(options.startup_path);
     impl->entry_pause_pending = options.stop_on_entry;
