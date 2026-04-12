@@ -152,6 +152,7 @@ struct CursorState {
         std::string index_path;
         std::string normalization_hint;
         std::string collation_hint;
+        std::string key_domain_hint;
     };
 
     int work_area = 0;
@@ -172,6 +173,7 @@ struct CursorState {
     std::string active_order_path;
     std::string active_order_normalization_hint;
     std::string active_order_collation_hint;
+    std::string active_order_key_domain_hint;
     std::string filter_expression;
 };
 
@@ -190,6 +192,7 @@ struct CursorPositionSnapshot {
     std::string active_order_path;
     std::string active_order_normalization_hint;
     std::string active_order_collation_hint;
+    std::string active_order_key_domain_hint;
 };
 
 struct ReplaceAssignment {
@@ -396,6 +399,47 @@ std::string normalize_index_value(std::string value) {
         return "false";
     }
     return value;
+}
+
+std::optional<double> try_parse_numeric_index_value(const std::string& value) {
+    const std::string trimmed = trim_copy(value);
+    if (trimmed.empty()) {
+        return std::nullopt;
+    }
+
+    char* end = nullptr;
+    const double parsed = std::strtod(trimmed.c_str(), &end);
+    if (end == trimmed.c_str() || end == nullptr || *end != '\0' || !std::isfinite(parsed)) {
+        return std::nullopt;
+    }
+    return parsed;
+}
+
+int compare_index_keys(
+    const std::string& left,
+    const std::string& right,
+    const std::string& key_domain_hint) {
+    if (key_domain_hint == "numeric_or_date") {
+        const auto left_numeric = try_parse_numeric_index_value(left);
+        const auto right_numeric = try_parse_numeric_index_value(right);
+        if (left_numeric.has_value() && right_numeric.has_value()) {
+            if (*left_numeric < *right_numeric) {
+                return -1;
+            }
+            if (*left_numeric > *right_numeric) {
+                return 1;
+            }
+            return 0;
+        }
+    }
+
+    if (left < right) {
+        return -1;
+    }
+    if (left > right) {
+        return 1;
+    }
+    return 0;
 }
 
 std::optional<std::string> record_field_value(const vfp::DbfRecord& record, const std::string& field_name) {
@@ -1652,7 +1696,8 @@ struct PrgRuntimeSession::Impl {
                         .expression = tag.key_expression_hint,
                         .index_path = normalize_path(index_asset.path),
                         .normalization_hint = tag.normalization_hint,
-                        .collation_hint = tag.collation_hint
+                        .collation_hint = tag.collation_hint,
+                        .key_domain_hint = index_asset.probe.key_domain_hint
                     });
                 }
                 continue;
@@ -1665,7 +1710,8 @@ struct PrgRuntimeSession::Impl {
                     .expression = index_asset.probe.key_expression_hint,
                     .index_path = normalize_path(index_asset.path),
                     .normalization_hint = index_asset.probe.normalization_hint,
-                    .collation_hint = index_asset.probe.collation_hint
+                    .collation_hint = index_asset.probe.collation_hint,
+                    .key_domain_hint = index_asset.probe.key_domain_hint
                 });
             }
         }
@@ -1837,6 +1883,7 @@ struct PrgRuntimeSession::Impl {
             cursor.active_order_path.clear();
             cursor.active_order_normalization_hint.clear();
             cursor.active_order_collation_hint.clear();
+            cursor.active_order_key_domain_hint.clear();
             return true;
         }
 
@@ -1860,6 +1907,7 @@ struct PrgRuntimeSession::Impl {
             cursor.active_order_path = cursor.orders[index].index_path;
             cursor.active_order_normalization_hint = cursor.orders[index].normalization_hint;
             cursor.active_order_collation_hint = cursor.orders[index].collation_hint;
+            cursor.active_order_key_domain_hint = cursor.orders[index].key_domain_hint;
             return true;
         }
 
@@ -1877,6 +1925,7 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_path = found->index_path;
         cursor.active_order_normalization_hint = found->normalization_hint;
         cursor.active_order_collation_hint = found->collation_hint;
+        cursor.active_order_key_domain_hint = found->key_domain_hint;
         return true;
     }
 
@@ -1900,6 +1949,7 @@ struct PrgRuntimeSession::Impl {
                 cursor.active_order_path = cursor.orders.front().index_path;
                 cursor.active_order_normalization_hint = cursor.orders.front().normalization_hint;
                 cursor.active_order_collation_hint = cursor.orders.front().collation_hint;
+                cursor.active_order_key_domain_hint = cursor.orders.front().key_domain_hint;
             } else {
                 last_error_message = "SEEK requires an active order";
                 return false;
@@ -1923,9 +1973,13 @@ struct PrgRuntimeSession::Impl {
             });
         }
 
-        std::sort(candidates.begin(), candidates.end(), [](const IndexedCandidate& left, const IndexedCandidate& right) {
-            if (left.key != right.key) {
-                return left.key < right.key;
+        std::sort(candidates.begin(), candidates.end(), [&](const IndexedCandidate& left, const IndexedCandidate& right) {
+            const int comparison = compare_index_keys(
+                left.key,
+                right.key,
+                cursor.active_order_key_domain_hint);
+            if (comparison != 0) {
+                return comparison < 0;
             }
             return left.recno < right.recno;
         });
@@ -1934,8 +1988,11 @@ struct PrgRuntimeSession::Impl {
             candidates.begin(),
             candidates.end(),
             normalized_target,
-            [](const IndexedCandidate& candidate, const std::string& value) {
-                return candidate.key < value;
+            [&](const IndexedCandidate& candidate, const std::string& value) {
+                return compare_index_keys(
+                    candidate.key,
+                    value,
+                    cursor.active_order_key_domain_hint) < 0;
             });
 
         const bool exact_match_required = is_set_enabled("exact");
@@ -1972,7 +2029,8 @@ struct PrgRuntimeSession::Impl {
             .active_order_expression = cursor.active_order_expression,
             .active_order_path = cursor.active_order_path,
             .active_order_normalization_hint = cursor.active_order_normalization_hint,
-            .active_order_collation_hint = cursor.active_order_collation_hint
+            .active_order_collation_hint = cursor.active_order_collation_hint,
+            .active_order_key_domain_hint = cursor.active_order_key_domain_hint
         };
     }
 
@@ -1986,6 +2044,7 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_path = snapshot.active_order_path;
         cursor.active_order_normalization_hint = snapshot.active_order_normalization_hint;
         cursor.active_order_collation_hint = snapshot.active_order_collation_hint;
+        cursor.active_order_key_domain_hint = snapshot.active_order_key_domain_hint;
     }
 
     bool current_record_matches_visibility(const CursorState& cursor, const Frame& frame, const std::string& extra_expression) {
@@ -2861,6 +2920,7 @@ struct PrgRuntimeSession::Impl {
         cursor.active_order_path = original.active_order_path;
         cursor.active_order_normalization_hint = original.active_order_normalization_hint;
         cursor.active_order_collation_hint = original.active_order_collation_hint;
+        cursor.active_order_key_domain_hint = original.active_order_key_domain_hint;
 
         if (!found && error_message != nullptr && !runtime_error.empty()) {
             *error_message = runtime_error;

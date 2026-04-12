@@ -181,6 +181,27 @@ void write_synthetic_idx(const std::filesystem::path& path, const std::string& e
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_synthetic_ndx(
+    const std::filesystem::path& path,
+    const std::string& expression,
+    bool numeric_or_date_domain) {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u32(bytes, 0U, 1U);
+    write_le_u32(bytes, 4U, 2U);
+    write_le_u32(bytes, 8U, 0x00000034U);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(std::min<std::size_t>(expression.size(), 100U)));
+    write_le_u16(bytes, 14U, 42U);
+    write_le_u16(bytes, 16U, numeric_or_date_domain ? 1U : 0U);
+    write_le_u16(bytes, 18U, 12U);
+    write_le_u16(bytes, 22U, 0U);
+    for (std::size_t index = 0; index < expression.size() && index < 100U; ++index) {
+        bytes[24U + index] = static_cast<std::uint8_t>(expression[index]);
+    }
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
 bool has_runtime_event(
     const std::vector<copperfin::runtime::RuntimeEvent>& events,
     const std::string& category,
@@ -1945,6 +1966,60 @@ void test_order_and_tag_preserve_index_file_identity() {
     }
     if (seek_rec != state.globals.end()) {
         expect(copperfin::runtime::format_value(seek_rec->second) == "3", "SEEK() should move to the matching record when using the IDX order");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_ndx_numeric_domain_guides_seek_near_ordering() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_ndx_numeric_domain";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path ndx_path = temp_root / "people.ndx";
+    write_people_dbf(table_path, {{"ALPHA", 2}, {"BRAVO", 10}, {"CHARLIE", 20}});
+    write_synthetic_ndx(ndx_path, "AGE", true);
+
+    const fs::path main_path = temp_root / "ndx_numeric_domain.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "SET NEAR ON\n"
+        "SEEK '9'\n"
+        "lFound = FOUND()\n"
+        "lEof = EOF()\n"
+        "nRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "NDX numeric-domain seek script should complete");
+
+    const auto found = state.globals.find("lfound");
+    const auto eof = state.globals.find("leof");
+    const auto rec = state.globals.find("nrec");
+
+    expect(found != state.globals.end(), "NDX numeric-domain seek should expose FOUND()");
+    expect(eof != state.globals.end(), "NDX numeric-domain seek should expose EOF()");
+    expect(rec != state.globals.end(), "NDX numeric-domain seek should expose RECNO()");
+
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "false", "NDX numeric-domain seek should still report a miss for a non-existent key");
+    }
+    if (eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof->second) == "false", "NDX numeric-domain SET NEAR should position to the next numeric key instead of EOF");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "2", "NDX numeric-domain seek should treat AGE keys numerically when choosing the nearest record");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -3726,6 +3801,7 @@ int main() {
     test_set_near_is_scoped_by_data_session();
     test_seek_related_index_functions();
     test_order_and_tag_preserve_index_file_identity();
+    test_ndx_numeric_domain_guides_seek_near_ordering();
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
     test_set_exact_affects_comparisons_and_seek();
