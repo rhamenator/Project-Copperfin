@@ -4887,6 +4887,74 @@ void test_total_command_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_total_command_for_sql_result_cursors() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_sql_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path output_path = temp_root / "sql_totals.dbf";
+    const fs::path main_path = temp_root / "total_sql.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "REPLACE NAME WITH 'ALPHA', AMOUNT WITH 5\n"
+        "GO 2\n"
+        "REPLACE NAME WITH 'ALPHA', AMOUNT WITH 7\n"
+        "GO 3\n"
+        "REPLACE NAME WITH 'WEST', AMOUNT WITH 9\n"
+        "GO TOP\n"
+        "TOTAL TO '" + output_path.string() + "' ON NAME FIELDS AMOUNT REST FOR AMOUNT >= 7 IN 'sqlcust'\n"
+        "nSqlRec = RECNO('sqlcust')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TOTAL SQL script should complete");
+    expect(state.sql_connections.empty(), "TOTAL SQL script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto sql_rec = state.globals.find("nsqlrec");
+    const auto disc = state.globals.find("ldisc");
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for TOTAL SQL parity");
+    expect(sql_rec != state.globals.end(), "TOTAL IN alias should preserve SQL cursor position");
+    expect(disc != state.globals.end(), "SQLDISCONNECT should be captured for TOTAL SQL parity");
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before TOTAL SQL checks");
+    }
+    if (sql_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_rec->second) == "1", "TOTAL should preserve targeted SQL cursor record position");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after TOTAL SQL checks");
+    }
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.total"; }),
+        "TOTAL for SQL cursors should emit runtime.total events");
+
+    const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
+    expect(totals_result.ok, "TOTAL should write a readable output DBF for SQL cursors");
+    expect(totals_result.table.fields.size() == 2U, "TOTAL SQL output should include ON plus requested numeric fields");
+    expect(totals_result.table.records.size() == 2U, "TOTAL SQL output should include one group per contiguous ON value");
+    if (totals_result.table.records.size() == 2U) {
+        expect(totals_result.table.records[0].values[0].display_value == "ALPHA", "TOTAL SQL output should preserve first grouped ON value");
+        expect(totals_result.table.records[0].values[1].display_value == "7", "TOTAL SQL output should sum grouped numeric fields");
+        expect(totals_result.table.records[1].values[0].display_value == "WEST", "TOTAL SQL output should include trailing group values");
+        expect(totals_result.table.records[1].values[1].display_value == "9", "TOTAL SQL output should sum trailing grouped numeric values");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_private_declaration_masks_caller_variable() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_mask";
@@ -5086,6 +5154,7 @@ int main() {
     test_command_level_aggregate_commands();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
+    test_total_command_for_sql_result_cursors();
     test_runtime_fault_containment();
     test_indexed_table_mutation_surfaces_runtime_error();
     test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();

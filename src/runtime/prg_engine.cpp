@@ -2147,29 +2147,62 @@ struct PrgRuntimeSession::Impl {
                 : "TOTAL target work area not found";
             return false;
         }
+        std::vector<vfp::DbfFieldDescriptor> source_fields;
+        std::vector<vfp::DbfRecord> source_records;
         if (cursor->remote) {
-            error_message = "TOTAL is not implemented for remote SQL cursors yet";
-            return false;
-        }
-        if (cursor->source_path.empty()) {
-            error_message = "TOTAL requires a local table-backed cursor";
-            return false;
-        }
+            source_records = cursor->remote_records;
+            if (!source_records.empty()) {
+                source_fields.reserve(source_records.front().values.size());
+                for (const auto& value : source_records.front().values) {
+                    vfp::DbfFieldDescriptor field;
+                    field.name = value.field_name;
+                    field.type = value.field_type == '\0' ? 'C' : value.field_type;
+                    if (field.type == 'N' || field.type == 'F') {
+                        field.length = 18U;
+                        field.decimal_count = 0U;
+                    } else {
+                        field.length = 32U;
+                        field.decimal_count = 0U;
+                    }
+                    source_fields.push_back(std::move(field));
+                }
 
-        const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, cursor->record_count);
-        if (!table_result.ok) {
-            error_message = table_result.error;
-            return false;
+                for (const auto& record : source_records) {
+                    for (auto& field : source_fields) {
+                        const std::string value_text = record_field_value(record, field.name).value_or(std::string{});
+                        if (field.type == 'N' || field.type == 'F') {
+                            field.length = static_cast<std::uint8_t>(std::max<int>(field.length, 18));
+                            continue;
+                        }
+                        field.length = static_cast<std::uint8_t>(
+                            std::max<int>(field.length, static_cast<int>(std::max<std::size_t>(1U, value_text.size()))));
+                    }
+                }
+            }
+        } else {
+            if (cursor->source_path.empty()) {
+                error_message = "TOTAL requires a local table-backed cursor";
+                return false;
+            }
+
+            const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, cursor->record_count);
+            if (!table_result.ok) {
+                error_message = table_result.error;
+                return false;
+            }
+
+            source_fields = table_result.table.fields;
+            source_records = table_result.table.records;
         }
 
         const auto field_by_name = [&](const std::string& field_name) -> const vfp::DbfFieldDescriptor* {
             const auto found = std::find_if(
-                table_result.table.fields.begin(),
-                table_result.table.fields.end(),
+                source_fields.begin(),
+                source_fields.end(),
                 [&](const vfp::DbfFieldDescriptor& field) {
                     return collapse_identifier(field.name) == collapse_identifier(field_name);
                 });
-            return found == table_result.table.fields.end() ? nullptr : &*found;
+            return found == source_fields.end() ? nullptr : &*found;
         };
 
         const vfp::DbfFieldDescriptor* on_field = field_by_name(plan.on_field_name);
@@ -2180,7 +2213,7 @@ struct PrgRuntimeSession::Impl {
 
         std::vector<const vfp::DbfFieldDescriptor*> total_fields;
         if (plan.field_names.empty()) {
-            for (const auto& field : table_result.table.fields) {
+            for (const auto& field : source_fields) {
                 if ((field.type == 'N' || field.type == 'F') &&
                     collapse_identifier(field.name) != collapse_identifier(on_field->name)) {
                     total_fields.push_back(&field);
@@ -2249,10 +2282,10 @@ struct PrgRuntimeSession::Impl {
         };
 
         for (const std::size_t recno : records) {
-            if (recno == 0U || recno > table_result.table.records.size()) {
+            if (recno == 0U || recno > source_records.size()) {
                 continue;
             }
-            append_record_to_group(table_result.table.records[recno - 1U]);
+            append_record_to_group(source_records[recno - 1U]);
         }
 
         std::vector<vfp::DbfFieldDescriptor> output_fields;
