@@ -72,7 +72,9 @@ add_library(cf_runtime_pipeline
 )
 
 add_library(cf_xbase_runtime
+    src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine.cpp
+    src/runtime/prg_engine_helpers.cpp
     src/runtime/xasset_methods.cpp
 )
 

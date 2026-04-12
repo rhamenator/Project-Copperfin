@@ -120,16 +120,33 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
 }
 
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
-    std::vector<std::uint8_t> bytes(3U * 512U, 0U);
-    write_le_u32(bytes, 0U, 2U);
-    write_le_u16(bytes, 4U, 0x0200U);
-    write_ascii(bytes, 16U, "MDXHDR");
-    write_ascii(bytes, (1U * 512U) + 32U, "NAME_TAG");
-    write_ascii(bytes, (2U * 512U) + 48U, "CITYSTATE");
+    constexpr std::uint16_t block_size = 512U;
+    std::vector<std::uint8_t> bytes(3U * block_size, 0U);
+
+    // Header block: real dBase IV MDX format fields at documented byte offsets.
+    bytes[0] = 0x02U;                                 // version = dBase IV
+    write_le_u16(bytes, 20U, block_size);             // base_block_size = 512
+    // block_size_adder (bytes 22-23) stays zero → effective_block_size = 512
+    bytes[24] = 0x01U;                                // production index flag
+    bytes[25] = 48U;                                  // tag_slots (max 48)
+    bytes[26] = 32U;                                  // tag_entry_size = 32
+    write_le_u16(bytes, 28U, 2U);                     // tags_in_use = 2
+    write_le_u32(bytes, 32U, 3U);                     // pages_in_file = 3
+
+    // Tag table starts at byte 512 (= effective_block_size).
+    // Entry 0 (bytes 512–543): tag name at entry+4 = byte 516.
+    write_le_u32(bytes, block_size + 0U, 0U);         // tag_header_page_num = 0
+    write_ascii(bytes, block_size + 4U, "NAME_TAG");  // 11-byte null-padded name field
+
+    // Entry 1 (bytes 544–575): tag name at entry+4 = byte 548.
+    write_le_u32(bytes, block_size + 32U, 0U);        // tag_header_page_num = 0
+    write_ascii(bytes, block_size + 36U, "CITYSTATE"); // 11-byte null-padded name field
+
     if (include_decoy_text) {
-        write_ascii(bytes, 128U, "HEADER_TEXT_SHOULD_NOT_BE_A_TAG");
-        write_ascii(bytes, (1U * 512U) + 320U, "LATE_BLOCK_TEXT");
-        write_ascii(bytes, (2U * 512U) + 400U, "TRAILING_TEXT");
+        // Decoys placed outside the tag-descriptor positions so the real-format parser ignores them.
+        write_ascii(bytes, 128U, "HDRTEXT");
+        write_ascii(bytes, block_size + 200U, "LATETEXT");
+        write_ascii(bytes, 2U * block_size + 100U, "BLOCKTEXT");
     }
     return bytes;
 }

@@ -3771,6 +3771,144 @@ void test_total_command_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_private_declaration_masks_caller_variable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_mask";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "private_mask.prg";
+    write_text(
+        main_path,
+        "x = 42\n"
+        "DO subproc\n"
+        "caller_x = x\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "PRIVATE x\n"
+        "x = 99\n"
+        "sub_x = x\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PRIVATE mask script should complete");
+
+    const auto sub_x = state.globals.find("sub_x");
+    const auto caller_x = state.globals.find("caller_x");
+
+    expect(sub_x != state.globals.end(), "sub_x should be in globals");
+    expect(caller_x != state.globals.end(), "caller_x should be in globals");
+
+    if (sub_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x->second) == "99", "sub should see its own PRIVATE x = 99");
+    }
+    if (caller_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_x->second) == "42", "caller x should be restored to 42 after sub returns");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_private_variable_visible_to_called_routines() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_visible";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "private_visible.prg";
+    write_text(
+        main_path,
+        "DO caller\n"
+        "RETURN\n"
+        "PROCEDURE caller\n"
+        "PRIVATE shared_val\n"
+        "shared_val = 77\n"
+        "DO inner\n"
+        "RETURN\n"
+        "PROCEDURE inner\n"
+        "inner_saw = shared_val\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PRIVATE visibility script should complete");
+
+    const auto inner_saw = state.globals.find("inner_saw");
+    expect(inner_saw != state.globals.end(), "inner_saw should be in globals");
+    if (inner_saw != state.globals.end()) {
+        expect(copperfin::runtime::format_value(inner_saw->second) == "77", "PRIVATE variable should be visible to called routines");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_store_command_assigns_multiple_variables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_store";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "store_test.prg";
+    write_text(
+        main_path,
+        "STORE 7 TO a, b, c\n"
+        "STORE 'hello' TO s1, s2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "STORE script should complete");
+
+    const auto a = state.globals.find("a");
+    const auto b = state.globals.find("b");
+    const auto c = state.globals.find("c");
+    const auto s1 = state.globals.find("s1");
+    const auto s2 = state.globals.find("s2");
+
+    expect(a != state.globals.end(), "STORE should assign a");
+    expect(b != state.globals.end(), "STORE should assign b");
+    expect(c != state.globals.end(), "STORE should assign c");
+    expect(s1 != state.globals.end(), "STORE should assign s1");
+    expect(s2 != state.globals.end(), "STORE should assign s2");
+
+    if (a != state.globals.end()) {
+        expect(copperfin::runtime::format_value(a->second) == "7", "a should equal 7");
+    }
+    if (b != state.globals.end()) {
+        expect(copperfin::runtime::format_value(b->second) == "7", "b should equal 7");
+    }
+    if (c != state.globals.end()) {
+        expect(copperfin::runtime::format_value(c->second) == "7", "c should equal 7");
+    }
+    if (s1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s1->second) == "hello", "s1 should equal 'hello'");
+    }
+    if (s2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2->second) == "hello", "s2 should equal 'hello'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -3823,6 +3961,9 @@ int main() {
     test_runtime_fault_containment();
     test_indexed_table_mutation_surfaces_runtime_error();
     test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
+    test_private_declaration_masks_caller_variable();
+    test_private_variable_visible_to_called_routines();
+    test_store_command_assigns_multiple_variables();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

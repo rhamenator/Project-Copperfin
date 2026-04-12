@@ -6,7 +6,6 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
-#include <set>
 
 namespace copperfin::vfp {
 
@@ -43,21 +42,6 @@ std::string read_ascii_hint(const std::vector<std::uint8_t>& bytes, std::size_t 
     }
 
     return value;
-}
-
-struct PrintableRun {
-    std::size_t offset = 0;
-    std::string text;
-};
-
-std::vector<PrintableRun> collect_printable_runs(
-    const std::vector<std::uint8_t>& bytes,
-    std::size_t start,
-    std::size_t end);
-
-bool is_identifier_char(char ch) {
-    const auto raw = static_cast<unsigned char>(ch);
-    return std::isalnum(raw) != 0 || ch == '_';
 }
 
 std::string trim_copy(std::string value) {
@@ -155,96 +139,6 @@ std::string derive_collation_hint(const std::string& expression, const std::stri
         return "expression-normalized";
     }
     return {};
-}
-
-std::vector<PrintableRun> collect_printable_runs(const std::vector<std::uint8_t>& bytes) {
-    return collect_printable_runs(bytes, 0U, bytes.size());
-}
-
-std::vector<PrintableRun> collect_printable_runs(
-    const std::vector<std::uint8_t>& bytes,
-    std::size_t start,
-    std::size_t end) {
-    std::vector<PrintableRun> runs;
-    const std::size_t bounded_end = std::min(end, bytes.size());
-
-    for (std::size_t index = std::min(start, bounded_end); index < bounded_end;) {
-        const auto raw = static_cast<unsigned char>(bytes[index]);
-        if (std::isprint(raw) == 0) {
-            ++index;
-            continue;
-        }
-
-        const std::size_t run_start = index;
-        std::string text;
-        while (index < bounded_end) {
-            const auto current = static_cast<unsigned char>(bytes[index]);
-            if (std::isprint(current) == 0) {
-                break;
-            }
-            text.push_back(static_cast<char>(current));
-            ++index;
-        }
-
-        if (text.size() >= 2U) {
-            runs.push_back({.offset = run_start, .text = std::move(text)});
-        }
-    }
-
-    return runs;
-}
-
-bool looks_like_mdx_tag_name_candidate(const std::string& text) {
-    if (text.size() < 2U || text.size() > 10U) {
-        return false;
-    }
-
-    bool saw_alpha = false;
-    for (unsigned char ch : text) {
-        if (!is_identifier_char(static_cast<char>(ch))) {
-            return false;
-        }
-        if (std::isalpha(ch) != 0) {
-            saw_alpha = true;
-            if (std::toupper(ch) != ch) {
-                return false;
-            }
-        }
-    }
-
-    return saw_alpha;
-}
-
-std::vector<IndexTagProbe> collect_mdx_tag_hints(const std::vector<std::uint8_t>& bytes) {
-    std::vector<IndexTagProbe> tags;
-    std::set<std::string> seen_names;
-    constexpr std::size_t mdx_block_size = 512U;
-    constexpr std::size_t mdx_metadata_region_start = 16U;
-    constexpr std::size_t mdx_metadata_region_length = 160U;
-
-    const std::size_t block_count = bytes.size() / mdx_block_size;
-    for (std::size_t block_index = 1U; block_index < block_count; ++block_index) {
-        const std::size_t block_start = block_index * mdx_block_size;
-        const std::size_t scan_start = block_start + mdx_metadata_region_start;
-        const std::size_t scan_end = std::min(
-            block_start + mdx_metadata_region_start + mdx_metadata_region_length,
-            block_start + mdx_block_size);
-
-        for (const PrintableRun& run : collect_printable_runs(bytes, scan_start, scan_end)) {
-            const std::string candidate = trim_copy(run.text);
-            if (!looks_like_mdx_tag_name_candidate(candidate) || !seen_names.insert(candidate).second) {
-                continue;
-            }
-
-            tags.push_back({
-                .name_hint = candidate,
-                .name_offset_hint = static_cast<std::uint32_t>(run.offset),
-                .inferred_name = false
-            });
-        }
-    }
-
-    return tags;
 }
 
 bool is_valid_optional_offset(std::uint32_t offset, std::uint32_t block_size, std::uint64_t file_size) {
@@ -411,11 +305,30 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
     IndexProbe probe;
     probe.kind = IndexKind::mdx;
     probe.file_size = file_size;
-    probe.block_size = 512U;
     probe.multi_tag = true;
     probe.production_candidate = true;
 
-    if (file_size < 1024U || (file_size % 512U) != 0U) {
+    // Read header fields at their documented dBase IV MDX byte offsets.
+    const std::uint16_t base_block_size = read_le_u16(bytes, 20U);
+    const std::uint16_t block_size_adder = read_le_u16(bytes, 22U);
+    const std::uint8_t tag_slots = bytes[25U];
+    const std::uint8_t tag_entry_size = bytes[26U];
+    const std::uint16_t tags_in_use = read_le_u16(bytes, 28U);
+    const std::uint32_t effective_block_size =
+        static_cast<std::uint32_t>(base_block_size) + static_cast<std::uint32_t>(block_size_adder);
+
+    const bool plausible_block_size = base_block_size >= 512U &&
+                                      base_block_size <= 4096U &&
+                                      (base_block_size % 512U) == 0U;
+    const bool plausible_adder = block_size_adder <= 512U;
+    const bool plausible_effective = effective_block_size >= 512U && effective_block_size <= 4096U;
+    const bool plausible_tag_slots = tag_slots > 0U && tag_slots <= 48U;
+    const bool plausible_tag_entry = tag_entry_size >= 16U && tag_entry_size <= 64U;
+    const bool plausible_tags = tags_in_use <= tag_slots;
+    const bool plausible_file = file_size >= static_cast<std::uint64_t>(effective_block_size) * 2U;
+
+    if (!plausible_block_size || !plausible_adder || !plausible_effective ||
+        !plausible_tag_slots || !plausible_tag_entry || !plausible_tags || !plausible_file) {
         return {
             .ok = false,
             .probe = probe,
@@ -423,26 +336,60 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
         };
     }
 
-    const bool header_has_nonzero_bytes = std::any_of(
-        bytes.begin(),
-        bytes.begin() + std::min<std::size_t>(bytes.size(), 64U),
-        [](std::uint8_t value) { return value != 0U; });
-    if (!header_has_nonzero_bytes) {
-        return {
-            .ok = false,
-            .probe = probe,
-            .error = "Header values do not look like a block-oriented dBase MDX file."
-        };
+    probe.block_size = effective_block_size;
+
+    // Tag table starts at byte offset effective_block_size.
+    // Each entry is tag_entry_size bytes: page_num (4), name (11), key_format (1), threads (3), reserved (1), key_type (1), reserved (11).
+    const std::size_t tag_table_offset = static_cast<std::size_t>(effective_block_size);
+    for (std::uint16_t index = 0U; index < tags_in_use; ++index) {
+        const std::size_t entry_offset =
+            tag_table_offset + static_cast<std::size_t>(index) * static_cast<std::size_t>(tag_entry_size);
+        if (entry_offset + static_cast<std::size_t>(tag_entry_size) > bytes.size()) {
+            break;
+        }
+
+        const std::string tag_name = read_ascii_hint(bytes, entry_offset + 4U, 11U);
+        if (tag_name.empty()) {
+            continue;
+        }
+
+        IndexTagProbe tag_probe;
+        tag_probe.name_hint = tag_name;
+        tag_probe.name_offset_hint = static_cast<std::uint32_t>(entry_offset + 4U);
+        tag_probe.inferred_name = false;
+
+        // Follow the tag header page to read the key expression if the page is in-bounds.
+        const std::uint32_t tag_header_page = read_le_u32(bytes, entry_offset);
+        if (tag_header_page > 0U) {
+            const std::size_t tag_header_offset =
+                static_cast<std::size_t>(tag_header_page) * static_cast<std::size_t>(effective_block_size);
+            if (tag_header_offset + 24U < bytes.size()) {
+                const std::size_t expr_max = bytes.size() - tag_header_offset - 24U;
+                const std::string key_expr =
+                    read_ascii_hint(bytes, tag_header_offset + 24U, std::min<std::size_t>(220U, expr_max));
+                if (!key_expr.empty()) {
+                    tag_probe.key_expression_hint = key_expr;
+                    tag_probe.normalization_hint = derive_normalization_hint(key_expr);
+                    tag_probe.collation_hint =
+                        derive_collation_hint(key_expr, tag_probe.normalization_hint);
+                }
+            }
+        }
+
+        probe.tags.push_back(std::move(tag_probe));
     }
 
-    probe.tags = collect_mdx_tag_hints(bytes);
     if (probe.tags.empty()) {
         return {
             .ok = false,
             .probe = probe,
-            .error = "No plausible block-local MDX tag metadata was found."
+            .error = "No plausible MDX tag metadata was found in the tag table."
         };
     }
+
+    probe.key_expression_hint = probe.tags.front().key_expression_hint;
+    probe.normalization_hint = probe.tags.front().normalization_hint;
+    probe.collation_hint = probe.tags.front().collation_hint;
 
     return {.ok = true, .probe = probe};
 }

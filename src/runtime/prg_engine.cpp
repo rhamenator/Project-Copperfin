@@ -1,4 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "prg_engine_command_helpers.h"
+#include "prg_engine_helpers.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"
@@ -73,6 +75,8 @@ enum class StatementKind {
     on_error,
     public_declaration,
     local_declaration,
+    private_declaration,
+    store_command,
     no_op
 };
 
@@ -132,6 +136,7 @@ struct Frame {
     std::size_t pc = 0;
     std::map<std::string, PrgValue> locals;
     std::set<std::string> local_names;
+    std::map<std::string, std::optional<PrgValue>> private_saved_values;
     std::vector<LoopState> loops;
     std::vector<ScanState> scans;
     std::vector<WhileState> whiles;
@@ -195,38 +200,6 @@ struct CursorPositionSnapshot {
     std::string active_order_key_domain_hint;
 };
 
-struct ReplaceAssignment {
-    std::string field_name;
-    std::string expression;
-};
-
-struct CalculateAssignment {
-    std::string aggregate_expression;
-    std::string variable_name;
-};
-
-enum class AggregateScopeKind {
-    all_records,
-    rest_records,
-    next_records,
-    record
-};
-
-struct AggregateScopeClause {
-    AggregateScopeKind kind = AggregateScopeKind::all_records;
-    std::string raw_value;
-};
-
-struct TotalCommandPlan {
-    std::string target_expression;
-    std::string on_field_name;
-    std::vector<std::string> field_names;
-    AggregateScopeClause scope;
-    std::string for_expression;
-    std::string while_expression;
-    std::string in_expression;
-};
-
 struct RegisteredApiFunction {
     int handle = 0;
     std::string variant;
@@ -249,208 +222,6 @@ struct DataSessionState {
     std::map<int, std::string> aliases;
     std::map<int, CursorState> cursors;
 };
-
-std::string trim_copy(std::string value) {
-    value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
-        return std::isspace(ch) == 0;
-    }));
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
-        value.pop_back();
-    }
-    return value;
-}
-
-std::string lowercase_copy(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
-    });
-    return value;
-}
-
-bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
-    if (value.size() < prefix.size()) {
-        return false;
-    }
-    for (std::size_t index = 0; index < prefix.size(); ++index) {
-        if (std::tolower(static_cast<unsigned char>(value[index])) !=
-            std::tolower(static_cast<unsigned char>(prefix[index]))) {
-            return false;
-        }
-    }
-    return true;
-}
-
-std::string normalize_identifier(std::string value) {
-    return lowercase_copy(trim_copy(std::move(value)));
-}
-
-std::string normalize_path(const std::string& value) {
-    if (value.empty()) {
-        return {};
-    }
-    return std::filesystem::path(value).lexically_normal().string();
-}
-
-bool is_index_file_path(const std::string& value) {
-    const std::string extension = lowercase_copy(std::filesystem::path(trim_copy(value)).extension().string());
-    return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||
-           extension == ".ndx" || extension == ".mdx";
-}
-
-std::string unquote_string(std::string value) {
-    value = trim_copy(std::move(value));
-    if (value.size() >= 2U && value.front() == '\'' && value.back() == '\'') {
-        return value.substr(1U, value.size() - 2U);
-    }
-    return value;
-}
-
-std::string take_first_token(std::string value) {
-    value = trim_copy(std::move(value));
-    if (value.empty()) {
-        return value;
-    }
-    if (value.front() == '\'') {
-        const auto closing = value.find('\'', 1U);
-        if (closing != std::string::npos) {
-            return value.substr(0U, closing + 1U);
-        }
-        return value;
-    }
-
-    const auto separator = value.find(' ');
-    return separator == std::string::npos ? value : value.substr(0U, separator);
-}
-
-std::pair<std::string, std::string> split_first_word(std::string value) {
-    value = trim_copy(std::move(value));
-    if (value.empty()) {
-        return {};
-    }
-
-    const auto separator = value.find(' ');
-    if (separator == std::string::npos) {
-        return {value, {}};
-    }
-
-    return {
-        value.substr(0U, separator),
-        trim_copy(value.substr(separator + 1U))
-    };
-}
-
-std::string uppercase_copy(std::string value);
-
-std::string take_keyword_value(const std::string& text, const std::string& keyword) {
-    const std::string upper = uppercase_copy(text);
-    const std::string pattern = " " + uppercase_copy(keyword) + " ";
-    const auto position = upper.find(pattern);
-    if (position == std::string::npos) {
-        return {};
-    }
-    return take_first_token(text.substr(position + pattern.size()));
-}
-
-std::string uppercase_copy(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::toupper(ch));
-    });
-    return value;
-}
-
-bool is_bare_identifier_text(const std::string& value) {
-    return !value.empty() && std::all_of(value.begin(), value.end(), [](unsigned char ch) {
-        return std::isalnum(ch) != 0 || ch == '_';
-    });
-}
-
-std::string collapse_identifier(const std::string& value) {
-    std::string normalized;
-    normalized.reserve(value.size());
-
-    for (char ch : value) {
-        const auto raw = static_cast<unsigned char>(ch);
-        if (std::isalnum(raw) == 0) {
-            continue;
-        }
-        normalized.push_back(static_cast<char>(std::toupper(raw)));
-    }
-
-    return normalized;
-}
-
-std::string unquote_identifier(std::string value) {
-    value = trim_copy(std::move(value));
-    if (value.size() >= 2U) {
-        if ((value.front() == '\'' && value.back() == '\'') ||
-            (value.front() == '"' && value.back() == '"')) {
-            return value.substr(1U, value.size() - 2U);
-        }
-    }
-    return value;
-}
-
-std::string normalize_index_value(std::string value) {
-    value = trim_copy(std::move(value));
-    if (value == ".T.") {
-        return "true";
-    }
-    if (value == ".F.") {
-        return "false";
-    }
-    return value;
-}
-
-std::optional<double> try_parse_numeric_index_value(const std::string& value) {
-    const std::string trimmed = trim_copy(value);
-    if (trimmed.empty()) {
-        return std::nullopt;
-    }
-
-    char* end = nullptr;
-    const double parsed = std::strtod(trimmed.c_str(), &end);
-    if (end == trimmed.c_str() || end == nullptr || *end != '\0' || !std::isfinite(parsed)) {
-        return std::nullopt;
-    }
-    return parsed;
-}
-
-int compare_index_keys(
-    const std::string& left,
-    const std::string& right,
-    const std::string& key_domain_hint) {
-    if (key_domain_hint == "numeric_or_date") {
-        const auto left_numeric = try_parse_numeric_index_value(left);
-        const auto right_numeric = try_parse_numeric_index_value(right);
-        if (left_numeric.has_value() && right_numeric.has_value()) {
-            if (*left_numeric < *right_numeric) {
-                return -1;
-            }
-            if (*left_numeric > *right_numeric) {
-                return 1;
-            }
-            return 0;
-        }
-    }
-
-    if (left < right) {
-        return -1;
-    }
-    if (left > right) {
-        return 1;
-    }
-    return 0;
-}
-
-std::optional<std::string> record_field_value(const vfp::DbfRecord& record, const std::string& field_name) {
-    const std::string normalized_field = collapse_identifier(field_name);
-    for (const auto& value : record.values) {
-        if (collapse_identifier(value.field_name) == normalized_field) {
-            return value.display_value;
-        }
-    }
-    return std::nullopt;
-}
 
 vfp::DbfRecord make_synthetic_sql_record(std::size_t recno) {
     const auto synthetic_name = [&]() {
@@ -475,97 +246,6 @@ vfp::DbfRecord make_synthetic_sql_record(std::size_t recno) {
             vfp::DbfRecordValue{.field_name = "AMOUNT", .field_type = 'N', .display_value = std::to_string(recno * 10U)},
         }
     };
-}
-
-std::string evaluate_index_expression(const std::string& expression, const vfp::DbfRecord& record) {
-    const std::string trimmed = trim_copy(expression);
-    const std::string upper = uppercase_copy(trimmed);
-
-    const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
-        if (!starts_with_insensitive(trimmed, prefix + "(") || trimmed.back() != ')') {
-            return std::nullopt;
-        }
-
-        const std::string inner = trim_copy(trimmed.substr(prefix.size() + 1U, trimmed.size() - prefix.size() - 2U));
-        std::string value = evaluate_index_expression(inner, record);
-        transform(value);
-        return value;
-    };
-
-    if (const auto upper_value = apply_unary("UPPER", [](std::string& value) {
-            value = uppercase_copy(value);
-        })) {
-        return *upper_value;
-    }
-    if (const auto lower_value = apply_unary("LOWER", [](std::string& value) {
-            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-                return static_cast<char>(std::tolower(ch));
-            });
-        })) {
-        return *lower_value;
-    }
-    if (const auto trim_value = apply_unary("ALLTRIM", [](std::string& value) {
-            value = trim_copy(std::move(value));
-        })) {
-        return *trim_value;
-    }
-    if (const auto ltrim_value = apply_unary("LTRIM", [](std::string& value) {
-            const auto first = std::find_if(value.begin(), value.end(), [](unsigned char ch) {
-                return std::isspace(ch) == 0;
-            });
-            value.erase(value.begin(), first);
-        })) {
-        return *ltrim_value;
-    }
-    if (const auto rtrim_value = apply_unary("RTRIM", [](std::string& value) {
-            while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
-                value.pop_back();
-            }
-        })) {
-        return *rtrim_value;
-    }
-
-    if (trimmed.size() >= 2U &&
-        ((trimmed.front() == '\'' && trimmed.back() == '\'') ||
-         (trimmed.front() == '"' && trimmed.back() == '"'))) {
-        return unquote_identifier(trimmed);
-    }
-
-    if (const auto field_value = record_field_value(record, trimmed)) {
-        return normalize_index_value(*field_value);
-    }
-
-    return normalize_index_value(trimmed);
-}
-
-bool has_keyword(const std::string& text, const std::string& keyword) {
-    const std::string upper = " " + uppercase_copy(text) + " ";
-    const std::string pattern = " " + uppercase_copy(keyword) + " ";
-    return upper.find(pattern) != std::string::npos;
-}
-
-bool parse_object_handle_reference(const PrgValue& value, int& handle, std::string& prog_id) {
-    if (value.kind != PrgValueKind::string) {
-        return false;
-    }
-
-    const std::string prefix = "object:";
-    if (value.string_value.rfind(prefix, 0) != 0) {
-        return false;
-    }
-
-    const auto separator = value.string_value.rfind('#');
-    if (separator == std::string::npos || separator <= prefix.size()) {
-        return false;
-    }
-
-    prog_id = value.string_value.substr(prefix.size(), separator - prefix.size());
-    try {
-        handle = std::stoi(value.string_value.substr(separator + 1U));
-    } catch (...) {
-        return false;
-    }
-    return true;
 }
 
 std::string strip_inline_comment(const std::string& line) {
@@ -672,302 +352,6 @@ Statement make_statement(StatementKind kind, const std::string& path, std::size_
     statement.location = {.file_path = normalize_path(path), .line = line};
     statement.text = text;
     return statement;
-}
-
-std::vector<std::string> split_csv_like(const std::string& text) {
-    std::vector<std::string> parts;
-    std::string current;
-    int nesting = 0;
-    bool in_string = false;
-
-    for (char ch : text) {
-        if (ch == '\'') {
-            in_string = !in_string;
-            current.push_back(ch);
-            continue;
-        }
-        if (!in_string) {
-            if (ch == '(') {
-                ++nesting;
-            } else if (ch == ')' && nesting > 0) {
-                --nesting;
-            } else if (ch == ',' && nesting == 0) {
-                parts.push_back(trim_copy(current));
-                current.clear();
-                continue;
-            }
-        }
-        current.push_back(ch);
-    }
-
-    if (!current.empty()) {
-        parts.push_back(trim_copy(current));
-    }
-    return parts;
-}
-
-std::size_t find_keyword_top_level(const std::string& text, const std::string& keyword) {
-    const std::string upper = uppercase_copy(text);
-    const std::string target = uppercase_copy(keyword);
-    int nesting = 0;
-    bool in_string = false;
-
-    for (std::size_t index = 0; index < upper.size(); ++index) {
-        const char ch = upper[index];
-        if (ch == '\'') {
-            in_string = !in_string;
-            continue;
-        }
-        if (in_string) {
-            continue;
-        }
-        if (ch == '(') {
-            ++nesting;
-            continue;
-        }
-        if (ch == ')' && nesting > 0) {
-            --nesting;
-            continue;
-        }
-        if (nesting != 0) {
-            continue;
-        }
-        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
-            upper.compare(index, target.size(), target) == 0) {
-            const std::size_t tail = index + target.size();
-            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
-                return index;
-            }
-        }
-    }
-
-    return std::string::npos;
-}
-
-std::string trim_command_keyword(const std::string& text, const std::string& keyword) {
-    const std::size_t position = find_keyword_top_level(text, keyword);
-    if (position == std::string::npos) {
-        return {};
-    }
-    return trim_copy(text.substr(position + keyword.size()));
-}
-
-std::size_t find_keyword_top_level_from(
-    const std::string& text,
-    const std::string& keyword,
-    std::size_t start_index) {
-    const std::string upper = uppercase_copy(text);
-    const std::string target = uppercase_copy(keyword);
-
-    bool in_string = false;
-    int nesting = 0;
-    for (std::size_t index = start_index; index < upper.size(); ++index) {
-        const char ch = upper[index];
-        if (ch == '\'' && (index == 0U || upper[index - 1U] != '\\')) {
-            in_string = !in_string;
-            continue;
-        }
-        if (in_string) {
-            continue;
-        }
-        if (ch == '(') {
-            ++nesting;
-            continue;
-        }
-        if (ch == ')' && nesting > 0) {
-            --nesting;
-            continue;
-        }
-        if (nesting != 0) {
-            continue;
-        }
-        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
-            upper.compare(index, target.size(), target) == 0) {
-            const std::size_t tail = index + target.size();
-            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
-                return index;
-            }
-        }
-    }
-
-    return std::string::npos;
-}
-
-std::size_t find_first_keyword_top_level(
-    const std::string& text,
-    std::initializer_list<std::string> keywords,
-    std::size_t start_index = 0U) {
-    std::size_t result = std::string::npos;
-    for (const std::string& keyword : keywords) {
-        const std::size_t position = find_keyword_top_level_from(text, keyword, start_index);
-        if (position == std::string::npos) {
-            continue;
-        }
-        result = result == std::string::npos ? position : std::min(result, position);
-    }
-    return result;
-}
-
-std::size_t find_last_keyword_top_level(
-    const std::string& text,
-    std::initializer_list<std::string> keywords) {
-    std::size_t result = std::string::npos;
-    for (const std::string& keyword : keywords) {
-        std::size_t search_index = 0U;
-        while (search_index < text.size()) {
-            const std::size_t position = find_keyword_top_level_from(text, keyword, search_index);
-            if (position == std::string::npos) {
-                break;
-            }
-            result = result == std::string::npos ? position : std::max(result, position);
-            search_index = position + 1U;
-        }
-    }
-    return result;
-}
-
-std::string extract_command_clause(
-    const std::string& text,
-    const std::string& keyword,
-    std::initializer_list<std::string> stop_keywords = {}) {
-    const std::size_t position = find_keyword_top_level(text, keyword);
-    if (position == std::string::npos) {
-        return {};
-    }
-
-    const std::size_t value_start = position + keyword.size();
-    const std::size_t value_end = find_first_keyword_top_level(text, stop_keywords, value_start);
-    if (value_end == std::string::npos) {
-        return trim_copy(text.substr(value_start));
-    }
-    return trim_copy(text.substr(value_start, value_end - value_start));
-}
-
-std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text) {
-    std::vector<ReplaceAssignment> assignments;
-    for (const std::string& part : split_csv_like(text)) {
-        const std::size_t with_position = find_keyword_top_level(part, "WITH");
-        if (with_position == std::string::npos) {
-            continue;
-        }
-        assignments.push_back({
-            .field_name = trim_copy(part.substr(0U, with_position)),
-            .expression = trim_copy(part.substr(with_position + 4U))
-        });
-    }
-    return assignments;
-}
-
-std::vector<CalculateAssignment> parse_calculate_assignments(const std::string& text) {
-    std::vector<CalculateAssignment> assignments;
-    for (const std::string& part : split_csv_like(text)) {
-        std::size_t to_position = find_keyword_top_level(part, "INTO");
-        std::size_t keyword_length = 4U;
-        if (to_position == std::string::npos) {
-            to_position = find_keyword_top_level(part, "TO");
-            keyword_length = 2U;
-        }
-        if (to_position == std::string::npos) {
-            continue;
-        }
-        assignments.push_back({
-            .aggregate_expression = trim_copy(part.substr(0U, to_position)),
-            .variable_name = trim_copy(part.substr(to_position + keyword_length))
-        });
-    }
-    return assignments;
-}
-
-AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::string& expression_text) {
-    AggregateScopeClause scope;
-    expression_text = trim_copy(text);
-    if (expression_text.empty()) {
-        return scope;
-    }
-
-    const std::size_t keyword_position = find_last_keyword_top_level(expression_text, {"NEXT", "RECORD", "REST", "ALL"});
-    if (keyword_position == std::string::npos) {
-        return scope;
-    }
-
-    const std::string keyword_and_tail = trim_copy(expression_text.substr(keyword_position));
-    const auto [keyword, tail] = split_first_word(keyword_and_tail);
-    const std::string normalized_keyword = normalize_identifier(keyword);
-
-    if ((normalized_keyword == "all" || normalized_keyword == "rest") && !tail.empty()) {
-        return scope;
-    }
-    if ((normalized_keyword == "next" || normalized_keyword == "record") && tail.empty()) {
-        return scope;
-    }
-    if (normalized_keyword != "all" &&
-        normalized_keyword != "rest" &&
-        normalized_keyword != "next" &&
-        normalized_keyword != "record") {
-        return scope;
-    }
-
-    expression_text = trim_copy(expression_text.substr(0U, keyword_position));
-    if (normalized_keyword == "rest") {
-        scope.kind = AggregateScopeKind::rest_records;
-    } else if (normalized_keyword == "next") {
-        scope.kind = AggregateScopeKind::next_records;
-        scope.raw_value = tail;
-    } else if (normalized_keyword == "record") {
-        scope.kind = AggregateScopeKind::record;
-        scope.raw_value = tail;
-    }
-    return scope;
-}
-
-std::string format_total_numeric_value(double value, std::uint8_t decimal_count) {
-    std::ostringstream stream;
-    if (decimal_count == 0U) {
-        stream << static_cast<long long>(std::llround(value));
-    } else {
-        stream << std::fixed << std::setprecision(decimal_count) << value;
-    }
-    return stream.str();
-}
-
-std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body, std::string& error_message) {
-    TotalCommandPlan plan;
-    plan.target_expression = extract_command_clause(body, "TO", {"ON"});
-    plan.on_field_name = extract_command_clause(body, "ON", {"FIELDS", "FOR", "WHILE", "IN", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
-    const std::string fields_text = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "IN", "NOOPTIMIZE", "ALL", "REST", "NEXT", "RECORD"});
-    if (!fields_text.empty()) {
-        plan.field_names = split_csv_like(fields_text);
-        for (std::string& field_name : plan.field_names) {
-            field_name = trim_copy(std::move(field_name));
-        }
-        plan.field_names.erase(
-            std::remove_if(plan.field_names.begin(), plan.field_names.end(), [](const std::string& field_name) {
-                return field_name.empty();
-            }),
-            plan.field_names.end());
-    }
-
-    plan.for_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "NOOPTIMIZE"});
-    plan.while_expression = extract_command_clause(body, "WHILE", {"IN", "NOOPTIMIZE"});
-    plan.in_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
-
-    std::string scope_text = trim_copy(body);
-    const std::size_t for_position = find_first_keyword_top_level(scope_text, {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
-    if (for_position != std::string::npos) {
-        scope_text = trim_copy(scope_text.substr(0U, for_position));
-    }
-    std::string ignored_expression;
-    plan.scope = parse_aggregate_scope_clause(scope_text, ignored_expression);
-
-    if (plan.target_expression.empty()) {
-        error_message = "TOTAL requires a TO target";
-        return std::nullopt;
-    }
-    if (plan.on_field_name.empty()) {
-        error_message = "TOTAL requires an ON field";
-        return std::nullopt;
-    }
-    return plan;
 }
 
 Program parse_program(const std::string& path) {
@@ -1249,6 +633,17 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "LOCAL ")) {
             statement.kind = StatementKind::local_declaration;
             statement.names = split_csv_like(line.substr(6U));
+        } else if (starts_with_insensitive(line, "PRIVATE ")) {
+            statement.kind = StatementKind::private_declaration;
+            statement.names = split_csv_like(line.substr(8U));
+        } else if (starts_with_insensitive(line, "STORE ")) {
+            statement.kind = StatementKind::store_command;
+            const std::string body = trim_copy(line.substr(6U));
+            const std::size_t to_position = find_keyword_top_level(body, "TO");
+            if (to_position != std::string::npos) {
+                statement.expression = trim_copy(body.substr(0U, to_position));
+                statement.names = split_csv_like(trim_copy(body.substr(to_position + 2U)));
+            }
         } else if (upper == "RETURN" || starts_with_insensitive(line, "RETURN ")) {
             statement.kind = StatementKind::return_statement;
         } else {
@@ -1270,80 +665,6 @@ Program parse_program(const std::string& path) {
     }
 
     return program;
-}
-
-PrgValue make_empty_value() {
-    return {};
-}
-
-PrgValue make_boolean_value(bool value) {
-    PrgValue result;
-    result.kind = PrgValueKind::boolean;
-    result.boolean_value = value;
-    return result;
-}
-
-PrgValue make_number_value(double value) {
-    PrgValue result;
-    result.kind = PrgValueKind::number;
-    result.number_value = value;
-    return result;
-}
-
-PrgValue make_string_value(std::string value) {
-    PrgValue result;
-    result.kind = PrgValueKind::string;
-    result.string_value = std::move(value);
-    return result;
-}
-
-bool value_as_bool(const PrgValue& value) {
-    switch (value.kind) {
-        case PrgValueKind::boolean:
-            return value.boolean_value;
-        case PrgValueKind::number:
-            return std::abs(value.number_value) > 0.000001;
-        case PrgValueKind::string:
-            return !value.string_value.empty();
-        case PrgValueKind::empty:
-            return false;
-    }
-    return false;
-}
-
-double value_as_number(const PrgValue& value) {
-    switch (value.kind) {
-        case PrgValueKind::boolean:
-            return value.boolean_value ? 1.0 : 0.0;
-        case PrgValueKind::number:
-            return value.number_value;
-        case PrgValueKind::string:
-            return value.string_value.empty() ? 0.0 : std::stod(value.string_value);
-        case PrgValueKind::empty:
-            return 0.0;
-    }
-    return 0.0;
-}
-
-std::string value_as_string(const PrgValue& value) {
-    switch (value.kind) {
-        case PrgValueKind::boolean:
-            return value.boolean_value ? "true" : "false";
-        case PrgValueKind::number: {
-            std::ostringstream stream;
-            if (std::abs(value.number_value - std::round(value.number_value)) < 0.000001) {
-                stream << std::llround(value.number_value);
-            } else {
-                stream << value.number_value;
-            }
-            return stream.str();
-        }
-        case PrgValueKind::string:
-            return value.string_value;
-        case PrgValueKind::empty:
-            return {};
-    }
-    return {};
 }
 
 }  // namespace
@@ -3282,6 +2603,23 @@ struct PrgRuntimeSession::Impl {
         return {};
     }
 
+    void restore_private_declarations(Frame& frame) {
+        for (const auto& [name, saved] : frame.private_saved_values) {
+            if (saved.has_value()) {
+                globals[name] = *saved;
+            } else {
+                globals.erase(name);
+            }
+        }
+    }
+
+    void pop_frame() {
+        if (!stack.empty()) {
+            restore_private_declarations(stack.back());
+            stack.pop_back();
+        }
+    }
+
     bool breakpoint_matches(const SourceLocation& location) const {
         const std::string normalized = normalize_path(location.file_path);
         return std::any_of(breakpoints.begin(), breakpoints.end(), [&](const RuntimeBreakpoint& breakpoint) {
@@ -4394,7 +3732,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
     Frame& frame = stack.back();
     if (frame.routine == nullptr || frame.pc >= frame.routine->statements.size()) {
-        stack.pop_back();
+        pop_frame();
         return {};
     }
 
@@ -4591,7 +3929,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         case StatementKind::return_statement:
-            stack.pop_back();
+            pop_frame();
             return {.frame_returned = true};
         case StatementKind::do_case_statement:
             frame.cases.push_back({
@@ -5194,6 +4532,26 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 frame.locals.try_emplace(normalized, make_empty_value());
             }
             return {};
+        case StatementKind::private_declaration:
+            for (const auto& name : statement.names) {
+                const std::string normalized = normalize_identifier(name);
+                const auto existing = globals.find(normalized);
+                if (existing != globals.end()) {
+                    frame.private_saved_values.try_emplace(normalized, existing->second);
+                    existing->second = make_empty_value();
+                } else {
+                    frame.private_saved_values.try_emplace(normalized, std::nullopt);
+                    globals[normalized] = make_empty_value();
+                }
+            }
+            return {};
+        case StatementKind::store_command: {
+            const PrgValue result = evaluate_expression(statement.expression, frame);
+            for (const auto& name : statement.names) {
+                assign_variable(frame, trim_copy(name), result);
+            }
+            return {};
+        }
         case StatementKind::no_op:
             return {};
     }
@@ -5266,7 +4624,7 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
     while (true) {
         while (!stack.empty() &&
                (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size())) {
-            stack.pop_back();
+            pop_frame();
         }
         if (event_dispatch_return_depth.has_value() && stack.size() <= *event_dispatch_return_depth) {
             event_dispatch_return_depth.reset();
@@ -5283,7 +4641,7 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
 
         const Statement* next = current_statement();
         if (next == nullptr) {
-            stack.pop_back();
+            pop_frame();
             continue;
         }
 
