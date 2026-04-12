@@ -3575,6 +3575,109 @@ void test_sql_result_cursor_command_seek_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_mutation_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_mutation_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "cFound = NAME\n"
+        "nFoundAmount = AMOUNT\n"
+        "REPLACE AMOUNT WITH 21, NAME WITH 'BRAVOX'\n"
+        "cAfterReplace = NAME\n"
+        "nAfterReplace = AMOUNT\n"
+        "DELETE\n"
+        "lDeleted = DELETED()\n"
+        "RECALL\n"
+        "lRecalled = DELETED()\n"
+        "DELETE FOR AMOUNT = 30\n"
+        "LOCATE FOR DELETED()\n"
+        "cDeletedName = NAME\n"
+        "nDeletedAmount = AMOUNT\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL mutation parity script should complete");
+    expect(state.sql_connections.empty(), "SQL mutation parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto found = state.globals.find("cfound");
+    const auto found_amount = state.globals.find("nfoundamount");
+    const auto after_replace = state.globals.find("cafterreplace");
+    const auto after_replace_amount = state.globals.find("nafterreplace");
+    const auto deleted = state.globals.find("ldeleted");
+    const auto recalled = state.globals.find("lrecalled");
+    const auto deleted_name = state.globals.find("cdeletedname");
+    const auto deleted_amount = state.globals.find("ndeletedamount");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL mutation parity");
+    expect(found != state.globals.end(), "LOCATE on a SQL cursor should expose the matching NAME");
+    expect(found_amount != state.globals.end(), "LOCATE on a SQL cursor should expose the matching AMOUNT");
+    expect(after_replace != state.globals.end(), "REPLACE on a SQL cursor should expose the updated NAME");
+    expect(after_replace_amount != state.globals.end(), "REPLACE on a SQL cursor should expose the updated AMOUNT");
+    expect(deleted != state.globals.end(), "DELETE on a SQL cursor should expose DELETED()");
+    expect(recalled != state.globals.end(), "RECALL on a SQL cursor should expose DELETED()");
+    expect(deleted_name != state.globals.end(), "DELETE FOR on a SQL cursor should expose the tombstoned NAME");
+    expect(deleted_amount != state.globals.end(), "DELETE FOR on a SQL cursor should expose the tombstoned AMOUNT");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL mutation parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL mutation checks");
+    }
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "BRAVO", "LOCATE should position the matching synthetic SQL row before mutation");
+    }
+    if (found_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_amount->second) == "20", "field resolution should expose the original SQL row values before mutation");
+    }
+    if (after_replace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_replace->second) == "BRAVOX", "REPLACE should update synthetic SQL character fields in place");
+    }
+    if (after_replace_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_replace_amount->second) == "21", "REPLACE should update synthetic SQL numeric fields in place");
+    }
+    if (deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted->second) == "true", "DELETE should tombstone the current synthetic SQL row");
+    }
+    if (recalled != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recalled->second) == "false", "RECALL should clear the synthetic SQL tombstone flag");
+    }
+    if (deleted_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_name->second) == "CHARLIE", "DELETE FOR should tombstone the matching synthetic SQL row");
+    }
+    if (deleted_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_amount->second) == "30", "DELETE FOR should preserve field lookup on the tombstoned synthetic SQL row");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL mutation checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.locate"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.replace"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
+        "SQL mutation commands should emit the same runtime events as local mutation commands");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_fault_containment() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faults";
@@ -4932,6 +5035,7 @@ int main() {
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
     test_sql_result_cursor_command_seek_parity();
+    test_sql_result_cursor_mutation_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();

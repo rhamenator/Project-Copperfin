@@ -184,6 +184,7 @@ struct CursorState {
     std::string active_order_key_domain_hint;
     bool active_order_descending = false;
     std::string filter_expression;
+    std::vector<vfp::DbfRecord> remote_records;
 };
 
 struct IndexedCandidate {
@@ -1435,15 +1436,14 @@ struct PrgRuntimeSession::Impl {
             cursor.active_order_normalization_hint);
         std::vector<IndexedCandidate> candidates;
         if (cursor.remote) {
-            candidates.reserve(cursor.record_count);
-            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno) {
-                const vfp::DbfRecord record = make_synthetic_sql_record(recno);
+            candidates.reserve(cursor.remote_records.size());
+            for (const auto& record : cursor.remote_records) {
                 if (!order_for_expression_matches_record(cursor.active_order_for_expression, record)) {
                     continue;
                 }
                 candidates.push_back({
                     .key = evaluate_index_expression(cursor.active_order_expression, record),
-                    .recno = recno
+                    .recno = record.record_index + 1U
                 });
             }
         } else {
@@ -1614,10 +1614,10 @@ struct PrgRuntimeSession::Impl {
         }
 
         if (cursor.remote) {
-            if (cursor.recno > cursor.record_count) {
+            if (cursor.recno > cursor.record_count || cursor.recno > cursor.remote_records.size()) {
                 return std::nullopt;
             }
-            return make_synthetic_sql_record(cursor.recno);
+            return cursor.remote_records[cursor.recno - 1U];
         }
         if (cursor.source_path.empty()) {
             return std::nullopt;
@@ -1732,8 +1732,25 @@ struct PrgRuntimeSession::Impl {
         const std::vector<ReplaceAssignment>& assignments,
         const Frame& frame) {
         if (cursor.remote) {
-            last_error_message = "REPLACE is not yet supported on remote SQL cursors";
-            return false;
+            if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size()) {
+                last_error_message = "REPLACE requires a current remote record";
+                return false;
+            }
+
+            vfp::DbfRecord& record = cursor.remote_records[cursor.recno - 1U];
+            for (const auto& assignment : assignments) {
+                const PrgValue value = evaluate_expression(assignment.expression, frame);
+                const std::string normalized_field = collapse_identifier(assignment.field_name);
+                auto field = std::find_if(record.values.begin(), record.values.end(), [&](vfp::DbfRecordValue& candidate) {
+                    return collapse_identifier(candidate.field_name) == normalized_field;
+                });
+                if (field == record.values.end()) {
+                    last_error_message = "Field not found on remote SQL cursor: " + assignment.field_name;
+                    return false;
+                }
+                field->display_value = value_as_string(value);
+            }
+            return true;
         }
         if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof) {
             last_error_message = "REPLACE requires a current local record";
@@ -1780,10 +1797,28 @@ struct PrgRuntimeSession::Impl {
 
     bool set_deleted_flag(CursorState& cursor, const Frame& frame, const std::string& for_expression, bool deleted) {
         if (cursor.remote) {
-            last_error_message = deleted
-                ? "DELETE is not yet supported on remote SQL cursors"
-                : "RECALL is not yet supported on remote SQL cursors";
-            return false;
+            std::vector<std::size_t> target_records;
+            if (for_expression.empty()) {
+                if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size()) {
+                    last_error_message = "This command requires a current remote record";
+                    return false;
+                }
+                target_records.push_back(cursor.recno);
+            } else {
+                const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+                for (std::size_t index = 0; index < cursor.remote_records.size(); ++index) {
+                    move_cursor_to(cursor, static_cast<long long>(index + 1U));
+                    if (current_record_matches_visibility(cursor, frame, for_expression)) {
+                        target_records.push_back(index + 1U);
+                    }
+                }
+                restore_cursor_snapshot(cursor, original);
+            }
+
+            for (const std::size_t recno : target_records) {
+                cursor.remote_records[recno - 1U].deleted = deleted;
+            }
+            return true;
         }
         if (cursor.source_path.empty()) {
             last_error_message = "This command requires a local table-backed cursor";
@@ -2664,7 +2699,14 @@ struct PrgRuntimeSession::Impl {
         }
 
         DataSessionState& session = current_session_state();
+        std::vector<vfp::DbfRecord> remote_records;
         session.aliases[target_area] = alias;
+        if (remote) {
+            remote_records.reserve(record_count);
+            for (std::size_t recno = 1U; recno <= record_count; ++recno) {
+                remote_records.push_back(make_synthetic_sql_record(recno));
+            }
+        }
         session.cursors[target_area] = CursorState{
             .work_area = target_area,
             .alias = alias,
@@ -2677,7 +2719,8 @@ struct PrgRuntimeSession::Impl {
             .recno = record_count == 0U ? 0U : 1U,
             .found = false,
             .bof = record_count == 0U,
-            .eof = record_count == 0U
+            .eof = record_count == 0U,
+            .remote_records = std::move(remote_records)
         };
         if (remote && sql_handle > 0) {
             auto& connections = current_sql_connections();
