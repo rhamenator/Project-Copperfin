@@ -154,6 +154,7 @@ struct CursorState {
     struct OrderState {
         std::string name;
         std::string expression;
+        std::string for_expression;
         std::string index_path;
         std::string normalization_hint;
         std::string collation_hint;
@@ -176,6 +177,7 @@ struct CursorState {
     std::vector<OrderState> orders;
     std::string active_order_name;
     std::string active_order_expression;
+    std::string active_order_for_expression;
     std::string active_order_path;
     std::string active_order_normalization_hint;
     std::string active_order_collation_hint;
@@ -196,6 +198,7 @@ struct CursorPositionSnapshot {
     bool eof = true;
     std::string active_order_name;
     std::string active_order_expression;
+    std::string active_order_for_expression;
     std::string active_order_path;
     std::string active_order_normalization_hint;
     std::string active_order_collation_hint;
@@ -1038,6 +1041,7 @@ struct PrgRuntimeSession::Impl {
                     orders.push_back({
                         .name = tag.name_hint.empty() ? collapse_identifier(tag.key_expression_hint) : tag.name_hint,
                         .expression = tag.key_expression_hint,
+                        .for_expression = tag.for_expression_hint,
                         .index_path = normalize_path(index_asset.path),
                         .normalization_hint = tag.normalization_hint,
                         .collation_hint = tag.collation_hint,
@@ -1053,6 +1057,7 @@ struct PrgRuntimeSession::Impl {
                 orders.push_back({
                     .name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
                     .expression = index_asset.probe.key_expression_hint,
+                    .for_expression = index_asset.probe.for_expression_hint,
                     .index_path = normalize_path(index_asset.path),
                     .normalization_hint = index_asset.probe.normalization_hint,
                     .collation_hint = index_asset.probe.collation_hint,
@@ -1163,6 +1168,25 @@ struct PrgRuntimeSession::Impl {
             }
         }
         return false;
+    }
+
+    bool order_for_expression_matches_record(const std::string& for_expression, const vfp::DbfRecord& record) const {
+        std::string canonical = uppercase_copy(trim_copy(for_expression));
+        canonical.erase(
+            std::remove_if(canonical.begin(), canonical.end(), [](unsigned char ch) {
+                return std::isspace(ch) != 0;
+            }),
+            canonical.end());
+        if (canonical.empty()) {
+            return true;
+        }
+        if (canonical == "DELETED()=.F.") {
+            return !record.deleted;
+        }
+        if (canonical == "DELETED()=.T.") {
+            return record.deleted;
+        }
+        return true;
     }
 
     std::string normalize_seek_key_for_order(std::string value, const std::string& normalization_hint) const {
@@ -1317,6 +1341,7 @@ struct PrgRuntimeSession::Impl {
         if (trimmed.empty() || trimmed == "0") {
             cursor.active_order_name.clear();
             cursor.active_order_expression.clear();
+            cursor.active_order_for_expression.clear();
             cursor.active_order_path.clear();
             cursor.active_order_normalization_hint.clear();
             cursor.active_order_collation_hint.clear();
@@ -1342,6 +1367,7 @@ struct PrgRuntimeSession::Impl {
 
             cursor.active_order_name = cursor.orders[index].name;
             cursor.active_order_expression = cursor.orders[index].expression;
+            cursor.active_order_for_expression = cursor.orders[index].for_expression;
             cursor.active_order_path = cursor.orders[index].index_path;
             cursor.active_order_normalization_hint = cursor.orders[index].normalization_hint;
             cursor.active_order_collation_hint = cursor.orders[index].collation_hint;
@@ -1358,6 +1384,7 @@ struct PrgRuntimeSession::Impl {
             if (cursor.remote) {
                 cursor.active_order_name = uppercase_copy(target_name);
                 cursor.active_order_expression = target_name;
+                cursor.active_order_for_expression.clear();
                 cursor.active_order_path.clear();
                 cursor.active_order_normalization_hint.clear();
                 cursor.active_order_collation_hint.clear();
@@ -1371,6 +1398,7 @@ struct PrgRuntimeSession::Impl {
 
         cursor.active_order_name = found->name;
         cursor.active_order_expression = found->expression;
+    cursor.active_order_for_expression = found->for_expression;
         cursor.active_order_path = found->index_path;
         cursor.active_order_normalization_hint = found->normalization_hint;
         cursor.active_order_collation_hint = found->collation_hint;
@@ -1390,6 +1418,7 @@ struct PrgRuntimeSession::Impl {
             if (!cursor.orders.empty()) {
                 cursor.active_order_name = cursor.orders.front().name;
                 cursor.active_order_expression = cursor.orders.front().expression;
+                cursor.active_order_for_expression = cursor.orders.front().for_expression;
                 cursor.active_order_path = cursor.orders.front().index_path;
                 cursor.active_order_normalization_hint = cursor.orders.front().normalization_hint;
                 cursor.active_order_collation_hint = cursor.orders.front().collation_hint;
@@ -1409,6 +1438,9 @@ struct PrgRuntimeSession::Impl {
             candidates.reserve(cursor.record_count);
             for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno) {
                 const vfp::DbfRecord record = make_synthetic_sql_record(recno);
+                if (!order_for_expression_matches_record(cursor.active_order_for_expression, record)) {
+                    continue;
+                }
                 candidates.push_back({
                     .key = evaluate_index_expression(cursor.active_order_expression, record),
                     .recno = recno
@@ -1423,6 +1455,9 @@ struct PrgRuntimeSession::Impl {
 
             candidates.reserve(table_result.table.records.size());
             for (const auto& record : table_result.table.records) {
+                if (!order_for_expression_matches_record(cursor.active_order_for_expression, record)) {
+                    continue;
+                }
                 candidates.push_back({
                     .key = evaluate_index_expression(cursor.active_order_expression, record),
                     .recno = record.record_index + 1U
@@ -1486,6 +1521,7 @@ struct PrgRuntimeSession::Impl {
             .eof = cursor.eof,
             .active_order_name = cursor.active_order_name,
             .active_order_expression = cursor.active_order_expression,
+            .active_order_for_expression = cursor.active_order_for_expression,
             .active_order_path = cursor.active_order_path,
             .active_order_normalization_hint = cursor.active_order_normalization_hint,
             .active_order_collation_hint = cursor.active_order_collation_hint,
@@ -1501,6 +1537,7 @@ struct PrgRuntimeSession::Impl {
         cursor.eof = snapshot.eof;
         cursor.active_order_name = snapshot.active_order_name;
         cursor.active_order_expression = snapshot.active_order_expression;
+        cursor.active_order_for_expression = snapshot.active_order_for_expression;
         cursor.active_order_path = snapshot.active_order_path;
         cursor.active_order_normalization_hint = snapshot.active_order_normalization_hint;
         cursor.active_order_collation_hint = snapshot.active_order_collation_hint;
@@ -2387,6 +2424,7 @@ struct PrgRuntimeSession::Impl {
         }
         cursor.active_order_name = original.active_order_name;
         cursor.active_order_expression = original.active_order_expression;
+        cursor.active_order_for_expression = original.active_order_for_expression;
         cursor.active_order_path = original.active_order_path;
         cursor.active_order_normalization_hint = original.active_order_normalization_hint;
         cursor.active_order_collation_hint = original.active_order_collation_hint;

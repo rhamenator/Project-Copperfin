@@ -92,7 +92,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `PRIVATE`
 - `STORE`
 
-The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDING` / `DESCENDING` direction control on the local `SET ORDER` / `SEEK` path, grounded `UPPER(...)` seek-key normalization on that same search path, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, function-order designator suffix parsing for `SEEK()` / `INDEXSEEK()` one-off `ASCENDING` / `DESCENDING` overrides, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
+The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDING` / `DESCENDING` direction control on the local `SET ORDER` / `SEEK` path, grounded `UPPER(...)` seek-key normalization on that same search path, first-pass grounded `FOR`-filtered order behavior for extracted `DELETED() = .F./.T.` hints, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, function-order designator suffix parsing for `SEEK()` / `INDEXSEEK()` one-off `ASCENDING` / `DESCENDING` overrides, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
 
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 

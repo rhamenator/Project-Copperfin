@@ -181,6 +181,36 @@ void write_synthetic_idx(const std::filesystem::path& path, const std::string& e
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_synthetic_idx_with_for(
+    const std::filesystem::path& path,
+    const std::string& expression,
+    const std::string& for_expression) {
+    std::vector<std::uint8_t> bytes(1024U, 0U);
+    write_le_u32(bytes, 0U, 512U);
+    write_le_u32(bytes, 4U, 0U);
+    write_le_u32(bytes, 8U, 1024U);
+    write_le_u16(bytes, 12U, static_cast<std::uint16_t>(std::min<std::size_t>(expression.size(), 220U)));
+    for (std::size_t index = 0; index < expression.size() && index < 220U; ++index) {
+        bytes[16U + index] = static_cast<std::uint8_t>(expression[index]);
+    }
+    for (std::size_t index = 0; index < for_expression.size() && index < 220U; ++index) {
+        bytes[236U + index] = static_cast<std::uint8_t>(for_expression[index]);
+    }
+
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+void mark_simple_dbf_record_deleted(const std::filesystem::path& path, std::size_t recno) {
+    constexpr std::size_t header_length = 32U + 32U + 1U;
+    constexpr std::size_t record_length = 1U + 10U;
+    std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+    const std::size_t deletion_offset = header_length + ((recno - 1U) * record_length);
+    file.seekp(static_cast<std::streamoff>(deletion_offset), std::ios::beg);
+    const char deleted = '*';
+    file.write(&deleted, 1);
+}
+
 void write_synthetic_ndx(
     const std::filesystem::path& path,
     const std::string& expression,
@@ -2503,6 +2533,88 @@ void test_order_and_tag_preserve_index_file_identity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_respects_grounded_order_for_expression_hints() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_expression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    mark_simple_dbf_record_deleted(table_path, 2U);
+    write_synthetic_idx_with_for(idx_path, "UPPER(NAME)", "DELETED() = .F.");
+
+    const fs::path main_path = temp_root / "order_for_expression.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "SEEK 'BRAVO'\n"
+        "lDeletedFound = FOUND()\n"
+        "lDeletedEof = EOF()\n"
+        "nDeletedRec = RECNO()\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "SEEK 'BRAVO'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "SEEK 'CHARLIE'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOR-filtered order SEEK script should complete");
+
+    const auto deleted_found = state.globals.find("ldeletedfound");
+    const auto deleted_eof = state.globals.find("ldeletedeof");
+    const auto deleted_rec = state.globals.find("ndeletedrec");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto visible_found = state.globals.find("lvisiblefound");
+    const auto visible_rec = state.globals.find("nvisiblerec");
+
+    expect(deleted_found != state.globals.end(), "SEEK on a filtered-out key should expose FOUND()");
+    expect(deleted_eof != state.globals.end(), "SEEK on a filtered-out key should expose EOF()");
+    expect(deleted_rec != state.globals.end(), "SEEK on a filtered-out key should expose RECNO()");
+    expect(near_found != state.globals.end(), "SET NEAR SEEK on a filtered-out key should expose FOUND()");
+    expect(near_rec != state.globals.end(), "SET NEAR SEEK on a filtered-out key should expose RECNO()");
+    expect(visible_found != state.globals.end(), "SEEK on a visible key should expose FOUND()");
+    expect(visible_rec != state.globals.end(), "SEEK on a visible key should expose RECNO()");
+
+    if (deleted_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_found->second) == "false", "SEEK should ignore keys filtered out by the grounded order FOR expression");
+    }
+    if (deleted_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_eof->second) == "true", "SEEK without SET NEAR should move to EOF when only a filtered-out key matches");
+    }
+    if (deleted_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_rec->second) == "4", "SEEK without SET NEAR should position after the visible rows when the filtered-out key is skipped");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "SET NEAR should still report a miss for a filtered-out key");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "3", "SET NEAR should move to the next visible indexed key after a filtered-out match");
+    }
+    if (visible_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_found->second) == "true", "SEEK should still find keys allowed by the grounded order FOR expression");
+    }
+    if (visible_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_rec->second) == "3", "SEEK should position on the visible row that survives the order FOR expression");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 void test_ndx_numeric_domain_guides_seek_near_ordering() {
     namespace fs = std::filesystem;
@@ -4733,6 +4845,7 @@ int main() {
     test_seek_related_index_functions();
     test_seek_function_accepts_direction_suffix_in_order_designator();
     test_order_and_tag_preserve_index_file_identity();
+    test_seek_respects_grounded_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
