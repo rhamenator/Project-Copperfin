@@ -3019,6 +3019,69 @@ void test_set_filter_scopes_local_cursor_visibility() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_filter_in_targets_nonselected_alias() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter_in";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "set_filter_in.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT People\n"
+        "SET FILTER TO AGE >= 30 IN Other\n"
+        "GO TOP\n"
+        "cPeopleTop = NAME\n"
+        "SELECT Other\n"
+        "GO TOP\n"
+        "cOtherTop = NAME\n"
+        "SET FILTER OFF IN Other\n"
+        "GO TOP\n"
+        "cOtherTopUnfiltered = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET FILTER ... IN script should complete");
+
+    const auto people_top = state.globals.find("cpeopletop");
+    const auto other_top = state.globals.find("cothertop");
+    const auto other_top_unfiltered = state.globals.find("cothertopunfiltered");
+
+    expect(people_top != state.globals.end(), "selected alias top row should be captured");
+    expect(other_top != state.globals.end(), "targeted alias filtered row should be captured");
+    expect(other_top_unfiltered != state.globals.end(), "targeted alias unfiltered row should be captured");
+
+    if (people_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_top->second) == "ALPHA", "SET FILTER ... IN Other should not affect People");
+    }
+    if (other_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_top->second) == "CHARLIE", "SET FILTER ... IN Other should affect the targeted alias");
+    }
+    if (other_top_unfiltered != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_top_unfiltered->second) == "ALPHA", "SET FILTER OFF IN Other should restore unfiltered navigation for the targeted alias");
+    }
+
+    expect(
+        std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.filter";
+        }) >= 2,
+        "SET FILTER ... IN and SET FILTER OFF IN should emit runtime.filter events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_do_while_and_loop_control_flow() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_while";
@@ -3950,6 +4013,7 @@ int main() {
     test_sql_result_cursor_read_only_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
+    test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
     test_text_endtext_literal_blocks();

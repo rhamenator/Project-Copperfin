@@ -4446,7 +4446,19 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             const auto [option_name, option_value] = split_first_word(statement.expression);
             const std::string normalized_name = normalize_identifier(option_name);
             if (normalized_name == "filter") {
-                CursorState* cursor = resolve_cursor_target({});
+                std::string filter_clause = trim_copy(option_value);
+                if (starts_with_insensitive(filter_clause, "TO ")) {
+                    filter_clause = trim_copy(filter_clause.substr(3U));
+                }
+
+                std::string filter_target;
+                const std::size_t in_position = find_keyword_top_level(filter_clause, "IN");
+                if (in_position != std::string::npos) {
+                    filter_target = trim_copy(filter_clause.substr(in_position + 2U));
+                    filter_clause = trim_copy(filter_clause.substr(0U, in_position));
+                }
+
+                CursorState* cursor = resolve_cursor_target(filter_target);
                 if (cursor == nullptr) {
                     last_error_message = "SET FILTER requires a selected work area";
                     last_fault_location = statement.location;
@@ -4454,15 +4466,11 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string filter_value = trim_copy(option_value);
-                if (starts_with_insensitive(filter_value, "TO ")) {
-                    filter_value = trim_copy(filter_value.substr(3U));
-                }
-                if (normalize_identifier(filter_value) == "off") {
-                    filter_value.clear();
+                if (normalize_identifier(filter_clause) == "off") {
+                    filter_clause.clear();
                 }
 
-                cursor->filter_expression = filter_value;
+                cursor->filter_expression = filter_clause;
                 if (!cursor->filter_expression.empty() && cursor->record_count > 0U &&
                     !current_record_matches_visibility(*cursor, frame, {})) {
                     (void)seek_visible_record(*cursor, frame, static_cast<long long>(cursor->recno), 1, {}, false);
