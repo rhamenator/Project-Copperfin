@@ -1067,6 +1067,102 @@ void test_plain_use_reuses_current_selected_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_select_and_use_in_designator_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_designator_expressions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    const fs::path orders_path = temp_root / "orders.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "ROME"});
+    write_simple_dbf(orders_path, {"ORDER1", "ORDER2"});
+
+    const fs::path main_path = temp_root / "designator_expressions.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN 0\n"
+        "nTargetArea = 1\n"
+        "SELECT nTargetArea\n"
+        "nSelectedNumeric = SELECT()\n"
+        "cSelectedNumericAlias = ALIAS()\n"
+        "cTargetAlias = 'Cities'\n"
+        "SELECT cTargetAlias\n"
+        "nSelectedAlias = SELECT()\n"
+        "cSelectedAlias = ALIAS()\n"
+        "USE '" + orders_path.string() + "' ALIAS Orders IN cTargetAlias\n"
+        "nOrdersArea = SELECT('Orders')\n"
+        "nCitiesArea = SELECT('Cities')\n"
+        "nSelectedAfterUse = SELECT()\n"
+        "cSelectedAfterUse = ALIAS()\n"
+        "GO TOP\n"
+        "cTopAfterUse = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "expression-based SELECT and USE ... IN script should complete");
+
+    const auto selected_numeric = state.globals.find("nselectednumeric");
+    const auto selected_numeric_alias = state.globals.find("cselectednumericalias");
+    const auto selected_alias = state.globals.find("nselectedalias");
+    const auto selected_alias_name = state.globals.find("cselectedalias");
+    const auto orders_area = state.globals.find("nordersarea");
+    const auto cities_area = state.globals.find("ncitiesarea");
+    const auto selected_after_use = state.globals.find("nselectedafteruse");
+    const auto selected_after_use_name = state.globals.find("cselectedafteruse");
+    const auto top_after_use = state.globals.find("ctopafteruse");
+
+    expect(selected_numeric != state.globals.end(), "SELECT nTargetArea should expose the selected area");
+    expect(selected_numeric_alias != state.globals.end(), "SELECT nTargetArea should expose the selected alias");
+    expect(selected_alias != state.globals.end(), "SELECT cTargetAlias should expose the selected area");
+    expect(selected_alias_name != state.globals.end(), "SELECT cTargetAlias should expose the selected alias");
+    expect(orders_area != state.globals.end(), "USE ... IN cTargetAlias should expose the replacement alias area");
+    expect(cities_area != state.globals.end(), "USE ... IN cTargetAlias should clear the replaced alias lookup");
+    expect(selected_after_use != state.globals.end(), "USE ... IN cTargetAlias should preserve the selected work area");
+    expect(selected_after_use_name != state.globals.end(), "USE ... IN cTargetAlias should select the replacement alias");
+    expect(top_after_use != state.globals.end(), "USE ... IN cTargetAlias should expose the replacement table's current record");
+
+    if (selected_numeric != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_numeric->second) == "1", "SELECT nTargetArea should resolve numeric expression targets");
+    }
+    if (selected_numeric_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_numeric_alias->second) == "People", "SELECT nTargetArea should select the numeric target area");
+    }
+    if (selected_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_alias->second) == "2", "SELECT cTargetAlias should resolve alias expression targets");
+    }
+    if (selected_alias_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_alias_name->second) == "Cities", "SELECT cTargetAlias should select the targeted alias");
+    }
+    if (orders_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(orders_area->second) == "2", "USE ... IN cTargetAlias should reuse the targeted alias work area");
+    }
+    if (cities_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cities_area->second) == "0", "USE ... IN cTargetAlias should remove the replaced alias");
+    }
+    if (selected_after_use != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_use->second) == "2", "USE ... IN cTargetAlias should keep the targeted work area selected");
+    }
+    if (selected_after_use_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_use_name->second) == "Orders", "USE ... IN cTargetAlias should select the replacement alias");
+    }
+    if (top_after_use != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_after_use->second) == "ORDER1", "USE ... IN cTargetAlias should expose the replacement table rows");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_select_zero_and_use_in_zero_reuse_closed_work_area() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_select_zero_reuse";
@@ -3991,6 +4087,7 @@ int main() {
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();
     test_plain_use_reuses_current_selected_work_area();
+    test_select_and_use_in_designator_expressions();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();

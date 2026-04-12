@@ -1093,27 +1093,13 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
-    std::optional<int> resolve_use_target_work_area(const std::string& in_expression) {
+    std::optional<int> resolve_use_target_work_area(const std::string& in_expression, const Frame& frame) {
         const std::string trimmed_expression = trim_copy(in_expression);
         if (trimmed_expression.empty()) {
             return current_selected_work_area();
         }
 
-        std::string area_text;
-        if (trimmed_expression.size() >= 2U && trimmed_expression.front() == '\'' && trimmed_expression.back() == '\'') {
-            area_text = unquote_string(trimmed_expression);
-        } else {
-            const PrgValue area_value = evaluate_expression(trimmed_expression, stack.back());
-            area_text = trim_copy(value_as_string(area_value));
-            if (area_text.empty()) {
-                const bool bare_identifier = std::all_of(trimmed_expression.begin(), trimmed_expression.end(), [](unsigned char ch) {
-                    return std::isalnum(ch) != 0 || ch == '_';
-                });
-                if (bare_identifier) {
-                    area_text = trimmed_expression;
-                }
-            }
-        }
+        const std::string area_text = evaluate_cursor_designator_expression(trimmed_expression, frame);
         if (area_text.empty()) {
             return 0;
         }
@@ -2415,7 +2401,7 @@ struct PrgRuntimeSession::Impl {
                 alias = table_path.stem().string();
             }
 
-            const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression);
+            const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression, stack.back());
             if (!requested_target_area.has_value()) {
                 return false;
             }
@@ -2458,7 +2444,7 @@ struct PrgRuntimeSession::Impl {
             field_count = synthetic_record_count == 0U ? 0U : 3U;
         }
 
-        const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression);
+        const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression, stack.back());
         if (!requested_target_area.has_value()) {
             return false;
         }
@@ -4368,7 +4354,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::select_command: {
-            std::string selection = trim_copy(value_as_string(evaluate_expression(statement.expression, frame)));
+            std::string selection = evaluate_cursor_designator_expression(statement.expression, frame);
             if (selection.empty()) {
                 selection = trim_copy(statement.expression);
             }
