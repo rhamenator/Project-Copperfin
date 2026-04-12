@@ -4139,6 +4139,119 @@ void test_sql_result_cursor_mutation_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_navigation_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_navigation_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_navigation_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "cAliasBefore = ALIAS()\n"
+        "nOtherRecBefore = RECNO()\n"
+        "nCustRecBefore = RECNO('sqlcust')\n"
+        "GO TOP IN sqlcust\n"
+        "nCustRecAfterGoTop = RECNO('sqlcust')\n"
+        "SKIP 1 IN sqlcust\n"
+        "nCustRecAfterSkip = RECNO('sqlcust')\n"
+        "LOCATE FOR AMOUNT = 30 IN sqlcust\n"
+        "nCustRecAfterLocate = RECNO('sqlcust')\n"
+        "GO 99 IN sqlcust\n"
+        "nCustRecAfterGoEdge = RECNO('sqlcust')\n"
+        "cAliasAfterCommands = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL navigation IN-target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL navigation IN-target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_before = state.globals.find("ncustrecbefore");
+    const auto cust_rec_after_go_top = state.globals.find("ncustrecaftergotop");
+    const auto cust_rec_after_skip = state.globals.find("ncustrecafterskip");
+    const auto cust_rec_after_locate = state.globals.find("ncustrecafterlocate");
+    const auto cust_rec_after_go_edge = state.globals.find("ncustrecaftergoedge");
+    const auto alias_after_commands = state.globals.find("caliasaftercommands");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL navigation IN-target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL navigation IN-target parity");
+    expect(alias_before != state.globals.end(), "Selected alias before targeted SQL navigation commands should be captured");
+    expect(other_rec_before != state.globals.end(), "Selected SQL cursor RECNO() before targeted navigation should be captured");
+    expect(cust_rec_before != state.globals.end(), "Target SQL cursor RECNO() before targeted navigation should be captured");
+    expect(cust_rec_after_go_top != state.globals.end(), "Target SQL cursor RECNO() after GO TOP IN should be captured");
+    expect(cust_rec_after_skip != state.globals.end(), "Target SQL cursor RECNO() after SKIP IN should be captured");
+    expect(cust_rec_after_locate != state.globals.end(), "Target SQL cursor RECNO() after LOCATE IN should be captured");
+    expect(cust_rec_after_go_edge != state.globals.end(), "Target SQL cursor RECNO() after GO edge IN should be captured");
+    expect(alias_after_commands != state.globals.end(), "Selected alias after targeted SQL navigation commands should be captured");
+    expect(other_rec_after != state.globals.end(), "Selected SQL cursor RECNO() after targeted navigation should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL navigation IN-target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL navigation checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL navigation checks");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_before->second)) == "SQLOTHER", "selected SQL alias should start on sqlother before targeted navigation");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before targeted navigation");
+    }
+    if (cust_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_before->second) == "1", "target SQL cursor should start at first record before targeted navigation");
+    }
+    if (cust_rec_after_go_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_go_top->second) == "1", "GO TOP IN should reposition the targeted SQL cursor to first record");
+    }
+    if (cust_rec_after_skip != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_skip->second) == "2", "SKIP IN should move the targeted SQL cursor pointer");
+    }
+    if (cust_rec_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_locate->second) == "3", "LOCATE ... IN should position the targeted SQL cursor on the match");
+    }
+    if (cust_rec_after_go_edge != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_go_edge->second) == "4", "GO 99 IN should move targeted SQL cursor to EOF position");
+    }
+    if (alias_after_commands != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_commands->second)) == "SQLOTHER", "targeted SQL navigation commands should preserve the selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "targeted SQL navigation commands should preserve the selected SQL cursor pointer");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL navigation checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.go"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.skip"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.locate"; }),
+        "targeted SQL GO/SKIP/LOCATE commands should emit runtime navigation events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_fault_containment() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faults";
@@ -5568,6 +5681,7 @@ int main() {
     test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
+    test_sql_result_cursor_navigation_in_target_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
