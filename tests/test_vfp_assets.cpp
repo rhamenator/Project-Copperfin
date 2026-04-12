@@ -119,6 +119,22 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
     return bytes;
 }
 
+std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_descriptive_tag_name() {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 1U);
+    write_le_u32(bytes, 1028U, 4U * 512U);
+
+    write_ascii(bytes, (3U * 512U) - 10U, "FULLNAME");
+    write_ascii(bytes, 4U * 512U, "UPPER(LAST+FIRST)");
+    return bytes;
+}
+
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
     constexpr std::uint16_t block_size = 512U;
     std::vector<std::uint8_t> bytes(3U * block_size, 0U);
@@ -260,6 +276,23 @@ void test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions() {
         expect(
             tag->for_expression_hint == "DELETED() = .F.",
             "tag-page-local binding should ignore earlier decoy FOR expressions");
+    }
+}
+
+void test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hints() {
+    const auto bytes = make_synthetic_cdx_bytes_with_descriptive_tag_name();
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::cdx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible CDX with a descriptive tag name");
+    expect(result.probe.tags.size() == 1U, "descriptive-tag CDX probe should expose the single tag");
+    if (!result.probe.tags.empty()) {
+        expect(result.probe.tags.front().name_hint == "FULLNAME", "descriptive tag names should be preserved");
+        expect(
+            result.probe.tags.front().key_expression_hint == "UPPER(LAST+FIRST)",
+            "tag-page-local binding should attach expressions even when the tag name does not resemble the expression");
+        expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "descriptive-tag CDX probe should preserve the stored tag page hint");
+        expect(result.probe.tags.front().normalization_hint == "upper", "descriptive-tag CDX probe should still derive normalization hints");
+        expect(result.probe.tags.front().collation_hint == "case-folded", "descriptive-tag CDX probe should still derive collation hints");
     }
 }
 
@@ -903,6 +936,7 @@ int main() {
     test_parse_index_probe_for_cdx();
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();
+    test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hints();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
     test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();

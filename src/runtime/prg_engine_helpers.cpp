@@ -257,13 +257,14 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
     const auto split_top_level_plus = [&](const std::string& value) {
         return split_top_level(value, '+');
     };
-    const auto parse_function_arguments = [&](const std::string& prefix) -> std::optional<std::vector<std::string>> {
-        if (!starts_with_insensitive(trimmed, prefix + "(") || trimmed.back() != ')') {
+    const auto parse_function_arguments = [&](const std::string& value, const std::string& prefix) -> std::optional<std::vector<std::string>> {
+        const std::string candidate = trim_copy(value);
+        if (!starts_with_insensitive(candidate, prefix + "(") || candidate.back() != ')') {
             return std::nullopt;
         }
 
         std::vector<std::string> arguments = split_top_level(
-            trim_copy(trimmed.substr(prefix.size() + 1U, trimmed.size() - prefix.size() - 2U)),
+            trim_copy(candidate.substr(prefix.size() + 1U, candidate.size() - prefix.size() - 2U)),
             ',');
         for (std::string& argument : arguments) {
             argument = trim_copy(std::move(argument));
@@ -302,19 +303,28 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             return is_concat_safe(inner);
         };
         const auto is_supported_binary_with_count = [&](const std::string& prefix) {
-            if (!starts_with_insensitive(part, prefix + "(") || part.back() != ')') {
+            const auto arguments = parse_function_arguments(part, prefix);
+            if (!arguments.has_value() || arguments->size() != 2U) {
                 return false;
             }
-            const std::vector<std::string> arguments = split_top_level(
-                trim_copy(part.substr(prefix.size() + 1U, part.size() - prefix.size() - 2U)),
-                ',');
-            if (arguments.size() != 2U) {
+            if (!is_concat_safe((*arguments)[0])) {
                 return false;
             }
-            if (!is_concat_safe(arguments[0])) {
+            return try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value();
+        };
+        const auto is_supported_substr = [&]() {
+            const auto arguments = parse_function_arguments(part, "SUBSTR");
+            if (!arguments.has_value() || (arguments->size() != 2U && arguments->size() != 3U)) {
                 return false;
             }
-            return try_parse_numeric_index_value(evaluate_index_expression(arguments[1], record)).has_value();
+            if (!is_concat_safe((*arguments)[0])) {
+                return false;
+            }
+            if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value()) {
+                return false;
+            }
+            return arguments->size() == 2U ||
+                try_parse_numeric_index_value(evaluate_index_expression((*arguments)[2], record)).has_value();
         };
 
         return is_supported_unary("UPPER") ||
@@ -322,7 +332,9 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             is_supported_unary("ALLTRIM") ||
             is_supported_unary("LTRIM") ||
             is_supported_unary("RTRIM") ||
-            is_supported_binary_with_count("LEFT");
+            is_supported_binary_with_count("LEFT") ||
+            is_supported_binary_with_count("RIGHT") ||
+            is_supported_substr();
     };
 
     const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
@@ -368,7 +380,7 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
         })) {
         return *rtrim_value;
     }
-    if (const auto left_args = parse_function_arguments("LEFT")) {
+    if (const auto left_args = parse_function_arguments(trimmed, "LEFT")) {
         if (left_args->size() == 2U) {
             std::string value = evaluate_index_expression((*left_args)[0], record);
             const auto count = try_parse_numeric_index_value(evaluate_index_expression((*left_args)[1], record));
@@ -382,6 +394,50 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
                     value.resize(length);
                 }
                 return value;
+            }
+        }
+    }
+    if (const auto right_args = parse_function_arguments(trimmed, "RIGHT")) {
+        if (right_args->size() == 2U) {
+            std::string value = evaluate_index_expression((*right_args)[0], record);
+            const auto count = try_parse_numeric_index_value(evaluate_index_expression((*right_args)[1], record));
+            if (count.has_value()) {
+                const long long requested = static_cast<long long>(std::llround(*count));
+                if (requested <= 0LL) {
+                    return {};
+                }
+                const std::size_t length = std::min<std::size_t>(value.size(), static_cast<std::size_t>(requested));
+                if (length < value.size()) {
+                    value = value.substr(value.size() - length);
+                }
+                return value;
+            }
+        }
+    }
+    if (const auto substr_args = parse_function_arguments(trimmed, "SUBSTR")) {
+        if (substr_args->size() == 2U || substr_args->size() == 3U) {
+            std::string value = evaluate_index_expression((*substr_args)[0], record);
+            const auto start = try_parse_numeric_index_value(evaluate_index_expression((*substr_args)[1], record));
+            if (start.has_value()) {
+                const long long requested_start = static_cast<long long>(std::llround(*start));
+                if (requested_start <= 0LL) {
+                    return {};
+                }
+                const std::size_t start_index = static_cast<std::size_t>(requested_start - 1LL);
+                if (start_index >= value.size()) {
+                    return {};
+                }
+                if (substr_args->size() == 2U) {
+                    return value.substr(start_index);
+                }
+                const auto length = try_parse_numeric_index_value(evaluate_index_expression((*substr_args)[2], record));
+                if (length.has_value()) {
+                    const long long requested_length = static_cast<long long>(std::llround(*length));
+                    if (requested_length <= 0LL) {
+                        return {};
+                    }
+                    return value.substr(start_index, static_cast<std::size_t>(requested_length));
+                }
             }
         }
     }

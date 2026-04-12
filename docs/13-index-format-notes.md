@@ -8,6 +8,7 @@ Current coverage:
   - Minimal header probe for block size, root node offset, free node hint, key-length hint, and key-pool hint.
   - Treated as multi-tag index containers.
   - First-pass directory leaf-page parsing now surfaces stored tag names plus conservative per-tag page hints from plausible node pages, and page-local key/`FOR` expression hints now prefer the hinted tag-page neighborhood before falling back to whole-file heuristics.
+  - When a stored tag name is descriptive rather than expression-shaped, single local tag-page expressions can now still bind through the grounded page hint instead of being dropped back to derived fallback names.
   - First-pass expression-derived normalization/collation hints are now surfaced for tag expressions such as `UPPER(...)`/`LOWER(...)`, with the current implementation explicitly treated as heuristic metadata rather than true binary collation fidelity.
   - Focused regression coverage now exercises direct `.cdx`/`.dcx` probing, adversarial decoy-expression cases, and `DBC` companion discovery.
 - `IDX`

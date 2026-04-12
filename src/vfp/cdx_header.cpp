@@ -378,7 +378,7 @@ std::vector<CdxTagDescriptor> collect_directory_leaf_tags(
 
 std::vector<std::string> expression_symbols(const std::string& expression) {
     static const std::set<std::string> ignored_symbols{
-        "UPPER", "LOWER", "ALLTRIM", "LTRIM", "RTRIM", "PADR", "PADL", "TRANSFORM"
+        "UPPER", "LOWER", "ALLTRIM", "LTRIM", "RTRIM", "LEFT", "RIGHT", "SUBSTR", "PADR", "PADL", "TRANSFORM"
     };
 
     std::vector<std::string> symbols;
@@ -516,6 +516,15 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
             best_score = 0;
             found_match = false;
             score_runs(expressions);
+        }
+
+        if (!found_match && local_expressions.size() == 1U) {
+            const PrintableRun& local_expression = local_expressions.front();
+            if (used_expression_offsets.find(local_expression.offset) == used_expression_offsets.end()) {
+                best_expression = local_expression;
+                found_match = true;
+                best_score = 60;
+            }
         }
 
         if (!found_match || best_score < 60) {
