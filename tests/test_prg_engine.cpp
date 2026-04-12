@@ -2197,6 +2197,75 @@ void test_seek_uses_grounded_order_normalization_hints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_supports_composite_tag_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_composite";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "LAST", .type = 'C', .length = 10U},
+        {.name = "FIRST", .type = 'C', .length = 10U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"DOE", "JOHN"},
+        {"SMITH", "JANE"},
+        {"TAYLOR", "ALEX"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "composite seek DBF fixture should be created");
+    write_synthetic_cdx(cdx_path, "FULLNAME", "UPPER(LAST+FIRST)");
+
+    const fs::path main_path = temp_root / "seek_composite.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG FULLNAME\n"
+        "lSeekCmd = SEEK('smithjane')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK('doejohn', 'People', 'FULLNAME')\n"
+        "nSeekFnRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "composite-expression seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK on a composite tag should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command composite SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() on a composite tag should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() composite RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should match concatenated composite-tag keys");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "2", "command SEEK should land on the concatenated composite-tag match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should match concatenated composite-tag keys");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "1", "SEEK() should land on the requested composite-tag match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_near_changes_seek_failure_position() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near";
@@ -6239,6 +6308,7 @@ int main() {
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
     test_set_order_and_seek_for_local_tables();
     test_seek_uses_grounded_order_normalization_hints();
+    test_seek_supports_composite_tag_expressions();
     test_set_near_changes_seek_failure_position();
     test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();

@@ -5,7 +5,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <sstream>
+#include <vector>
 
 namespace copperfin::runtime {
 
@@ -213,6 +215,84 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
     const std::string trimmed = trim_copy(expression);
     const std::string upper = uppercase_copy(trimmed);
 
+    const auto split_top_level_plus = [](const std::string& value) {
+        std::vector<std::string> parts;
+        std::string current;
+        current.reserve(value.size());
+        int depth = 0;
+        char quote = '\0';
+        for (char ch : value) {
+            if (quote != '\0') {
+                current.push_back(ch);
+                if (ch == quote) {
+                    quote = '\0';
+                }
+                continue;
+            }
+            if (ch == '\'' || ch == '"') {
+                quote = ch;
+                current.push_back(ch);
+                continue;
+            }
+            if (ch == '(') {
+                ++depth;
+                current.push_back(ch);
+                continue;
+            }
+            if (ch == ')' && depth > 0) {
+                --depth;
+                current.push_back(ch);
+                continue;
+            }
+            if (ch == '+' && depth == 0) {
+                parts.push_back(trim_copy(current));
+                current.clear();
+                continue;
+            }
+            current.push_back(ch);
+        }
+        parts.push_back(trim_copy(current));
+        return parts;
+    };
+
+    std::function<bool(const std::string&)> is_concat_safe = [&](const std::string& candidate) {
+        const std::string part = trim_copy(candidate);
+        if (part.empty()) {
+            return false;
+        }
+
+        const std::vector<std::string> nested_parts = split_top_level_plus(part);
+        if (nested_parts.size() > 1U) {
+            return std::all_of(nested_parts.begin(), nested_parts.end(), is_concat_safe);
+        }
+
+        if (part.size() >= 2U &&
+            ((part.front() == '\'' && part.back() == '\'') ||
+             (part.front() == '"' && part.back() == '"'))) {
+            return true;
+        }
+        if (record_field_value(record, part).has_value()) {
+            return true;
+        }
+        if (try_parse_numeric_index_value(part).has_value()) {
+            return false;
+        }
+
+        const auto is_supported_unary = [&](const std::string& prefix) {
+            if (!starts_with_insensitive(part, prefix + "(") || part.back() != ')') {
+                return false;
+            }
+            const std::string inner = trim_copy(part.substr(prefix.size() + 1U, part.size() - prefix.size() - 2U));
+            return is_concat_safe(inner);
+        };
+
+        return is_supported_unary("UPPER") ||
+            is_supported_unary("LOWER") ||
+            is_supported_unary("ALLTRIM") ||
+            is_supported_unary("LTRIM") ||
+            is_supported_unary("RTRIM");
+    };
+
     const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
         if (!starts_with_insensitive(trimmed, prefix + "(") || trimmed.back() != ')') {
             return std::nullopt;
@@ -255,6 +335,16 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             }
         })) {
         return *rtrim_value;
+    }
+
+    const std::vector<std::string> concat_parts = split_top_level_plus(trimmed);
+    if (concat_parts.size() > 1U &&
+        std::all_of(concat_parts.begin(), concat_parts.end(), is_concat_safe)) {
+        std::string combined;
+        for (const auto& part : concat_parts) {
+            combined += evaluate_index_expression(part, record);
+        }
+        return combined;
     }
 
     if (trimmed.size() >= 2U &&
