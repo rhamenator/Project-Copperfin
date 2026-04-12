@@ -3045,6 +3045,80 @@ void test_use_again_and_alias_collision_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_in_selected_alias_replacement_clears_old_alias_and_order_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_selected_alias_replacement";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path cities_path = temp_root / "cities.dbf";
+    const fs::path people_idx_path = temp_root / "people.idx";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(cities_path, {"OSLO", "ROME"});
+    write_synthetic_idx(people_idx_path, "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "selected_alias_replacement.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "GO BOTTOM\n"
+        "USE '" + cities_path.string() + "' ALIAS Cities IN People\n"
+        "nOldAliasArea = SELECT('People')\n"
+        "nNewAliasArea = SELECT('Cities')\n"
+        "cAliasAfter = ALIAS()\n"
+        "cOrderAfter = ORDER()\n"
+        "nRecAfter = RECNO()\n"
+        "cTopAfter = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "selected alias replacement script should complete");
+
+    const auto old_alias_area = state.globals.find("noldaliasarea");
+    const auto new_alias_area = state.globals.find("nnewaliasarea");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto order_after = state.globals.find("corderafter");
+    const auto rec_after = state.globals.find("nrecafter");
+    const auto top_after = state.globals.find("ctopafter");
+
+    expect(old_alias_area != state.globals.end(), "SELECT('People') after selected alias replacement should be captured");
+    expect(new_alias_area != state.globals.end(), "SELECT('Cities') after selected alias replacement should be captured");
+    expect(alias_after != state.globals.end(), "ALIAS() after selected alias replacement should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after selected alias replacement should be captured");
+    expect(rec_after != state.globals.end(), "RECNO() after selected alias replacement should be captured");
+    expect(top_after != state.globals.end(), "field access after selected alias replacement should be captured");
+
+    if (old_alias_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(old_alias_area->second) == "0", "selected alias replacement should clear the old alias lookup");
+    }
+    if (new_alias_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(new_alias_area->second) == "1", "selected alias replacement should reuse the selected work area in place");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after->second) == "Cities", "selected alias replacement should expose the new alias immediately");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "selected alias replacement should clear the old active order state when the replacement has no orders");
+    }
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "1", "selected alias replacement should reset the cursor position for the new table");
+    }
+    if (top_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_after->second) == "OSLO", "selected alias replacement should expose the new table's first record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 void test_select_missing_alias_is_an_error() {
     namespace fs = std::filesystem;
@@ -4851,6 +4925,7 @@ int main() {
     test_foxtools_registration_is_scoped_by_data_session();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
+    test_use_in_selected_alias_replacement_clears_old_alias_and_order_state();
     test_select_missing_alias_is_an_error();
     test_use_in_missing_alias_is_an_error();
     test_sql_result_cursors_and_ole_actions();
