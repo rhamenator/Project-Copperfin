@@ -4252,6 +4252,115 @@ void test_sql_result_cursor_navigation_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_filter_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_filter_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_filter_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "cAliasBefore = ALIAS()\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET FILTER TO AMOUNT >= 20 IN sqlcust\n"
+        "GO TOP IN sqlcust\n"
+        "nCustRecAfterGoTop = RECNO('sqlcust')\n"
+        "SKIP 1 IN sqlcust\n"
+        "nCustRecAfterSkip = RECNO('sqlcust')\n"
+        "SKIP 1 IN sqlcust\n"
+        "nCustRecAfterSkipEdge = RECNO('sqlcust')\n"
+        "SET FILTER TO IN sqlcust\n"
+        "GO TOP IN sqlcust\n"
+        "nCustRecAfterFilterOff = RECNO('sqlcust')\n"
+        "cAliasAfter = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL filter IN-target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL filter IN-target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_after_go_top = state.globals.find("ncustrecaftergotop");
+    const auto cust_rec_after_skip = state.globals.find("ncustrecafterskip");
+    const auto cust_rec_after_skip_edge = state.globals.find("ncustrecafterskipedge");
+    const auto cust_rec_after_filter_off = state.globals.find("ncustrecafterfilteroff");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL filter IN-target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL filter IN-target parity");
+    expect(alias_before != state.globals.end(), "Selected alias before targeted SQL filter flow should be captured");
+    expect(other_rec_before != state.globals.end(), "Selected SQL cursor RECNO() before targeted SQL filter flow should be captured");
+    expect(cust_rec_after_go_top != state.globals.end(), "Target SQL cursor RECNO() after GO TOP IN with filter should be captured");
+    expect(cust_rec_after_skip != state.globals.end(), "Target SQL cursor RECNO() after SKIP IN with filter should be captured");
+    expect(cust_rec_after_skip_edge != state.globals.end(), "Target SQL cursor RECNO() after filtered SKIP edge should be captured");
+    expect(cust_rec_after_filter_off != state.globals.end(), "Target SQL cursor RECNO() after clearing filter should be captured");
+    expect(alias_after != state.globals.end(), "Selected alias after targeted SQL filter flow should be captured");
+    expect(other_rec_after != state.globals.end(), "Selected SQL cursor RECNO() after targeted SQL filter flow should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL filter IN-target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL filter checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL filter checks");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_before->second)) == "SQLOTHER", "selected SQL alias should remain on sqlother before targeted filter flow");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before targeted filter flow");
+    }
+    if (cust_rec_after_go_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_go_top->second) == "2", "GO TOP IN should honor targeted SQL filter visibility");
+    }
+    if (cust_rec_after_skip != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_skip->second) == "3", "SKIP IN should move across filtered visible SQL rows");
+    }
+    if (cust_rec_after_skip_edge != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_skip_edge->second) == "4", "filtered SKIP IN edge should move targeted SQL cursor to EOF position");
+    }
+    if (cust_rec_after_filter_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_filter_off->second) == "1", "clearing targeted SQL filter should restore full GO TOP visibility");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after->second)) == "SQLOTHER", "targeted SQL filter flow should preserve selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "targeted SQL filter flow should preserve selected SQL cursor pointer");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL filter checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.go"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.skip"; }),
+        "targeted SQL SET FILTER/GO/SKIP flow should emit runtime.filter and navigation events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_fault_containment() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_faults";
@@ -5682,6 +5791,7 @@ int main() {
     test_sql_result_cursor_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();
+    test_sql_result_cursor_filter_in_target_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
