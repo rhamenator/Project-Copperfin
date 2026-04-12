@@ -138,13 +138,54 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
 }
 
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
-    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    const std::filesystem::path target_path(path);
+    const std::filesystem::path temp_path = target_path.string() + ".cptmp";
+    const std::filesystem::path backup_path = target_path.string() + ".cpbak";
+
+    std::error_code ec;
+    std::filesystem::remove(temp_path, ec);
+    std::filesystem::remove(backup_path, ec);
+
+    std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
     if (!output) {
         return false;
     }
 
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
-    return static_cast<bool>(output);
+    if (!output) {
+        std::filesystem::remove(temp_path, ec);
+        return false;
+    }
+
+    output.close();
+    if (!output) {
+        std::filesystem::remove(temp_path, ec);
+        return false;
+    }
+
+    const bool had_target = std::filesystem::exists(target_path, ec);
+    if (had_target) {
+        std::filesystem::rename(target_path, backup_path, ec);
+        if (ec) {
+            std::filesystem::remove(temp_path, ec);
+            return false;
+        }
+    }
+
+    std::filesystem::rename(temp_path, target_path, ec);
+    if (ec) {
+        if (had_target) {
+            std::error_code restore_ec;
+            std::filesystem::rename(backup_path, target_path, restore_ec);
+        }
+        std::filesystem::remove(temp_path, ec);
+        return false;
+    }
+
+    if (had_target) {
+        std::filesystem::remove(backup_path, ec);
+    }
+    return true;
 }
 
 std::string infer_memo_sidecar_path(const std::string& path) {
@@ -1058,10 +1099,31 @@ DbfWriteResult create_dbf_table_file(
         }
     }
 
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(path);
+    const bool had_table_file = !original_table_bytes.empty();
+    const std::string memo_path = infer_memo_sidecar_path(path);
+    const std::vector<std::uint8_t> original_memo_bytes = has_memo_fields ? read_binary_file(memo_path) : std::vector<std::uint8_t>{};
+    const bool had_memo_file = has_memo_fields && !original_memo_bytes.empty();
+
     if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = records.size()};
     }
-    if (has_memo_fields && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
+    if (has_memo_fields && !write_binary_file(memo_path, memo_bytes)) {
+        if (had_table_file) {
+            write_binary_file(path, original_table_bytes);
+        } else {
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+        }
+
+        if (had_memo_file) {
+            write_binary_file(memo_path, original_memo_bytes);
+        } else {
+            std::error_code ignored;
+            if (std::filesystem::is_regular_file(memo_path, ignored)) {
+                std::filesystem::remove(memo_path, ignored);
+            }
+        }
         return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = records.size()};
     }
 
@@ -1078,6 +1140,7 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
+    input.close();
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
@@ -1112,6 +1175,8 @@ DbfWriteResult replace_record_field_value(
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
+    input.close();
+    const std::vector<std::uint8_t> original_table_bytes = bytes;
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
@@ -1129,12 +1194,17 @@ DbfWriteResult replace_record_field_value(
 
     DbfWriteResult result;
     std::vector<std::uint8_t> memo_bytes;
+    std::vector<std::uint8_t> original_memo_bytes;
+    std::string memo_path;
+    bool had_memo_file = false;
     if (is_memo_pointer_field(field->type)) {
-        const std::string memo_path = infer_memo_sidecar_path(path);
+        memo_path = infer_memo_sidecar_path(path);
         if (memo_path.empty()) {
             return {.ok = false, .error = "No memo sidecar path could be inferred for the table.", .record_count = header_result.header.record_count};
         }
-        memo_bytes = read_binary_file(memo_path);
+        original_memo_bytes = read_binary_file(memo_path);
+        had_memo_file = !original_memo_bytes.empty();
+        memo_bytes = original_memo_bytes;
         result = write_memo_field_bytes(
             bytes,
             header_result.header.header_length + (record_index * header_result.header.record_length) + field->offset,
@@ -1150,7 +1220,16 @@ DbfWriteResult replace_record_field_value(
     if (!write_binary_file(path, bytes)) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
     }
-    if (is_memo_pointer_field(field->type) && !write_binary_file(infer_memo_sidecar_path(path), memo_bytes)) {
+    if (is_memo_pointer_field(field->type) && !write_binary_file(memo_path, memo_bytes)) {
+        write_binary_file(path, original_table_bytes);
+        if (had_memo_file) {
+            write_binary_file(memo_path, original_memo_bytes);
+        } else {
+            std::error_code ignored;
+            if (std::filesystem::is_regular_file(memo_path, ignored)) {
+                std::filesystem::remove(memo_path, ignored);
+            }
+        }
         return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = header_result.header.record_count};
     }
     return result;
@@ -1169,6 +1248,7 @@ DbfWriteResult set_record_deleted_flag(
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
+    input.close();
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {

@@ -674,6 +674,42 @@ void test_visual_asset_memo_sidecar_repair_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_memo_replace_recovers_directory_sidecar_path() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_memo_rollback_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "rollback.dbf";
+    const fs::path memo_path = temp_dir / "rollback.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TITLE", .type = 'C', .length = 12U},
+        {.name = "BODY", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"FIRST", "Initial memo payload"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "setup should create a memo-backed table for rollback validation");
+    fs::remove(memo_path, ignored);
+    fs::create_directories(memo_path, ignored);
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated payload should rollback");
+    expect(replace_result.ok, "memo replacement should recover when the sidecar path is an unexpected directory");
+    expect(fs::is_regular_file(memo_path), "memo replacement should restore a regular memo sidecar file");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "table should remain readable after recovering the memo sidecar path");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "Updated payload should rollback", "memo replacement should persist the updated payload after recovery");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -689,6 +725,7 @@ int main() {
     test_append_blank_rejects_unsupported_field_layouts_without_changing_file();
     test_parse_dbf_table_rejects_truncated_visual_asset();
     test_visual_asset_memo_sidecar_repair_round_trip();
+    test_memo_replace_recovers_directory_sidecar_path();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
