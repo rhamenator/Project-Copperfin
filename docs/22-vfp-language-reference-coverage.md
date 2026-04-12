@@ -94,10 +94,10 @@ The native runtime/parser currently has first-pass support for these command fam
 
 The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDING` / `DESCENDING` direction control on the local `SET ORDER` / `SEEK` path, grounded `UPPER(...)` seek-key normalization on that same search path, first-pass composite tag-expression evaluation for concatenated keys such as `UPPER(LAST+FIRST)`, first-pass substring-style tag evaluation for `LEFT(...)`, `RIGHT(...)`, and `SUBSTR(...)` expressions such as `UPPER(LEFT(NAME, 3))`, `UPPER(RIGHT(NAME, 3))`, and `UPPER(SUBSTR(NAME, 2, 3))`, first-pass grounded `FOR`-filtered order behavior for extracted `DELETED() = .F./.T.` hints, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, function-order designator suffix parsing for `SEEK()` / `INDEXSEEK()` one-off `ASCENDING` / `DESCENDING` overrides, command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and descriptive stored CDX tag names such as `FULLNAME` now bind to their hinted tag-page-local expressions even when the tag name itself does not resemble the key expression. The runtime also preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
 
+That local indexed-search slice now also evaluates a broader grounded tag-expression family on the shipped `SEEK` path, including `LEFT(...)`, `RIGHT(...)`, `SUBSTR(...)`, `PADL(...)`, and `PADR(...)` expressions captured from loaded tag metadata.
+
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
-- `SELECT()`, `ALIAS()`, `USED()`, `DBF()`, `FCOUNT()`
-- `RECCOUNT()`, `RECNO()`, `FOUND()`, `EOF()`, `BOF()`, `DELETED()`
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
 - `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`

@@ -326,6 +326,19 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             return arguments->size() == 2U ||
                 try_parse_numeric_index_value(evaluate_index_expression((*arguments)[2], record)).has_value();
         };
+        const auto is_supported_pad = [&](const std::string& prefix) {
+            const auto arguments = parse_function_arguments(part, prefix);
+            if (!arguments.has_value() || (arguments->size() != 2U && arguments->size() != 3U)) {
+                return false;
+            }
+            if (!is_concat_safe((*arguments)[0])) {
+                return false;
+            }
+            if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value()) {
+                return false;
+            }
+            return arguments->size() == 2U || is_concat_safe((*arguments)[2]);
+        };
 
         return is_supported_unary("UPPER") ||
             is_supported_unary("LOWER") ||
@@ -334,7 +347,9 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             is_supported_unary("RTRIM") ||
             is_supported_binary_with_count("LEFT") ||
             is_supported_binary_with_count("RIGHT") ||
-            is_supported_substr();
+            is_supported_substr() ||
+            is_supported_pad("PADL") ||
+            is_supported_pad("PADR");
     };
 
     const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
@@ -440,6 +455,54 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
                 }
             }
         }
+    }
+    const auto apply_pad = [&](const std::string& prefix, bool left_pad) -> std::optional<std::string> {
+        const auto pad_args = parse_function_arguments(trimmed, prefix);
+        if (!pad_args.has_value() || (pad_args->size() != 2U && pad_args->size() != 3U)) {
+            return std::nullopt;
+        }
+
+        std::string value = evaluate_index_expression((*pad_args)[0], record);
+        const auto length = try_parse_numeric_index_value(evaluate_index_expression((*pad_args)[1], record));
+        if (!length.has_value()) {
+            return std::nullopt;
+        }
+
+        const long long requested = static_cast<long long>(std::llround(*length));
+        if (requested <= 0LL) {
+            return std::string{};
+        }
+
+        const std::size_t target_length = static_cast<std::size_t>(requested);
+        if (value.size() > target_length) {
+            value.resize(target_length);
+            return value;
+        }
+
+        char pad_character = ' ';
+        if (pad_args->size() == 3U) {
+            const std::string pad_text = evaluate_index_expression((*pad_args)[2], record);
+            if (!pad_text.empty()) {
+                pad_character = pad_text.front();
+            }
+        }
+
+        if (value.size() < target_length) {
+            const std::size_t padding = target_length - value.size();
+            if (left_pad) {
+                value.insert(value.begin(), padding, pad_character);
+            } else {
+                value.append(padding, pad_character);
+            }
+        }
+
+        return value;
+    };
+    if (const auto padl_value = apply_pad("PADL", true)) {
+        return *padl_value;
+    }
+    if (const auto padr_value = apply_pad("PADR", false)) {
+        return *padr_value;
     }
 
     const std::vector<std::string> concat_parts = split_top_level_plus(trimmed);
