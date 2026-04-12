@@ -455,6 +455,53 @@ void test_currency_and_datetime_field_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_double_field_create_replace_and_append_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_double_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "metrics.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "SCORE", .type = 'B', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"ALPHA", "10.5"},
+        {"BRAVO", "-2.25"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support Double (B) fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Double-backed DBFs should remain readable after creation");
+    expect(parse_result.table.records.size() == 2U, "Double-backed DBFs should expose created rows");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "10.5", "created Double fields should round-trip positive values");
+        expect(parse_result.table.records[1].values[1].display_value == "-2.25", "created Double fields should round-trip negative values");
+    }
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "SCORE", "21.125");
+    expect(replace_result.ok, "replace_record_field_value should support Double (B) fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support Double (B) fields");
+    expect(append_result.record_count == 3U, "Double-backed append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "Double-backed DBFs should remain readable after mutation");
+    expect(parse_result.table.records.size() == 3U, "Double-backed DBFs should expose appended rows");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[1].values[1].display_value == "21.125", "Double field replacements should persist");
+        expect(parse_result.table.records[2].values[1].display_value == "0", "blank appended Double fields should initialize to zero");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_append_blank_rejects_unsupported_field_layouts_without_changing_file() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -470,7 +517,7 @@ void test_append_blank_rejects_unsupported_field_layouts_without_changing_file()
     write_le_u16(table_bytes, 8U, 65U);
     write_le_u16(table_bytes, 10U, 9U);
 
-    write_field_descriptor(table_bytes, 32U, "VALUE", 'B', 1U, 8U);
+    write_field_descriptor(table_bytes, 32U, "VALUE", 'Q', 1U, 8U);
     table_bytes[64U] = 0x0DU;
     table_bytes[65U] = 0x20U;
     write_ascii(table_bytes, 66U, "12345678");
@@ -584,6 +631,7 @@ int main() {
     test_indexed_table_mutations_fail_fast_without_changing_files();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
+    test_double_field_create_replace_and_append_round_trip();
     test_append_blank_rejects_unsupported_field_layouts_without_changing_file();
     test_parse_dbf_table_rejects_truncated_visual_asset();
     test_visual_asset_memo_sidecar_repair_round_trip();

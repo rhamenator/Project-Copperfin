@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -266,7 +267,7 @@ std::optional<RawFieldDescriptor> find_raw_field(
 }
 
 bool supports_direct_field_writes(char field_type) {
-    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'I' ||
+    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'B' || field_type == 'I' ||
            field_type == 'Y' || field_type == 'T';
 }
 
@@ -276,7 +277,7 @@ bool supports_table_field_storage(char field_type) {
 
 bool supports_blank_field_initialization(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'D' || field_type == 'L' ||
-           field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'M';
+           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'M';
 }
 
 std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
@@ -532,6 +533,26 @@ DbfWriteResult write_field_bytes(
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
         }
+        case 'B': {
+            const std::string text = trim_both(value);
+            double parsed = 0.0;
+            if (!text.empty()) {
+                std::size_t consumed = 0U;
+                try {
+                    parsed = std::stod(text, &consumed);
+                } catch (const std::exception&) {
+                    return {.ok = false, .error = "Double fields only accept numeric values.", .record_count = header.record_count};
+                }
+                if (consumed != text.size()) {
+                    return {.ok = false, .error = "Double fields only accept numeric values.", .record_count = header.record_count};
+                }
+            }
+
+            std::array<std::uint8_t, 8U> raw{};
+            std::memcpy(raw.data(), &parsed, raw.size());
+            std::copy(raw.begin(), raw.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            break;
+        }
         case 'I': {
             const std::string text = trim_both(value);
             if (text.empty()) {
@@ -612,6 +633,12 @@ DbfWriteResult append_blank_record_bytes(
             case 'L':
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
                 break;
+                case 'B':
+                    std::fill_n(
+                        table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                        field.length,
+                        static_cast<std::uint8_t>(0U));
+                    break;
             case 'I':
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
@@ -777,6 +804,19 @@ std::string decode_value(
             const std::int32_t value = static_cast<std::int32_t>(read_le_u32(raw, 0U));
             return std::to_string(value);
         }
+        case 'B': {
+            if (raw.size() < 8U) {
+                return {};
+            }
+            double value = 0.0;
+            std::array<std::uint8_t, 8U> storage{};
+            std::copy_n(raw.begin(), 8U, storage.begin());
+            std::memcpy(&value, storage.data(), storage.size());
+            std::ostringstream stream;
+            stream.precision(15);
+            stream << value;
+            return trim_both(stream.str());
+        }
         case 'T': {
             if (raw.size() < 8U) {
                 return {};
@@ -926,6 +966,8 @@ DbfWriteResult create_dbf_table_file(
                 return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
             }
             has_memo_fields = true;
+        } else if (field.type == 'B' && field.length != 8U) {
+            return {.ok = false, .error = "Double fields require a width of exactly 8 bytes."};
         } else if (field.type == 'I' && field.length != 4U) {
             return {.ok = false, .error = "Integer fields require a width of exactly 4 bytes."};
         } else if ((field.type == 'Y' || field.type == 'T') && field.length != 8U) {

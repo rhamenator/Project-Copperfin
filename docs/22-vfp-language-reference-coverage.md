@@ -123,7 +123,7 @@ The official command inventory is much larger than the current runtime. The deep
 ### Local Table Mutation And Query Flow
 
 - add the table-editing and table-browse commands needed for real legacy business applications
-- keep strengthening the shared DBF/FPT mutation path so runtime commands do not regress FoxPro-compatible memo-backed tables, first-pass fixed-width `I`/`Y`/`T` field writes, and other core FoxPro field types, and keep the new indexed-table plus unsupported-layout fail-fast guards in place until real structural/indexed storage fidelity exists
+- keep strengthening the shared DBF/FPT mutation path so runtime commands do not regress FoxPro-compatible memo-backed tables, first-pass fixed-width `B`/`I`/`Y`/`T` field writes, and other core FoxPro field types, and keep the new indexed-table plus unsupported-layout fail-fast guards in place until real structural/indexed storage fidelity exists
 - extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN`, first-pass `TOTAL` with `IN` targeting and local `N/F/I/Y` support, and `CALCULATE` families toward broader xBase parity
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 

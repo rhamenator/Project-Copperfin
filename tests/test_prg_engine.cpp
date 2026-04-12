@@ -5638,7 +5638,7 @@ void test_append_blank_for_unsupported_field_layout_surfaces_runtime_error() {
     for (std::size_t index = 0; index < 5U; ++index) {
         table_bytes[32U + index] = static_cast<std::uint8_t>(value_field[index]);
     }
-    table_bytes[32U + 11U] = static_cast<std::uint8_t>('B');
+    table_bytes[32U + 11U] = static_cast<std::uint8_t>('Q');
     write_le_u32(table_bytes, 32U + 12U, 1U);
     table_bytes[32U + 16U] = 8U;
     table_bytes[64U] = 0x0DU;
