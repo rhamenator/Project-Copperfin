@@ -1217,6 +1217,56 @@ struct PrgRuntimeSession::Impl {
         return value;
     }
 
+    std::string derive_order_normalization_hint(const std::string& expression) const {
+        const std::string upper = uppercase_copy(trim_copy(expression));
+        std::vector<std::string> hints;
+        const auto append_hint = [&](const std::string& hint) {
+            if (std::find(hints.begin(), hints.end(), hint) == hints.end()) {
+                hints.push_back(hint);
+            }
+        };
+
+        if (upper.find("UPPER(") != std::string::npos) {
+            append_hint("upper");
+        }
+        if (upper.find("LOWER(") != std::string::npos) {
+            append_hint("lower");
+        }
+        if (upper.find("ALLTRIM(") != std::string::npos) {
+            append_hint("alltrim");
+        }
+        if (upper.find("LTRIM(") != std::string::npos) {
+            append_hint("ltrim");
+        }
+        if (upper.find("RTRIM(") != std::string::npos) {
+            append_hint("rtrim");
+        }
+
+        std::string joined;
+        for (std::size_t index = 0; index < hints.size(); ++index) {
+            if (index != 0U) {
+                joined += ",";
+            }
+            joined += hints[index];
+        }
+        return joined;
+    }
+
+    std::string derive_order_collation_hint(
+        const std::string& expression,
+        const std::string& normalization_hint) const {
+        const std::string upper = uppercase_copy(trim_copy(expression));
+        if (upper.find("UPPER(") != std::string::npos || upper.find("LOWER(") != std::string::npos) {
+            return "case-folded";
+        }
+        if (upper.find("CHRTRAN(") != std::string::npos ||
+            upper.find("STRTRAN(") != std::string::npos ||
+            !normalization_hint.empty()) {
+            return "expression-normalized";
+        }
+        return {};
+    }
+
     bool can_open_table_cursor(
         const std::string& resolved_path,
         const std::string& alias,
@@ -1385,12 +1435,13 @@ struct PrgRuntimeSession::Impl {
         });
         if (found == cursor.orders.end()) {
             if (cursor.remote) {
+                const std::string normalization_hint = derive_order_normalization_hint(target_name);
                 cursor.active_order_name = uppercase_copy(target_name);
                 cursor.active_order_expression = target_name;
                 cursor.active_order_for_expression.clear();
                 cursor.active_order_path.clear();
-                cursor.active_order_normalization_hint.clear();
-                cursor.active_order_collation_hint.clear();
+                cursor.active_order_normalization_hint = normalization_hint;
+                cursor.active_order_collation_hint = derive_order_collation_hint(target_name, normalization_hint);
                 cursor.active_order_key_domain_hint.clear();
                 cursor.active_order_descending = descending_override.value_or(false);
                 return true;
