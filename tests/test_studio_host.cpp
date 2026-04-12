@@ -152,6 +152,101 @@ void test_open_document_preserves_validation_findings() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_open_document_preserves_memo_validation_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_memo_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "payload_truncated.scx";
+    const fs::path sidecar_path = temp_dir / "payload_truncated.sct";
+
+    {
+        std::vector<std::uint8_t> table_bytes(115U, 0U);
+        table_bytes[0] = 0x30U;
+        table_bytes[1] = 126U;
+        table_bytes[2] = 4U;
+        table_bytes[3] = 11U;
+        table_bytes[4] = 0x01U;
+        table_bytes[8] = 97U;
+        table_bytes[10] = 18U;
+        table_bytes[11] = 0U;
+        table_bytes[28] = 0x00U;
+        table_bytes[29] = 0x03U;
+        table_bytes[32] = 'O';
+        table_bytes[33] = 'B';
+        table_bytes[34] = 'J';
+        table_bytes[35] = 'N';
+        table_bytes[36] = 'A';
+        table_bytes[37] = 'M';
+        table_bytes[38] = 'E';
+        table_bytes[43] = 'C';
+        table_bytes[44] = 1U;
+        table_bytes[48] = 12U;
+        table_bytes[64] = 'P';
+        table_bytes[65] = 'R';
+        table_bytes[66] = 'O';
+        table_bytes[67] = 'P';
+        table_bytes[68] = 'E';
+        table_bytes[69] = 'R';
+        table_bytes[70] = 'T';
+        table_bytes[71] = 'I';
+        table_bytes[72] = 'E';
+        table_bytes[73] = 'S';
+        table_bytes[75] = 'M';
+        table_bytes[76] = 13U;
+        table_bytes[80] = 4U;
+        table_bytes[96] = 0x0DU;
+        table_bytes[97] = 0x20U;
+        table_bytes[98] = 't';
+        table_bytes[99] = 'x';
+        table_bytes[100] = 't';
+        table_bytes[101] = 'T';
+        table_bytes[102] = 'i';
+        table_bytes[103] = 't';
+        table_bytes[104] = 'l';
+        table_bytes[105] = 'e';
+        table_bytes[110] = 0x01U;
+        table_bytes[114] = 0x1AU;
+
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        memo_bytes[3] = 2U;
+        memo_bytes[6] = 0x02U;
+        memo_bytes[7] = 0x00U;
+        memo_bytes[512U + 3U] = 1U;
+        memo_bytes[512U + 4U] = 0x00U;
+        memo_bytes[512U + 5U] = 0x00U;
+        memo_bytes[512U + 6U] = 0x03U;
+        memo_bytes[512U + 7U] = 0x84U;
+        std::ofstream output(sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const copperfin::studio::StudioOpenRequest request{
+        .path = form_path.string(),
+        .read_only = true
+    };
+
+    const auto result = copperfin::studio::open_document(request);
+    expect(result.ok, "open_document should still succeed for forms with truncated memo payloads");
+    expect(
+        std::any_of(
+            result.document.inspection.validation_issues.begin(),
+            result.document.inspection.validation_issues.end(),
+            [](const copperfin::vfp::AssetValidationIssue& issue) {
+                return issue.code == "memo.payload_truncated";
+            }),
+        "Studio documents should preserve memo payload validation findings");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -159,6 +254,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_switch();
     test_open_document_infers_form_sidecar();
     test_open_document_preserves_validation_findings();
+    test_open_document_preserves_memo_validation_findings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <fstream>
+#include <set>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -40,6 +42,81 @@ bool is_dbf_family_asset(AssetFamily family) {
 bool is_index_extension(const std::string& extension) {
     return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||
            extension == ".ndx" || extension == ".mdx";
+}
+
+std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return static_cast<std::uint16_t>(bytes[offset]) |
+           (static_cast<std::uint16_t>(bytes[offset + 1U]) << 8U);
+}
+
+std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return static_cast<std::uint32_t>(bytes[offset]) |
+           (static_cast<std::uint32_t>(bytes[offset + 1U]) << 8U) |
+           (static_cast<std::uint32_t>(bytes[offset + 2U]) << 16U) |
+           (static_cast<std::uint32_t>(bytes[offset + 3U]) << 24U);
+}
+
+std::uint16_t read_be_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return static_cast<std::uint16_t>((static_cast<std::uint16_t>(bytes[offset]) << 8U) |
+                                      static_cast<std::uint16_t>(bytes[offset + 1U]));
+}
+
+std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
+    return (static_cast<std::uint32_t>(bytes[offset]) << 24U) |
+           (static_cast<std::uint32_t>(bytes[offset + 1U]) << 16U) |
+           (static_cast<std::uint32_t>(bytes[offset + 2U]) << 8U) |
+           static_cast<std::uint32_t>(bytes[offset + 3U]);
+}
+
+std::vector<std::uint8_t> read_binary_file(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return {};
+    }
+
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
+std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
+    std::string value;
+    value.reserve(length);
+    for (std::size_t index = 0; index < length && (offset + index) < bytes.size(); ++index) {
+        const std::uint8_t raw = bytes[offset + index];
+        if (raw == 0U) {
+            break;
+        }
+        value.push_back(static_cast<char>(raw));
+    }
+
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
+        value.pop_back();
+    }
+    return value;
+}
+
+struct RawFieldDescriptor {
+    std::string name;
+    char type = '\0';
+    std::uint32_t offset = 0;
+    std::uint8_t length = 0;
+};
+
+std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes) {
+    std::vector<RawFieldDescriptor> fields;
+    std::size_t descriptor_offset = 32U;
+    while ((descriptor_offset + 32U) <= table_bytes.size() && table_bytes[descriptor_offset] != 0x0DU) {
+        fields.push_back({
+            .name = read_ascii_name(table_bytes, descriptor_offset, 11U),
+            .type = static_cast<char>(table_bytes[descriptor_offset + 11U]),
+            .offset = read_le_u32(table_bytes, descriptor_offset + 12U),
+            .length = table_bytes[descriptor_offset + 16U]
+        });
+        descriptor_offset += 32U;
+    }
+    return fields;
 }
 
 std::string memo_sidecar_path_for(const std::filesystem::path& path, AssetFamily family) {
@@ -200,6 +277,15 @@ void append_validation_issue(
     });
 }
 
+bool has_validation_issue(
+    const AssetInspectionResult& result,
+    const std::string& code,
+    const std::string& path) {
+    return std::any_of(result.validation_issues.begin(), result.validation_issues.end(), [&](const AssetValidationIssue& issue) {
+        return issue.code == code && issue.path == path;
+    });
+}
+
 void validate_dbf_storage(
     AssetInspectionResult& result,
     const std::string& path,
@@ -277,6 +363,115 @@ void validate_expected_companions(
             "index.structural_sidecar_missing",
             path,
             "The DBF-family asset expects a structural/production index companion, but no matching companion file was found.");
+    }
+}
+
+void validate_memo_sidecar(
+    AssetInspectionResult& result,
+    const std::string& table_path,
+    AssetFamily family,
+    const DbfHeader& header,
+    const std::vector<std::uint8_t>& table_bytes) {
+    if (!asset_expects_memo_sidecar(family, header)) {
+        return;
+    }
+
+    const std::string memo_path = memo_sidecar_path_for(std::filesystem::path(table_path), family);
+    if (memo_path.empty()) {
+        return;
+    }
+
+    std::error_code ignored;
+    if (!std::filesystem::exists(memo_path, ignored)) {
+        return;
+    }
+
+    const std::vector<std::uint8_t> memo_bytes = read_binary_file(memo_path);
+    if (memo_bytes.size() < 8U) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "memo.sidecar_header_truncated",
+            memo_path,
+            "The memo sidecar is too short to contain a valid header.");
+        return;
+    }
+
+    const std::uint16_t block_size = read_be_u16(memo_bytes, 6U);
+    if (block_size == 0U) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "memo.block_size_invalid",
+            memo_path,
+            "The memo sidecar declares an invalid zero block size.");
+        return;
+    }
+
+    if (memo_bytes.size() < block_size) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::error,
+            "memo.sidecar_shorter_than_block_size",
+            memo_path,
+            "The memo sidecar is shorter than its declared block size.");
+        return;
+    }
+
+    if (table_bytes.size() < header.header_length) {
+        return;
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto memo_field = std::find_if(fields.begin(), fields.end(), [](const RawFieldDescriptor& field) {
+        return field.type == 'M';
+    });
+    if (memo_field == fields.end()) {
+        return;
+    }
+
+    const std::uint64_t available_record_bytes = table_bytes.size() - static_cast<std::uint64_t>(header.header_length);
+    const std::size_t readable_records = header.record_length == 0U
+        ? 0U
+        : static_cast<std::size_t>(std::min<std::uint64_t>(
+            header.record_count,
+            available_record_bytes / static_cast<std::uint64_t>(header.record_length)));
+
+    std::set<std::uint32_t> checked_blocks;
+    for (std::size_t record_index = 0; record_index < readable_records; ++record_index) {
+        const std::size_t record_offset =
+            static_cast<std::size_t>(header.header_length) + (record_index * static_cast<std::size_t>(header.record_length));
+        const std::size_t field_offset = record_offset + memo_field->offset;
+        if ((field_offset + 4U) > table_bytes.size()) {
+            break;
+        }
+
+        const std::uint32_t block_number = read_le_u32(table_bytes, field_offset);
+        if (block_number == 0U || !checked_blocks.insert(block_number).second) {
+            continue;
+        }
+
+        const std::uint64_t block_offset = static_cast<std::uint64_t>(block_number) * static_cast<std::uint64_t>(block_size);
+        if ((block_offset + 8U) > memo_bytes.size()) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "memo.pointer_out_of_range",
+                memo_path,
+                "A memo field points to a block outside the available sidecar range.");
+            continue;
+        }
+
+        const std::uint32_t payload_length = read_be_u32(memo_bytes, static_cast<std::size_t>(block_offset + 4U));
+        const std::uint64_t payload_end = block_offset + 8U + static_cast<std::uint64_t>(payload_length);
+        if (payload_end > memo_bytes.size()) {
+            append_validation_issue(
+                result,
+                AssetValidationSeverity::error,
+                "memo.payload_truncated",
+                memo_path,
+                "A referenced memo payload extends beyond the available sidecar bytes.");
+        }
     }
 }
 
@@ -401,9 +596,11 @@ AssetInspectionResult inspect_asset(const std::string& path) {
     result.header_available = true;
     result.header = header_result.header;
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
+    const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
 
     validate_dbf_storage(result, path, result.header, file_size);
     validate_expected_companions(result, path, result.family, result.header);
+    validate_memo_sidecar(result, path, result.family, result.header, table_bytes);
 
     for (const auto& companion_index : companion_index_paths_for(std::filesystem::path(path), result.family)) {
         if (!std::filesystem::exists(companion_index)) {
@@ -413,7 +610,7 @@ AssetInspectionResult inspect_asset(const std::string& path) {
         const IndexParseResult index_result = parse_index_probe_from_file(companion_index);
         if (index_result.ok) {
             result.indexes.push_back({.path = companion_index, .probe = index_result.probe});
-        } else {
+        } else if (!has_validation_issue(result, "index.companion_parse_failed", companion_index)) {
             append_validation_issue(
                 result,
                 AssetValidationSeverity::warning,

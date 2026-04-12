@@ -58,7 +58,16 @@ std::vector<std::uint8_t> make_vfp_header() {
 
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value);
 void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
+void write_be_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value);
+void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value);
 void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value);
+void write_field_descriptor(
+    std::vector<std::uint8_t>& bytes,
+    std::size_t offset,
+    const std::string& name,
+    char type,
+    std::uint32_t field_offset,
+    std::uint8_t length);
 
 std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_tag, bool include_for_expression) {
     std::vector<std::uint8_t> bytes(16U * 512U, 0U);
@@ -183,10 +192,37 @@ void write_le_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
     bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
 }
 
+void write_be_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
+    bytes[offset] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>(value & 0xFFU);
+}
+
+void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint32_t value) {
+    bytes[offset] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
+    bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
+    bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
+}
+
 void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std::string& value) {
     for (std::size_t index = 0; index < value.size(); ++index) {
         bytes[offset + index] = static_cast<std::uint8_t>(value[index]);
     }
+}
+
+void write_field_descriptor(
+    std::vector<std::uint8_t>& bytes,
+    std::size_t offset,
+    const std::string& name,
+    char type,
+    std::uint32_t field_offset,
+    std::uint8_t length) {
+    for (std::size_t index = 0; index < 11U && index < name.size(); ++index) {
+        bytes[offset + index] = static_cast<std::uint8_t>(name[index]);
+    }
+    bytes[offset + 11U] = static_cast<std::uint8_t>(type);
+    write_le_u32(bytes, offset + 12U, field_offset);
+    bytes[offset + 16U] = length;
 }
 
 void test_parse_index_probe_for_idx() {
@@ -516,6 +552,93 @@ void test_inspect_asset_reports_missing_companions_and_unparseable_indexes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_inspect_asset_reports_malformed_memo_sidecar_findings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_asset_memo_validation_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto write_form_with_memo_pointer = [&](const fs::path& table_path, std::uint32_t block_pointer) {
+        std::vector<std::uint8_t> table_bytes(115U, 0U);
+        table_bytes[0] = 0x30U;
+        table_bytes[1] = 126U;
+        table_bytes[2] = 4U;
+        table_bytes[3] = 11U;
+        write_le_u32(table_bytes, 4U, 1U);
+        write_le_u16(table_bytes, 8U, 97U);
+        write_le_u16(table_bytes, 10U, 18U);
+        table_bytes[28U] = 0x00U;
+        table_bytes[29U] = 0x03U;
+        write_field_descriptor(table_bytes, 32U, "OBJNAME", 'C', 1U, 12U);
+        write_field_descriptor(table_bytes, 64U, "PROPERTIES", 'M', 13U, 4U);
+        table_bytes[96U] = 0x0DU;
+        table_bytes[97U] = 0x20U;
+        write_ascii(table_bytes, 98U, "txtTitle");
+        write_le_u32(table_bytes, 110U, block_pointer);
+        table_bytes.back() = 0x1AU;
+
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    };
+
+    const fs::path bad_header_form_path = temp_dir / "bad_header.scx";
+    const fs::path bad_header_sidecar_path = temp_dir / "bad_header.sct";
+    write_form_with_memo_pointer(bad_header_form_path, 1U);
+    {
+        std::vector<std::uint8_t> memo_bytes(32U, 0U);
+        write_be_u16(memo_bytes, 6U, 0U);
+        std::ofstream output(bad_header_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto bad_header_result = copperfin::vfp::inspect_asset(bad_header_form_path.string());
+    expect(bad_header_result.ok, "inspect_asset should still succeed for forms with malformed memo sidecar headers");
+    expect(
+        has_validation_issue(bad_header_result, "memo.sidecar_shorter_than_block_size", "bad_header.sct") ||
+        has_validation_issue(bad_header_result, "memo.block_size_invalid", "bad_header.sct") ||
+        has_validation_issue(bad_header_result, "memo.sidecar_header_truncated", "bad_header.sct"),
+        "inspect_asset should report malformed memo sidecar header metadata");
+
+    const fs::path out_of_range_form_path = temp_dir / "pointer_out_of_range.scx";
+    const fs::path out_of_range_sidecar_path = temp_dir / "pointer_out_of_range.sct";
+    write_form_with_memo_pointer(out_of_range_form_path, 3U);
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        std::ofstream output(out_of_range_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto out_of_range_result = copperfin::vfp::inspect_asset(out_of_range_form_path.string());
+    expect(out_of_range_result.ok, "inspect_asset should still succeed for forms with out-of-range memo pointers");
+    expect(
+        has_validation_issue(out_of_range_result, "memo.pointer_out_of_range", "pointer_out_of_range.sct"),
+        "inspect_asset should report memo pointers that fall outside the sidecar range");
+
+    const fs::path truncated_form_path = temp_dir / "payload_truncated.scx";
+    const fs::path truncated_sidecar_path = temp_dir / "payload_truncated.sct";
+    write_form_with_memo_pointer(truncated_form_path, 1U);
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        memo_bytes[512U + 3U] = 1U;
+        write_be_u32(memo_bytes, 512U + 4U, 900U);
+        std::ofstream output(truncated_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto truncated_result = copperfin::vfp::inspect_asset(truncated_form_path.string());
+    expect(truncated_result.ok, "inspect_asset should still succeed for forms with truncated memo payloads");
+    expect(
+        has_validation_issue(truncated_result, "memo.payload_truncated", "payload_truncated.sct"),
+        "inspect_asset should report truncated payloads in referenced memo blocks");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -532,6 +655,7 @@ int main() {
     test_parse_real_vfp_cdx_when_available();
     test_inspect_asset_reports_dbf_storage_validation_findings();
     test_inspect_asset_reports_missing_companions_and_unparseable_indexes();
+    test_inspect_asset_reports_malformed_memo_sidecar_findings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
