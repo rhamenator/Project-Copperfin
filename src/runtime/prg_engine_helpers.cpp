@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
+#include <iomanip>
 #include <sstream>
 #include <vector>
 
@@ -339,6 +340,21 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             }
             return arguments->size() == 2U || is_concat_safe((*arguments)[2]);
         };
+        const auto is_supported_str = [&]() {
+            const auto arguments = parse_function_arguments(part, "STR");
+            if (!arguments.has_value() || (arguments->size() != 2U && arguments->size() != 3U)) {
+                return false;
+            }
+
+            if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[0], record)).has_value()) {
+                return false;
+            }
+            if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value()) {
+                return false;
+            }
+            return arguments->size() == 2U ||
+                try_parse_numeric_index_value(evaluate_index_expression((*arguments)[2], record)).has_value();
+        };
 
         return is_supported_unary("UPPER") ||
             is_supported_unary("LOWER") ||
@@ -349,7 +365,8 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
             is_supported_binary_with_count("RIGHT") ||
             is_supported_substr() ||
             is_supported_pad("PADL") ||
-            is_supported_pad("PADR");
+            is_supported_pad("PADR") ||
+            is_supported_str();
     };
 
     const auto apply_unary = [&](const std::string& prefix, auto&& transform) -> std::optional<std::string> {
@@ -503,6 +520,45 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
     }
     if (const auto padr_value = apply_pad("PADR", false)) {
         return *padr_value;
+    }
+    if (const auto str_args = parse_function_arguments(trimmed, "STR")) {
+        if (str_args->size() == 2U || str_args->size() == 3U) {
+            const auto numeric = try_parse_numeric_index_value(evaluate_index_expression((*str_args)[0], record));
+            const auto width = try_parse_numeric_index_value(evaluate_index_expression((*str_args)[1], record));
+            if (numeric.has_value() && width.has_value()) {
+                const long long requested_width = static_cast<long long>(std::llround(*width));
+                if (requested_width <= 0LL) {
+                    return {};
+                }
+
+                int decimals = 0;
+                if (str_args->size() == 3U) {
+                    const auto requested_decimals =
+                        try_parse_numeric_index_value(evaluate_index_expression((*str_args)[2], record));
+                    if (!requested_decimals.has_value()) {
+                        return {};
+                    }
+                    decimals = static_cast<int>(std::max(0LL, static_cast<long long>(std::llround(*requested_decimals))));
+                }
+
+                std::ostringstream formatted;
+                if (decimals > 0) {
+                    formatted << std::fixed << std::setprecision(decimals) << *numeric;
+                } else {
+                    formatted << std::llround(*numeric);
+                }
+
+                std::string value = formatted.str();
+                const std::size_t target_width = static_cast<std::size_t>(requested_width);
+                if (value.size() > target_width) {
+                    return std::string(target_width, '*');
+                }
+                if (value.size() < target_width) {
+                    value.insert(value.begin(), target_width - value.size(), ' ');
+                }
+                return value;
+            }
+        }
     }
 
     const std::vector<std::string> concat_parts = split_top_level_plus(trimmed);

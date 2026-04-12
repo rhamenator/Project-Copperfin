@@ -2680,6 +2680,65 @@ void test_seek_supports_padr_default_padding_tag_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_supports_str_function_tag_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_str";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "AGESTR", "UPPER(STR(AGE, 3))");
+
+    const fs::path main_path = temp_root / "seek_str.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG AGESTR\n"
+        "lSeekCmd = SEEK(' 30')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK(' 10', 'People', 'AGESTR')\n"
+        "nSeekFnRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "STR()-expression seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK on a STR() tag should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command STR() SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() on a STR() tag should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() STR() RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should match STR()-derived tag keys");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "3", "command SEEK should land on the STR()-derived exact match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should match STR()-derived tag keys");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "1", "SEEK() should land on the requested STR()-derived match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_near_changes_seek_failure_position() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near";
@@ -6730,6 +6789,7 @@ int main() {
     test_seek_supports_padr_function_tag_expressions();
     test_seek_supports_padl_default_padding_tag_expressions();
     test_seek_supports_padr_default_padding_tag_expressions();
+    test_seek_supports_str_function_tag_expressions();
     test_set_near_changes_seek_failure_position();
     test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();
