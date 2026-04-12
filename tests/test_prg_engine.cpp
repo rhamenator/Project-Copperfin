@@ -3683,6 +3683,100 @@ void test_sql_result_cursor_command_seek_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_scan_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_scan_in_target_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_scan_in_target_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO()\n"
+        "nCustRecBefore = RECNO('sqlcust')\n"
+        "nScanHits = 0\n"
+        "SCAN FOR AMOUNT >= 20 IN sqlcust\n"
+        "    nScanHits = nScanHits + 1\n"
+        "ENDSCAN\n"
+        "cAliasAfterScan = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "nCustRecAfter = RECNO('sqlcust')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL SCAN IN target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL SCAN IN target parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_before = state.globals.find("ncustrecbefore");
+    const auto scan_hits = state.globals.find("nscanhits");
+    const auto alias_after_scan = state.globals.find("caliasafterscan");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto cust_rec_after = state.globals.find("ncustrecafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL SCAN IN target parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL SCAN IN target parity");
+    expect(other_rec_before != state.globals.end(), "selected SQL cursor RECNO() before targeted SCAN should be captured");
+    expect(cust_rec_before != state.globals.end(), "target SQL cursor RECNO() before targeted SCAN should be captured");
+    expect(scan_hits != state.globals.end(), "SCAN FOR ... IN sqlcust hit count should be captured");
+    expect(alias_after_scan != state.globals.end(), "ALIAS() after targeted SQL SCAN should be captured");
+    expect(other_rec_after != state.globals.end(), "selected SQL cursor RECNO() after targeted SCAN should be captured");
+    expect(cust_rec_after != state.globals.end(), "target SQL cursor RECNO() after targeted SCAN should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL SCAN IN target parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL SCAN checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL SCAN checks");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should be on the bottom record before targeted SCAN");
+    }
+    if (cust_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_before->second) == "1", "target SQL cursor should start on its first record before targeted SCAN");
+    }
+    if (scan_hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_hits->second) == "2", "SCAN FOR ... IN sqlcust should iterate matching rows on the targeted SQL cursor");
+    }
+    if (alias_after_scan != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_scan->second)) == "SQLOTHER", "SCAN ... IN sqlcust should preserve the currently selected SQL alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "SCAN ... IN sqlcust should preserve the selected SQL cursor pointer");
+    }
+    if (cust_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after->second) == "4", "targeted SQL SCAN should leave the targeted cursor just past the last record");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL SCAN checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.scan" && event.detail == "AMOUNT >= 20";
+        }),
+        "SCAN ... IN sqlcust should emit a runtime.scan event with the targeted filter expression");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_parity";
@@ -5312,6 +5406,7 @@ int main() {
     test_sql_result_cursor_seek_parity();
     test_sql_result_cursor_command_seek_parity();
     test_sql_result_cursor_command_seek_in_target_parity();
+    test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_mutation_parity();
     test_local_table_mutation_and_scan_flow();
     test_set_filter_scopes_local_cursor_visibility();
