@@ -4458,7 +4458,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     filter_clause = trim_copy(filter_clause.substr(0U, in_position));
                 }
 
-                CursorState* cursor = resolve_cursor_target(filter_target);
+                const std::string resolved_filter_target = evaluate_cursor_designator_expression(filter_target, frame);
+                CursorState* cursor = resolve_cursor_target(resolved_filter_target);
                 if (cursor == nullptr) {
                     last_error_message = "SET FILTER requires a selected work area";
                     last_fault_location = statement.location;

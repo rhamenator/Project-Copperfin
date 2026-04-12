@@ -3035,13 +3035,14 @@ void test_set_filter_in_targets_nonselected_alias() {
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
         "SELECT People\n"
-        "SET FILTER TO AGE >= 30 IN Other\n"
+        "cTargetAlias = 'Other'\n"
+        "SET FILTER TO AGE >= 30 IN cTargetAlias\n"
         "GO TOP\n"
         "cPeopleTop = NAME\n"
         "SELECT Other\n"
         "GO TOP\n"
         "cOtherTop = NAME\n"
-        "SET FILTER OFF IN Other\n"
+        "SET FILTER OFF IN cTargetAlias\n"
         "GO TOP\n"
         "cOtherTopUnfiltered = NAME\n"
         "RETURN\n");
@@ -3064,13 +3065,13 @@ void test_set_filter_in_targets_nonselected_alias() {
     expect(other_top_unfiltered != state.globals.end(), "targeted alias unfiltered row should be captured");
 
     if (people_top != state.globals.end()) {
-        expect(copperfin::runtime::format_value(people_top->second) == "ALPHA", "SET FILTER ... IN Other should not affect People");
+        expect(copperfin::runtime::format_value(people_top->second) == "ALPHA", "SET FILTER ... IN cTargetAlias should not affect People");
     }
     if (other_top != state.globals.end()) {
-        expect(copperfin::runtime::format_value(other_top->second) == "CHARLIE", "SET FILTER ... IN Other should affect the targeted alias");
+        expect(copperfin::runtime::format_value(other_top->second) == "CHARLIE", "SET FILTER ... IN cTargetAlias should affect the targeted alias");
     }
     if (other_top_unfiltered != state.globals.end()) {
-        expect(copperfin::runtime::format_value(other_top_unfiltered->second) == "ALPHA", "SET FILTER OFF IN Other should restore unfiltered navigation for the targeted alias");
+        expect(copperfin::runtime::format_value(other_top_unfiltered->second) == "ALPHA", "SET FILTER OFF IN cTargetAlias should restore unfiltered navigation for the targeted alias");
     }
 
     expect(
