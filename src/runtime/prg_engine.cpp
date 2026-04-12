@@ -2257,6 +2257,23 @@ struct PrgRuntimeSession::Impl {
                 });
             return found == source_fields.end() ? nullptr : &*found;
         };
+        const auto is_total_numeric_field = [](const vfp::DbfFieldDescriptor& field) {
+            return field.type == 'N' || field.type == 'F' || field.type == 'I' || field.type == 'Y';
+        };
+        const auto make_total_output_field = [](const vfp::DbfFieldDescriptor& field) {
+            vfp::DbfFieldDescriptor output_field = field;
+            if (output_field.type == 'I') {
+                output_field.length = 4U;
+                output_field.decimal_count = 0U;
+            } else if (output_field.type == 'Y') {
+                output_field.length = 8U;
+                output_field.decimal_count = std::max<std::uint8_t>(output_field.decimal_count, 4U);
+            } else {
+                output_field.length = static_cast<std::uint8_t>(
+                    std::max<int>(output_field.length, output_field.decimal_count == 0U ? 18 : 20));
+            }
+            return output_field;
+        };
 
         const vfp::DbfFieldDescriptor* on_field = field_by_name(plan.on_field_name);
         if (on_field == nullptr) {
@@ -2267,7 +2284,7 @@ struct PrgRuntimeSession::Impl {
         std::vector<const vfp::DbfFieldDescriptor*> total_fields;
         if (plan.field_names.empty()) {
             for (const auto& field : source_fields) {
-                if ((field.type == 'N' || field.type == 'F') &&
+                if (is_total_numeric_field(field) &&
                     collapse_identifier(field.name) != collapse_identifier(on_field->name)) {
                     total_fields.push_back(&field);
                 }
@@ -2279,7 +2296,7 @@ struct PrgRuntimeSession::Impl {
                     error_message = "TOTAL field was not found: " + field_name;
                     return false;
                 }
-                if (field->type != 'N' && field->type != 'F') {
+                if (!is_total_numeric_field(*field)) {
                     error_message = "TOTAL only supports numeric FIELDS in the first pass";
                     return false;
                 }
@@ -2302,9 +2319,7 @@ struct PrgRuntimeSession::Impl {
             std::vector<vfp::DbfFieldDescriptor> output_fields;
             output_fields.push_back(*on_field);
             for (const auto* field : total_fields) {
-                vfp::DbfFieldDescriptor output_field = *field;
-                output_field.length = static_cast<std::uint8_t>(std::max<int>(output_field.length, output_field.decimal_count == 0U ? 18 : 20));
-                output_fields.push_back(output_field);
+                output_fields.push_back(make_total_output_field(*field));
             }
             const auto create_result = vfp::create_dbf_table_file(target_path, output_fields, {});
             if (!create_result.ok) {
@@ -2344,9 +2359,7 @@ struct PrgRuntimeSession::Impl {
         std::vector<vfp::DbfFieldDescriptor> output_fields;
         output_fields.push_back(*on_field);
         for (const auto* field : total_fields) {
-            vfp::DbfFieldDescriptor output_field = *field;
-            output_field.length = static_cast<std::uint8_t>(std::max<int>(output_field.length, output_field.decimal_count == 0U ? 18 : 20));
-            output_fields.push_back(output_field);
+            output_fields.push_back(make_total_output_field(*field));
         }
 
         std::vector<std::vector<std::string>> output_records;

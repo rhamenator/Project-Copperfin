@@ -5941,6 +5941,68 @@ void test_total_command_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_total_command_supports_currency_and_integer_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_currency_integer";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "TOTALCUR", .type = 'Y', .length = 8U, .decimal_count = 4U},
+        {.name = "QTY", .type = 'I', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"EAST", "1.2500", "2"},
+        {"EAST", "2.5000", "3"},
+        {"WEST", "4.0000", "5"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "currency/integer sales DBF fixture should be created");
+
+    const fs::path output_path = temp_root / "totals.dbf";
+    const fs::path main_path = temp_root / "total_currency_integer.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "GO 2\n"
+        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS TOTALCUR, QTY\n"
+        "nRecAfter = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TOTAL currency/integer script should complete");
+
+    const auto rec_after = state.globals.find("nrecafter");
+    expect(rec_after != state.globals.end(), "TOTAL currency/integer script should capture the current selected record");
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "2", "TOTAL currency/integer should preserve the selected cursor position");
+    }
+
+    const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
+    expect(totals_result.ok, "TOTAL currency/integer should write a readable output DBF");
+    expect(totals_result.table.fields.size() == 3U, "TOTAL currency/integer output should include ON plus requested numeric fields");
+    expect(totals_result.table.records.size() == 2U, "TOTAL currency/integer output should include one group per contiguous ON value");
+    if (totals_result.table.records.size() == 2U) {
+        expect(totals_result.table.records[0].values[0].display_value == "EAST", "TOTAL currency/integer should preserve the first grouped ON value");
+        expect(totals_result.table.records[0].values[1].display_value == "3.7500", "TOTAL currency/integer should sum currency fields with four-decimal fidelity");
+        expect(totals_result.table.records[0].values[2].display_value == "5", "TOTAL currency/integer should sum integer fields");
+        expect(totals_result.table.records[1].values[0].display_value == "WEST", "TOTAL currency/integer should preserve trailing grouped ON values");
+        expect(totals_result.table.records[1].values[1].display_value == "4.0000", "TOTAL currency/integer should preserve trailing currency totals");
+        expect(totals_result.table.records[1].values[2].display_value == "5", "TOTAL currency/integer should preserve trailing integer totals");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_total_command_for_sql_result_cursors() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_sql_cursor";
@@ -6218,6 +6280,7 @@ int main() {
     test_command_level_aggregate_commands();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
+    test_total_command_supports_currency_and_integer_fields();
     test_total_command_for_sql_result_cursors();
     test_runtime_fault_containment();
     test_indexed_table_mutation_surfaces_runtime_error();
