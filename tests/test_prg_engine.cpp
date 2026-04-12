@@ -1924,6 +1924,78 @@ void test_set_order_and_seek_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_uses_grounded_order_normalization_hints() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_normalization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_normalization.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "lSeekCmd = SEEK('bravo')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK('charlie', 'People', 'NAME')\n"
+        "nSeekFnRec = RECNO()\n"
+        "SET ORDER TO TAG NAME DESCENDING\n"
+        "lSeekDesc = SEEK('alpha')\n"
+        "nSeekDescRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "normalization-aware seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+    const auto seek_desc = state.globals.find("lseekdesc");
+    const auto seek_desc_rec = state.globals.find("nseekdescrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK result should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() result should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() RECNO() should be captured");
+    expect(seek_desc != state.globals.end(), "descending normalized SEEK result should be captured");
+    expect(seek_desc_rec != state.globals.end(), "descending normalized SEEK RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should honor grounded upper normalization hints");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "2", "command SEEK should land on the case-folded match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should honor grounded upper normalization hints");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "3", "SEEK() should move to the normalized match");
+    }
+    if (seek_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_desc->second) == "true", "descending SEEK should also honor grounded normalization hints");
+    }
+    if (seek_desc_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_desc_rec->second) == "1", "descending SEEK should land on the normalized exact match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_near_changes_seek_failure_position() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near";
@@ -4394,6 +4466,7 @@ int main() {
     test_sql_result_cursors_are_isolated_by_data_session();
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_set_order_and_seek_for_local_tables();
+    test_seek_uses_grounded_order_normalization_hints();
     test_set_near_changes_seek_failure_position();
     test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();

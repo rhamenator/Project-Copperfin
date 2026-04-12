@@ -1116,6 +1116,42 @@ struct PrgRuntimeSession::Impl {
         return descending ? -comparison : comparison;
     }
 
+    bool order_normalization_hint_contains(const std::string& hints, const std::string& token) const {
+        std::stringstream stream(hints);
+        std::string part;
+        while (std::getline(stream, part, ',')) {
+            if (lowercase_copy(trim_copy(part)) == token) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::string normalize_seek_key_for_order(std::string value, const std::string& normalization_hint) const {
+        if (order_normalization_hint_contains(normalization_hint, "alltrim")) {
+            value = trim_copy(std::move(value));
+        } else {
+            if (order_normalization_hint_contains(normalization_hint, "ltrim")) {
+                value.erase(
+                    value.begin(),
+                    std::find_if(value.begin(), value.end(), [](unsigned char ch) { return std::isspace(ch) == 0; }));
+            }
+            if (order_normalization_hint_contains(normalization_hint, "rtrim")) {
+                value.erase(
+                    std::find_if(value.rbegin(), value.rend(), [](unsigned char ch) { return std::isspace(ch) == 0; }).base(),
+                    value.end());
+            }
+        }
+
+        if (order_normalization_hint_contains(normalization_hint, "upper")) {
+            value = uppercase_copy(std::move(value));
+        } else if (order_normalization_hint_contains(normalization_hint, "lower")) {
+            value = lowercase_copy(std::move(value));
+        }
+
+        return value;
+    }
+
     bool can_open_table_cursor(
         const std::string& resolved_path,
         const std::string& alias,
@@ -1329,7 +1365,9 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
-        const std::string normalized_target = evaluate_index_expression(search_key, vfp::DbfRecord{});
+        const std::string normalized_target = normalize_seek_key_for_order(
+            evaluate_index_expression(search_key, vfp::DbfRecord{}),
+            cursor.active_order_normalization_hint);
         std::vector<IndexedCandidate> candidates;
         candidates.reserve(table_result.table.records.size());
 
