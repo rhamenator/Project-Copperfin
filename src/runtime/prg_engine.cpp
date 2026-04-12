@@ -560,8 +560,10 @@ Program parse_program(const std::string& path) {
             statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "ENDSCAN") {
             statement.kind = StatementKind::endscan_statement;
-        } else if (upper == "APPEND BLANK") {
+        } else if (upper == "APPEND BLANK" || starts_with_insensitive(line, "APPEND BLANK ")) {
             statement.kind = StatementKind::append_blank_command;
+            const std::string body = upper == "APPEND BLANK" ? std::string{} : trim_copy(line.substr(12U));
+            statement.secondary_expression = trim_command_keyword(body, "IN");
         } else if (starts_with_insensitive(line, "REPLACE ")) {
             statement.kind = StatementKind::replace_command;
             const std::string body = trim_copy(line.substr(8U));
@@ -4524,9 +4526,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::append_blank_command: {
-            CursorState* cursor = resolve_cursor_target({});
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
-                last_error_message = "APPEND BLANK requires a selected work area";
+                last_error_message = "APPEND BLANK target work area not found";
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};

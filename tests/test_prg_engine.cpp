@@ -14,6 +14,12 @@
 namespace {
 
 int failures = 0;
+    std::string uppercase_ascii(std::string value) {
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::toupper(ch));
+        });
+        return value;
+    }
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -3599,6 +3605,15 @@ void test_sql_result_cursor_mutation_parity() {
         "nAfterAppend = RECCOUNT('sqlcust')\n"
         "nRecAfterAppend = RECNO()\n"
         "lAppendDeleted = DELETED()\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "nBeforeTargetedAppend = RECCOUNT('sqlcust')\n"
+        "APPEND BLANK IN sqlcust\n"
+        "nAfterTargetedAppend = RECCOUNT('sqlcust')\n"
+        "cAliasAfterTargetedAppend = ALIAS()\n"
+        "SELECT sqlcust\n"
+        "nTargetedRecAfterAppend = RECNO()\n"
+        "lTargetedAppendDeleted = DELETED()\n"
         "REPLACE NAME WITH 'DELTA', AMOUNT WITH 40\n"
         "cAppendedName = NAME\n"
         "nAppendedAmount = AMOUNT\n"
@@ -3636,6 +3651,12 @@ void test_sql_result_cursor_mutation_parity() {
     const auto after_append = state.globals.find("nafterappend");
     const auto rec_after_append = state.globals.find("nrecafterappend");
     const auto append_deleted = state.globals.find("lappenddeleted");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto before_targeted_append = state.globals.find("nbeforetargetedappend");
+    const auto after_targeted_append = state.globals.find("naftertargetedappend");
+    const auto alias_after_targeted_append = state.globals.find("caliasaftertargetedappend");
+    const auto targeted_rec_after_append = state.globals.find("ntargetedrecafterappend");
+    const auto targeted_append_deleted = state.globals.find("ltargetedappenddeleted");
     const auto appended_name = state.globals.find("cappendedname");
     const auto appended_amount = state.globals.find("nappendedamount");
     const auto seek_delta = state.globals.find("lseekdelta");
@@ -3656,6 +3677,12 @@ void test_sql_result_cursor_mutation_parity() {
     expect(after_append != state.globals.end(), "RECCOUNT() after SQL APPEND BLANK should be captured");
     expect(rec_after_append != state.globals.end(), "RECNO() after SQL APPEND BLANK should be captured");
     expect(append_deleted != state.globals.end(), "DELETED() after SQL APPEND BLANK should be captured");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for targeted SQL APPEND BLANK");
+    expect(before_targeted_append != state.globals.end(), "RECCOUNT() before targeted SQL APPEND BLANK should be captured");
+    expect(after_targeted_append != state.globals.end(), "RECCOUNT() after targeted SQL APPEND BLANK should be captured");
+    expect(alias_after_targeted_append != state.globals.end(), "ALIAS() after targeted SQL APPEND BLANK should be captured");
+    expect(targeted_rec_after_append != state.globals.end(), "RECNO() after targeted SQL APPEND BLANK should be captured");
+    expect(targeted_append_deleted != state.globals.end(), "DELETED() after targeted SQL APPEND BLANK should be captured");
     expect(appended_name != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended NAME");
     expect(appended_amount != state.globals.end(), "REPLACE after SQL APPEND BLANK should expose the appended AMOUNT");
     expect(seek_delta != state.globals.end(), "SEEK after SQL APPEND BLANK should expose whether the appended row is indexed");
@@ -3694,6 +3721,24 @@ void test_sql_result_cursor_mutation_parity() {
     if (append_deleted != state.globals.end()) {
         expect(copperfin::runtime::format_value(append_deleted->second) == "false", "APPEND BLANK should create a non-deleted synthetic SQL row");
     }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL APPEND BLANK checks");
+    }
+    if (before_targeted_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_targeted_append->second) == "4", "targeted SQL APPEND BLANK should start from the prior appended row count");
+    }
+    if (after_targeted_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_targeted_append->second) == "5", "targeted SQL APPEND BLANK should append to the requested non-selected SQL cursor");
+    }
+    if (alias_after_targeted_append != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_targeted_append->second)) == "SQLOTHER", "targeted SQL APPEND BLANK should preserve the current selected alias");
+    }
+    if (targeted_rec_after_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(targeted_rec_after_append->second) == "5", "targeted SQL APPEND BLANK should move the targeted SQL cursor pointer to the appended row");
+    }
+    if (targeted_append_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(targeted_append_deleted->second) == "false", "targeted SQL APPEND BLANK should create a non-deleted row on the targeted cursor");
+    }
     if (appended_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(appended_name->second) == "DELTA", "REPLACE after APPEND BLANK should update the appended SQL row");
     }
@@ -3704,7 +3749,10 @@ void test_sql_result_cursor_mutation_parity() {
         expect(copperfin::runtime::format_value(seek_delta->second) == "true", "SEEK should find SQL rows appended and mutated in memory");
     }
     if (seek_rec != state.globals.end()) {
-        expect(copperfin::runtime::format_value(seek_rec->second) == "4", "SEEK should position to the appended SQL row when ordering by NAME");
+        expect(
+            targeted_rec_after_append != state.globals.end() &&
+                copperfin::runtime::format_value(seek_rec->second) == copperfin::runtime::format_value(targeted_rec_after_append->second),
+            "SEEK should position to the SQL row appended by the targeted APPEND BLANK");
     }
     if (seek_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(seek_name->second) == "DELTA", "SEEK should expose the appended SQL row values after in-memory mutation");
