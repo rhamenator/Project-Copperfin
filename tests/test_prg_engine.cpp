@@ -2003,6 +2003,90 @@ void test_set_near_changes_seek_failure_position() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_order_descending_changes_seek_ordering() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_order_descending";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "set_order_descending.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME DESCENDING\n"
+        "cOrder = ORDER()\n"
+        "SEEK 'CHARLIE'\n"
+        "lExactFound = FOUND()\n"
+        "nExactRec = RECNO()\n"
+        "SET NEAR ON\n"
+        "SEEK 'BRAVO'\n"
+        "lNearFound = FOUND()\n"
+        "lNearEof = EOF()\n"
+        "nNearRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "descending SET ORDER script should complete");
+
+    const auto order = state.globals.find("corder");
+    const auto exact_found = state.globals.find("lexactfound");
+    const auto exact_rec = state.globals.find("nexactrec");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_eof = state.globals.find("lneareof");
+    const auto near_rec = state.globals.find("nnearrec");
+
+    expect(order != state.globals.end(), "ORDER() after descending SET ORDER should be captured");
+    expect(exact_found != state.globals.end(), "FOUND() after exact descending SEEK should be captured");
+    expect(exact_rec != state.globals.end(), "RECNO() after exact descending SEEK should be captured");
+    expect(near_found != state.globals.end(), "FOUND() after descending SET NEAR seek should be captured");
+    expect(near_eof != state.globals.end(), "EOF() after descending SET NEAR seek should be captured");
+    expect(near_rec != state.globals.end(), "RECNO() after descending SET NEAR seek should be captured");
+
+    if (order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order->second) == "NAME", "descending SET ORDER should still expose the controlling tag name");
+    }
+    if (exact_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_found->second) == "true", "descending exact SEEK should still report FOUND()");
+    }
+    if (exact_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_rec->second) == "2", "descending exact SEEK should still land on the matching row");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "descending SET NEAR SEEK should still report a miss");
+    }
+    if (near_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_eof->second) == "false", "descending SET NEAR SEEK should stay off EOF when a nearby key exists");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "1", "descending SET NEAR SEEK should move to the next row in descending order");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.order" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded, dir=descending]") != std::string::npos;
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded, dir=descending]: BRAVO -> not found") != std::string::npos;
+        }),
+        "descending SET ORDER and SEEK should emit order-direction metadata");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_command_accepts_tag_override_without_set_order() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_tag_override";
@@ -2058,6 +2142,72 @@ void test_seek_command_accepts_tag_override_without_set_order() {
                 event.detail.find("NAME [norm=upper, coll=case-folded]: BRAVO -> found") != std::string::npos;
         }),
         "SEEK ... TAG should expose the temporary order metadata in runtime.seek events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_seek_command_accepts_descending_tag_override_without_set_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_descending_tag_override";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_descending_tag_override.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET NEAR ON\n"
+        "SEEK 'BRAVO' TAG NAME DESCENDING\n"
+        "lFound = FOUND()\n"
+        "lEof = EOF()\n"
+        "nRec = RECNO()\n"
+        "cOrderAfter = ORDER()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SEEK ... TAG DESCENDING script should complete");
+
+    const auto found = state.globals.find("lfound");
+    const auto eof = state.globals.find("leof");
+    const auto rec = state.globals.find("nrec");
+    const auto order_after = state.globals.find("corderafter");
+
+    expect(found != state.globals.end(), "SEEK ... TAG DESCENDING should expose FOUND()");
+    expect(eof != state.globals.end(), "SEEK ... TAG DESCENDING should expose EOF()");
+    expect(rec != state.globals.end(), "SEEK ... TAG DESCENDING should expose RECNO()");
+    expect(order_after != state.globals.end(), "SEEK ... TAG DESCENDING should leave ORDER() observable");
+
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "false", "descending tag override should still report a miss for an in-between key");
+    }
+    if (eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof->second) == "false", "descending tag override should honor SET NEAR and stay off EOF");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "1", "descending tag override should position to the next row in descending order");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "descending tag override should not permanently change the controlling order");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("NAME [norm=upper, coll=case-folded, dir=descending]: BRAVO -> not found") != std::string::npos;
+        }),
+        "SEEK ... TAG DESCENDING should expose the temporary descending metadata in runtime.seek events");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -4245,7 +4395,9 @@ int main() {
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_set_order_and_seek_for_local_tables();
     test_set_near_changes_seek_failure_position();
+    test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();
+    test_seek_command_accepts_descending_tag_override_without_set_order();
     test_set_near_is_scoped_by_data_session();
     test_seek_related_index_functions();
     test_order_and_tag_preserve_index_file_identity();

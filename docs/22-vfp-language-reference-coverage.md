@@ -92,7 +92,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `PRIVATE`
 - `STORE`
 
-The current indexed-search slice covers `SET ORDER TO TAG`, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
+The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDING` / `DESCENDING` direction control on the local `SET ORDER` / `SEEK` path, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, `TAG()`, `SET EXACT`, `SET NEAR`, and command-level one-off `SEEK ... TAG/ORDER` probes for local DBF-backed cursors, and the runtime now preserves the actual inspected index-file identity for `ORDER(alias, 1)` plus `TAG(indexFile, ...)` across supported xBase index extensions instead of assuming `.cdx`.
 
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
@@ -116,7 +116,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 - finish the remaining alias/work-area edge cases across `SELECT`, `USE`, and nested data sessions after the first strict `USE ... IN <alias>` targeting pass, first-pass non-selected target preservation, plain `USE` current-work-area reuse, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, stronger synthetic SQL cursor/session isolation, per-session SQL handle lifecycle cleanup, and the now-shipped session-local restoration coverage for `SET NEAR` and `SET DEFAULT TO`
 - keep closing the remaining expression-driven work-area targeting edges after the shared designator-expression path now covers `SET FILTER ... IN`, `SELECT <expr>`, `USE ... IN <expr>`, and the shipped local `IN`-targeted data/search family (`SET ORDER`, `SEEK`, `LOCATE`, `SCAN`, `GO`, `SKIP`, `REPLACE`, `DELETE`, `RECALL`) for core local-cursor flows
-- deepen order/search behavior beyond the first `SET ORDER TO TAG` / `SEEK` / `FOUND()` pass
+- deepen order/search behavior beyond the current first-pass `SET ORDER TO TAG` / `SEEK` / `FOUND()` plus direction-control slice
 - add adjacent data-navigation and data-search commands where VFP developers expect them to work together
 - use the command inventory to pull the next search/index/data-session commands in families instead of one at a time
 
