@@ -2739,6 +2739,124 @@ void test_seek_supports_str_function_tag_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_supports_str_default_width_tag_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_str_default";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "AGESTRD", "UPPER(STR(AGE))");
+
+    const fs::path main_path = temp_root / "seek_str_default.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG AGESTRD\n"
+        "lSeekCmd = SEEK('        30')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK('        10', 'People', 'AGESTRD')\n"
+        "nSeekFnRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "STR() default-width seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK on a STR() default-width tag should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command STR() default-width SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() on a STR() default-width tag should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() STR() default-width RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should match STR() default-width derived keys");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "3", "command SEEK should land on STR() default-width exact match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should match STR() default-width derived keys");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "1", "SEEK() should land on requested STR() default-width match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_seek_supports_str_decimal_tag_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_str_decimal";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "AGESTRX", "UPPER(STR(AGE, 5, 1))");
+
+    const fs::path main_path = temp_root / "seek_str_decimal.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG AGESTRX\n"
+        "lSeekCmd = SEEK(' 30.0')\n"
+        "nSeekCmdRec = RECNO()\n"
+        "GO TOP\n"
+        "lSeekFn = SEEK(' 10.0', 'People', 'AGESTRX')\n"
+        "nSeekFnRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "STR() decimal seek script should complete");
+
+    const auto seek_cmd = state.globals.find("lseekcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+
+    expect(seek_cmd != state.globals.end(), "command SEEK on a STR() decimal tag should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "command STR() decimal SEEK RECNO() should be captured");
+    expect(seek_fn != state.globals.end(), "SEEK() on a STR() decimal tag should be captured");
+    expect(seek_fn_rec != state.globals.end(), "SEEK() STR() decimal RECNO() should be captured");
+
+    if (seek_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd->second) == "true", "command SEEK should match STR() decimal derived keys");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "3", "command SEEK should land on STR() decimal exact match");
+    }
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should match STR() decimal derived keys");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "1", "SEEK() should land on requested STR() decimal match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_near_changes_seek_failure_position() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near";
@@ -6790,6 +6908,8 @@ int main() {
     test_seek_supports_padl_default_padding_tag_expressions();
     test_seek_supports_padr_default_padding_tag_expressions();
     test_seek_supports_str_function_tag_expressions();
+    test_seek_supports_str_default_width_tag_expressions();
+    test_seek_supports_str_decimal_tag_expressions();
     test_set_near_changes_seek_failure_position();
     test_set_order_descending_changes_seek_ordering();
     test_seek_command_accepts_tag_override_without_set_order();

@@ -342,17 +342,18 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
         };
         const auto is_supported_str = [&]() {
             const auto arguments = parse_function_arguments(part, "STR");
-            if (!arguments.has_value() || (arguments->size() != 2U && arguments->size() != 3U)) {
+            if (!arguments.has_value() || arguments->empty() || arguments->size() > 3U) {
                 return false;
             }
 
             if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[0], record)).has_value()) {
                 return false;
             }
-            if (!try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value()) {
+            if (arguments->size() >= 2U &&
+                !try_parse_numeric_index_value(evaluate_index_expression((*arguments)[1], record)).has_value()) {
                 return false;
             }
-            return arguments->size() == 2U ||
+            return arguments->size() <= 2U ||
                 try_parse_numeric_index_value(evaluate_index_expression((*arguments)[2], record)).has_value();
         };
 
@@ -522,11 +523,17 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
         return *padr_value;
     }
     if (const auto str_args = parse_function_arguments(trimmed, "STR")) {
-        if (str_args->size() == 2U || str_args->size() == 3U) {
+        if (!str_args->empty() && str_args->size() <= 3U) {
             const auto numeric = try_parse_numeric_index_value(evaluate_index_expression((*str_args)[0], record));
-            const auto width = try_parse_numeric_index_value(evaluate_index_expression((*str_args)[1], record));
-            if (numeric.has_value() && width.has_value()) {
-                const long long requested_width = static_cast<long long>(std::llround(*width));
+            if (numeric.has_value()) {
+                long long requested_width = 10LL;
+                if (str_args->size() >= 2U) {
+                    const auto width = try_parse_numeric_index_value(evaluate_index_expression((*str_args)[1], record));
+                    if (!width.has_value()) {
+                        return {};
+                    }
+                    requested_width = static_cast<long long>(std::llround(*width));
+                }
                 if (requested_width <= 0LL) {
                     return {};
                 }
