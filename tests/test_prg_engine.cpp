@@ -1883,6 +1883,100 @@ void test_sql_result_cursor_auto_allocation_tracks_session_selection_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_use_auto_allocation_tracks_session_selection_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_selection_flow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path orders_path = temp_root / "orders.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    write_simple_dbf(orders_path, {"ORDER1", "ORDER2"});
+
+    const fs::path main_path = temp_root / "local_selection_flow.prg";
+    write_text(
+        main_path,
+        "SELECT 0\n"
+        "nSession1SelectedBefore = SELECT()\n"
+        "USE '" + people_path.string() + "' ALIAS People\n"
+        "nSession1Area = SELECT('People')\n"
+        "nSession1SelectedAfter = SELECT()\n"
+        "SET DATASESSION TO 2\n"
+        "SELECT 0\n"
+        "SELECT 0\n"
+        "nSession2SelectedBefore = SELECT()\n"
+        "USE '" + orders_path.string() + "' ALIAS Orders\n"
+        "nSession2Area = SELECT('Orders')\n"
+        "nSession2SelectedAfter = SELECT()\n"
+        "SET DATASESSION TO 1\n"
+        "nSession1AreaBack = SELECT('People')\n"
+        "nSession1SelectedBack = SELECT()\n"
+        "cSession1AliasBack = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local selection-flow script should complete");
+    expect(state.work_area.data_session == 1, "local selection-flow script should restore data session 1");
+
+    const auto session1_selected_before = state.globals.find("nsession1selectedbefore");
+    const auto session1_area = state.globals.find("nsession1area");
+    const auto session1_selected_after = state.globals.find("nsession1selectedafter");
+    const auto session2_selected_before = state.globals.find("nsession2selectedbefore");
+    const auto session2_area = state.globals.find("nsession2area");
+    const auto session2_selected_after = state.globals.find("nsession2selectedafter");
+    const auto session1_area_back = state.globals.find("nsession1areaback");
+    const auto session1_selected_back = state.globals.find("nsession1selectedback");
+    const auto session1_alias_back = state.globals.find("csession1aliasback");
+
+    expect(session1_selected_before != state.globals.end(), "session-1 selected area before USE should be captured");
+    expect(session1_area != state.globals.end(), "session-1 local cursor area should be captured");
+    expect(session1_selected_after != state.globals.end(), "session-1 selected area after USE should be captured");
+    expect(session2_selected_before != state.globals.end(), "session-2 selected area before USE should be captured");
+    expect(session2_area != state.globals.end(), "session-2 local cursor area should be captured");
+    expect(session2_selected_after != state.globals.end(), "session-2 selected area after USE should be captured");
+    expect(session1_area_back != state.globals.end(), "session-1 local cursor area after restoring the session should be captured");
+    expect(session1_selected_back != state.globals.end(), "session-1 selected area after restoring the session should be captured");
+    expect(session1_alias_back != state.globals.end(), "session-1 alias after restoring the session should be captured");
+
+    if (session1_selected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_before->second) == "1", "session 1 should keep work area 1 selected before its first USE");
+    }
+    if (session1_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_area->second) == "1", "plain USE should reuse session 1's selected empty work area");
+    }
+    if (session1_selected_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_after->second) == "1", "plain USE should keep the local cursor on session 1's selected work area");
+    }
+    if (session2_selected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_selected_before->second) == "2", "session 2 should preserve its own SELECT 0 flow before USE");
+    }
+    if (session2_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_area->second) == "2", "plain USE should reuse session 2's selected empty work area");
+    }
+    if (session2_selected_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_selected_after->second) == "2", "plain USE should keep the local cursor on session 2's selected work area");
+    }
+    if (session1_area_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_area_back->second) == "1", "restoring session 1 should preserve that session's local cursor work area");
+    }
+    if (session1_selected_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_selected_back->second) == "1", "restoring session 1 should restore its selected work area");
+    }
+    if (session1_alias_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(session1_alias_back->second) == "People", "restoring session 1 should restore its selected alias");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
@@ -6008,6 +6102,7 @@ int main() {
     test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursors_are_isolated_by_data_session();
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
+    test_local_use_auto_allocation_tracks_session_selection_flow();
     test_set_order_and_seek_for_local_tables();
     test_seek_uses_grounded_order_normalization_hints();
     test_set_near_changes_seek_failure_position();
