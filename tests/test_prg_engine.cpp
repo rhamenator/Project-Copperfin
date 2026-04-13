@@ -7662,6 +7662,182 @@ void test_on_error_do_with_handler_receives_error_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_with_endwith_resolves_leading_dot_member_access() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "with_block.prg";
+    write_text(
+        main_path,
+        "obj = CREATEOBJECT('Sample.Object')\n"
+        "WITH obj\n"
+        "  .Caption = 'Hello'\n"
+        "  prop_value = .Caption\n"
+        "  call_value = .Add('World')\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "WITH/ENDWITH script should complete");
+
+    const auto prop_value = state.globals.find("prop_value");
+    const auto call_value = state.globals.find("call_value");
+    expect(prop_value != state.globals.end(), "WITH should resolve leading-dot property reads");
+    expect(call_value != state.globals.end(), "WITH should resolve leading-dot method calls");
+    if (prop_value != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(prop_value->second) == "ole:Sample.Object.caption",
+            "WITH property access should bind to the target object");
+    }
+    if (call_value != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(call_value->second).find("object:Sample.Object.add#") == 0U,
+            "WITH method calls should bind to the target object");
+    }
+
+    const bool has_with_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.with";
+        });
+    expect(has_with_event, "runtime should emit a WITH event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_try_catch_finally_handles_runtime_errors() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_catch_finally";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "try_catch_finally.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  DO missing_routine\n"
+        "CATCH TO err_text\n"
+        "  caught = err_text\n"
+        "FINALLY\n"
+        "  finally_hit = 1\n"
+        "ENDTRY\n"
+        "after_try = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TRY/CATCH/FINALLY script should complete");
+
+    const auto caught = state.globals.find("caught");
+    const auto finally_hit = state.globals.find("finally_hit");
+    const auto after_try = state.globals.find("after_try");
+    expect(caught != state.globals.end(), "CATCH should run when the TRY block faults");
+    expect(finally_hit != state.globals.end(), "FINALLY should run after handled TRY faults");
+    expect(after_try != state.globals.end(), "execution should continue after ENDTRY");
+    if (caught != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(caught->second).find("Unable to resolve DO target") != std::string::npos,
+            "CATCH TO should receive the runtime error text");
+    }
+
+    const bool has_try_handler_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.try_handler";
+        });
+    expect(has_try_handler_event, "runtime should emit a TRY handler event when a TRY block catches an error");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_try_finally_runs_without_catch_on_success() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_finally_success";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "try_finally_success.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  value = 7\n"
+        "CATCH TO err_text\n"
+        "  caught = 1\n"
+        "FINALLY\n"
+        "  finally_hit = 1\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TRY/FINALLY success script should complete");
+    expect(state.globals.find("caught") == state.globals.end(), "CATCH should be skipped when TRY succeeds");
+    expect(state.globals.find("finally_hit") != state.globals.end(), "FINALLY should still run when TRY succeeds");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_with_by_reference_updates_caller_variable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_with_byref";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "do_with_byref.prg";
+    write_text(
+        main_path,
+        "counter = 1\n"
+        "DO bump WITH @counter\n"
+        "RETURN\n"
+        "PROCEDURE bump\n"
+        "LPARAMETERS pcount\n"
+        "pcount = pcount + 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO WITH @var script should complete");
+
+    const auto counter = state.globals.find("counter");
+    expect(counter != state.globals.end(), "caller variable should still exist after BYREF call");
+    if (counter != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(counter->second) == "2",
+            "BYREF argument binding should write callee updates back to the caller");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -7765,8 +7941,12 @@ int main() {
     test_config_fpw_overrides_temp_directory_default();
     test_elseif_control_flow_executes_matching_branch();
     test_do_with_parameters_binds_arguments_in_called_routine();
+    test_do_with_by_reference_updates_caller_variable();
     test_on_error_do_handler_dispatches_routine();
     test_on_error_do_with_handler_receives_error_metadata();
+    test_with_endwith_resolves_leading_dot_member_access();
+    test_try_catch_finally_handles_runtime_errors();
+    test_try_finally_runs_without_catch_on_success();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -63,6 +63,8 @@ The native runtime/parser currently has first-pass support for these command fam
 - `DO CASE/CASE/OTHERWISE/ENDCASE`
 - `FOR/ENDFOR`
 - `DO WHILE/ENDDO`
+- `WITH/ENDWITH`
+- `TRY/CATCH/FINALLY/ENDTRY`
 - `LOOP`, `CONTINUE`, `EXIT`
 - `TEXT/ENDTEXT` with first-pass literal `TEXT TO ... [ADDITIVE] [NOSHOW]` capture
 - `LOCATE`
@@ -110,6 +112,8 @@ The current session/runtime-state slice also now keeps `SET DEFAULT TO` data-ses
 
 `ON ERROR` now also has a richer first-pass compatibility lane: `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handlers can inspect first-pass runtime fault metadata through `MESSAGE()`, `PROGRAM()`, `LINENO()`, and `ERROR()` while execution resumes after the handler returns. Static PRG diagnostics are also now wired through the Studio document-open path so analyzer findings surface to editor-facing consumers instead of staying runtime-only.
 
+The current PRG-engine slice now also supports first-pass `WITH/ENDWITH` member binding for leading-dot object access and first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow, plus first-pass `DO ... WITH @var` reference semantics so `LPARAMETERS` assignments can write back into caller variables where needed for FoxPro-style procedure behavior.
+
 ## Immediate Runtime Backlog Derived From The Official Reference
 
 The official command inventory is much larger than the current runtime. The deepest next command groups should stay focused on data/runtime compatibility first:
@@ -131,9 +135,9 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Native Control Flow
 
-- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `LOOP`/`CONTINUE`/`EXIT`, first-pass richer `ON ERROR`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
+- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `WITH/ENDWITH`, `TRY/CATCH/FINALLY`, `LOOP`/`CONTINUE`/`EXIT`, first-pass richer `ON ERROR`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
 - keep tightening expression semantics around stored-expression evaluation, macro substitution, and runtime-state inspection beyond the first-pass `EVAL()` / `SET()` / `&macro` slice
-- add the next adjacent command families such as `TEXT/ENDTEXT`, `WITH/ENDWITH`, or other control/branch semantics in coherent batches
+- add the next adjacent control families beyond the shipped engine core as coherent batches instead of one syntax form at a time
 
 ### SQL Pass-Through And Remote Cursor Behavior
 

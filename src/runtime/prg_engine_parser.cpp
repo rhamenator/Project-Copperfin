@@ -211,6 +211,9 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "CATCH")) {
             statement.kind = StatementKind::catch_statement;
             statement.identifier = trim_copy(line.substr(5U));
+            if (starts_with_insensitive(statement.identifier, "TO ")) {
+                statement.identifier = trim_copy(statement.identifier.substr(3U));
+            }
         } else if (upper == "FINALLY") {
             statement.kind = StatementKind::finally_statement;
         } else if (upper == "ENDTRY") {

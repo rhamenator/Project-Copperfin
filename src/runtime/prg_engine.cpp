@@ -62,12 +62,13 @@ struct CaseState {
 
 struct WithState {
     PrgValue target;
+    std::string binding_name;
 };
 
 struct TryState {
     std::size_t try_statement_index = 0;
-    std::size_t catch_statement_index = 0;
-    std::size_t finally_statement_index = 0;
+    std::optional<std::size_t> catch_statement_index;
+    std::optional<std::size_t> finally_statement_index;
     std::size_t endtry_statement_index = 0;
     std::string catch_variable;
     bool handling_error = false;
@@ -82,6 +83,8 @@ struct Frame {
     std::size_t pc = 0;
     std::map<std::string, PrgValue> locals;
     std::vector<PrgValue> call_arguments;
+    std::vector<std::optional<std::string>> call_argument_references;
+    std::map<std::string, std::string> parameter_reference_bindings;
     std::set<std::string> local_names;
     std::map<std::string, std::optional<PrgValue>> private_saved_values;
     std::vector<LoopState> loops;
@@ -260,24 +263,33 @@ struct PrgRuntimeSession::Impl {
         return inserted->second;
     }
 
-    void push_main_frame(const std::string& path, std::vector<PrgValue> call_arguments = {}) {
+    void push_main_frame(
+        const std::string& path,
+        std::vector<PrgValue> call_arguments = {},
+        std::vector<std::optional<std::string>> call_argument_references = {}) {
         Program& program = load_program(path);
         stack.push_back({
             .file_path = program.path,
             .routine_name = "main",
             .routine = &program.main,
             .pc = 0,
-            .call_arguments = std::move(call_arguments)
+            .call_arguments = std::move(call_arguments),
+            .call_argument_references = std::move(call_argument_references)
         });
     }
 
-    void push_routine_frame(const std::string& path, const Routine& routine, std::vector<PrgValue> call_arguments = {}) {
+    void push_routine_frame(
+        const std::string& path,
+        const Routine& routine,
+        std::vector<PrgValue> call_arguments = {},
+        std::vector<std::optional<std::string>> call_argument_references = {}) {
         stack.push_back({
             .file_path = normalize_path(path),
             .routine_name = routine.name,
             .routine = &routine,
             .pc = 0,
-            .call_arguments = std::move(call_arguments)
+            .call_arguments = std::move(call_arguments),
+            .call_argument_references = std::move(call_argument_references)
         });
     }
 
@@ -2716,8 +2728,28 @@ struct PrgRuntimeSession::Impl {
         }
     }
 
+    void sync_byref_arguments(Frame& frame) {
+        if (frame.parameter_reference_bindings.empty()) {
+            return;
+        }
+
+        Frame* caller = stack.size() >= 2U ? &stack[stack.size() - 2U] : nullptr;
+        for (const auto& [parameter_name, reference_name] : frame.parameter_reference_bindings) {
+            const auto local = frame.locals.find(parameter_name);
+            if (local == frame.locals.end()) {
+                continue;
+            }
+            if (caller != nullptr) {
+                assign_variable(*caller, reference_name, local->second);
+            } else {
+                globals[normalize_identifier(reference_name)] = local->second;
+            }
+        }
+    }
+
     void pop_frame() {
         if (!stack.empty()) {
+            sync_byref_arguments(stack.back());
             restore_private_declarations(stack.back());
             stack.pop_back();
         }
@@ -2806,6 +2838,156 @@ struct PrgRuntimeSession::Impl {
             }
         }
         return std::nullopt;
+    }
+
+    std::optional<std::size_t> find_matching_endwith(const Frame& frame, std::size_t pc) const {
+        if (frame.routine == nullptr) {
+            return std::nullopt;
+        }
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::with_statement) {
+                ++depth;
+            } else if (kind == StatementKind::endwith_statement) {
+                if (depth == 0) {
+                    return index;
+                }
+                --depth;
+            }
+        }
+        return std::nullopt;
+    }
+
+    struct TryClauseTargets {
+        std::optional<std::size_t> catch_statement_index;
+        std::optional<std::size_t> finally_statement_index;
+        std::optional<std::size_t> endtry_statement_index;
+    };
+
+    TryClauseTargets find_try_clause_targets(const Frame& frame, std::size_t pc) const {
+        TryClauseTargets targets;
+        if (frame.routine == nullptr) {
+            return targets;
+        }
+
+        int depth = 0;
+        for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index) {
+            const auto kind = frame.routine->statements[index].kind;
+            if (kind == StatementKind::try_statement) {
+                ++depth;
+                continue;
+            }
+            if (kind == StatementKind::endtry_statement) {
+                if (depth == 0) {
+                    targets.endtry_statement_index = index;
+                    return targets;
+                }
+                --depth;
+                continue;
+            }
+            if (depth != 0) {
+                continue;
+            }
+            if (kind == StatementKind::catch_statement && !targets.catch_statement_index.has_value()) {
+                targets.catch_statement_index = index;
+            } else if (kind == StatementKind::finally_statement && !targets.finally_statement_index.has_value()) {
+                targets.finally_statement_index = index;
+            }
+        }
+
+        return targets;
+    }
+
+    std::string apply_with_context(std::string text, const Frame& frame) const {
+        if (frame.withs.empty()) {
+            return text;
+        }
+
+        const std::string binding_name = frame.withs.back().binding_name;
+        if (binding_name.empty()) {
+            return text;
+        }
+
+        std::string rewritten;
+        rewritten.reserve(text.size() + binding_name.size() * 2U);
+        bool in_string = false;
+        for (std::size_t index = 0U; index < text.size(); ++index) {
+            const char ch = text[index];
+            if (ch == '\'') {
+                in_string = !in_string;
+                rewritten.push_back(ch);
+                continue;
+            }
+            if (in_string || ch != '.' || (index + 1U) >= text.size()) {
+                rewritten.push_back(ch);
+                continue;
+            }
+
+            const unsigned char next = static_cast<unsigned char>(text[index + 1U]);
+            if (std::isalpha(next) == 0 && next != '_') {
+                rewritten.push_back(ch);
+                continue;
+            }
+
+            char previous_nonspace = '\0';
+            for (std::size_t lookback = index; lookback > 0U; --lookback) {
+                const char candidate = text[lookback - 1U];
+                if (std::isspace(static_cast<unsigned char>(candidate)) != 0) {
+                    continue;
+                }
+                previous_nonspace = candidate;
+                break;
+            }
+
+            if (std::isalnum(static_cast<unsigned char>(previous_nonspace)) != 0 ||
+                previous_nonspace == '_' ||
+                previous_nonspace == '.') {
+                rewritten.push_back(ch);
+                continue;
+            }
+
+            rewritten.append(binding_name);
+            rewritten.push_back(ch);
+        }
+
+        return rewritten;
+    }
+
+    bool dispatch_try_handler(Frame& frame, const Statement& statement) {
+        for (auto iterator = frame.tries.rbegin(); iterator != frame.tries.rend(); ++iterator) {
+            TryState& active_try = *iterator;
+            if (active_try.handling_error) {
+                continue;
+            }
+
+            active_try.handling_error = true;
+            active_try.entered_catch = false;
+            active_try.entered_finally = false;
+            if (!active_try.catch_variable.empty()) {
+                assign_variable(frame, active_try.catch_variable, make_string_value(last_error_message));
+            }
+
+            if (active_try.catch_statement_index.has_value()) {
+                frame.pc = *active_try.catch_statement_index + 1U;
+                active_try.entered_catch = true;
+            } else if (active_try.finally_statement_index.has_value()) {
+                frame.pc = *active_try.finally_statement_index + 1U;
+                active_try.entered_finally = true;
+            } else {
+                frame.pc = active_try.endtry_statement_index + 1U;
+                frame.tries.erase(std::next(iterator).base());
+            }
+
+            events.push_back({
+                .category = "runtime.try_handler",
+                .detail = statement.text,
+                .location = statement.location
+            });
+            return true;
+        }
+
+        return false;
     }
 
     std::optional<std::size_t> find_next_case_clause(const Frame& frame, std::size_t pc) const {
@@ -3730,8 +3912,9 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
     const std::string& expression,
     const Frame& frame,
     const CursorState* preferred_cursor) {
+    const std::string effective_expression = apply_with_context(expression, frame);
     ExpressionParser parser(
-        expression,
+        effective_expression,
         frame,
         globals,
         current_default_directory(),
@@ -4008,20 +4191,21 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
     try {
     switch (statement.kind) {
-        case StatementKind::assignment:
-            if (statement.identifier.find('.') != std::string::npos) {
-                const auto separator = statement.identifier.find('.');
-                const PrgValue object_value = lookup_variable(frame, statement.identifier.substr(0U, separator));
+        case StatementKind::assignment: {
+            const std::string assignment_identifier = apply_with_context(statement.identifier, frame);
+            if (assignment_identifier.find('.') != std::string::npos) {
+                const auto separator = assignment_identifier.find('.');
+                const PrgValue object_value = lookup_variable(frame, assignment_identifier.substr(0U, separator));
                 auto object = resolve_ole_object(object_value);
                 if (!object.has_value()) {
-                    last_error_message = "OLE object not found for property assignment: " + statement.identifier;
+                    last_error_message = "OLE object not found for property assignment: " + assignment_identifier;
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
 
                 RuntimeOleObjectState* runtime_object = *object;
-                runtime_object->last_action = statement.identifier.substr(separator + 1U) + " = " + value_as_string(evaluate_expression(statement.expression, frame));
+                runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(evaluate_expression(statement.expression, frame));
                 ++runtime_object->action_count;
                 events.push_back({
                     .category = "ole.set",
@@ -4029,9 +4213,10 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     .location = statement.location
                 });
             } else {
-                assign_variable(frame, statement.identifier, evaluate_expression(statement.expression, frame));
+                assign_variable(frame, assignment_identifier, evaluate_expression(statement.expression, frame));
             }
             return {};
+        }
         case StatementKind::expression:
             if (!statement.expression.empty()) {
                 if (starts_with_insensitive(statement.expression, "WAIT WINDOW ")) {
@@ -4048,11 +4233,21 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::do_command: {
             const std::string target = trim_copy(statement.identifier);
             std::vector<PrgValue> call_arguments;
+            std::vector<std::optional<std::string>> call_argument_references;
             if (!trim_copy(statement.expression).empty()) {
                 for (const std::string& raw_argument : split_csv_like(statement.expression)) {
                     const std::string argument_expression = trim_copy(raw_argument);
                     if (!argument_expression.empty()) {
+                        if (argument_expression.front() == '@') {
+                            const std::string reference_name = trim_copy(argument_expression.substr(1U));
+                            if (is_bare_identifier_text(reference_name)) {
+                                call_arguments.push_back(lookup_variable(frame, reference_name));
+                                call_argument_references.push_back(reference_name);
+                                continue;
+                            }
+                        }
                         call_arguments.push_back(evaluate_expression(argument_expression, frame));
+                        call_argument_references.push_back(std::nullopt);
                     }
                 }
             }
@@ -4064,7 +4259,11 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                push_routine_frame(program.path, routine->second, std::move(call_arguments));
+                push_routine_frame(
+                    program.path,
+                    routine->second,
+                    std::move(call_arguments),
+                    std::move(call_argument_references));
                 return {};
             }
 
@@ -4089,7 +4288,10 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 return {.ok = false, .message = last_error_message};
             }
 
-            push_main_frame(target_path.string(), std::move(call_arguments));
+            push_main_frame(
+                target_path.string(),
+                std::move(call_arguments),
+                std::move(call_argument_references));
             return {};
         }
         case StatementKind::do_form: {
@@ -4445,6 +4647,78 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::endcase_statement:
             if (!frame.cases.empty()) {
                 frame.cases.pop_back();
+            }
+            return {};
+        case StatementKind::with_statement: {
+            const PrgValue target = evaluate_expression(statement.expression, frame);
+            const std::string binding_name =
+                "__with_" + std::to_string(frame.withs.size() + 1U) + "_" + std::to_string(frame.pc - 1U);
+            frame.local_names.insert(binding_name);
+            frame.locals[binding_name] = target;
+            frame.withs.push_back({
+                .target = target,
+                .binding_name = binding_name
+            });
+            events.push_back({
+                .category = "runtime.with",
+                .detail = statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::endwith_statement:
+            if (!frame.withs.empty()) {
+                frame.locals.erase(frame.withs.back().binding_name);
+                frame.local_names.erase(frame.withs.back().binding_name);
+                frame.withs.pop_back();
+            }
+            return {};
+        case StatementKind::try_statement: {
+            const TryClauseTargets targets = find_try_clause_targets(frame, frame.pc - 1U);
+            if (!targets.endtry_statement_index.has_value()) {
+                last_error_message = "TRY block is missing ENDTRY";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            std::string catch_variable;
+            if (targets.catch_statement_index.has_value()) {
+                catch_variable = normalize_identifier(frame.routine->statements[*targets.catch_statement_index].identifier);
+            }
+            frame.tries.push_back({
+                .try_statement_index = frame.pc - 1U,
+                .catch_statement_index = targets.catch_statement_index,
+                .finally_statement_index = targets.finally_statement_index,
+                .endtry_statement_index = *targets.endtry_statement_index,
+                .catch_variable = catch_variable,
+                .handling_error = false,
+                .entered_catch = false,
+                .entered_finally = false
+            });
+            return {};
+        }
+        case StatementKind::catch_statement:
+            if (!frame.tries.empty() && frame.tries.back().catch_statement_index == (frame.pc - 1U)) {
+                const TryState active_try = frame.tries.back();
+                if (!active_try.handling_error) {
+                    if (active_try.finally_statement_index.has_value()) {
+                        frame.tries.back().entered_finally = true;
+                        frame.pc = *active_try.finally_statement_index + 1U;
+                    } else {
+                        frame.tries.pop_back();
+                        frame.pc = active_try.endtry_statement_index + 1U;
+                    }
+                }
+            }
+            return {};
+        case StatementKind::finally_statement:
+            if (!frame.tries.empty() && frame.tries.back().finally_statement_index == (frame.pc - 1U)) {
+                frame.tries.back().entered_finally = true;
+            }
+            return {};
+        case StatementKind::endtry_statement:
+            if (!frame.tries.empty() && frame.tries.back().endtry_statement_index == (frame.pc - 1U)) {
+                frame.tries.pop_back();
             }
             return {};
         case StatementKind::read_events:
@@ -4947,6 +5221,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 } else {
                     frame.locals[normalized] = make_empty_value();
                 }
+                if (index < frame.call_argument_references.size() && frame.call_argument_references[index].has_value()) {
+                    frame.parameter_reference_bindings[normalized] = *frame.call_argument_references[index];
+                }
             }
             return {};
         }
@@ -5185,6 +5462,9 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
         if (!outcome.ok) {
             if (!stack.empty()) {
                 capture_last_error_context(stack.back(), *next);
+                if (dispatch_try_handler(stack.back(), *next)) {
+                    continue;
+                }
             }
             if (dispatch_error_handler()) {
                 continue;
