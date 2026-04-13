@@ -1,6 +1,10 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/security/audit_stream.h"
+#include "copperfin/security/authorization.h"
 #include "copperfin/security/process_hardening.h"
+#include "copperfin/security/security_model.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
 
 #include <algorithm>
@@ -43,6 +47,11 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
         }
     }
     return true;
+}
+
+bool parse_bool(const std::string& value) {
+    const std::string normalized = lowercase_copy(trim_copy(value));
+    return normalized == "1" || normalized == "true" || normalized == "yes";
 }
 
 std::string unescape_manifest_value(std::string value) {
@@ -103,6 +112,62 @@ std::vector<std::string> all_values(const ManifestMap& values, const std::string
         result.push_back(iterator->second);
     }
     return result;
+}
+
+std::vector<std::string> split_pipe(const std::string& value) {
+    std::vector<std::string> result;
+    std::string current;
+    for (const char ch : value) {
+        if (ch == '|') {
+            result.push_back(current);
+            current.clear();
+            continue;
+        }
+        current.push_back(ch);
+    }
+    result.push_back(current);
+    return result;
+}
+
+bool verify_manifest_hashes(const ManifestMap& manifest, std::string& error) {
+    const std::string expected_runtime_host_hash = first_value(manifest, "runtime_host_sha256");
+    if (expected_runtime_host_hash.empty()) {
+        error = "security-enabled manifest is missing runtime_host_sha256.";
+        return false;
+    }
+
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file("copperfin_runtime_host.exe");
+    if (!runtime_host_hash.ok) {
+        error = runtime_host_hash.error;
+        return false;
+    }
+    if (lowercase_copy(runtime_host_hash.hex_digest) != lowercase_copy(expected_runtime_host_hash)) {
+        error = "runtime host hash does not match manifest digest.";
+        return false;
+    }
+
+    const auto payload_values = all_values(manifest, "extension_payload");
+    for (const auto& payload : payload_values) {
+        const auto parts = split_pipe(payload);
+        if (parts.size() != 2U) {
+            error = "extension_payload entry is malformed in manifest.";
+            return false;
+        }
+
+        const std::filesystem::path payload_path(parts[0]);
+        const std::filesystem::path file_name = payload_path.filename();
+        const auto digest = copperfin::security::sha256_hex_for_file(file_name.string());
+        if (!digest.ok) {
+            error = digest.error;
+            return false;
+        }
+        if (lowercase_copy(digest.hex_digest) != lowercase_copy(parts[1])) {
+            error = "extension payload hash mismatch: " + file_name.string();
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void print_usage() {
@@ -336,6 +401,44 @@ int main(int argc, char** argv) {
 
     const auto assets = all_values(manifest, "asset");
     const auto warnings = all_values(manifest, "warning");
+    const bool security_enabled = parse_bool(first_value(manifest, "security_enabled"));
+    const std::string security_role = first_value(manifest, "security_role");
+    const std::string audit_log_path = first_value(manifest, "audit_log_path");
+    const auto security_profile = copperfin::security::default_native_security_profile();
+
+    if (security_enabled) {
+        if (!copperfin::security::role_has_permission(security_profile, security_role, "project.open")) {
+            if (!audit_log_path.empty()) {
+                (void)copperfin::security::append_immutable_audit_event(
+                    audit_log_path,
+                    "policy.denied",
+                    "role missing permission: project.open");
+            }
+            std::cout << "status: error\n";
+            std::cout << "error: Security policy denied project.open for role '" << security_role << "'.\n";
+            return 7;
+        }
+
+        std::string verification_error;
+        if (!verify_manifest_hashes(manifest, verification_error)) {
+            if (!audit_log_path.empty()) {
+                (void)copperfin::security::append_immutable_audit_event(
+                    audit_log_path,
+                    "policy.denied",
+                    "hash verification failed: " + verification_error);
+            }
+            std::cout << "status: error\n";
+            std::cout << "error: " << verification_error << "\n";
+            return 8;
+        }
+
+        if (!audit_log_path.empty()) {
+            (void)copperfin::security::append_immutable_audit_event(
+                audit_log_path,
+                "runtime.start",
+                "role=" + security_role + ",manifest=" + manifest_path);
+        }
+    }
     const std::string startup_source = resolve_startup_source(manifest);
     const std::string working_directory = first_value(manifest, "working_directory");
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
@@ -348,6 +451,7 @@ int main(int argc, char** argv) {
     std::cout << "startup.source: " << startup_source << "\n";
     std::cout << "working.directory: " << working_directory << "\n";
     std::cout << "security.enabled: " << first_value(manifest, "security_enabled") << "\n";
+    std::cout << "security.role: " << security_role << "\n";
     std::cout << "security.mode: " << first_value(manifest, "security_mode") << "\n";
     std::cout << "dotnet.story: " << first_value(manifest, "dotnet_story") << "\n";
     std::cout << "asset.count: " << assets.size() << "\n";
@@ -394,6 +498,18 @@ int main(int argc, char** argv) {
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
             const std::string& command = debug_commands[index];
+            if (security_enabled && !copperfin::security::role_has_permission(security_profile, security_role, "runtime.admin")) {
+                if (!audit_log_path.empty()) {
+                    (void)copperfin::security::append_immutable_audit_event(
+                        audit_log_path,
+                        "policy.denied",
+                        "role missing permission: runtime.admin");
+                }
+                std::cout << "status: error\n";
+                std::cout << "error: Security policy denied runtime.admin for role '" << security_role << "'.\n";
+                return 9;
+            }
+
             if (starts_with_insensitive(command, "select:") || starts_with_insensitive(command, "invoke:")) {
                 const auto action_routine = resolve_action_routine_name(xasset_model, command);
                 if (!action_routine.has_value()) {
@@ -423,6 +539,13 @@ int main(int argc, char** argv) {
         std::cout << "runtime.waiting_for_events: " << (state.waiting_for_events ? "true" : "false") << "\n";
         std::cout << "runtime.reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) << "\n";
         std::cout << "runtime.executed.statements: " << state.executed_statement_count << "\n";
+    }
+
+    if (security_enabled && !audit_log_path.empty()) {
+        (void)copperfin::security::append_immutable_audit_event(
+            audit_log_path,
+            "runtime.complete",
+            std::string("completed=") + (state.completed ? "true" : "false") + ",reason=" + copperfin::runtime::debug_pause_reason_name(state.reason));
     }
 
     return state.reason == copperfin::runtime::DebugPauseReason::error ? 5 : 0;

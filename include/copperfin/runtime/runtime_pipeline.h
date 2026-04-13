@@ -26,6 +26,12 @@ struct RuntimePackageAsset {
     bool exists = false;
     bool required_for_runtime = false;
     bool copied = false;
+    std::string sha256;
+};
+
+struct RuntimeArtifactDigest {
+    std::string path;
+    std::string sha256;
 };
 
 struct RuntimeDebugLaunchPlan {
@@ -53,10 +59,14 @@ struct RuntimePackagePlan {
     std::string startup_item;
     std::string startup_source_path;
     std::string working_directory;
+    std::string security_role;
+    std::string audit_log_path;
+    std::string runtime_host_sha256;
     BuildConfiguration configuration = BuildConfiguration::debug;
     bool security_enabled = false;
     bool emit_dotnet_launcher = true;
     std::vector<RuntimePackageAsset> assets;
+    std::vector<RuntimeArtifactDigest> extension_payload_digests;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;
 };

@@ -14,7 +14,12 @@ endif()
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 
 add_library(cf_security
+    src/security/audit_stream.cpp
+    src/security/authorization.cpp
+    src/security/external_process_policy.cpp
     src/security/process_hardening.cpp
+    src/security/secret_provider.cpp
+    src/security/sha256.cpp
     src/security/security_model.cpp
 )
 
@@ -25,6 +30,7 @@ target_include_directories(cf_security
 
 if(MSVC)
     target_compile_options(cf_security PRIVATE /W4 /permissive-)
+    target_link_libraries(cf_security PUBLIC bcrypt crypt32 wintrust version)
 else()
     target_compile_options(cf_security PRIVATE -Wall -Wextra -Wpedantic)
 endif()
@@ -325,6 +331,20 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_runtime_pipeline COMMAND $<TARGET_FILE:test_runtime_pipeline>)
+
+    add_executable(test_security_controls
+        tests/test_security_controls.cpp
+    )
+
+    target_link_libraries(test_security_controls PRIVATE cf_security)
+
+    if(MSVC)
+        target_compile_options(test_security_controls PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_security_controls PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_security_controls COMMAND $<TARGET_FILE:test_security_controls>)
 
     add_executable(test_prg_engine
         tests/test_prg_engine.cpp

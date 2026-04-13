@@ -1,6 +1,10 @@
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/security/audit_stream.h"
+#include "copperfin/security/authorization.h"
+#include "copperfin/security/external_process_policy.h"
 #include "copperfin/security/process_hardening.h"
+#include "copperfin/security/secret_provider.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
@@ -41,8 +45,22 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     const std::filesystem::path output_dir(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
 
+    const auto auth = copperfin::security::authorize_external_process({
+        .executable_name = "dotnet.exe",
+        .allowed_path_roots = {
+            R"(C:\Program Files\dotnet)",
+            R"(C:\Program Files (x86)\dotnet)"
+        },
+        .allowed_publishers = {"Microsoft Corporation"},
+        .require_trusted_signature = true
+    });
+    if (!auth.allowed) {
+        error = "dotnet publish denied by external process policy: " + auth.error;
+        return false;
+    }
+
     std::vector<std::string> publish_args = {
-        "dotnet",
+        auth.resolved_path,
         "publish",
         project_path.string(),
         "-c",
@@ -62,7 +80,7 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     }
     argv.push_back(nullptr);
 
-    const intptr_t exit_code = _spawnvp(_P_WAIT, "dotnet", const_cast<char* const*>(argv.data()));
+    const intptr_t exit_code = _spawnvp(_P_WAIT, auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
     if (exit_code == -1) {
         error = "dotnet publish failed to start: " + std::error_code(errno, std::generic_category()).message();
         return false;
@@ -119,6 +137,7 @@ int main(int argc, char** argv) {
     auto configuration = copperfin::runtime::BuildConfiguration::debug;
     bool enable_security = false;
     bool emit_dotnet_launcher = false;
+    std::string security_role = "developer";
 
     for (std::size_t index = 1; index < args.size(); ++index) {
         const auto& arg = args[index];
@@ -158,6 +177,48 @@ int main(int argc, char** argv) {
 
     const auto workspace = copperfin::studio::build_project_workspace(open_result.document);
     const auto security_profile = copperfin::security::default_native_security_profile();
+
+    if (enable_security) {
+        char* role_env = nullptr;
+        std::size_t role_env_length = 0;
+        if (_dupenv_s(&role_env, &role_env_length, "COPPERFIN_SECURITY_ROLE") == 0 && role_env != nullptr) {
+            security_role = role_env;
+            std::free(role_env);
+        }
+
+        if (!copperfin::security::role_has_permission(security_profile, security_role, "build.execute")) {
+            std::cout << "status: error\n";
+            std::cout << "error: Security policy denied build.execute for role '" << security_role << "'.\n";
+            return 7;
+        }
+
+        if (configuration == copperfin::runtime::BuildConfiguration::release &&
+            !copperfin::security::role_has_permission(security_profile, security_role, "build.release")) {
+            std::cout << "status: error\n";
+            std::cout << "error: Security policy denied build.release for role '" << security_role << "'.\n";
+            return 7;
+        }
+
+        if (configuration == copperfin::runtime::BuildConfiguration::release) {
+            char* signing_ref_raw = nullptr;
+            std::size_t signing_ref_length = 0;
+            if (_dupenv_s(&signing_ref_raw, &signing_ref_length, "COPPERFIN_RELEASE_SIGNING_KEY_REF") != 0 || signing_ref_raw == nullptr) {
+                std::cout << "status: error\n";
+                std::cout << "error: Security-enabled release builds require COPPERFIN_RELEASE_SIGNING_KEY_REF (env:<NAME>).\n";
+                return 7;
+            }
+
+            const std::string signing_ref(signing_ref_raw);
+            std::free(signing_ref_raw);
+            const auto secret = copperfin::security::resolve_secret_reference(signing_ref);
+            if (!secret.ok) {
+                std::cout << "status: error\n";
+                std::cout << "error: Signing key reference validation failed: " << secret.error << "\n";
+                return 7;
+            }
+        }
+    }
+
     const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
     const auto plan = copperfin::runtime::create_runtime_package_plan(
         open_result.document,
@@ -187,9 +248,22 @@ int main(int argc, char** argv) {
         return 5;
     }
 
+    if (enable_security && !materialized.plan.audit_log_path.empty()) {
+        (void)copperfin::security::append_immutable_audit_event(
+            materialized.plan.audit_log_path,
+            "build.package_materialized",
+            "role=" + security_role + ",project=" + materialized.plan.project_title);
+    }
+
     if (emit_dotnet_launcher) {
         std::string publish_error;
         if (!run_dotnet_publish(materialized.plan, publish_error)) {
+            if (enable_security && !materialized.plan.audit_log_path.empty()) {
+                (void)copperfin::security::append_immutable_audit_event(
+                    materialized.plan.audit_log_path,
+                    "policy.denied",
+                    publish_error);
+            }
             std::cout << "status: error\n";
             std::cout << "error: " << publish_error << "\n";
             return 6;

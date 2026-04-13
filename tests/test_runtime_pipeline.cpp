@@ -104,6 +104,9 @@ void test_materialize_runtime_package() {
         expect(result.plan.debug_plan.supports_step_debugging, "debug plan should enable step debugging for PRG startup");
         expect(runtime_manifest.find("startup_source=") != std::string::npos, "runtime manifest should include a startup source field");
         expect(debug_manifest.find("startup_source=") != std::string::npos, "debug manifest should include a startup source field");
+        expect(runtime_manifest.find("runtime_host_sha256=") != std::string::npos, "runtime manifest should include a runtime host SHA-256 digest");
+        expect(runtime_manifest.find("security_role=") != std::string::npos, "runtime manifest should include the effective security role");
+        expect(runtime_manifest.find("audit_log_path=") != std::string::npos, "runtime manifest should include the audit log path");
     }
 
     fs::remove_all(temp_root, ignored);

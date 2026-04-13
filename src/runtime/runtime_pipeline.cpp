@@ -1,7 +1,9 @@
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/security/sha256.h"
 
 #include <cctype>
 #include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -271,6 +273,30 @@ std::string resolve_working_directory(
     return document_dir.lexically_normal().string();
 }
 
+std::string resolve_security_role(bool security_enabled) {
+    if (!security_enabled) {
+        return {};
+    }
+
+    char* raw = nullptr;
+    std::size_t length = 0;
+    if (_dupenv_s(&raw, &length, "COPPERFIN_SECURITY_ROLE") == 0 && raw != nullptr) {
+        std::string role(raw);
+        std::free(raw);
+        role = trim_copy(role);
+        if (!role.empty()) {
+            return role;
+        }
+    }
+
+    return "developer";
+}
+
+bool is_extension_payload_path(const std::filesystem::path& path) {
+    const std::string extension = lowercase_copy(trim_copy(path.extension().string()));
+    return extension == ".dll" || extension == ".exe" || extension == ".vsix";
+}
+
 std::string join_strings(const std::vector<std::string>& values) {
     std::ostringstream stream;
     for (std::size_t index = 0; index < values.size(); ++index) {
@@ -407,6 +433,8 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
+    plan.security_role = resolve_security_role(enable_security);
+    plan.audit_log_path = (package_root / "security_audit.log").string();
     const std::string source_working_directory = resolve_working_directory(document, workspace);
 
     for (const auto& entry : workspace.entries) {
@@ -474,7 +502,10 @@ std::string build_runtime_manifest_text(
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
+    stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
+    stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
+    stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
     stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
@@ -488,7 +519,14 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(asset.staged_path) << "|"
                << quote_manifest_value(asset.type_title) << "|"
                << (asset.excluded ? "true" : "false") << "|"
-               << (asset.exists ? "true" : "false") << "\n";
+               << (asset.exists ? "true" : "false") << "|"
+               << quote_manifest_value(asset.sha256) << "\n";
+    }
+
+    for (const auto& digest : plan.extension_payload_digests) {
+        stream << "extension_payload="
+               << quote_manifest_value(digest.path) << "|"
+               << quote_manifest_value(digest.sha256) << "\n";
     }
 
     for (const auto& warning : plan.warnings) {
@@ -549,15 +587,22 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
         copy_companion_files_if_present(asset, materialized_plan.warnings);
         asset.copied = true;
+
+        const auto digest = security::sha256_hex_for_file(destination.string());
+        if (!digest.ok) {
+            return {.ok = false, .error = digest.error};
+        }
+        asset.sha256 = digest.hex_digest;
+
+        if (is_extension_payload_path(destination)) {
+            materialized_plan.extension_payload_digests.push_back({
+                .path = destination.string(),
+                .sha256 = digest.hex_digest
+            });
+        }
     }
 
     std::string error;
-    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
-        return {.ok = false, .error = error};
-    }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan), error)) {
-        return {.ok = false, .error = error};
-    }
 
     if (!validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
@@ -567,6 +612,16 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
 
+    const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
+    if (!runtime_host_digest.ok) {
+        return {.ok = false, .error = runtime_host_digest.error};
+    }
+    materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
+    materialized_plan.extension_payload_digests.push_back({
+        .path = plan.runtime_host_destination_path,
+        .sha256 = runtime_host_digest.hex_digest
+    });
+
     if (plan.emit_dotnet_launcher) {
         if (!write_text_file(plan.launcher_project_path, build_launcher_project_source(plan), error)) {
             return {.ok = false, .error = error};
@@ -574,6 +629,13 @@ RuntimeMaterializeResult materialize_runtime_package(
         if (!write_text_file(plan.launcher_source_path, build_launcher_program_source(plan), error)) {
             return {.ok = false, .error = error};
         }
+    }
+
+    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan), error)) {
+        return {.ok = false, .error = error};
     }
 
     return {.ok = true, .plan = std::move(materialized_plan)};
