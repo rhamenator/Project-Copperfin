@@ -76,17 +76,16 @@ flowchart LR
 	PRG --> DOTNET --> FED
 	PRG --> SEC
 
-	DBC -. container metadata gap blocks deep runtime parity .-> WS
 	FED -. federation translators missing .-> SQ
 	SQ -. broader remote writeback parity pending .-> RPT
 
 	class CORE hub;
 
-	class DBF done;
+	class DBF,DBC done;
 
 	class IDX,WS,LQ,SQ,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
 
-	class DBC,FED missing;
+	class FED missing;
 
 	class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```

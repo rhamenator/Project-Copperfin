@@ -1,5 +1,6 @@
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_header.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
 
 #include <cstdint>
@@ -601,6 +602,66 @@ void test_inspect_database_container_collects_dcx_companion() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_inspect_database_container_extracts_first_pass_catalog_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_catalog_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "catalog.dbc";
+    const fs::path dcx_path = temp_dir / "catalog.dcx";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "Northwind", "", ""},
+        {"TABLE", "Customers", "Northwind", ""},
+        {"VIEW", "ActiveCustomers", "Northwind", ""},
+        {"RELATION", "OrdersToCustomers", "Northwind", ""},
+        {"CONNECTION", "RemoteSql", "Northwind", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "DBC fixture creation should succeed for catalog metadata coverage");
+
+    {
+        const auto bytes = make_synthetic_cdx_family_bytes(false, true);
+        std::ofstream output(dcx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::inspect_asset(dbc_path.string());
+    expect(result.ok, "inspect_asset should succeed for a synthetic DBC catalog fixture");
+    expect(result.database_container_metadata_available, "inspect_asset should expose first-pass DBC catalog metadata");
+    if (result.database_container_metadata_available) {
+        expect(result.database_container_metadata.available, "DBC metadata container should be marked available");
+        expect(result.database_container_metadata.total_objects == 5U, "DBC metadata should count all catalog rows");
+        expect(result.database_container_metadata.database_objects == 1U, "DBC metadata should count DATABASE rows");
+        expect(result.database_container_metadata.table_objects == 1U, "DBC metadata should count TABLE rows");
+        expect(result.database_container_metadata.view_objects == 1U, "DBC metadata should count VIEW rows");
+        expect(result.database_container_metadata.relation_objects == 1U, "DBC metadata should count RELATION rows");
+        expect(result.database_container_metadata.connection_objects == 1U, "DBC metadata should count CONNECTION rows");
+        expect(!result.database_container_metadata.objects_preview.empty(), "DBC metadata should include object previews");
+        if (!result.database_container_metadata.objects_preview.empty()) {
+            const auto& first = result.database_container_metadata.objects_preview.front();
+            expect(first.object_type_hint == "database", "DBC preview should normalize object-type hints");
+            expect(first.object_name_hint == "Northwind", "DBC preview should preserve object-name hints");
+        }
+    }
+
+    expect(
+        !has_validation_issue(result, "dbc.catalog_parse_failed", "catalog.dbc"),
+        "DBC catalog fixtures should not report catalog-parse failures");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_parse_real_vfp_cdx_when_available() {
     const std::filesystem::path sample_path =
         "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
@@ -992,6 +1053,7 @@ int main() {
     test_parse_index_probe_for_mdx_rejects_implausible_header();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
+    test_inspect_database_container_extracts_first_pass_catalog_metadata();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
     test_parse_real_vfp_dcx_samples_when_available();

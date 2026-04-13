@@ -35,6 +35,25 @@ struct AssetValidationIssue {
     std::string message;
 };
 
+struct DatabaseContainerObjectPreview {
+    std::size_t record_index = 0;
+    bool deleted = false;
+    std::string object_type_hint;
+    std::string object_name_hint;
+    std::string parent_name_hint;
+};
+
+struct DatabaseContainerMetadata {
+    bool available = false;
+    std::size_t total_objects = 0;
+    std::size_t database_objects = 0;
+    std::size_t table_objects = 0;
+    std::size_t view_objects = 0;
+    std::size_t relation_objects = 0;
+    std::size_t connection_objects = 0;
+    std::vector<DatabaseContainerObjectPreview> objects_preview;
+};
+
 struct AssetInspectionResult {
     struct IndexAsset {
         std::string path;
@@ -47,6 +66,8 @@ struct AssetInspectionResult {
     bool header_available = false;
     DbfHeader header{};
     std::vector<IndexAsset> indexes;
+    bool database_container_metadata_available = false;
+    DatabaseContainerMetadata database_container_metadata{};
     std::vector<AssetValidationIssue> validation_issues;
     std::string error;
 

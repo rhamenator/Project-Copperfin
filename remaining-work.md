@@ -108,11 +108,11 @@ flowchart TD
 	D2 -. required for production-grade IDE workflows .-> D3
 	D4 -. standalone delivery depends on shell + language maturity .-> D5
 
-	class A1,A2,A3,A4 done;
+	class A1,A2,A3,A4,A5 done;
 
 	class B1,B2,B3,B4,C1,C2,C3,D1,D2,D3,D4,D5,E1,E3 partial;
 
-	class A5,E2 missing;
+	class E2 missing;
 
 	class P1,P2,P3,P4 lane;
 ```
@@ -129,7 +129,7 @@ Current repo status against the Windows-first product goal:
 | DBF local-table mutation core | Implemented | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, including shared memo-backed `M`/`G`/`P` pointer-field persistence via FoxPro-compatible sidecars, fixed-width `B`/`I`/`Y`/`T` field create/replace/append support, first-pass `V`/`Q` var-length field create/replace/append support, constrained `NULL` token handling across supported write paths, staged/backup write semantics for DBF/memo updates (with staged-artifact cleanup checks), sidecar-path anomaly recovery for memo writes, and fail-fast safety guards that block indexed-table mutation plus unsupported-field `APPEND BLANK` corruption until structural index write fidelity is delivered. |
 | CDX/DCX inspection | Implemented | Shared CDX/DCX probing now preserves per-tag page hints plus per-tag page header markers, binds key/`FOR` expressions from tag-page-local neighborhoods before whole-file fallback, surfaces expression-derived normalization/collation hints, and has focused synthetic plus optional real-sample coverage for direct probing and DBC companion discovery. |
 | MDX inspection | Implemented | MDX probing now validates block-oriented headers, parses the tag table with per-tag page/format/type/thread markers, extracts first-pass key and `FOR` expressions from tag-header pages with offset hints, surfaces expression-derived normalization/collation metadata, and is covered through direct and companion-inspection tests. |
-| DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
+| DBC/database container fidelity | Implemented | DBC inspection now includes first-pass catalog-object extraction over container records (`OBJECTTYPE`/`OBJECTNAME`/`PARENT*` heuristics), per-type object counts and preview rows, structured warnings when catalog extraction fails or yields no object metadata, and companion `DCT/DCX` validation + parse flow through the shared asset inspector path. |
 | Work areas and data sessions | Partial | `SELECT`, plain `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity functions, session-scoped synthetic SQL cursors and SQL handles, session-local SQL cursor auto-allocation that now follows the current selected work-area flow, freed-work-area reuse plus side-effect-free `SELECT(0)` probing, strict `USE ... IN <alias>` targeting plus first-pass non-selected-target preservation, shared expression-based cursor designators across `SET FILTER ... IN`, `SELECT <expr>`, `USE ... IN <expr>`, and the broader shipped local `IN`-targeted data/search command family, plus session-local `SET DEFAULT TO` restoration are working, but broader alias/session edge cases remain. |
 | Local query/mutation commands | Partial | `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, first-pass `SET FILTER TO/OFF`, aggregate built-ins, first-pass `CALCULATE`, first-pass command-level `COUNT`/`SUM`/`AVERAGE` with basic scope/`WHILE` and `IN` targeting support, and first-pass `TOTAL` with `IN` targeting plus local `I`/`Y` field support now exist for local DBF cursors, but broader xBase table/query commands are still missing. |
 | SQL pass-through/remote cursor behavior | Partial | Synthetic SQL cursor/session plumbing exists, and read-only remote cursor flow now covers first-pass local-style field lookup, filter-aware navigation, `LOCATE`, and aggregate semantics over synthetic `SQLEXEC()` result rows, but broader SQL pass-through and writable remote-cursor parity are still far from VFP complete. |
@@ -152,6 +152,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-12: DBC container inspection now surfaces first-pass catalog metadata instead of only header/companion checks. The inspector now loads container records, extracts normalized object-type/name/parent hints, emits per-type object counts plus bounded object previews, and reports structured warnings when catalog extraction fails or returns no catalog-object metadata.
 - 2026-04-12: index inspection now captures richer per-tag metadata for both CDX/DCX and MDX. CDX/DCX probes now expose tag-page header marker hints (`flags`/entry counts) in addition to grounded tag-page key/`FOR` binding, while MDX probes now parse tag-table marker bytes (format/type/thread), tag-header page offsets, and first-pass key/`FOR` expressions from tag-header pages instead of name-only block hints.
 - 2026-04-12: shared DBF mutation now supports first-pass `V`/`Q` var-length field create/replace/append flows using trailing-length storage semantics, with focused round-trip coverage for value updates plus blank append initialization while keeping unsupported-layout guards pinned to genuinely unsupported field types.
 - 2026-04-12: shared DBF mutation now accepts a constrained `NULL` token across supported direct-write field families (`C`/`N`/`F`/`L`/`D`/`B`/`I`/`Y`/`T`) using first-pass clear/zero semantics, and date display decoding now renders all-space stored dates as empty values instead of synthetic `----` placeholders.

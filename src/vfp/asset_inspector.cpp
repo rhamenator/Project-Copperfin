@@ -1,4 +1,5 @@
 #include "copperfin/vfp/asset_inspector.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
 #include <cctype>
@@ -18,6 +19,33 @@ std::string lowercase_extension(const std::filesystem::path& path) {
     });
     return ext;
 }
+
+std::string trim_copy(std::string value) {
+    const auto first = std::find_if(value.begin(), value.end(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    });
+    value.erase(value.begin(), first);
+
+    const auto last = std::find_if(value.rbegin(), value.rend(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    });
+    value.erase(last.base(), value.end());
+    return value;
+}
+
+std::string lowercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
+
+void append_validation_issue(
+    AssetInspectionResult& result,
+    AssetValidationSeverity severity,
+    std::string code,
+    std::string path,
+    std::string message);
 
 bool is_dbf_family_asset(AssetFamily family) {
     switch (family) {
@@ -129,6 +157,122 @@ std::string uppercase_copy(std::string value) {
         return static_cast<char>(std::toupper(ch));
     });
     return value;
+}
+
+const DbfRecordValue* find_record_value(const DbfRecord& record, std::initializer_list<const char*> names) {
+    for (const char* name : names) {
+        const std::string target = uppercase_copy(name == nullptr ? std::string{} : std::string(name));
+        const auto found = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& value) {
+            return uppercase_copy(value.field_name) == target;
+        });
+        if (found != record.values.end()) {
+            return &(*found);
+        }
+    }
+
+    return nullptr;
+}
+
+std::string canonical_dbc_object_type(std::string value) {
+    value = uppercase_copy(trim_copy(std::move(value)));
+    if (value.empty()) {
+        return {};
+    }
+
+    if (value.find("DATABASE") != std::string::npos) {
+        return "database";
+    }
+    if (value.find("TABLE") != std::string::npos) {
+        return "table";
+    }
+    if (value.find("VIEW") != std::string::npos) {
+        return "view";
+    }
+    if (value.find("RELATION") != std::string::npos) {
+        return "relation";
+    }
+    if (value.find("CONNECTION") != std::string::npos) {
+        return "connection";
+    }
+
+    return lowercase_copy(value);
+}
+
+void extract_database_container_metadata(
+    AssetInspectionResult& result,
+    const std::string& path,
+    const DbfHeader& header) {
+    if (header.record_count == 0U) {
+        return;
+    }
+
+    const DbfTableParseResult table_result = parse_dbf_table_from_file(path, header.record_count);
+    if (!table_result.ok) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::warning,
+            "dbc.catalog_parse_failed",
+            path,
+            "The DBC header parsed, but first-pass catalog metadata could not be loaded: " + table_result.error);
+        return;
+    }
+
+    DatabaseContainerMetadata metadata;
+    constexpr std::size_t preview_limit = 32U;
+    for (const DbfRecord& record : table_result.table.records) {
+        if (record.deleted) {
+            continue;
+        }
+
+        const DbfRecordValue* type_value = find_record_value(record, {"OBJECTTYPE", "OBJTYPE", "TYPE"});
+        const DbfRecordValue* name_value = find_record_value(record, {"OBJECTNAME", "OBJNAME", "NAME", "OBJECT"});
+        const DbfRecordValue* parent_value = find_record_value(record, {"PARENTNAME", "PARENT", "PARENTID"});
+
+        const std::string object_type_hint = type_value == nullptr ? std::string{} : canonical_dbc_object_type(type_value->display_value);
+        const std::string object_name_hint = name_value == nullptr ? std::string{} : trim_copy(name_value->display_value);
+        const std::string parent_name_hint = parent_value == nullptr ? std::string{} : trim_copy(parent_value->display_value);
+
+        if (object_type_hint.empty() && object_name_hint.empty() && parent_name_hint.empty()) {
+            continue;
+        }
+
+        ++metadata.total_objects;
+        if (object_type_hint == "database") {
+            ++metadata.database_objects;
+        } else if (object_type_hint == "table") {
+            ++metadata.table_objects;
+        } else if (object_type_hint == "view") {
+            ++metadata.view_objects;
+        } else if (object_type_hint == "relation") {
+            ++metadata.relation_objects;
+        } else if (object_type_hint == "connection") {
+            ++metadata.connection_objects;
+        }
+
+        if (metadata.objects_preview.size() < preview_limit) {
+            metadata.objects_preview.push_back({
+                .record_index = record.record_index,
+                .deleted = record.deleted,
+                .object_type_hint = object_type_hint,
+                .object_name_hint = object_name_hint,
+                .parent_name_hint = parent_name_hint
+            });
+        }
+    }
+
+    if (metadata.total_objects == 0U) {
+        append_validation_issue(
+            result,
+            AssetValidationSeverity::warning,
+            "dbc.catalog_empty",
+            path,
+            "The DBC catalog loaded but no first-pass object metadata rows were detected.");
+        return;
+    }
+
+    metadata.available = true;
+    result.database_container_metadata_available = true;
+    result.database_container_metadata = std::move(metadata);
 }
 
 std::string memo_sidecar_path_for(const std::filesystem::path& path, AssetFamily family) {
@@ -764,6 +908,10 @@ AssetInspectionResult inspect_asset(const std::string& path) {
     validate_dbf_field_descriptors(result, path, result.header, table_bytes);
     validate_expected_companions(result, path, result.family, result.header);
     validate_memo_sidecar(result, path, result.family, result.header, table_bytes);
+
+    if (result.family == AssetFamily::database_container) {
+        extract_database_container_metadata(result, path, result.header);
+    }
 
     for (const auto& companion_index : companion_index_paths_for(std::filesystem::path(path), result.family)) {
         if (!std::filesystem::exists(companion_index)) {
