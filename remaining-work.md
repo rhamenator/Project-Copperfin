@@ -110,7 +110,9 @@ flowchart TD
 
 	class A1 done;
 
-	class A2,A3,A4,B1,B2,B3,B4,C1,C2,C3,D1,D2,D3,D4,D5,E1,E3 partial;
+	class A3,A4,B1,B2,B3,B4,C1,C2,C3,D1,D2,D3,D4,D5,E1,E3 partial;
+
+	class A2 done;
 
 	class A5,E2 missing;
 
@@ -126,7 +128,7 @@ Current repo status against the Windows-first product goal:
 | Area | Status | Notes |
 | --- | --- | --- |
 | DBF/FPT basic read fidelity | Implemented | Real DBF parsing, memo decoding, inspector/design-surface consumption, and first-pass structured asset-validation findings for storage/sidecar inconsistencies are in place for representative assets, though broader repair logic is still incomplete. |
-| DBF local-table mutation core | Partial | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, including first-pass shared memo-backed `M`/`G`/`P` pointer-field persistence via FoxPro-compatible sidecars, first-pass fixed-width `B`/`I`/`Y`/`T` field create/replace/append support, first-pass constrained `NULL` token handling across those write paths, first-pass staged/backup write semantics for DBF/memo updates, and fail-fast safety guards that block indexed-table mutation plus unsupported-field `APPEND BLANK` corruption until broader storage fidelity exists, but broader field-type coverage, deeper repair, and stronger transactional guarantees still need work. |
+| DBF local-table mutation core | Implemented | Native DBF append/field-update/delete-flag writes now exist for local table-backed runtime flows, including shared memo-backed `M`/`G`/`P` pointer-field persistence via FoxPro-compatible sidecars, fixed-width `B`/`I`/`Y`/`T` field create/replace/append support, first-pass `V`/`Q` var-length field create/replace/append support, constrained `NULL` token handling across supported write paths, staged/backup write semantics for DBF/memo updates (with staged-artifact cleanup checks), sidecar-path anomaly recovery for memo writes, and fail-fast safety guards that block indexed-table mutation plus unsupported-field `APPEND BLANK` corruption until structural index write fidelity is delivered. |
 | CDX/DCX inspection | Partial | First-pass real directory-leaf tag-name parsing now preserves conservative per-tag page hints, page-local per-tag key/`FOR` expression binding prefers hinted tag-page neighborhoods before whole-file fallback and now attaches single local tag-page expressions even when descriptive tag names do not resemble the key expression, first-pass expression-derived normalization/collation hints now surface for matching tag expressions, focused `.cdx`/`.dcx` adversarial coverage locks down that shared parser entry point, and optional real-sample smoke coverage now exercises additional installed VFP `CDX/DCX` files, but deeper metadata, write fidelity, and richer order/collation behavior remain incomplete. |
 | MDX inspection | Partial | First-pass multi-tag enumeration now surfaces block-local tag-name hints from non-header metadata regions, minimal header plausibility rejects obviously empty or hint-free `MDX` files, and same-base companion inspection exercises that shared path, but real layout parsing, expression extraction, and write fidelity remain incomplete. |
 | DBC/database container fidelity | Missing | The architecture and backlog exist, but the repo does not yet have a first-class DBC runtime/editing implementation. |
@@ -152,6 +154,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-12: shared DBF mutation now supports first-pass `V`/`Q` var-length field create/replace/append flows using trailing-length storage semantics, with focused round-trip coverage for value updates plus blank append initialization while keeping unsupported-layout guards pinned to genuinely unsupported field types.
 - 2026-04-12: shared DBF mutation now accepts a constrained `NULL` token across supported direct-write field families (`C`/`N`/`F`/`L`/`D`/`B`/`I`/`Y`/`T`) using first-pass clear/zero semantics, and date display decoding now renders all-space stored dates as empty values instead of synthetic `----` placeholders.
 - 2026-04-12: staged DBF/memo writes now have focused cleanup coverage that locks down removal of temporary (`.cptmp`) and backup (`.cpbak`) artifacts after successful mutation writes.
 - 2026-04-12: shared DBF mutation writes now use staged temporary-file swaps with backup/restore behavior to reduce partial-write risk during local-table mutation. Memo-backed replacements now also recover sidecar-path anomalies (for example, unexpected directory collisions at the memo sidecar path) while keeping DBF data readable and updated.

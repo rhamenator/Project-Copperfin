@@ -570,7 +570,7 @@ void test_append_blank_rejects_unsupported_field_layouts_without_changing_file()
     write_le_u16(table_bytes, 8U, 65U);
     write_le_u16(table_bytes, 10U, 9U);
 
-    write_field_descriptor(table_bytes, 32U, "VALUE", 'Q', 1U, 8U);
+    write_field_descriptor(table_bytes, 32U, "VALUE", 'W', 1U, 8U);
     table_bytes[64U] = 0x0DU;
     table_bytes[65U] = 0x20U;
     write_ascii(table_bytes, 66U, "12345678");
@@ -761,6 +761,55 @@ void test_replace_field_value_accepts_null_token_for_supported_types() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_varchar_and_varbinary_field_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_vq_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "vq.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TITLE", .type = 'C', .length = 10U},
+        {.name = "VCOL", .type = 'V', .length = 9U},
+        {.name = "QCOL", .type = 'Q', .length = 9U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"ALPHA", "V-ONE", "Q_ONE"},
+        {"BRAVO", "V-TWO", "Q_TWO"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "create_dbf_table_file should support V/Q fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "V/Q-backed DBFs should remain readable after creation");
+    if (parse_result.ok && parse_result.table.records.size() == 2U && parse_result.table.records[0].values.size() >= 3U) {
+        expect(parse_result.table.records[0].values[1].display_value == "V-ONE", "created V fields should round-trip");
+        expect(parse_result.table.records[1].values[2].display_value == "Q_TWO", "created Q fields should round-trip");
+    }
+
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VCOL", "V-THREE").ok, "replace_record_field_value should support V fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "QCOL", "Q_THREE").ok, "replace_record_field_value should support Q fields");
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(append_result.ok, "append_blank_record_to_file should support V/Q-backed tables");
+    expect(append_result.record_count == 3U, "V/Q-backed append_blank_record_to_file should grow the record count");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "V/Q-backed DBFs should remain readable after mutation");
+    expect(parse_result.table.records.size() == 3U, "V/Q-backed DBFs should expose appended rows");
+    if (parse_result.table.records.size() == 3U && parse_result.table.records[1].values.size() >= 3U) {
+        expect(parse_result.table.records[1].values[1].display_value == "V-THREE", "V field replacements should persist");
+        expect(parse_result.table.records[1].values[2].display_value == "Q_THREE", "Q field replacements should persist");
+        expect(parse_result.table.records[2].values[1].display_value.empty(), "blank appended V fields should initialize empty");
+        expect(parse_result.table.records[2].values[2].display_value.empty(), "blank appended Q fields should initialize empty");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_staged_write_temp_artifacts_are_cleaned_up() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -808,6 +857,7 @@ int main() {
     test_visual_asset_memo_sidecar_repair_round_trip();
     test_memo_replace_recovers_directory_sidecar_path();
     test_replace_field_value_accepts_null_token_for_supported_types();
+    test_varchar_and_varbinary_field_round_trip();
     test_staged_write_temp_artifacts_are_cleaned_up();
 
     if (failures != 0) {

@@ -309,7 +309,7 @@ std::optional<RawFieldDescriptor> find_raw_field(
 
 bool supports_direct_field_writes(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'L' || field_type == 'D' || field_type == 'B' || field_type == 'I' ||
-           field_type == 'Y' || field_type == 'T';
+           field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q';
 }
 
 bool is_memo_pointer_field(char field_type) {
@@ -322,7 +322,8 @@ bool supports_table_field_storage(char field_type) {
 
 bool supports_blank_field_initialization(char field_type) {
     return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'D' || field_type == 'L' ||
-           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || is_memo_pointer_field(field_type);
+           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q' ||
+           is_memo_pointer_field(field_type);
 }
 
 std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
@@ -621,6 +622,35 @@ DbfWriteResult write_field_bytes(
             std::copy(raw.begin(), raw.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
         }
+        case 'V':
+        case 'Q': {
+            if (field.length < 2U) {
+                return {.ok = false, .error = "V/Q fields require a width of at least 2 bytes.", .record_count = header.record_count};
+            }
+
+            std::fill_n(
+                table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                field.length,
+                static_cast<std::uint8_t>(0U));
+            if (is_null_token) {
+                table_bytes[field_offset + field.length - 1U] = 0U;
+                break;
+            }
+
+            std::string text = value;
+            if (field.type == 'V') {
+                text = trim_both(std::move(text));
+            }
+
+            const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
+            if (text.size() > payload_capacity) {
+                return {.ok = false, .error = "V/Q value is too large for the target field.", .record_count = header.record_count};
+            }
+
+            std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            table_bytes[field_offset + field.length - 1U] = static_cast<std::uint8_t>(text.size());
+            break;
+        }
         case 'I': {
             if (is_null_token) {
                 write_le_u32(table_bytes, field_offset, 0U);
@@ -736,6 +766,13 @@ DbfWriteResult append_blank_record_bytes(
             case 'M':
             case 'G':
             case 'P':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
+                break;
+            case 'V':
+            case 'Q':
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
                     field.length,
@@ -903,6 +940,20 @@ std::string decode_value(
             stream << value;
             return trim_both(stream.str());
         }
+        case 'V':
+        case 'Q': {
+            if (raw.size() < 2U) {
+                return {};
+            }
+
+            const std::size_t payload_capacity = raw.size() - 1U;
+            const std::size_t payload_length = std::min<std::size_t>(payload_capacity, raw.back());
+            std::string value(raw.begin(), raw.begin() + static_cast<std::ptrdiff_t>(payload_length));
+            if (field_type == 'V') {
+                return trim_right(std::move(value));
+            }
+            return value;
+        }
         case 'T': {
             if (raw.size() < 8U) {
                 return {};
@@ -1052,6 +1103,8 @@ DbfWriteResult create_dbf_table_file(
                 return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
             }
             has_memo_fields = true;
+        } else if ((field.type == 'V' || field.type == 'Q') && field.length < 2U) {
+            return {.ok = false, .error = "V/Q fields require a width of at least 2 bytes."};
         } else if (field.type == 'B' && field.length != 8U) {
             return {.ok = false, .error = "Double fields require a width of exactly 8 bytes."};
         } else if (field.type == 'I' && field.length != 4U) {
