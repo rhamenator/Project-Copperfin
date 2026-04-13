@@ -36,6 +36,8 @@ struct XAssetExecutableModel {
     std::vector<XAssetActionBinding> actions;
     std::vector<std::string> startup_routines;
     std::vector<std::string> startup_lines;
+    std::vector<std::string> shutdown_routines;
+    std::vector<std::string> shutdown_lines;
 };
 
 XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);

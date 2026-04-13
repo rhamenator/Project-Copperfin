@@ -455,6 +455,37 @@ void test_report_form_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_label_form_pause() {
+    namespace fs = std::filesystem;
+    const fs::path label_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\cust.lbx)";
+    if (!fs::exists(label_path)) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_label";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "label.prg";
+    write_text(
+        main_path,
+        "LABEL FORM '" + label_path.string() + "' PREVIEW\n"
+        "x = 2\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "LABEL FORM PREVIEW should pause in the event loop");
+    expect(state.waiting_for_events, "label preview should report waiting_for_events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_do_form_pause() {
     namespace fs = std::filesystem;
     const fs::path form_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx)";
@@ -1048,6 +1079,50 @@ void test_report_form_to_file_renders_without_event_loop_pause() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "report.render";
     }), "REPORT FORM TO FILE should emit a report.render event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_label_form_to_file_renders_without_event_loop_pause() {
+    namespace fs = std::filesystem;
+    const fs::path label_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\cust.lbx)";
+    if (!fs::exists(label_path)) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_label_render";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path output_path = temp_root / "cust_render.txt";
+    const fs::path main_path = temp_root / "label_render.prg";
+    write_text(
+        main_path,
+        "LABEL FORM '" + label_path.string() + "' TO FILE '" + output_path.string() + "'\n"
+        "x = 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LABEL FORM TO FILE should complete without entering a preview event loop");
+    expect(!state.waiting_for_events, "LABEL FORM TO FILE should not leave the runtime waiting_for_events");
+    expect(fs::exists(output_path), "LABEL FORM TO FILE should materialize an output artifact");
+
+    const auto x_value = state.globals.find("x");
+    expect(x_value != state.globals.end(), "statements after LABEL FORM TO FILE should continue executing");
+    if (x_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(x_value->second) == "2", "LABEL FORM TO FILE should not block follow-on statements");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "label.render";
+    }), "LABEL FORM TO FILE should emit a label.render event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -7847,7 +7922,9 @@ int main() {
     test_dispatch_event_handler();
     test_local_variables_in_stack_frame();
     test_report_form_pause();
+    test_label_form_pause();
     test_report_form_to_file_renders_without_event_loop_pause();
+    test_label_form_to_file_renders_without_event_loop_pause();
     test_do_form_pause();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();

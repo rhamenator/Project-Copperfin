@@ -110,7 +110,9 @@ flowchart TD
 
 	class B1,B2,B3,B4 done;
 
-	class C1,C2,C3,D1,D2,D3,D4,D5,E1,E3 partial;
+	class C1,C2,C3 done;
+
+	class D1,D2,D3,D4,D5,E1,E3 partial;
 
 	class E2 missing;
 
@@ -134,9 +136,9 @@ Current repo status against the Windows-first product goal:
 | Local query/mutation commands | Implemented | Local runtime command parity now includes `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL` with command-level `FOR`/`WHILE` and expression-driven `IN` targeting support, plus `SET FILTER TO/OFF`, aggregate built-ins, `CALCULATE`, command-level `COUNT`/`SUM`/`AVERAGE` with scope/`WHILE` and `IN`, and `TOTAL` with `IN` targeting plus local `I`/`Y` field support. Focused regressions now lock down cross-cursor targeting, boundary behavior, and mutation persistence across local DBF workflows. |
 | SQL pass-through/remote cursor behavior | Implemented | SQL pass-through now includes connection/session plumbing (`SQLCONNECT`/`SQLSTRINGCONNECT`/`SQLDISCONNECT`), command execution (`SQLEXEC`) with DML rows-affected tracking (`SQLROWCOUNT`), prepared-command execution (`SQLPREPARE` + `SQLEXEC(handle)`), and connection property metadata (`SQLGETPROP`/`SQLSETPROP`) with provider-hint classification. Remote cursor behavior covers local-style field lookup/navigation/filter-aware visibility, index-aware seek/order flows, aggregate semantics, and in-memory mutation commands (`APPEND BLANK`, `REPLACE`, `DELETE`/`RECALL` including `FOR`/`WHILE` targeting) over `SQLEXEC()` result cursors with focused runtime regression coverage. |
 | PRG execution engine | Implemented | The native PRG engine now has the core execution semantics needed for the Windows-first runtime layer: structured stepping/breakpoints, fault containment, configurable runtime guardrails, cooperative scheduler yielding, config-file controls (`CONFIG.FPW`/`CONFIG.FP`), shipped control-flow blocks (`IF`/`ELSEIF`/`ELSE`, `DO CASE`, `FOR`, `DO WHILE`, `WITH`, `TRY/CATCH/FINALLY`), `DO ... WITH` argument binding including first-pass `@` reference semantics, literal `TEXT/ENDTEXT` plus `TEXTMERGE`, first-pass `EVAL()` / `SET()` / `&macro`, `PRIVATE` / `STORE`, parser/analyzer module splits, richer `ON ERROR DO ... WITH` metadata, and focused runtime regression coverage for those engine-level behaviors. Broader command-surface parity remains tracked in adjacent runtime/designer/compiler areas, but the engine box itself is no longer the blocker. |
-| Forms/classes runtime parity | Partial | Bootstrapped `SCX/VCX` startup and extracted method dispatch exist, but lifecycle/container/data-environment fidelity is still incomplete. |
-| Reports/labels runtime parity | Partial | `FRX/LBX` preview/event-loop launch works, and first-pass `REPORT/LABEL ... TO FILE` render-path execution now emits output artifacts without entering the preview loop, but full report execution/output semantics remain incomplete. |
-| Menus runtime parity | Partial | Startup activation and action dispatch work, but richer menu navigation/state semantics are still unfinished. |
+| Forms/classes runtime parity | Implemented | First-pass `SCX/VCX` runtime parity now covers executable xAsset bootstrap generation, extracted method dispatch, root-object startup/shutdown sequencing (`Load`/`Init`/`Activate` plus `Deactivate`/`Destroy`/`Unload` where present), `DataEnvironment` open/close hooks, synthetic class-library coverage, and real-form launch/event-loop runtime validation. |
+| Reports/labels runtime parity | Implemented | `FRX/LBX` preview/event-loop launch and `REPORT/LABEL ... TO FILE` render-path execution now work for both report and label assets, including layout-aware runtime events, output artifact generation, and focused runtime regression coverage against installed VFP samples. |
+| Menus runtime parity | Implemented | `MNX` runtime parity now covers executable bootstrap generation for setup/activation/action-dispatch/cleanup flows, popup/menu event-loop entry, handler dispatch while waiting for events, submenu activation wrapping, and real-sample menu model extraction against installed VFP assets. |
 | Build/package/debug pipeline | Partial | Native build/package/runtime/debug hosts are wired end to end, but the compiler/runtime contract still relies on heuristics and line-based manifests. |
 | Shared designers | Partial | Shared VS/Studio designer shells exist for major asset families, but fidelity and round-trip depth are not yet production grade. |
 | Visual Studio integration | Partial | Asset editors, project panes, and first-pass FoxPro language assistance exist, and Studio document open now carries static PRG analyzer diagnostics for program files, but the IDE story is not yet full-fidelity. |
@@ -152,6 +154,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-13: Phase B runtime parity surfaces reached green status. The shared xAsset runtime model now covers first-pass form/class startup and shutdown sequencing (`DataEnvironment` open/close hooks plus root-object lifecycle methods where present), report/label preview and `TO FILE` runtime lanes are both regression-covered, and menu bootstrap generation now includes setup, action dispatch, submenu activation wrapping, and cleanup with real-sample model validation.
 - 2026-04-13: PRG execution-engine parity reached green status. The runtime now supports first-pass `WITH/ENDWITH` execution semantics for leading-dot member access, first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow with handled-error continuation and `FINALLY` execution, and first-pass `DO ... WITH @var` reference semantics that write callee updates back to the caller.
 - 2026-04-12: PRG structured-flow semantics now include first-pass `ELSEIF` branch support and `DO ... WITH` argument binding into `PARAMETERS`/`LPARAMETERS` locals for called routines, with focused regression coverage.
 - 2026-04-12: the PRG engine split progressed further: parser loading now lives in `prg_engine_parser.cpp`, static diagnostics live in a shared `cf_prg_analysis` library, and the Studio document path now carries analyzer diagnostics for `.prg` files without introducing a runtime/design-model link cycle.
@@ -309,20 +312,20 @@ This is where Copperfin stops being only an engine and starts being a FoxPro app
 
 ### C1. Forms And Classes
 
-- Finish `SCX/SCT` and `VCX/VCT` event/lifecycle fidelity.
-- Implement more realistic container, object, and data-environment behavior.
-- Improve extracted `METHODS` execution so form/class runtime behavior is closer to VFP rather than only bootstrapped.
+- First-pass runtime parity is now in place through executable xAsset bootstrap generation, extracted method dispatch, and root/data-environment lifecycle sequencing.
+- Follow-on work should deepen container/object semantics and visual/runtime fidelity instead of reopening the now-shipped bootstrap surface.
+- Designer and IDE work can build on this runtime path rather than carrying separate form/class execution heuristics.
 
 ### C2. Reports And Labels
 
-- Finish `FRX/FRT` and `LBX/LBT` runtime behavior.
-- Improve expression evaluation, preview fidelity, output generation, and report object behavior.
-- Build the output/export pipeline as a real subsystem, not only a preview shell.
+- First-pass runtime parity is now in place for `FRX/FRT` and `LBX/LBT` preview plus `TO FILE` execution.
+- Follow-on work should deepen layout fidelity, expression evaluation, export breadth, and report-object behavior on top of the shipped runtime lane.
+- Treat the render/export pipeline as an area for refinement, not as a blocker for basic runtime coverage anymore.
 
 ### C3. Menus
 
-- Finish `MNX/MNT` runtime fidelity beyond startup and first nested dispatch.
-- Improve popup/menu navigation, routing, state handling, and event semantics.
+- First-pass `MNX/MNT` runtime parity is now in place for startup, activation, action dispatch, submenu activation wrapping, and cleanup bootstrap flow.
+- Follow-on work should deepen popup/menu navigation, routing, state handling, and event semantics without regressing the shipped executable bootstrap surface.
 
 ### C4. Projects
 

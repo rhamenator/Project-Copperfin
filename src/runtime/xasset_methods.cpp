@@ -293,6 +293,32 @@ bool has_method(
     return true;
 }
 
+void append_unique_line(std::vector<std::string>& lines, std::string line) {
+    line = trim_copy(std::move(line));
+    if (line.empty()) {
+        return;
+    }
+    if (std::find(lines.begin(), lines.end(), line) == lines.end()) {
+        lines.push_back(std::move(line));
+    }
+}
+
+void append_if_method_exists(
+    const std::vector<XAssetMethod>& methods,
+    const std::string& object_path,
+    const std::string& method_name,
+    std::vector<std::string>& routines,
+    std::vector<std::string>& lines) {
+    std::string routine_name;
+    if (!has_method(methods, object_path, method_name, routine_name)) {
+        return;
+    }
+    if (std::find(routines.begin(), routines.end(), routine_name) == routines.end()) {
+        routines.push_back(routine_name);
+    }
+    append_unique_line(lines, "DO " + routine_name);
+}
+
 void append_methods(std::vector<XAssetMethod>& destination, const std::vector<XAssetMethod>& methods) {
     destination.insert(destination.end(), methods.begin(), methods.end());
 }
@@ -446,30 +472,29 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
     }
 
     if (document.kind == studio::StudioAssetKind::form || document.kind == studio::StudioAssetKind::class_library) {
-        std::string routine_name;
-        if (has_method(model.methods, "Dataenvironment", "BeforeOpenTables", routine_name)) {
-            model.startup_routines.push_back(routine_name);
+        append_if_method_exists(model.methods, "Dataenvironment", "BeforeOpenTables", model.startup_routines, model.startup_lines);
+        append_if_method_exists(model.methods, "Dataenvironment", "OpenTables", model.startup_routines, model.startup_lines);
+        if (!model.root_object_path.empty()) {
+            append_if_method_exists(model.methods, model.root_object_path, "Load", model.startup_routines, model.startup_lines);
+            append_if_method_exists(model.methods, model.root_object_path, "Init", model.startup_routines, model.startup_lines);
+            if (document.kind == studio::StudioAssetKind::form) {
+                append_if_method_exists(model.methods, model.root_object_path, "Activate", model.startup_routines, model.startup_lines);
+            }
+
+            append_if_method_exists(model.methods, model.root_object_path, "Deactivate", model.shutdown_routines, model.shutdown_lines);
+            append_if_method_exists(model.methods, model.root_object_path, "Destroy", model.shutdown_routines, model.shutdown_lines);
+            append_if_method_exists(model.methods, model.root_object_path, "Unload", model.shutdown_routines, model.shutdown_lines);
         }
-        if (!model.root_object_path.empty() && has_method(model.methods, model.root_object_path, "Load", routine_name)) {
-            model.startup_routines.push_back(routine_name);
-        }
-        if (!model.root_object_path.empty() && has_method(model.methods, model.root_object_path, "Init", routine_name)) {
-            model.startup_routines.push_back(routine_name);
-        }
-        if (document.kind == studio::StudioAssetKind::form &&
-            !model.root_object_path.empty() &&
-            has_method(model.methods, model.root_object_path, "Activate", routine_name)) {
-            model.startup_routines.push_back(routine_name);
-        }
-        for (const auto& startup_routine : model.startup_routines) {
-            model.startup_lines.push_back("DO " + startup_routine);
-        }
+        append_if_method_exists(model.methods, "Dataenvironment", "CloseTables", model.shutdown_routines, model.shutdown_lines);
         model.runnable_startup = !model.startup_routines.empty();
     } else if (document.kind == studio::StudioAssetKind::menu) {
         for (const auto& method : model.methods) {
             if (lowercase_copy(method.method_name) == "setup") {
                 model.startup_routines.push_back(method.routine_name);
-                model.startup_lines.push_back("DO " + method.routine_name);
+                append_unique_line(model.startup_lines, "DO " + method.routine_name);
+            } else if (lowercase_copy(method.method_name) == "cleanup") {
+                model.shutdown_routines.push_back(method.routine_name);
+                append_unique_line(model.shutdown_lines, "DO " + method.routine_name);
             }
         }
 
@@ -531,6 +556,9 @@ std::string build_xasset_bootstrap_source(const XAssetExecutableModel& model, bo
     }
     if (include_read_events && !model.startup_enters_event_loop) {
         stream << "READ EVENTS\n";
+    }
+    for (const auto& line : model.shutdown_lines) {
+        stream << line << "\n";
     }
     stream << "RETURN\n";
 
