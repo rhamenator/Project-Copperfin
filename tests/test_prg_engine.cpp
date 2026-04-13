@@ -896,6 +896,103 @@ void test_use_and_data_session_isolation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_cross_session_alias_and_work_area_isolation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cross_session_isolation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "cross_session_isolation.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nS1PeopleArea = SELECT('People')\n"
+        "lS1PeopleUsedBefore = USED('People')\n"
+        "SET DATASESSION TO 2\n"
+        "nS2PeopleLookupBefore = SELECT('People')\n"
+        "USE '" + table_path.string() + "' ALIAS SessionTwoPeople IN 0\n"
+        "nS2PeopleArea = SELECT('SessionTwoPeople')\n"
+        "lS2PeopleUsedBefore = USED('SessionTwoPeople')\n"
+        "SET DATASESSION TO 1\n"
+        "USE IN 1\n"
+        "lS1PeopleUsedAfterClose = USED('People')\n"
+        "nS1PeopleLookupAfterClose = SELECT('People')\n"
+        "SET DATASESSION TO 2\n"
+        "lS2PeopleStillUsed = USED('SessionTwoPeople')\n"
+        "nS2PeopleAreaAfterReturn = SELECT('SessionTwoPeople')\n"
+        "cS2AliasAfterReturn = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "cross-session alias/work-area isolation script should complete");
+    expect(state.work_area.data_session == 2, "script should finish in data session 2");
+
+    const auto s1_area = state.globals.find("ns1peoplearea");
+    const auto s1_used_before = state.globals.find("ls1peopleusedbefore");
+    const auto s2_lookup_before = state.globals.find("ns2peoplelookupbefore");
+    const auto s2_area = state.globals.find("ns2peoplearea");
+    const auto s2_used_before = state.globals.find("ls2peopleusedbefore");
+    const auto s1_used_after_close = state.globals.find("ls1peopleusedafterclose");
+    const auto s1_lookup_after_close = state.globals.find("ns1peoplelookupafterclose");
+    const auto s2_still_used = state.globals.find("ls2peoplestillused");
+    const auto s2_area_after_return = state.globals.find("ns2peopleareaafterreturn");
+    const auto s2_alias_after_return = state.globals.find("cs2aliasafterreturn");
+
+    expect(s1_area != state.globals.end(), "session-1 alias area should be captured");
+    expect(s1_used_before != state.globals.end(), "session-1 USED() before close should be captured");
+    expect(s2_lookup_before != state.globals.end(), "session-2 lookup for session-1 alias should be captured");
+    expect(s2_area != state.globals.end(), "session-2 alias area should be captured");
+    expect(s2_used_before != state.globals.end(), "session-2 USED() before returning should be captured");
+    expect(s1_used_after_close != state.globals.end(), "session-1 USED() after close should be captured");
+    expect(s1_lookup_after_close != state.globals.end(), "session-1 alias lookup after close should be captured");
+    expect(s2_still_used != state.globals.end(), "session-2 USED() after returning should be captured");
+    expect(s2_area_after_return != state.globals.end(), "session-2 alias area after return should be captured");
+    expect(s2_alias_after_return != state.globals.end(), "session-2 selected alias after return should be captured");
+
+    if (s1_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s1_area->second) == "1", "session 1 should open People in work area 1");
+    }
+    if (s1_used_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s1_used_before->second) == "true", "session 1 should report People as open");
+    }
+    if (s2_lookup_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_lookup_before->second) == "0", "session 2 should not resolve aliases from session 1");
+    }
+    if (s2_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_area->second) == "1", "session 2 should reuse its own work area 1 independently");
+    }
+    if (s2_used_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_used_before->second) == "true", "session 2 should report its own alias as open");
+    }
+    if (s1_used_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s1_used_after_close->second) == "false", "USE IN 1 in session 1 should close only session-1 area 1");
+    }
+    if (s1_lookup_after_close != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s1_lookup_after_close->second) == "0", "session-1 alias lookup should clear after close");
+    }
+    if (s2_still_used != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_still_used->second) == "true", "closing session-1 area 1 should not affect session-2 area 1");
+    }
+    if (s2_area_after_return != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_area_after_return->second) == "1", "session-2 alias lookup should still resolve to session-2 area 1");
+    }
+    if (s2_alias_after_return != state.globals.end()) {
+        expect(copperfin::runtime::format_value(s2_alias_after_return->second) == "SessionTwoPeople", "session-2 selected alias should still be SessionTwoPeople");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_in_existing_alias_reuses_target_work_area() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_in_existing_alias";
@@ -6884,6 +6981,7 @@ int main() {
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
     test_use_and_data_session_isolation();
+    test_cross_session_alias_and_work_area_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();
     test_plain_use_reuses_current_selected_work_area();

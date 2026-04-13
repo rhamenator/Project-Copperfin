@@ -83,7 +83,9 @@ flowchart LR
 
 	class DBF,DBC done;
 
-	class IDX,WS,LQ,SQ,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
+	class WS done;
+
+	class IDX,LQ,SQ,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
 
 	class FED missing;
 
