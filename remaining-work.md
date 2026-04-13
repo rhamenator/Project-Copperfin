@@ -103,9 +103,6 @@ flowchart TD
 	D3 --> D5
 	B4 --> E1 --> E2 --> E3
 
-	D2 -. required for production-grade IDE workflows .-> D3
-	D4 -. standalone delivery depends on shell + language maturity .-> D5
-
 	class A1,A2,A3,A4,A5 done;
 
 	class B1,B2,B3,B4 done;
@@ -156,6 +153,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-13: the old gray dependency callouts under Phase C were retired from the architecture diagram. Shared designers, Visual Studio integration, the standalone Studio shell, and the shipped language-service baseline are all now green, so those relationships are no longer tracked as unresolved blockers.
 - 2026-04-13: Phase C reached green status. The repo now treats the build/package/debug pipeline, shared designers, Visual Studio integration, standalone Studio shell, and FoxPro language-service layer as implemented, with the subsystem registry updated to match the shipped Phase C surfaces.
 - 2026-04-13: Phase B runtime parity surfaces reached green status. The shared xAsset runtime model now covers first-pass form/class startup and shutdown sequencing (`DataEnvironment` open/close hooks plus root-object lifecycle methods where present), report/label preview and `TO FILE` runtime lanes are both regression-covered, and menu bootstrap generation now includes setup, action dispatch, submenu activation wrapping, and cleanup with real-sample model validation.
 - 2026-04-13: PRG execution-engine parity reached green status. The runtime now supports first-pass `WITH/ENDWITH` execution semantics for leading-dot member access, first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow with handled-error continuation and `FINALLY` execution, and first-pass `DO ... WITH @var` reference semantics that write callee updates back to the caller.
@@ -394,9 +392,9 @@ This phase should consume the completed runtime and design model rather than inv
 - Follow-on work should deepen workflow coverage and polish until it fully matches the strongest daily-driver scenarios.
 - Keep it converged with the shared core rather than forking behavior away from the Visual Studio path.
 
-## Phase G: Language Service Completion
+## Phase G: Language Service Deepening
 
-This can progress in parallel with shell work, but it should still depend on the runtime and project index becoming stronger.
+The baseline language-service surface is now shipped. What remains here is depth, breadth, and stronger semantics on top of that baseline.
 
 ### G1. Editor Semantics
 
