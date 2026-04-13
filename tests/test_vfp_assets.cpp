@@ -82,14 +82,20 @@ std::vector<std::uint8_t> make_synthetic_cdx_family_bytes(bool include_second_ta
     if (include_second_tag) {
         write_le_u32(bytes, 1028U, 11U * 512U);
         write_le_u32(bytes, 1032U, 4U * 512U);
+        write_le_u16(bytes, 11U * 512U, 0x0001U);
+        write_le_u16(bytes, (11U * 512U) + 2U, 1U);
+        write_le_u16(bytes, 4U * 512U, 0x0003U);
+        write_le_u16(bytes, (4U * 512U) + 2U, 2U);
         write_ascii(bytes, (3U * 512U) - 20U, "CUSTOMER_I");
         write_ascii(bytes, (3U * 512U) - 10U, "COMPANY_NA");
-        write_ascii(bytes, 4U * 512U, "UPPER(company_name)");
-        write_ascii(bytes, 11U * 512U, "customer_id");
+        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(company_name)");
+        write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
     } else {
         write_le_u32(bytes, 1028U, 4U * 512U);
+        write_le_u16(bytes, 4U * 512U, 0x0003U);
+        write_le_u16(bytes, (4U * 512U) + 2U, 1U);
         write_ascii(bytes, (3U * 512U) - 10U, "NAME");
-        write_ascii(bytes, 4U * 512U, "UPPER(NAME)");
+        write_ascii(bytes, (4U * 512U) + 24U, "UPPER(NAME)");
     }
 
     if (include_for_expression) {
@@ -113,7 +119,7 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_decoys() {
     write_ascii(bytes, (3U * 512U) - 10U, "CUSTOMER_I");
     write_ascii(bytes, (3U * 512U) + 24U, "customer_invoice_id");
     write_ascii(bytes, (4U * 512U) + 24U, "invoice_deleted = .F.");
-    write_ascii(bytes, 11U * 512U, "customer_id");
+    write_ascii(bytes, (11U * 512U) + 24U, "customer_id");
     write_ascii(bytes, (12U * 512U) + 16U, "DELETED() = .F.");
 
     return bytes;
@@ -131,13 +137,13 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_descriptive_tag_name() {
     write_le_u32(bytes, 1028U, 4U * 512U);
 
     write_ascii(bytes, (3U * 512U) - 10U, "FULLNAME");
-    write_ascii(bytes, 4U * 512U, "UPPER(LAST+FIRST)");
+    write_ascii(bytes, (4U * 512U) + 24U, "UPPER(LAST+FIRST)");
     return bytes;
 }
 
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
     constexpr std::uint16_t block_size = 512U;
-    std::vector<std::uint8_t> bytes(3U * block_size, 0U);
+    std::vector<std::uint8_t> bytes(6U * block_size, 0U);
 
     // Header block: real dBase IV MDX format fields at documented byte offsets.
     bytes[0] = 0x02U;                                 // version = dBase IV
@@ -147,16 +153,38 @@ std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
     bytes[25] = 48U;                                  // tag_slots (max 48)
     bytes[26] = 32U;                                  // tag_entry_size = 32
     write_le_u16(bytes, 28U, 2U);                     // tags_in_use = 2
-    write_le_u32(bytes, 32U, 3U);                     // pages_in_file = 3
+    write_le_u32(bytes, 32U, 6U);                     // pages_in_file = 6
 
     // Tag table starts at byte 512 (= effective_block_size).
     // Entry 0 (bytes 512–543): tag name at entry+4 = byte 516.
-    write_le_u32(bytes, block_size + 0U, 0U);         // tag_header_page_num = 0
+    write_le_u32(bytes, block_size + 0U, 2U);         // tag_header_page_num = 2
     write_ascii(bytes, block_size + 4U, "NAME_TAG");  // 11-byte null-padded name field
+    bytes[block_size + 15U] = static_cast<std::uint8_t>('C');
+    bytes[block_size + 16U] = 0x01U;
+    bytes[block_size + 17U] = 0x00U;
+    bytes[block_size + 18U] = 0x00U;
+    bytes[block_size + 20U] = static_cast<std::uint8_t>('C');
 
     // Entry 1 (bytes 544–575): tag name at entry+4 = byte 548.
-    write_le_u32(bytes, block_size + 32U, 0U);        // tag_header_page_num = 0
+    write_le_u32(bytes, block_size + 32U, 3U);        // tag_header_page_num = 3
     write_ascii(bytes, block_size + 36U, "CITYSTATE"); // 11-byte null-padded name field
+    bytes[block_size + 47U] = static_cast<std::uint8_t>('C');
+    bytes[block_size + 48U] = 0x02U;
+    bytes[block_size + 49U] = 0x00U;
+    bytes[block_size + 50U] = 0x00U;
+    bytes[block_size + 52U] = static_cast<std::uint8_t>('C');
+
+    const std::size_t first_tag_header = 2U * block_size;
+    write_le_u16(bytes, first_tag_header + 0U, 0x0001U);
+    write_le_u16(bytes, first_tag_header + 2U, 9U);
+    write_ascii(bytes, first_tag_header + 24U, "UPPER(NAME)");
+    write_ascii(bytes, first_tag_header + 80U, "DELETED() = .F.");
+
+    const std::size_t second_tag_header = 3U * block_size;
+    write_le_u16(bytes, second_tag_header + 0U, 0x0001U);
+    write_le_u16(bytes, second_tag_header + 2U, 7U);
+    write_ascii(bytes, second_tag_header + 24U, "UPPER(CITY+STATE)");
+    write_ascii(bytes, second_tag_header + 88U, "STATE = 'WA'");
 
     if (include_decoy_text) {
         // Decoys placed outside the tag-descriptor positions so the real-format parser ignores them.
@@ -220,6 +248,7 @@ void test_parse_index_probe_for_cdx() {
     if (result.probe.tags.size() >= 2U) {
         expect(result.probe.tags[0].name_hint == "CUSTOMER_I", "directory leaf parsing should preserve the first stored tag name");
         expect(result.probe.tags[0].tag_page_offset_hint == (11U * 512U), "CDX probe should surface the first tag page hint");
+        expect(result.probe.tags[0].tag_sort_marker_hint == "flags:0x0001,entries:1", "CDX probe should expose per-tag page marker hints");
         expect(
             result.probe.tags[0].key_expression_hint == "customer_id",
             "directory tag names should still bind to the matching plain-field expression");
@@ -227,6 +256,7 @@ void test_parse_index_probe_for_cdx() {
         expect(!result.probe.tags[0].inferred_name, "directory-derived tag names should not be marked as inferred");
         expect(result.probe.tags[1].name_hint == "COMPANY_NA", "directory leaf parsing should preserve the second stored tag name");
         expect(result.probe.tags[1].tag_page_offset_hint == (4U * 512U), "CDX probe should surface the second tag page hint");
+        expect(result.probe.tags[1].tag_sort_marker_hint == "flags:0x0003,entries:2", "CDX probe should expose per-tag page marker hints");
         expect(
             result.probe.tags[1].key_expression_hint == "UPPER(company_name)",
             "directory tag names should still bind to the matching functional expression");
@@ -251,6 +281,7 @@ void test_parse_index_probe_for_dcx() {
     if (!result.probe.tags.empty()) {
         expect(result.probe.tags.front().name_hint == "NAME", "DCX probe should preserve the stored tag name");
         expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "DCX probe should preserve the stored tag page hint");
+        expect(result.probe.tags.front().tag_sort_marker_hint == "flags:0x0003,entries:1", "DCX probe should expose per-tag page marker hints");
         expect(result.probe.tags.front().key_expression_hint == "UPPER(NAME)", "DCX probe should expose the key expression hint");
         expect(result.probe.tags.front().normalization_hint == "upper", "DCX probe should expose first-pass normalization hints");
         expect(result.probe.tags.front().collation_hint == "case-folded", "DCX probe should expose first-pass collation hints");
@@ -416,10 +447,25 @@ void test_parse_index_probe_for_mdx() {
     expect(result.probe.kind == copperfin::vfp::IndexKind::mdx, "MDX probe kind should be preserved");
     expect(result.probe.multi_tag, "MDX should be treated as multi-tag");
     expect(result.probe.production_candidate, "MDX should be treated as a production index candidate");
+    expect(result.probe.header_sort_marker_hint == "slots:48,entry_size:32,in_use:2", "MDX probe should expose header slot metadata");
     expect(result.probe.tags.size() == 2U, "MDX probe should enumerate first-pass tag hints");
     if (result.probe.tags.size() >= 2U) {
         expect(result.probe.tags[0].name_hint == "NAME_TAG", "MDX probe should expose the first tag hint");
         expect(result.probe.tags[1].name_hint == "CITYSTATE", "MDX probe should expose the second tag hint");
+        expect(result.probe.tags[0].tag_page_offset_hint == (2U * 512U), "MDX probe should expose the first tag header-page offset hint");
+        expect(result.probe.tags[1].tag_page_offset_hint == (3U * 512U), "MDX probe should expose the second tag header-page offset hint");
+        expect(result.probe.tags[0].key_expression_hint == "UPPER(NAME)", "MDX probe should extract first-pass key expressions from tag headers");
+        expect(result.probe.tags[1].key_expression_hint == "UPPER(CITY+STATE)", "MDX probe should extract first-pass key expressions from tag headers");
+        expect(result.probe.tags[0].for_expression_hint == "DELETED() = .F.", "MDX probe should extract first-pass FOR expressions from tag headers");
+        expect(result.probe.tags[1].for_expression_hint == "STATE = 'WA'", "MDX probe should extract first-pass FOR expressions from tag headers");
+        expect(result.probe.tags[0].tag_sort_marker_hint == "flags:0x0001,entries:9", "MDX probe should expose first-tag page marker metadata");
+        expect(result.probe.tags[1].tag_sort_marker_hint == "flags:0x0001,entries:7", "MDX probe should expose second-tag page marker metadata");
+        expect(result.probe.tags[0].key_format_marker == static_cast<std::uint8_t>('C'), "MDX probe should preserve the tag key-format marker");
+        expect(result.probe.tags[0].key_type_marker == static_cast<std::uint8_t>('C'), "MDX probe should preserve the tag key-type marker");
+        expect(result.probe.tags[0].thread_hint == 1U, "MDX probe should preserve the tag thread marker bytes");
+        expect(result.probe.tags[1].thread_hint == 2U, "MDX probe should preserve per-tag thread marker bytes");
+        expect(result.probe.tags[0].normalization_hint == "upper", "MDX probe should derive first-pass normalization hints from key expressions");
+        expect(result.probe.tags[0].collation_hint == "case-folded", "MDX probe should derive first-pass collation hints from key expressions");
     }
 }
 
@@ -498,6 +544,8 @@ void test_inspect_asset_collects_companion_indexes() {
                 expect(index.probe.tags[0].name_hint == "NAME_TAG", "inspect_asset should expose the first MDX tag hint");
                 expect(index.probe.tags[1].name_hint == "CITYSTATE", "inspect_asset should expose the second MDX tag hint");
                 expect(index.probe.tags[0].name_hint != "LATE_BLOCK_TEXT", "inspect_asset should not promote late block text into MDX tags");
+                expect(index.probe.tags[0].key_expression_hint == "UPPER(NAME)", "inspect_asset should expose first-pass MDX key-expression metadata");
+                expect(index.probe.tags[0].for_expression_hint == "DELETED() = .F.", "inspect_asset should expose first-pass MDX FOR-expression metadata");
             }
         }
     }

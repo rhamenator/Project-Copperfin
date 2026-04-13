@@ -93,12 +93,128 @@ std::string format_hex_byte(std::uint8_t value) {
     return text;
 }
 
+std::string format_hex_u16(std::uint16_t value) {
+    static const char digits[] = "0123456789ABCDEF";
+    std::string text = "0x0000";
+    text[2] = digits[(value >> 12U) & 0x0FU];
+    text[3] = digits[(value >> 8U) & 0x0FU];
+    text[4] = digits[(value >> 4U) & 0x0FU];
+    text[5] = digits[value & 0x0FU];
+    return text;
+}
+
 std::string make_idx_header_sort_marker(std::uint8_t signature, std::uint8_t flags) {
     return "sig:" + format_hex_byte(signature) + ",flags:" + format_hex_byte(flags);
 }
 
 std::string make_ndx_header_sort_marker(std::uint8_t signature) {
     return "ver:" + format_hex_byte(signature);
+}
+
+std::string make_tag_sort_marker(std::uint16_t flags, std::uint16_t entry_count) {
+    return "flags:" + format_hex_u16(flags) + ",entries:" + std::to_string(entry_count);
+}
+
+struct PrintableRun {
+    std::size_t offset = 0;
+    std::string text;
+};
+
+bool is_identifier_char(char ch) {
+    const auto raw = static_cast<unsigned char>(ch);
+    return std::isalnum(raw) != 0 || ch == '_';
+}
+
+bool is_expression_char(char ch) {
+    const auto raw = static_cast<unsigned char>(ch);
+    return std::isalnum(raw) != 0 || ch == '_' || ch == '(' || ch == ')' ||
+           ch == '.' || ch == ',' || ch == '\'' || ch == '"' || ch == ' ' ||
+           ch == '=' || ch == '<' || ch == '>' || ch == '+' || ch == '-' ||
+           ch == '*' || ch == '/' || ch == '!';
+}
+
+std::vector<PrintableRun> collect_printable_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
+    std::vector<PrintableRun> runs;
+    const std::size_t bounded_end = std::min(end, bytes.size());
+
+    for (std::size_t index = std::min(start, bounded_end); index < bounded_end;) {
+        const auto raw = static_cast<unsigned char>(bytes[index]);
+        if (std::isprint(raw) == 0) {
+            ++index;
+            continue;
+        }
+
+        const std::size_t run_start = index;
+        std::string text;
+        while (index < bounded_end) {
+            const auto current = static_cast<unsigned char>(bytes[index]);
+            if (std::isprint(current) == 0) {
+                break;
+            }
+            text.push_back(static_cast<char>(current));
+            ++index;
+        }
+
+        if (text.size() >= 4U) {
+            runs.push_back({.offset = run_start, .text = std::move(text)});
+        }
+    }
+
+    return runs;
+}
+
+bool looks_like_expression_candidate(const std::string& text) {
+    if (text.size() < 4U || text.size() > 96U) {
+        return false;
+    }
+
+    if (!std::all_of(text.begin(), text.end(), [](char ch) { return is_expression_char(ch); })) {
+        return false;
+    }
+
+    const bool has_identifier = std::any_of(text.begin(), text.end(), [](char ch) {
+        return is_identifier_char(ch);
+    });
+    const bool has_parens = text.find('(') != std::string::npos && text.find(')') != std::string::npos;
+    const bool has_operator = text.find('=') != std::string::npos ||
+                              text.find('<') != std::string::npos ||
+                              text.find('>') != std::string::npos;
+    return has_identifier && (has_parens || has_operator || text.find('+') != std::string::npos);
+}
+
+bool looks_like_for_expression_candidate(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+
+    const std::string upper = uppercase_copy(text);
+    return text.find('=') != std::string::npos ||
+           text.find('<') != std::string::npos ||
+           text.find('>') != std::string::npos ||
+           upper.find(".T.") != std::string::npos ||
+           upper.find(".F.") != std::string::npos ||
+           upper.starts_with("DELETED(") ||
+           upper.find(" AND ") != std::string::npos ||
+           upper.find(" OR ") != std::string::npos ||
+           upper.starts_with("NOT ");
+}
+
+std::vector<PrintableRun> collect_expression_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
+    std::vector<PrintableRun> expressions;
+    for (const PrintableRun& run : collect_printable_runs(bytes, start, end)) {
+        const std::string candidate = trim_copy(run.text);
+        if (!looks_like_expression_candidate(candidate)) {
+            continue;
+        }
+        expressions.push_back({.offset = run.offset, .text = candidate});
+    }
+    return expressions;
 }
 
 std::string derive_normalization_hint(const std::string& expression) {
@@ -172,12 +288,22 @@ IndexParseResult parse_cdx_family_probe(
     for (const CdxTagDescriptor& tag : cdx_result.tags) {
         const std::string normalization_hint = derive_normalization_hint(tag.key_expression_hint);
         const std::string collation_hint = derive_collation_hint(tag.key_expression_hint, normalization_hint);
+        std::string tag_sort_marker_hint;
+        if (tag.tag_page_offset_hint != 0U) {
+            const std::size_t tag_page_offset = static_cast<std::size_t>(tag.tag_page_offset_hint);
+            if ((tag_page_offset + 4U) <= bytes.size()) {
+                const std::uint16_t flags = read_le_u16(bytes, tag_page_offset);
+                const std::uint16_t entry_count = read_le_u16(bytes, tag_page_offset + 2U);
+                tag_sort_marker_hint = make_tag_sort_marker(flags, entry_count);
+            }
+        }
         probe.tags.push_back({
             .name_hint = tag.name_hint,
             .key_expression_hint = tag.key_expression_hint,
             .for_expression_hint = tag.for_expression_hint,
             .normalization_hint = normalization_hint,
             .collation_hint = collation_hint,
+            .tag_sort_marker_hint = tag_sort_marker_hint,
             .tag_page_offset_hint = tag.tag_page_offset_hint,
             .name_offset_hint = tag.name_offset_hint,
             .key_expression_offset_hint = tag.key_expression_offset_hint,
@@ -338,6 +464,11 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
 
     probe.block_size = effective_block_size;
 
+    probe.header_sort_marker_hint =
+        "slots:" + std::to_string(tag_slots) +
+        ",entry_size:" + std::to_string(tag_entry_size) +
+        ",in_use:" + std::to_string(tags_in_use);
+
     // Tag table starts at byte offset effective_block_size.
     // Each entry is tag_entry_size bytes: page_num (4), name (11), key_format (1), threads (3), reserved (1), key_type (1), reserved (11).
     const std::size_t tag_table_offset = static_cast<std::size_t>(effective_block_size);
@@ -356,6 +487,11 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
         IndexTagProbe tag_probe;
         tag_probe.name_hint = tag_name;
         tag_probe.name_offset_hint = static_cast<std::uint32_t>(entry_offset + 4U);
+        tag_probe.key_format_marker = bytes[entry_offset + 15U];
+        tag_probe.thread_hint = static_cast<std::uint32_t>(bytes[entry_offset + 16U]) |
+                    (static_cast<std::uint32_t>(bytes[entry_offset + 17U]) << 8U) |
+                    (static_cast<std::uint32_t>(bytes[entry_offset + 18U]) << 16U);
+        tag_probe.key_type_marker = bytes[entry_offset + 20U];
         tag_probe.inferred_name = false;
 
         // Follow the tag header page to read the key expression if the page is in-bounds.
@@ -363,15 +499,51 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
         if (tag_header_page > 0U) {
             const std::size_t tag_header_offset =
                 static_cast<std::size_t>(tag_header_page) * static_cast<std::size_t>(effective_block_size);
+            if (tag_header_offset < bytes.size()) {
+                tag_probe.tag_page_offset_hint = static_cast<std::uint32_t>(tag_header_offset);
+            }
             if (tag_header_offset + 24U < bytes.size()) {
                 const std::size_t expr_max = bytes.size() - tag_header_offset - 24U;
                 const std::string key_expr =
                     read_ascii_hint(bytes, tag_header_offset + 24U, std::min<std::size_t>(220U, expr_max));
                 if (!key_expr.empty()) {
                     tag_probe.key_expression_hint = key_expr;
+                    tag_probe.key_expression_offset_hint = static_cast<std::uint32_t>(tag_header_offset + 24U);
                     tag_probe.normalization_hint = derive_normalization_hint(key_expr);
                     tag_probe.collation_hint =
                         derive_collation_hint(key_expr, tag_probe.normalization_hint);
+                }
+            }
+
+            if (tag_header_offset + 4U <= bytes.size()) {
+                const std::uint16_t flags = read_le_u16(bytes, tag_header_offset);
+                const std::uint16_t entry_count = read_le_u16(bytes, tag_header_offset + 2U);
+                tag_probe.tag_sort_marker_hint = make_tag_sort_marker(flags, entry_count);
+            }
+
+            if (tag_probe.key_expression_hint.empty() || tag_probe.for_expression_hint.empty()) {
+                const std::size_t page_end = std::min(
+                    bytes.size(),
+                    tag_header_offset + static_cast<std::size_t>(effective_block_size));
+                const std::vector<PrintableRun> expression_runs =
+                    collect_expression_runs(bytes, tag_header_offset + 24U, page_end);
+                for (const PrintableRun& run : expression_runs) {
+                    if (tag_probe.key_expression_hint.empty()) {
+                        tag_probe.key_expression_hint = run.text;
+                        tag_probe.key_expression_offset_hint = static_cast<std::uint32_t>(run.offset);
+                        tag_probe.normalization_hint = derive_normalization_hint(tag_probe.key_expression_hint);
+                        tag_probe.collation_hint =
+                            derive_collation_hint(tag_probe.key_expression_hint, tag_probe.normalization_hint);
+                        continue;
+                    }
+
+                    if (tag_probe.for_expression_hint.empty() &&
+                        run.offset > tag_probe.key_expression_offset_hint &&
+                        looks_like_for_expression_candidate(run.text)) {
+                        tag_probe.for_expression_hint = run.text;
+                        tag_probe.for_expression_offset_hint = static_cast<std::uint32_t>(run.offset);
+                        break;
+                    }
                 }
             }
         }

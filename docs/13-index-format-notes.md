@@ -10,6 +10,7 @@ Current coverage:
   - First-pass directory leaf-page parsing now surfaces stored tag names plus conservative per-tag page hints from plausible node pages, and page-local key/`FOR` expression hints now prefer the hinted tag-page neighborhood before falling back to whole-file heuristics.
   - When a stored tag name is descriptive rather than expression-shaped, single local tag-page expressions can now still bind through the grounded page hint instead of being dropped back to derived fallback names.
   - First-pass expression-derived normalization/collation hints are now surfaced for tag expressions such as `UPPER(...)`/`LOWER(...)`, with the current implementation explicitly treated as heuristic metadata rather than true binary collation fidelity.
+  - Per-tag page marker hints (`flags` and entry counts) are now surfaced from grounded tag-page headers when page offsets are available.
   - Focused regression coverage now exercises direct `.cdx`/`.dcx` probing, adversarial decoy-expression cases, and `DBC` companion discovery.
 - `IDX`
   - Visual FoxPro single-index header probe.
@@ -22,9 +23,10 @@ Current coverage:
   - Additive opaque header sort-marker hints and a key-domain hint now surface from existing header bytes, again without mapping raw markers to named collations.
   - The runtime now uses the `NDX` key-domain hint for a narrow indexed-compare slice: numeric-domain `SEEK` ordering can behave numerically without changing broader collation behavior.
 - `MDX`
-  - First-pass block-level probe with block-local tag hint enumeration from non-header metadata regions.
-  - Minimal plausibility checks now require a non-empty header block plus at least one plausible non-header tag hint.
-  - Treated as a production multi-tag index container pending deeper layout, expression, and write parsing.
+  - Block-oriented header probe with plausibility checks for block sizing and tag table geometry.
+  - Tag-table parsing now surfaces per-tag page offsets, key-format markers, key-type markers, and thread marker hints.
+  - Tag-header page parsing now extracts first-pass key and `FOR` expressions with source offsets, plus expression-derived normalization/collation hints.
+  - Treated as a production multi-tag index container for read/inspection workflows; write fidelity remains out of scope.
 
 Current inspector behavior:
 
@@ -62,8 +64,7 @@ Reference docs used to keep the probe rules grounded:
 
 Next implementation steps:
 
-1. Extend the new `CDX/DCX` directory-page parsing into deeper per-tag metadata extraction instead of relying on expression matching heuristics for anything beyond first-pass key/`FOR` hints.
-2. Deepen `MDX` parsing beyond block-local tag hints into real layout and expression metadata extraction.
-3. Move beyond first-pass expression-derived normalization/collation hints, current opaque single-index header markers, and the narrow `NDX` key-domain runtime slice into more format-grounded metadata where the file layouts support it.
-4. Correlate DBF field metadata with index expressions for migration planning.
-5. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.
+1. Move beyond first-pass expression-derived normalization/collation hints, current opaque single-index header markers, and the narrow `NDX` key-domain runtime slice into more format-grounded metadata where the file layouts support it.
+2. Correlate DBF field metadata with index expressions for migration planning.
+3. Deepen read-only validation against real VFP and dBase fixtures beyond the current smoke coverage.
+4. Design and stage explicit index-write fidelity slices (separate from read/inspection parsing).
