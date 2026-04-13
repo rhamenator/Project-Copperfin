@@ -1,5 +1,6 @@
 #pragma once
 
+#include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
 
@@ -46,6 +47,7 @@ struct StudioDocumentModel {
     bool read_only = false;
     bool launched_from_visual_studio = false;
     vfp::AssetInspectionResult inspection{};
+    std::vector<runtime::PrgStaticDiagnostic> static_diagnostics;
     bool table_preview_available = false;
     vfp::DbfTable table_preview{};
 };

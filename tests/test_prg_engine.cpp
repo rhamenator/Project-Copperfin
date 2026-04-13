@@ -7587,6 +7587,81 @@ void test_on_error_do_handler_dispatches_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_on_error_do_with_handler_receives_error_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_on_error_do_with";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "on_error_do_with.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr WITH MESSAGE(), PROGRAM(), LINENO(), ERROR()\n"
+        "DO missing_routine\n"
+        "after_error = 1\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "LPARAMETERS err_message, err_program, err_line, err_code\n"
+        "captured_message = err_message\n"
+        "captured_program = err_program\n"
+        "captured_line = err_line\n"
+        "captured_code = err_code\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ON ERROR DO WITH script should complete after handler dispatch");
+
+    const auto captured_message = state.globals.find("captured_message");
+    const auto captured_program = state.globals.find("captured_program");
+    const auto captured_line = state.globals.find("captured_line");
+    const auto captured_code = state.globals.find("captured_code");
+    const auto after_error = state.globals.find("after_error");
+    expect(captured_message != state.globals.end(), "ON ERROR DO WITH handler should capture MESSAGE()");
+    expect(captured_program != state.globals.end(), "ON ERROR DO WITH handler should capture PROGRAM()");
+    expect(captured_line != state.globals.end(), "ON ERROR DO WITH handler should capture LINENO()");
+    expect(captured_code != state.globals.end(), "ON ERROR DO WITH handler should capture ERROR()");
+    expect(after_error != state.globals.end(), "execution should continue after ON ERROR DO WITH handler returns");
+
+    if (captured_message != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(captured_message->second).find("Unable to resolve DO target") != std::string::npos,
+            "MESSAGE() should describe the failing command");
+    }
+    if (captured_program != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(captured_program->second) == "main",
+            "PROGRAM() should report the failing procedure context");
+    }
+    if (captured_line != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(captured_line->second) == "2",
+            "LINENO() should report the failing source line");
+    }
+    if (captured_code != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(captured_code->second) == "1",
+            "ERROR() should expose a non-zero first-pass runtime error code");
+    }
+
+    const bool has_handler_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.error_handler" &&
+                event.detail.find("WITH 4 argument") != std::string::npos;
+        });
+    expect(has_handler_event, "runtime should record ON ERROR DO WITH handler dispatch detail");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -7691,6 +7766,7 @@ int main() {
     test_elseif_control_flow_executes_matching_branch();
     test_do_with_parameters_binds_arguments_in_called_routine();
     test_on_error_do_handler_dispatches_routine();
+    test_on_error_do_with_handler_receives_error_metadata();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -102,11 +102,13 @@ The expression/function layer currently has first-pass support for these VFP-fac
 - `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
 - `CREATEOBJECT()`, `GETOBJECT()`
-- utility coverage already used by shipped tests and bootstrap paths, including `AT()`, `RAT()`, `SUBSTR()`, `ALLTRIM()`, `STR()`, `CHR()`, `FILE()`, `SYS()`, `MESSAGE()`, `ERROR()`, `VERSION()`, `ON()`, `SET()`, and `MESSAGEBOX()`
+- utility coverage already used by shipped tests and bootstrap paths, including `AT()`, `RAT()`, `SUBSTR()`, `ALLTRIM()`, `STR()`, `CHR()`, `FILE()`, `SYS()`, `MESSAGE()`, `PROGRAM()`, `LINENO()`, `ERROR()`, `VERSION()`, `ON()`, `SET()`, and `MESSAGEBOX()`
 
 That SQL slice now includes session-scoped synthetic cursor materialization that follows the current selected work-area flow for each data session when `SQLEXEC()` auto-opens a result cursor, plus a first-pass remote-cursor layer where synthetic SQL rows participate in field lookup, targeted command-path filtering (`SET FILTER ... IN`) composed with targeted command-path navigation (`GO ... IN`, `SKIP ... IN`, `LOCATE ... IN`), command-path `SCAN ... IN` targeted iteration, aggregate built-ins, command-level `TOTAL` output aggregation, `CALCULATE`, in-memory `REPLACE` / `APPEND BLANK` / `DELETE` / `RECALL` mutation, non-selected-target `REPLACE ... IN` / `DELETE FOR ... IN` / `RECALL FOR ... IN` command-path behavior, `APPEND BLANK IN <alias|work area>` targeted append behavior, one-off `SEEK()` / `INDEXSEEK()` probes that use temporary order expressions over the in-memory result rows, first-pass normalization-aware temporary SQL order expressions such as `UPPER(NAME)` including combined `DESCENDING` suffix probes, and command-path `SET ORDER TO <expr>` / `SEEK` behavior over those same synthetic rows including non-selected-target `SET ORDER ... IN ... [ASCENDING|DESCENDING]` / `SEEK ... IN` parity and post-mutation seeks against appended in-memory rows.
 
 The current session/runtime-state slice also now keeps `SET DEFAULT TO` data-session-local, so `SET('DEFAULT')` and relative path resolution restore correctly after `SET DATASESSION` switches instead of leaking one session's default directory into another, and focused regression coverage now locks down the local-table counterpart to the shipped SQL selection-flow behavior so `SELECT 0`, `USE IN <selected-alias>`, and plain `USE` keep reusing each session's selected empty work area after session switches.
+
+`ON ERROR` now also has a richer first-pass compatibility lane: `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handlers can inspect first-pass runtime fault metadata through `MESSAGE()`, `PROGRAM()`, `LINENO()`, and `ERROR()` while execution resumes after the handler returns. Static PRG diagnostics are also now wired through the Studio document-open path so analyzer findings surface to editor-facing consumers instead of staying runtime-only.
 
 ## Immediate Runtime Backlog Derived From The Official Reference
 
@@ -129,7 +131,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Native Control Flow
 
-- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `LOOP`/`CONTINUE`/`EXIT`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
+- extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `LOOP`/`CONTINUE`/`EXIT`, first-pass richer `ON ERROR`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
 - keep tightening expression semantics around stored-expression evaluation, macro substitution, and runtime-state inspection beyond the first-pass `EVAL()` / `SET()` / `&macro` slice
 - add the next adjacent command families such as `TEXT/ENDTEXT`, `WITH/ENDWITH`, or other control/branch semantics in coherent batches
 

@@ -71,14 +71,29 @@ add_library(cf_runtime_pipeline
     src/runtime/runtime_pipeline.cpp
 )
 
+add_library(cf_prg_analysis
+    src/runtime/prg_engine_static_analysis.cpp
+)
+
 add_library(cf_xbase_runtime
     src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine.cpp
     src/runtime/prg_engine_helpers.cpp
+    src/runtime/prg_engine_parser.cpp
     src/runtime/prg_engine_runtime_config.cpp
-    src/runtime/prg_engine_static_analysis.cpp
     src/runtime/xasset_methods.cpp
 )
+
+target_include_directories(cf_prg_analysis
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_prg_analysis PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_prg_analysis PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 target_include_directories(cf_xbase_runtime
     PUBLIC
@@ -87,6 +102,7 @@ target_include_directories(cf_xbase_runtime
 
 target_link_libraries(cf_xbase_runtime
     PUBLIC
+        cf_prg_analysis
         cf_design_model
 )
 
@@ -119,7 +135,7 @@ target_include_directories(cf_design_model
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(cf_design_model PUBLIC cf_vfp_assets)
+target_link_libraries(cf_design_model PUBLIC cf_vfp_assets cf_prg_analysis)
 
 if(MSVC)
     target_compile_options(cf_design_model PRIVATE /W4 /permissive-)

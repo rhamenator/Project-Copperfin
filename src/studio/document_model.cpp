@@ -242,6 +242,9 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.read_only = request.read_only;
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.inspection = inspection;
+    if (document.kind == StudioAssetKind::program) {
+        document.static_diagnostics = runtime::analyze_prg_file(request.path);
+    }
 
     if (inspection.header_available) {
         const std::size_t max_records = request.load_full_table

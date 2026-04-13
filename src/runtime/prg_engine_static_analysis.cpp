@@ -1,7 +1,8 @@
 #include "copperfin/runtime/prg_engine.h"
 
-#include "prg_engine_helpers.h"
-
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
 #include <fstream>
 #include <vector>
 
@@ -22,6 +23,51 @@ struct StaticLine {
     StaticLineKind kind = StaticLineKind::other;
     std::size_t line = 0;
 };
+
+std::string trim_copy(std::string value) {
+    const auto not_space = [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    };
+
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), not_space));
+    value.erase(std::find_if(value.rbegin(), value.rend(), not_space).base(), value.end());
+    return value;
+}
+
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
+std::string lowercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
+
+std::string normalize_identifier(std::string value) {
+    return lowercase_copy(trim_copy(std::move(value)));
+}
+
+bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
+    if (value.size() < prefix.size()) {
+        return false;
+    }
+    for (std::size_t index = 0; index < prefix.size(); ++index) {
+        if (std::tolower(static_cast<unsigned char>(value[index])) !=
+            std::tolower(static_cast<unsigned char>(prefix[index]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::string normalize_path(const std::string& path) {
+    return std::filesystem::path(path).lexically_normal().string();
+}
 
 std::string strip_comment(const std::string& line) {
     bool in_string = false;

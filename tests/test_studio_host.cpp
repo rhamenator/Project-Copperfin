@@ -320,6 +320,42 @@ void test_open_document_preserves_dbf_descriptor_validation_findings() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_open_document_includes_prg_static_diagnostics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_prg_diagnostics";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path program_path = temp_dir / "flagged.prg";
+    {
+        std::ofstream output(program_path, std::ios::binary);
+        output << "DO WHILE .T.\n";
+        output << "x = 1\n";
+        output << "ENDDO\n";
+    }
+
+    const copperfin::studio::StudioOpenRequest request{
+        .path = program_path.string(),
+        .read_only = true
+    };
+
+    const auto result = copperfin::studio::open_document(request);
+    expect(result.ok, "open_document should succeed for a PRG file");
+    expect(result.document.kind == copperfin::studio::StudioAssetKind::program, "PRG should map to a program document");
+    expect(!result.document.static_diagnostics.empty(), "Studio documents should include PRG static diagnostics");
+    expect(
+        std::any_of(
+            result.document.static_diagnostics.begin(),
+            result.document.static_diagnostics.end(),
+            [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+                return diagnostic.code == "PRG1001";
+            }),
+        "Studio documents should surface analyzer diagnostics for PRG files");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -329,6 +365,7 @@ int main() {
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();
     test_open_document_preserves_dbf_descriptor_validation_findings();
+    test_open_document_includes_prg_static_diagnostics();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
