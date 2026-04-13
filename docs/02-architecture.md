@@ -76,8 +76,6 @@ flowchart LR
 	PRG --> DOTNET --> FED
 	PRG --> SEC
 
-	FED -. federation translators missing .-> SQ
-	SQ -. broader remote writeback parity pending .-> RPT
 
 	class CORE hub;
 
@@ -85,7 +83,9 @@ flowchart LR
 
 	class WS done;
 
-	class IDX,LQ,SQ,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
+	class LQ,SQ done;
+
+	class IDX,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
 
 	class FED missing;
 

@@ -842,6 +842,75 @@ void test_sql_pass_through_rows_affected_and_provider_hint() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_prepare_and_connection_properties() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_prepare";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_prepare.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('Provider=SQLOLEDB;Data Source=Northwind')\n"
+        "nSetTimeout = SQLSETPROP(nConn, 'QueryTimeout', 45)\n"
+        "nPrepare = SQLPREPARE(nConn, 'select * from customers')\n"
+        "nExecPrepared = SQLEXEC(nConn)\n"
+        "nRowsPrepared = SQLROWCOUNT(nConn)\n"
+        "cProvider = SQLGETPROP(nConn, 'Provider')\n"
+        "nTimeout = SQLGETPROP(nConn, 'QueryTimeout')\n"
+        "cPrepared = SQLGETPROP(nConn, 'PreparedCommand')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL prepare/property script should complete");
+
+    const auto prepare = state.globals.find("nprepare");
+    const auto exec_prepared = state.globals.find("nexecprepared");
+    const auto rows_prepared = state.globals.find("nrowsprepared");
+    const auto provider = state.globals.find("cprovider");
+    const auto timeout = state.globals.find("ntimeout");
+    const auto prepared_text = state.globals.find("cprepared");
+
+    expect(prepare != state.globals.end(), "SQLPREPARE should return a status code");
+    expect(exec_prepared != state.globals.end(), "SQLEXEC(handle) should execute prepared SQL");
+    expect(rows_prepared != state.globals.end(), "SQLROWCOUNT should report prepared SELECT row count");
+    expect(provider != state.globals.end(), "SQLGETPROP should return provider metadata");
+    expect(timeout != state.globals.end(), "SQLSETPROP/SQLGETPROP should round-trip numeric timeout metadata");
+    expect(prepared_text != state.globals.end(), "SQLGETPROP should return prepared command text");
+
+    if (prepare != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prepare->second) == "1", "SQLPREPARE should report success for known handles");
+    }
+    if (exec_prepared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_prepared->second) == "1", "SQLEXEC(handle) should execute prepared statements successfully");
+    }
+    if (rows_prepared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_prepared->second) == "3", "SQLROWCOUNT should expose prepared SELECT result cardinality");
+    }
+    if (provider != state.globals.end()) {
+        expect(copperfin::runtime::format_value(provider->second) == "oledb", "provider hinting should classify Provider= connect strings as OLE DB");
+    }
+    if (timeout != state.globals.end()) {
+        expect(copperfin::runtime::format_value(timeout->second) == "45", "SQLSETPROP should persist query timeout metadata");
+    }
+    if (prepared_text != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prepared_text->second) == "select * from customers", "prepared SQL text should be retrievable through SQLGETPROP");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "sql.prepare";
+    }), "SQLPREPARE should emit sql.prepare events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_and_data_session_isolation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tables";
@@ -1458,10 +1527,10 @@ void test_expression_driven_in_targeting_across_local_data_commands() {
         "SCAN FOR AGE >= 20 WHILE AGE < 30 IN cDataTarget\n"
         "  nScanHits = nScanHits + 1\n"
         "ENDSCAN\n"
-        "GO BOTTOM IN cDataTarget\n"
-        "REPLACE AGE WITH 99 IN cDataTarget\n"
-        "DELETE FOR AGE = 99 IN cDataTarget\n"
-        "RECALL FOR AGE = 99 IN cDataTarget\n"
+        "GO TOP IN cDataTarget\n"
+        "REPLACE AGE WITH 77 FOR AGE >= 10 WHILE AGE < 30 IN cDataTarget\n"
+        "DELETE FOR AGE = 77 WHILE AGE < 30 IN cDataTarget\n"
+        "RECALL FOR AGE = 77 WHILE AGE < 30 IN cDataTarget\n"
         "nSelectedAfterCommands = SELECT()\n"
         "cSelectedAfterCommands = ALIAS()\n"
         "RETURN\n");
@@ -1523,9 +1592,12 @@ void test_expression_driven_in_targeting_across_local_data_commands() {
     if (orders_result.ok) {
         expect(orders_result.table.records.size() == 3U, "Orders DBF should still contain three records");
         if (orders_result.table.records.size() >= 3U) {
-            expect(orders_result.table.records[2].values[0].display_value == "THREE", "targeted mutation flow should keep the THREE record");
-            expect(orders_result.table.records[2].values[1].display_value == "99", "REPLACE ... IN cTarget should update the targeted cursor record");
-            expect(!orders_result.table.records[2].deleted, "DELETE/RECALL ... IN cTarget should leave the targeted record recalled");
+            expect(orders_result.table.records[0].values[1].display_value == "77", "REPLACE ... FOR ... WHILE ... IN cTarget should update matching record 1");
+            expect(orders_result.table.records[1].values[1].display_value == "77", "REPLACE ... FOR ... WHILE ... IN cTarget should update matching record 2");
+            expect(orders_result.table.records[2].values[1].display_value == "30", "REPLACE ... FOR ... WHILE ... IN cTarget should stop at the WHILE boundary");
+            expect(!orders_result.table.records[0].deleted, "DELETE/RECALL ... WHILE ... IN cTarget should restore matching record 1");
+            expect(!orders_result.table.records[1].deleted, "DELETE/RECALL ... WHILE ... IN cTarget should restore matching record 2");
+            expect(!orders_result.table.records[2].deleted, "DELETE/RECALL ... WHILE ... IN cTarget should not affect records outside the WHILE boundary");
         }
     }
 
@@ -7215,6 +7287,7 @@ int main() {
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
     test_sql_pass_through_rows_affected_and_provider_hint();
+    test_sql_prepare_and_connection_properties();
     test_use_and_data_session_isolation();
     test_cross_session_alias_and_work_area_isolation();
     test_use_in_existing_alias_reuses_target_work_area();

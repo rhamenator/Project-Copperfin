@@ -576,20 +576,23 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "REPLACE ")) {
             statement.kind = StatementKind::replace_command;
             const std::string body = trim_copy(line.substr(8U));
-            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "IN"});
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.tertiary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            statement.quaternary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
-            statement.expression = trim_command_keyword(body, "FOR");
-            statement.secondary_expression = trim_command_keyword(body, "IN");
+            statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "RECALL" || starts_with_insensitive(line, "RECALL ")) {
             statement.kind = StatementKind::recall_command;
             const std::string body = upper == "RECALL" ? std::string{} : trim_copy(line.substr(7U));
-            statement.expression = trim_command_keyword(body, "FOR");
-            statement.secondary_expression = trim_command_keyword(body, "IN");
+            statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (starts_with_insensitive(line, "GOTO ") || starts_with_insensitive(line, "GO ")) {
             statement.kind = StatementKind::go_command;
             const std::string body = starts_with_insensitive(line, "GOTO ")
@@ -1842,8 +1845,9 @@ struct PrgRuntimeSession::Impl {
         CursorState& cursor,
         const std::vector<ReplaceAssignment>& assignments,
         const Frame& frame,
-        const std::string& for_expression) {
-        if (trim_copy(for_expression).empty()) {
+        const std::string& for_expression,
+        const std::string& while_expression) {
+        if (trim_copy(for_expression).empty() && trim_copy(while_expression).empty()) {
             return replace_current_record_fields(cursor, assignments, frame);
         }
 
@@ -1857,6 +1861,9 @@ struct PrgRuntimeSession::Impl {
             move_cursor_to(cursor, static_cast<long long>(recno));
             if (cursor.recno == 0U || cursor.eof) {
                 continue;
+            }
+            if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor))) {
+                break;
             }
             if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame, &cursor))) {
                 continue;
@@ -1914,10 +1921,15 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
-    bool set_deleted_flag(CursorState& cursor, const Frame& frame, const std::string& for_expression, bool deleted) {
+    bool set_deleted_flag(
+        CursorState& cursor,
+        const Frame& frame,
+        const std::string& for_expression,
+        const std::string& while_expression,
+        bool deleted) {
         if (cursor.remote) {
             std::vector<std::size_t> target_records;
-            if (for_expression.empty()) {
+            if (for_expression.empty() && while_expression.empty()) {
                 if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size()) {
                     last_error_message = "This command requires a current remote record";
                     return false;
@@ -1927,6 +1939,9 @@ struct PrgRuntimeSession::Impl {
                 const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
                 for (std::size_t index = 0; index < cursor.remote_records.size(); ++index) {
                     move_cursor_to(cursor, static_cast<long long>(index + 1U));
+                    if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor))) {
+                        break;
+                    }
                     if (current_record_matches_visibility(cursor, frame, for_expression)) {
                         target_records.push_back(index + 1U);
                     }
@@ -1945,7 +1960,7 @@ struct PrgRuntimeSession::Impl {
         }
 
         std::vector<std::size_t> target_records;
-        if (for_expression.empty()) {
+        if (for_expression.empty() && while_expression.empty()) {
             if (cursor.recno == 0U || cursor.eof) {
                 last_error_message = "This command requires a current local record";
                 return false;
@@ -1961,6 +1976,9 @@ struct PrgRuntimeSession::Impl {
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             for (const auto& record : table_result.table.records) {
                 move_cursor_to(cursor, static_cast<long long>(record.record_index + 1U));
+                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor))) {
+                    break;
+                }
                 if (current_record_matches_visibility(cursor, frame, for_expression)) {
                     target_records.push_back(record.record_index + 1U);
                 }
@@ -2914,7 +2932,14 @@ struct PrgRuntimeSession::Impl {
             .target = target,
             .provider = provider_hint,
             .last_cursor_alias = {},
-            .last_result_count = 0U
+            .last_result_count = 0U,
+            .prepared_command = {},
+            .properties = {
+                {"provider", provider_hint},
+                {"target", target},
+                {"querytimeout", "0"},
+                {"connecttimeout", "0"}
+            }
         });
         return handle;
     }
@@ -2932,6 +2957,83 @@ struct PrgRuntimeSession::Impl {
         return static_cast<int>(found->second.last_result_count);
     }
 
+    int sql_prepare(int handle, const std::string& command) {
+        auto& connections = current_sql_connections();
+        const auto found = connections.find(handle);
+        if (found == connections.end()) {
+            last_error_message = "SQL handle not found: " + std::to_string(handle);
+            return -1;
+        }
+        found->second.prepared_command = command;
+        found->second.properties["preparedcommand"] = command;
+        events.push_back({
+            .category = "sql.prepare",
+            .detail = "handle " + std::to_string(handle) + ": " + command,
+            .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+        });
+        return 1;
+    }
+
+    PrgValue sql_get_prop(int handle, const std::string& property_name) const {
+        const auto& connections = current_sql_connections();
+        const auto found = connections.find(handle);
+        if (found == connections.end()) {
+            return make_number_value(-1.0);
+        }
+
+        const std::string normalized_name = normalize_identifier(property_name);
+        if (normalized_name == "provider") {
+            return make_string_value(found->second.provider);
+        }
+        if (normalized_name == "target" || normalized_name == "connectstring") {
+            return make_string_value(found->second.target);
+        }
+        if (normalized_name == "preparedcommand") {
+            return make_string_value(found->second.prepared_command);
+        }
+        if (normalized_name == "rowcount" || normalized_name == "lastresultcount") {
+            return make_number_value(static_cast<double>(found->second.last_result_count));
+        }
+
+        const auto property = found->second.properties.find(normalized_name);
+        if (property == found->second.properties.end()) {
+            return make_empty_value();
+        }
+
+        const std::string raw_value = property->second;
+        if (!raw_value.empty() && std::all_of(raw_value.begin(), raw_value.end(), [](unsigned char ch) {
+                return std::isdigit(ch) != 0 || ch == '-' || ch == '.';
+            })) {
+            return make_number_value(std::stod(raw_value));
+        }
+        return make_string_value(raw_value);
+    }
+
+    int sql_set_prop(int handle, const std::string& property_name, const PrgValue& value) {
+        auto& connections = current_sql_connections();
+        const auto found = connections.find(handle);
+        if (found == connections.end()) {
+            last_error_message = "SQL handle not found: " + std::to_string(handle);
+            return -1;
+        }
+
+        const std::string normalized_name = normalize_identifier(property_name);
+        const std::string property_value = value.kind == PrgValueKind::number
+            ? std::to_string(static_cast<long long>(std::llround(value.number_value)))
+            : value_as_string(value);
+
+        if (normalized_name == "preparedcommand") {
+            found->second.prepared_command = property_value;
+        }
+        found->second.properties[normalized_name] = property_value;
+        events.push_back({
+            .category = "sql.setprop",
+            .detail = "handle " + std::to_string(handle) + ": " + normalized_name + "=" + property_value,
+            .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+        });
+        return 1;
+    }
+
     int sql_exec(int handle, const std::string& command, const std::string& cursor_alias) {
         auto& connections = current_sql_connections();
         const auto found = connections.find(handle);
@@ -2944,14 +3046,20 @@ struct PrgRuntimeSession::Impl {
         connection.last_cursor_alias.clear();
         connection.last_result_count = 0U;
 
+        const std::string effective_command = trim_copy(command).empty() ? connection.prepared_command : trim_copy(command);
+        if (effective_command.empty()) {
+            last_error_message = "SQLEXEC requires a command or a prepared SQL statement";
+            return -1;
+        }
+
         std::size_t result_count = 0;
-        const std::string normalized_command = lowercase_copy(trim_copy(command));
+        const std::string normalized_command = lowercase_copy(effective_command);
         if (normalized_command.rfind("select", 0) == 0) {
             result_count = 3U;
             const std::string alias = trim_copy(cursor_alias).empty()
                 ? "sqlresult" + std::to_string(handle)
                 : trim_copy(cursor_alias);
-            if (!open_table_cursor({}, alias, resolve_sql_cursor_auto_target(), true, true, handle, command, result_count)) {
+            if (!open_table_cursor({}, alias, resolve_sql_cursor_auto_target(), true, true, handle, effective_command, result_count)) {
                 return -1;
             }
         } else if (
@@ -2963,7 +3071,7 @@ struct PrgRuntimeSession::Impl {
         }
         events.push_back({
             .category = "sql.exec",
-            .detail = "handle " + std::to_string(handle) + ": " + command,
+            .detail = "handle " + std::to_string(handle) + ": " + effective_command,
             .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
         });
         if (result_count > 0U) {
@@ -3430,6 +3538,9 @@ public:
         std::function<int(int, const std::string&, const std::string&)> sql_exec_callback,
         std::function<bool(int)> sql_disconnect_callback,
         std::function<int(int)> sql_row_count_callback,
+        std::function<int(int, const std::string&)> sql_prepare_callback,
+        std::function<PrgValue(int, const std::string&)> sql_get_prop_callback,
+        std::function<int(int, const std::string&, const PrgValue&)> sql_set_prop_callback,
         std::function<int(const std::string&, const std::string&)> register_ole_callback,
         std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback,
         std::function<PrgValue(const std::string&)> ole_property_callback,
@@ -3462,6 +3573,9 @@ public:
           sql_exec_callback_(std::move(sql_exec_callback)),
           sql_disconnect_callback_(std::move(sql_disconnect_callback)),
           sql_row_count_callback_(std::move(sql_row_count_callback)),
+          sql_prepare_callback_(std::move(sql_prepare_callback)),
+          sql_get_prop_callback_(std::move(sql_get_prop_callback)),
+          sql_set_prop_callback_(std::move(sql_set_prop_callback)),
           register_ole_callback_(std::move(register_ole_callback)),
           ole_invoke_callback_(std::move(ole_invoke_callback)),
           ole_property_callback_(std::move(ole_property_callback)),
@@ -3816,9 +3930,9 @@ private:
             record_event_callback_("sql.connect", function + ":" + target + " -> " + std::to_string(handle));
             return make_number_value(static_cast<double>(handle));
         }
-        if (function == "sqlexec" && arguments.size() >= 2U) {
+        if (function == "sqlexec" && !arguments.empty()) {
             const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
-            const std::string command = value_as_string(arguments[1]);
+            const std::string command = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
             const std::string cursor_alias = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
             return make_number_value(static_cast<double>(sql_exec_callback_(handle, command, cursor_alias)));
         }
@@ -3833,6 +3947,18 @@ private:
         if (function == "sqlrowcount" && !arguments.empty()) {
             const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
             return make_number_value(static_cast<double>(sql_row_count_callback_(handle)));
+        }
+        if (function == "sqlprepare" && arguments.size() >= 2U) {
+            const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            return make_number_value(static_cast<double>(sql_prepare_callback_(handle, value_as_string(arguments[1]))));
+        }
+        if (function == "sqlgetprop" && arguments.size() >= 2U) {
+            const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            return sql_get_prop_callback_(handle, value_as_string(arguments[1]));
+        }
+        if (function == "sqlsetprop" && arguments.size() >= 3U) {
+            const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            return make_number_value(static_cast<double>(sql_set_prop_callback_(handle, value_as_string(arguments[1]), arguments[2])));
         }
         return make_string_value(function);
     }
@@ -3992,6 +4118,9 @@ private:
     std::function<int(int, const std::string&, const std::string&)> sql_exec_callback_;
     std::function<bool(int)> sql_disconnect_callback_;
     std::function<int(int)> sql_row_count_callback_;
+    std::function<int(int, const std::string&)> sql_prepare_callback_;
+    std::function<PrgValue(int, const std::string&)> sql_get_prop_callback_;
+    std::function<int(int, const std::string&, const PrgValue&)> sql_set_prop_callback_;
     std::function<int(const std::string&, const std::string&)> register_ole_callback_;
     std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback_;
     std::function<PrgValue(const std::string&)> ole_property_callback_;
@@ -4140,6 +4269,15 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         },
         [this](int handle) {
             return sql_row_count(handle);
+        },
+        [this](int handle, const std::string& command) {
+            return sql_prepare(handle, command);
+        },
+        [this](int handle, const std::string& property_name) {
+            return sql_get_prop(handle, property_name);
+        },
+        [this](int handle, const std::string& property_name, const PrgValue& value) {
+            return sql_set_prop(handle, property_name, value);
         },
         [this](const std::string& prog_id, const std::string& source) {
             return register_ole_object(prog_id, source);
@@ -4780,17 +4918,22 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            if (!replace_records(*cursor, assignments, frame, statement.tertiary_expression)) {
+            if (!replace_records(*cursor, assignments, frame, statement.tertiary_expression, statement.quaternary_expression)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
 
+            std::string replace_detail = statement.expression;
+            if (!trim_copy(statement.tertiary_expression).empty()) {
+                replace_detail += " FOR " + statement.tertiary_expression;
+            }
+            if (!trim_copy(statement.quaternary_expression).empty()) {
+                replace_detail += " WHILE " + statement.quaternary_expression;
+            }
             events.push_back({
                 .category = "runtime.replace",
-                .detail = trim_copy(statement.tertiary_expression).empty()
-                    ? statement.expression
-                    : statement.expression + " FOR " + statement.tertiary_expression,
+                .detail = replace_detail,
                 .location = statement.location
             });
             return {};
@@ -4824,15 +4967,19 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            if (!set_deleted_flag(*cursor, frame, statement.expression, true)) {
+            if (!set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, true)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
 
+            std::string delete_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+            if (!trim_copy(statement.tertiary_expression).empty()) {
+                delete_detail += " WHILE " + statement.tertiary_expression;
+            }
             events.push_back({
                 .category = "runtime.delete",
-                .detail = statement.expression.empty() ? cursor->alias : statement.expression,
+                .detail = delete_detail,
                 .location = statement.location
             });
             return {};
@@ -4845,15 +4992,19 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            if (!set_deleted_flag(*cursor, frame, statement.expression, false)) {
+            if (!set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, false)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
 
+            std::string recall_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+            if (!trim_copy(statement.tertiary_expression).empty()) {
+                recall_detail += " WHILE " + statement.tertiary_expression;
+            }
             events.push_back({
                 .category = "runtime.recall",
-                .detail = statement.expression.empty() ? cursor->alias : statement.expression,
+                .detail = recall_detail,
                 .location = statement.location
             });
             return {};

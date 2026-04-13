@@ -88,6 +88,8 @@ struct RuntimeSqlConnectionState {
     std::string provider;
     std::string last_cursor_alias;
     std::size_t last_result_count = 0;
+    std::string prepared_command;
+    std::map<std::string, std::string> properties;
 };
 
 struct RuntimeOleObjectState {
