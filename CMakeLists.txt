@@ -38,6 +38,7 @@ endif()
 add_library(cf_platform_profile
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
+    src/platform/federation_execution.cpp
     src/platform/query_translator.cpp
 )
 
@@ -184,7 +185,7 @@ add_executable(copperfin_runtime_host
     apps/copperfin_runtime_host/main.cpp
 )
 
-target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security)
+target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile)
 
 if(MSVC)
     target_compile_options(copperfin_runtime_host PRIVATE /W4 /permissive-)
@@ -357,6 +358,20 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_query_translator COMMAND $<TARGET_FILE:test_query_translator>)
+
+    add_executable(test_federation_execution
+        tests/test_federation_execution.cpp
+    )
+
+    target_link_libraries(test_federation_execution PRIVATE cf_platform_profile)
+
+    if(MSVC)
+        target_compile_options(test_federation_execution PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_federation_execution PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_federation_execution COMMAND $<TARGET_FILE:test_federation_execution>)
 
     add_executable(test_runtime_pipeline
         tests/test_runtime_pipeline.cpp

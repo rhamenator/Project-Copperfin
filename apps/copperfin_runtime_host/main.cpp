@@ -1,5 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/platform/federation_execution.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
 #include "copperfin/security/process_hardening.h"
@@ -172,6 +173,7 @@ bool verify_manifest_hashes(const ManifestMap& manifest, std::string& error) {
 
 void print_usage() {
     std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|select:<action-id>|invoke:<action-id>>]\n";
+    std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -359,6 +361,9 @@ int main(int argc, char** argv) {
     }
 
     std::string manifest_path;
+    std::string federation_backend;
+    std::string federation_query;
+    std::string federation_target;
     bool debug_mode = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
@@ -367,6 +372,12 @@ int main(int argc, char** argv) {
         const std::string arg = argv[index];
         if (arg == "--manifest" && (index + 1) < argc) {
             manifest_path = argv[++index];
+        } else if (arg == "--federation-backend" && (index + 1) < argc) {
+            federation_backend = argv[++index];
+        } else if (arg == "--federation-query" && (index + 1) < argc) {
+            federation_query = argv[++index];
+        } else if (arg == "--federation-target" && (index + 1) < argc) {
+            federation_target = argv[++index];
         } else if (arg == "--debug") {
             debug_mode = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {
@@ -379,6 +390,44 @@ int main(int argc, char** argv) {
             print_usage();
             return 2;
         }
+    }
+
+    const bool federation_mode_requested =
+        !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty();
+    if (federation_mode_requested) {
+        if (trim_copy(federation_backend).empty() || trim_copy(federation_query).empty()) {
+            std::cout << "status: error\n";
+            std::cout << "error: --federation-backend and --federation-query are both required in federation mode.\n";
+            return 2;
+        }
+
+        const auto backend = copperfin::platform::federation_backend_from_string(federation_backend);
+        if (!backend.has_value()) {
+            std::cout << "status: error\n";
+            std::cout << "error: Unknown federation backend: " << federation_backend << "\n";
+            return 2;
+        }
+
+        const auto plan = copperfin::platform::build_federation_execution_plan({
+            .backend = *backend,
+            .fox_sql = federation_query,
+            .target = federation_target
+        });
+        if (!plan.ok) {
+            std::cout << "status: error\n";
+            std::cout << "runtime.mode: federation-query-plan\n";
+            std::cout << "error: " << plan.error << "\n";
+            return 6;
+        }
+
+        std::cout << "status: ok\n";
+        std::cout << "runtime.mode: federation-query-plan\n";
+        std::cout << "federation.backend: " << copperfin::platform::federation_backend_name(plan.backend) << "\n";
+        std::cout << "federation.connector: " << plan.connector << "\n";
+        std::cout << "federation.target: " << plan.target << "\n";
+        std::cout << "federation.translated_sql: " << plan.translated_sql << "\n";
+        std::cout << "federation.command: " << plan.execution_command << "\n";
+        return 0;
     }
 
     if (manifest_path.empty()) {
