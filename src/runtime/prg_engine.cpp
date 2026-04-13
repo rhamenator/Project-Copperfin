@@ -1,6 +1,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
+#include "prg_engine_runtime_config.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"
@@ -14,10 +15,14 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <new>
 #include <optional>
 #include <process.h>
 #include <set>
 #include <sstream>
+#include <system_error>
+#include <thread>
+#include <chrono>
 #include <utility>
 
 namespace copperfin::runtime {
@@ -76,6 +81,8 @@ enum class StatementKind {
     public_declaration,
     local_declaration,
     private_declaration,
+    parameters_declaration,
+    lparameters_declaration,
     store_command,
     no_op
 };
@@ -109,6 +116,7 @@ struct LoopState {
     std::string variable_name;
     double end_value = 0.0;
     double step_value = 1.0;
+    std::size_t iteration_count = 0;
 };
 
 struct ScanState {
@@ -117,11 +125,13 @@ struct ScanState {
     int work_area = 0;
     std::string for_expression;
     std::string while_expression;
+    std::size_t iteration_count = 0;
 };
 
 struct WhileState {
     std::size_t do_while_statement_index = 0;
     std::size_t enddo_statement_index = 0;
+    std::size_t iteration_count = 0;
 };
 
 struct CaseState {
@@ -136,12 +146,14 @@ struct Frame {
     const Routine* routine = nullptr;
     std::size_t pc = 0;
     std::map<std::string, PrgValue> locals;
+    std::vector<PrgValue> call_arguments;
     std::set<std::string> local_names;
     std::map<std::string, std::optional<PrgValue>> private_saved_values;
     std::vector<LoopState> loops;
     std::vector<ScanState> scans;
     std::vector<WhileState> whiles;
     std::vector<CaseState> cases;
+    bool evaluate_conditional_else = false;
 };
 
 struct ExecutionOutcome {
@@ -396,6 +408,9 @@ Program parse_program(const std::string& path) {
         if (starts_with_insensitive(line, "IF ")) {
             statement.kind = StatementKind::if_statement;
             statement.expression = trim_copy(line.substr(3U));
+        } else if (starts_with_insensitive(line, "ELSEIF ")) {
+            statement.kind = StatementKind::else_statement;
+            statement.expression = trim_copy(line.substr(7U));
         } else if (upper == "DO CASE") {
             statement.kind = StatementKind::do_case_statement;
         } else if (starts_with_insensitive(line, "CASE ")) {
@@ -469,11 +484,24 @@ Program parse_program(const std::string& path) {
             statement.expression = trim_copy(line.substr(13U));
         } else if (starts_with_insensitive(line, "DO ")) {
             statement.kind = StatementKind::do_command;
-            statement.identifier = trim_copy(line.substr(3U));
+            const std::string body = trim_copy(line.substr(3U));
+            const std::size_t with_position = find_keyword_top_level(body, "WITH");
+            if (with_position == std::string::npos) {
+                statement.identifier = body;
+            } else {
+                statement.identifier = trim_copy(body.substr(0U, with_position));
+                statement.expression = trim_copy(body.substr(with_position + 4U));
+            }
         } else if (upper == "READ EVENTS") {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {
             statement.kind = StatementKind::clear_events;
+        } else if (starts_with_insensitive(line, "LPARAMETERS ")) {
+            statement.kind = StatementKind::lparameters_declaration;
+            statement.names = split_csv_like(line.substr(12U));
+        } else if (starts_with_insensitive(line, "PARAMETERS ")) {
+            statement.kind = StatementKind::parameters_declaration;
+            statement.names = split_csv_like(line.substr(11U));
         } else if (starts_with_insensitive(line, "SEEK ")) {
             statement.kind = StatementKind::seek_command;
             const std::string body = trim_copy(line.substr(5U));
@@ -695,6 +723,12 @@ Program parse_program(const std::string& path) {
 struct PrgRuntimeSession::Impl {
     explicit Impl(RuntimeSessionOptions session_options)
         : options(std::move(session_options)) {
+        max_call_depth = std::max<std::size_t>(1U, options.max_call_depth);
+        max_executed_statements = std::max<std::size_t>(1U, options.max_executed_statements);
+        max_loop_iterations = std::max<std::size_t>(1U, options.max_loop_iterations);
+        scheduler_yield_statement_interval = std::max<std::size_t>(1U, options.scheduler_yield_statement_interval);
+        scheduler_yield_sleep_ms = options.scheduler_yield_sleep_ms;
+        runtime_temp_directory = choose_runtime_temp_directory(options);
     }
 
     RuntimeSessionOptions options;
@@ -722,9 +756,17 @@ struct PrgRuntimeSession::Impl {
     std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
+    bool handling_error = false;
+    std::optional<std::size_t> error_handler_return_depth;
     std::optional<std::size_t> event_dispatch_return_depth;
     bool restore_event_loop_after_dispatch = false;
     std::size_t executed_statement_count = 0;
+    std::size_t max_call_depth = 1024;
+    std::size_t max_executed_statements = 500000;
+    std::size_t max_loop_iterations = 200000;
+    std::filesystem::path runtime_temp_directory;
+    std::size_t scheduler_yield_statement_interval = 4096;
+    std::size_t scheduler_yield_sleep_ms = 1;
 
     Program& load_program(const std::string& path) {
         const std::string normalized = normalize_path(path);
@@ -736,22 +778,24 @@ struct PrgRuntimeSession::Impl {
         return inserted->second;
     }
 
-    void push_main_frame(const std::string& path) {
+    void push_main_frame(const std::string& path, std::vector<PrgValue> call_arguments = {}) {
         Program& program = load_program(path);
         stack.push_back({
             .file_path = program.path,
             .routine_name = "main",
             .routine = &program.main,
-            .pc = 0
+            .pc = 0,
+            .call_arguments = std::move(call_arguments)
         });
     }
 
-    void push_routine_frame(const std::string& path, const Routine& routine) {
+    void push_routine_frame(const std::string& path, const Routine& routine, std::vector<PrgValue> call_arguments = {}) {
         stack.push_back({
             .file_path = normalize_path(path),
             .routine_name = routine.name,
             .routine = &routine,
-            .pc = 0
+            .pc = 0,
+            .call_arguments = std::move(call_arguments)
         });
     }
 
@@ -907,6 +951,22 @@ struct PrgRuntimeSession::Impl {
 
         last_state = state;
         return state;
+    }
+
+    [[nodiscard]] bool can_push_frame() const {
+        return stack.size() < max_call_depth;
+    }
+
+    [[nodiscard]] std::string call_depth_limit_message() const {
+        return "Runtime guardrail: maximum call depth (" + std::to_string(max_call_depth) + ") exceeded.";
+    }
+
+    [[nodiscard]] std::string step_budget_limit_message() const {
+        return "Runtime guardrail: maximum executed statements (" + std::to_string(max_executed_statements) + ") exceeded.";
+    }
+
+    [[nodiscard]] std::string loop_iteration_limit_message() const {
+        return "Runtime guardrail: maximum loop iterations (" + std::to_string(max_loop_iterations) + ") exceeded.";
     }
 
     int next_available_work_area() const {
@@ -3328,6 +3388,11 @@ struct PrgRuntimeSession::Impl {
         }
 
         LoopState& loop = frame.loops.back();
+        ++loop.iteration_count;
+        if (loop.iteration_count > max_loop_iterations) {
+            last_error_message = loop_iteration_limit_message();
+            return {.ok = false, .message = last_error_message};
+        }
         const double next_value = value_as_number(lookup_variable(frame, loop.variable_name)) + loop.step_value;
         assign_variable(frame, loop.variable_name, make_number_value(next_value));
         const bool should_continue = loop.step_value >= 0.0
@@ -3350,7 +3415,14 @@ struct PrgRuntimeSession::Impl {
             return {};
         }
 
-        ScanState scan = frame.scans.back();
+        ScanState& scan = frame.scans.back();
+        ++scan.iteration_count;
+        if (scan.iteration_count > max_loop_iterations) {
+            last_error_message = loop_iteration_limit_message();
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            return {.ok = false, .message = last_error_message};
+        }
         CursorState* cursor = find_cursor_by_area(scan.work_area);
         if (cursor == nullptr) {
             frame.scans.pop_back();
@@ -3496,6 +3568,7 @@ struct PrgRuntimeSession::Impl {
     }
 
     bool dispatch_event_handler(const std::string& routine_name);
+    bool dispatch_error_handler();
     ExecutionOutcome execute_current_statement();
     RuntimePauseState run(DebugResumeAction action);
 };
@@ -4385,7 +4458,7 @@ std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap
 
     const std::filesystem::path asset_file(asset_path);
     const std::filesystem::path bootstrap_path =
-        std::filesystem::temp_directory_path() /
+        runtime_temp_directory /
         (asset_file.stem().string() + "_copperfin_bootstrap.prg");
 
     std::ofstream output(bootstrap_path, std::ios::binary);
@@ -4461,9 +4534,24 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         case StatementKind::do_command: {
             const std::string target = trim_copy(statement.identifier);
+            std::vector<PrgValue> call_arguments;
+            if (!trim_copy(statement.expression).empty()) {
+                for (const std::string& raw_argument : split_csv_like(statement.expression)) {
+                    const std::string argument_expression = trim_copy(raw_argument);
+                    if (!argument_expression.empty()) {
+                        call_arguments.push_back(evaluate_expression(argument_expression, frame));
+                    }
+                }
+            }
             Program& program = load_program(frame.file_path);
             if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end()) {
-                push_routine_frame(program.path, routine->second);
+                if (!can_push_frame()) {
+                    last_error_message = call_depth_limit_message();
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                push_routine_frame(program.path, routine->second, std::move(call_arguments));
                 return {};
             }
 
@@ -4481,7 +4569,14 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 return {.ok = false, .message = last_error_message};
             }
 
-            push_main_frame(target_path.string());
+            if (!can_push_frame()) {
+                last_error_message = call_depth_limit_message();
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            push_main_frame(target_path.string(), std::move(call_arguments));
             return {};
         }
         case StatementKind::do_form: {
@@ -4493,6 +4588,12 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             if (std::filesystem::exists(form_path)) {
                 if (const auto bootstrap_path = materialize_xasset_bootstrap(form_path.string(), true)) {
+                    if (!can_push_frame()) {
+                        last_error_message = call_depth_limit_message();
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     push_main_frame(*bootstrap_path);
                 }
             }
@@ -4673,16 +4774,54 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::if_statement:
             if (!value_as_bool(evaluate_expression(statement.expression, frame))) {
                 if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true)) {
-                    frame.pc = *destination + 1U;
+                    const Statement& destination_statement = frame.routine->statements[*destination];
+                    if (destination_statement.kind == StatementKind::else_statement &&
+                        !trim_copy(destination_statement.expression).empty()) {
+                        frame.evaluate_conditional_else = true;
+                        frame.pc = *destination;
+                    } else {
+                        frame.evaluate_conditional_else = false;
+                        frame.pc = *destination + 1U;
+                    }
                 }
+            } else {
+                frame.evaluate_conditional_else = false;
             }
             return {};
         case StatementKind::else_statement:
+            if (!trim_copy(statement.expression).empty()) {
+                if (!frame.evaluate_conditional_else) {
+                    if (const auto destination = find_matching_branch(frame, frame.pc - 1U, false)) {
+                        frame.pc = *destination + 1U;
+                    }
+                    return {};
+                }
+
+                frame.evaluate_conditional_else = false;
+                if (value_as_bool(evaluate_expression(statement.expression, frame))) {
+                    return {};
+                }
+                if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true)) {
+                    const Statement& destination_statement = frame.routine->statements[*destination];
+                    if (destination_statement.kind == StatementKind::else_statement &&
+                        !trim_copy(destination_statement.expression).empty()) {
+                        frame.evaluate_conditional_else = true;
+                        frame.pc = *destination;
+                    } else {
+                        frame.evaluate_conditional_else = false;
+                        frame.pc = *destination + 1U;
+                    }
+                }
+                return {};
+            }
+
+            frame.evaluate_conditional_else = false;
             if (const auto destination = find_matching_branch(frame, frame.pc - 1U, false)) {
                 frame.pc = *destination + 1U;
             }
             return {};
         case StatementKind::endif_statement:
+            frame.evaluate_conditional_else = false;
             return {};
         case StatementKind::for_statement: {
             const double start_value = value_as_number(evaluate_expression(statement.expression, frame));
@@ -4709,7 +4848,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
                 .variable_name = normalize_identifier(statement.identifier),
                 .end_value = end_value,
-                .step_value = step_value
+                .step_value = step_value,
+                .iteration_count = 0
             });
             return {};
         }
@@ -4722,7 +4862,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 if (existing == frame.whiles.rend()) {
                     frame.whiles.push_back({
                         .do_while_statement_index = frame.pc - 1U,
-                        .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U)
+                        .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                        .iteration_count = 0
                     });
                 }
             } else {
@@ -4778,6 +4919,13 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         }
         case StatementKind::enddo_statement:
             if (!frame.whiles.empty()) {
+                ++frame.whiles.back().iteration_count;
+                if (frame.whiles.back().iteration_count > max_loop_iterations) {
+                    last_error_message = loop_iteration_limit_message();
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 frame.pc = frame.whiles.back().do_while_statement_index;
             }
             return {};
@@ -4891,7 +5039,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .endscan_statement_index = find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
                 .work_area = cursor->work_area,
                 .for_expression = statement.expression,
-                .while_expression = statement.tertiary_expression
+                .while_expression = statement.tertiary_expression,
+                .iteration_count = 0
             });
             events.push_back({
                 .category = "runtime.scan",
@@ -5272,6 +5421,22 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 }
             }
             return {};
+        case StatementKind::parameters_declaration:
+        case StatementKind::lparameters_declaration: {
+            for (std::size_t index = 0U; index < statement.names.size(); ++index) {
+                const std::string normalized = normalize_identifier(statement.names[index]);
+                if (normalized.empty()) {
+                    continue;
+                }
+                frame.local_names.insert(normalized);
+                if (index < frame.call_arguments.size()) {
+                    frame.locals[normalized] = frame.call_arguments[index];
+                } else {
+                    frame.locals[normalized] = make_empty_value();
+                }
+            }
+            return {};
+        }
         case StatementKind::store_command: {
             const PrgValue result = evaluate_expression(statement.expression, frame);
             for (const auto& name : statement.names) {
@@ -5282,6 +5447,36 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::no_op:
             return {};
     }
+    } catch (const std::bad_alloc&) {
+        last_error_message = "Runtime resource fault: out of memory. Execution paused safely.";
+        last_fault_location = statement.location;
+        last_fault_statement = statement.text;
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = statement.location
+        });
+        return {.ok = false, .message = last_error_message};
+    } catch (const std::filesystem::filesystem_error& error) {
+        last_error_message = std::string("Runtime resource fault: filesystem failure: ") + error.what();
+        last_fault_location = statement.location;
+        last_fault_statement = statement.text;
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = statement.location
+        });
+        return {.ok = false, .message = last_error_message};
+    } catch (const std::system_error& error) {
+        last_error_message = std::string("Runtime resource fault: system error: ") + error.what();
+        last_fault_location = statement.location;
+        last_fault_statement = statement.text;
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = statement.location
+        });
+        return {.ok = false, .message = last_error_message};
     } catch (const std::exception& error) {
         last_error_message = std::string("Runtime fault: ") + error.what();
         last_fault_location = statement.location;
@@ -5323,9 +5518,63 @@ bool PrgRuntimeSession::Impl::dispatch_event_handler(const std::string& routine_
         waiting_for_events = false;
         event_dispatch_return_depth = stack.size();
         restore_event_loop_after_dispatch = true;
+        if (!can_push_frame()) {
+            waiting_for_events = true;
+            restore_event_loop_after_dispatch = false;
+            event_dispatch_return_depth.reset();
+            last_error_message = call_depth_limit_message();
+            events.push_back({
+                .category = "runtime.error",
+                .detail = last_error_message,
+                .location = {}
+            });
+            return false;
+        }
         push_routine_frame(program.path, found->second);
         events.push_back({
             .category = "runtime.dispatch",
+            .detail = found->second.name,
+            .location = {}
+        });
+        return true;
+    }
+
+    return false;
+}
+
+bool PrgRuntimeSession::Impl::dispatch_error_handler() {
+    if (handling_error) {
+        return false;
+    }
+
+    std::string handler = trim_copy(error_handler);
+    if (handler.empty()) {
+        return false;
+    }
+
+    if (!starts_with_insensitive(handler, "DO ")) {
+        return false;
+    }
+    handler = trim_copy(handler.substr(3U));
+    if (handler.empty()) {
+        return false;
+    }
+
+    for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator) {
+        Program& program = load_program(iterator->file_path);
+        const auto found = program.routines.find(normalize_identifier(handler));
+        if (found == program.routines.end()) {
+            continue;
+        }
+        if (!can_push_frame()) {
+            return false;
+        }
+
+        handling_error = true;
+        error_handler_return_depth = stack.size();
+        push_routine_frame(program.path, found->second);
+        events.push_back({
+            .category = "runtime.error_handler",
             .detail = found->second.name,
             .location = {}
         });
@@ -5348,6 +5597,7 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
     const std::size_t base_depth = stack.size();
     bool first_statement = true;
 
+    try {
     while (true) {
         while (!stack.empty() &&
                (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size())) {
@@ -5362,6 +5612,10 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
             }
             restore_event_loop_after_dispatch = false;
         }
+        if (error_handler_return_depth.has_value() && stack.size() <= *error_handler_return_depth) {
+            error_handler_return_depth.reset();
+            handling_error = false;
+        }
         if (stack.empty()) {
             return build_pause_state(DebugPauseReason::completed, "Execution completed.");
         }
@@ -5372,12 +5626,27 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
             continue;
         }
 
+        if (executed_statement_count >= max_executed_statements) {
+            last_error_message = step_budget_limit_message();
+            last_fault_location = next->location;
+            last_fault_statement = next->text;
+            events.push_back({
+                .category = "runtime.error",
+                .detail = last_error_message,
+                .location = next->location
+            });
+            return build_pause_state(DebugPauseReason::error, last_error_message);
+        }
+
         if (!first_statement && breakpoint_matches(next->location)) {
             return build_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
         }
 
         const ExecutionOutcome outcome = execute_current_statement();
         if (!outcome.ok) {
+            if (dispatch_error_handler()) {
+                continue;
+            }
             return build_pause_state(DebugPauseReason::error, outcome.message);
         }
         if (outcome.waiting_for_events) {
@@ -5390,6 +5659,14 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
 
         switch (action) {
             case DebugResumeAction::continue_run:
+                if (scheduler_yield_statement_interval != 0U &&
+                    (executed_statement_count % scheduler_yield_statement_interval) == 0U) {
+                    if (scheduler_yield_sleep_ms == 0U) {
+                        std::this_thread::yield();
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(scheduler_yield_sleep_ms));
+                    }
+                }
                 break;
             case DebugResumeAction::step_into:
                 return build_pause_state(DebugPauseReason::step, "Step completed.");
@@ -5407,17 +5684,76 @@ RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action) {
 
         first_statement = false;
     }
+    } catch (const std::bad_alloc&) {
+        last_error_message = "Runtime resource fault: out of memory. Execution paused safely.";
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = last_fault_location
+        });
+        return build_pause_state(DebugPauseReason::error, last_error_message);
+    } catch (const std::filesystem::filesystem_error& error) {
+        last_error_message = std::string("Runtime resource fault: filesystem failure: ") + error.what();
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = last_fault_location
+        });
+        return build_pause_state(DebugPauseReason::error, last_error_message);
+    } catch (const std::system_error& error) {
+        last_error_message = std::string("Runtime resource fault: system error: ") + error.what();
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = last_fault_location
+        });
+        return build_pause_state(DebugPauseReason::error, last_error_message);
+    } catch (const std::exception& error) {
+        last_error_message = std::string("Runtime fault: ") + error.what();
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = last_fault_location
+        });
+        return build_pause_state(DebugPauseReason::error, last_error_message);
+    } catch (...) {
+        last_error_message = "Runtime fault: unknown exception";
+        events.push_back({
+            .category = "runtime.error",
+            .detail = last_error_message,
+            .location = last_fault_location
+        });
+        return build_pause_state(DebugPauseReason::error, last_error_message);
+    }
 }
 
 PrgRuntimeSession PrgRuntimeSession::create(const RuntimeSessionOptions& options) {
-    auto impl = std::make_unique<Impl>(options);
-    impl->startup_default_directory = options.working_directory.empty()
-        ? std::filesystem::path(options.startup_path).parent_path().string()
-        : normalize_path(options.working_directory);
+    RuntimeSessionOptions effective = options;
+    effective.startup_path = normalize_path(effective.startup_path);
+    effective.working_directory = effective.working_directory.empty()
+        ? std::filesystem::path(effective.startup_path).parent_path().string()
+        : normalize_path(effective.working_directory);
+
+    if (const auto config = load_runtime_config_near(
+            std::filesystem::path(effective.startup_path),
+            std::filesystem::path(effective.working_directory))) {
+        apply_runtime_config_defaults(effective, *config);
+    }
+
+    auto impl = std::make_unique<Impl>(effective);
+    impl->startup_default_directory = effective.working_directory;
     impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
     impl->data_sessions.try_emplace(1);
-    impl->push_main_frame(options.startup_path);
-    impl->entry_pause_pending = options.stop_on_entry;
+    impl->events.push_back({
+        .category = "runtime.config",
+        .detail = "temp=" + impl->runtime_temp_directory.string() +
+            ";max_call_depth=" + std::to_string(impl->max_call_depth) +
+            ";max_executed_statements=" + std::to_string(impl->max_executed_statements) +
+            ";max_loop_iterations=" + std::to_string(impl->max_loop_iterations),
+        .location = {}
+    });
+    impl->push_main_frame(effective.startup_path);
+    impl->entry_pause_pending = effective.stop_on_entry;
     return PrgRuntimeSession(std::move(impl));
 }
 

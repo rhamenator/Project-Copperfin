@@ -63,6 +63,19 @@ struct RuntimeEvent {
     SourceLocation location{};
 };
 
+enum class DiagnosticSeverity {
+    info,
+    warning,
+    error
+};
+
+struct PrgStaticDiagnostic {
+    std::string code;
+    DiagnosticSeverity severity = DiagnosticSeverity::warning;
+    std::string message;
+    SourceLocation location{};
+};
+
 struct RuntimeWorkAreaState {
     int selected = 1;
     int data_session = 1;
@@ -122,6 +135,12 @@ struct RuntimeSessionOptions {
     std::string startup_path;
     std::string working_directory;
     bool stop_on_entry = false;
+    std::size_t max_call_depth = 1024;
+    std::size_t max_executed_statements = 500000;
+    std::size_t max_loop_iterations = 200000;
+    std::string temp_directory;
+    std::size_t scheduler_yield_statement_interval = 4096;
+    std::size_t scheduler_yield_sleep_ms = 1;
 };
 
 class PrgRuntimeSession {
@@ -149,5 +168,6 @@ private:
 
 [[nodiscard]] const char* debug_pause_reason_name(DebugPauseReason reason);
 [[nodiscard]] std::string format_value(const PrgValue& value);
+[[nodiscard]] std::vector<PrgStaticDiagnostic> analyze_prg_file(const std::string& path);
 
 }  // namespace copperfin::runtime

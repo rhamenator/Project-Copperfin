@@ -7271,6 +7271,322 @@ void test_store_command_assigns_multiple_variables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_guardrail_limits_call_depth_without_crashing_host() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_call_depth";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "deep_calls.prg";
+    write_text(
+        main_path,
+        "DO a\n"
+        "RETURN\n"
+        "PROCEDURE a\n"
+        "DO b\n"
+        "RETURN\n"
+        "PROCEDURE b\n"
+        "DO c\n"
+        "RETURN\n"
+        "PROCEDURE c\n"
+        "DO d\n"
+        "RETURN\n"
+        "PROCEDURE d\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false,
+        .max_call_depth = 3
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "call-depth guardrail should pause with an error");
+    expect(
+        state.message.find("maximum call depth") != std::string::npos,
+        "call-depth guardrail should report a call-depth limit message");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_guardrail_limits_statement_budget_without_crashing_host() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_statement_budget";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "endless_loop.prg";
+    write_text(
+        main_path,
+        "DO WHILE .T.\n"
+        "x = 1\n"
+        "ENDDO\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false,
+        .max_executed_statements = 30,
+        .max_loop_iterations = 1000
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "statement-budget guardrail should pause with an error");
+    expect(
+        state.message.find("maximum executed statements") != std::string::npos,
+        "statement-budget guardrail should report a statement-budget limit message");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_static_diag";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path flagged_path = temp_root / "flagged.prg";
+    write_text(
+        flagged_path,
+        "DO WHILE .T.\n"
+        "x = 1\n"
+        "ENDDO\n");
+
+    const auto diagnostics = copperfin::runtime::analyze_prg_file(flagged_path.string());
+    expect(!diagnostics.empty(), "analyzer should emit diagnostics for likely infinite loops");
+    const bool has_infinite_loop_warning = std::any_of(
+        diagnostics.begin(),
+        diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(has_infinite_loop_warning, "analyzer should emit PRG1001 for DO WHILE .T. without exit path");
+
+    const fs::path safe_path = temp_root / "safe.prg";
+    write_text(
+        safe_path,
+        "DO WHILE .T.\n"
+        "EXIT\n"
+        "ENDDO\n");
+    const auto safe_diagnostics = copperfin::runtime::analyze_prg_file(safe_path.string());
+    const bool safe_has_warning = std::any_of(
+        safe_diagnostics.begin(),
+        safe_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(!safe_has_warning, "analyzer should not emit PRG1001 when an explicit EXIT path exists");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_config_fpw_overrides_runtime_limits() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_config_limits";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "config.fpw",
+        "MAX_CALL_DEPTH = 3\n"
+        "MAX_EXECUTED_STATEMENTS = 40\n"
+        "MAX_LOOP_ITERATIONS = 500\n");
+
+    const fs::path main_path = temp_root / "deep_calls.prg";
+    write_text(
+        main_path,
+        "DO a\n"
+        "RETURN\n"
+        "PROCEDURE a\n"
+        "DO b\n"
+        "RETURN\n"
+        "PROCEDURE b\n"
+        "DO c\n"
+        "RETURN\n"
+        "PROCEDURE c\n"
+        "DO d\n"
+        "RETURN\n"
+        "PROCEDURE d\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "config.fpw call-depth limit should pause with an error");
+    expect(
+        state.message.find("maximum call depth") != std::string::npos,
+        "config.fpw should control max call depth when options use defaults");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_config_fpw_overrides_temp_directory_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_config_temp_dir";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path local_temp = temp_root / "user_local_temp";
+    fs::create_directories(local_temp);
+
+    write_text(
+        temp_root / "config.fpw",
+        "TMPFILES = '" + local_temp.string() + "'\n");
+
+    const fs::path main_path = temp_root / "main.prg";
+    write_text(main_path, "x = 1\nRETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "config temp-directory script should complete");
+
+    const bool reported_config_temp = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [&](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.config" && event.detail.find(local_temp.string()) != std::string::npos;
+        });
+    expect(reported_config_temp, "runtime config event should include TMPFILES override path");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_elseif_control_flow_executes_matching_branch() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_elseif";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "elseif_test.prg";
+    write_text(
+        main_path,
+        "x = 2\n"
+        "IF x = 1\n"
+        "  outcome = 'if'\n"
+        "ELSEIF x = 2\n"
+        "  outcome = 'elseif'\n"
+        "ELSE\n"
+        "  outcome = 'else'\n"
+        "ENDIF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ELSEIF script should complete");
+    const auto outcome = state.globals.find("outcome");
+    expect(outcome != state.globals.end(), "ELSEIF script should assign outcome");
+    if (outcome != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outcome->second) == "elseif", "ELSEIF branch should be selected");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_with_parameters_binds_arguments_in_called_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_with_parameters";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "do_with_parameters.prg";
+    write_text(
+        main_path,
+        "DO addvals WITH 4, 5\n"
+        "RETURN\n"
+        "PROCEDURE addvals\n"
+        "LPARAMETERS a, b\n"
+        "sum_result = a + b\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO WITH LPARAMETERS script should complete");
+
+    const auto sum_result = state.globals.find("sum_result");
+    expect(sum_result != state.globals.end(), "called routine should assign sum_result");
+    if (sum_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_result->second) == "9", "DO WITH arguments should bind to LPARAMETERS");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_on_error_do_handler_dispatches_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_on_error_do";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "on_error_do.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "DO missing_routine\n"
+        "after_error = 1\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "handled = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ON ERROR DO script should complete after handler dispatch");
+
+    const auto handled = state.globals.find("handled");
+    const auto after_error = state.globals.find("after_error");
+    expect(handled != state.globals.end(), "ON ERROR handler should set handled flag");
+    expect(after_error != state.globals.end(), "execution should continue after ON ERROR handler returns");
+    if (handled != state.globals.end()) {
+        expect(copperfin::runtime::format_value(handled->second) == "1", "handled flag should be 1");
+    }
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "1", "post-error statement should run");
+    }
+
+    const bool has_handler_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.error_handler";
+        });
+    expect(has_handler_event, "runtime should emit runtime.error_handler event when ON ERROR handler is dispatched");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -7367,6 +7683,14 @@ int main() {
     test_private_declaration_masks_caller_variable();
     test_private_variable_visible_to_called_routines();
     test_store_command_assigns_multiple_variables();
+    test_runtime_guardrail_limits_call_depth_without_crashing_host();
+    test_runtime_guardrail_limits_statement_budget_without_crashing_host();
+    test_static_diagnostic_flags_likely_infinite_do_while_loop();
+    test_config_fpw_overrides_runtime_limits();
+    test_config_fpw_overrides_temp_directory_default();
+    test_elseif_control_flow_executes_matching_branch();
+    test_do_with_parameters_binds_arguments_in_called_routine();
+    test_on_error_do_handler_dispatches_routine();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
