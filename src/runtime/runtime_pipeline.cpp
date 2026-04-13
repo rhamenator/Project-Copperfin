@@ -179,6 +179,48 @@ bool copy_file_if_exists(
     return true;
 }
 
+bool validate_runtime_host_source_path(
+    const RuntimePackagePlan& plan,
+    const std::string& runtime_host_source_path,
+    std::string& error) {
+    if (runtime_host_source_path.empty()) {
+        error = "Runtime host source path is empty.";
+        return false;
+    }
+
+    std::filesystem::path source(runtime_host_source_path);
+    std::error_code canonical_error;
+    source = std::filesystem::weakly_canonical(source, canonical_error);
+    if (canonical_error) {
+        error = "Unable to resolve runtime host source path.";
+        return false;
+    }
+
+    if (!std::filesystem::exists(source) || !std::filesystem::is_regular_file(source)) {
+        error = "Runtime host source path does not point to a regular file.";
+        return false;
+    }
+
+#ifdef _WIN32
+    if (plan.security_enabled) {
+        const std::string expected_file_name = "copperfin_runtime_host.exe";
+        if (!source.is_absolute()) {
+            error = "Security-enabled packaging requires an absolute runtime host source path.";
+            return false;
+        }
+
+        if (lowercase_copy(source.filename().string()) != expected_file_name) {
+            error = "Security-enabled packaging requires runtime host binary name 'copperfin_runtime_host.exe'.";
+            return false;
+        }
+    }
+#else
+    (void)plan;
+#endif
+
+    return true;
+}
+
 std::string resolve_project_item_source(
     const studio::StudioDocumentModel& document,
     const studio::StudioProjectEntry& entry) {
@@ -514,6 +556,10 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
     if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan), error)) {
+        return {.ok = false, .error = error};
+    }
+
+    if (!validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
     }
 

@@ -169,11 +169,76 @@ void test_materialize_excluded_xasset_startup_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_security_enabled_runtime_host_name_validation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_security_tests";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path canonical_runtime_host = temp_root / "copperfin_runtime_host.exe";
+    const fs::path non_canonical_runtime_host = temp_root / "runtime_host_custom.exe";
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(canonical_runtime_host, "runtime-host");
+    write_text(non_canonical_runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "secure_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "SecureDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "SecureDemo";
+    workspace.build_plan.output_path = (output_dir / "SecureDemo.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto secure_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        true,
+        false);
+
+    expect(secure_plan.ok, "security-enabled plan should be created");
+
+    const auto rejected_result = copperfin::runtime::materialize_runtime_package(
+        secure_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        non_canonical_runtime_host.string());
+
+    expect(!rejected_result.ok, "security-enabled packaging should reject non-standard runtime host names");
+
+    const auto accepted_result = copperfin::runtime::materialize_runtime_package(
+        secure_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        canonical_runtime_host.string());
+
+    expect(accepted_result.ok, "security-enabled packaging should accept canonical runtime host name");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_materialize_runtime_package();
     test_materialize_excluded_xasset_startup_package();
+    test_security_enabled_runtime_host_name_validation();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

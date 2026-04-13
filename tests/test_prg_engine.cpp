@@ -2,13 +2,16 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <process.h>
 #include <sstream>
+#include <system_error>
 #include <vector>
 
 namespace {
@@ -544,15 +547,42 @@ void test_export_vfp_compatibility_corpus_script() {
     write_text(regression_root / "runtime" / "macro.spr", "SCREEN fixture");
     write_text(vfp_source_root / "ReportBuilder" / "ignore.txt", "not a FoxPro asset");
 
-    const std::string command =
-        "powershell -NoProfile -ExecutionPolicy Bypass -File \"" + script_path.string() +
-        "\" -OutputDirectory \"" + output_root.string() +
-        "\" -InstalledVfpRoots \"" + installed_root.string() +
-        "\" -VfpSourceRoots \"" + vfp_source_root.string() +
-        "\" -LegacyProjectRoots \"" + legacy_root.string() +
-        "\" -RegressionSampleRoots \"" + regression_root.string() + "\"";
+    std::vector<std::string> script_args = {
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        script_path.string(),
+        "-OutputDirectory",
+        output_root.string(),
+        "-InstalledVfpRoots",
+        installed_root.string(),
+        "-VfpSourceRoots",
+        vfp_source_root.string(),
+        "-LegacyProjectRoots",
+        legacy_root.string(),
+        "-RegressionSampleRoots",
+        regression_root.string()
+    };
 
-    const int exit_code = std::system(command.c_str());
+    std::vector<const char*> argv;
+    argv.reserve(script_args.size() + 1U);
+    for (const auto& arg : script_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+
+    const intptr_t exit_code = _spawnvp(_P_WAIT, "powershell", const_cast<char* const*>(argv.data()));
+    expect(exit_code != -1, "compatibility corpus exporter should launch powershell successfully");
+    if (exit_code == -1) {
+        std::cerr << "FAIL: powershell launch error: "
+                  << std::error_code(errno, std::generic_category()).message() << "\n";
+        ++failures;
+        fs::remove_all(fixture_root, ignored);
+        fs::remove_all(output_root, ignored);
+        return;
+    }
     expect(exit_code == 0, "compatibility corpus exporter should succeed for synthetic fixture roots");
 
     const fs::path manifest_path = output_root / "vfp-compatibility-corpus.json";

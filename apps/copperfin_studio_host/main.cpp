@@ -1,6 +1,7 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
+#include "copperfin/security/process_hardening.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
 #include "copperfin/studio/product_subsystems.h"
@@ -780,6 +781,11 @@ void print_subsystems() {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        std::cerr << "warning: " << hardening.message << "\n";
+    }
+
     std::vector<std::string> args;
     args.reserve(argc > 1 ? static_cast<std::size_t>(argc - 1) : 0U);
     for (int index = 1; index < argc; ++index) {

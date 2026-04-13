@@ -1,4 +1,5 @@
 #include "copperfin/vfp/asset_inspector.h"
+#include "copperfin/security/process_hardening.h"
 
 #include <iostream>
 
@@ -98,6 +99,11 @@ void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        std::cerr << "warning: " << hardening.message << "\n";
+    }
+
     if (argc != 2) {
         print_usage();
         return 1;

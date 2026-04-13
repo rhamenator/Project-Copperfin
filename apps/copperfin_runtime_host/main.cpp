@@ -1,5 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/security/process_hardening.h"
 #include "copperfin/studio/document_model.h"
 
 #include <algorithm>
@@ -287,6 +288,11 @@ std::string resolve_startup_source(const ManifestMap& manifest) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        std::cerr << "warning: " << hardening.message << "\n";
+    }
+
     std::string manifest_path;
     bool debug_mode = false;
     std::vector<std::string> breakpoint_args;

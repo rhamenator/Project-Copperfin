@@ -1,23 +1,23 @@
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/security/process_hardening.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
 
+#include <cerrno>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <process.h>
 #include <string>
+#include <system_error>
 #include <vector>
 
 namespace {
 
 void print_usage() {
     std::cout << "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory> [--configuration debug|release] [--enable-security] [--emit-dotnet-launcher] [--runtime-host <path>]\n";
-}
-
-std::string quote_argument(const std::string& value) {
-    return "\"" + value + "\"";
 }
 
 std::string resolve_runtime_host_path(const std::string& override_path) {
@@ -41,13 +41,33 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     const std::filesystem::path output_dir(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
 
-    const std::string command =
-        "dotnet publish " + quote_argument(project_path.string()) +
-        " -c " + configuration +
-        " -r win-x64 --self-contained false" +
-        " -o " + quote_argument(output_dir.string());
+    std::vector<std::string> publish_args = {
+        "dotnet",
+        "publish",
+        project_path.string(),
+        "-c",
+        configuration,
+        "-r",
+        "win-x64",
+        "--self-contained",
+        "false",
+        "-o",
+        output_dir.string()
+    };
 
-    const int exit_code = std::system(command.c_str());
+    std::vector<const char*> argv;
+    argv.reserve(publish_args.size() + 1U);
+    for (const auto& arg : publish_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+
+    const intptr_t exit_code = _spawnvp(_P_WAIT, "dotnet", const_cast<char* const*>(argv.data()));
+    if (exit_code == -1) {
+        error = "dotnet publish failed to start: " + std::error_code(errno, std::generic_category()).message();
+        return false;
+    }
+
     if (exit_code != 0) {
         error = "dotnet publish failed for generated launcher.";
         return false;
@@ -78,6 +98,11 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
 }  // namespace
 
 int main(int argc, char** argv) {
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        std::cerr << "warning: " << hardening.message << "\n";
+    }
+
     std::vector<std::string> args;
     for (int index = 1; index < argc; ++index) {
         args.emplace_back(argv[index]);

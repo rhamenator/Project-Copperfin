@@ -6,9 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(MSVC)
+    add_compile_options(/sdl /guard:cf /Qspectre)
+    add_link_options(/DYNAMICBASE /NXCOMPAT /guard:cf)
+endif()
+
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 
 add_library(cf_security
+    src/security/process_hardening.cpp
     src/security/security_model.cpp
 )
 
@@ -147,7 +153,7 @@ add_executable(copperfin_inspect
     apps/copperfin_inspect/main.cpp
 )
 
-target_link_libraries(copperfin_inspect PRIVATE cf_vfp_assets)
+target_link_libraries(copperfin_inspect PRIVATE cf_vfp_assets cf_security)
 
 if(MSVC)
     target_compile_options(copperfin_inspect PRIVATE /W4 /permissive-)
@@ -171,7 +177,7 @@ add_executable(copperfin_runtime_host
     apps/copperfin_runtime_host/main.cpp
 )
 
-target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime)
+target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security)
 
 if(MSVC)
     target_compile_options(copperfin_runtime_host PRIVATE /W4 /permissive-)
