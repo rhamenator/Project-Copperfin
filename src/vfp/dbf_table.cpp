@@ -219,39 +219,6 @@ std::string infer_memo_sidecar_path(const std::string& path) {
     return {};
 }
 
-std::vector<std::filesystem::path> infer_structural_index_sidecar_paths(const std::string& path) {
-    std::vector<std::filesystem::path> candidates;
-    const std::filesystem::path file_path(path);
-    if (file_path.empty()) {
-        return candidates;
-    }
-
-    candidates.push_back(file_path.parent_path() / (file_path.stem().string() + ".cdx"));
-
-    std::filesystem::path full_name = file_path;
-    full_name += ".cdx";
-    candidates.push_back(std::move(full_name));
-    return candidates;
-}
-
-bool has_companion_structural_index(const std::string& path) {
-    const auto candidates = infer_structural_index_sidecar_paths(path);
-    return std::any_of(
-        candidates.begin(),
-        candidates.end(),
-        [](const std::filesystem::path& candidate) {
-            std::error_code ignored;
-            return std::filesystem::exists(candidate, ignored);
-        });
-}
-
-std::optional<std::string> unsupported_indexed_table_mutation_error(const std::string& path, const DbfHeader& header) {
-    if (header.has_production_index() || has_companion_structural_index(path)) {
-        return "Indexed DBF mutation is not yet supported for tables with structural/production indexes.";
-    }
-    return std::nullopt;
-}
-
 struct RawFieldDescriptor {
     std::string name;
     char type = '\0';
@@ -1238,10 +1205,6 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
     }
-    if (const auto mutation_error = unsupported_indexed_table_mutation_error(path, header_result.header); mutation_error.has_value()) {
-        return {.ok = false, .error = *mutation_error, .record_count = header_result.header.record_count};
-    }
-
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
     DbfWriteResult result = append_blank_record_bytes(bytes, header_result.header, fields);
     if (!result.ok) {
@@ -1274,10 +1237,6 @@ DbfWriteResult replace_record_field_value(
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
     }
-    if (const auto mutation_error = unsupported_indexed_table_mutation_error(path, header_result.header); mutation_error.has_value()) {
-        return {.ok = false, .error = *mutation_error, .record_count = header_result.header.record_count};
-    }
-
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
     const auto field = find_raw_field(fields, field_name);
     if (!field.has_value()) {
@@ -1345,9 +1304,6 @@ DbfWriteResult set_record_deleted_flag(
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
-    }
-    if (const auto mutation_error = unsupported_indexed_table_mutation_error(path, header_result.header); mutation_error.has_value()) {
-        return {.ok = false, .error = *mutation_error, .record_count = header_result.header.record_count};
     }
     if (record_index >= header_result.header.record_count) {
         return {.ok = false, .error = "Record index is out of range.", .record_count = header_result.header.record_count};

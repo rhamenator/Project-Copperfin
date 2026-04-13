@@ -440,10 +440,16 @@ Program parse_program(const std::string& path) {
             statement.identifier = trim_copy(line.substr(8U));
         } else if (starts_with_insensitive(line, "REPORT FORM ")) {
             statement.kind = StatementKind::report_form;
-            statement.identifier = trim_copy(line.substr(12U));
+            const std::string body = trim_copy(line.substr(12U));
+            statement.identifier = take_first_token(body);
+            statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
+            statement.tertiary_expression = extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
         } else if (starts_with_insensitive(line, "LABEL FORM ")) {
             statement.kind = StatementKind::label_form;
-            statement.identifier = trim_copy(line.substr(11U));
+            const std::string body = trim_copy(line.substr(11U));
+            statement.identifier = take_first_token(body);
+            statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
+            statement.tertiary_expression = extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
         } else if (starts_with_insensitive(line, "ACTIVATE POPUP ")) {
             statement.kind = StatementKind::activate_surface;
             statement.identifier = "popup";
@@ -567,13 +573,10 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "REPLACE ")) {
             statement.kind = StatementKind::replace_command;
             const std::string body = trim_copy(line.substr(8U));
-            const std::size_t in_position = find_keyword_top_level(body, "IN");
-            if (in_position == std::string::npos) {
-                statement.expression = body;
-            } else {
-                statement.expression = trim_copy(body.substr(0U, in_position));
-                statement.secondary_expression = trim_copy(body.substr(in_position + 2U));
-            }
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "IN"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.tertiary_expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
@@ -1826,6 +1829,48 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
+    bool replace_records(
+        CursorState& cursor,
+        const std::vector<ReplaceAssignment>& assignments,
+        const Frame& frame,
+        const std::string& for_expression) {
+        if (trim_copy(for_expression).empty()) {
+            return replace_current_record_fields(cursor, assignments, frame);
+        }
+
+        const std::size_t original_recno = cursor.recno;
+        const bool original_found = cursor.found;
+        const bool original_bof = cursor.bof;
+        const bool original_eof = cursor.eof;
+        std::size_t replaced_count = 0U;
+
+        for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno) {
+            move_cursor_to(cursor, static_cast<long long>(recno));
+            if (cursor.recno == 0U || cursor.eof) {
+                continue;
+            }
+            if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame, &cursor))) {
+                continue;
+            }
+            if (!value_as_bool(evaluate_expression(for_expression, frame, &cursor))) {
+                continue;
+            }
+
+            if (!replace_current_record_fields(cursor, assignments, frame)) {
+                return false;
+            }
+            ++replaced_count;
+        }
+
+        if (replaced_count == 0U) {
+            move_cursor_to(cursor, static_cast<long long>(original_recno));
+            cursor.found = original_found;
+            cursor.bof = original_bof;
+            cursor.eof = original_eof;
+        }
+        return true;
+    }
+
     bool append_blank_record(CursorState& cursor) {
         if (cursor.remote) {
             const std::size_t recno = cursor.remote_records.size() + 1U;
@@ -2845,12 +2890,20 @@ struct PrgRuntimeSession::Impl {
     }
 
     int sql_connect(const std::string& target, const std::string& provider) {
+        std::string provider_hint = provider;
+        const std::string normalized_target = lowercase_copy(target);
+        if (normalized_target.find("provider=") != std::string::npos) {
+            provider_hint = "oledb";
+        } else if (normalized_target.find("driver=") != std::string::npos || normalized_target.find("dsn=") != std::string::npos) {
+            provider_hint = "odbc";
+        }
+
         int& next_handle = current_sql_handle_counter();
         const int handle = next_handle++;
         current_sql_connections().emplace(handle, RuntimeSqlConnectionState{
             .handle = handle,
             .target = target,
-            .provider = provider,
+            .provider = provider_hint,
             .last_cursor_alias = {},
             .last_result_count = 0U
         });
@@ -2861,6 +2914,15 @@ struct PrgRuntimeSession::Impl {
         return current_sql_connections().erase(handle) > 0;
     }
 
+    int sql_row_count(int handle) const {
+        const auto& connections = current_sql_connections();
+        const auto found = connections.find(handle);
+        if (found == connections.end()) {
+            return -1;
+        }
+        return static_cast<int>(found->second.last_result_count);
+    }
+
     int sql_exec(int handle, const std::string& command, const std::string& cursor_alias) {
         auto& connections = current_sql_connections();
         const auto found = connections.find(handle);
@@ -2868,6 +2930,10 @@ struct PrgRuntimeSession::Impl {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
             return -1;
         }
+
+        RuntimeSqlConnectionState& connection = found->second;
+        connection.last_cursor_alias.clear();
+        connection.last_result_count = 0U;
 
         std::size_t result_count = 0;
         const std::string normalized_command = lowercase_copy(trim_copy(command));
@@ -2879,6 +2945,12 @@ struct PrgRuntimeSession::Impl {
             if (!open_table_cursor({}, alias, resolve_sql_cursor_auto_target(), true, true, handle, command, result_count)) {
                 return -1;
             }
+        } else if (
+            normalized_command.rfind("insert", 0) == 0 ||
+            normalized_command.rfind("update", 0) == 0 ||
+            normalized_command.rfind("delete", 0) == 0) {
+            result_count = normalized_command.find("where 1=0") == std::string::npos ? 1U : 0U;
+            connection.last_result_count = result_count;
         }
         events.push_back({
             .category = "sql.exec",
@@ -2886,9 +2958,26 @@ struct PrgRuntimeSession::Impl {
             .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
         });
         if (result_count > 0U) {
+            if (normalized_command.rfind("select", 0) == 0) {
+                events.push_back({
+                    .category = "sql.cursor",
+                    .detail = connection.last_cursor_alias + " (" + std::to_string(result_count) + " rows)",
+                    .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+                });
+            } else {
+                events.push_back({
+                    .category = "sql.rows",
+                    .detail = "handle " + std::to_string(handle) + ": " + std::to_string(connection.last_result_count) + " affected",
+                    .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
+                });
+            }
+        } else if (
+            normalized_command.rfind("insert", 0) == 0 ||
+            normalized_command.rfind("update", 0) == 0 ||
+            normalized_command.rfind("delete", 0) == 0) {
             events.push_back({
-                .category = "sql.cursor",
-                .detail = found->second.last_cursor_alias + " (" + std::to_string(result_count) + " rows)",
+                .category = "sql.rows",
+                .detail = "handle " + std::to_string(handle) + ": 0 affected",
                 .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
             });
         }
@@ -3179,7 +3268,33 @@ struct PrgRuntimeSession::Impl {
         return asset_path.lexically_normal();
     }
 
-    ExecutionOutcome open_report_surface(const Statement& statement, const char* extension, const char* category) {
+    std::filesystem::path resolve_report_output_path(const std::string& to_clause, const Frame& frame) {
+        std::string target = trim_copy(to_clause);
+        if (target.empty()) {
+            return {};
+        }
+
+        if (starts_with_insensitive(target, "FILE ")) {
+            target = trim_copy(target.substr(5U));
+        }
+        if (target.empty()) {
+            return {};
+        }
+
+        std::filesystem::path output_path;
+        if (target.size() >= 2U && target.front() == '\'' && target.back() == '\'') {
+            output_path = std::filesystem::path(unquote_string(target));
+        } else {
+            output_path = std::filesystem::path(value_as_string(evaluate_expression(target, frame)));
+        }
+
+        if (output_path.is_relative()) {
+            output_path = std::filesystem::path(current_default_directory()) / output_path;
+        }
+        return output_path.lexically_normal();
+    }
+
+    ExecutionOutcome open_report_surface(const Statement& statement, const Frame& frame, const char* extension, const char* category_prefix) {
         const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
         if (!std::filesystem::exists(asset_path)) {
             last_error_message = std::string("Unable to resolve report asset: ") + asset_path.string();
@@ -3201,20 +3316,66 @@ struct PrgRuntimeSession::Impl {
         }
 
         const auto layout = studio::build_report_layout(open_result.document);
-        waiting_for_events = true;
-        events.push_back({
-            .category = category,
-            .detail = asset_path.string(),
-            .location = statement.location
-        });
-        if (layout.available) {
+        const bool preview_mode =
+            normalize_identifier(statement.secondary_expression) == "preview" ||
+            trim_copy(statement.tertiary_expression).empty();
+        if (preview_mode) {
+            waiting_for_events = true;
             events.push_back({
-                .category = std::string(category) + ".layout",
-                .detail = std::to_string(layout.sections.size()) + " sections",
+                .category = std::string(category_prefix) + ".preview",
+                .detail = asset_path.string(),
                 .location = statement.location
             });
+            if (layout.available) {
+                events.push_back({
+                    .category = std::string(category_prefix) + ".preview.layout",
+                    .detail = std::to_string(layout.sections.size()) + " sections",
+                    .location = statement.location
+                });
+            }
+            return {.waiting_for_events = true};
         }
-        return {.waiting_for_events = true};
+
+        const std::filesystem::path output_path = resolve_report_output_path(statement.tertiary_expression, frame);
+        if (output_path.empty()) {
+            last_error_message = "REPORT/LABEL TO clause requires a writable output path";
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            return {.ok = false, .message = last_error_message};
+        }
+
+        if (!output_path.parent_path().empty()) {
+            std::error_code ignored;
+            std::filesystem::create_directories(output_path.parent_path(), ignored);
+        }
+
+        std::ofstream output(output_path, std::ios::binary);
+        if (!output.good()) {
+            last_error_message = "Unable to open report output path: " + output_path.string();
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            return {.ok = false, .message = last_error_message};
+        }
+
+        output << "Copperfin " << category_prefix << " render\n";
+        output << "source=" << asset_path.string() << "\n";
+        if (layout.available) {
+            output << "sections=" << layout.sections.size() << "\n";
+        }
+        output.close();
+        if (!output.good()) {
+            last_error_message = "Unable to write report output path: " + output_path.string();
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            return {.ok = false, .message = last_error_message};
+        }
+
+        events.push_back({
+            .category = std::string(category_prefix) + ".render",
+            .detail = output_path.string(),
+            .location = statement.location
+        });
+        return {};
     }
 
     bool dispatch_event_handler(const std::string& routine_name);
@@ -3259,6 +3420,7 @@ public:
         std::function<int(const std::string&, const std::string&)> sql_connect_callback,
         std::function<int(int, const std::string&, const std::string&)> sql_exec_callback,
         std::function<bool(int)> sql_disconnect_callback,
+        std::function<int(int)> sql_row_count_callback,
         std::function<int(const std::string&, const std::string&)> register_ole_callback,
         std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback,
         std::function<PrgValue(const std::string&)> ole_property_callback,
@@ -3290,6 +3452,7 @@ public:
           sql_connect_callback_(std::move(sql_connect_callback)),
           sql_exec_callback_(std::move(sql_exec_callback)),
           sql_disconnect_callback_(std::move(sql_disconnect_callback)),
+          sql_row_count_callback_(std::move(sql_row_count_callback)),
           register_ole_callback_(std::move(register_ole_callback)),
           ole_invoke_callback_(std::move(ole_invoke_callback)),
           ole_property_callback_(std::move(ole_property_callback)),
@@ -3658,6 +3821,10 @@ private:
             }
             return make_number_value(ok ? 1.0 : -1.0);
         }
+        if (function == "sqlrowcount" && !arguments.empty()) {
+            const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            return make_number_value(static_cast<double>(sql_row_count_callback_(handle)));
+        }
         return make_string_value(function);
     }
 
@@ -3815,6 +3982,7 @@ private:
     std::function<int(const std::string&, const std::string&)> sql_connect_callback_;
     std::function<int(int, const std::string&, const std::string&)> sql_exec_callback_;
     std::function<bool(int)> sql_disconnect_callback_;
+    std::function<int(int)> sql_row_count_callback_;
     std::function<int(const std::string&, const std::string&)> register_ole_callback_;
     std::function<PrgValue(const std::string&, const std::string&, const std::vector<PrgValue>&)> ole_invoke_callback_;
     std::function<PrgValue(const std::string&)> ole_property_callback_;
@@ -3960,6 +4128,9 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         },
         [this](int handle) {
             return sql_disconnect(handle);
+        },
+        [this](int handle) {
+            return sql_row_count(handle);
         },
         [this](const std::string& prog_id, const std::string& source) {
             return register_ole_object(prog_id, source);
@@ -4229,14 +4400,37 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
+            std::string text_value = statement.expression;
             if (normalize_identifier(statement.tertiary_expression) == "textmerge") {
-                last_error_message = "TEXT TEXTMERGE is not yet supported";
-                last_fault_location = statement.location;
-                last_fault_statement = statement.text;
-                return {.ok = false, .message = last_error_message};
+                std::string merged_text;
+                merged_text.reserve(text_value.size());
+
+                std::size_t cursor = 0U;
+                while (cursor < text_value.size()) {
+                    const std::size_t start = text_value.find("<<", cursor);
+                    if (start == std::string::npos) {
+                        merged_text.append(text_value.substr(cursor));
+                        break;
+                    }
+
+                    merged_text.append(text_value.substr(cursor, start - cursor));
+                    const std::size_t end = text_value.find(">>", start + 2U);
+                    if (end == std::string::npos) {
+                        merged_text.append(text_value.substr(start));
+                        break;
+                    }
+
+                    const std::string merge_expression = trim_copy(text_value.substr(start + 2U, end - start - 2U));
+                    if (!merge_expression.empty()) {
+                        merged_text.append(value_as_string(evaluate_expression(merge_expression, frame)));
+                    }
+
+                    cursor = end + 2U;
+                }
+
+                text_value = std::move(merged_text);
             }
 
-            std::string text_value = statement.expression;
             if (normalize_identifier(statement.secondary_expression) == "additive") {
                 text_value = value_as_string(lookup_variable(frame, statement.identifier)) + text_value;
             }
@@ -4265,9 +4459,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::report_form:
-            return open_report_surface(statement, ".frx", "report.preview");
+            return open_report_surface(statement, frame, ".frx", "report");
         case StatementKind::label_form:
-            return open_report_surface(statement, ".lbx", "label.preview");
+            return open_report_surface(statement, frame, ".lbx", "label");
         case StatementKind::activate_surface:
             waiting_for_events = true;
             events.push_back({
@@ -4576,7 +4770,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            if (!replace_current_record_fields(*cursor, assignments, frame)) {
+            if (!replace_records(*cursor, assignments, frame, statement.tertiary_expression)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -4584,7 +4778,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
             events.push_back({
                 .category = "runtime.replace",
-                .detail = statement.expression,
+                .detail = trim_copy(statement.tertiary_expression).empty()
+                    ? statement.expression
+                    : statement.expression + " FOR " + statement.tertiary_expression,
                 .location = statement.location
             });
             return {};

@@ -797,6 +797,50 @@ void test_sql_and_ole_compatibility_functions() {
 
     fs::remove_all(temp_root, ignored);
 }
+void test_sql_pass_through_rows_affected_and_provider_hint() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_rows";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_rows.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('Driver=ODBC Driver 18 for SQL Server;Server=Northwind')\n"
+        "nInsert = SQLEXEC(nConn, 'insert into customers values (1)')\n"
+        "nUpdate = SQLEXEC(nConn, 'update customers set id = 2 where id = 1')\n"
+        "nDelete = SQLEXEC(nConn, 'delete from customers where id = 2')\n"
+        "nRows = SQLROWCOUNT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL pass-through DML script should complete");
+
+    const auto rows = state.globals.find("nrows");
+    expect(rows != state.globals.end(), "SQLROWCOUNT should expose rows affected for the latest SQLEXEC DML command");
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "1", "SQLROWCOUNT should return the last DML rows-affected value");
+    }
+
+    expect(!state.sql_connections.empty(), "SQL script should keep connection metadata while connected");
+    if (!state.sql_connections.empty()) {
+        expect(state.sql_connections.front().provider == "odbc", "SQLCONNECT target hints should classify ODBC provider metadata");
+        expect(state.sql_connections.front().last_result_count == 1U, "connection state should retain the latest SQLEXEC rows-affected count");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "sql.rows";
+    }), "SQL DML execution should emit sql.rows runtime events");
+
+    fs::remove_all(temp_root, ignored);
+}
 
 void test_use_and_data_session_isolation() {
     namespace fs = std::filesystem;
@@ -892,6 +936,49 @@ void test_use_and_data_session_isolation() {
     if (alias5 != state.globals.end()) {
         expect(copperfin::runtime::format_value(alias5->second).empty(), "USE IN alias should close the targeted work area");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+void test_report_form_to_file_renders_without_event_loop_pause() {
+    namespace fs = std::filesystem;
+    const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
+    if (!fs::exists(report_path)) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_report_render";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path output_path = temp_root / "invoice_render.txt";
+    const fs::path main_path = temp_root / "report_render.prg";
+    write_text(
+        main_path,
+        "REPORT FORM '" + report_path.string() + "' TO FILE '" + output_path.string() + "'\n"
+        "x = 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPORT FORM TO FILE should complete without entering a preview event loop");
+    expect(!state.waiting_for_events, "REPORT FORM TO FILE should not leave the runtime waiting_for_events");
+    expect(fs::exists(output_path), "REPORT FORM TO FILE should materialize an output artifact");
+
+    const auto x_value = state.globals.find("x");
+    expect(x_value != state.globals.end(), "statements after REPORT FORM TO FILE should continue executing");
+    if (x_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(x_value->second) == "2", "REPORT FORM TO FILE should not block follow-on statements");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "report.render";
+    }), "REPORT FORM TO FILE should emit a report.render event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1746,6 +1833,81 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     if (fields != state.globals.end()) {
         expect(copperfin::runtime::format_value(fields->second) == "3", "FCOUNT('sqlcust') should expose the synthetic SQL cursor schema");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_mutation_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutations";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_mutations.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "GO BOTTOM\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'DELTA', AMOUNT WITH 99\n"
+        "DELETE FOR NAME = 'BRAVO'\n"
+        "GO 2\n"
+        "lDeletedBravo = DELETED()\n"
+        "RECALL FOR NAME = 'BRAVO'\n"
+        "GO 2\n"
+        "lRecalledBravo = DELETED()\n"
+        "nCount = RECCOUNT('sqlcust')\n"
+        "GO BOTTOM\n"
+        "cLastName = NAME\n"
+        "nLastAmount = AMOUNT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL mutation script should complete");
+
+    const auto deleted_bravo = state.globals.find("ldeletedbravo");
+    const auto recalled_bravo = state.globals.find("lrecalledbravo");
+    const auto count = state.globals.find("ncount");
+    const auto last_name = state.globals.find("clastname");
+    const auto last_amount = state.globals.find("nlastamount");
+
+    expect(deleted_bravo != state.globals.end(), "DELETE FOR over SQL cursor should expose DELETED() state");
+    expect(recalled_bravo != state.globals.end(), "RECALL FOR over SQL cursor should expose DELETED() state");
+    expect(count != state.globals.end(), "SQL mutation flow should expose RECCOUNT() after APPEND BLANK");
+    expect(last_name != state.globals.end(), "SQL mutation flow should expose appended-row NAME values");
+    expect(last_amount != state.globals.end(), "SQL mutation flow should expose appended-row numeric values");
+
+    if (deleted_bravo != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_bravo->second) == "true", "DELETE FOR should tombstone matching SQL cursor rows");
+    }
+    if (recalled_bravo != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recalled_bravo->second) == "false", "RECALL FOR should clear SQL cursor tombstones");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "4", "APPEND BLANK should grow synthetic SQL cursor record count");
+    }
+    if (last_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_name->second) == "DELTA", "REPLACE should persist appended SQL cursor character values");
+    }
+    if (last_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_amount->second) == "99", "REPLACE should persist appended SQL cursor numeric values");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.append_blank", "sqlcust") &&
+        has_runtime_event(state.events, "runtime.replace", "NAME WITH 'DELTA', AMOUNT WITH 99") &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
+        "SQL mutation commands should emit append/replace/delete/recall runtime events");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -5666,8 +5828,63 @@ void test_local_table_mutation_and_scan_flow() {
 
     fs::remove_all(temp_root, ignored);
 }
+void test_replace_for_updates_all_matching_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_for";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
 
-void test_indexed_table_mutation_surfaces_runtime_error() {
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_for.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'JUNIOR' FOR AGE < 25 IN People\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "GO 3\n"
+        "cName3 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPLACE FOR script should complete");
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    const auto name3 = state.globals.find("cname3");
+    expect(name1 != state.globals.end(), "REPLACE FOR should allow reading updated first record value");
+    expect(name2 != state.globals.end(), "REPLACE FOR should allow reading updated second record value");
+    expect(name3 != state.globals.end(), "REPLACE FOR should preserve non-matching third record value");
+
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "JUNIOR", "REPLACE FOR should update matching record 1");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "JUNIOR", "REPLACE FOR should update matching record 2");
+    }
+    if (name3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name3->second) == "CHARLIE", "REPLACE FOR should not update non-matching records");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.replace" && event.detail.find("FOR AGE < 25") != std::string::npos;
+    }), "REPLACE FOR should emit runtime.replace with the FOR filter context");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_indexed_table_mutation_succeeds_for_structural_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_indexed_mutation_guard";
     std::error_code ignored;
@@ -5686,7 +5903,8 @@ void test_indexed_table_mutation_surfaces_runtime_error() {
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "APPEND BLANK\n"
-        "xAfterError = 11\n"
+        "REPLACE NAME WITH 'CHARLIE', AGE WITH 30\n"
+        "xAfterMutation = RECCOUNT()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -5695,25 +5913,27 @@ void test_indexed_table_mutation_surfaces_runtime_error() {
         .stop_on_entry = false
     });
 
-    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "indexed-table APPEND BLANK should pause with an error");
-    expect(state.location.line == 2U, "indexed-table APPEND BLANK should highlight the mutation statement");
-    expect(
-        state.message.find("Indexed DBF mutation is not yet supported") != std::string::npos,
-        "indexed-table APPEND BLANK should explain that structural index writes are not supported");
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "indexed-table mutation should complete without runtime faults");
 
-    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "continuing after indexed-table mutation failure should keep the session alive");
-    const auto after_error = state.globals.find("xaftererror");
-    expect(after_error != state.globals.end(), "post-error statements should still execute after indexed-table mutation failure");
-    if (after_error != state.globals.end()) {
-        expect(copperfin::runtime::format_value(after_error->second) == "11", "post-error execution should preserve later statements");
+    const auto after_mutation = state.globals.find("xaftermutation");
+    expect(after_mutation != state.globals.end(), "indexed-table mutation should continue through follow-on statements");
+    if (after_mutation != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_mutation->second) == "3", "indexed-table APPEND BLANK should increase RECCOUNT");
     }
 
-    expect(!std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.append_blank";
-    }), "failed indexed-table APPEND BLANK should not emit a success append event");
-    expect(std::filesystem::file_size(table_path) == original_table_bytes, "failed indexed-table APPEND BLANK should not change the DBF size");
+    }), "successful indexed-table APPEND BLANK should emit a runtime append event");
+    expect(std::filesystem::file_size(table_path) > original_table_bytes, "successful indexed-table APPEND BLANK should increase DBF size");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "indexed-table mutation should keep the DBF readable");
+    expect(parse_result.table.records.size() == 3U, "indexed-table mutation should persist appended rows");
+    if (parse_result.table.records.size() == 3U) {
+        expect(parse_result.table.records[2].values[0].display_value == "CHARLIE", "indexed-table mutation should persist REPLACE on appended row");
+        expect(parse_result.table.records[2].values[1].display_value == "30", "indexed-table mutation should persist numeric REPLACE values");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -6166,6 +6386,8 @@ void test_text_endtext_literal_blocks() {
     const fs::path main_path = temp_root / "text_blocks.prg";
     write_text(
         main_path,
+        "cName = 'Copperfin'\n"
+        "nCount = 3\n"
         "TEXT TO cBody NOSHOW\n"
         "Alpha\n"
         "\n"
@@ -6174,6 +6396,9 @@ void test_text_endtext_literal_blocks() {
         "ENDTEXT\n"
         "TEXT TO cBody ADDITIVE NOSHOW\n"
         "Bravo\n"
+        "ENDTEXT\n"
+        "TEXT TO cMerged TEXTMERGE NOSHOW\n"
+        "Name=<<cName>>; Count=<<nCount>>\n"
         "ENDTEXT\n"
         "RETURN\n");
 
@@ -6194,10 +6419,18 @@ void test_text_endtext_literal_blocks() {
             "TEXT/ENDTEXT should preserve literal lines and ADDITIVE should append the next block");
     }
 
+    const auto merged = state.globals.find("cmerged");
+    expect(merged != state.globals.end(), "TEXT TEXTMERGE should assign merged block content");
+    if (merged != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged->second) == "Name=Copperfin; Count=3\n",
+            "TEXT TEXTMERGE should interpolate <<expression>> segments using runtime expression evaluation");
+    }
+
     const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.text";
     }));
-    expect(text_events == 2, "each TEXT block should emit a runtime.text event");
+    expect(text_events == 3, "each TEXT block should emit a runtime.text event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -6975,11 +7208,13 @@ int main() {
     test_dispatch_event_handler();
     test_local_variables_in_stack_frame();
     test_report_form_pause();
+    test_report_form_to_file_renders_without_event_loop_pause();
     test_do_form_pause();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
     test_eval_macro_and_runtime_state_semantics();
     test_sql_and_ole_compatibility_functions();
+    test_sql_pass_through_rows_affected_and_provider_hint();
     test_use_and_data_session_isolation();
     test_cross_session_alias_and_work_area_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
@@ -6991,6 +7226,7 @@ int main() {
     test_go_and_skip_cursor_navigation();
     test_cursor_identity_functions_for_local_tables();
     test_cursor_identity_functions_for_sql_result_cursors();
+    test_sql_result_cursor_mutation_commands();
     test_sql_result_cursors_are_isolated_by_data_session();
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_local_use_auto_allocation_tracks_session_selection_flow();
@@ -7039,6 +7275,7 @@ int main() {
     test_sql_result_cursor_navigation_in_target_parity();
     test_sql_result_cursor_filter_in_target_parity();
     test_local_table_mutation_and_scan_flow();
+    test_replace_for_updates_all_matching_records();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();
@@ -7052,7 +7289,7 @@ int main() {
     test_total_command_supports_currency_and_integer_fields();
     test_total_command_for_sql_result_cursors();
     test_runtime_fault_containment();
-    test_indexed_table_mutation_surfaces_runtime_error();
+    test_indexed_table_mutation_succeeds_for_structural_indexes();
     test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
     test_private_declaration_masks_caller_variable();
     test_private_variable_visible_to_called_routines();

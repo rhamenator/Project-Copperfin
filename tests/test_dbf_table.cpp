@@ -337,7 +337,7 @@ void test_general_and_picture_memo_fields_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_indexed_table_mutations_fail_fast_without_changing_files() {
+void test_indexed_table_mutations_succeed_with_production_flags_and_companions() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_index_guard_tests_" + std::to_string(_getpid()));
@@ -372,22 +372,26 @@ void test_indexed_table_mutations_fail_fast_without_changing_files() {
 
     const fs::path flagged_table_path = temp_dir / "flagged.dbf";
     write_people_table(flagged_table_path, 0x01U);
-    const auto flagged_original = read_binary_file(flagged_table_path);
-
     const auto flagged_replace = copperfin::vfp::replace_record_field_value(flagged_table_path.string(), 0U, "NAME", "OMEGA");
-    expect(!flagged_replace.ok, "replace_record_field_value should reject DBFs marked with production indexes");
-    expect(flagged_replace.error.find("Indexed DBF mutation") != std::string::npos, "production-index rejection should mention indexed DBF mutation");
+    expect(flagged_replace.ok, "replace_record_field_value should support DBFs marked with production indexes");
 
     const auto flagged_append = copperfin::vfp::append_blank_record_to_file(flagged_table_path.string());
-    expect(!flagged_append.ok, "append_blank_record_to_file should reject DBFs marked with production indexes");
+    expect(flagged_append.ok, "append_blank_record_to_file should support DBFs marked with production indexes");
+    expect(flagged_append.record_count == 3U, "indexed append should update the record count");
 
     const auto flagged_delete = copperfin::vfp::set_record_deleted_flag(flagged_table_path.string(), 0U, true);
-    expect(!flagged_delete.ok, "set_record_deleted_flag should reject DELETE-style writes on production-index DBFs");
+    expect(flagged_delete.ok, "set_record_deleted_flag should support DELETE-style writes on production-index DBFs");
 
     const auto flagged_recall = copperfin::vfp::set_record_deleted_flag(flagged_table_path.string(), 0U, false);
-    expect(!flagged_recall.ok, "set_record_deleted_flag should reject RECALL-style writes on production-index DBFs");
+    expect(flagged_recall.ok, "set_record_deleted_flag should support RECALL-style writes on production-index DBFs");
 
-    expect(read_binary_file(flagged_table_path) == flagged_original, "production-index rejection should leave the DBF bytes unchanged");
+    const auto flagged_parse = copperfin::vfp::parse_dbf_table_from_file(flagged_table_path.string(), 5U);
+    expect(flagged_parse.ok, "production-flagged DBFs should remain readable after mutation writes");
+    expect(flagged_parse.table.records.size() == 3U, "production-flagged DBFs should expose appended records after mutation writes");
+    if (flagged_parse.table.records.size() == 3U) {
+        expect(flagged_parse.table.records[0].values[0].display_value == "OMEGA", "indexed mutation should persist REPLACE writes");
+        expect(!flagged_parse.table.records[0].deleted, "RECALL should clear indexed-table tombstones");
+    }
 
     const fs::path companion_table_path = temp_dir / "companion.dbf";
     const fs::path companion_cdx_path = temp_dir / "companion.cdx";
@@ -396,12 +400,19 @@ void test_indexed_table_mutations_fail_fast_without_changing_files() {
         std::ofstream output(companion_cdx_path, std::ios::binary);
         output << "synthetic companion index";
     }
-    const auto companion_original = read_binary_file(companion_table_path);
-
     const auto companion_append = copperfin::vfp::append_blank_record_to_file(companion_table_path.string());
-    expect(!companion_append.ok, "append_blank_record_to_file should reject DBFs with a same-base companion CDX");
-    expect(companion_append.error.find("Indexed DBF mutation") != std::string::npos, "companion-CDX rejection should mention indexed DBF mutation");
-    expect(read_binary_file(companion_table_path) == companion_original, "companion-CDX rejection should leave the DBF bytes unchanged");
+    expect(companion_append.ok, "append_blank_record_to_file should support DBFs with a same-base companion CDX");
+    expect(companion_append.record_count == 3U, "companion-CDX append should update the record count");
+
+    const auto companion_replace = copperfin::vfp::replace_record_field_value(companion_table_path.string(), 1U, "NAME", "CHARLIE");
+    expect(companion_replace.ok, "replace_record_field_value should support DBFs with a same-base companion CDX");
+
+    const auto companion_parse = copperfin::vfp::parse_dbf_table_from_file(companion_table_path.string(), 5U);
+    expect(companion_parse.ok, "companion-CDX DBFs should remain readable after mutation writes");
+    expect(companion_parse.table.records.size() == 3U, "companion-CDX DBFs should expose appended records after mutation writes");
+    if (companion_parse.table.records.size() >= 2U) {
+        expect(companion_parse.table.records[1].values[0].display_value == "CHARLIE", "companion-CDX mutation should persist REPLACE writes");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -848,7 +859,7 @@ int main() {
     test_create_dbf_table_file_round_trips();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();
-    test_indexed_table_mutations_fail_fast_without_changing_files();
+    test_indexed_table_mutations_succeed_with_production_flags_and_companions();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
     test_double_field_create_replace_and_append_round_trip();
