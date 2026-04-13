@@ -1,0 +1,25 @@
+name: Build Visual Studio VSIX
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-vsix:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore and build VSIX
+        run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=Release /p:DeployExtension=false
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: copperfin-visualstudio-vsix
+          path: vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix

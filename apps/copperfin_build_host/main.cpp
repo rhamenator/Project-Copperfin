@@ -29,11 +29,21 @@ std::string resolve_runtime_host_path(const std::string& override_path) {
         return override_path;
     }
 
+    std::string resolved;
+#ifdef _WIN32
     char* configured = nullptr;
     std::size_t configured_length = 0;
     if (_dupenv_s(&configured, &configured_length, "COPPERFIN_RUNTIME_HOST_PATH") == 0 && configured != nullptr) {
-        std::string resolved(configured);
+        resolved = configured;
         std::free(configured);
+    }
+#else
+    if (const char* configured = std::getenv("COPPERFIN_RUNTIME_HOST_PATH"); configured != nullptr) {
+        resolved = configured;
+    }
+#endif
+
+    if (!resolved.empty()) {
         return resolved;
     }
 
@@ -179,11 +189,21 @@ int main(int argc, char** argv) {
     const auto security_profile = copperfin::security::default_native_security_profile();
 
     if (enable_security) {
-        char* role_env = nullptr;
+        std::string role_env;
+#ifdef _WIN32
+        char* role_env_raw = nullptr;
         std::size_t role_env_length = 0;
-        if (_dupenv_s(&role_env, &role_env_length, "COPPERFIN_SECURITY_ROLE") == 0 && role_env != nullptr) {
+        if (_dupenv_s(&role_env_raw, &role_env_length, "COPPERFIN_SECURITY_ROLE") == 0 && role_env_raw != nullptr) {
+            role_env = role_env_raw;
+            std::free(role_env_raw);
+        }
+#else
+        if (const char* role_env_raw = std::getenv("COPPERFIN_SECURITY_ROLE"); role_env_raw != nullptr) {
+            role_env = role_env_raw;
+        }
+#endif
+        if (!role_env.empty()) {
             security_role = role_env;
-            std::free(role_env);
         }
 
         if (!copperfin::security::role_has_permission(security_profile, security_role, "build.execute")) {
@@ -200,16 +220,26 @@ int main(int argc, char** argv) {
         }
 
         if (configuration == copperfin::runtime::BuildConfiguration::release) {
+            std::string signing_ref;
+#ifdef _WIN32
             char* signing_ref_raw = nullptr;
             std::size_t signing_ref_length = 0;
-            if (_dupenv_s(&signing_ref_raw, &signing_ref_length, "COPPERFIN_RELEASE_SIGNING_KEY_REF") != 0 || signing_ref_raw == nullptr) {
+            if (_dupenv_s(&signing_ref_raw, &signing_ref_length, "COPPERFIN_RELEASE_SIGNING_KEY_REF") == 0 && signing_ref_raw != nullptr) {
+                signing_ref = signing_ref_raw;
+                std::free(signing_ref_raw);
+            }
+#else
+            if (const char* signing_ref_raw = std::getenv("COPPERFIN_RELEASE_SIGNING_KEY_REF"); signing_ref_raw != nullptr) {
+                signing_ref = signing_ref_raw;
+            }
+#endif
+
+            if (signing_ref.empty()) {
                 std::cout << "status: error\n";
                 std::cout << "error: Security-enabled release builds require COPPERFIN_RELEASE_SIGNING_KEY_REF (env:<NAME>).\n";
                 return 7;
             }
 
-            const std::string signing_ref(signing_ref_raw);
-            std::free(signing_ref_raw);
             const auto secret = copperfin::security::resolve_secret_reference(signing_ref);
             if (!secret.ok) {
                 std::cout << "status: error\n";

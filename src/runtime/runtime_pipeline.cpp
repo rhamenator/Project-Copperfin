@@ -278,15 +278,23 @@ std::string resolve_security_role(bool security_enabled) {
         return {};
     }
 
+    std::string role;
+#ifdef _WIN32
     char* raw = nullptr;
     std::size_t length = 0;
     if (_dupenv_s(&raw, &length, "COPPERFIN_SECURITY_ROLE") == 0 && raw != nullptr) {
-        std::string role(raw);
+        role = raw;
         std::free(raw);
-        role = trim_copy(role);
-        if (!role.empty()) {
-            return role;
-        }
+    }
+#else
+    if (const char* raw = std::getenv("COPPERFIN_SECURITY_ROLE"); raw != nullptr) {
+        role = raw;
+    }
+#endif
+
+    role = trim_copy(role);
+    if (!role.empty()) {
+        return role;
     }
 
     return "developer";

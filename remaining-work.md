@@ -111,9 +111,9 @@ flowchart TD
 
 	class D1,D2,D3,D4,D5 done;
 
-	class E1,E3 partial;
+	class E1,E2 partial;
 
-	class E2 missing;
+	class E3 done;
 
 	class P1,P2,P3,P4 lane;
 ```
@@ -144,7 +144,7 @@ Current repo status against the Windows-first product goal:
 | Standalone Copperfin IDE | Implemented | The standalone Studio host and WinForms shell now provide document hosting, multi-tab asset opening, designer-backed inspection/edit flows, subsystem enumeration, and native-host integration without depending on Visual Studio. |
 | Language service | Implemented | FoxPro language-service behavior now ships through the Visual Studio extension’s completion, quick-info, signature-help, and definition-resolution pipeline, backed by project symbol indexing over FoxPro/VFP assets and source files. |
 | .NET interoperability | Partial | Build-time launcher generation and documented architecture exist, but broad first-class runtime interop is still incomplete. |
-| Database federation | Missing | Platform models exist, but deterministic backend translators are not yet implemented. |
+| Database federation | Partial | Platform models now include a first-pass deterministic Fox SQL translator lane for relational backends (`sqlite`, `postgresql`, `sqlserver`, `oracle`) with focused unit coverage, but connector execution/runtime integration is still incomplete. |
 | Security/policy controls | Implemented | Security controls now include package/runtime SHA-256 integrity verification for runtime host and extension payload entries, policy-enforced external process launch allow-list with trusted-signature/publisher checks, security role permission checks (`build.execute`/`build.release`/`project.open`/`runtime.admin`) in host workflows, secret-provider enforcement for security-enabled release signing-key references, immutable hash-chained audit stream writes for build/runtime security events, and CI supply-chain gating with SBOM generation plus HIGH/CRITICAL CVE blocking. |
 
 ## Phase A: Core Data And Compatibility Engine
@@ -159,6 +159,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-13: PRG execution-engine parity reached green status. The runtime now supports first-pass `WITH/ENDWITH` execution semantics for leading-dot member access, first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow with handled-error continuation and `FINALLY` execution, and first-pass `DO ... WITH @var` reference semantics that write callee updates back to the caller.
 - 2026-04-13: first-pass host/process hardening landed across build/runtime/studio/inspect executables. Windows process startup now applies DLL search-path hardening, security-enabled package materialization now rejects non-canonical runtime-host binary names, and generated launcher publish now avoids shell-based command execution.
 - 2026-04-13: enterprise security controls now have an end-to-end baseline. Runtime packages now emit SHA-256 digests for the packaged runtime host and extension payload entries, runtime host verifies those digests before execution when security is enabled, external process launches are policy-gated through trusted signature/publisher allow-list checks, security-enabled release packaging enforces provider-backed signing-key references (`env:<NAME>`), immutable hash-chained audit events are emitted for build/runtime security actions, runtime/build hosts enforce role permissions for privileged operations, and CI now includes SBOM output plus a HIGH/CRITICAL CVE gate.
+- 2026-04-13: database federation now has a first-pass deterministic translator slice in native code. Copperfin can now translate constrained Fox SQL `SELECT ... FROM ...` inputs into backend-targeted relational SQL variants for `sqlite`, `postgresql`, `sqlserver`, and `oracle`, with focused regression coverage in `test_query_translator` while deeper connector/runtime execution integration remains open.
 - 2026-04-12: PRG structured-flow semantics now include first-pass `ELSEIF` branch support and `DO ... WITH` argument binding into `PARAMETERS`/`LPARAMETERS` locals for called routines, with focused regression coverage.
 - 2026-04-12: the PRG engine split progressed further: parser loading now lives in `prg_engine_parser.cpp`, static diagnostics live in a shared `cf_prg_analysis` library, and the Studio document path now carries analyzer diagnostics for `.prg` files without introducing a runtime/design-model link cycle.
 - 2026-04-12: `ON ERROR` compatibility now has a richer first-pass handler lane. `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handler-visible `MESSAGE()`, `PROGRAM()`, `LINENO()`, and `ERROR()` now expose the failing statement context with focused runtime regression coverage.

@@ -38,6 +38,7 @@ endif()
 add_library(cf_platform_profile
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
+    src/platform/query_translator.cpp
 )
 
 target_include_directories(cf_platform_profile
@@ -203,6 +204,31 @@ else()
     target_compile_options(copperfin_build_host PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+install(TARGETS copperfin_inspect copperfin_studio_host copperfin_runtime_host copperfin_build_host
+    RUNTIME DESTINATION bin
+)
+
+install(FILES README.md LICENSE SECURITY.md remaining-work.md
+    DESTINATION share/copperfin
+)
+
+set(CPACK_PACKAGE_NAME "copperfin")
+set(CPACK_PACKAGE_VENDOR "Copperfin")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Copperfin standalone runtime and studio host tooling")
+set(CPACK_PACKAGE_VERSION "0.1.0")
+set(CPACK_PACKAGE_CONTACT "maintainers@copperfin.local")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
+
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS;ZIP")
+elseif(APPLE)
+    set(CPACK_GENERATOR "productbuild;TGZ")
+else()
+    set(CPACK_GENERATOR "DEB;RPM;TGZ")
+endif()
+
+include(CPack)
+
 if(COPPERFIN_BUILD_TESTS)
     enable_testing()
 
@@ -317,6 +343,20 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_platform_models COMMAND $<TARGET_FILE:test_platform_models>)
+
+    add_executable(test_query_translator
+        tests/test_query_translator.cpp
+    )
+
+    target_link_libraries(test_query_translator PRIVATE cf_platform_profile)
+
+    if(MSVC)
+        target_compile_options(test_query_translator PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_query_translator PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_query_translator COMMAND $<TARGET_FILE:test_query_translator>)
 
     add_executable(test_runtime_pipeline
         tests/test_runtime_pipeline.cpp

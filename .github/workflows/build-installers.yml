@@ -1,0 +1,86 @@
+name: Build Standalone Installers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+
+      - name: Package (NSIS and ZIP)
+        run: cpack --config build/CPackConfig.cmake -C Release -G "NSIS;ZIP"
+
+      - name: Upload Windows installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: copperfin-windows-installers
+          path: |
+            build/*.exe
+            build/*.zip
+
+  macos-installer:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+
+      - name: Package (productbuild and TGZ)
+        run: cpack --config build/CPackConfig.cmake -G "productbuild;TGZ"
+
+      - name: Upload macOS installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: copperfin-macos-installers
+          path: |
+            build/*.pkg
+            build/*.tar.gz
+
+  linux-deb-rpm-installers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install RPM tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
+
+      - name: Build
+        run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+
+      - name: Package Debian installer
+        run: cpack --config build/CPackConfig.cmake -G DEB
+
+      - name: Package RedHat installer
+        run: cpack --config build/CPackConfig.cmake -G RPM
+
+      - name: Package portable archive
+        run: cpack --config build/CPackConfig.cmake -G TGZ
+
+      - name: Upload Linux installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: copperfin-linux-installers
+          path: |
+            build/*.deb
+            build/*.rpm
+            build/*.tar.gz
