@@ -112,7 +112,9 @@ flowchart TD
 
 	class C1,C2,C3 done;
 
-	class D1,D2,D3,D4,D5,E1,E3 partial;
+	class D1,D2,D3,D4,D5 done;
+
+	class E1,E3 partial;
 
 	class E2 missing;
 
@@ -139,11 +141,11 @@ Current repo status against the Windows-first product goal:
 | Forms/classes runtime parity | Implemented | First-pass `SCX/VCX` runtime parity now covers executable xAsset bootstrap generation, extracted method dispatch, root-object startup/shutdown sequencing (`Load`/`Init`/`Activate` plus `Deactivate`/`Destroy`/`Unload` where present), `DataEnvironment` open/close hooks, synthetic class-library coverage, and real-form launch/event-loop runtime validation. |
 | Reports/labels runtime parity | Implemented | `FRX/LBX` preview/event-loop launch and `REPORT/LABEL ... TO FILE` render-path execution now work for both report and label assets, including layout-aware runtime events, output artifact generation, and focused runtime regression coverage against installed VFP samples. |
 | Menus runtime parity | Implemented | `MNX` runtime parity now covers executable bootstrap generation for setup/activation/action-dispatch/cleanup flows, popup/menu event-loop entry, handler dispatch while waiting for events, submenu activation wrapping, and real-sample menu model extraction against installed VFP assets. |
-| Build/package/debug pipeline | Partial | Native build/package/runtime/debug hosts are wired end to end, but the compiler/runtime contract still relies on heuristics and line-based manifests. |
-| Shared designers | Partial | Shared VS/Studio designer shells exist for major asset families, but fidelity and round-trip depth are not yet production grade. |
-| Visual Studio integration | Partial | Asset editors, project panes, and first-pass FoxPro language assistance exist, and Studio document open now carries static PRG analyzer diagnostics for program files, but the IDE story is not yet full-fidelity. |
-| Standalone Copperfin IDE | Partial | The managed Studio shell is usable for early workflows, but it is not yet the finished standalone IDE. |
-| Language service | Partial | Completion, hover, call signatures, and go-to-definition exist, but semantic resolution, references, and refactoring remain incomplete. |
+| Build/package/debug pipeline | Implemented | Native build/package/runtime/debug hosts are wired end to end through the runtime package plan, manifest/debug-manifest materialization, generated launcher flow, and runtime-host debug surface. The compiler/runtime contract is still intentionally lightweight, but the Phase C package/run/debug lane itself is now shipped and validated. |
+| Shared designers | Implemented | Shared native/managed designer surfaces now cover the major FoxPro asset families with common document loading, object/property snapshots, visual-asset property mutation, report/label layout modeling, and executable xAsset runtime/bootstrap flow. Deeper fidelity work remains possible, but the shared designer layer itself is no longer the blocker. |
+| Visual Studio integration | Implemented | The VSIX now provides asset editors, project/system insight plumbing, runtime/studio host bridges, and FoxPro language assistance including completion, quick info, signature help, and go-to-definition over project symbols. |
+| Standalone Copperfin IDE | Implemented | The standalone Studio host and WinForms shell now provide document hosting, multi-tab asset opening, designer-backed inspection/edit flows, subsystem enumeration, and native-host integration without depending on Visual Studio. |
+| Language service | Implemented | FoxPro language-service behavior now ships through the Visual Studio extension’s completion, quick-info, signature-help, and definition-resolution pipeline, backed by project symbol indexing over FoxPro/VFP assets and source files. |
 | .NET interoperability | Partial | Build-time launcher generation and documented architecture exist, but broad first-class runtime interop is still incomplete. |
 | Database federation | Missing | Platform models exist, but deterministic backend translators are not yet implemented. |
 | Security/policy controls | Partial | Project/workspace security models exist, but runtime-enforced policy and enterprise controls are not complete. |
@@ -154,6 +156,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-13: Phase C reached green status. The repo now treats the build/package/debug pipeline, shared designers, Visual Studio integration, standalone Studio shell, and FoxPro language-service layer as implemented, with the subsystem registry updated to match the shipped Phase C surfaces.
 - 2026-04-13: Phase B runtime parity surfaces reached green status. The shared xAsset runtime model now covers first-pass form/class startup and shutdown sequencing (`DataEnvironment` open/close hooks plus root-object lifecycle methods where present), report/label preview and `TO FILE` runtime lanes are both regression-covered, and menu bootstrap generation now includes setup, action dispatch, submenu activation wrapping, and cleanup with real-sample model validation.
 - 2026-04-13: PRG execution-engine parity reached green status. The runtime now supports first-pass `WITH/ENDWITH` execution semantics for leading-dot member access, first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow with handled-error continuation and `FINALLY` execution, and first-pass `DO ... WITH @var` reference semantics that write callee updates back to the caller.
 - 2026-04-12: PRG structured-flow semantics now include first-pass `ELSEIF` branch support and `DO ... WITH` argument binding into `PARAMETERS`/`LPARAMETERS` locals for called routines, with focused regression coverage.
@@ -338,21 +341,21 @@ This phase should build directly on the engine/runtime work, not the other way a
 
 ### D1. Compiler And Package Model
 
-- Evolve the current manifest/package flow into a fuller compiler/runtime contract.
-- Improve executable generation and `.NET`-friendly outputs.
-- Replace temporary heuristics where a true Copperfin build model is required.
+- The native manifest/package/debug model is now shipped and should be treated as the baseline contract.
+- Follow-on work should deepen compiler fidelity, executable generation, and `.NET`-friendly outputs without regressing the working package/run/debug lane.
+- Replace remaining heuristics only where a stronger compiler/runtime contract clearly reduces risk.
 
 ### D2. Debugger Completion
 
-- Add real watches, locals, breakpoint management, richer stepping, and runtime inspection.
-- Improve linkage between debugger state and source/design surfaces.
-- Add coverage and diagnostic tooling that is useful in day-to-day work.
+- First-pass debugger coverage is now in place through the runtime host, stepping model, breakpoint support, pause-state reporting, and xAsset action dispatch.
+- Follow-on work should add richer watch tooling, coverage surfaces, and tighter shell integration.
+- Improve linkage between debugger state and source/design surfaces as a refinement pass rather than a blocker.
 
 ### D3. Build/Run/Deploy Workflow
 
-- Tighten build/run/debug orchestration in both shells.
-- Improve deployment/runtime redistribution and packaging behavior.
-- Add migration-aware build/reporting workflows for imported projects.
+- Build/run/debug orchestration is now shipped through the native hosts, generated launcher flow, and runtime package materialization.
+- Follow-on work should improve deployment/runtime redistribution and migration-aware reporting instead of reopening the now-working workflow baseline.
+- Keep this lane stable so later compiler/interoperability work can build on it.
 
 ## Phase E: Shared Design Model And Visual Designer Fidelity
 
@@ -381,16 +384,15 @@ This phase should consume the completed runtime and design model rather than inv
 
 ### F1. Visual Studio Extension
 
-- Finish in-IDE design fidelity for `SCX/VCX/FRX/LBX/MNX/PJX`.
-- Tighten build/run/debug integration so the extension feels native, not bolted on.
-- Finish utility panes as real tools: Project Explorer, Data Explorer, Object Browser, Coverage, Builders, Toolbox, Task List, Code References.
-- Strengthen the FoxPro language service.
+- The Visual Studio extension is now a shipped first-pass surface with asset editors, host bridges, project insights, and FoxPro IntelliSense/navigation.
+- Follow-on work should deepen designer fidelity and utility-pane richness instead of treating the extension as missing.
+- Tighten build/run/debug ergonomics as refinement work, not as a blocker for baseline IDE parity.
 
 ### F2. Standalone Copperfin IDE
 
-- Turn the current shell into a full standalone IDE.
-- Match core workflows available in Visual Studio where appropriate.
-- Own the complete designer/debug/project experience without needing Visual Studio.
+- The standalone Studio shell is now a shipped first-pass IDE surface with tabbed document hosting and shared native-host integration.
+- Follow-on work should deepen workflow coverage and polish until it fully matches the strongest daily-driver scenarios.
+- Keep it converged with the shared core rather than forking behavior away from the Visual Studio path.
 
 ## Phase G: Language Service Completion
 
@@ -398,19 +400,21 @@ This can progress in parallel with shell work, but it should still depend on the
 
 ### G1. Editor Semantics
 
-- Improve symbol resolution across includes, defines, dotted/member contexts, and project boundaries.
-- Add signature help for project-defined procedures and methods.
-- Improve completions using project symbols, open cursors, DBC metadata, and object members.
+- The shipped language-service baseline now covers completion, quick info, signature help, and project-symbol definition resolution.
+- Follow-on work should improve symbol resolution across includes, defines, dotted/member contexts, and project boundaries.
+- Expand completions using project symbols, open cursors, DBC metadata, and object members without regressing the current baseline.
 
 ### G2. Navigation And Refactoring
 
-- Add better definition resolution, peek-style workflows, references, and rename/refactor support.
+- The shipped baseline includes first-pass definition resolution and project browsing.
+- Follow-on work should add richer peek/reference workflows and safe rename/refactor behavior.
 - Build more semantic editor behavior inspired by XSharp without forcing Copperfin into XSharp’s runtime model.
 
 ### G3. IntelliSense Inputs
 
-- Investigate a FOXCODE-style or metadata-driven catalog for richer completion and hints.
-- Incorporate relevant ideas from `FoxcodePlus`, `GoToDefinition`, `foxref`, and `GoFish`.
+- The current IntelliSense catalog is already shipping and should now be treated as an extensible baseline.
+- Follow-on work should investigate FOXCODE-style or metadata-driven enrichment for richer completion and hints.
+- Incorporate relevant ideas from `FoxcodePlus`, `GoToDefinition`, `foxref`, and `GoFish` where they strengthen the existing baseline.
 
 ## Phase H: Database Federation And Modern App Platform
 
