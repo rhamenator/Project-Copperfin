@@ -48,6 +48,62 @@ The implementation order should be:
 7. Modernization layers: database federation, AI/MCP, polyglot, security polish
 8. Portability work for standalone IDE and core runtime
 
+## Open Issue Groups (Current)
+
+This grouped list mirrors the active GitHub issue set so this backlog stays aligned with real unfinished work.
+
+### Runtime Compatibility And Command Surface
+
+- A3 runtime semantics and command depth: #7, #8
+- A4 automation and host containment: #10, #11, #12
+- Runtime safety and diagnostics: #13, #14
+
+### Runtime Parity Surfaces
+
+- Forms/classes runtime fidelity: #15
+- Reports/labels runtime fidelity: #16
+- Menus runtime fidelity: #17
+- Project startup/build behavior: #18
+
+### Build, Compiler, And Debug Pipeline
+
+- Compiler/runtime contract and package model: #19
+- Debugger completion: #20
+- Build/run/deploy workflow tightening: #21
+- AST/IR and transpilation outputs: #42, #43
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41
+
+### Designers And IDE Parity
+
+- Shared design model and memo-heavy round-trip: #22
+- Designer interaction/builder/editor completion: #23, #24
+- Visual Studio extension parity: #25
+- Standalone IDE parity: #26
+
+### Language Service
+
+- Editor semantics and completions: #27
+- Navigation/refactoring depth: #28
+- IntelliSense metadata inputs: #29
+
+### Federation, Interop, And Modern Platform
+
+- Relational federation and connector behavior: #30
+- Document/vector translation and AI planning policy: #31
+- .NET outputs and integration hooks: #32
+- Interop/compiler LINQ and runtime bridge contracts: #57, #91
+
+### Security And Policy
+
+- Runtime/project security depth: #33
+- Extension/host/AI policy hardening: #34
+
+### Portability
+
+- Portable core boundary: #35
+- macOS standalone/core port: #36
+- Linux standalone/core port: #37
+
 ## Priority Architecture Diagram
 
 ```mermaid
@@ -105,15 +161,15 @@ flowchart TD
 
 	class A1,A2,A3,A4,A5 done;
 
-	class B1,B2,B3,B4 done;
+	class B1,B2,B3 done;
 
-	class C1,C2,C3 done;
+	class B4 partial;
 
-	class D1,D2,D3,D4,D5 done;
+	class C1,C2,C3 partial;
 
-	class E1,E2 partial;
+	class D1,D2,D3,D4,D5 partial;
 
-	class E3 done;
+	class E1,E2,E3 partial;
 
 	class P1,P2,P3,P4 lane;
 ```
@@ -134,24 +190,26 @@ Current repo status against the Windows-first product goal:
 | Work areas and data sessions | Implemented | The runtime now provides robust session-scoped work-area semantics across `SELECT`, plain `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity and alias lookup functions, expression-driven `SELECT`/`USE ... IN` designators, `SELECT(0)` next-free probing with freed-area reuse, session-local SQL cursor/handle allocation, session-local `SET DEFAULT TO` and `SET` state restoration, and strict cross-session alias/work-area isolation (including same-work-area-number independence and close semantics) with full runtime regression coverage. |
 | Local query/mutation commands | Implemented | Local runtime command parity now includes `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL` with command-level `FOR`/`WHILE` and expression-driven `IN` targeting support, plus `SET FILTER TO/OFF`, aggregate built-ins, `CALCULATE`, command-level `COUNT`/`SUM`/`AVERAGE` with scope/`WHILE` and `IN`, and `TOTAL` with `IN` targeting plus local `I`/`Y` field support. Focused regressions now lock down cross-cursor targeting, boundary behavior, and mutation persistence across local DBF workflows. |
 | SQL pass-through/remote cursor behavior | Implemented | SQL pass-through now includes connection/session plumbing (`SQLCONNECT`/`SQLSTRINGCONNECT`/`SQLDISCONNECT`), command execution (`SQLEXEC`) with DML rows-affected tracking (`SQLROWCOUNT`), prepared-command execution (`SQLPREPARE` + `SQLEXEC(handle)`), and connection property metadata (`SQLGETPROP`/`SQLSETPROP`) with provider-hint classification. Remote cursor behavior covers local-style field lookup/navigation/filter-aware visibility, index-aware seek/order flows, aggregate semantics, and in-memory mutation commands (`APPEND BLANK`, `REPLACE`, `DELETE`/`RECALL` including `FOR`/`WHILE` targeting) over `SQLEXEC()` result cursors with focused runtime regression coverage. |
-| PRG execution engine | Implemented | The native PRG engine now has the core execution semantics needed for the Windows-first runtime layer: structured stepping/breakpoints, fault containment, configurable runtime guardrails, cooperative scheduler yielding, config-file controls (`CONFIG.FPW`/`CONFIG.FP`), shipped control-flow blocks (`IF`/`ELSEIF`/`ELSE`, `DO CASE`, `FOR`, `DO WHILE`, `WITH`, `TRY/CATCH/FINALLY`), `DO ... WITH` argument binding including first-pass `@` reference semantics, literal `TEXT/ENDTEXT` plus `TEXTMERGE`, first-pass `EVAL()` / `SET()` / `&macro`, `PRIVATE` / `STORE`, parser/analyzer module splits, richer `ON ERROR DO ... WITH` metadata, and focused runtime regression coverage for those engine-level behaviors. Broader command-surface parity remains tracked in adjacent runtime/designer/compiler areas, but the engine box itself is no longer the blocker. |
-| Forms/classes runtime parity | Implemented | First-pass `SCX/VCX` runtime parity now covers executable xAsset bootstrap generation, extracted method dispatch, root-object startup/shutdown sequencing (`Load`/`Init`/`Activate` plus `Deactivate`/`Destroy`/`Unload` where present), `DataEnvironment` open/close hooks, synthetic class-library coverage, and real-form launch/event-loop runtime validation. |
-| Reports/labels runtime parity | Implemented | `FRX/LBX` preview/event-loop launch and `REPORT/LABEL ... TO FILE` render-path execution now work for both report and label assets, including layout-aware runtime events, output artifact generation, and focused runtime regression coverage against installed VFP samples. |
-| Menus runtime parity | Implemented | `MNX` runtime parity now covers executable bootstrap generation for setup/activation/action-dispatch/cleanup flows, popup/menu event-loop entry, handler dispatch while waiting for events, submenu activation wrapping, and real-sample menu model extraction against installed VFP assets. |
-| Build/package/debug pipeline | Implemented | Native build/package/runtime/debug hosts are wired end to end through the runtime package plan, manifest/debug-manifest materialization, generated launcher flow, and runtime-host debug surface. The compiler/runtime contract is still intentionally lightweight, but the Phase C package/run/debug lane itself is now shipped and validated. |
-| Shared designers | Implemented | Shared native/managed designer surfaces now cover the major FoxPro asset families with common document loading, object/property snapshots, visual-asset property mutation, report/label layout modeling, and executable xAsset runtime/bootstrap flow. Deeper fidelity work remains possible, but the shared designer layer itself is no longer the blocker. |
-| Visual Studio integration | Implemented | The VSIX now provides asset editors, project/system insight plumbing, runtime/studio host bridges, and FoxPro language assistance including completion, quick info, signature help, and go-to-definition over project symbols. |
-| Standalone Copperfin IDE | Implemented | The standalone Studio host and WinForms shell now provide document hosting, multi-tab asset opening, designer-backed inspection/edit flows, subsystem enumeration, and native-host integration without depending on Visual Studio. |
-| Language service | Implemented | FoxPro language-service behavior now ships through the Visual Studio extension’s completion, quick-info, signature-help, and definition-resolution pipeline, backed by project symbol indexing over FoxPro/VFP assets and source files. |
+| PRG execution engine | Partial | Core execution semantics are in place, but command-surface depth and runtime-state/macro parity still have active backlog in #7 and #8. |
+| Forms/classes runtime parity | Partial | First-pass runtime bootstrap is shipped, but event/lifecycle and behavior-fidelity depth remains open in #15. |
+| Reports/labels runtime parity | Partial | Preview and first output paths are shipped, but report/label runtime and pipeline completion remains open in #16. |
+| Menus runtime parity | Partial | First-pass bootstrap and dispatch are shipped, but menu routing/state semantics remain open in #17. |
+| Build/package/debug pipeline | Partial | Baseline orchestration is shipped, but compiler/runtime contract, debugger completion, and workflow tightening remain open in #19, #20, and #21. |
+| Shared designers | Partial | Shared design surfaces exist, but high-fidelity model completion and round-trip robustness remain open in #22. |
+| Visual Studio integration | Partial | Extension baseline is shipped, but full parity and utility-pane completion remain open in #25. |
+| Standalone Copperfin IDE | Partial | Standalone shell is shipped, but full daily-driver IDE parity remains open in #26. |
+| Language service | Partial | Core language-service features are shipped, but semantic resolution/navigation/refactoring depth remains open in #27, #28, and #29. |
 | .NET interoperability | Partial | Build-time launcher generation and documented architecture exist, but broad first-class runtime interop is still incomplete. |
 | Database federation | Partial | Platform models now include a first-pass deterministic Fox SQL translator lane for relational backends (`sqlite`, `postgresql`, `sqlserver`, `oracle`) with focused unit coverage, and runtime host now has a deterministic federated query execution-planning lane for backend/target/sql plan materialization, but live connector execution integration is still incomplete. |
-| Security/policy controls | Implemented | Security controls now include package/runtime SHA-256 integrity verification for runtime host and extension payload entries, policy-enforced external process launch allow-list with trusted-signature/publisher checks, security role permission checks (`build.execute`/`build.release`/`project.open`/`runtime.admin`) in host workflows, secret-provider enforcement for security-enabled release signing-key references, immutable hash-chained audit stream writes for build/runtime security events, and CI supply-chain gating with SBOM generation plus HIGH/CRITICAL CVE blocking. |
+| Security/policy controls | Partial | Baseline security controls are shipped (integrity verification, policy-gated process launch, RBAC checks, secret-provider enforcement, immutable audit stream, SBOM/CVE gate), but deeper runtime/project and extension/AI policy hardening remains open in #33 and #34. |
 
 ## Phase A: Core Data And Compatibility Engine
 
 This is the deepest layer and should continue to absorb the most effort until it is boringly reliable.
 
 ### Progress Notes
+
+- 2026-04-13: status classification was re-aligned to the active issue backlog. Multiple areas previously marked green are now tracked as partial until the corresponding open issue groups are closed and validated.
 
 - 2026-04-13: the old gray dependency callouts under Phase C were retired from the architecture diagram. Shared designers, Visual Studio integration, the standalone Studio shell, and the shipped language-service baseline are all now green, so those relationships are no longer tracked as unresolved blockers.
 - 2026-04-13: Phase C reached green status. The repo now treats the build/package/debug pipeline, shared designers, Visual Studio integration, standalone Studio shell, and FoxPro language-service layer as implemented, with the subsystem registry updated to match the shipped Phase C surfaces.
