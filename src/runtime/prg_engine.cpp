@@ -116,6 +116,7 @@ struct ScanState {
     std::size_t endscan_statement_index = 0;
     int work_area = 0;
     std::string for_expression;
+    std::string while_expression;
 };
 
 struct WhileState {
@@ -557,12 +558,14 @@ Program parse_program(const std::string& path) {
         } else if (upper == "LOCATE" || starts_with_insensitive(line, "LOCATE ")) {
             statement.kind = StatementKind::locate_command;
             const std::string body = upper == "LOCATE" ? std::string{} : trim_copy(line.substr(7U));
-            statement.expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "SCAN" || starts_with_insensitive(line, "SCAN ")) {
             statement.kind = StatementKind::scan_statement;
             const std::string body = upper == "SCAN" ? std::string{} : trim_copy(line.substr(5U));
-            statement.expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
         } else if (upper == "ENDSCAN") {
             statement.kind = StatementKind::endscan_statement;
@@ -1624,6 +1627,7 @@ struct PrgRuntimeSession::Impl {
         long long start_recno,
         int direction,
         const std::string& extra_expression,
+        const std::string& while_expression,
         bool preserve_on_failure) {
         const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
         const long long first = direction >= 0 ? std::max<long long>(1, start_recno) : std::min<long long>(start_recno, static_cast<long long>(cursor.record_count));
@@ -1631,6 +1635,9 @@ struct PrgRuntimeSession::Impl {
              recno >= 1 && recno <= static_cast<long long>(cursor.record_count);
              recno += direction) {
             move_cursor_to(cursor, recno);
+            if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor))) {
+                break;
+            }
             if (current_record_matches_visibility(cursor, frame, extra_expression)) {
                 return true;
             }
@@ -1655,7 +1662,7 @@ struct PrgRuntimeSession::Impl {
         long long remaining = std::llabs(delta);
         long long next_start = static_cast<long long>(cursor.recno) + direction;
         while (remaining > 0) {
-            if (!seek_visible_record(cursor, frame, next_start, direction, {}, false)) {
+            if (!seek_visible_record(cursor, frame, next_start, direction, {}, {}, false)) {
                 return false;
             }
             --remaining;
@@ -1765,6 +1772,7 @@ struct PrgRuntimeSession::Impl {
     bool locate_next_matching_record(
         CursorState& cursor,
         const std::string& for_expression,
+        const std::string& while_expression,
         const Frame& frame,
         std::size_t start_recno) {
         if (!cursor.remote && cursor.source_path.empty()) {
@@ -1778,6 +1786,7 @@ struct PrgRuntimeSession::Impl {
             static_cast<long long>(start_recno),
             1,
             for_expression,
+            while_expression,
             false);
         cursor.found = found;
         return true;
@@ -3240,7 +3249,7 @@ struct PrgRuntimeSession::Impl {
             return {};
         }
 
-        if (!locate_next_matching_record(*cursor, scan.for_expression, frame, cursor->recno + 1U)) {
+        if (!locate_next_matching_record(*cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U)) {
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             return {.ok = false, .message = last_error_message};
@@ -4703,7 +4712,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 return {.ok = false, .message = last_error_message};
             }
 
-            if (!locate_next_matching_record(*cursor, statement.expression, frame, 1U)) {
+            if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, 1U)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -4726,7 +4735,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
 
             const std::size_t start_recno = cursor->recno == 0U ? 1U : cursor->recno;
-            if (!locate_next_matching_record(*cursor, statement.expression, frame, start_recno)) {
+            if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, start_recno)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -4743,7 +4752,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .scan_statement_index = frame.pc - 1U,
                 .endscan_statement_index = find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
                 .work_area = cursor->work_area,
-                .for_expression = statement.expression
+                .for_expression = statement.expression,
+                .while_expression = statement.tertiary_expression
             });
             events.push_back({
                 .category = "runtime.scan",
@@ -4859,11 +4869,11 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
             const std::string destination = uppercase_copy(trim_copy(statement.expression));
             if (destination == "TOP") {
-                if (!seek_visible_record(*cursor, frame, 1, 1, {}, false) && cursor->record_count == 0U) {
+                if (!seek_visible_record(*cursor, frame, 1, 1, {}, {}, false) && cursor->record_count == 0U) {
                     move_cursor_to(*cursor, 0);
                 }
             } else if (destination == "BOTTOM") {
-                if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, false) && cursor->record_count == 0U) {
+                if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false) && cursor->record_count == 0U) {
                     move_cursor_to(*cursor, 0);
                 }
             } else {
@@ -5031,7 +5041,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 cursor->filter_expression = filter_clause;
                 if (!cursor->filter_expression.empty() && cursor->record_count > 0U &&
                     !current_record_matches_visibility(*cursor, frame, {})) {
-                    (void)seek_visible_record(*cursor, frame, static_cast<long long>(cursor->recno), 1, {}, false);
+                    (void)seek_visible_record(*cursor, frame, static_cast<long long>(cursor->recno), 1, {}, {}, false);
                 }
 
                 events.push_back({

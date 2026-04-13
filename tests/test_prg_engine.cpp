@@ -1451,11 +1451,11 @@ void test_expression_driven_in_targeting_across_local_data_commands() {
         "GO TOP IN cDataTarget\n"
         "SKIP 1 IN cDataTarget\n"
         "nOrdersRecAfterSkip = RECNO('Orders')\n"
-        "LOCATE FOR AGE = 30 IN cDataTarget\n"
+        "LOCATE FOR AGE >= 20 WHILE AGE < 30 IN cDataTarget\n"
         "nOrdersRecAfterLocate = RECNO('Orders')\n"
         "GO TOP IN cDataTarget\n"
         "nScanHits = 0\n"
-        "SCAN FOR AGE >= 20 IN cDataTarget\n"
+        "SCAN FOR AGE >= 20 WHILE AGE < 30 IN cDataTarget\n"
         "  nScanHits = nScanHits + 1\n"
         "ENDSCAN\n"
         "GO BOTTOM IN cDataTarget\n"
@@ -1506,10 +1506,10 @@ void test_expression_driven_in_targeting_across_local_data_commands() {
         expect(copperfin::runtime::format_value(orders_rec_after_skip->second) == "2", "GO/SKIP IN cTarget should navigate the targeted cursor");
     }
     if (orders_rec_after_locate != state.globals.end()) {
-        expect(copperfin::runtime::format_value(orders_rec_after_locate->second) == "3", "LOCATE ... IN cTarget should find records on the targeted cursor");
+        expect(copperfin::runtime::format_value(orders_rec_after_locate->second) == "2", "LOCATE ... WHILE ... IN cTarget should stop matching at the WHILE boundary on the targeted cursor");
     }
     if (scan_hits != state.globals.end()) {
-        expect(copperfin::runtime::format_value(scan_hits->second) == "2", "SCAN ... IN cTarget should iterate visible matches on the targeted cursor");
+        expect(copperfin::runtime::format_value(scan_hits->second) == "1", "SCAN ... WHILE ... IN cTarget should only iterate rows before the WHILE boundary on the targeted cursor");
     }
     if (selected_after_commands != state.globals.end()) {
         expect(copperfin::runtime::format_value(selected_after_commands->second) == "2", "IN-targeted commands should preserve the selected work area");
