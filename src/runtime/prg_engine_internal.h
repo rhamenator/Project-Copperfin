@@ -69,6 +69,16 @@ enum class StatementKind {
     parameters_declaration,
     lparameters_declaration,
     store_command,
+    close_command,
+    erase_command,
+    copy_file_command,
+    rename_file_command,
+    print_command,
+    create_cursor_command,
+    copy_to_command,
+    append_from_command,
+    scatter_command,
+    gather_command,
     no_op
 };
 

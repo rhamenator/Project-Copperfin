@@ -12,7 +12,9 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -3722,6 +3724,340 @@ private:
             const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
             return make_number_value(static_cast<double>(sql_set_prop_callback_(handle, value_as_string(arguments[1]), arguments[2])));
         }
+        // --- String functions ---
+        if (function == "len" && !arguments.empty()) {
+            return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
+        }
+        if (function == "left" && arguments.size() >= 2U) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+            return make_string_value(src.substr(0U, std::min(n, src.size())));
+        }
+        if (function == "right" && arguments.size() >= 2U) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+            return make_string_value(n >= src.size() ? src : src.substr(src.size() - n));
+        }
+        if (function == "upper" && !arguments.empty()) {
+            return make_string_value(uppercase_copy(value_as_string(arguments[0])));
+        }
+        if (function == "lower" && !arguments.empty()) {
+            std::string s = value_as_string(arguments[0]);
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+                return static_cast<char>(std::tolower(c));
+            });
+            return make_string_value(std::move(s));
+        }
+        if ((function == "ltrim" || function == "trim") && !arguments.empty()) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::size_t start = src.find_first_not_of(' ');
+            return make_string_value(start == std::string::npos ? std::string{} : src.substr(start));
+        }
+        if (function == "rtrim" && !arguments.empty()) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::size_t end = src.find_last_not_of(' ');
+            return make_string_value(end == std::string::npos ? std::string{} : src.substr(0U, end + 1U));
+        }
+        if (function == "space" && !arguments.empty()) {
+            const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[0])));
+            return make_string_value(std::string(n, ' '));
+        }
+        if (function == "replicate" && arguments.size() >= 2U) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+            std::string result;
+            result.reserve(src.size() * n);
+            for (std::size_t i = 0; i < n; ++i) result += src;
+            return make_string_value(std::move(result));
+        }
+        if (function == "strtran" && arguments.size() >= 3U) {
+            std::string src = value_as_string(arguments[0]);
+            const std::string find = value_as_string(arguments[1]);
+            const std::string repl = value_as_string(arguments[2]);
+            if (!find.empty()) {
+                std::string result;
+                std::size_t pos = 0;
+                while (pos < src.size()) {
+                    const std::size_t found = src.find(find, pos);
+                    if (found == std::string::npos) { result += src.substr(pos); break; }
+                    result += src.substr(pos, found - pos);
+                    result += repl;
+                    pos = found + find.size();
+                }
+                src = std::move(result);
+            }
+            return make_string_value(std::move(src));
+        }
+        if (function == "stuff" && arguments.size() >= 4U) {
+            std::string src = value_as_string(arguments[0]);
+            const std::size_t start = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1]))) - 1U;
+            const std::size_t length = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
+            const std::string replacement = value_as_string(arguments[3]);
+            if (start <= src.size()) {
+                src.replace(start, std::min(length, src.size() - start), replacement);
+            }
+            return make_string_value(std::move(src));
+        }
+        if (function == "asc" && !arguments.empty()) {
+            const std::string src = value_as_string(arguments[0]);
+            return make_number_value(src.empty() ? 0.0 : static_cast<double>(static_cast<unsigned char>(src[0])));
+        }
+        if (function == "val" && !arguments.empty()) {
+            const std::string src = trim_copy(value_as_string(arguments[0]));
+            if (src.empty()) return make_number_value(0.0);
+            double result = 0.0;
+            try { result = std::stod(src); } catch (...) { result = 0.0; }
+            return make_number_value(result);
+        }
+        if (function == "occurs" && arguments.size() >= 2U) {
+            const std::string needle = value_as_string(arguments[0]);
+            const std::string haystack = value_as_string(arguments[1]);
+            if (needle.empty()) return make_number_value(0.0);
+            std::size_t count = 0;
+            std::size_t pos = 0;
+            while ((pos = haystack.find(needle, pos)) != std::string::npos) {
+                ++count;
+                pos += needle.size();
+            }
+            return make_number_value(static_cast<double>(count));
+        }
+        // --- Type / null functions ---
+        if (function == "empty" && !arguments.empty()) {
+            const PrgValue& v = arguments[0];
+            if (v.kind == PrgValueKind::empty) return make_boolean_value(true);
+            if (v.kind == PrgValueKind::string) return make_boolean_value(trim_copy(v.string_value).empty());
+            if (v.kind == PrgValueKind::number) return make_boolean_value(std::abs(v.number_value) < 0.000001);
+            if (v.kind == PrgValueKind::boolean) return make_boolean_value(!v.boolean_value);
+            return make_boolean_value(true);
+        }
+        if ((function == "isnull" || function == "isempty") && !arguments.empty()) {
+            return make_boolean_value(arguments[0].kind == PrgValueKind::empty);
+        }
+        if (function == "vartype" && !arguments.empty()) {
+            const PrgValue& v = arguments[0];
+            if (v.kind == PrgValueKind::empty) return make_string_value("U");
+            if (v.kind == PrgValueKind::boolean) return make_string_value("L");
+            if (v.kind == PrgValueKind::number) return make_string_value("N");
+            return make_string_value("C");
+        }
+        if (function == "type" && !arguments.empty()) {
+            const std::string expr = trim_copy(value_as_string(arguments[0]));
+            const PrgValue result = eval_expression_callback_(expr);
+            if (result.kind == PrgValueKind::empty) return make_string_value("U");
+            if (result.kind == PrgValueKind::boolean) return make_string_value("L");
+            if (result.kind == PrgValueKind::number) return make_string_value("N");
+            return make_string_value("C");
+        }
+        // --- Conditional / coalesce ---
+        if (function == "iif" && arguments.size() >= 3U) {
+            return value_as_bool(arguments[0]) ? arguments[1] : arguments[2];
+        }
+        if (function == "nvl" && arguments.size() >= 2U) {
+            return arguments[0].kind == PrgValueKind::empty ? arguments[1] : arguments[0];
+        }
+        if (function == "between" && arguments.size() >= 3U) {
+            const double v = value_as_number(arguments[0]);
+            return make_boolean_value(v >= value_as_number(arguments[1]) && v <= value_as_number(arguments[2]));
+        }
+        // --- Numeric math ---
+        if (function == "int" && !arguments.empty()) {
+            return make_number_value(std::trunc(value_as_number(arguments[0])));
+        }
+        if ((function == "abs" || function == "fabs") && !arguments.empty()) {
+            return make_number_value(std::abs(value_as_number(arguments[0])));
+        }
+        if (function == "round" && !arguments.empty()) {
+            const double value = value_as_number(arguments[0]);
+            const int decimals = arguments.size() >= 2U ? static_cast<int>(std::llround(value_as_number(arguments[1]))) : 0;
+            const double factor = std::pow(10.0, static_cast<double>(decimals));
+            return make_number_value(std::round(value * factor) / factor);
+        }
+        if (function == "mod" && arguments.size() >= 2U) {
+            const double a = value_as_number(arguments[0]);
+            const double b = value_as_number(arguments[1]);
+            if (std::abs(b) < 0.000001) return make_number_value(0.0);
+            return make_number_value(std::fmod(a, b));
+        }
+        if (function == "sqrt" && !arguments.empty()) {
+            const double v = value_as_number(arguments[0]);
+            return make_number_value(v < 0.0 ? 0.0 : std::sqrt(v));
+        }
+        if (function == "ceiling" && !arguments.empty()) {
+            return make_number_value(std::ceil(value_as_number(arguments[0])));
+        }
+        if (function == "floor" && !arguments.empty()) {
+            return make_number_value(std::floor(value_as_number(arguments[0])));
+        }
+        if (function == "exp" && !arguments.empty()) {
+            return make_number_value(std::exp(value_as_number(arguments[0])));
+        }
+        if (function == "log" && !arguments.empty()) {
+            const double v = value_as_number(arguments[0]);
+            return make_number_value(v > 0.0 ? std::log(v) : 0.0);
+        }
+        if (function == "pi") {
+            return make_number_value(3.14159265358979323846);
+        }
+        if (function == "sign" && !arguments.empty()) {
+            const double v = value_as_number(arguments[0]);
+            return make_number_value(v > 0.0 ? 1.0 : (v < 0.0 ? -1.0 : 0.0));
+        }
+        // --- Date / time stubs (return empty string / 0 when not yet bridged) ---
+        if (function == "date") {
+            const auto now = std::chrono::system_clock::now();
+            const auto tt = std::chrono::system_clock::to_time_t(now);
+            std::tm local_tm{};
+#if defined(_WIN32)
+            localtime_s(&local_tm, &tt);
+#else
+            localtime_r(&tt, &local_tm);
+#endif
+            char buf[16];
+            std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d",
+                local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900);
+            return make_string_value(buf);
+        }
+        if (function == "time") {
+            const auto now = std::chrono::system_clock::now();
+            const auto tt = std::chrono::system_clock::to_time_t(now);
+            std::tm local_tm{};
+#if defined(_WIN32)
+            localtime_s(&local_tm, &tt);
+#else
+            localtime_r(&tt, &local_tm);
+#endif
+            char buf[12];
+            std::snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
+                local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
+            return make_string_value(buf);
+        }
+        if (function == "datetime") {
+            const auto now = std::chrono::system_clock::now();
+            const auto tt = std::chrono::system_clock::to_time_t(now);
+            std::tm local_tm{};
+#if defined(_WIN32)
+            localtime_s(&local_tm, &tt);
+#else
+            localtime_r(&tt, &local_tm);
+#endif
+            char buf[24];
+            std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d %02d:%02d:%02d",
+                local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900,
+                local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
+            return make_string_value(buf);
+        }
+        if (function == "year" && !arguments.empty()) {
+            // If argument looks like a date string MM/DD/YYYY, extract year
+            const std::string s = value_as_string(arguments[0]);
+            const auto last_slash = s.rfind('/');
+            if (last_slash != std::string::npos && last_slash + 1U < s.size()) {
+                try { return make_number_value(std::stod(s.substr(last_slash + 1U))); } catch (...) {}
+            }
+            return make_number_value(0.0);
+        }
+        if (function == "month" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            const auto first_slash = s.find('/');
+            if (first_slash != std::string::npos) {
+                try { return make_number_value(std::stod(s.substr(0U, first_slash))); } catch (...) {}
+            }
+            return make_number_value(0.0);
+        }
+        if (function == "day" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            const auto first_slash = s.find('/');
+            const auto second_slash = first_slash != std::string::npos ? s.find('/', first_slash + 1U) : std::string::npos;
+            if (first_slash != std::string::npos && second_slash != std::string::npos) {
+                try { return make_number_value(std::stod(s.substr(first_slash + 1U, second_slash - first_slash - 1U))); } catch (...) {}
+            }
+            return make_number_value(0.0);
+        }
+        if (function == "dtos" && !arguments.empty()) {
+            // Convert MM/DD/YYYY to YYYYMMDD
+            const std::string s = value_as_string(arguments[0]);
+            const auto first_slash = s.find('/');
+            const auto second_slash = first_slash != std::string::npos ? s.find('/', first_slash + 1U) : std::string::npos;
+            if (first_slash != std::string::npos && second_slash != std::string::npos) {
+                const std::string month = s.substr(0U, first_slash);
+                const std::string day = s.substr(first_slash + 1U, second_slash - first_slash - 1U);
+                const std::string year = s.substr(second_slash + 1U);
+                return make_string_value(year + (month.size() == 1U ? "0" + month : month)
+                    + (day.size() == 1U ? "0" + day : day));
+            }
+            return make_string_value(s);
+        }
+        if (function == "ctod" && !arguments.empty()) {
+            // Accept a date string and return it as-is (we store dates as strings)
+            return make_string_value(value_as_string(arguments[0]));
+        }
+        if (function == "dtoc" && !arguments.empty()) {
+            return make_string_value(value_as_string(arguments[0]));
+        }
+        if (function == "ttoc" && !arguments.empty()) {
+            return make_string_value(value_as_string(arguments[0]));
+        }
+        // --- Array / variable helpers ---
+        if (function == "alen" && !arguments.empty()) {
+            // Return 0 — arrays are not yet modeled; avoids hard crash
+            return make_number_value(0.0);
+        }
+        if ((function == "adel" || function == "ains" || function == "asort" || function == "ascan" || function == "asize") && !arguments.empty()) {
+            return make_number_value(0.0);
+        }
+        // --- Misc ---
+        if (function == "getenv" && !arguments.empty()) {
+            const std::string env_key = value_as_string(arguments[0]);
+            char* env_val = nullptr;
+            std::size_t env_len = 0U;
+            std::string env_result;
+            if (_dupenv_s(&env_val, &env_len, env_key.c_str()) == 0 && env_val != nullptr) {
+                env_result = env_val;
+                free(env_val);
+            }
+            return make_string_value(env_result);
+        }
+        if (function == "fullpath" && !arguments.empty()) {
+            std::filesystem::path p(value_as_string(arguments[0]));
+            if (p.is_relative()) p = std::filesystem::path(default_directory_) / p;
+            return make_string_value(std::filesystem::absolute(p).string());
+        }
+        if (function == "justfname" && !arguments.empty()) {
+            return make_string_value(std::filesystem::path(value_as_string(arguments[0])).filename().string());
+        }
+        if (function == "juststem" && !arguments.empty()) {
+            return make_string_value(std::filesystem::path(value_as_string(arguments[0])).stem().string());
+        }
+        if (function == "justext" && !arguments.empty()) {
+            const auto ext = std::filesystem::path(value_as_string(arguments[0])).extension().string();
+            return make_string_value(!ext.empty() && ext[0] == '.' ? ext.substr(1U) : ext);
+        }
+        if (function == "addbs" && !arguments.empty()) {
+            std::string path = value_as_string(arguments[0]);
+            if (!path.empty() && path.back() != '\\' && path.back() != '/') path += '\\';
+            return make_string_value(std::move(path));
+        }
+        if (function == "numlock" || function == "capslock" || function == "scrolllock") {
+            return make_boolean_value(false);
+        }
+        if (function == "cursorsetprop" || function == "cursorgetprop") {
+            return make_number_value(0.0);
+        }
+        if (function == "isdigit" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            return make_boolean_value(!s.empty() && std::isdigit(static_cast<unsigned char>(s[0])) != 0);
+        }
+        if (function == "isalpha" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            return make_boolean_value(!s.empty() && std::isalpha(static_cast<unsigned char>(s[0])) != 0);
+        }
+        if (function == "islower" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            return make_boolean_value(!s.empty() && std::islower(static_cast<unsigned char>(s[0])) != 0);
+        }
+        if (function == "isupper" && !arguments.empty()) {
+            const std::string s = value_as_string(arguments[0]);
+            return make_boolean_value(!s.empty() && std::isupper(static_cast<unsigned char>(s[0])) != 0);
+        }
         return make_string_value(function);
     }
 
@@ -5232,6 +5568,242 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             for (const auto& name : statement.names) {
                 assign_variable(frame, trim_copy(name), result);
             }
+            return {};
+        }
+        case StatementKind::close_command: {
+            // CLOSE ALL / CLOSE TABLES / CLOSE DATABASES
+            DataSessionState& session = current_session_state();
+            std::vector<int> areas;
+            areas.reserve(session.cursors.size());
+            for (const auto& [area, _cursor] : session.cursors) {
+                areas.push_back(area);
+            }
+            for (const int area : areas) {
+                close_cursor(std::to_string(area));
+            }
+            events.push_back({
+                .category = "runtime.close",
+                .detail = statement.expression.empty() ? "ALL" : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::erase_command: {
+            // ERASE <file> / DELETE FILE <file>
+            const std::string raw_path = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            std::filesystem::path fpath(raw_path);
+            if (fpath.is_relative()) {
+                fpath = std::filesystem::path(current_default_directory()) / fpath;
+            }
+            std::error_code ec;
+            std::filesystem::remove(fpath, ec);
+            if (ec) {
+                last_error_message = "ERASE failed: " + ec.message() + " (" + fpath.string() + ")";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.erase",
+                .detail = fpath.string(),
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::copy_file_command: {
+            // COPY FILE <src> TO <dest>
+            const std::string src_raw = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            const std::string dst_raw = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.secondary_expression, frame))));
+            auto make_abs = [&](const std::string& raw) {
+                std::filesystem::path p(raw);
+                if (p.is_relative()) {
+                    p = std::filesystem::path(current_default_directory()) / p;
+                }
+                return p;
+            };
+            const std::filesystem::path src = make_abs(src_raw);
+            const std::filesystem::path dst = make_abs(dst_raw);
+            std::error_code ec;
+            std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
+            if (ec) {
+                last_error_message = "COPY FILE failed: " + ec.message();
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.copy_file",
+                .detail = src.string() + " -> " + dst.string(),
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::rename_file_command: {
+            // RENAME <old> TO <new>
+            const std::string old_raw = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            const std::string new_raw = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.secondary_expression, frame))));
+            auto make_abs = [&](const std::string& raw) {
+                std::filesystem::path p(raw);
+                if (p.is_relative()) {
+                    p = std::filesystem::path(current_default_directory()) / p;
+                }
+                return p;
+            };
+            const std::filesystem::path old_path = make_abs(old_raw);
+            const std::filesystem::path new_path = make_abs(new_raw);
+            std::error_code ec;
+            std::filesystem::rename(old_path, new_path, ec);
+            if (ec) {
+                last_error_message = "RENAME failed: " + ec.message();
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.rename",
+                .detail = old_path.string() + " -> " + new_path.string(),
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::print_command: {
+            // ? or ?? expression — evaluate and emit as output event
+            const PrgValue result = evaluate_expression(statement.expression, frame);
+            const std::string text_value = value_as_string(result);
+            events.push_back({
+                .category = "runtime.print",
+                .detail = text_value,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::create_cursor_command: {
+            // CREATE CURSOR <alias> (<field_list>) — stub: open as an empty in-memory cursor
+            const std::string alias = statement.identifier.empty()
+                ? "CURSOR1"
+                : normalize_identifier(value_as_string(evaluate_expression(statement.identifier, frame)));
+            if (alias.empty()) {
+                last_error_message = "CREATE CURSOR requires a non-empty alias";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!open_table_cursor({}, alias, {}, true, true, 0, {}, 0U)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            events.push_back({
+                .category = "runtime.create_cursor",
+                .detail = alias,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::copy_to_command: {
+            // COPY TO <dest> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
+            // Stub: emit event; full DBF export not yet implemented
+            const std::string dest = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            events.push_back({
+                .category = "runtime.copy_to",
+                .detail = dest,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::append_from_command: {
+            // APPEND FROM <src> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
+            // Stub: emit event; full DBF import not yet implemented
+            const std::string src = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            events.push_back({
+                .category = "runtime.append_from",
+                .detail = src,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::scatter_command: {
+            // SCATTER [FIELDS <list>] TO <var>|MEMVAR [BLANK]
+            const bool use_memvar = (statement.identifier == "memvar");
+            const bool blank = !statement.tertiary_expression.empty();
+            if (use_memvar || blank) {
+                // SCATTER MEMVAR / BLANK — create memory variables from current record fields
+                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                if (cursor == nullptr) {
+                    last_error_message = "SCATTER: no current work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                const auto rec = current_record(*cursor);
+                if (!rec.has_value()) {
+                    last_error_message = "SCATTER: no current record";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                for (const auto& field : rec->values) {
+                    const std::string var_name = "m." + field.field_name;
+                    const PrgValue val = blank ? PrgValue{} : make_string_value(field.display_value);
+                    assign_variable(frame, var_name, val);
+                }
+            } else {
+                // SCATTER TO <array_var> — array support not yet fully implemented; stub behaviour
+            }
+            events.push_back({
+                .category = "runtime.scatter",
+                .detail = use_memvar ? "memvar" : statement.expression,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::gather_command: {
+            // GATHER FROM <var>|MEMVAR [FIELDS <list>] [FOR <expr>]
+            const bool use_memvar = (statement.identifier == "memvar");
+            if (use_memvar) {
+                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                if (cursor == nullptr) {
+                    last_error_message = "GATHER: no current work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                const auto rec = current_record(*cursor);
+                if (!rec.has_value()) {
+                    last_error_message = "GATHER: no current record";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                // Build REPLACE assignments from m.<fieldname> variables
+                std::vector<ReplaceAssignment> assignments;
+                assignments.reserve(rec->values.size());
+                for (const auto& field : rec->values) {
+                    const std::string var_name = "m." + field.field_name;
+                    const PrgValue val = lookup_variable(frame, var_name);
+                    assignments.push_back({
+                        .field_name = field.field_name,
+                        .expression = "\"" + value_as_string(val) + "\""
+                    });
+                }
+                if (!replace_current_record_fields(*cursor, assignments, frame)) {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+            }
+            events.push_back({
+                .category = "runtime.gather",
+                .detail = use_memvar ? "memvar" : statement.expression,
+                .location = statement.location
+            });
             return {};
         }
         case StatementKind::no_op:

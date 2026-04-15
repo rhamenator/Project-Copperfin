@@ -464,6 +464,91 @@ Program parse_program(const std::string& path) {
             }
         } else if (upper == "RETURN" || starts_with_insensitive(line, "RETURN ")) {
             statement.kind = StatementKind::return_statement;
+        } else if (upper == "CLOSE ALL" || upper == "CLOSE TABLES"
+            || upper == "CLOSE DATABASES" || upper == "CLOSE DATABASE"
+            || starts_with_insensitive(line, "CLOSE ALL")
+            || starts_with_insensitive(line, "CLOSE TABLES")
+            || starts_with_insensitive(line, "CLOSE DATABASES")) {
+            statement.kind = StatementKind::close_command;
+            // Store just the scope keyword (ALL, TABLES, DATABASES) as detail
+            const std::size_t space_pos = upper.find(' ');
+            statement.expression = space_pos != std::string::npos ? trim_copy(upper.substr(space_pos + 1U)) : "ALL";
+        } else if (starts_with_insensitive(line, "ERASE ") || starts_with_insensitive(line, "DELETE FILE ")) {
+            statement.kind = StatementKind::erase_command;
+            const bool starts_delete = starts_with_insensitive(line, "DELETE FILE ");
+            statement.expression = trim_copy(line.substr(starts_delete ? 12U : 6U));
+        } else if (starts_with_insensitive(line, "COPY FILE ")) {
+            // COPY FILE <src> TO <dest>
+            statement.kind = StatementKind::copy_file_command;
+            const std::string body = trim_copy(line.substr(10U));
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                statement.expression = trim_copy(body.substr(0U, to_pos));
+                statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
+            } else {
+                statement.expression = body;
+            }
+        } else if (starts_with_insensitive(line, "RENAME ")) {
+            // RENAME <old> TO <new>
+            statement.kind = StatementKind::rename_file_command;
+            const std::string body = trim_copy(line.substr(7U));
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                statement.expression = trim_copy(body.substr(0U, to_pos));
+                statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
+            } else {
+                statement.expression = body;
+            }
+        } else if (!line.empty() && (line[0] == '?' || (line.size() >= 2U && line[0] == '?' && line[1] == '?'))) {
+            statement.kind = StatementKind::print_command;
+            // ??, ??? all treat what follows as expression
+            std::size_t start = 1U;
+            while (start < line.size() && line[start] == '?') ++start;
+            statement.expression = trim_copy(line.substr(start));
+        } else if (starts_with_insensitive(line, "CREATE CURSOR ")) {
+            // CREATE CURSOR <alias> (<field_list>)
+            statement.kind = StatementKind::create_cursor_command;
+            const std::string body = trim_copy(line.substr(14U));
+            const auto paren_open = body.find('(');
+            if (paren_open != std::string::npos && body.back() == ')') {
+                statement.identifier = trim_copy(body.substr(0U, paren_open));
+                statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
+            } else {
+                statement.identifier = body;
+            }
+        } else if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
+            statement.kind = StatementKind::copy_to_command;
+            const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
+            const std::string body = trim_copy(line.substr(is_structure ? 18U : 8U));
+            statement.identifier = is_structure ? "structure" : std::string{};
+            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "FIELDS", "FOR", "WHILE", "IN"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "TYPE", {"FIELDS", "FOR", "WHILE", "IN"});
+            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE", "IN"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+        } else if (starts_with_insensitive(line, "APPEND FROM ")) {
+            statement.kind = StatementKind::append_from_command;
+            const std::string body = trim_copy(line.substr(12U));
+            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "FIELDS", "FOR", "WHILE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.secondary_expression = extract_command_clause(body, "TYPE", {"FIELDS", "FOR", "WHILE"});
+            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
+        } else if (starts_with_insensitive(line, "SCATTER ")) {
+            statement.kind = StatementKind::scatter_command;
+            const std::string body = trim_copy(line.substr(8U));
+            // SCATTER FIELDS <list> TO <var>|MEMVAR [BLANK]
+            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "BLANK"});
+            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "BLANK"});
+            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+            statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
+        } else if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR")) {
+            statement.kind = StatementKind::gather_command;
+            const std::string body = trim_copy(line.substr(7U));
+            statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "FOR"});
+            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"FROM", "MEMVAR", "FOR"});
+            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"FROM", "FIELDS", "MEMVAR"});
         } else {
             const auto equals = line.find('=');
             if (!line.empty() && line[0] == '=') {

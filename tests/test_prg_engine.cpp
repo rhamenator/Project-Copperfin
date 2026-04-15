@@ -7943,6 +7943,306 @@ void test_do_with_by_reference_updates_caller_variable() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_string_and_math_expression_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_str_math";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "str_math.prg";
+    write_text(
+        main_path,
+        "l = LEN('hello')\n"
+        "lft = LEFT('hello', 3)\n"
+        "rgt = RIGHT('hello', 2)\n"
+        "up = UPPER('hello')\n"
+        "lo = LOWER('WORLD')\n"
+        "sp = LEN(SPACE(5))\n"
+        "repl = REPLICATE('ab', 3)\n"
+        "trimmed = LTRIM('  hi  ')\n"
+        "rtrimmed = RTRIM('  hi  ')\n"
+        "a = ABS(-7)\n"
+        "b = INT(3.9)\n"
+        "c = MOD(10, 3)\n"
+        "d = ROUND(3.567, 2)\n"
+        "e = SIGN(-5)\n"
+        "f = IIF(.T., 'yes', 'no')\n"
+        "g = BETWEEN(5, 1, 10)\n"
+        "h = OCCURS('l', 'hello world')\n"
+        "v = VAL('42')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "string/math function script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+            name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("l", "5");
+    check("lft", "hel");
+    check("rgt", "lo");
+    check("up", "HELLO");
+    check("lo", "world");
+    check("sp", "5");
+    check("repl", "ababab");
+    check("trimmed", "hi  ");
+    check("rtrimmed", "  hi");
+    check("a", "7");
+    check("b", "3");
+    check("c", "1");
+    check("d", "3.57");
+    check("e", "-1");
+    check("f", "yes");
+    check("g", "true");
+    check("h", "3");
+    check("v", "42");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_type_and_null_expression_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_type_null";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "type_null.prg";
+    write_text(
+        main_path,
+        "x = 5\n"
+        "t_num = VARTYPE(x)\n"
+        "t_str = VARTYPE('hello')\n"
+        "t_bool = VARTYPE(.T.)\n"
+        "em = EMPTY('')\n"
+        "em2 = EMPTY(0)\n"
+        "not_em = EMPTY('hi')\n"
+        "nvl_result = NVL('', 'fallback')\n"
+        "nvl_ok = NVL('value', 'fallback')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "type/null function script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+            name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("t_num", "N");
+    check("t_str", "C");
+    check("t_bool", "L");
+    check("em", "true");
+    check("em2", "true");
+    check("not_em", "false");
+    check("nvl_result", "");  // NVL('','fallback') returns '' since '' is string, not .NULL.
+    check("nvl_ok", "value");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_print_command_emits_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_print_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "print_test.prg";
+    write_text(
+        main_path,
+        "? 'hello world'\n"
+        "? 1 + 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "? print command script should complete");
+
+    expect(has_runtime_event(state.events, "runtime.print", "hello world"),
+        "? 'hello world' should emit a runtime.print event with detail 'hello world'");
+
+    const bool has_three = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
+        return ev.category == "runtime.print" && ev.detail == "3";
+    });
+    expect(has_three, "? 1 + 2 should emit a runtime.print event with detail '3'");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_close_command_closes_all_work_areas() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_close_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "a.dbf", {"alpha", "beta"});
+    write_simple_dbf(temp_root / "b.dbf", {"gamma", "delta"});
+
+    const fs::path main_path = temp_root / "close_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "a.dbf").string() + "'\n"
+        "SELECT 2\n"
+        "USE '" + (temp_root / "b.dbf").string() + "'\n"
+        "CLOSE ALL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLOSE ALL script should complete");
+
+    expect(has_runtime_event(state.events, "runtime.close", "ALL"),
+        "CLOSE ALL should emit a runtime.close event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_erase_copy_rename_file_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_file_ops";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Write a file to erase
+    write_text(temp_root / "to_erase.txt", "data");
+    // Write a file to copy/rename
+    write_text(temp_root / "original.txt", "content");
+
+    const fs::path main_path = temp_root / "file_ops.prg";
+    write_text(
+        main_path,
+        "ERASE 'to_erase.txt'\n"
+        "COPY FILE 'original.txt' TO 'copied.txt'\n"
+        "RENAME 'copied.txt' TO 'renamed.txt'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "file ops script should complete");
+
+    expect(!fs::exists(temp_root / "to_erase.txt"), "ERASE should have deleted to_erase.txt");
+    expect(fs::exists(temp_root / "original.txt"), "COPY FILE should leave original.txt intact");
+    expect(fs::exists(temp_root / "renamed.txt"), "RENAME should create renamed.txt");
+    expect(!fs::exists(temp_root / "copied.txt"), "RENAME should remove the old file name copied.txt");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_memvar_from_current_record() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "people.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "scatter_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "'\n"
+        "GO 1\n"
+        "SCATTER MEMVAR\n"
+        "grabbed = m.NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER MEMVAR script should complete");
+
+    const auto grabbed = state.globals.find("grabbed");
+    expect(grabbed != state.globals.end(), "grabbed variable should exist after SCATTER MEMVAR");
+    if (grabbed != state.globals.end()) {
+        const std::string val = copperfin::runtime::format_value(grabbed->second);
+        expect(val.find("Alice") != std::string::npos || val == "Alice      ",
+            "SCATTER MEMVAR should copy NAME field into m.NAME (got: '" + val + "')");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_emits_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"row1", "row2"});
+
+    const fs::path main_path = temp_root / "copy_to_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO 'dest'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO script should complete");
+
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.copy_to";
+        });
+    expect(has_event, "COPY TO should emit a runtime.copy_to event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -8054,6 +8354,13 @@ int main() {
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_try_finally_runs_without_catch_on_success();
+    test_string_and_math_expression_functions();
+    test_type_and_null_expression_functions();
+    test_print_command_emits_event();
+    test_close_command_closes_all_work_areas();
+    test_erase_copy_rename_file_commands();
+    test_scatter_memvar_from_current_record();
+    test_copy_to_emits_event();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
