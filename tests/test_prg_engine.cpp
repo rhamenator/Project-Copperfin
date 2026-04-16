@@ -9459,6 +9459,108 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_array_fills_2d_runtime_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}, {"Bob", 25}});
+
+    const fs::path main_path = temp_root / "copy_to_array.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "'\n"
+        "COPY TO ARRAY myarr\n"
+        "row1_name = myarr[1, 1]\n"
+        "row1_age = myarr[1, 2]\n"
+        "row2_name = myarr[2, 1]\n"
+        "row2_age = myarr[2, 2]\n"
+        "arr_rows = ALEN(myarr, 1)\n"
+        "arr_cols = ALEN(myarr, 2)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY script should complete");
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+    chk("arr_rows",  "2",     "COPY TO ARRAY 2 records should give 2 rows");
+    chk("arr_cols",  "2",     "COPY TO ARRAY 2 fields should give 2 columns");
+    chk("row1_name", "Alice", "COPY TO ARRAY row 1 col 1 should be NAME");
+    chk("row1_age",  "30",    "COPY TO ARRAY row 1 col 2 should be AGE");
+    chk("row2_name", "Bob",   "COPY TO ARRAY row 2 col 1 should be NAME");
+    chk("row2_age",  "25",    "COPY TO ARRAY row 2 col 2 should be AGE");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_writes_records_from_2d_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Source table has two records; dest table starts empty.
+    write_people_dbf(temp_root / "source.dbf", {{"Carol", 55}, {"Dave", 19}});
+    write_people_dbf(temp_root / "dest.dbf", {});
+
+    const fs::path main_path = temp_root / "append_from_array.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO ARRAY tmparr\n"
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM ARRAY tmparr\n"
+        "GO 1\n"
+        "dest_name1 = NAME\n"
+        "dest_age1 = AGE\n"
+        "GO 2\n"
+        "dest_name2 = NAME\n"
+        "dest_age2 = AGE\n"
+        "dest_rc = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY script should complete");
+
+    const auto chk2 = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+    chk2("dest_rc",    "2",     "APPEND FROM ARRAY should append 2 records");
+    chk2("dest_name1", "Carol", "APPEND FROM ARRAY record 1 NAME should match");
+    chk2("dest_age1",  "55",    "APPEND FROM ARRAY record 1 AGE should match");
+    chk2("dest_name2", "Dave",  "APPEND FROM ARRAY record 2 NAME should match");
+    chk2("dest_age2",  "19",    "APPEND FROM ARRAY record 2 AGE should match");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_gather_memvar_round_trips_field_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_rt";
@@ -9700,6 +9802,8 @@ int main() {
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
+    test_copy_to_array_fills_2d_runtime_array();
+    test_append_from_array_writes_records_from_2d_array();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
 

@@ -6708,6 +6708,74 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::copy_to_command: {
+            // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]
+            if (statement.identifier == "array") {
+                const std::string array_name = trim_copy(statement.expression);
+                if (array_name.empty()) {
+                    last_error_message = "COPY TO ARRAY: array name required";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                if (cursor == nullptr) {
+                    last_error_message = "COPY TO ARRAY: no current work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                // Determine field set (optionally filtered)
+                const std::vector<std::string> field_filter = parse_field_filter_clause(statement.tertiary_expression);
+                const std::string for_expr = statement.quaternary_expression;
+                // Gather field descriptors for column order from current record or cursor schema
+                std::vector<std::string> col_names;
+                const auto sample_rec = current_record(*cursor);
+                if (sample_rec.has_value()) {
+                    for (const auto& rv : sample_rec->values) {
+                        if (field_matches_filter(rv.field_name, field_filter)) {
+                            col_names.push_back(rv.field_name);
+                        }
+                    }
+                } else if (cursor->source_path.empty()) {
+                    // Remote cursor — use remote_records schema if available
+                    if (!cursor->remote_records.empty()) {
+                        for (const auto& rv : cursor->remote_records.front().values) {
+                            if (field_matches_filter(rv.field_name, field_filter)) {
+                                col_names.push_back(rv.field_name);
+                            }
+                        }
+                    }
+                }
+                const std::size_t num_cols = col_names.empty() ? 1U : col_names.size();
+                std::vector<PrgValue> flat_values;
+                const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
+                for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno) {
+                    move_cursor_to(*cursor, static_cast<long long>(recno));
+                    if (!current_record_matches_visibility(*cursor, frame, for_expr)) { continue; }
+                    const auto rec = current_record(*cursor);
+                    if (!rec.has_value()) { continue; }
+                    for (const auto& col : col_names) {
+                        const auto it = std::find_if(
+                            rec->values.begin(), rec->values.end(),
+                            [&](const vfp::DbfRecordValue& rv) {
+                                return collapse_identifier(rv.field_name) == collapse_identifier(col);
+                            });
+                        flat_values.push_back(
+                            it != rec->values.end()
+                                ? record_value_to_prg_value(*it)
+                                : make_empty_value());
+                    }
+                }
+                restore_cursor_snapshot(*cursor, saved);
+                assign_array(array_name, std::move(flat_values), num_cols);
+                events.push_back({
+                    .category = "runtime.copy_to_array",
+                    .detail = array_name,
+                    .location = statement.location
+                });
+                return {};
+            }
+
             // COPY TO <dest> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
             // COPY STRUCTURE TO <dest> — copies schema only (no rows)
             const bool is_structure = (statement.identifier == "structure");
@@ -6897,6 +6965,81 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::append_from_command: {
+            // APPEND FROM ARRAY <array> [FIELDS <list>]
+            if (statement.identifier == "array") {
+                const std::string array_name = trim_copy(statement.expression);
+                if (array_name.empty()) {
+                    last_error_message = "APPEND FROM ARRAY: array name required";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                if (cursor == nullptr || cursor->source_path.empty()) {
+                    events.push_back({
+                        .category = "runtime.append_from_array",
+                        .detail = array_name,
+                        .location = statement.location
+                    });
+                    return {};
+                }
+                // Determine dest fields order (filtered by FIELDS clause)
+                const std::vector<std::string> field_filter = parse_field_filter_clause(statement.tertiary_expression);
+                const auto dest_result = vfp::parse_dbf_table_from_file(
+                    cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                if (!dest_result.ok) {
+                    last_error_message = "APPEND FROM ARRAY: " + dest_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                std::vector<vfp::DbfFieldDescriptor> target_fields;
+                for (const auto& f : dest_result.table.fields) {
+                    if (field_matches_filter(f.name, field_filter)) {
+                        target_fields.push_back(f);
+                    }
+                }
+                if (target_fields.empty()) {
+                    last_error_message = "APPEND FROM ARRAY: no fields match the FIELDS clause";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                const std::size_t num_rows = array_length(array_name, 1);
+                const std::size_t num_cols = std::max<std::size_t>(1U, array_length(array_name, 2));
+                std::size_t appended_count = 0U;
+                for (std::size_t row = 1U; row <= num_rows; ++row) {
+                    const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                    if (!blank_result.ok) {
+                        last_error_message = "APPEND FROM ARRAY: " + blank_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    cursor->record_count = blank_result.record_count;
+                    cursor->eof = false;
+                    cursor->recno = blank_result.record_count;
+                    const std::size_t usable_cols = std::min(target_fields.size(), num_cols);
+                    for (std::size_t col = 1U; col <= usable_cols; ++col) {
+                        const PrgValue val = array_value(array_name, row, col);
+                        const auto rep_result = vfp::replace_record_field_value(
+                            cursor->source_path,
+                            cursor->recno - 1U,
+                            target_fields[col - 1U].name,
+                            value_as_string(val));
+                        if (!rep_result.ok) { continue; }
+                        cursor->record_count = rep_result.record_count;
+                    }
+                    ++appended_count;
+                }
+                events.push_back({
+                    .category = "runtime.append_from_array",
+                    .detail = array_name + " (" + std::to_string(appended_count) + " records)",
+                    .location = statement.location
+                });
+                return {};
+            }
+
             // APPEND FROM <src> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
             // First pass: copy non-deleted records from source DBF into current local cursor.
             // Field matching is by name; extra fields in source that do not exist in destination are silently skipped.

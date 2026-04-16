@@ -563,6 +563,15 @@ Program parse_program(const std::string& path) {
             } else {
                 statement.identifier = body;
             }
+        } else if (starts_with_insensitive(line, "COPY TO ARRAY ")) {
+            // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]
+            statement.kind = StatementKind::copy_to_command;
+            statement.identifier = "array";
+            const std::string body = trim_copy(line.substr(14U));
+            const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
         } else if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
             statement.kind = StatementKind::copy_to_command;
             const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
@@ -580,6 +589,15 @@ Program parse_program(const std::string& path) {
             if (!with_clause.empty()) {
                 statement.names.push_back(with_clause);
             }
+        } else if (starts_with_insensitive(line, "APPEND FROM ARRAY ")) {
+            // APPEND FROM ARRAY <array> [FIELDS <list>]
+            statement.kind = StatementKind::append_from_command;
+            statement.identifier = "array";
+            const std::string body = trim_copy(line.substr(18U));
+            const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
         } else if (starts_with_insensitive(line, "APPEND FROM ")) {
             statement.kind = StatementKind::append_from_command;
             const std::string body = trim_copy(line.substr(12U));
