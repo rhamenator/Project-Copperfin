@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <new>
 #include <optional>
 #include <process.h>
@@ -178,6 +179,365 @@ struct DataSessionState {
     std::map<int, CursorState> cursors;
 };
 
+struct RuntimeArray {
+    std::size_t rows = 0;
+    std::size_t columns = 1;
+    std::vector<PrgValue> values;
+};
+
+std::vector<std::string> parse_field_filter_clause(const std::string& fields_clause) {
+    std::vector<std::string> field_filter;
+    std::string remaining = fields_clause;
+    while (!remaining.empty()) {
+        const auto comma = remaining.find(',');
+        const std::string token = collapse_identifier(trim_copy(
+            comma == std::string::npos ? remaining : remaining.substr(0U, comma)));
+        if (!token.empty()) {
+            field_filter.push_back(token);
+        }
+        if (comma == std::string::npos) {
+            break;
+        }
+        remaining = remaining.substr(comma + 1U);
+    }
+    return field_filter;
+}
+
+bool field_matches_filter(const std::string& field_name, const std::vector<std::string>& field_filter) {
+    if (field_filter.empty()) {
+        return true;
+    }
+    return std::find_if(
+        field_filter.begin(),
+        field_filter.end(),
+        [&](const std::string& candidate) {
+            return collapse_identifier(candidate) == collapse_identifier(field_name);
+        }) != field_filter.end();
+}
+
+std::string format_sdf_field_value(const vfp::DbfFieldDescriptor& field, std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.size() > field.length) {
+        value = value.substr(0U, field.length);
+    }
+    if (value.size() >= field.length) {
+        return value;
+    }
+
+    const std::string padding(field.length - value.size(), ' ');
+    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+    if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+        field_type == 'B' || field_type == 'Y') {
+        return padding + value;
+    }
+    return value + padding;
+}
+
+std::vector<std::string> split_sdf_lines(const std::string& contents) {
+    std::vector<std::string> lines;
+    std::size_t start = 0U;
+    while (start < contents.size()) {
+        std::size_t end = contents.find('\n', start);
+        if (end == std::string::npos) {
+            end = contents.size();
+        }
+        std::string line = contents.substr(start, end - start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (!line.empty()) {
+            lines.push_back(std::move(line));
+        }
+        start = end + 1U;
+    }
+    return lines;
+}
+
+std::vector<std::string> split_text_lines(const std::string& contents) {
+    std::vector<std::string> lines;
+    std::string current;
+    for (std::size_t index = 0U; index < contents.size(); ++index) {
+        const char ch = contents[index];
+        if (ch == '\r' || ch == '\n') {
+            lines.push_back(current);
+            current.clear();
+            if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n') {
+                ++index;
+            }
+            continue;
+        }
+        current.push_back(ch);
+    }
+    if (!current.empty() || (!contents.empty() && contents.back() != '\r' && contents.back() != '\n')) {
+        lines.push_back(current);
+    }
+    return lines;
+}
+
+bool wildcard_match_insensitive(const std::string& pattern, const std::string& text) {
+    const std::string p = lowercase_copy(pattern);
+    const std::string t = lowercase_copy(text);
+    std::size_t pattern_index = 0U;
+    std::size_t text_index = 0U;
+    std::size_t star_index = std::string::npos;
+    std::size_t star_text_index = 0U;
+    while (text_index < t.size()) {
+        if (pattern_index < p.size() && (p[pattern_index] == '?' || p[pattern_index] == t[text_index])) {
+            ++pattern_index;
+            ++text_index;
+        } else if (pattern_index < p.size() && p[pattern_index] == '*') {
+            star_index = pattern_index++;
+            star_text_index = text_index;
+        } else if (star_index != std::string::npos) {
+            pattern_index = star_index + 1U;
+            text_index = ++star_text_index;
+        } else {
+            return false;
+        }
+    }
+    while (pattern_index < p.size() && p[pattern_index] == '*') {
+        ++pattern_index;
+    }
+    return pattern_index == p.size();
+}
+
+std::string format_file_time_part(const std::filesystem::file_time_type& file_time, bool date_part) {
+    const auto system_time = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+        file_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+    const std::time_t raw_time = std::chrono::system_clock::to_time_t(system_time);
+    std::tm local{};
+    localtime_s(&local, &raw_time);
+    std::ostringstream stream;
+    if (date_part) {
+        stream << std::setfill('0') << std::setw(2) << (local.tm_mon + 1) << "/"
+               << std::setw(2) << local.tm_mday << "/"
+               << std::setw(4) << (local.tm_year + 1900);
+    } else {
+        stream << std::setfill('0') << std::setw(2) << local.tm_hour << ":"
+               << std::setw(2) << local.tm_min << ":"
+               << std::setw(2) << local.tm_sec;
+    }
+    return stream.str();
+}
+
+std::string file_attributes_for_adir(const std::filesystem::directory_entry& entry) {
+    std::string attributes;
+    std::error_code ignored;
+    if (entry.is_directory(ignored)) {
+        attributes += "D";
+    }
+    const auto name = entry.path().filename().string();
+    if (!name.empty() && name.front() == '.') {
+        attributes += "H";
+    }
+    if ((entry.status(ignored).permissions() & std::filesystem::perms::owner_write) == std::filesystem::perms::none) {
+        attributes += "R";
+    }
+    return attributes;
+}
+
+struct DelimitedTextOptions {
+    char delimiter = ',';
+    char quote = '"';
+    bool quote_character_fields = true;
+};
+
+DelimitedTextOptions parse_delimited_text_options(const std::string& type, const std::string& with_clause) {
+    DelimitedTextOptions options;
+    if (normalize_identifier(type) == "tab") {
+        options.delimiter = '\t';
+    }
+
+    std::string clause = trim_copy(with_clause);
+    if (clause.empty()) {
+        return options;
+    }
+    const std::string normalized = normalize_identifier(clause);
+    if (normalized == "tab") {
+        options.delimiter = '\t';
+        return options;
+    }
+    if (normalized == "blank" || normalized == "space") {
+        options.delimiter = ' ';
+        return options;
+    }
+
+    const std::size_t character_clause = find_keyword_top_level(clause, "CHARACTER");
+    if (character_clause != std::string::npos) {
+        std::string quote_clause = trim_copy(clause.substr(0U, character_clause));
+        if (const std::size_t trailing_with = find_keyword_top_level(quote_clause, "WITH");
+            trailing_with != std::string::npos) {
+            quote_clause = trim_copy(quote_clause.substr(0U, trailing_with));
+        }
+        quote_clause = unquote_string(quote_clause);
+        if (!quote_clause.empty()) {
+            options.quote = quote_clause.front();
+        }
+        std::string delimiter_clause = trim_copy(clause.substr(character_clause + 9U));
+        delimiter_clause = unquote_string(delimiter_clause);
+        if (!delimiter_clause.empty()) {
+            options.delimiter = delimiter_clause.front();
+        }
+        return options;
+    }
+
+    clause = unquote_string(clause);
+    if (!clause.empty()) {
+        options.quote = clause.front();
+    }
+    return options;
+}
+
+std::string format_delimited_field_value(
+    const vfp::DbfFieldDescriptor& field,
+    const std::string& raw_value,
+    const DelimitedTextOptions& options) {
+    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+    const std::string value = trim_copy(raw_value);
+    const bool quote_value = options.quote_character_fields &&
+        !(field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' ||
+          field_type == 'Y' || field_type == 'L');
+    if (!quote_value) {
+        return value;
+    }
+
+    std::string escaped;
+    escaped.reserve(value.size() + 2U);
+    escaped.push_back(options.quote);
+    for (const char ch : value) {
+        if (ch == options.quote) {
+            escaped.push_back(options.quote);
+        }
+        escaped.push_back(ch);
+    }
+    escaped.push_back(options.quote);
+    return escaped;
+}
+
+std::vector<std::string> parse_delimited_text_line(const std::string& line, const DelimitedTextOptions& options) {
+    std::vector<std::string> values;
+    std::string current;
+    bool in_quotes = false;
+    for (std::size_t index = 0U; index < line.size(); ++index) {
+        const char ch = line[index];
+        if (ch == options.quote) {
+            if (in_quotes && index + 1U < line.size() && line[index + 1U] == options.quote) {
+                current.push_back(options.quote);
+                ++index;
+            } else {
+                in_quotes = !in_quotes;
+            }
+            continue;
+        }
+        if (!in_quotes && ch == options.delimiter) {
+            values.push_back(trim_copy(current));
+            current.clear();
+            continue;
+        }
+        current.push_back(ch);
+    }
+    values.push_back(trim_copy(current));
+    return values;
+}
+
+std::vector<ReplaceAssignment> parse_update_set_assignments(const std::string& text) {
+    std::vector<ReplaceAssignment> assignments;
+    for (const std::string& part : split_csv_like(text)) {
+        const std::size_t equals = part.find('=');
+        if (equals == std::string::npos) {
+            continue;
+        }
+        assignments.push_back({
+            .field_name = trim_copy(part.substr(0U, equals)),
+            .expression = trim_copy(part.substr(equals + 1U))
+        });
+    }
+    return assignments;
+}
+
+PrgValue record_value_to_prg_value(const vfp::DbfRecordValue& field) {
+    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+    const std::string text = trim_copy(field.display_value);
+    if (field.is_null) {
+        return make_empty_value();
+    }
+    if (field_type == 'L') {
+        return make_boolean_value(normalize_identifier(text) == "true" || normalize_identifier(text) == "t" ||
+                                  normalize_identifier(text) == "y" || text == ".T.");
+    }
+    if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+        field_type == 'B' || field_type == 'Y') {
+        if (text.empty()) {
+            return make_number_value(0.0);
+        }
+        try {
+            return make_number_value(std::stod(text));
+        } catch (const std::exception&) {
+            return make_string_value(field.display_value);
+        }
+    }
+    return make_string_value(field.display_value);
+}
+
+PrgValue blank_value_for_field(const vfp::DbfRecordValue& field) {
+    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+    if (field_type == 'L') {
+        return make_boolean_value(false);
+    }
+    if (field_type == 'N' || field_type == 'F' || field_type == 'I' ||
+        field_type == 'B' || field_type == 'Y') {
+        return make_number_value(0.0);
+    }
+    return make_empty_value();
+}
+
+int classify_runtime_error_code(const std::string& message) {
+    const std::string normalized = normalize_identifier(message);
+    if (normalized.find("unable to resolve do target") != std::string::npos) {
+        return 1001;
+    }
+    if (normalized.find("work area not found") != std::string::npos ||
+        normalized.find("no current work area") != std::string::npos) {
+        return 1002;
+    }
+    if (normalized.find("sql handle not found") != std::string::npos ||
+        normalized.find("sqlexec") != std::string::npos ||
+        normalized.find("sqlprepare") != std::string::npos ||
+        normalized.find("odbc") != std::string::npos) {
+        return 1526;
+    }
+    if (normalized.find("ole object") != std::string::npos ||
+        normalized.find("automation") != std::string::npos) {
+        return 1429;
+    }
+    if (normalized.find("unable to open") != std::string::npos ||
+        normalized.find("unable to write") != std::string::npos ||
+        normalized.find("file") != std::string::npos) {
+        return 1003;
+    }
+    if (normalized.find("resource fault") != std::string::npos ||
+        normalized.find("budget") != std::string::npos ||
+        normalized.find("loop") != std::string::npos) {
+        return 1099;
+    }
+    return 1;
+}
+
+std::string runtime_error_parameter(const std::string& message) {
+    const std::size_t quoted_start = message.find('\'');
+    if (quoted_start != std::string::npos) {
+        const std::size_t quoted_end = message.find('\'', quoted_start + 1U);
+        if (quoted_end != std::string::npos && quoted_end > quoted_start + 1U) {
+            return message.substr(quoted_start + 1U, quoted_end - quoted_start - 1U);
+        }
+    }
+    const std::size_t colon = message.rfind(':');
+    if (colon != std::string::npos && colon + 1U < message.size()) {
+        return trim_copy(message.substr(colon + 1U));
+    }
+    return message;
+}
+
 vfp::DbfRecord make_synthetic_sql_record(std::size_t recno) {
     const auto synthetic_name = [&]() {
         switch (recno) {
@@ -220,6 +580,7 @@ struct PrgRuntimeSession::Impl {
     std::map<std::string, Program> programs;
     std::vector<Frame> stack;
     std::map<std::string, PrgValue> globals;
+    std::map<std::string, RuntimeArray> arrays;
     std::vector<RuntimeBreakpoint> breakpoints;
     std::vector<RuntimeEvent> events;
     RuntimePauseState last_state{};
@@ -313,9 +674,7 @@ struct PrgRuntimeSession::Impl {
         if (last_fault_statement.empty()) {
             last_fault_statement = statement.text;
         }
-        if (last_error_code == 0) {
-            last_error_code = 1;
-        }
+        last_error_code = classify_runtime_error_code(last_error_message);
         last_error_procedure = frame.routine_name;
     }
 
@@ -2531,6 +2890,7 @@ struct PrgRuntimeSession::Impl {
         const auto found = connections.find(handle);
         if (found == connections.end()) {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
+            last_error_code = classify_runtime_error_code(last_error_message);
             return -1;
         }
         found->second.prepared_command = command;
@@ -2583,6 +2943,7 @@ struct PrgRuntimeSession::Impl {
         const auto found = connections.find(handle);
         if (found == connections.end()) {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
+            last_error_code = classify_runtime_error_code(last_error_message);
             return -1;
         }
 
@@ -2608,6 +2969,7 @@ struct PrgRuntimeSession::Impl {
         const auto found = connections.find(handle);
         if (found == connections.end()) {
             last_error_message = "SQL handle not found: " + std::to_string(handle);
+            last_error_code = classify_runtime_error_code(last_error_message);
             return -1;
         }
 
@@ -2618,6 +2980,7 @@ struct PrgRuntimeSession::Impl {
         const std::string effective_command = trim_copy(command).empty() ? connection.prepared_command : trim_copy(command);
         if (effective_command.empty()) {
             last_error_message = "SQLEXEC requires a command or a prepared SQL statement";
+            last_error_code = classify_runtime_error_code(last_error_message);
             return -1;
         }
 
@@ -2701,7 +3064,7 @@ struct PrgRuntimeSession::Impl {
     std::optional<std::string> materialize_xasset_bootstrap(const std::string& asset_path, bool include_read_events);
 
     void assign_variable(Frame& frame, const std::string& name, const PrgValue& value) {
-        const std::string normalized = normalize_identifier(name);
+        const std::string normalized = normalize_memory_variable_identifier(name);
         if (frame.local_names.contains(normalized) || frame.locals.contains(normalized)) {
             frame.locals[normalized] = value;
             return;
@@ -2710,7 +3073,7 @@ struct PrgRuntimeSession::Impl {
     }
 
     PrgValue lookup_variable(const Frame& frame, const std::string& name) const {
-        const std::string normalized = normalize_identifier(name);
+        const std::string normalized = normalize_memory_variable_identifier(name);
         if (const auto local = frame.locals.find(normalized); local != frame.locals.end()) {
             return local->second;
         }
@@ -2718,6 +3081,518 @@ struct PrgRuntimeSession::Impl {
             return global->second;
         }
         return {};
+    }
+
+    RuntimeArray* find_array(const std::string& name) {
+        const auto found = arrays.find(normalize_memory_variable_identifier(name));
+        return found == arrays.end() ? nullptr : &found->second;
+    }
+
+    const RuntimeArray* find_array(const std::string& name) const {
+        const auto found = arrays.find(normalize_memory_variable_identifier(name));
+        return found == arrays.end() ? nullptr : &found->second;
+    }
+
+    bool has_array(const std::string& name) const {
+        return find_array(name) != nullptr;
+    }
+
+    std::size_t array_length(const std::string& name, int dimension) const {
+        const RuntimeArray* array = find_array(name);
+        if (array == nullptr) {
+            return 0U;
+        }
+        if (dimension == 1) {
+            return array->rows;
+        }
+        if (dimension == 2) {
+            return array->columns;
+        }
+        return array->values.size();
+    }
+
+    PrgValue array_value(const std::string& name, std::size_t row, std::size_t column = 1U) const {
+        const RuntimeArray* array = find_array(name);
+        if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns) {
+            return make_empty_value();
+        }
+        const std::size_t index = ((row - 1U) * array->columns) + (column - 1U);
+        return index < array->values.size() ? array->values[index] : make_empty_value();
+    }
+
+    std::size_t array_linear_index(const RuntimeArray& array, std::size_t row, std::size_t column) const {
+        if (row == 0U || column == 0U || row > array.rows || column > array.columns) {
+            return 0U;
+        }
+        const std::size_t index = ((row - 1U) * array.columns) + column;
+        return index <= array.values.size() ? index : 0U;
+    }
+
+    std::size_t array_subscript(const RuntimeArray& array, std::size_t element, int dimension) const {
+        if (element == 0U || element > array.values.size()) {
+            return 0U;
+        }
+        if (dimension == 1) {
+            return ((element - 1U) / array.columns) + 1U;
+        }
+        if (dimension == 2) {
+            return ((element - 1U) % array.columns) + 1U;
+        }
+        return 0U;
+    }
+
+    void assign_array(const std::string& name, std::vector<PrgValue> values, std::size_t columns = 1U) {
+        columns = std::max<std::size_t>(1U, columns);
+        RuntimeArray array;
+        array.columns = columns;
+        array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
+        array.values = std::move(values);
+        array.values.resize(array.rows * array.columns);
+        arrays[normalize_memory_variable_identifier(name)] = std::move(array);
+    }
+
+    bool parse_array_reference(
+        const std::string& reference,
+        const Frame& frame,
+        std::string& array_name,
+        std::size_t& row,
+        std::size_t& column) {
+        const std::string trimmed = trim_copy(reference);
+        if (trimmed.empty()) {
+            return false;
+        }
+
+        const std::size_t bracket_open = trimmed.find('[');
+        const std::size_t paren_open = trimmed.find('(');
+        const bool uses_brackets = bracket_open != std::string::npos;
+        const std::size_t open = uses_brackets ? bracket_open : paren_open;
+        if (open == std::string::npos || open == 0U) {
+            return false;
+        }
+
+        const char close_char = uses_brackets ? ']' : ')';
+        if (trimmed.back() != close_char) {
+            return false;
+        }
+
+        array_name = trim_copy(trimmed.substr(0U, open));
+        if (array_name.empty()) {
+            return false;
+        }
+        const std::string indexes_text = trimmed.substr(open + 1U, trimmed.size() - open - 2U);
+        const std::vector<std::string> parts = split_csv_like(indexes_text);
+        if (parts.empty()) {
+            return false;
+        }
+        row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[0], frame))));
+        column = parts.size() >= 2U
+            ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(evaluate_expression(parts[1], frame))))
+            : 1U;
+        return row > 0U && column > 0U;
+    }
+
+    bool assign_array_element(const std::string& reference, const Frame& frame, const PrgValue& value) {
+        std::string array_name;
+        std::size_t row = 0U;
+        std::size_t column = 1U;
+        if (!parse_array_reference(reference, frame, array_name, row, column)) {
+            return false;
+        }
+
+        RuntimeArray* array = find_array(array_name);
+        if (array == nullptr || row > array->rows || column > array->columns) {
+            const std::size_t new_rows = array == nullptr ? row : std::max(row, array->rows);
+            const std::size_t new_columns = array == nullptr ? column : std::max(column, array->columns);
+            resize_array(array_name, new_rows, new_columns);
+            array = find_array(array_name);
+        }
+        if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns) {
+            return false;
+        }
+        array->values[((row - 1U) * array->columns) + (column - 1U)] = value;
+        return true;
+    }
+
+    bool declare_array(const std::string& declaration, const Frame& frame) {
+        std::string array_name;
+        std::size_t rows = 0U;
+        std::size_t columns = 1U;
+        if (!parse_array_reference(declaration, frame, array_name, rows, columns)) {
+            return false;
+        }
+        resize_array(array_name, rows, columns);
+        return true;
+    }
+
+    PrgValue resize_array(const std::string& name, std::size_t rows, std::size_t columns = 1U) {
+        columns = std::max<std::size_t>(1U, columns);
+        RuntimeArray* array = find_array(name);
+        if (array == nullptr) {
+            assign_array(name, {}, columns);
+            array = find_array(name);
+        }
+        if (array == nullptr) {
+            return make_number_value(0.0);
+        }
+        std::vector<PrgValue> new_values(rows * columns);
+        const std::size_t copy_rows = std::min(rows, array->rows);
+        const std::size_t copy_columns = std::min(columns, array->columns);
+        for (std::size_t row = 0U; row < copy_rows; ++row) {
+            for (std::size_t column = 0U; column < copy_columns; ++column) {
+                new_values[(row * columns) + column] = array->values[(row * array->columns) + column];
+            }
+        }
+        array->rows = rows;
+        array->columns = columns;
+        array->values = std::move(new_values);
+        return make_number_value(static_cast<double>(array->values.size()));
+    }
+
+    PrgValue copy_array_values(
+        const std::string& source_name,
+        const std::string& target_name,
+        std::size_t source_start,
+        std::size_t count,
+        std::size_t target_start) {
+        RuntimeArray* source = find_array(source_name);
+        if (source == nullptr || source->values.empty() || trim_copy(target_name).empty()) {
+            return make_number_value(0.0);
+        }
+        source_start = std::max<std::size_t>(1U, source_start);
+        target_start = std::max<std::size_t>(1U, target_start);
+        if (source_start > source->values.size()) {
+            return make_number_value(0.0);
+        }
+
+        const std::size_t available = source->values.size() - source_start + 1U;
+        const std::size_t copy_count = count == 0U ? available : std::min(count, available);
+        if (copy_count == 0U) {
+            return make_number_value(0.0);
+        }
+
+        RuntimeArray* target = find_array(target_name);
+        const std::size_t target_columns = target == nullptr ? 1U : std::max<std::size_t>(1U, target->columns);
+        const std::size_t required_elements = target_start + copy_count - 1U;
+        if (target == nullptr || required_elements > target->values.size()) {
+            const std::size_t required_rows = (required_elements + target_columns - 1U) / target_columns;
+            resize_array(target_name, required_rows, target_columns);
+            target = find_array(target_name);
+        }
+        if (target == nullptr || required_elements > target->values.size()) {
+            return make_number_value(0.0);
+        }
+
+        std::vector<PrgValue> snapshot;
+        snapshot.reserve(copy_count);
+        for (std::size_t offset = 0U; offset < copy_count; ++offset) {
+            snapshot.push_back(source->values[source_start - 1U + offset]);
+        }
+        for (std::size_t offset = 0U; offset < snapshot.size(); ++offset) {
+            target->values[target_start - 1U + offset] = snapshot[offset];
+        }
+        return make_number_value(static_cast<double>(snapshot.size()));
+    }
+
+    PrgValue populate_lines_array(
+        const std::string& target_name,
+        const std::string& text,
+        int flags = 0,
+        const std::vector<std::string>& parse_tokens = {}) {
+        if (trim_copy(target_name).empty()) {
+            return make_number_value(0.0);
+        }
+
+        std::vector<std::string> lines;
+        if (!parse_tokens.empty()) {
+            std::string current = text;
+            lines.push_back(current);
+            for (const std::string& token : parse_tokens) {
+                if (token.empty()) {
+                    continue;
+                }
+                std::vector<std::string> next;
+                for (const std::string& part : lines) {
+                    std::size_t start = 0U;
+                    while (true) {
+                        const std::size_t found = part.find(token, start);
+                        if (found == std::string::npos) {
+                            next.push_back(part.substr(start));
+                            break;
+                        }
+                        next.push_back(part.substr(start, found - start));
+                        start = found + token.size();
+                    }
+                }
+                lines = std::move(next);
+            }
+        } else {
+            lines = split_text_lines(text);
+        }
+
+        const bool trim_lines = (flags & 1) != 0;
+        const bool omit_empty = (flags & 2) != 0;
+        std::vector<PrgValue> values;
+        values.reserve(lines.size());
+        for (std::string line : lines) {
+            if (trim_lines) {
+                line = trim_copy(line);
+            }
+            if (omit_empty && line.empty()) {
+                continue;
+            }
+            values.push_back(make_string_value(std::move(line)));
+        }
+        assign_array(target_name, std::move(values), 1U);
+        return make_number_value(static_cast<double>(array_length(target_name, 0)));
+    }
+
+    PrgValue populate_directory_array(
+        const std::string& target_name,
+        const std::string& skeleton,
+        const std::string& attribute_filter) {
+        if (trim_copy(target_name).empty()) {
+            return make_number_value(0.0);
+        }
+
+        namespace fs = std::filesystem;
+        fs::path pattern_path = skeleton.empty() ? fs::path("*.*") : fs::path(skeleton);
+        if (pattern_path.is_relative()) {
+            pattern_path = fs::path(current_default_directory()) / pattern_path;
+        }
+        const fs::path directory = pattern_path.has_parent_path() ? pattern_path.parent_path() : fs::path(current_default_directory());
+        const std::string pattern = pattern_path.filename().string().empty() ? "*.*" : pattern_path.filename().string();
+        const bool include_directories = normalize_identifier(attribute_filter).find('d') != std::string::npos;
+
+        std::vector<fs::directory_entry> entries;
+        std::error_code ignored;
+        if (fs::exists(directory, ignored)) {
+            for (const auto& entry : fs::directory_iterator(directory, ignored)) {
+                const bool is_directory = entry.is_directory(ignored);
+                if (is_directory && !include_directories) {
+                    continue;
+                }
+                if (!wildcard_match_insensitive(pattern, entry.path().filename().string())) {
+                    continue;
+                }
+                entries.push_back(entry);
+            }
+        }
+        std::sort(entries.begin(), entries.end(), [](const fs::directory_entry& left, const fs::directory_entry& right) {
+            return lowercase_copy(left.path().filename().string()) < lowercase_copy(right.path().filename().string());
+        });
+
+        std::vector<PrgValue> values;
+        values.reserve(entries.size() * 5U);
+        for (const auto& entry : entries) {
+            const auto last_write = entry.last_write_time(ignored);
+            const bool is_directory = entry.is_directory(ignored);
+            values.push_back(make_string_value(entry.path().filename().string()));
+            values.push_back(make_number_value(is_directory ? 0.0 : static_cast<double>(entry.file_size(ignored))));
+            values.push_back(make_string_value(format_file_time_part(last_write, true)));
+            values.push_back(make_string_value(format_file_time_part(last_write, false)));
+            values.push_back(make_string_value(file_attributes_for_adir(entry)));
+        }
+        assign_array(target_name, std::move(values), 5U);
+        return make_number_value(static_cast<double>(entries.size()));
+    }
+
+    PrgValue populate_fields_array(const std::string& target_name, const std::string& designator) {
+        if (trim_copy(target_name).empty()) {
+            return make_number_value(0.0);
+        }
+        CursorState* cursor = resolve_cursor_target(designator);
+        if (cursor == nullptr || cursor->source_path.empty()) {
+            assign_array(target_name, {}, 16U);
+            return make_number_value(0.0);
+        }
+        const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, 1U);
+        if (!table_result.ok) {
+            assign_array(target_name, {}, 16U);
+            return make_number_value(0.0);
+        }
+
+        std::vector<PrgValue> values;
+        values.reserve(table_result.table.fields.size() * 16U);
+        for (const auto& field : table_result.table.fields) {
+            values.push_back(make_string_value(field.name));
+            values.push_back(make_string_value(std::string(1U, static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))))));
+            values.push_back(make_number_value(static_cast<double>(field.length)));
+            values.push_back(make_number_value(static_cast<double>(field.decimal_count)));
+            values.push_back(make_boolean_value(false));
+            values.push_back(make_boolean_value(false));
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+            values.push_back(make_empty_value());
+        }
+        assign_array(target_name, std::move(values), 16U);
+        return make_number_value(static_cast<double>(table_result.table.fields.size()));
+    }
+
+    PrgValue mutate_array_function(
+        const std::string& function,
+        const std::vector<std::string>& raw_arguments,
+        const std::vector<PrgValue>& arguments) {
+        if (raw_arguments.empty()) {
+            return make_number_value(0.0);
+        }
+        const std::string array_name = raw_arguments[0];
+        const std::string normalized_function = normalize_identifier(function);
+        RuntimeArray* array = find_array(array_name);
+
+        if (normalized_function == "alines" && arguments.size() >= 2U) {
+            const int flags = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 0;
+            std::vector<std::string> parse_tokens;
+            for (std::size_t index = 3U; index < arguments.size(); ++index) {
+                parse_tokens.push_back(value_as_string(arguments[index]));
+            }
+            return populate_lines_array(array_name, value_as_string(arguments[1]), flags, parse_tokens);
+        }
+
+        if (normalized_function == "adir") {
+            const std::string skeleton = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{"*.*"};
+            const std::string attributes = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+            return populate_directory_array(array_name, skeleton, attributes);
+        }
+
+        if (normalized_function == "afields") {
+            const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+            return populate_fields_array(array_name, designator);
+        }
+
+        if (normalized_function == "asize") {
+            const std::size_t rows = arguments.size() >= 2U
+                ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])))
+                : 0U;
+            const std::size_t columns = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
+                : 1U;
+            return resize_array(array_name, rows, columns);
+        }
+
+        if (normalized_function == "acopy" && raw_arguments.size() >= 2U) {
+            const std::size_t source_start = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
+                : 1U;
+            const std::size_t count = arguments.size() >= 4U
+                ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[3])))
+                : 0U;
+            const std::size_t target_start = arguments.size() >= 5U
+                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[4])))
+                : 1U;
+            return copy_array_values(array_name, raw_arguments[1], source_start, count, target_start);
+        }
+
+        if (array == nullptr) {
+            return make_number_value(0.0);
+        }
+        if (normalized_function == "aelement" && arguments.size() >= 2U) {
+            const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
+            const std::size_t column = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[2])))
+                : 1U;
+            return make_number_value(static_cast<double>(array_linear_index(*array, row, column)));
+        }
+        if (normalized_function == "asubscript" && arguments.size() >= 3U) {
+            const std::size_t element = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
+            const int dimension = static_cast<int>(std::llround(value_as_number(arguments[2])));
+            return make_number_value(static_cast<double>(array_subscript(*array, element, dimension)));
+        }
+        if (normalized_function == "ascan" && arguments.size() >= 2U) {
+            for (std::size_t index = 0U; index < array->values.size(); ++index) {
+                if (value_as_string(array->values[index]) == value_as_string(arguments[1])) {
+                    return make_number_value(static_cast<double>(index + 1U));
+                }
+            }
+            return make_number_value(0.0);
+        }
+        if (normalized_function == "adel" && arguments.size() >= 2U) {
+            const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
+            if (position == 0U || position > array->values.size()) {
+                return make_number_value(0.0);
+            }
+            for (std::size_t index = position - 1U; index + 1U < array->values.size(); ++index) {
+                array->values[index] = array->values[index + 1U];
+            }
+            if (!array->values.empty()) {
+                array->values.back() = make_empty_value();
+            }
+            return make_number_value(1.0);
+        }
+        if (normalized_function == "ains" && arguments.size() >= 2U) {
+            const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
+            if (position == 0U || position > array->values.size()) {
+                return make_number_value(0.0);
+            }
+            for (std::size_t index = array->values.size() - 1U; index > position - 1U; --index) {
+                array->values[index] = array->values[index - 1U];
+            }
+            array->values[position - 1U] = make_empty_value();
+            return make_number_value(1.0);
+        }
+        if (normalized_function == "asort") {
+            std::sort(array->values.begin(), array->values.end(), [](const PrgValue& left, const PrgValue& right) {
+                return value_as_string(left) < value_as_string(right);
+            });
+            return make_number_value(1.0);
+        }
+        return make_number_value(0.0);
+    }
+
+    int populate_error_array(const std::string& name) {
+        if (trim_copy(name).empty()) {
+            return 0;
+        }
+        if (last_error_code == 0 && last_error_message.empty()) {
+            return 0;
+        }
+        const int effective_error_code = last_error_code == 0
+            ? classify_runtime_error_code(last_error_message)
+            : last_error_code;
+        const std::string error_parameter = runtime_error_parameter(last_error_message);
+        if (effective_error_code == 1526) {
+            std::vector<PrgValue> values{
+                make_number_value(1526.0),
+                make_string_value(last_error_message),
+                make_string_value(error_parameter),
+                make_string_value("HY000"),
+                make_number_value(-1.0),
+                make_number_value(0.0),
+                make_empty_value()
+            };
+            assign_array(name, std::move(values), 7U);
+            return 1;
+        }
+        if (effective_error_code == 1429) {
+            std::vector<PrgValue> values{
+                make_number_value(1429.0),
+                make_string_value(last_error_message),
+                make_string_value(error_parameter),
+                make_string_value("Copperfin OLE"),
+                make_empty_value(),
+                make_empty_value(),
+                make_number_value(1429.0)
+            };
+            assign_array(name, std::move(values), 7U);
+            return 1;
+        }
+        std::vector<PrgValue> values{
+            make_number_value(static_cast<double>(effective_error_code)),
+            make_string_value(last_error_message),
+            make_string_value(error_parameter == last_error_message ? std::string{} : error_parameter),
+            make_number_value(static_cast<double>(current_selected_work_area())),
+            make_empty_value(),
+            make_empty_value(),
+            make_empty_value()
+        };
+        assign_array(name, std::move(values), 7U);
+        return 1;
     }
 
     void restore_private_declarations(Frame& frame) {
@@ -2744,7 +3619,7 @@ struct PrgRuntimeSession::Impl {
             if (caller != nullptr) {
                 assign_variable(*caller, reference_name, local->second);
             } else {
-                globals[normalize_identifier(reference_name)] = local->second;
+                globals[normalize_memory_variable_identifier(reference_name)] = local->second;
             }
         }
     }
@@ -3280,6 +4155,11 @@ public:
         std::function<bool(const std::string&)> eof_callback,
         std::function<bool(const std::string&)> bof_callback,
         std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback,
+        std::function<bool(const std::string&)> array_exists_callback,
+        std::function<std::size_t(const std::string&, int)> array_length_callback,
+        std::function<PrgValue(const std::string&, std::size_t, std::size_t)> array_value_callback,
+        std::function<PrgValue(const std::string&, const std::vector<std::string>&, const std::vector<PrgValue>&)> array_function_callback,
+        std::function<int(const std::string&)> aerror_callback,
         std::function<PrgValue(const std::string&, const std::vector<std::string>&)> aggregate_callback,
         std::function<std::string(const std::string&, bool)> order_callback,
         std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback,
@@ -3315,6 +4195,11 @@ public:
           eof_callback_(std::move(eof_callback)),
           bof_callback_(std::move(bof_callback)),
           field_lookup_callback_(std::move(field_lookup_callback)),
+          array_exists_callback_(std::move(array_exists_callback)),
+          array_length_callback_(std::move(array_length_callback)),
+          array_value_callback_(std::move(array_value_callback)),
+          array_function_callback_(std::move(array_function_callback)),
+          aerror_callback_(std::move(aerror_callback)),
           aggregate_callback_(std::move(aggregate_callback)),
           order_callback_(std::move(order_callback)),
           tag_callback_(std::move(tag_callback)),
@@ -3454,6 +4339,17 @@ private:
         }
 
         skip_whitespace();
+        if (match("[")) {
+            const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+            std::size_t column = 1U;
+            skip_whitespace();
+            if (match(",")) {
+                column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+            }
+            match("]");
+            return array_value_callback_(identifier, row, column);
+        }
+
         if (match("(")) {
             std::vector<PrgValue> arguments;
             std::vector<std::string> raw_arguments;
@@ -3469,6 +4365,15 @@ private:
                     }
                     match(",");
                 }
+            }
+            if (array_exists_callback_(identifier)) {
+                const std::size_t row = arguments.empty()
+                    ? 0U
+                    : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[0])));
+                const std::size_t column = arguments.size() < 2U
+                    ? 1U
+                    : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
+                return array_value_callback_(identifier, row, column);
             }
             return evaluate_function(identifier, arguments, raw_arguments);
         }
@@ -3614,8 +4519,14 @@ private:
             return make_boolean_value(std::filesystem::exists(path));
         }
         if (function == "sys") {
-            if (!arguments.empty() && std::llround(value_as_number(arguments[0])) == 16) {
-                return make_string_value(frame_.file_path);
+            if (!arguments.empty()) {
+                const long long sys_code = std::llround(value_as_number(arguments[0]));
+                if (sys_code == 16) {
+                    return make_string_value(frame_.file_path);
+                }
+                if (sys_code == 2018) {
+                    return make_string_value(uppercase_copy(runtime_error_parameter(last_error_message_)));
+                }
             }
             return make_string_value("0");
         }
@@ -3651,6 +4562,9 @@ private:
         }
         if (function == "message") {
             return make_string_value(last_error_message_);
+        }
+        if (function == "aerror" && !raw_arguments.empty()) {
+            return make_number_value(static_cast<double>(aerror_callback_(raw_arguments[0])));
         }
         if (function == "eval" && !arguments.empty()) {
             return eval_expression_callback_(value_as_string(arguments[0]));
@@ -3998,11 +4912,15 @@ private:
         }
         // --- Array / variable helpers ---
         if (function == "alen" && !arguments.empty()) {
-            // Return 0 — arrays are not yet modeled; avoids hard crash
-            return make_number_value(0.0);
+            const std::string array_name = raw_arguments.empty() ? std::string{} : raw_arguments[0];
+            const int dimension = arguments.size() >= 2U ? static_cast<int>(value_as_number(arguments[1])) : 0;
+            return make_number_value(static_cast<double>(array_length_callback_(array_name, dimension)));
         }
-        if ((function == "adel" || function == "ains" || function == "asort" || function == "ascan" || function == "asize") && !arguments.empty()) {
-            return make_number_value(0.0);
+        if ((function == "acopy" || function == "adel" || function == "adir" || function == "aelement" ||
+             function == "afields" || function == "ains" || function == "alines" || function == "asort" ||
+             function == "ascan" || function == "asize" || function == "asubscript") &&
+            !arguments.empty()) {
+            return array_function_callback_(function, raw_arguments, arguments);
         }
         // --- Misc ---
         if (function == "getenv" && !arguments.empty()) {
@@ -4062,7 +4980,7 @@ private:
     }
 
     PrgValue resolve_identifier(const std::string& identifier) const {
-        const std::string normalized = normalize_identifier(identifier);
+        const std::string normalized = normalize_memory_variable_identifier(identifier);
         const auto local = frame_.locals.find(normalized);
         if (local != frame_.locals.end()) {
             return local->second;
@@ -4070,6 +4988,9 @@ private:
         const auto global = globals_.find(normalized);
         if (global != globals_.end()) {
             return global->second;
+        }
+        if (starts_with_insensitive(normalize_identifier(identifier), "m.")) {
+            return {};
         }
         if (const auto field = field_lookup_callback_(identifier)) {
             return *field;
@@ -4203,6 +5124,11 @@ private:
     std::function<bool(const std::string&)> eof_callback_;
     std::function<bool(const std::string&)> bof_callback_;
     std::function<std::optional<PrgValue>(const std::string&)> field_lookup_callback_;
+    std::function<bool(const std::string&)> array_exists_callback_;
+    std::function<std::size_t(const std::string&, int)> array_length_callback_;
+    std::function<PrgValue(const std::string&, std::size_t, std::size_t)> array_value_callback_;
+    std::function<PrgValue(const std::string&, const std::vector<std::string>&, const std::vector<PrgValue>&)> array_function_callback_;
+    std::function<int(const std::string&)> aerror_callback_;
     std::function<PrgValue(const std::string&, const std::vector<std::string>&)> aggregate_callback_;
     std::function<std::string(const std::string&, bool)> order_callback_;
     std::function<std::string(const std::string&, std::size_t, const std::string&)> tag_callback_;
@@ -4309,6 +5235,21 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
         [this, preferred_cursor](const std::string& identifier) {
             const CursorState* current_cursor = preferred_cursor == nullptr ? resolve_cursor_target({}) : preferred_cursor;
             return resolve_field_value(identifier, current_cursor);
+        },
+        [this](const std::string& name) {
+            return has_array(name);
+        },
+        [this](const std::string& name, int dimension) {
+            return array_length(name, dimension);
+        },
+        [this](const std::string& name, std::size_t row, std::size_t column) {
+            return array_value(name, row, column);
+        },
+        [this](const std::string& function, const std::vector<std::string>& raw_arguments, const std::vector<PrgValue>& arguments) {
+            return mutate_array_function(function, raw_arguments, arguments);
+        },
+        [this](const std::string& name) {
+            return populate_error_array(name);
         },
         [this, &frame](const std::string& function_name, const std::vector<std::string>& raw_arguments) {
             return aggregate_function_value(function_name, raw_arguments, frame);
@@ -4529,9 +5470,19 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
     switch (statement.kind) {
         case StatementKind::assignment: {
             const std::string assignment_identifier = apply_with_context(statement.identifier, frame);
+            const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
+            if (assign_array_element(assignment_identifier, frame, assignment_value)) {
+                return {};
+            }
             if (assignment_identifier.find('.') != std::string::npos) {
                 const auto separator = assignment_identifier.find('.');
-                const PrgValue object_value = lookup_variable(frame, assignment_identifier.substr(0U, separator));
+                const std::string object_part = assignment_identifier.substr(0U, separator);
+                // VFP uses m. as a memory-variable namespace prefix (not an OLE object).
+                if (normalize_identifier(object_part) == "m") {
+                    assign_variable(frame, assignment_identifier, assignment_value);
+                    return {};
+                }
+                const PrgValue object_value = lookup_variable(frame, object_part);
                 auto object = resolve_ole_object(object_value);
                 if (!object.has_value()) {
                     last_error_message = "OLE object not found for property assignment: " + assignment_identifier;
@@ -4541,7 +5492,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 }
 
                 RuntimeOleObjectState* runtime_object = *object;
-                runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(evaluate_expression(statement.expression, frame));
+                runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(assignment_value);
                 ++runtime_object->action_count;
                 events.push_back({
                     .category = "ole.set",
@@ -4549,7 +5500,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     .location = statement.location
                 });
             } else {
-                assign_variable(frame, assignment_identifier, evaluate_expression(statement.expression, frame));
+                assign_variable(frame, assignment_identifier, assignment_value);
             }
             return {};
         }
@@ -5210,6 +6161,41 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         }
+        case StatementKind::update_command: {
+            const std::string target_expression = trim_copy(statement.secondary_expression).empty()
+                ? trim_copy(statement.identifier)
+                : trim_copy(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target_expression(target_expression, frame);
+            if (cursor == nullptr) {
+                last_error_message = "UPDATE target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const std::vector<ReplaceAssignment> assignments = parse_update_set_assignments(statement.expression);
+            if (assignments.empty()) {
+                last_error_message = "UPDATE requires SET field = expression assignments";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            const std::string for_expression = trim_copy(statement.tertiary_expression).empty()
+                ? ".T."
+                : statement.tertiary_expression;
+            if (!replace_records(*cursor, assignments, frame, for_expression, statement.quaternary_expression)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.update",
+                .detail = statement.text,
+                .location = statement.location
+            });
+            return {};
+        }
         case StatementKind::append_blank_command: {
             CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
@@ -5521,19 +6507,19 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         case StatementKind::public_declaration:
             for (const auto& name : statement.names) {
-                globals.try_emplace(normalize_identifier(name), make_empty_value());
+                globals.try_emplace(normalize_memory_variable_identifier(name), make_empty_value());
             }
             return {};
         case StatementKind::local_declaration:
             for (const auto& name : statement.names) {
-                const std::string normalized = normalize_identifier(name);
+                const std::string normalized = normalize_memory_variable_identifier(name);
                 frame.local_names.insert(normalized);
                 frame.locals.try_emplace(normalized, make_empty_value());
             }
             return {};
         case StatementKind::private_declaration:
             for (const auto& name : statement.names) {
-                const std::string normalized = normalize_identifier(name);
+                const std::string normalized = normalize_memory_variable_identifier(name);
                 const auto existing = globals.find(normalized);
                 if (existing != globals.end()) {
                     frame.private_saved_values.try_emplace(normalized, existing->second);
@@ -5547,7 +6533,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::parameters_declaration:
         case StatementKind::lparameters_declaration: {
             for (std::size_t index = 0U; index < statement.names.size(); ++index) {
-                const std::string normalized = normalize_identifier(statement.names[index]);
+                const std::string normalized = normalize_memory_variable_identifier(statement.names[index]);
                 if (normalized.empty()) {
                     continue;
                 }
@@ -5561,6 +6547,22 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     frame.parameter_reference_bindings[normalized] = *frame.call_argument_references[index];
                 }
             }
+            return {};
+        }
+        case StatementKind::dimension_command: {
+            for (const auto& name : statement.names) {
+                if (!declare_array(name, frame)) {
+                    last_error_message = "DIMENSION/DECLARE requires array dimensions";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+            }
+            events.push_back({
+                .category = "runtime.dimension",
+                .detail = std::to_string(statement.names.size()) + " array(s)",
+                .location = statement.location
+            });
             return {};
         }
         case StatementKind::store_command: {
@@ -5707,24 +6709,448 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         }
         case StatementKind::copy_to_command: {
             // COPY TO <dest> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
-            // Stub: emit event; full DBF export not yet implemented
-            const std::string dest = unquote_string(trim_copy(
+            // COPY STRUCTURE TO <dest> — copies schema only (no rows)
+            const bool is_structure = (statement.identifier == "structure");
+            const std::string dest_raw = unquote_string(trim_copy(
                 value_as_string(evaluate_expression(statement.expression, frame))));
+            const std::string copy_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
+            const bool copy_as_sdf = copy_type == "sdf";
+            const bool copy_as_delimited = copy_type == "csv" || copy_type == "delimited";
+            const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
+
+            CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+            if (cursor == nullptr || cursor->source_path.empty()) {
+                // Remote-only or no open table — emit event stub
+                events.push_back({
+                    .category = "runtime.copy_to",
+                    .detail = dest_raw,
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            namespace fs = std::filesystem;
+            fs::path dest_path(dest_raw);
+            if (dest_path.extension().empty()) {
+                if (copy_as_sdf || copy_type == "delimited") {
+                    dest_path += ".txt";
+                } else if (copy_type == "csv") {
+                    dest_path += ".csv";
+                } else {
+                    dest_path += ".dbf";
+                }
+            }
+            if (dest_path.is_relative()) {
+                dest_path = fs::path(current_default_directory()) / dest_path;
+            }
+            dest_path = dest_path.lexically_normal();
+
+            // Load source table schema + records up to the cursor record count
+            const auto table_result = vfp::parse_dbf_table_from_file(
+                cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+            if (!table_result.ok) {
+                last_error_message = "COPY TO: " + table_result.error;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            // Build field filter from FIELDS clause (comma-separated names)
+            const std::string fields_clause = statement.tertiary_expression;
+            const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
+
+            // Filter descriptors by FIELDS clause
+            std::vector<vfp::DbfFieldDescriptor> out_fields;
+            for (const auto& f : table_result.table.fields) {
+                if (field_matches_filter(f.name, field_filter)) {
+                    out_fields.push_back(f);
+                }
+            }
+            if (out_fields.empty()) {
+                last_error_message = "COPY TO: no fields match the FIELDS clause";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            // Collect qualifying rows (skip for COPY STRUCTURE TO)
+            const std::string for_expr = statement.quaternary_expression;
+            std::vector<std::vector<std::string>> out_rows;
+            if (!is_structure) {
+                const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
+                for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno) {
+                    move_cursor_to(*cursor, static_cast<long long>(recno));
+                    if (!current_record_matches_visibility(*cursor, frame, for_expr)) { continue; }
+                    const auto rec = current_record(*cursor);
+                    if (!rec.has_value()) { continue; }
+                    std::vector<std::string> row;
+                    row.reserve(out_fields.size());
+                    for (const auto& desc : out_fields) {
+                        const auto it = std::find_if(
+                            rec->values.begin(), rec->values.end(),
+                            [&](const vfp::DbfRecordValue& rv) {
+                                return collapse_identifier(rv.field_name) == collapse_identifier(desc.name);
+                            });
+                        row.push_back(it != rec->values.end() ? it->display_value : std::string{});
+                    }
+                    out_rows.push_back(std::move(row));
+                }
+                restore_cursor_snapshot(*cursor, saved);
+            }
+
+            if (copy_as_sdf) {
+                if (!dest_path.parent_path().empty()) {
+                    std::error_code ignored;
+                    fs::create_directories(dest_path.parent_path(), ignored);
+                }
+                std::ofstream output(dest_path, std::ios::binary);
+                if (!output.good()) {
+                    last_error_message = "COPY TO TYPE SDF: unable to open output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                for (const auto& row : out_rows) {
+                    for (std::size_t index = 0U; index < out_fields.size(); ++index) {
+                        output << format_sdf_field_value(out_fields[index], index < row.size() ? row[index] : std::string{});
+                    }
+                    output << "\r\n";
+                }
+                output.close();
+                if (!output.good()) {
+                    last_error_message = "COPY TO TYPE SDF: unable to write output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                events.push_back({
+                    .category = "runtime.copy_to",
+                    .detail = dest_path.string(),
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            if (copy_as_delimited) {
+                if (!dest_path.parent_path().empty()) {
+                    std::error_code ignored;
+                    fs::create_directories(dest_path.parent_path(), ignored);
+                }
+                std::ofstream output(dest_path, std::ios::binary);
+                if (!output.good()) {
+                    last_error_message = "COPY TO TYPE DELIMITED: unable to open output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                const DelimitedTextOptions delimited_options = parse_delimited_text_options(copy_type, with_clause);
+                if (copy_type == "csv") {
+                    for (std::size_t index = 0U; index < out_fields.size(); ++index) {
+                        if (index != 0U) {
+                            output << delimited_options.delimiter;
+                        }
+                        output << out_fields[index].name;
+                    }
+                    output << "\r\n";
+                }
+                for (const auto& row : out_rows) {
+                    for (std::size_t index = 0U; index < out_fields.size(); ++index) {
+                        if (index != 0U) {
+                            output << delimited_options.delimiter;
+                        }
+                        output << format_delimited_field_value(
+                            out_fields[index],
+                            index < row.size() ? row[index] : std::string{},
+                            delimited_options);
+                    }
+                    output << "\r\n";
+                }
+                output.close();
+                if (!output.good()) {
+                    last_error_message = "COPY TO TYPE DELIMITED: unable to write output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                events.push_back({
+                    .category = "runtime.copy_to",
+                    .detail = dest_path.string(),
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            const auto write_result = vfp::create_dbf_table_file(
+                dest_path.string(), out_fields, out_rows);
+            if (!write_result.ok) {
+                last_error_message = "COPY TO: " + write_result.error;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
             events.push_back({
                 .category = "runtime.copy_to",
-                .detail = dest,
+                .detail = dest_path.string(),
                 .location = statement.location
             });
             return {};
         }
         case StatementKind::append_from_command: {
             // APPEND FROM <src> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
-            // Stub: emit event; full DBF import not yet implemented
-            const std::string src = unquote_string(trim_copy(
+            // First pass: copy non-deleted records from source DBF into current local cursor.
+            // Field matching is by name; extra fields in source that do not exist in destination are silently skipped.
+            const std::string src_raw = unquote_string(trim_copy(
                 value_as_string(evaluate_expression(statement.expression, frame))));
+            const std::string append_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
+            const bool append_from_sdf = append_type == "sdf";
+            const bool append_from_delimited = append_type == "csv" || append_type == "delimited";
+            const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
+
+            CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+            if (cursor == nullptr || cursor->source_path.empty()) {
+                // Remote-only or no open table — emit event stub
+                events.push_back({
+                    .category = "runtime.append_from",
+                    .detail = src_raw,
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            namespace fs = std::filesystem;
+            fs::path src_path(src_raw);
+            if (src_path.extension().empty()) {
+                if (append_from_sdf || append_type == "delimited") {
+                    src_path += ".txt";
+                } else if (append_type == "csv") {
+                    src_path += ".csv";
+                } else {
+                    src_path += ".dbf";
+                }
+            }
+            if (src_path.is_relative()) {
+                src_path = fs::path(current_default_directory()) / src_path;
+            }
+            src_path = src_path.lexically_normal();
+
+            const std::string fields_clause = statement.tertiary_expression;
+            const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
+
+            if (append_from_sdf) {
+                std::ifstream input(src_path, std::ios::binary);
+                if (!input.good()) {
+                    last_error_message = "APPEND FROM TYPE SDF: unable to open source file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                std::ostringstream buffer;
+                buffer << input.rdbuf();
+
+                const auto dest_result = vfp::parse_dbf_table_from_file(
+                    cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                if (!dest_result.ok) {
+                    last_error_message = "APPEND FROM TYPE SDF: " + dest_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::vector<vfp::DbfFieldDescriptor> target_fields;
+                for (const auto& field : dest_result.table.fields) {
+                    if (field_matches_filter(field.name, field_filter)) {
+                        target_fields.push_back(field);
+                    }
+                }
+                if (target_fields.empty()) {
+                    last_error_message = "APPEND FROM TYPE SDF: no fields match the FIELDS clause";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::size_t appended_count = 0U;
+                for (const std::string& line : split_sdf_lines(buffer.str())) {
+                    const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                    if (!blank_result.ok) {
+                        last_error_message = "APPEND FROM TYPE SDF: " + blank_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    cursor->record_count = blank_result.record_count;
+                    cursor->eof = false;
+                    cursor->recno = blank_result.record_count;
+
+                    std::size_t offset = 0U;
+                    for (const auto& field : target_fields) {
+                        const std::string raw_value = offset < line.size()
+                            ? line.substr(offset, std::min<std::size_t>(field.length, line.size() - offset))
+                            : std::string{};
+                        offset += field.length;
+                        const auto rep_result = vfp::replace_record_field_value(
+                            cursor->source_path,
+                            cursor->recno - 1U,
+                            field.name,
+                            raw_value);
+                        if (!rep_result.ok) {
+                            last_error_message = "APPEND FROM TYPE SDF: " + rep_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = rep_result.record_count;
+                    }
+                    ++appended_count;
+                }
+
+                events.push_back({
+                    .category = "runtime.append_from",
+                    .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE SDF)",
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            if (append_from_delimited) {
+                std::ifstream input(src_path, std::ios::binary);
+                if (!input.good()) {
+                    last_error_message = "APPEND FROM TYPE DELIMITED: unable to open source file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                std::ostringstream buffer;
+                buffer << input.rdbuf();
+
+                const auto dest_result = vfp::parse_dbf_table_from_file(
+                    cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                if (!dest_result.ok) {
+                    last_error_message = "APPEND FROM TYPE DELIMITED: " + dest_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::vector<vfp::DbfFieldDescriptor> target_fields;
+                for (const auto& field : dest_result.table.fields) {
+                    if (field_matches_filter(field.name, field_filter)) {
+                        target_fields.push_back(field);
+                    }
+                }
+                if (target_fields.empty()) {
+                    last_error_message = "APPEND FROM TYPE DELIMITED: no fields match the FIELDS clause";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
+                std::size_t appended_count = 0U;
+                bool first_delimited_line = true;
+                for (const std::string& line : split_text_lines(buffer.str())) {
+                    if (line.empty()) {
+                        continue;
+                    }
+                    const std::vector<std::string> values = parse_delimited_text_line(line, delimited_options);
+                    if (append_type == "csv" && first_delimited_line && values.size() >= target_fields.size()) {
+                        bool matches_header = true;
+                        for (std::size_t index = 0U; index < target_fields.size(); ++index) {
+                            if (collapse_identifier(values[index]) != collapse_identifier(target_fields[index].name)) {
+                                matches_header = false;
+                                break;
+                            }
+                        }
+                        if (matches_header) {
+                            first_delimited_line = false;
+                            continue;
+                        }
+                    }
+                    first_delimited_line = false;
+                    const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                    if (!blank_result.ok) {
+                        last_error_message = "APPEND FROM TYPE DELIMITED: " + blank_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    cursor->record_count = blank_result.record_count;
+                    cursor->eof = false;
+                    cursor->recno = blank_result.record_count;
+
+                    for (std::size_t index = 0U; index < target_fields.size() && index < values.size(); ++index) {
+                        const auto rep_result = vfp::replace_record_field_value(
+                            cursor->source_path,
+                            cursor->recno - 1U,
+                            target_fields[index].name,
+                            values[index]);
+                        if (!rep_result.ok) {
+                            last_error_message = "APPEND FROM TYPE DELIMITED: " + rep_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = rep_result.record_count;
+                    }
+                    ++appended_count;
+                }
+
+                events.push_back({
+                    .category = "runtime.append_from",
+                    .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            // Parse all records from the source file
+            const auto src_result = vfp::parse_dbf_table_from_file(
+                src_path.string(), std::numeric_limits<std::size_t>::max());
+            if (!src_result.ok) {
+                last_error_message = "APPEND FROM: " + src_result.error;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            // Append each qualifying source record into the destination cursor
+            std::size_t appended_count = 0U;
+            for (const auto& src_rec : src_result.table.records) {
+                if (src_rec.deleted) { continue; }
+                // Append a blank record and then replace matching fields by name
+                const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                if (!blank_result.ok) {
+                    last_error_message = "APPEND FROM: " + blank_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                cursor->record_count = blank_result.record_count;
+                cursor->eof = false;
+                cursor->recno = blank_result.record_count;
+
+                for (const auto& src_field : src_rec.values) {
+                    if (!field_matches_filter(src_field.field_name, field_filter)) {
+                        continue;
+                    }
+                    const auto rep_result = vfp::replace_record_field_value(
+                        cursor->source_path,
+                        cursor->recno - 1U,
+                        src_field.field_name,
+                        src_field.display_value);
+                    if (!rep_result.ok) {
+                        // Field may not exist in destination — skip silently
+                        continue;
+                    }
+                    cursor->record_count = rep_result.record_count;
+                }
+                ++appended_count;
+            }
+
             events.push_back({
                 .category = "runtime.append_from",
-                .detail = src,
+                .detail = src_raw + " (" + std::to_string(appended_count) + " records)",
                 .location = statement.location
             });
             return {};
@@ -5733,29 +7159,56 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             // SCATTER [FIELDS <list>] TO <var>|MEMVAR [BLANK]
             const bool use_memvar = (statement.identifier == "memvar");
             const bool blank = !statement.tertiary_expression.empty();
-            if (use_memvar || blank) {
-                // SCATTER MEMVAR / BLANK — create memory variables from current record fields
-                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
-                if (cursor == nullptr) {
-                    last_error_message = "SCATTER: no current work area";
+            const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
+            CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+            if (cursor == nullptr) {
+                last_error_message = "SCATTER: no current work area";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            const auto rec = current_record(*cursor);
+            if (!rec.has_value()) {
+                last_error_message = "SCATTER: no current record";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            std::vector<PrgValue> scattered_values;
+            for (const auto& field : rec->values) {
+                if (!field_matches_filter(field.field_name, field_filter)) {
+                    continue;
+                }
+                const PrgValue val = blank ? blank_value_for_field(field) : record_value_to_prg_value(field);
+                if (use_memvar) {
+                    assign_variable(frame, "m." + field.field_name, val);
+                } else {
+                    scattered_values.push_back(val);
+                }
+            }
+
+            if (!use_memvar) {
+                const std::string array_name = trim_copy(statement.expression);
+                if (array_name.empty()) {
+                    last_error_message = "SCATTER TO requires an array name when MEMVAR is not used";
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                const auto rec = current_record(*cursor);
-                if (!rec.has_value()) {
-                    last_error_message = "SCATTER: no current record";
+                assign_array(array_name, std::move(scattered_values));
+            }
+
+            if (!field_filter.empty()) {
+                const std::size_t selected_count = use_memvar ? 0U : array_length(statement.expression, 0);
+                if (!use_memvar && selected_count == 0U) {
+                    last_error_message = "SCATTER: no fields match the FIELDS clause";
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
-                }
-                for (const auto& field : rec->values) {
-                    const std::string var_name = "m." + field.field_name;
-                    const PrgValue val = blank ? PrgValue{} : make_string_value(field.display_value);
-                    assign_variable(frame, var_name, val);
                 }
             } else {
-                // SCATTER TO <array_var> — array support not yet fully implemented; stub behaviour
+                (void)field_filter;
             }
             events.push_back({
                 .category = "runtime.scatter",
@@ -5767,36 +7220,62 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         case StatementKind::gather_command: {
             // GATHER FROM <var>|MEMVAR [FIELDS <list>] [FOR <expr>]
             const bool use_memvar = (statement.identifier == "memvar");
-            if (use_memvar) {
-                CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
-                if (cursor == nullptr) {
-                    last_error_message = "GATHER: no current work area";
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
+            CursorState* cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+            if (cursor == nullptr) {
+                last_error_message = "GATHER: no current work area";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            const auto rec = current_record(*cursor);
+            if (!rec.has_value()) {
+                last_error_message = "GATHER: no current record";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!trim_copy(statement.quaternary_expression).empty() &&
+                !value_as_bool(evaluate_expression(statement.quaternary_expression, frame, cursor))) {
+                events.push_back({
+                    .category = "runtime.gather",
+                    .detail = use_memvar ? "memvar skipped" : statement.expression + " skipped",
+                    .location = statement.location
+                });
+                return {};
+            }
+
+            const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
+            std::size_t array_index = 1U;
+            for (const auto& field : rec->values) {
+                if (!field_matches_filter(field.field_name, field_filter)) {
+                    continue;
                 }
-                const auto rec = current_record(*cursor);
-                if (!rec.has_value()) {
-                    last_error_message = "GATHER: no current record";
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
-                // Build REPLACE assignments from m.<fieldname> variables
-                std::vector<ReplaceAssignment> assignments;
-                assignments.reserve(rec->values.size());
-                for (const auto& field : rec->values) {
-                    const std::string var_name = "m." + field.field_name;
-                    const PrgValue val = lookup_variable(frame, var_name);
-                    assignments.push_back({
-                        .field_name = field.field_name,
-                        .expression = "\"" + value_as_string(val) + "\""
-                    });
-                }
-                if (!replace_current_record_fields(*cursor, assignments, frame)) {
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
+                const PrgValue val = use_memvar
+                    ? lookup_variable(frame, "m." + field.field_name)
+                    : array_value(statement.expression, array_index++);
+                if (cursor->remote) {
+                    auto it = std::find_if(
+                        cursor->remote_records[cursor->recno - 1U].values.begin(),
+                        cursor->remote_records[cursor->recno - 1U].values.end(),
+                        [&](const vfp::DbfRecordValue& rv) {
+                            return collapse_identifier(rv.field_name) == collapse_identifier(field.field_name);
+                        });
+                    if (it != cursor->remote_records[cursor->recno - 1U].values.end()) {
+                        it->display_value = value_as_string(val);
+                    }
+                } else {
+                    const auto rep_result = vfp::replace_record_field_value(
+                        cursor->source_path,
+                        cursor->recno - 1U,
+                        field.field_name,
+                        value_as_string(val));
+                    if (!rep_result.ok) {
+                        last_error_message = rep_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    cursor->record_count = rep_result.record_count;
                 }
             }
             events.push_back({

@@ -7751,8 +7751,8 @@ void test_on_error_do_with_handler_receives_error_metadata() {
     }
     if (captured_code != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(captured_code->second) == "1",
-            "ERROR() should expose a non-zero first-pass runtime error code");
+            copperfin::runtime::format_value(captured_code->second) == "1001",
+            "ERROR() should expose the first-pass runtime resolve error code");
     }
 
     const bool has_handler_event = std::any_of(
@@ -7763,6 +7763,239 @@ void test_on_error_do_with_handler_receives_error_metadata() {
                 event.detail.find("WITH 4 argument") != std::string::npos;
         });
     expect(has_handler_event, "runtime should record ON ERROR DO WITH handler dispatch detail");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_aerror_populates_structured_runtime_error_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aerror";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aerror.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "DO missing_target\n"
+        "after_error = 'continued'\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "nErrorRows = AERROR(aErr)\n"
+        "nErrorCols = ALEN(aErr, 2)\n"
+        "nErrorCode = aErr[1,1]\n"
+        "cErrorMessage = aErr[1,2]\n"
+        "cErrorParam = aErr[1,3]\n"
+        "nErrorWorkArea = aErr[1,4]\n"
+        "cTriggerInfo = VARTYPE(aErr[1,5])\n"
+        "cReservedOne = VARTYPE(aErr[1,6])\n"
+        "cReservedTwo = VARTYPE(aErr[1,7])\n"
+        "cSys2018 = SYS(2018)\n"
+        "cErrorProgram = PROGRAM()\n"
+        "nErrorLine = LINENO()\n"
+        "cErrorHandler = ON('ERROR')\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "AERROR() handler script should complete");
+
+    const auto rows = state.globals.find("nerrorrows");
+    const auto cols = state.globals.find("nerrorcols");
+    const auto code = state.globals.find("nerrorcode");
+    const auto message = state.globals.find("cerrormessage");
+    const auto parameter = state.globals.find("cerrorparam");
+    const auto work_area = state.globals.find("nerrorworkarea");
+    const auto trigger_info = state.globals.find("ctriggerinfo");
+    const auto reserved_one = state.globals.find("creservedone");
+    const auto reserved_two = state.globals.find("creservedtwo");
+    const auto sys2018 = state.globals.find("csys2018");
+    const auto line = state.globals.find("nerrorline");
+    const auto program = state.globals.find("cerrorprogram");
+    const auto handler = state.globals.find("cerrorhandler");
+    const auto after_error = state.globals.find("after_error");
+
+    expect(rows != state.globals.end(), "AERROR() should return a row count");
+    expect(cols != state.globals.end(), "AERROR() array should expose a column count");
+    expect(code != state.globals.end(), "AERROR() should populate the error code column");
+    expect(message != state.globals.end(), "AERROR() should populate the message column");
+    expect(parameter != state.globals.end(), "AERROR() should populate the error parameter column");
+    expect(work_area != state.globals.end(), "AERROR() should populate the work-area column");
+    expect(trigger_info != state.globals.end(), "AERROR() should expose an empty trigger-info column for normal runtime errors");
+    expect(reserved_one != state.globals.end(), "AERROR() should expose an empty reserved column");
+    expect(reserved_two != state.globals.end(), "AERROR() should expose a second empty reserved column");
+    expect(sys2018 != state.globals.end(), "SYS(2018) should expose the uppercase error parameter");
+    expect(line != state.globals.end(), "AERROR() should populate the failing line column");
+    expect(program != state.globals.end(), "AERROR() should populate the procedure column");
+    expect(handler != state.globals.end(), "AERROR() should populate the ON ERROR handler column");
+    expect(after_error != state.globals.end(), "ON ERROR script should continue after handler dispatch");
+
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "1", "AERROR() should return one first-pass error row");
+    }
+    if (cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cols->second) == "7", "AERROR() should expose the VFP seven-column shape");
+    }
+    if (code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(code->second) == "1001", "AERROR() should expose a distinct resolve-failure error code");
+    }
+    if (message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(message->second).find("Unable to resolve DO target") != std::string::npos,
+            "AERROR() message should describe the failing runtime command");
+    }
+    if (parameter != state.globals.end()) {
+        expect(copperfin::runtime::format_value(parameter->second) == "missing_target",
+            "AERROR() parameter column should preserve the mixed-case runtime error parameter");
+    }
+    if (work_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(work_area->second) == "1",
+            "AERROR() work-area column should capture the selected work area");
+    }
+    if (trigger_info != state.globals.end()) {
+        expect(copperfin::runtime::format_value(trigger_info->second) == "U",
+            "AERROR() trigger-info column should be empty for non-trigger runtime errors");
+    }
+    if (reserved_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(reserved_one->second) == "U",
+            "AERROR() first reserved column should be empty for normal runtime errors");
+    }
+    if (reserved_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(reserved_two->second) == "U",
+            "AERROR() second reserved column should be empty for normal runtime errors");
+    }
+    if (sys2018 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sys2018->second) == "MISSING_TARGET",
+            "SYS(2018) should expose the uppercase runtime error parameter");
+    }
+    if (line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line->second) == "2",
+            "AERROR() line column should report the failing source line");
+    }
+    if (program != state.globals.end()) {
+        expect(copperfin::runtime::format_value(program->second) == "main",
+            "AERROR() procedure column should report the failing routine");
+    }
+    if (handler != state.globals.end()) {
+        expect(copperfin::runtime::format_value(handler->second).find("DO handleerr") != std::string::npos,
+            "AERROR() handler column should preserve the active ON ERROR clause");
+    }
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_aerror_exposes_sql_and_ole_specific_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aerror_specific";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aerror_specific.prg";
+    write_text(
+        main_path,
+        "nSqlResult = SQLEXEC(999, 'select * from missing')\n"
+        "nSqlRows = AERROR(aSqlErr)\n"
+        "nSqlCode = aSqlErr[1,1]\n"
+        "cSqlMessage = aSqlErr[1,2]\n"
+        "cSqlDetail = aSqlErr[1,3]\n"
+        "cSqlState = aSqlErr[1,4]\n"
+        "nSqlNative = aSqlErr[1,5]\n"
+        "ON ERROR DO oleerr\n"
+        "missingOle.SomeProperty = 42\n"
+        "RETURN\n"
+        "PROCEDURE oleerr\n"
+        "nOleRows = AERROR(aOleErr)\n"
+        "nOleCode = aOleErr[1,1]\n"
+        "cOleMessage = aOleErr[1,2]\n"
+        "cOleDetail = aOleErr[1,3]\n"
+        "cOleApp = aOleErr[1,4]\n"
+        "nOleNative = aOleErr[1,7]\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL/OLE AERROR script should complete");
+
+    const auto sql_rows = state.globals.find("nsqlrows");
+    const auto sql_code = state.globals.find("nsqlcode");
+    const auto sql_message = state.globals.find("csqlmessage");
+    const auto sql_detail = state.globals.find("csqldetail");
+    const auto sql_state = state.globals.find("csqlstate");
+    const auto sql_native = state.globals.find("nsqlnative");
+    const auto ole_rows = state.globals.find("nolerows");
+    const auto ole_code = state.globals.find("nolecode");
+    const auto ole_message = state.globals.find("colemessage");
+    const auto ole_detail = state.globals.find("coledetail");
+    const auto ole_app = state.globals.find("coleapp");
+    const auto ole_native = state.globals.find("nolenative");
+
+    expect(sql_rows != state.globals.end(), "SQL AERROR should return a row count");
+    expect(sql_code != state.globals.end(), "SQL AERROR should populate code");
+    expect(sql_message != state.globals.end(), "SQL AERROR should populate message");
+    expect(sql_detail != state.globals.end(), "SQL AERROR should populate detail");
+    expect(sql_state != state.globals.end(), "SQL AERROR should populate SQL state");
+    expect(sql_native != state.globals.end(), "SQL AERROR should populate native code");
+    expect(ole_rows != state.globals.end(), "OLE AERROR should return a row count");
+    expect(ole_code != state.globals.end(), "OLE AERROR should populate code");
+    expect(ole_message != state.globals.end(), "OLE AERROR should populate message");
+    expect(ole_detail != state.globals.end(), "OLE AERROR should populate detail");
+    expect(ole_app != state.globals.end(), "OLE AERROR should populate app name");
+    expect(ole_native != state.globals.end(), "OLE AERROR should populate native code");
+
+    if (sql_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_rows->second) == "1", "SQL AERROR should expose one row");
+    }
+    if (sql_code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_code->second) == "1526", "SQL failures should use the VFP ODBC error code");
+    }
+    if (sql_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_message->second).find("SQL handle not found") != std::string::npos,
+            "SQL AERROR message should preserve SQL failure text");
+    }
+    if (sql_detail != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_detail->second) == "999",
+            "SQL AERROR detail should preserve the failing handle parameter");
+    }
+    if (sql_state != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_state->second) == "HY000", "SQL AERROR should expose a generic SQL state");
+    }
+    if (sql_native != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_native->second) == "-1", "SQL AERROR should expose a native failure code");
+    }
+    if (ole_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_rows->second) == "1", "OLE AERROR should expose one row");
+    }
+    if (ole_code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_code->second) == "1429", "OLE failures should use the VFP OLE error code");
+    }
+    if (ole_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_message->second).find("OLE object not found") != std::string::npos,
+            "OLE AERROR message should preserve automation failure text");
+    }
+    if (ole_detail != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_detail->second).find("missingOle.SomeProperty") != std::string::npos,
+            "OLE AERROR detail should preserve the failing member path");
+    }
+    if (ole_app != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_app->second) == "Copperfin OLE",
+            "OLE AERROR app column should identify the runtime automation bridge");
+    }
+    if (ole_native != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_native->second) == "1429",
+            "OLE AERROR native column should preserve the automation error code");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -8209,6 +8442,676 @@ void test_scatter_memvar_from_current_record() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_fields";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42", "true"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "scatter/gather typed DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_memvar_fields.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME, AGE MEMVAR\n"
+        "cName = m.NAME\n"
+        "nAgePlus = m.AGE + 1\n"
+        "cActiveType = VARTYPE(m.ACTIVE)\n"
+        "SCATTER FIELDS AGE, ACTIVE MEMVAR BLANK\n"
+        "nBlankAge = m.AGE\n"
+        "lBlankActive = m.ACTIVE\n"
+        "m.NAME = 'Skipped'\n"
+        "GATHER MEMVAR FIELDS NAME FOR .F.\n"
+        "m.NAME = 'Updated'\n"
+        "GATHER MEMVAR FIELDS NAME FOR .T.\n"
+        "cAfterGather = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER MEMVAR field-filter script should complete");
+
+    const auto name = state.globals.find("cname");
+    const auto age_plus = state.globals.find("nageplus");
+    const auto active_type = state.globals.find("cactivetype");
+    const auto blank_age = state.globals.find("nblankage");
+    const auto blank_active = state.globals.find("lblankactive");
+    const auto after_gather = state.globals.find("caftergather");
+    const bool has_skipped_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.gather" && ev.detail == "memvar skipped";
+        });
+
+    expect(name != state.globals.end(), "SCATTER FIELDS should populate selected NAME memvar");
+    expect(age_plus != state.globals.end(), "SCATTER should preserve numeric AGE as a numeric memvar");
+    expect(active_type != state.globals.end(), "SCATTER FIELDS should leave unselected ACTIVE undefined");
+    expect(blank_age != state.globals.end(), "SCATTER BLANK should create a numeric blank AGE value");
+    expect(blank_active != state.globals.end(), "SCATTER BLANK should create a logical blank ACTIVE value");
+    expect(has_skipped_event, "GATHER FOR .F. should skip field replacement");
+    expect(after_gather != state.globals.end(), "GATHER FOR .T. should update the selected field");
+
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "Alice",
+            "SCATTER FIELDS should copy NAME into m.NAME");
+    }
+    if (age_plus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age_plus->second) == "43",
+            "SCATTER should expose numeric AGE as arithmetic-capable");
+    }
+    if (active_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(active_type->second) == "U",
+            "SCATTER FIELDS should not populate omitted ACTIVE memvar");
+    }
+    if (blank_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_age->second) == "0",
+            "SCATTER BLANK should use numeric zero for numeric fields");
+    }
+    if (blank_active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_active->second) == "false",
+            "SCATTER BLANK should use false for logical fields");
+    }
+    if (after_gather != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_gather->second) == "Updated",
+            "GATHER FOR .T. should apply field replacement");
+    }
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok, "GATHER MEMVAR destination table should remain readable");
+    if (persisted.ok && !persisted.table.records.empty() && !persisted.table.records[0U].values.empty()) {
+        expect(persisted.table.records[0U].values[0U].display_value == "Updated",
+            "only the FOR .T. GATHER should persist the NAME update");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_to_array_and_gather_from_array_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "scatter/gather array DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_array.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME, AGE TO aRow\n"
+        "nArrayLen = ALEN(aRow)\n"
+        "nRows = ALEN(aRow, 1)\n"
+        "nCols = ALEN(aRow, 2)\n"
+        "cFirst = aRow[1]\n"
+        "nSecondPlus = aRow(2) + 1\n"
+        "REPLACE NAME WITH 'Changed', AGE WITH 7\n"
+        "GATHER FROM aRow FIELDS NAME, AGE\n"
+        "cAfterName = NAME\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER TO array / GATHER FROM array script should complete");
+
+    const auto array_len = state.globals.find("narraylen");
+    const auto rows = state.globals.find("nrows");
+    const auto cols = state.globals.find("ncols");
+    const auto first = state.globals.find("cfirst");
+    const auto second_plus = state.globals.find("nsecondplus");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+
+    expect(array_len != state.globals.end(), "ALEN(aRow) should expose array element count");
+    expect(rows != state.globals.end(), "ALEN(aRow, 1) should expose first dimension");
+    expect(cols != state.globals.end(), "ALEN(aRow, 2) should expose second dimension");
+    expect(first != state.globals.end(), "aRow[1] should read the first scattered value");
+    expect(second_plus != state.globals.end(), "aRow(2) should read the second scattered value");
+    expect(after_name != state.globals.end(), "GATHER FROM array should restore NAME");
+    expect(after_age != state.globals.end(), "GATHER FROM array should restore AGE");
+
+    if (array_len != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_len->second) == "2",
+            "SCATTER TO array should create two array elements");
+    }
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "2",
+            "SCATTER TO array should create a one-dimensional row count matching field count");
+    }
+    if (cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cols->second) == "1",
+            "SCATTER TO array should expose one column for first-pass one-dimensional arrays");
+    }
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "Alice",
+            "array bracket access should read the first scattered value");
+    }
+    if (second_plus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_plus->second) == "43",
+            "array paren access should preserve numeric scattered values");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "GATHER FROM array should write NAME from the array");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "42",
+            "GATHER FROM array should write AGE from the array");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_update_command_sets_scoped_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_update_command";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "40"},
+        {"Bob", "50"},
+        {"Alice", "60"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "UPDATE command DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "update_command.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People\n"
+        "UPDATE People SET AGE = AGE + 1 WHERE NAME = 'Alice'\n"
+        "UPDATE SET AGE = AGE + 10 WHERE NAME = 'Bob'\n"
+        "UPDATE IN People SET AGE = AGE + 1 WHERE NAME = 'Alice'\n"
+        "GO 1\n"
+        "nFirstAge = AGE\n"
+        "GO 2\n"
+        "nSecondAge = AGE\n"
+        "GO 3\n"
+        "nThirdAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UPDATE command script should complete");
+    expect(has_runtime_event(state.events, "runtime.update", "UPDATE People SET AGE = AGE + 1 WHERE NAME = 'Alice'"),
+        "UPDATE should emit a runtime.update event");
+
+    const auto first_age = state.globals.find("nfirstage");
+    const auto second_age = state.globals.find("nsecondage");
+    const auto third_age = state.globals.find("nthirdage");
+    expect(first_age != state.globals.end(), "UPDATE script should capture first AGE");
+    expect(second_age != state.globals.end(), "UPDATE script should capture second AGE");
+    expect(third_age != state.globals.end(), "UPDATE script should capture third AGE");
+    if (first_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_age->second) == "42",
+            "UPDATE alias and UPDATE IN should both update first matching record");
+    }
+    if (second_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_age->second) == "60",
+            "UPDATE SET without explicit alias should target the selected cursor");
+    }
+    if (third_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(third_age->second) == "62",
+            "UPDATE alias and UPDATE IN should both update later matching records");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_array_mutator_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_mutators";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "tools.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "FIRST", .type = 'C', .length = 10U},
+        {.name = "SECOND", .type = 'C', .length = 10U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Zulu", "Alpha"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "array mutator DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "array_mutators.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "SCATTER FIELDS FIRST, SECOND TO aTools\n"
+        "nScanAlpha = ASCAN(aTools, 'Alpha')\n"
+        "nSortOk = ASORT(aTools)\n"
+        "cSortedFirst = aTools[1]\n"
+        "cSortedSecond = aTools[2]\n"
+        "nDeleteOk = ADEL(aTools, 1)\n"
+        "cAfterDeleteFirst = aTools[1]\n"
+        "nInsertOk = AINS(aTools, 1)\n"
+        "cAfterInsertFirstType = VARTYPE(aTools[1])\n"
+        "cAfterInsertSecond = aTools[2]\n"
+        "nResize = ASIZE(aTools, 4)\n"
+        "nLenAfterResize = ALEN(aTools)\n"
+        "cPreservedAfterResize = aTools[2]\n"
+        "DIMENSION aSource[2,3], aTarget[2,3], aFlat[1]\n"
+        "aSource[1,1] = 'A'\n"
+        "aSource[1,2] = 'B'\n"
+        "aSource[1,3] = 'C'\n"
+        "aSource[2,1] = 'D'\n"
+        "aSource[2,2] = 'E'\n"
+        "aSource[2,3] = 'F'\n"
+        "nElement = AELEMENT(aSource, 2, 2)\n"
+        "nElementRow = ASUBSCRIPT(aSource, nElement, 1)\n"
+        "nElementColumn = ASUBSCRIPT(aSource, nElement, 2)\n"
+        "nCopyWindow = ACOPY(aSource, aTarget, 2, 3, 3)\n"
+        "cTargetOne = aTarget[1,3]\n"
+        "cTargetTwo = aTarget[2,1]\n"
+        "cTargetThree = aTarget[2,2]\n"
+        "nCopyAll = ACOPY(aSource, aFlat)\n"
+        "nFlatLen = ALEN(aFlat)\n"
+        "cFlatSix = aFlat[6]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "runtime array mutator script should complete");
+
+    const auto scan_alpha = state.globals.find("nscanalpha");
+    const auto sort_ok = state.globals.find("nsortok");
+    const auto sorted_first = state.globals.find("csortedfirst");
+    const auto sorted_second = state.globals.find("csortedsecond");
+    const auto delete_ok = state.globals.find("ndeleteok");
+    const auto after_delete_first = state.globals.find("cafterdeletefirst");
+    const auto insert_ok = state.globals.find("ninsertok");
+    const auto after_insert_first_type = state.globals.find("cafterinsertfirsttype");
+    const auto after_insert_second = state.globals.find("cafterinsertsecond");
+    const auto resize = state.globals.find("nresize");
+    const auto len_after_resize = state.globals.find("nlenafterresize");
+    const auto preserved_after_resize = state.globals.find("cpreservedafterresize");
+    const auto element = state.globals.find("nelement");
+    const auto element_row = state.globals.find("nelementrow");
+    const auto element_column = state.globals.find("nelementcolumn");
+    const auto copy_window = state.globals.find("ncopywindow");
+    const auto target_one = state.globals.find("ctargetone");
+    const auto target_two = state.globals.find("ctargettwo");
+    const auto target_three = state.globals.find("ctargetthree");
+    const auto copy_all = state.globals.find("ncopyall");
+    const auto flat_len = state.globals.find("nflatlen");
+    const auto flat_six = state.globals.find("cflatsix");
+
+    expect(scan_alpha != state.globals.end(), "ASCAN should return a captured position");
+    expect(sort_ok != state.globals.end(), "ASORT should return a status");
+    expect(sorted_first != state.globals.end(), "ASORT should leave a readable first element");
+    expect(sorted_second != state.globals.end(), "ASORT should leave a readable second element");
+    expect(delete_ok != state.globals.end(), "ADEL should return a status");
+    expect(after_delete_first != state.globals.end(), "ADEL should shift following elements left");
+    expect(insert_ok != state.globals.end(), "AINS should return a status");
+    expect(after_insert_first_type != state.globals.end(), "AINS should insert an empty slot");
+    expect(after_insert_second != state.globals.end(), "AINS should shift existing elements right");
+    expect(resize != state.globals.end(), "ASIZE should return the new element count");
+    expect(len_after_resize != state.globals.end(), "ALEN should reflect ASIZE result");
+    expect(preserved_after_resize != state.globals.end(), "ASIZE should preserve existing values");
+    expect(element != state.globals.end(), "AELEMENT should return a linear element number");
+    expect(element_row != state.globals.end(), "ASUBSCRIPT should resolve the element row");
+    expect(element_column != state.globals.end(), "ASUBSCRIPT should resolve the element column");
+    expect(copy_window != state.globals.end(), "ACOPY should return a copied window count");
+    expect(target_one != state.globals.end(), "ACOPY should copy into the requested target element");
+    expect(target_two != state.globals.end(), "ACOPY should continue across target rows");
+    expect(target_three != state.globals.end(), "ACOPY should copy the full requested window");
+    expect(copy_all != state.globals.end(), "ACOPY should copy all remaining source elements by default");
+    expect(flat_len != state.globals.end(), "ACOPY should grow a one-dimensional target when needed");
+    expect(flat_six != state.globals.end(), "ACOPY should preserve the final copied source element");
+
+    if (scan_alpha != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_alpha->second) == "2", "ASCAN should find Alpha in the original second slot");
+    }
+    if (sort_ok != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_ok->second) == "1", "ASORT should report success");
+    }
+    if (sorted_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sorted_first->second) == "Alpha", "ASORT should sort Alpha first");
+    }
+    if (sorted_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sorted_second->second) == "Zulu", "ASORT should sort Zulu second");
+    }
+    if (delete_ok != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_ok->second) == "1", "ADEL should report success");
+    }
+    if (after_delete_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_delete_first->second) == "Zulu", "ADEL should shift Zulu into the first slot");
+    }
+    if (insert_ok != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_ok->second) == "1", "AINS should report success");
+    }
+    if (after_insert_first_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_insert_first_type->second) == "U", "AINS should insert an empty slot");
+    }
+    if (after_insert_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_insert_second->second) == "Zulu", "AINS should shift Zulu into the second slot");
+    }
+    if (resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(resize->second) == "4", "ASIZE should report the new element count");
+    }
+    if (len_after_resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(len_after_resize->second) == "4", "ALEN should reflect ASIZE growth");
+    }
+    if (preserved_after_resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(preserved_after_resize->second) == "Zulu", "ASIZE should preserve shifted values");
+    }
+    if (element != state.globals.end()) {
+        expect(copperfin::runtime::format_value(element->second) == "5", "AELEMENT(aSource, 2, 2) should return row-major element 5");
+    }
+    if (element_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(element_row->second) == "2", "ASUBSCRIPT(..., 1) should return row 2");
+    }
+    if (element_column != state.globals.end()) {
+        expect(copperfin::runtime::format_value(element_column->second) == "2", "ASUBSCRIPT(..., 2) should return column 2");
+    }
+    if (copy_window != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_window->second) == "3", "ACOPY should report three copied elements");
+    }
+    if (target_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_one->second) == "B", "ACOPY should place source element 2 in target element 3");
+    }
+    if (target_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_two->second) == "C", "ACOPY should place source element 3 in target element 4");
+    }
+    if (target_three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_three->second) == "D", "ACOPY should place source element 4 in target element 5");
+    }
+    if (copy_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_all->second) == "6", "ACOPY without count should copy all source elements");
+    }
+    if (flat_len != state.globals.end()) {
+        expect(copperfin::runtime::format_value(flat_len->second) == "6", "ACOPY should grow a flat target to six elements");
+    }
+    if (flat_six != state.globals.end()) {
+        expect(copperfin::runtime::format_value(flat_six->second) == "F", "ACOPY should copy the final element into the grown flat target");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_array_dimension_and_element_assignment() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_assignment";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "array_assignment.prg";
+    write_text(
+        main_path,
+        "DIMENSION aGrid[2,3], aList(2)\n"
+        "DECLARE aDeclared[1,2]\n"
+        "aGrid[1,1] = 'A'\n"
+        "aGrid[1,2] = 'B'\n"
+        "aGrid(2,3) = 'F'\n"
+        "aDeclared[1,2] = 'D'\n"
+        "aList[1] = 10\n"
+        "aList(2) = 15\n"
+        "nGridRows = ALEN(aGrid, 1)\n"
+        "nGridCols = ALEN(aGrid, 2)\n"
+        "nDeclaredCols = ALEN(aDeclared, 2)\n"
+        "cGridA = aGrid[1,1]\n"
+        "cGridB = aGrid(1,2)\n"
+        "cGridF = aGrid[2,3]\n"
+        "cDeclared = aDeclared[1,2]\n"
+        "nListSum = aList[1] + aList(2)\n"
+        "nResize = ASIZE(aGrid, 3, 4)\n"
+        "cGridFAfterResize = aGrid[2,3]\n"
+        "aGrid[3,4] = 'L'\n"
+        "cGridL = aGrid(3,4)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "array declaration and element assignment script should complete");
+
+    const auto rows = state.globals.find("ngridrows");
+    const auto cols = state.globals.find("ngridcols");
+    const auto declared_cols = state.globals.find("ndeclaredcols");
+    const auto grid_a = state.globals.find("cgrida");
+    const auto grid_b = state.globals.find("cgridb");
+    const auto grid_f = state.globals.find("cgridf");
+    const auto declared = state.globals.find("cdeclared");
+    const auto list_sum = state.globals.find("nlistsum");
+    const auto resize = state.globals.find("nresize");
+    const auto grid_f_after_resize = state.globals.find("cgridfafterresize");
+    const auto grid_l = state.globals.find("cgridl");
+
+    expect(rows != state.globals.end(), "DIMENSION should expose row count through ALEN");
+    expect(cols != state.globals.end(), "DIMENSION should expose column count through ALEN");
+    expect(declared_cols != state.globals.end(), "DECLARE should expose column count through ALEN");
+    expect(grid_a != state.globals.end(), "bracket array assignment should be readable");
+    expect(grid_b != state.globals.end(), "paren array read should be readable");
+    expect(grid_f != state.globals.end(), "paren array assignment should be readable through bracket syntax");
+    expect(declared != state.globals.end(), "DECLARE array assignment should be readable");
+    expect(list_sum != state.globals.end(), "one-dimensional array assignment should support arithmetic reads");
+    expect(resize != state.globals.end(), "ASIZE should resize declared 2D arrays");
+    expect(grid_f_after_resize != state.globals.end(), "ASIZE should preserve existing 2D values");
+    expect(grid_l != state.globals.end(), "array assignment should write newly grown 2D cells");
+
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "2", "DIMENSION aGrid[2,3] should create two rows");
+    }
+    if (cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cols->second) == "3", "DIMENSION aGrid[2,3] should create three columns");
+    }
+    if (declared_cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(declared_cols->second) == "2", "DECLARE aDeclared[1,2] should create two columns");
+    }
+    if (grid_a != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_a->second) == "A", "aGrid[1,1] should contain A");
+    }
+    if (grid_b != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_b->second) == "B", "aGrid(1,2) should contain B");
+    }
+    if (grid_f != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_f->second) == "F", "aGrid[2,3] should contain F");
+    }
+    if (declared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(declared->second) == "D", "aDeclared[1,2] should contain D");
+    }
+    if (list_sum != state.globals.end()) {
+        expect(copperfin::runtime::format_value(list_sum->second) == "25", "array element reads should participate in arithmetic");
+    }
+    if (resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(resize->second) == "12", "ASIZE(aGrid, 3, 4) should report twelve elements");
+    }
+    if (grid_f_after_resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_f_after_resize->second) == "F", "ASIZE should preserve existing 2D cells");
+    }
+    if (grid_l != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_l->second) == "L", "aGrid[3,4] should contain L after growth");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_array_metadata_and_text_functions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_metadata";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 41}});
+    write_text(temp_root / "alpha.txt", "abc");
+    write_text(temp_root / "beta.bin", "not matched");
+
+    const fs::path main_path = temp_root / "array_metadata.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS People\n"
+        "nLineCount = ALINES(aLines, ' red ' + CHR(13) + CHR(10) + 'blue', 1)\n"
+        "cLineOne = aLines[1]\n"
+        "cLineTwo = aLines[2]\n"
+        "nFileCount = ADIR(aFiles, '" + (temp_root / "*.txt").string() + "')\n"
+        "cFileName = aFiles[1,1]\n"
+        "nFileSize = aFiles[1,2]\n"
+        "cFileAttr = aFiles[1,5]\n"
+        "nFieldCount = AFIELDS(aFields)\n"
+        "nFieldCols = ALEN(aFields, 2)\n"
+        "cFieldOneName = aFields[1,1]\n"
+        "cFieldOneType = aFields[1,2]\n"
+        "nFieldOneWidth = aFields[1,3]\n"
+        "cFieldTwoName = aFields[2,1]\n"
+        "cFieldTwoType = aFields[2,2]\n"
+        "nFieldTwoWidth = aFields[2,3]\n"
+        "nFieldTwoDecimals = aFields[2,4]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "array metadata and text function script should complete");
+
+    const auto line_count = state.globals.find("nlinecount");
+    const auto line_one = state.globals.find("clineone");
+    const auto line_two = state.globals.find("clinetwo");
+    const auto file_count = state.globals.find("nfilecount");
+    const auto file_name = state.globals.find("cfilename");
+    const auto file_size = state.globals.find("nfilesize");
+    const auto file_attr = state.globals.find("cfileattr");
+    const auto field_count = state.globals.find("nfieldcount");
+    const auto field_cols = state.globals.find("nfieldcols");
+    const auto field_one_name = state.globals.find("cfieldonename");
+    const auto field_one_type = state.globals.find("cfieldonetype");
+    const auto field_one_width = state.globals.find("nfieldonewidth");
+    const auto field_two_name = state.globals.find("cfieldtwoname");
+    const auto field_two_type = state.globals.find("cfieldtwotype");
+    const auto field_two_width = state.globals.find("nfieldtwowidth");
+    const auto field_two_decimals = state.globals.find("nfieldtwodecimals");
+
+    expect(line_count != state.globals.end(), "ALINES should return a count");
+    expect(line_one != state.globals.end(), "ALINES should populate first line");
+    expect(line_two != state.globals.end(), "ALINES should populate second line");
+    expect(file_count != state.globals.end(), "ADIR should return a count");
+    expect(file_name != state.globals.end(), "ADIR should populate file name");
+    expect(file_size != state.globals.end(), "ADIR should populate file size");
+    expect(file_attr != state.globals.end(), "ADIR should populate attribute column");
+    expect(field_count != state.globals.end(), "AFIELDS should return a field count");
+    expect(field_cols != state.globals.end(), "AFIELDS should expose its metadata column count");
+    expect(field_one_name != state.globals.end(), "AFIELDS should populate first field name");
+    expect(field_one_type != state.globals.end(), "AFIELDS should populate first field type");
+    expect(field_one_width != state.globals.end(), "AFIELDS should populate first field width");
+    expect(field_two_name != state.globals.end(), "AFIELDS should populate second field name");
+    expect(field_two_type != state.globals.end(), "AFIELDS should populate second field type");
+    expect(field_two_width != state.globals.end(), "AFIELDS should populate second field width");
+    expect(field_two_decimals != state.globals.end(), "AFIELDS should populate second field decimals");
+
+    if (line_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_count->second) == "2", "ALINES should split two lines");
+    }
+    if (line_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_one->second) == "red", "ALINES flag 1 should trim the first line");
+    }
+    if (line_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_two->second) == "blue", "ALINES should preserve second line text");
+    }
+    if (file_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(file_count->second) == "1", "ADIR should match only the txt file");
+    }
+    if (file_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(file_name->second) == "alpha.txt", "ADIR should return the matched file name");
+    }
+    if (file_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(file_size->second) == "3", "ADIR should return the file size");
+    }
+    if (file_attr != state.globals.end()) {
+        expect(copperfin::runtime::format_value(file_attr->second).find("D") == std::string::npos,
+            "ADIR should not mark normal files as directories");
+    }
+    if (field_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_count->second) == "2", "AFIELDS should report two fields");
+    }
+    if (field_cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_cols->second) == "16", "AFIELDS should expose sixteen metadata columns");
+    }
+    if (field_one_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_one_name->second) == "NAME", "AFIELDS first field name should be NAME");
+    }
+    if (field_one_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_one_type->second) == "C", "AFIELDS first field type should be C");
+    }
+    if (field_one_width != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_one_width->second) == "10", "AFIELDS first field width should be 10");
+    }
+    if (field_two_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_two_name->second) == "AGE", "AFIELDS second field name should be AGE");
+    }
+    if (field_two_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_two_type->second) == "N", "AFIELDS second field type should be N");
+    }
+    if (field_two_width != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_two_width->second) == "3", "AFIELDS second field width should be 3");
+    }
+    if (field_two_decimals != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_two_decimals->second) == "0", "AFIELDS second field decimals should be 0");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_emits_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to";
@@ -8239,6 +9142,427 @@ void test_copy_to_emits_event() {
             return ev.category == "runtime.copy_to";
         });
     expect(has_event, "COPY TO should emit a runtime.copy_to event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_creates_destination_dbf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_full";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob", "Carol"});
+
+    const fs::path main_path = temp_root / "copy_to_full.prg";
+    const std::string dest_path = (temp_root / "dest.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + dest_path + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO full script should complete");
+    expect(fs::exists(dest_path), "COPY TO should create destination DBF file");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY TO destination DBF should be readable");
+        expect(result.table.records.size() == 3U,
+            "COPY TO should copy all 3 records (got " + std::to_string(result.table.records.size()) + ")");
+        if (result.table.records.size() >= 1U) {
+            const auto& first = result.table.records[0U].values;
+            const bool has_alice = !first.empty() && first[0U].display_value.find("Alice") != std::string::npos;
+            expect(has_alice, "COPY TO first record should contain Alice");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_structure_to_creates_empty_schema() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_struct";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "copy_struct.prg";
+    const std::string dest_path = (temp_root / "schema.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY STRUCTURE TO '" + dest_path + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY STRUCTURE TO script should complete");
+    expect(fs::exists(dest_path), "COPY STRUCTURE TO should create destination DBF");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY STRUCTURE TO destination DBF should be readable");
+        expect(result.table.records.empty(), "COPY STRUCTURE TO should produce zero rows");
+        expect(!result.table.fields.empty(), "COPY STRUCTURE TO should preserve field descriptors");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_copies_records_into_current_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Create destination with one row; source with two rows
+    write_simple_dbf(temp_root / "dest.dbf", {"Alice"});
+    write_simple_dbf(temp_root / "source.dbf", {"Bob", "Carol"});
+
+    const fs::path main_path = temp_root / "append_from.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "source.dbf").string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM script should complete");
+
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.append_from";
+        });
+    expect(has_event, "APPEND FROM should emit a runtime.append_from event");
+
+    // Verify destination now has 3 records (1 original + 2 from source)
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM destination DBF should be readable after append");
+    expect(result.table.records.size() == 3U,
+        "APPEND FROM should produce 3 records total (got " + std::to_string(result.table.records.size()) + ")");
+    if (result.table.records.size() >= 3U) {
+        const bool has_bob = result.table.records[1U].values[0U].display_value.find("Bob") != std::string::npos;
+        expect(has_bob, "APPEND FROM second record should be Bob");
+        const bool has_carol = result.table.records[2U].values[0U].display_value.find("Carol") != std::string::npos;
+        expect(has_carol, "APPEND FROM third record should be Carol");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "copy_to_sdf.prg";
+    const std::string dest_path = (temp_root / "people.sdf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + dest_path + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO TYPE SDF script should complete");
+    expect(fs::exists(dest_path), "COPY TO TYPE SDF should create the destination text file");
+    if (fs::exists(dest_path)) {
+        const std::string contents = read_text(dest_path);
+        expect(contents == "Alice     \r\nBob       \r\n",
+            "COPY TO TYPE SDF should write fixed-width rows using DBF field lengths");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_type_sdf_imports_fixed_width_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "dest.dbf", {});
+    write_text(temp_root / "people.sdf", "Dora      \r\nEvan      \r\n");
+
+    const fs::path main_path = temp_root / "append_from_sdf.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.sdf").string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM TYPE SDF script should complete");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM TYPE SDF destination DBF should be readable");
+    expect(result.table.records.size() == 2U,
+        "APPEND FROM TYPE SDF should append two rows");
+    if (result.table.records.size() >= 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Dora",
+            "first SDF row should import into the first DBF record");
+        expect(result.table.records[1U].values[0U].display_value == "Evan",
+            "second SDF row should import into the second DBF record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_csv_and_delimited_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Ann,Lee", 7}, {"Bob", 42}});
+
+    const fs::path main_path = temp_root / "copy_to_csv.prg";
+    const std::string csv_path = (temp_root / "people.csv").string();
+    const std::string pipe_path = (temp_root / "people_pipe.txt").string();
+    const std::string custom_path = (temp_root / "people_custom.txt").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "'\n"
+        "COPY TO '" + csv_path + "' TYPE CSV FIELDS NAME, AGE\n"
+        "COPY TO '" + pipe_path + "' DELIMITED WITH CHARACTER '|' FIELDS NAME, AGE FOR AGE > 10\n"
+        "COPY TO '" + custom_path + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE FOR AGE > 10\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO TYPE CSV/DELIMITED script should complete");
+    expect(fs::exists(csv_path), "COPY TO TYPE CSV should create destination text file");
+    expect(fs::exists(pipe_path), "COPY TO DELIMITED should create destination text file");
+    expect(fs::exists(custom_path), "COPY TO DELIMITED custom enclosure should create destination text file");
+
+    if (fs::exists(csv_path)) {
+        const std::string contents = read_text(csv_path);
+        expect(contents == "NAME,AGE\r\n\"Ann,Lee\",7\r\n\"Bob\",42\r\n",
+            "COPY TO TYPE CSV should write a field-name header and quote character fields");
+    }
+    if (fs::exists(pipe_path)) {
+        const std::string contents = read_text(pipe_path);
+        expect(contents == "\"Bob\"|42\r\n",
+            "COPY TO DELIMITED WITH CHARACTER should honor the delimiter and FOR clause");
+    }
+    if (fs::exists(custom_path)) {
+        const std::string contents = read_text(custom_path);
+        expect(contents == "_Bob_;42\r\n",
+            "COPY TO DELIMITED WITH enclosure plus WITH CHARACTER should honor both VFP options");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_type_csv_imports_delimited_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_csv";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "dest.dbf", {});
+    write_text(temp_root / "people.csv", "NAME,AGE\r\n\"Ivy, Jr\",9\r\n\"Max\",44\r\n");
+    write_text(temp_root / "people_pipe.txt", "\"Nia\"|12\r\n");
+    write_text(temp_root / "people_custom.txt", "_Ora_;15\r\n");
+
+    const fs::path main_path = temp_root / "append_from_csv.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.csv").string() + "' TYPE CSV FIELDS NAME, AGE\n"
+        "APPEND FROM '" + (temp_root / "people_pipe.txt").string() + "' DELIMITED WITH CHARACTER '|' FIELDS NAME, AGE\n"
+        "APPEND FROM '" + (temp_root / "people_custom.txt").string() + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM TYPE CSV/DELIMITED script should complete");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM TYPE CSV destination DBF should be readable");
+    expect(result.table.records.size() == 4U,
+        "APPEND FROM TYPE CSV/DELIMITED should append four rows");
+    if (result.table.records.size() >= 4U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ivy, Jr",
+            "first CSV row should preserve comma inside quoted character field");
+        expect(result.table.records[0U].values[1U].display_value == "9",
+            "first CSV numeric field should import into AGE");
+        expect(result.table.records[1U].values[0U].display_value == "Max",
+            "second CSV row should import NAME");
+        expect(result.table.records[1U].values[1U].display_value == "44",
+            "second CSV row should import AGE");
+        expect(result.table.records[2U].values[0U].display_value == "Nia",
+            "DELIMITED WITH CHARACTER row should import NAME");
+        expect(result.table.records[2U].values[1U].display_value == "12",
+            "DELIMITED WITH CHARACTER row should import AGE");
+        expect(result.table.records[3U].values[0U].display_value == "Ora",
+            "DELIMITED custom enclosure row should import NAME");
+        expect(result.table.records[3U].values[1U].display_value == "15",
+            "DELIMITED custom enclosure row should import AGE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_gather_memvar_round_trips_field_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_rt";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "table.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "gather_rt.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "table.dbf").string() + "'\n"
+        "GO 1\n"
+        "SCATTER MEMVAR\n"
+        "m.NAME = 'Updated'\n"
+        "GATHER MEMVAR\n"
+        "updated_name = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GATHER MEMVAR round-trip script should complete");
+
+    const auto it = state.globals.find("updated_name");
+    expect(it != state.globals.end(), "updated_name variable should exist after GATHER MEMVAR");
+    if (it != state.globals.end()) {
+        const std::string val = copperfin::runtime::format_value(it->second);
+        expect(val.find("Updated") != std::string::npos,
+            "GATHER MEMVAR should write m.NAME back to record (got '" + val + "')");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_m_dot_namespace_shares_bare_memory_variable_binding() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_m_dot_namespace";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "m_dot.prg";
+    write_text(
+        main_path,
+        "m.customer = 'Alice'\n"
+        "from_bare = customer\n"
+        "M.customer = 'Bob'\n"
+        "from_prefixed = m.customer\n"
+        "customer = 'Carol'\n"
+        "from_m_after_bare = m.customer\n"
+        "PUBLIC m.public_name\n"
+        "m.public_name = 'Public'\n"
+        "from_public_bare = public_name\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "m. namespace script should complete");
+
+    const auto customer = state.globals.find("customer");
+    const auto prefixed_customer = state.globals.find("m.customer");
+    const auto from_bare = state.globals.find("from_bare");
+    const auto from_prefixed = state.globals.find("from_prefixed");
+    const auto from_m_after_bare = state.globals.find("from_m_after_bare");
+    const auto from_public_bare = state.globals.find("from_public_bare");
+
+    expect(customer != state.globals.end(), "m.customer should be stored under the bare customer binding");
+    expect(prefixed_customer == state.globals.end(), "m.customer should not create a separate prefixed global binding");
+    expect(from_bare != state.globals.end(), "bare reads should see m.customer assignments");
+    expect(from_prefixed != state.globals.end(), "m. reads should see bare memory-variable storage");
+    expect(from_m_after_bare != state.globals.end(), "m. reads should see later bare assignments");
+    expect(from_public_bare != state.globals.end(), "PUBLIC m.name should declare the bare memory-variable binding");
+
+    if (customer != state.globals.end()) {
+        expect(copperfin::runtime::format_value(customer->second) == "Carol",
+            "bare assignment should update the shared m.customer binding");
+    }
+    if (from_bare != state.globals.end()) {
+        expect(copperfin::runtime::format_value(from_bare->second) == "Alice",
+            "bare reads should resolve the initial m.customer value");
+    }
+    if (from_prefixed != state.globals.end()) {
+        expect(copperfin::runtime::format_value(from_prefixed->second) == "Bob",
+            "m.customer reads should resolve the updated shared value");
+    }
+    if (from_m_after_bare != state.globals.end()) {
+        expect(copperfin::runtime::format_value(from_m_after_bare->second) == "Carol",
+            "m.customer should resolve a value assigned through the bare name");
+    }
+    if (from_public_bare != state.globals.end()) {
+        expect(copperfin::runtime::format_value(from_public_bare->second) == "Public",
+            "PUBLIC m.public_name should be readable through public_name");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -8351,6 +9675,8 @@ int main() {
     test_do_with_by_reference_updates_caller_variable();
     test_on_error_do_handler_dispatches_routine();
     test_on_error_do_with_handler_receives_error_metadata();
+    test_aerror_populates_structured_runtime_error_array();
+    test_aerror_exposes_sql_and_ole_specific_rows();
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_try_finally_runs_without_catch_on_success();
@@ -8360,7 +9686,22 @@ int main() {
     test_close_command_closes_all_work_areas();
     test_erase_copy_rename_file_commands();
     test_scatter_memvar_from_current_record();
+    test_scatter_gather_memvar_fields_blank_and_for_semantics();
+    test_scatter_to_array_and_gather_from_array_round_trip();
+    test_update_command_sets_scoped_records();
+    test_runtime_array_mutator_functions();
+    test_array_dimension_and_element_assignment();
+    test_array_metadata_and_text_functions();
     test_copy_to_emits_event();
+    test_copy_to_creates_destination_dbf();
+    test_copy_structure_to_creates_empty_schema();
+    test_append_from_copies_records_into_current_table();
+    test_copy_to_type_sdf_writes_fixed_width_text_rows();
+    test_append_from_type_sdf_imports_fixed_width_text_rows();
+    test_copy_to_type_csv_and_delimited_text_rows();
+    test_append_from_type_csv_imports_delimited_rows();
+    test_gather_memvar_round_trips_field_values();
+    test_m_dot_namespace_shares_bare_memory_variable_binding();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

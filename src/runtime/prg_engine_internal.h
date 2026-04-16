@@ -68,6 +68,7 @@ enum class StatementKind {
     private_declaration,
     parameters_declaration,
     lparameters_declaration,
+    dimension_command,
     store_command,
     close_command,
     erase_command,
@@ -79,6 +80,7 @@ enum class StatementKind {
     append_from_command,
     scatter_command,
     gather_command,
+    update_command,
     no_op
 };
 

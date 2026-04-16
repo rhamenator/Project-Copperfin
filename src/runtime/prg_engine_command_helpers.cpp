@@ -24,9 +24,9 @@ std::vector<std::string> split_csv_like(const std::string& text) {
             continue;
         }
         if (!in_string) {
-            if (ch == '(') {
+            if (ch == '(' || ch == '[') {
                 ++nesting;
-            } else if (ch == ')' && nesting > 0) {
+            } else if ((ch == ')' || ch == ']') && nesting > 0) {
                 --nesting;
             } else if (ch == ',' && nesting == 0) {
                 parts.push_back(trim_copy(current));

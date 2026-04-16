@@ -3,6 +3,7 @@
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 
+#include <cctype>
 #include <fstream>
 
 namespace copperfin::runtime {
@@ -29,6 +30,19 @@ std::string strip_inline_comment(const std::string& line) {
         }
     }
     return line;
+}
+
+bool looks_like_array_declaration_body(const std::string& body) {
+    const std::string trimmed = trim_copy(body);
+    for (const char ch : trimmed) {
+        if (ch == '(' || ch == '[') {
+            return true;
+        }
+        if (std::isspace(static_cast<unsigned char>(ch)) != 0 || ch == ',') {
+            return false;
+        }
+    }
+    return false;
 }
 
 std::vector<LogicalLine> load_logical_lines(const std::string& path) {
@@ -376,6 +390,32 @@ Program parse_program(const std::string& path) {
             statement.tertiary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.quaternary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
+        } else if (starts_with_insensitive(line, "UPDATE ")) {
+            statement.kind = StatementKind::update_command;
+            const std::string body = trim_copy(line.substr(7U));
+            const std::size_t set_position = find_keyword_top_level(body, "SET");
+            if (set_position == std::string::npos) {
+                statement.identifier = body;
+            } else {
+                std::string target = trim_copy(body.substr(0U, set_position));
+                if (starts_with_insensitive(target, "IN ")) {
+                    statement.secondary_expression = trim_copy(target.substr(3U));
+                    target.clear();
+                }
+                statement.identifier = target;
+                const std::string update_tail = trim_copy(body.substr(set_position + 3U));
+                const std::size_t tail_start = find_first_keyword_top_level(update_tail, {"WHERE", "FOR", "WHILE", "IN"});
+                statement.expression = tail_start == std::string::npos ? update_tail : trim_copy(update_tail.substr(0U, tail_start));
+                statement.tertiary_expression = extract_command_clause(update_tail, "WHERE", {"FOR", "WHILE", "IN"});
+                if (statement.tertiary_expression.empty()) {
+                    statement.tertiary_expression = extract_command_clause(update_tail, "FOR", {"WHERE", "WHILE", "IN"});
+                }
+                statement.quaternary_expression = extract_command_clause(update_tail, "WHILE", {"WHERE", "FOR", "IN"});
+                const std::string in_clause = extract_command_clause(update_tail, "IN", {"WHERE", "FOR", "WHILE"});
+                if (!in_clause.empty()) {
+                    statement.secondary_expression = in_clause;
+                }
+            }
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
@@ -454,6 +494,13 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "PRIVATE ")) {
             statement.kind = StatementKind::private_declaration;
             statement.names = split_csv_like(line.substr(8U));
+        } else if (starts_with_insensitive(line, "DIMENSION ")) {
+            statement.kind = StatementKind::dimension_command;
+            statement.names = split_csv_like(line.substr(10U));
+        } else if (starts_with_insensitive(line, "DECLARE ") &&
+                   looks_like_array_declaration_body(line.substr(8U))) {
+            statement.kind = StatementKind::dimension_command;
+            statement.names = split_csv_like(line.substr(8U));
         } else if (starts_with_insensitive(line, "STORE ")) {
             statement.kind = StatementKind::store_command;
             const std::string body = trim_copy(line.substr(6U));
@@ -521,19 +568,33 @@ Program parse_program(const std::string& path) {
             const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
             const std::string body = trim_copy(line.substr(is_structure ? 18U : 8U));
             statement.identifier = is_structure ? "structure" : std::string{};
-            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "FIELDS", "FOR", "WHILE", "IN"});
+            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE", "IN"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "TYPE", {"FIELDS", "FOR", "WHILE", "IN"});
+            statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE", "IN"});
+            if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
+                statement.secondary_expression = "DELIMITED";
+            }
             statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE", "IN"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+            const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE", "IN"});
+            if (!with_clause.empty()) {
+                statement.names.push_back(with_clause);
+            }
         } else if (starts_with_insensitive(line, "APPEND FROM ")) {
             statement.kind = StatementKind::append_from_command;
             const std::string body = trim_copy(line.substr(12U));
-            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "FIELDS", "FOR", "WHILE"});
+            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "TYPE", {"FIELDS", "FOR", "WHILE"});
+            statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE"});
+            if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
+                statement.secondary_expression = "DELIMITED";
+            }
             statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
+            const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE"});
+            if (!with_clause.empty()) {
+                statement.names.push_back(with_clause);
+            }
         } else if (starts_with_insensitive(line, "SCATTER ")) {
             statement.kind = StatementKind::scatter_command;
             const std::string body = trim_copy(line.substr(8U));

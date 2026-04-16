@@ -13,6 +13,7 @@ std::string trim_copy(std::string value);
 std::string lowercase_copy(std::string value);
 bool starts_with_insensitive(const std::string& value, const std::string& prefix);
 std::string normalize_identifier(std::string value);
+std::string normalize_memory_variable_identifier(std::string value);
 std::string normalize_path(const std::string& value);
 bool is_index_file_path(const std::string& value);
 std::string unquote_string(std::string value);

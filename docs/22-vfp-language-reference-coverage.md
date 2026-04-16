@@ -92,7 +92,18 @@ The native runtime/parser currently has first-pass support for these command fam
 - `PUBLIC`
 - `LOCAL`
 - `PRIVATE`
+- `DIMENSION` / array-form `DECLARE` — first-pass runtime arrays with one- and two-dimensional sizing
 - `STORE`
+- `COPY TO` — full local DBF export via `create_dbf_table_file`; optional `FIELDS` clause filters columns; optional `FOR` clause filters rows by visibility; first-pass `TYPE SDF` fixed-width text export plus VFP-style `TYPE CSV` and `DELIMITED` text export, including CSV field-name headers, quoted character fields, `WITH <enclosure>`, and `WITH CHARACTER <separator>` handling
+- `COPY STRUCTURE TO` — schema-only export (zero records); first-pass
+- `APPEND FROM` — full local DBF import via `parse_dbf_table_from_file`; inserts each non-deleted source record using `append_blank_record_to_file` + `replace_record_field_value`; optional `FIELDS` clause; first-pass `TYPE SDF` fixed-width text import plus first-pass `TYPE CSV` / `DELIMITED` import with quoted-field parsing and matching CSV header skipping
+- `SCATTER MEMVAR` / `SCATTER TO <array>` — snapshot current record fields to `m.<fieldname>` variables or a first-pass one-dimensional array; `FIELDS` and `BLANK` are honored with typed values; first-pass
+- `GATHER MEMVAR` / `GATHER FROM <array>` — write `m.<fieldname>` variables or array elements back to current record via direct `replace_record_field_value` calls (type-faithful, no string-quote round-trip); `FIELDS` and `FOR` are honored; first-pass
+- `UPDATE` — first-pass local/remote cursor command forms, including `UPDATE <alias> SET ...`, `UPDATE SET ...` against the selected cursor, and `UPDATE IN <alias> SET ...`; `WHERE`/`FOR` scope clauses reuse scoped record replacement semantics
+
+The `m.` variable namespace prefix is also now correctly handled as a memory-variable alias across assignment, lookup, expression evaluation, and declarations: `m.<name>`, `M.<name>`, and bare `<name>` share the same local/global runtime binding, and `m.<name>` no longer falls through to OLE property resolution.
+
+Runtime arrays now have first-pass direct element reads and writes through both bracket and parenthesis syntax (`array[1]`, `array[1,2]`, `array(1)`, `array(1,2)`), including declared arrays and arrays resized through `ASIZE()`.
 
 The current xAsset runtime surface behind those commands is now green at the first-pass runtime level: `DO FORM` is backed by generated `SCX/VCX` bootstrap sources that sequence `DataEnvironment` open/close hooks plus root-object lifecycle methods where present, `REPORT FORM` and `LABEL FORM` now both support preview/event-loop and `TO FILE` execution lanes, and menu assets now have executable startup/action/cleanup bootstrap modeling through the shared `MNX` xAsset path.
 
@@ -103,6 +114,9 @@ That local indexed-search slice now also evaluates a broader grounded tag-expres
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
+- first-pass `ALEN()` for runtime arrays created by `SCATTER TO <array>`, `AERROR(<array>)`, `DIMENSION` / array-form `DECLARE`, and `ASIZE()`, including total element count and dimension queries
+- first-pass `AERROR(<array>)` with VFP-aligned seven-column rows for normal runtime errors, plus SQL/ODBC-like `1526` and OLE/automation-like `1429` row shapes carrying provider-specific detail placeholders where Copperfin does not yet have live provider payloads
+- first-pass runtime array helpers over Copperfin runtime arrays: `ACOPY()`, `ADIR()`, `AELEMENT()`, `AFIELDS()`, `ALINES()`, `ASIZE()`, `ASCAN()`, `ADEL()`, `AINS()`, `ASORT()`, and `ASUBSCRIPT()`
 - `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
 - `CREATEOBJECT()`, `GETOBJECT()`
@@ -112,7 +126,7 @@ That SQL slice now includes session-scoped synthetic cursor materialization that
 
 The current session/runtime-state slice also now keeps `SET DEFAULT TO` data-session-local, so `SET('DEFAULT')` and relative path resolution restore correctly after `SET DATASESSION` switches instead of leaking one session's default directory into another, and focused regression coverage now locks down the local-table counterpart to the shipped SQL selection-flow behavior so `SELECT 0`, `USE IN <selected-alias>`, and plain `USE` keep reusing each session's selected empty work area after session switches.
 
-`ON ERROR` now also has a richer first-pass compatibility lane: `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handlers can inspect first-pass runtime fault metadata through `MESSAGE()`, `PROGRAM()`, `LINENO()`, and `ERROR()` while execution resumes after the handler returns. Static PRG diagnostics are also now wired through the Studio document-open path so analyzer findings surface to editor-facing consumers instead of staying runtime-only.
+`ON ERROR` now also has a richer first-pass compatibility lane: `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handlers can inspect first-pass runtime fault metadata through `MESSAGE()`, `PROGRAM()`, `LINENO()`, `ERROR()`, `AERROR()`, `SYS(2018)`, and `ON('ERROR')` while execution resumes after the handler returns. Static PRG diagnostics are also now wired through the Studio document-open path so analyzer findings surface to editor-facing consumers instead of staying runtime-only.
 
 The current PRG-engine slice now also supports first-pass `WITH/ENDWITH` member binding for leading-dot object access and first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow, plus first-pass `DO ... WITH @var` reference semantics so `LPARAMETERS` assignments can write back into caller variables where needed for FoxPro-style procedure behavior.
 
