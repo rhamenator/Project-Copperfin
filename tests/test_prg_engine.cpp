@@ -9,7 +9,13 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#if defined(_WIN32)
 #include <process.h>
+#else
+#include <sys/wait.h>
+#include <unistd.h>
+#define _getpid getpid
+#endif
 #include <sstream>
 #include <system_error>
 #include <vector>
@@ -289,9 +295,16 @@ void test_do_form_pause() {
 
 void test_export_vfp_compatibility_corpus_script() {
     namespace fs = std::filesystem;
+#if defined(_WIN32)
     const fs::path script_path = R"(E:\Project-Copperfin\scripts\export-vfp-compatibility-corpus.ps1)";
     const fs::path fixture_root = R"(E:\Project-Copperfin\build\compatibility_corpus_fixture)";
     const fs::path output_root = R"(E:\Project-Copperfin\build\compatibility_corpus_output)";
+#else
+    const fs::path repo_root = fs::current_path();
+    const fs::path script_path = repo_root / "scripts" / "export-vfp-compatibility-corpus.ps1";
+    const fs::path fixture_root = repo_root / "build" / "compatibility_corpus_fixture";
+    const fs::path output_root = repo_root / "build" / "compatibility_corpus_output";
+#endif
     const fs::path installed_root = fixture_root / "installed";
     const fs::path vfp_source_root = fixture_root / "vfpsource";
     const fs::path legacy_root = fixture_root / "legacy";
@@ -340,7 +353,35 @@ void test_export_vfp_compatibility_corpus_script() {
     }
     argv.push_back(nullptr);
 
-    const intptr_t exit_code = _spawnvp(_P_WAIT, "powershell", const_cast<char* const*>(argv.data()));
+    intptr_t exit_code = -1;
+#if defined(_WIN32)
+    exit_code = _spawnvp(_P_WAIT, "powershell", const_cast<char* const*>(argv.data()));
+#else
+    const int has_pwsh = std::system("command -v pwsh >/dev/null 2>&1");
+    const int has_powershell = has_pwsh == 0 ? 0 : std::system("command -v powershell >/dev/null 2>&1");
+    if (has_pwsh != 0 && has_powershell != 0) {
+        fs::remove_all(fixture_root, ignored);
+        fs::remove_all(output_root, ignored);
+        return;
+    }
+    script_args[0] = has_pwsh == 0 ? "pwsh" : "powershell";
+    argv.clear();
+    for (const auto& arg : script_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    const pid_t child = fork();
+    if (child == 0) {
+        execvp(argv[0], const_cast<char* const*>(argv.data()));
+        _exit(127);
+    }
+    if (child > 0) {
+        int status = 0;
+        if (waitpid(child, &status, 0) == child && WIFEXITED(status)) {
+            exit_code = WEXITSTATUS(status);
+        }
+    }
+#endif
     expect(exit_code != -1, "compatibility corpus exporter should launch powershell successfully");
     if (exit_code == -1) {
         std::cerr << "FAIL: powershell launch error: "
@@ -364,34 +405,47 @@ void test_export_vfp_compatibility_corpus_script() {
     const std::string manifest = read_text(manifest_path);
     const std::string summary = read_text(summary_path);
 
-    expect(manifest.find(R"(Samples\\Solution\\Reports\\invoice.frx)") != std::string::npos,
+    expect(manifest.find("Samples/Solution/Reports/invoice.frx") != std::string::npos ||
+               manifest.find(R"(Samples\\Solution\\Reports\\invoice.frx)") != std::string::npos,
            "manifest should include installed VFP sample report assets");
-    expect(manifest.find(R"(Wizards\\Template\\Books\\Forms\\books.scx)") != std::string::npos,
+    expect(manifest.find("Wizards/Template/Books/Forms/books.scx") != std::string::npos ||
+               manifest.find(R"(Wizards\\Template\\Books\\Forms\\books.scx)") != std::string::npos,
            "manifest should include installed VFP wizard form assets");
-    expect(manifest.find(R"(ReportBuilder\\builder.prg)") != std::string::npos,
+    expect(manifest.find("ReportBuilder/builder.prg") != std::string::npos ||
+               manifest.find(R"(ReportBuilder\\builder.prg)") != std::string::npos,
            "manifest should include local VFP source PRGs");
-    expect(manifest.find(R"(Legacy\\sample.pjx)") != std::string::npos,
+    expect(manifest.find("Legacy/sample.pjx") != std::string::npos ||
+               manifest.find(R"(Legacy\\sample.pjx)") != std::string::npos,
            "manifest should include legacy project assets");
-    expect(manifest.find(R"(runtime\\macro.spr)") != std::string::npos,
+    expect(manifest.find("runtime/macro.spr") != std::string::npos ||
+               manifest.find(R"(runtime\\macro.spr)") != std::string::npos,
            "manifest should include regression sample assets");
-    expect(manifest.find("\"assetCategory\":  \"designer\"") != std::string::npos,
+    expect(manifest.find("\"assetCategory\":  \"designer\"") != std::string::npos ||
+               manifest.find("\"assetCategory\": \"designer\"") != std::string::npos,
            "manifest should classify designer assets");
-    expect(manifest.find("\"assetCategory\":  \"code\"") != std::string::npos,
+    expect(manifest.find("\"assetCategory\":  \"code\"") != std::string::npos ||
+               manifest.find("\"assetCategory\": \"code\"") != std::string::npos,
            "manifest should classify code assets");
-    expect(manifest.find("\"assetCategory\":  \"application\"") != std::string::npos,
+    expect(manifest.find("\"assetCategory\":  \"application\"") != std::string::npos ||
+               manifest.find("\"assetCategory\": \"application\"") != std::string::npos,
            "manifest should classify project and app assets");
     expect(manifest.find("ignore.txt") == std::string::npos,
            "manifest should ignore unsupported file extensions");
 
-    expect(summary.find("\"totalEntries\":  5") != std::string::npos,
+    expect(summary.find("\"totalEntries\":  5") != std::string::npos ||
+               summary.find("\"totalEntries\": 5") != std::string::npos,
            "summary should report the exported entry count");
-    expect(summary.find("\"installed-vfp\":  2") != std::string::npos,
+    expect(summary.find("\"installed-vfp\":  2") != std::string::npos ||
+               summary.find("\"installed-vfp\": 2") != std::string::npos,
            "summary should count installed VFP assets");
-    expect(summary.find("\"local-vfp-source\":  1") != std::string::npos,
+    expect(summary.find("\"local-vfp-source\":  1") != std::string::npos ||
+               summary.find("\"local-vfp-source\": 1") != std::string::npos,
            "summary should count VFP source assets");
-    expect(summary.find("\"legacy-project\":  1") != std::string::npos,
+    expect(summary.find("\"legacy-project\":  1") != std::string::npos ||
+               summary.find("\"legacy-project\": 1") != std::string::npos,
            "summary should count legacy project assets");
-    expect(summary.find("\"regression-sample\":  1") != std::string::npos,
+    expect(summary.find("\"regression-sample\":  1") != std::string::npos ||
+               summary.find("\"regression-sample\": 1") != std::string::npos,
            "summary should count regression sample assets");
 
     fs::remove_all(fixture_root, ignored);
@@ -5943,6 +5997,11 @@ void test_string_and_math_expression_functions() {
         "rat_second = RAT('ha', 'ha ha ha', 2)\n"
         "atc_hit = ATC('FOX', 'red fox')\n"
         "ratc_hit = RATC('FOX', 'fox red fox')\n"
+        "line_text = 'alpha' + CHR(13) + CHR(10) + 'Beta fox' + CHR(10) + 'gamma fox'\n"
+        "atline_hit = ATLINE('fox', line_text)\n"
+        "atcline_hit = ATCLINE('BETA', line_text)\n"
+        "atline_second = ATLINE('fox', line_text, 2)\n"
+        "ratline_hit = RATLINE('fox', line_text)\n"
         "proper_value = PROPER('legacy fox-pro APP')\n"
         "like_hit = LIKE('A?C*', 'abc legacy')\n"
         "like_miss = LIKE('A?D*', 'abc legacy')\n"
@@ -5991,6 +6050,10 @@ void test_string_and_math_expression_functions() {
     check("rat_second", "4");
     check("atc_hit", "5");
     check("ratc_hit", "9");
+    check("atline_hit", "2");
+    check("atcline_hit", "2");
+    check("atline_second", "3");
+    check("ratline_hit", "3");
     check("proper_value", "Legacy Fox-Pro App");
     check("like_hit", "true");
     check("like_miss", "false");

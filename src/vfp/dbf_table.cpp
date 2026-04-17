@@ -115,6 +115,10 @@ std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t 
 }
 
 std::string load_file_string(const std::string& path) {
+    std::error_code ignored;
+    if (!std::filesystem::is_regular_file(path, ignored)) {
+        return {};
+    }
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {};
@@ -126,6 +130,10 @@ std::string load_file_string(const std::string& path) {
 }
 
 std::vector<std::uint8_t> read_binary_file(const std::string& path) {
+    std::error_code ignored;
+    if (!std::filesystem::is_regular_file(path, ignored)) {
+        return {};
+    }
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {};

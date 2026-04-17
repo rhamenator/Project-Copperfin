@@ -24,7 +24,6 @@
 #include <map>
 #include <new>
 #include <optional>
-#include <process.h>
 #include <set>
 #include <sstream>
 #include <system_error>
@@ -33,6 +32,7 @@
 #include <utility>
 
 #if defined(_WIN32)
+#include <process.h>
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
@@ -46,6 +46,8 @@
 // we declare only what we need via IDispatch-based late binding.
 // The actual CLR invocation uses IDispatch::Invoke for safety and compatibility.
 #include <oaidl.h>
+#else
+#include <unistd.h>
 #endif
 
 namespace copperfin::runtime {
@@ -226,6 +228,43 @@ struct RuntimeArray {
     std::size_t columns = 1;
     std::vector<PrgValue> values;
 };
+
+int current_process_id() {
+#if defined(_WIN32)
+    return _getpid();
+#else
+    return getpid();
+#endif
+}
+
+std::tm local_time_from_time_t(const std::time_t raw_time) {
+    std::tm local{};
+#if defined(_WIN32)
+    localtime_s(&local, &raw_time);
+#else
+    localtime_r(&raw_time, &local);
+#endif
+    return local;
+}
+
+std::optional<std::string> get_environment_variable_value(const std::string& name) {
+#if defined(_WIN32)
+    char* raw = nullptr;
+    std::size_t length = 0U;
+    if (_dupenv_s(&raw, &length, name.c_str()) != 0 || raw == nullptr) {
+        return std::nullopt;
+    }
+    std::string value(raw);
+    free(raw);
+    return value;
+#else
+    const char* raw = std::getenv(name.c_str());
+    if (raw == nullptr) {
+        return std::nullopt;
+    }
+    return std::string(raw);
+#endif
+}
 
 // Wildcard match: '*' matches any sequence, '?' matches a single char (case-insensitive).
 static bool field_wildcard_match(const std::string& name, const std::string& pattern) {
@@ -414,8 +453,7 @@ std::string format_file_time_part(const std::filesystem::file_time_type& file_ti
     const auto system_time = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
         file_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
     const std::time_t raw_time = std::chrono::system_clock::to_time_t(system_time);
-    std::tm local{};
-    localtime_s(&local, &raw_time);
+    const std::tm local = local_time_from_time_t(raw_time);
     std::ostringstream stream;
     if (date_part) {
         stream << std::setfill('0') << std::setw(2) << (local.tm_mon + 1) << "/"
@@ -3063,7 +3101,7 @@ struct PrgRuntimeSession::Impl {
 
         const std::string normalized_name = normalize_identifier(function.function_name);
         if (normalized_name == "getcurrentprocessid") {
-            return make_number_value(static_cast<double>(_getpid()));
+            return make_number_value(static_cast<double>(current_process_id()));
         }
         if ((normalized_name == "lstrlena" || normalized_name == "lstrlenw") && !arguments.empty()) {
             return make_number_value(static_cast<double>(value_as_string(arguments.front()).size()));
@@ -5449,6 +5487,47 @@ private:
             }
             return make_number_value(0.0);
         }
+        if ((function == "atline" || function == "atcline" || function == "ratline") && arguments.size() >= 2U) {
+            const bool reverse = function == "ratline";
+            const bool case_insensitive = function == "atcline";
+            std::string needle = value_as_string(arguments[0]);
+            std::vector<std::string> lines = split_text_lines(value_as_string(arguments[1]));
+            const std::size_t occurrence = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                : 1U;
+            if (case_insensitive) {
+                needle = uppercase_copy(std::move(needle));
+                for (std::string& line : lines) {
+                    line = uppercase_copy(std::move(line));
+                }
+            }
+            if (needle.empty()) {
+                return make_number_value(0.0);
+            }
+            std::size_t found_count = 0U;
+            if (reverse) {
+                for (std::size_t index = lines.size(); index > 0U; --index) {
+                    if (lines[index - 1U].find(needle) == std::string::npos) {
+                        continue;
+                    }
+                    ++found_count;
+                    if (found_count == occurrence) {
+                        return make_number_value(static_cast<double>(index));
+                    }
+                }
+            } else {
+                for (std::size_t index = 0U; index < lines.size(); ++index) {
+                    if (lines[index].find(needle) == std::string::npos) {
+                        continue;
+                    }
+                    ++found_count;
+                    if (found_count == occurrence) {
+                        return make_number_value(static_cast<double>(index + 1U));
+                    }
+                }
+            }
+            return make_number_value(0.0);
+        }
         if (function == "substr" && arguments.size() >= 2U) {
             const std::string source = value_as_string(arguments[0]);
             const std::size_t start = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1]) - 1.0));
@@ -5873,12 +5952,7 @@ private:
         if (function == "date") {
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
-            std::tm local_tm{};
-#if defined(_WIN32)
-            localtime_s(&local_tm, &tt);
-#else
-            localtime_r(&tt, &local_tm);
-#endif
+            const std::tm local_tm = local_time_from_time_t(tt);
             char buf[16];
             std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d",
                 local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900);
@@ -5887,12 +5961,7 @@ private:
         if (function == "time") {
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
-            std::tm local_tm{};
-#if defined(_WIN32)
-            localtime_s(&local_tm, &tt);
-#else
-            localtime_r(&tt, &local_tm);
-#endif
+            const std::tm local_tm = local_time_from_time_t(tt);
             char buf[12];
             std::snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
                 local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
@@ -5901,12 +5970,7 @@ private:
         if (function == "datetime") {
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
-            std::tm local_tm{};
-#if defined(_WIN32)
-            localtime_s(&local_tm, &tt);
-#else
-            localtime_r(&tt, &local_tm);
-#endif
+            const std::tm local_tm = local_time_from_time_t(tt);
             char buf[24];
             std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d %02d:%02d:%02d",
                 local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900,
@@ -5978,14 +6042,7 @@ private:
         // --- Misc ---
         if (function == "getenv" && !arguments.empty()) {
             const std::string env_key = value_as_string(arguments[0]);
-            char* env_val = nullptr;
-            std::size_t env_len = 0U;
-            std::string env_result;
-            if (_dupenv_s(&env_val, &env_len, env_key.c_str()) == 0 && env_val != nullptr) {
-                env_result = env_val;
-                free(env_val);
-            }
-            return make_string_value(env_result);
+            return make_string_value(get_environment_variable_value(env_key).value_or(std::string{}));
         }
         if (function == "fullpath" && !arguments.empty()) {
             std::filesystem::path p(value_as_string(arguments[0]));

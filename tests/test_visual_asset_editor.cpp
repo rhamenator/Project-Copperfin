@@ -6,7 +6,12 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#if defined(_WIN32)
 #include <process.h>
+#else
+#include <unistd.h>
+#define _getpid getpid
+#endif
 #include <string>
 #include <vector>
 

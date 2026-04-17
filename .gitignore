@@ -9,3 +9,4 @@
 *.VC.opendb
 # codex-resume-prompt.txt
 .codex-driver/
+.codex-venv/

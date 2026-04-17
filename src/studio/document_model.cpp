@@ -2,6 +2,7 @@
 
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <string_view>
 
