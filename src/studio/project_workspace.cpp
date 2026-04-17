@@ -136,12 +136,15 @@ ProjectTypeDescriptor describe_project_item(
 }
 
 std::string default_output_path(const StudioDocumentModel& document, const std::string& project_title) {
-    std::filesystem::path output = std::filesystem::path(document.path).parent_path();
     const std::string stem = project_title.empty()
         ? std::filesystem::path(document.path).stem().string()
         : project_title;
-    output /= stem + ".exe";
-    return output.string();
+    const std::string leaf = stem + ".exe";
+    const std::size_t separator = document.path.find_last_of("/\\");
+    if (separator != std::string::npos) {
+        return document.path.substr(0U, separator + 1U) + leaf;
+    }
+    return (std::filesystem::path(document.path).parent_path() / leaf).string();
 }
 
 }  // namespace

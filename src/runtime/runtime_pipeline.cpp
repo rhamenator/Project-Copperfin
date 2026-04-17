@@ -203,22 +203,22 @@ bool validate_runtime_host_source_path(
         return false;
     }
 
-#ifdef _WIN32
     if (plan.security_enabled) {
+#ifdef _WIN32
         const std::string expected_file_name = "copperfin_runtime_host.exe";
+#else
+        const std::string expected_file_name = "copperfin_runtime_host";
+#endif
         if (!source.is_absolute()) {
             error = "Security-enabled packaging requires an absolute runtime host source path.";
             return false;
         }
 
         if (lowercase_copy(source.filename().string()) != expected_file_name) {
-            error = "Security-enabled packaging requires runtime host binary name 'copperfin_runtime_host.exe'.";
+            error = "Security-enabled packaging requires canonical runtime host binary name.";
             return false;
         }
     }
-#else
-    (void)plan;
-#endif
 
     return true;
 }

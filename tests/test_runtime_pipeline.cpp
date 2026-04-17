@@ -25,6 +25,14 @@ void write_text(const std::filesystem::path& path, const std::string& contents) 
     output << contents;
 }
 
+std::filesystem::path runtime_host_fixture_path(const std::filesystem::path& root) {
+#if defined(_WIN32)
+    return root / "copperfin_runtime_host.exe";
+#else
+    return root / "copperfin_runtime_host";
+#endif
+}
+
 std::string read_text(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     std::ostringstream stream;
@@ -37,7 +45,7 @@ void test_materialize_runtime_package() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_tests";
     const fs::path project_dir = temp_root / "project";
     const fs::path output_dir = temp_root / "output";
-    const fs::path runtime_host = temp_root / "copperfin_runtime_host.exe";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
@@ -117,7 +125,7 @@ void test_materialize_excluded_xasset_startup_package() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_xasset_tests";
     const fs::path project_dir = temp_root / "project";
     const fs::path output_dir = temp_root / "output";
-    const fs::path runtime_host = temp_root / "copperfin_runtime_host.exe";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
@@ -177,7 +185,7 @@ void test_security_enabled_runtime_host_name_validation() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_security_tests";
     const fs::path project_dir = temp_root / "project";
     const fs::path output_dir = temp_root / "output";
-    const fs::path canonical_runtime_host = temp_root / "copperfin_runtime_host.exe";
+    const fs::path canonical_runtime_host = runtime_host_fixture_path(temp_root);
     const fs::path non_canonical_runtime_host = temp_root / "runtime_host_custom.exe";
 
     std::error_code ignored;

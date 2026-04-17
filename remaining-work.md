@@ -209,7 +209,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
-- 2026-04-17: Linux-side narrow validation is now available from a repo-local `.codex-venv` CMake install, with local generated artifacts ignored. The first Linux run exposed portability issues in Windows-only process includes, PowerShell test launching, path-separator-specific exporter assertions, and DBF memo-sidecar directory reads; those were fixed without changing the Windows-first product direction. `test_dbf_table` and `test_prg_engine` build and run under the local Linux CMake/Ninja toolchain.
+- 2026-04-17: Linux-side validation is now available from a repo-local `.codex-venv` CMake install, with local generated artifacts ignored and a `scripts/validate-posix.sh` wrapper that runs under `zsh`, `bash`, or `sh`. The first Linux runs exposed portability issues in Windows-only process includes, PowerShell test launching, path-separator-specific exporter assertions, DBF memo-sidecar directory reads, project-workspace Windows-path fallback handling, runtime-host canonical-name validation, and non-Windows SHA-256 hashing; those were fixed without changing the Windows-first product direction. The full native CTest suite now builds and passes under the local Linux CMake/Ninja toolchain.
 
 - 2026-04-17: The PRG expression-function surface gained the next small official string/comparison utility batch: occurrence-aware `AT()` / `RAT()`, first-pass case-insensitive `ATC()` / `RATC()`, line-oriented `ATLINE()` / `ATCLINE()` / `RATLINE()`, wildcard `LIKE()`, `INLIST()`, and `PROPER()`. Focused coverage was added to the existing string/math expression regression cluster.
 

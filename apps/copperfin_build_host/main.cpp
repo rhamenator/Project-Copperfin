@@ -13,7 +13,12 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#if defined(_WIN32)
 #include <process.h>
+#else
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 #include <string>
 #include <system_error>
 #include <vector>
@@ -90,7 +95,22 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     }
     argv.push_back(nullptr);
 
-    const intptr_t exit_code = _spawnvp(_P_WAIT, auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
+    intptr_t exit_code = -1;
+#if defined(_WIN32)
+    exit_code = _spawnvp(_P_WAIT, auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
+#else
+    const pid_t child = fork();
+    if (child == 0) {
+        execvp(auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
+        _exit(127);
+    }
+    if (child > 0) {
+        int status = 0;
+        if (waitpid(child, &status, 0) == child && WIFEXITED(status)) {
+            exit_code = WEXITSTATUS(status);
+        }
+    }
+#endif
     if (exit_code == -1) {
         error = "dotnet publish failed to start: " + std::error_code(errno, std::generic_category()).message();
         return false;

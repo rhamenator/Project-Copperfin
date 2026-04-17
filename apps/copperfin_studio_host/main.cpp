@@ -9,6 +9,7 @@
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>

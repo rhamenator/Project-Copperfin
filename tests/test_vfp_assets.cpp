@@ -3,6 +3,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>

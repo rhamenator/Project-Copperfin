@@ -300,7 +300,7 @@ void test_export_vfp_compatibility_corpus_script() {
     const fs::path fixture_root = R"(E:\Project-Copperfin\build\compatibility_corpus_fixture)";
     const fs::path output_root = R"(E:\Project-Copperfin\build\compatibility_corpus_output)";
 #else
-    const fs::path repo_root = fs::current_path();
+    const fs::path repo_root = fs::path(__FILE__).parent_path().parent_path();
     const fs::path script_path = repo_root / "scripts" / "export-vfp-compatibility-corpus.ps1";
     const fs::path fixture_root = repo_root / "build" / "compatibility_corpus_fixture";
     const fs::path output_root = repo_root / "build" / "compatibility_corpus_output";

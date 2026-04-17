@@ -1,6 +1,7 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
