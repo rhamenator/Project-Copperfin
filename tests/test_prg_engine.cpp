@@ -295,16 +295,10 @@ void test_do_form_pause() {
 
 void test_export_vfp_compatibility_corpus_script() {
     namespace fs = std::filesystem;
-#if defined(_WIN32)
-    const fs::path script_path = R"(E:\Project-Copperfin\scripts\export-vfp-compatibility-corpus.ps1)";
-    const fs::path fixture_root = R"(E:\Project-Copperfin\build\compatibility_corpus_fixture)";
-    const fs::path output_root = R"(E:\Project-Copperfin\build\compatibility_corpus_output)";
-#else
     const fs::path repo_root = fs::path(__FILE__).parent_path().parent_path();
     const fs::path script_path = repo_root / "scripts" / "export-vfp-compatibility-corpus.ps1";
     const fs::path fixture_root = repo_root / "build" / "compatibility_corpus_fixture";
     const fs::path output_root = repo_root / "build" / "compatibility_corpus_output";
-#endif
     const fs::path installed_root = fixture_root / "installed";
     const fs::path vfp_source_root = fixture_root / "vfpsource";
     const fs::path legacy_root = fixture_root / "legacy";
