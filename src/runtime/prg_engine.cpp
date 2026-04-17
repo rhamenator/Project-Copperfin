@@ -5388,13 +5388,66 @@ private:
             }
             return make_string_value("0");
         }
-        if (function == "at" && arguments.size() >= 2U) {
-            const auto found = value_as_string(arguments[1]).find(value_as_string(arguments[0]));
-            return make_number_value(found == std::string::npos ? 0.0 : static_cast<double>(found + 1U));
+        if ((function == "at" || function == "atc") && arguments.size() >= 2U) {
+            const bool case_insensitive = function == "atc";
+            std::string needle = value_as_string(arguments[0]);
+            std::string haystack = value_as_string(arguments[1]);
+            const std::size_t occurrence = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                : 1U;
+            if (case_insensitive) {
+                needle = uppercase_copy(std::move(needle));
+                haystack = uppercase_copy(std::move(haystack));
+            }
+            if (needle.empty()) {
+                return make_number_value(0.0);
+            }
+            std::size_t found_count = 0U;
+            std::size_t search_pos = 0U;
+            while (search_pos <= haystack.size()) {
+                const auto found = haystack.find(needle, search_pos);
+                if (found == std::string::npos) {
+                    break;
+                }
+                ++found_count;
+                if (found_count == occurrence) {
+                    return make_number_value(static_cast<double>(found + 1U));
+                }
+                search_pos = found + needle.size();
+            }
+            return make_number_value(0.0);
         }
-        if (function == "rat" && arguments.size() >= 2U) {
-            const auto found = value_as_string(arguments[1]).rfind(value_as_string(arguments[0]));
-            return make_number_value(found == std::string::npos ? 0.0 : static_cast<double>(found + 1U));
+        if ((function == "rat" || function == "ratc") && arguments.size() >= 2U) {
+            const bool case_insensitive = function == "ratc";
+            std::string needle = value_as_string(arguments[0]);
+            std::string haystack = value_as_string(arguments[1]);
+            const std::size_t occurrence = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                : 1U;
+            if (case_insensitive) {
+                needle = uppercase_copy(std::move(needle));
+                haystack = uppercase_copy(std::move(haystack));
+            }
+            if (needle.empty()) {
+                return make_number_value(0.0);
+            }
+            std::size_t found_count = 0U;
+            std::size_t search_pos = std::string::npos;
+            while (true) {
+                const auto found = haystack.rfind(needle, search_pos);
+                if (found == std::string::npos) {
+                    break;
+                }
+                ++found_count;
+                if (found_count == occurrence) {
+                    return make_number_value(static_cast<double>(found + 1U));
+                }
+                if (found == 0U) {
+                    break;
+                }
+                search_pos = found - 1U;
+            }
+            return make_number_value(0.0);
         }
         if (function == "substr" && arguments.size() >= 2U) {
             const std::string source = value_as_string(arguments[0]);
@@ -5629,6 +5682,35 @@ private:
                 // else: delete character (to_chars shorter than from_chars)
             }
             return make_string_value(std::move(result));
+        }
+        if (function == "proper" && !arguments.empty()) {
+            std::string src = value_as_string(arguments[0]);
+            bool start_word = true;
+            for (char& ch : src) {
+                const auto raw = static_cast<unsigned char>(ch);
+                if (std::isalpha(raw) != 0) {
+                    ch = static_cast<char>(start_word ? std::toupper(raw) : std::tolower(raw));
+                    start_word = false;
+                } else {
+                    if (std::isdigit(raw) == 0) {
+                        start_word = true;
+                    }
+                }
+            }
+            return make_string_value(std::move(src));
+        }
+        if (function == "like" && arguments.size() >= 2U) {
+            return make_boolean_value(wildcard_match_insensitive(
+                value_as_string(arguments[0]),
+                value_as_string(arguments[1])));
+        }
+        if (function == "inlist" && arguments.size() >= 2U) {
+            for (std::size_t index = 1U; index < arguments.size(); ++index) {
+                if (values_equal(arguments[0], arguments[index])) {
+                    return make_boolean_value(true);
+                }
+            }
+            return make_boolean_value(false);
         }
         if ((function == "getwordcount" || function == "getwordnum") && !arguments.empty()) {
             const std::string src = value_as_string(arguments[0]);

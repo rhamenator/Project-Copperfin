@@ -5939,6 +5939,15 @@ void test_string_and_math_expression_functions() {
         "g = BETWEEN(5, 1, 10)\n"
         "h = OCCURS('l', 'hello world')\n"
         "v = VAL('42')\n"
+        "at_second = AT('ha', 'ha ha ha', 2)\n"
+        "rat_second = RAT('ha', 'ha ha ha', 2)\n"
+        "atc_hit = ATC('FOX', 'red fox')\n"
+        "ratc_hit = RATC('FOX', 'fox red fox')\n"
+        "proper_value = PROPER('legacy fox-pro APP')\n"
+        "like_hit = LIKE('A?C*', 'abc legacy')\n"
+        "like_miss = LIKE('A?D*', 'abc legacy')\n"
+        "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
+        "inlist_miss = INLIST(4, 1, 2, 3)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -5978,6 +5987,15 @@ void test_string_and_math_expression_functions() {
     check("g", "true");
     check("h", "3");
     check("v", "42");
+    check("at_second", "4");
+    check("rat_second", "4");
+    check("atc_hit", "5");
+    check("ratc_hit", "9");
+    check("proper_value", "Legacy Fox-Pro App");
+    check("like_hit", "true");
+    check("like_miss", "false");
+    check("inlist_hit", "true");
+    check("inlist_miss", "false");
 
     fs::remove_all(temp_root, ignored);
 }
