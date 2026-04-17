@@ -81,6 +81,7 @@ enum class StatementKind {
     print_command,
     create_cursor_command,
     create_table_command,
+    alter_table_command,
     copy_to_command,
     append_from_command,
     scatter_command,

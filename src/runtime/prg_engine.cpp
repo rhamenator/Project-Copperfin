@@ -597,6 +597,11 @@ std::optional<vfp::DbfFieldDescriptor> parse_create_table_field(std::string text
         if (length == 0U) {
             length = 10U;
         }
+    } else if (type_name == "V" || type_name == "VARCHAR") {
+        type = 'V';
+        if (length == 0U) {
+            length = 10U;
+        }
     } else if (type_name == "N" || type_name == "NUMERIC") {
         type = 'N';
         if (length == 0U) {
@@ -604,6 +609,14 @@ std::optional<vfp::DbfFieldDescriptor> parse_create_table_field(std::string text
         }
     } else if (type_name == "F" || type_name == "FLOAT") {
         type = 'F';
+        if (length == 0U) {
+            length = 10U;
+        }
+    } else if (type_name == "B" || type_name == "DOUBLE") {
+        type = 'B';
+        length = 8U;
+    } else if (type_name == "Q" || type_name == "VARBINARY") {
+        type = 'Q';
         if (length == 0U) {
             length = 10U;
         }
@@ -8072,6 +8085,67 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = "runtime.create_table",
                 .detail = table_path.string(),
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::alter_table_command: {
+            if (normalize_identifier(statement.secondary_expression) != "add") {
+                last_error_message = "ALTER TABLE currently supports ADD COLUMN only";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            std::string target = trim_copy(statement.identifier);
+            if (target.empty()) {
+                last_error_message = "ALTER TABLE requires a target table name";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if ((target.size() >= 2U && target.front() == '\'' && target.back() == '\'') ||
+                (target.size() >= 2U && target.front() == '"' && target.back() == '"')) {
+                target = value_as_string(evaluate_expression(target, frame));
+            } else {
+                target = unquote_string(target);
+            }
+
+            std::filesystem::path table_path(target);
+            if (table_path.extension().empty()) {
+                table_path += ".dbf";
+            }
+            if (table_path.is_relative()) {
+                table_path = std::filesystem::path(current_default_directory()) / table_path;
+            }
+            table_path = table_path.lexically_normal();
+
+            const auto field = parse_create_table_field(statement.expression);
+            if (!field.has_value()) {
+                last_error_message = "ALTER TABLE ADD COLUMN requires a supported field declaration";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const auto add_result = vfp::add_dbf_table_field(table_path.string(), *field);
+            if (!add_result.ok) {
+                last_error_message = add_result.error;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            for (auto& [_, cursor] : current_session_state().cursors) {
+                if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string())) {
+                    cursor.field_count += 1U;
+                    cursor.record_count = add_result.record_count;
+                }
+            }
+
+            events.push_back({
+                .category = "runtime.alter_table",
+                .detail = table_path.string() + " ADD " + field->name,
                 .location = statement.location
             });
             return {};

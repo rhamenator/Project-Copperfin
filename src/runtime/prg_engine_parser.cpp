@@ -600,6 +600,21 @@ Program parse_program(const std::string& path) {
             std::size_t start = 1U;
             while (start < line.size() && line[start] == '?') ++start;
             statement.expression = trim_copy(line.substr(start));
+        } else if (starts_with_insensitive(line, "ALTER TABLE ")) {
+            statement.kind = StatementKind::alter_table_command;
+            const std::string body = trim_copy(line.substr(12U));
+            const std::size_t add_position = find_keyword_top_level(body, "ADD");
+            if (add_position == std::string::npos) {
+                statement.identifier = body;
+            } else {
+                statement.identifier = trim_copy(body.substr(0U, add_position));
+                std::string add_clause = trim_copy(body.substr(add_position + 3U));
+                if (starts_with_insensitive(add_clause, "COLUMN ")) {
+                    add_clause = trim_copy(add_clause.substr(7U));
+                }
+                statement.expression = add_clause;
+                statement.secondary_expression = "add";
+            }
         } else if (starts_with_insensitive(line, "CREATE TABLE ")) {
             statement.kind = StatementKind::create_table_command;
             const std::string body = trim_copy(line.substr(13U));

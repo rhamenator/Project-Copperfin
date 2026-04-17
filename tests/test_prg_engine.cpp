@@ -5486,6 +5486,167 @@ void test_sql_result_cursor_mutation_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_sql_style_mutation_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_style_mutation_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_style_mutation_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "cAliasBefore = ALIAS()\n"
+        "nOtherRecBefore = RECNO()\n"
+        "nBeforeTarget = RECCOUNT('sqlcust')\n"
+        "INSERT INTO sqlcust (ID, NAME, AMOUNT) VALUES (4, 'DELTA', 44)\n"
+        "INSERT INTO sqlcust VALUES (5, 'ECHO', 55)\n"
+        "DELETE FROM sqlcust WHERE NAME = 'BRAVO'\n"
+        "cAliasAfter = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "nAfterTarget = RECCOUNT('sqlcust')\n"
+        "SELECT sqlcust\n"
+        "LOCATE FOR NAME = 'DELTA'\n"
+        "nDeltaId = ID\n"
+        "cDeltaName = NAME\n"
+        "nDeltaAmount = AMOUNT\n"
+        "lDeltaDeleted = DELETED()\n"
+        "LOCATE FOR NAME = 'ECHO'\n"
+        "nEchoId = ID\n"
+        "cEchoName = NAME\n"
+        "nEchoAmount = AMOUNT\n"
+        "lEchoDeleted = DELETED()\n"
+        "GO 2\n"
+        "cBravoName = NAME\n"
+        "lBravoDeleted = DELETED()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL-style mutation parity script should complete");
+    expect(state.sql_connections.empty(), "SQL-style mutation parity script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto alias_before = state.globals.find("caliasbefore");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto before_target = state.globals.find("nbeforetarget");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto after_target = state.globals.find("naftertarget");
+    const auto delta_id = state.globals.find("ndeltaid");
+    const auto delta_name = state.globals.find("cdeltaname");
+    const auto delta_amount = state.globals.find("ndeltaamount");
+    const auto delta_deleted = state.globals.find("ldeltadeleted");
+    const auto echo_id = state.globals.find("nechoid");
+    const auto echo_name = state.globals.find("cechoname");
+    const auto echo_amount = state.globals.find("nechoamount");
+    const auto echo_deleted = state.globals.find("lechodeleted");
+    const auto bravo_name = state.globals.find("cbravoname");
+    const auto bravo_deleted = state.globals.find("lbravodeleted");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for SQL-style mutation parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for SQL-style mutation parity");
+    expect(alias_before != state.globals.end(), "Selected alias before SQL-style mutation should be captured");
+    expect(other_rec_before != state.globals.end(), "Selected cursor pointer before SQL-style mutation should be captured");
+    expect(before_target != state.globals.end(), "Target SQL cursor RECCOUNT() before INSERT INTO should be captured");
+    expect(alias_after != state.globals.end(), "Selected alias after SQL-style mutation should be captured");
+    expect(other_rec_after != state.globals.end(), "Selected cursor pointer after SQL-style mutation should be captured");
+    expect(after_target != state.globals.end(), "Target SQL cursor RECCOUNT() after INSERT INTO should be captured");
+    expect(delta_id != state.globals.end(), "field-list INSERT INTO should expose appended SQL ID");
+    expect(delta_name != state.globals.end(), "field-list INSERT INTO should expose appended SQL NAME");
+    expect(delta_amount != state.globals.end(), "field-list INSERT INTO should expose appended SQL AMOUNT");
+    expect(delta_deleted != state.globals.end(), "field-list INSERT INTO should create a live SQL row");
+    expect(echo_id != state.globals.end(), "schema-order INSERT INTO should expose appended SQL ID");
+    expect(echo_name != state.globals.end(), "schema-order INSERT INTO should expose appended SQL NAME");
+    expect(echo_amount != state.globals.end(), "schema-order INSERT INTO should expose appended SQL AMOUNT");
+    expect(echo_deleted != state.globals.end(), "schema-order INSERT INTO should create a live SQL row");
+    expect(bravo_name != state.globals.end(), "DELETE FROM should leave the matched SQL row readable");
+    expect(bravo_deleted != state.globals.end(), "DELETE FROM should expose the matched SQL tombstone state");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL-style mutation parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before SQL-style mutation checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before SQL-style mutation checks");
+    }
+    if (alias_before != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_before->second)) == "SQLOTHER", "selected SQL alias should start on sqlother before SQL-style mutations");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before SQL-style mutations");
+    }
+    if (before_target != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_target->second) == "3", "synthetic SQL result cursor should start with three rows before SQL-style inserts");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after->second)) == "SQLOTHER", "INSERT INTO / DELETE FROM should preserve the selected SQL alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "INSERT INTO / DELETE FROM should preserve the selected SQL cursor pointer");
+    }
+    if (after_target != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_target->second) == "5", "two SQL-style INSERT INTO commands should append two synthetic SQL rows");
+    }
+    if (delta_id != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delta_id->second) == "4", "field-list INSERT INTO should map SQL ID by field name");
+    }
+    if (delta_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delta_name->second) == "DELTA", "field-list INSERT INTO should map SQL NAME by field name");
+    }
+    if (delta_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delta_amount->second) == "44", "field-list INSERT INTO should map SQL AMOUNT by field name");
+    }
+    if (delta_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delta_deleted->second) == "false", "field-list INSERT INTO should append a non-deleted SQL row");
+    }
+    if (echo_id != state.globals.end()) {
+        expect(copperfin::runtime::format_value(echo_id->second) == "5", "schema-order INSERT INTO should map SQL ID by schema order");
+    }
+    if (echo_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(echo_name->second) == "ECHO", "schema-order INSERT INTO should map SQL NAME by schema order");
+    }
+    if (echo_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(echo_amount->second) == "55", "schema-order INSERT INTO should map SQL AMOUNT by schema order");
+    }
+    if (echo_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(echo_deleted->second) == "false", "schema-order INSERT INTO should append a non-deleted SQL row");
+    }
+    if (bravo_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bravo_name->second) == "BRAVO", "DELETE FROM should match the requested synthetic SQL row");
+    }
+    if (bravo_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bravo_deleted->second) == "true", "DELETE FROM should tombstone the matching synthetic SQL row");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL-style mutation checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.insert_into";
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.delete_from";
+        }),
+        "SQL-style mutation commands should emit INSERT INTO and DELETE FROM runtime events for synthetic SQL cursors");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_in_target_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutation_in_target_parity";
@@ -6395,6 +6556,112 @@ void test_create_table_creates_local_dbf_and_opens_cursor() {
     if (parse_result.table.records.size() == 1U) {
         expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "CREATE TABLE row should persist NAME value");
         expect(parse_result.table.records[0].values[1].display_value == "42", "CREATE TABLE row should persist AGE value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_alter_table_add_column_rewrites_local_dbf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_alter_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "alter_table.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "DELETE FROM People WHERE AGE = 20\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN ACTIVE L\n"
+        "REPLACE ACTIVE WITH .T. FOR NAME = 'ALPHA'\n"
+        "nCount = RECCOUNT()\n"
+        "GO 1\n"
+        "lActive = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ALTER TABLE ADD COLUMN script should complete");
+    const auto count = state.globals.find("ncount");
+    const auto active = state.globals.find("lactive");
+    expect(count != state.globals.end(), "ALTER TABLE should preserve RECCOUNT()");
+    expect(active != state.globals.end(), "ALTER TABLE should expose the new field immediately");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2", "ALTER TABLE should preserve existing records");
+    }
+    if (active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(active->second) == "true", "ALTER TABLE new field should be mutable after rewrite");
+    }
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.alter_table";
+    }), "ALTER TABLE should emit a runtime.alter_table event");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "ALTER TABLE output should remain readable");
+    expect(parse_result.table.fields.size() == 3U, "ALTER TABLE should add one field");
+    expect(parse_result.table.records.size() == 2U, "ALTER TABLE should preserve row count");
+    if (parse_result.table.fields.size() == 3U) {
+        expect(parse_result.table.fields[2].name == "ACTIVE", "ALTER TABLE should append the declared field name");
+        expect(parse_result.table.fields[2].type == 'L', "ALTER TABLE should append the declared field type");
+    }
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "ALTER TABLE should preserve row values");
+        expect(parse_result.table.records[0].values[2].display_value == "true", "ALTER TABLE should persist mutation to new field");
+        expect(parse_result.table.records[1].deleted, "ALTER TABLE should preserve deleted flags");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_create_table_accepts_extended_field_declarations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_create_table_extended";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "extended.dbf";
+    const fs::path main_path = temp_root / "create_table_extended.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (FULLNAME CHARACTER(12) NOT NULL, SCORE NUMERIC(5,2) DEFAULT 0, RATE DOUBLE NULL, CODE VARCHAR(8), RAW VARBINARY(6), PAID CURRENCY DEFAULT 0)\n"
+        "INSERT INTO Extended (FULLNAME, SCORE, RATE, CODE, RAW, PAID) VALUES ('LONG NAME', 12.34, 9.5, 'AB', '0102', 123.4500)\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CREATE TABLE extended declaration script should complete");
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "extended CREATE TABLE should open the created cursor");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1", "extended CREATE TABLE should support immediate inserts");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "extended CREATE TABLE output should be readable");
+    expect(parse_result.table.fields.size() == 6U, "extended CREATE TABLE should persist all declared fields");
+    if (parse_result.table.fields.size() == 6U) {
+        expect(parse_result.table.fields[0].type == 'C' && parse_result.table.fields[0].length == 12U, "CHARACTER declarations should map to C(width)");
+        expect(parse_result.table.fields[1].type == 'N' && parse_result.table.fields[1].length == 5U && parse_result.table.fields[1].decimal_count == 2U, "NUMERIC declarations should preserve width and decimals");
+        expect(parse_result.table.fields[2].type == 'B' && parse_result.table.fields[2].length == 8U, "DOUBLE declarations should map to B(8)");
+        expect(parse_result.table.fields[3].type == 'V' && parse_result.table.fields[3].length == 8U, "VARCHAR declarations should map to V(width)");
+        expect(parse_result.table.fields[4].type == 'Q' && parse_result.table.fields[4].length == 6U, "VARBINARY declarations should map to Q(width)");
+        expect(parse_result.table.fields[5].type == 'Y' && parse_result.table.fields[5].length == 8U, "CURRENCY declarations should map to Y(8)");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -10083,6 +10350,7 @@ int main() {
     test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_order_direction_in_target_parity();
     test_sql_result_cursor_mutation_parity();
+    test_sql_result_cursor_sql_style_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();
     test_sql_result_cursor_filter_in_target_parity();
@@ -10093,6 +10361,8 @@ int main() {
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_create_table_creates_local_dbf_and_opens_cursor();
+    test_alter_table_add_column_rewrites_local_dbf();
+    test_create_table_accepts_extended_field_declarations();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();
