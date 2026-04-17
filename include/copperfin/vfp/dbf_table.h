@@ -62,6 +62,7 @@ DbfWriteResult set_record_deleted_flag(
     const std::string& path,
     std::size_t record_index,
     bool deleted);
+DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count);
 DbfWriteResult pack_dbf_table_file(const std::string& path);
 DbfWriteResult zap_dbf_table_file(const std::string& path);
 

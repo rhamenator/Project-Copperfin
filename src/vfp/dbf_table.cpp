@@ -1322,6 +1322,40 @@ DbfWriteResult set_record_deleted_flag(
     return {.ok = true, .record_count = header_result.header.record_count};
 }
 
+DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count) {
+    std::vector<std::uint8_t> bytes = read_binary_file(path);
+    if (bytes.empty()) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    const auto& header = header_result.header;
+    if (record_count > header.record_count) {
+        return {.ok = false, .error = "Requested record count exceeds current table size.", .record_count = header.record_count};
+    }
+    if (header.header_length > bytes.size()) {
+        return {.ok = false, .error = "Table header is truncated.", .record_count = header.record_count};
+    }
+
+    const std::size_t new_size = header.header_length + (record_count * static_cast<std::size_t>(header.record_length)) + 1U;
+    if (new_size > bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated.", .record_count = header.record_count};
+    }
+
+    bytes.resize(new_size);
+    bytes.back() = 0x1AU;
+    write_le_u32(bytes, 4U, static_cast<std::uint32_t>(record_count));
+    if (!write_binary_file(path, bytes)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = header.record_count};
+    }
+
+    return {.ok = true, .record_count = record_count};
+}
+
 DbfWriteResult pack_dbf_table_file(const std::string& path) {
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {

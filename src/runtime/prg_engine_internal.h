@@ -80,6 +80,7 @@ enum class StatementKind {
     rename_file_command,
     print_command,
     create_cursor_command,
+    create_table_command,
     copy_to_command,
     append_from_command,
     scatter_command,

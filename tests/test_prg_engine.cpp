@@ -6265,6 +6265,141 @@ void test_insert_into_and_delete_from_local_table() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_insert_into_rolls_back_failed_local_append() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const auto original_size = std::filesystem::file_size(table_path);
+
+    const fs::path main_path = temp_root / "insert_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "INSERT INTO People (NAME, AGE) VALUES ('THIS-NAME-IS-TOO-LONG', 77)\n"
+        "nAfterError = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "failed INSERT INTO should pause with an error");
+    expect(state.location.line == 2U, "failed INSERT INTO should highlight the INSERT statement");
+    expect(
+        state.message.find("too large") != std::string::npos,
+        "failed INSERT INTO should preserve the field-write error message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after failed INSERT INTO should keep the session alive");
+    const auto after_error = state.globals.find("naftererror");
+    expect(after_error != state.globals.end(), "post-error RECCOUNT() should be captured");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "2", "failed INSERT INTO should roll back the appended row");
+    }
+
+    expect(std::filesystem::file_size(table_path) == original_size, "failed INSERT INTO should restore the original DBF size");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "failed INSERT INTO rollback should leave the DBF readable");
+    expect(parse_result.table.records.size() == 2U, "failed INSERT INTO rollback should preserve the original record count");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "failed INSERT INTO rollback should preserve row 1");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO", "failed INSERT INTO rollback should preserve row 2");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_create_table_creates_local_dbf_and_opens_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_create_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "created.dbf";
+    const fs::path main_path = temp_root / "create_table.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (NAME C(10), AGE N(3,0), ACTIVE L, BORN D)\n"
+        "nEmptyCount = RECCOUNT()\n"
+        "INSERT INTO Created (NAME, AGE, ACTIVE, BORN) VALUES ('ALPHA', 42, .T., '20260102')\n"
+        "nAfterInsert = RECCOUNT()\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "nAge = AGE\n"
+        "lActive = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CREATE TABLE script should complete");
+    expect(std::filesystem::exists(table_path), "CREATE TABLE should create a DBF file");
+
+    const auto empty_count = state.globals.find("nemptycount");
+    const auto after_insert = state.globals.find("nafterinsert");
+    const auto name = state.globals.find("cname");
+    const auto age = state.globals.find("nage");
+    const auto active = state.globals.find("lactive");
+    expect(empty_count != state.globals.end(), "CREATE TABLE should open an empty current cursor");
+    expect(after_insert != state.globals.end(), "INSERT after CREATE TABLE should expose updated RECCOUNT()");
+    expect(name != state.globals.end(), "created table field lookup should expose NAME");
+    expect(age != state.globals.end(), "created table field lookup should expose AGE");
+    expect(active != state.globals.end(), "created table field lookup should expose ACTIVE");
+    if (empty_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(empty_count->second) == "0", "CREATE TABLE should start with zero records");
+    }
+    if (after_insert != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_insert->second) == "1", "INSERT after CREATE TABLE should append one record");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALPHA", "created table should persist character values");
+    }
+    if (age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age->second) == "42", "created table should persist numeric values");
+    }
+    if (active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(active->second) == "true", "created table should persist logical values");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.create_table";
+    }), "CREATE TABLE should emit a runtime.create_table event");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "CREATE TABLE output should be readable");
+    expect(parse_result.table.fields.size() == 4U, "CREATE TABLE should persist the declared schema");
+    expect(parse_result.table.records.size() == 1U, "INSERT after CREATE TABLE should persist one row");
+    if (parse_result.table.fields.size() == 4U) {
+        expect(parse_result.table.fields[0].name == "NAME", "CREATE TABLE should persist NAME field");
+        expect(parse_result.table.fields[0].type == 'C', "CREATE TABLE should persist character type");
+        expect(parse_result.table.fields[0].length == 10U, "CREATE TABLE should persist character width");
+        expect(parse_result.table.fields[1].name == "AGE", "CREATE TABLE should persist AGE field");
+        expect(parse_result.table.fields[1].type == 'N', "CREATE TABLE should persist numeric type");
+        expect(parse_result.table.fields[1].length == 3U, "CREATE TABLE should persist numeric width");
+        expect(parse_result.table.fields[2].type == 'L', "CREATE TABLE should persist logical type");
+        expect(parse_result.table.fields[3].type == 'D', "CREATE TABLE should persist date type");
+    }
+    if (parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "CREATE TABLE row should persist NAME value");
+        expect(parse_result.table.records[0].values[1].display_value == "42", "CREATE TABLE row should persist AGE value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_indexed_table_mutation_succeeds_for_structural_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_indexed_mutation_guard";
@@ -9956,6 +10091,8 @@ int main() {
     test_pack_compacts_deleted_local_records();
     test_zap_truncates_local_table_records();
     test_insert_into_and_delete_from_local_table();
+    test_insert_into_rolls_back_failed_local_append();
+    test_create_table_creates_local_dbf_and_opens_cursor();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();

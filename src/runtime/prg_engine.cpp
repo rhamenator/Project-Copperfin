@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -552,6 +553,101 @@ std::vector<ReplaceAssignment> parse_update_set_assignments(const std::string& t
         });
     }
     return assignments;
+}
+
+std::optional<vfp::DbfFieldDescriptor> parse_create_table_field(std::string text) {
+    text = trim_copy(std::move(text));
+    if (text.empty()) {
+        return std::nullopt;
+    }
+
+    std::istringstream stream(text);
+    std::string name;
+    std::string type_text;
+    stream >> name >> type_text;
+    if (name.empty() || type_text.empty()) {
+        return std::nullopt;
+    }
+
+    name = unquote_identifier(name);
+    type_text = uppercase_copy(trim_copy(type_text));
+    std::uint8_t length = 0U;
+    std::uint8_t decimals = 0U;
+
+    const std::size_t open_paren = type_text.find('(');
+    std::string type_name = open_paren == std::string::npos ? type_text : type_text.substr(0U, open_paren);
+    if (open_paren != std::string::npos && type_text.back() == ')') {
+        const std::string inside = type_text.substr(open_paren + 1U, type_text.size() - open_paren - 2U);
+        const std::vector<std::string> parts = split_csv_like(inside);
+        try {
+            if (!parts.empty()) {
+                length = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[0])), 0, 255));
+            }
+            if (parts.size() > 1U) {
+                decimals = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[1])), 0, 255));
+            }
+        } catch (const std::exception&) {
+            return std::nullopt;
+        }
+    }
+
+    char type = '\0';
+    if (type_name == "C" || type_name == "CHAR" || type_name == "CHARACTER") {
+        type = 'C';
+        if (length == 0U) {
+            length = 10U;
+        }
+    } else if (type_name == "N" || type_name == "NUMERIC") {
+        type = 'N';
+        if (length == 0U) {
+            length = 10U;
+        }
+    } else if (type_name == "F" || type_name == "FLOAT") {
+        type = 'F';
+        if (length == 0U) {
+            length = 10U;
+        }
+    } else if (type_name == "L" || type_name == "LOGICAL") {
+        type = 'L';
+        length = 1U;
+    } else if (type_name == "D" || type_name == "DATE") {
+        type = 'D';
+        length = 8U;
+    } else if (type_name == "I" || type_name == "INTEGER") {
+        type = 'I';
+        length = 4U;
+    } else if (type_name == "Y" || type_name == "CURRENCY") {
+        type = 'Y';
+        length = 8U;
+        decimals = 4U;
+    } else if (type_name == "T" || type_name == "DATETIME") {
+        type = 'T';
+        length = 8U;
+    } else if (type_name == "M" || type_name == "MEMO") {
+        type = 'M';
+        length = 4U;
+    }
+
+    if (type == '\0' || name.empty()) {
+        return std::nullopt;
+    }
+    return vfp::DbfFieldDescriptor{
+        .name = name,
+        .type = type,
+        .offset = 0U,
+        .length = length,
+        .decimal_count = decimals
+    };
+}
+
+std::vector<vfp::DbfFieldDescriptor> parse_create_table_fields(const std::string& field_list) {
+    std::vector<vfp::DbfFieldDescriptor> fields;
+    for (const std::string& part : split_csv_like(field_list)) {
+        if (auto field = parse_create_table_field(part)) {
+            fields.push_back(*field);
+        }
+    }
+    return fields;
 }
 
 PrgValue record_value_to_prg_value(const vfp::DbfRecordValue& field) {
@@ -1981,6 +2077,12 @@ struct PrgRuntimeSession::Impl {
             return false;
         }
 
+        const std::size_t original_record_count = cursor.record_count;
+        const std::size_t original_recno = cursor.recno;
+        const bool original_found = cursor.found;
+        const bool original_bof = cursor.bof;
+        const bool original_eof = cursor.eof;
+
         if (!append_blank_record(cursor)) {
             return false;
         }
@@ -1993,7 +2095,32 @@ struct PrgRuntimeSession::Impl {
                 .expression = trim_copy(values[index])
             });
         }
-        return replace_current_record_fields(cursor, assignments, frame);
+        if (replace_current_record_fields(cursor, assignments, frame)) {
+            return true;
+        }
+
+        const std::string replace_error = last_error_message;
+        if (cursor.remote) {
+            if (cursor.remote_records.size() > original_record_count) {
+                cursor.remote_records.resize(original_record_count);
+            }
+            cursor.record_count = cursor.remote_records.size();
+            move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+        } else if (!cursor.source_path.empty()) {
+            const auto rollback_result = vfp::truncate_dbf_table_file(cursor.source_path, original_record_count);
+            if (rollback_result.ok) {
+                cursor.record_count = rollback_result.record_count;
+                move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+            } else {
+                last_error_message = replace_error + " (rollback failed: " + rollback_result.error + ")";
+                return false;
+            }
+        }
+        cursor.found = original_found;
+        cursor.bof = original_bof;
+        cursor.eof = original_eof;
+        last_error_message = replace_error;
+        return false;
     }
 
     bool append_blank_record(CursorState& cursor) {
@@ -7891,6 +8018,60 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = "runtime.create_cursor",
                 .detail = alias,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::create_table_command: {
+            std::string target = trim_copy(statement.identifier);
+            if (target.empty()) {
+                last_error_message = "CREATE TABLE requires a target table name";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if ((target.size() >= 2U && target.front() == '\'' && target.back() == '\'') ||
+                (target.size() >= 2U && target.front() == '"' && target.back() == '"')) {
+                target = value_as_string(evaluate_expression(target, frame));
+            } else {
+                target = unquote_string(target);
+            }
+
+            std::filesystem::path table_path(target);
+            if (table_path.extension().empty()) {
+                table_path += ".dbf";
+            }
+            if (table_path.is_relative()) {
+                table_path = std::filesystem::path(current_default_directory()) / table_path;
+            }
+            table_path = table_path.lexically_normal();
+
+            const std::vector<vfp::DbfFieldDescriptor> fields = parse_create_table_fields(statement.expression);
+            if (fields.empty()) {
+                last_error_message = "CREATE TABLE requires at least one supported field declaration";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
+            if (!create_result.ok) {
+                last_error_message = create_result.error;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            const std::string alias = normalize_identifier(table_path.stem().string());
+            if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.create_table",
+                .detail = table_path.string(),
                 .location = statement.location
             });
             return {};

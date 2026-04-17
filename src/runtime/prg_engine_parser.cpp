@@ -600,6 +600,16 @@ Program parse_program(const std::string& path) {
             std::size_t start = 1U;
             while (start < line.size() && line[start] == '?') ++start;
             statement.expression = trim_copy(line.substr(start));
+        } else if (starts_with_insensitive(line, "CREATE TABLE ")) {
+            statement.kind = StatementKind::create_table_command;
+            const std::string body = trim_copy(line.substr(13U));
+            const auto paren_open = body.find('(');
+            if (paren_open != std::string::npos && body.back() == ')') {
+                statement.identifier = trim_copy(body.substr(0U, paren_open));
+                statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
+            } else {
+                statement.identifier = body;
+            }
         } else if (starts_with_insensitive(line, "CREATE CURSOR ")) {
             // CREATE CURSOR <alias> (<field_list>)
             statement.kind = StatementKind::create_cursor_command;
