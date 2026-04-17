@@ -1,0 +1,56 @@
+name: Native CMake Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-validation:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC
+            os: ubuntu-latest
+          - name: macOS Clang
+            os: macos-latest
+          - name: Windows MSVC
+            os: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure native build
+        if: runner.os != 'Windows'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Configure native build
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build native targets
+        if: runner.os != 'Windows'
+        run: cmake --build build --parallel
+
+      - name: Build native targets
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release --parallel
+
+      - name: Run native test suite
+        if: runner.os != 'Windows'
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run native test suite
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build -C Release --output-on-failure

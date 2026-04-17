@@ -141,6 +141,11 @@ E:\Project-Copperfin\build\Release\copperfin_build_host.exe build --project "C:\
 E:\Project-Copperfin\scripts\validate-windows.ps1
 ```
 
+GitHub validation:
+
+- `.github/workflows/native-validation.yml` runs the portable native CMake build and CTest suite on hosted Linux, macOS, and Windows runners for pushes, pull requests, and manual dispatch.
+- `.github/workflows/build-installers.yml` remains focused on packaging standalone installer artifacts and intentionally builds with tests disabled.
+
 Current MVP scope:
 
 - open `PJX/PJT`, `SCX/SCT`, `VCX/VCT`, `FRX/FRT`, `LBX/LBT`, `MNX/MNT`, `DBF/FPT`, `CDX/DCX`, `IDX`, `NDX`, and `MDX`
