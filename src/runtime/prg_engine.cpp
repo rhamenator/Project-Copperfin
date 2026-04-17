@@ -3,6 +3,7 @@
 #include "prg_engine_helpers.h"
 #include "prg_engine_internal.h"
 #include "prg_engine_runtime_config.h"
+#include "prg_engine_table_structure_helpers.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"
@@ -20,6 +21,7 @@
 #include <fstream>
 #include <functional>
 #include <iomanip>
+#include <map>
 #include <new>
 #include <optional>
 #include <process.h>
@@ -135,6 +137,12 @@ struct CursorState {
         bool descending = false;
     };
 
+    struct FieldRule {
+        bool nullable = true;
+        bool has_default = false;
+        std::string default_expression;
+    };
+
     int work_area = 0;
     std::string alias;
     std::string source_path;
@@ -158,6 +166,7 @@ struct CursorState {
     bool active_order_descending = false;
     std::string filter_expression;
     std::vector<vfp::DbfRecord> remote_records;
+    std::map<std::string, FieldRule> field_rules;
 };
 
 struct IndexedCandidate {
@@ -555,112 +564,19 @@ std::vector<ReplaceAssignment> parse_update_set_assignments(const std::string& t
     return assignments;
 }
 
-std::optional<vfp::DbfFieldDescriptor> parse_create_table_field(std::string text) {
-    text = trim_copy(std::move(text));
-    if (text.empty()) {
-        return std::nullopt;
-    }
-
-    std::istringstream stream(text);
-    std::string name;
-    std::string type_text;
-    stream >> name >> type_text;
-    if (name.empty() || type_text.empty()) {
-        return std::nullopt;
-    }
-
-    name = unquote_identifier(name);
-    type_text = uppercase_copy(trim_copy(type_text));
-    std::uint8_t length = 0U;
-    std::uint8_t decimals = 0U;
-
-    const std::size_t open_paren = type_text.find('(');
-    std::string type_name = open_paren == std::string::npos ? type_text : type_text.substr(0U, open_paren);
-    if (open_paren != std::string::npos && type_text.back() == ')') {
-        const std::string inside = type_text.substr(open_paren + 1U, type_text.size() - open_paren - 2U);
-        const std::vector<std::string> parts = split_csv_like(inside);
-        try {
-            if (!parts.empty()) {
-                length = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[0])), 0, 255));
-            }
-            if (parts.size() > 1U) {
-                decimals = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[1])), 0, 255));
-            }
-        } catch (const std::exception&) {
-            return std::nullopt;
+std::map<std::string, CursorState::FieldRule> field_rules_from_declarations(
+    const std::vector<TableFieldDeclaration>& declarations) {
+    std::map<std::string, CursorState::FieldRule> rules;
+    for (const auto& declaration : declarations) {
+        if (!declaration.nullable || declaration.has_default) {
+            rules[collapse_identifier(declaration.descriptor.name)] = CursorState::FieldRule{
+                .nullable = declaration.nullable,
+                .has_default = declaration.has_default,
+                .default_expression = declaration.default_expression
+            };
         }
     }
-
-    char type = '\0';
-    if (type_name == "C" || type_name == "CHAR" || type_name == "CHARACTER") {
-        type = 'C';
-        if (length == 0U) {
-            length = 10U;
-        }
-    } else if (type_name == "V" || type_name == "VARCHAR") {
-        type = 'V';
-        if (length == 0U) {
-            length = 10U;
-        }
-    } else if (type_name == "N" || type_name == "NUMERIC") {
-        type = 'N';
-        if (length == 0U) {
-            length = 10U;
-        }
-    } else if (type_name == "F" || type_name == "FLOAT") {
-        type = 'F';
-        if (length == 0U) {
-            length = 10U;
-        }
-    } else if (type_name == "B" || type_name == "DOUBLE") {
-        type = 'B';
-        length = 8U;
-    } else if (type_name == "Q" || type_name == "VARBINARY") {
-        type = 'Q';
-        if (length == 0U) {
-            length = 10U;
-        }
-    } else if (type_name == "L" || type_name == "LOGICAL") {
-        type = 'L';
-        length = 1U;
-    } else if (type_name == "D" || type_name == "DATE") {
-        type = 'D';
-        length = 8U;
-    } else if (type_name == "I" || type_name == "INTEGER") {
-        type = 'I';
-        length = 4U;
-    } else if (type_name == "Y" || type_name == "CURRENCY") {
-        type = 'Y';
-        length = 8U;
-        decimals = 4U;
-    } else if (type_name == "T" || type_name == "DATETIME") {
-        type = 'T';
-        length = 8U;
-    } else if (type_name == "M" || type_name == "MEMO") {
-        type = 'M';
-        length = 4U;
-    }
-
-    if (type == '\0' || name.empty()) {
-        return std::nullopt;
-    }
-    return vfp::DbfFieldDescriptor{
-        .name = name,
-        .type = type,
-        .offset = 0U,
-        .length = length,
-        .decimal_count = decimals
-    };
-}
-
-std::vector<vfp::DbfFieldDescriptor> parse_create_table_fields(const std::string& field_list) {
-    std::vector<vfp::DbfFieldDescriptor> fields;
-    for (const std::string& part : split_csv_like(field_list)) {
-        if (auto field = parse_create_table_field(part)) {
-            fields.push_back(*field);
-        }
-    }
-    return fields;
+    return rules;
 }
 
 PrgValue record_value_to_prg_value(const vfp::DbfRecordValue& field) {
@@ -2059,6 +1975,68 @@ struct PrgRuntimeSession::Impl {
         return names;
     }
 
+    std::optional<std::string> current_record_field_display_value(CursorState& cursor, const std::string& field_name) {
+        const std::string normalized = collapse_identifier(field_name);
+        if (cursor.remote) {
+            if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size()) {
+                return std::nullopt;
+            }
+            const auto& record = cursor.remote_records[cursor.recno - 1U];
+            const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const vfp::DbfRecordValue& candidate) {
+                return collapse_identifier(candidate.field_name) == normalized;
+            });
+            if (value == record.values.end()) {
+                return std::nullopt;
+            }
+            if (value->is_null) {
+                return "null";
+            }
+            return value->display_value;
+        }
+
+        if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof) {
+            return std::nullopt;
+        }
+        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
+        if (!table_result.ok) {
+            last_error_message = table_result.error;
+            return std::nullopt;
+        }
+        if (cursor.recno > table_result.table.records.size()) {
+            return std::nullopt;
+        }
+        const auto& record = table_result.table.records[cursor.recno - 1U];
+        const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const vfp::DbfRecordValue& candidate) {
+            return collapse_identifier(candidate.field_name) == normalized;
+        });
+        if (value == record.values.end()) {
+            return std::nullopt;
+        }
+        if (value->is_null) {
+            return "null";
+        }
+        return value->display_value;
+    }
+
+    bool validate_not_null_fields(CursorState& cursor) {
+        for (const auto& [field_name, rule] : cursor.field_rules) {
+            if (rule.nullable) {
+                continue;
+            }
+            const auto value = current_record_field_display_value(cursor, field_name);
+            if (!value.has_value()) {
+                last_error_message = "NOT NULL field not found: " + field_name;
+                return false;
+            }
+            const std::string normalized_value = lowercase_copy(trim_copy(*value));
+            if (normalized_value.empty() || normalized_value == "null") {
+                last_error_message = "NOT NULL constraint failed for field: " + field_name;
+                return false;
+            }
+        }
+        return true;
+    }
+
     bool insert_record_values(
         CursorState& cursor,
         const Frame& frame,
@@ -2102,13 +2080,32 @@ struct PrgRuntimeSession::Impl {
 
         std::vector<ReplaceAssignment> assignments;
         assignments.reserve(fields.size());
+        std::vector<std::string> explicit_fields;
+        explicit_fields.reserve(fields.size());
         for (std::size_t index = 0U; index < fields.size(); ++index) {
+            explicit_fields.push_back(collapse_identifier(fields[index]));
             assignments.push_back({
                 .field_name = fields[index],
                 .expression = trim_copy(values[index])
             });
         }
-        if (replace_current_record_fields(cursor, assignments, frame)) {
+        std::vector<ReplaceAssignment> default_assignments;
+        for (const auto& [field_name, rule] : cursor.field_rules) {
+            if (!rule.has_default) {
+                continue;
+            }
+            if (std::find(explicit_fields.begin(), explicit_fields.end(), field_name) != explicit_fields.end()) {
+                continue;
+            }
+            default_assignments.push_back({
+                .field_name = field_name,
+                .expression = rule.default_expression
+            });
+        }
+
+        const bool defaults_ok = default_assignments.empty() || replace_current_record_fields(cursor, default_assignments, frame);
+        const bool explicit_ok = defaults_ok && replace_current_record_fields(cursor, assignments, frame);
+        if (explicit_ok && validate_not_null_fields(cursor)) {
             return true;
         }
 
@@ -3506,7 +3503,8 @@ struct PrgRuntimeSession::Impl {
         bool remote,
         int sql_handle,
         const std::string& sql_command,
-        std::size_t synthetic_record_count) {
+        std::size_t synthetic_record_count,
+        const std::map<std::string, CursorState::FieldRule>& field_rules = {}) {
         (void)sql_command;
         std::string alias = requested_alias;
         std::string resolved_path = raw_path;
@@ -3575,7 +3573,8 @@ struct PrgRuntimeSession::Impl {
                 .found = false,
                 .bof = record_count == 0U,
                 .eof = record_count == 0U,
-                .orders = std::move(orders)
+                .orders = std::move(orders),
+                .field_rules = field_rules
             };
             return true;
         } else if (alias.empty()) {
@@ -3625,7 +3624,8 @@ struct PrgRuntimeSession::Impl {
             .found = false,
             .bof = record_count == 0U,
             .eof = record_count == 0U,
-            .remote_records = std::move(remote_records)
+            .remote_records = std::move(remote_records),
+            .field_rules = field_rules
         };
         if (remote && sql_handle > 0) {
             auto& connections = current_sql_connections();
@@ -7420,12 +7420,6 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
         }
         case StatementKind::pack_command: {
             const std::string pack_options = uppercase_copy(trim_copy(statement.expression));
-            if (pack_options.find("MEMO") != std::string::npos && pack_options.find("DBF") == std::string::npos) {
-                last_error_message = "PACK MEMO is not implemented yet";
-                last_fault_location = statement.location;
-                last_fault_statement = statement.text;
-                return {.ok = false, .message = last_error_message};
-            }
             CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
                 last_error_message = "PACK target work area not found";
@@ -7433,15 +7427,35 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
             }
-            if (!pack_cursor(*cursor)) {
-                last_fault_location = statement.location;
-                last_fault_statement = statement.text;
-                return {.ok = false, .message = last_error_message};
+            if (pack_options.find("MEMO") != std::string::npos && pack_options.find("DBF") == std::string::npos) {
+                if (cursor->remote) {
+                    events.push_back({
+                        .category = "runtime.pack",
+                        .detail = cursor->alias + " MEMO",
+                        .location = statement.location
+                    });
+                    return {};
+                }
+                const auto pack_result = vfp::pack_dbf_memo_file(cursor->source_path);
+                if (!pack_result.ok) {
+                    last_error_message = pack_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                cursor->record_count = pack_result.record_count;
+                move_cursor_to(*cursor, static_cast<long long>(std::min(cursor->recno, cursor->record_count)));
+            } else {
+                if (!pack_cursor(*cursor)) {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
             }
 
             events.push_back({
                 .category = "runtime.pack",
-                .detail = cursor->alias,
+                .detail = pack_options.find("MEMO") != std::string::npos ? cursor->alias + " MEMO" : cursor->alias,
                 .location = statement.location
             });
             return {};
@@ -8059,7 +8073,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             table_path = table_path.lexically_normal();
 
-            const std::vector<vfp::DbfFieldDescriptor> fields = parse_create_table_fields(statement.expression);
+            const auto declarations = parse_table_field_declarations(statement.expression);
+            const std::vector<vfp::DbfFieldDescriptor> fields = table_field_descriptors(declarations);
             if (fields.empty()) {
                 last_error_message = "CREATE TABLE requires at least one supported field declaration";
                 last_fault_location = statement.location;
@@ -8076,7 +8091,8 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
 
             const std::string alias = normalize_identifier(table_path.stem().string());
-            if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U)) {
+            const auto field_rules = field_rules_from_declarations(declarations);
+            if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules)) {
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -8090,8 +8106,9 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         }
         case StatementKind::alter_table_command: {
-            if (normalize_identifier(statement.secondary_expression) != "add") {
-                last_error_message = "ALTER TABLE currently supports ADD COLUMN only";
+            const std::string action = normalize_identifier(statement.secondary_expression);
+            if (action != "add" && action != "drop" && action != "alter") {
+                last_error_message = "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only";
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -8120,15 +8137,27 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             }
             table_path = table_path.lexically_normal();
 
-            const auto field = parse_create_table_field(statement.expression);
-            if (!field.has_value()) {
-                last_error_message = "ALTER TABLE ADD COLUMN requires a supported field declaration";
-                last_fault_location = statement.location;
-                last_fault_statement = statement.text;
-                return {.ok = false, .message = last_error_message};
+            vfp::DbfWriteResult add_result;
+            std::optional<TableFieldDeclaration> declaration;
+            std::string affected_field = trim_copy(statement.expression);
+            if (action == "add" || action == "alter") {
+                declaration = parse_table_field_declaration(statement.expression);
+                if (!declaration.has_value()) {
+                    last_error_message = action == "add"
+                        ? "ALTER TABLE ADD COLUMN requires a supported field declaration"
+                        : "ALTER TABLE ALTER COLUMN requires a supported field declaration";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                affected_field = declaration->descriptor.name;
+                add_result = action == "add"
+                    ? vfp::add_dbf_table_field(table_path.string(), declaration->descriptor)
+                    : vfp::alter_dbf_table_field(table_path.string(), declaration->descriptor);
+            } else {
+                affected_field = unquote_identifier(affected_field);
+                add_result = vfp::drop_dbf_table_field(table_path.string(), affected_field);
             }
-
-            const auto add_result = vfp::add_dbf_table_field(table_path.string(), *field);
             if (!add_result.ok) {
                 last_error_message = add_result.error;
                 last_fault_location = statement.location;
@@ -8138,14 +8167,32 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
 
             for (auto& [_, cursor] : current_session_state().cursors) {
                 if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string())) {
-                    cursor.field_count += 1U;
+                    if (action == "add") {
+                        cursor.field_count += 1U;
+                    } else if (action == "drop" && cursor.field_count > 0U) {
+                        cursor.field_count -= 1U;
+                    }
                     cursor.record_count = add_result.record_count;
+                    const std::string normalized_field = collapse_identifier(affected_field);
+                    if (action == "drop") {
+                        cursor.field_rules.erase(normalized_field);
+                    } else if (declaration.has_value()) {
+                        if (!declaration->nullable || declaration->has_default) {
+                            cursor.field_rules[normalized_field] = CursorState::FieldRule{
+                                .nullable = declaration->nullable,
+                                .has_default = declaration->has_default,
+                                .default_expression = declaration->default_expression
+                            };
+                        } else {
+                            cursor.field_rules.erase(normalized_field);
+                        }
+                    }
                 }
             }
 
             events.push_back({
                 .category = "runtime.alter_table",
-                .detail = table_path.string() + " ADD " + field->name,
+                .detail = table_path.string() + " " + uppercase_copy(action) + " " + affected_field,
                 .location = statement.location
             });
             return {};

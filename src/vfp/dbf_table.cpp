@@ -1250,6 +1250,132 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
     return {.ok = true, .record_count = records.size()};
 }
 
+DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name) {
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    DbfTableParseResult table_result = parse_dbf_table_from_file(path, header_result.header.record_count);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    const std::string normalized_field_name = lowercase_copy(trim_both(field_name));
+    const auto field = std::find_if(
+        table_result.table.fields.begin(),
+        table_result.table.fields.end(),
+        [&](const DbfFieldDescriptor& candidate) {
+            return lowercase_copy(trim_both(candidate.name)) == normalized_field_name;
+        });
+    if (field == table_result.table.fields.end()) {
+        return {.ok = false, .error = "The target field was not found.", .record_count = table_result.table.records.size()};
+    }
+    if (table_result.table.fields.size() <= 1U) {
+        return {.ok = false, .error = "Cannot drop the last field from a DBF table.", .record_count = table_result.table.records.size()};
+    }
+
+    const std::size_t field_index = static_cast<std::size_t>(std::distance(table_result.table.fields.begin(), field));
+    std::vector<DbfFieldDescriptor> fields;
+    fields.reserve(table_result.table.fields.size() - 1U);
+    for (std::size_t index = 0U; index < table_result.table.fields.size(); ++index) {
+        if (index != field_index) {
+            fields.push_back(table_result.table.fields[index]);
+        }
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table_result.table.records.size());
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table_result.table.records.size());
+    for (const auto& record : table_result.table.records) {
+        std::vector<std::string> output_record;
+        output_record.reserve(fields.size());
+        for (std::size_t index = 0U; index < record.values.size(); ++index) {
+            if (index != field_index) {
+                output_record.push_back(record.values[index].display_value);
+            }
+        }
+        deleted_flags.push_back(record.deleted);
+        records.push_back(std::move(output_record));
+    }
+
+    const DbfWriteResult create_result = create_dbf_table_file(path, fields, records);
+    if (!create_result.ok) {
+        return create_result;
+    }
+
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
+        if (!delete_result.ok) {
+            return delete_result;
+        }
+    }
+
+    return {.ok = true, .record_count = records.size()};
+}
+
+DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    DbfTableParseResult table_result = parse_dbf_table_from_file(path, header_result.header.record_count);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    const std::string normalized_field_name = lowercase_copy(trim_both(field.name));
+    const auto existing = std::find_if(
+        table_result.table.fields.begin(),
+        table_result.table.fields.end(),
+        [&](const DbfFieldDescriptor& candidate) {
+            return lowercase_copy(trim_both(candidate.name)) == normalized_field_name;
+        });
+    if (existing == table_result.table.fields.end()) {
+        return {.ok = false, .error = "The target field was not found.", .record_count = table_result.table.records.size()};
+    }
+
+    std::vector<DbfFieldDescriptor> fields = table_result.table.fields;
+    const std::size_t field_index = static_cast<std::size_t>(std::distance(table_result.table.fields.begin(), existing));
+    fields[field_index] = field;
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table_result.table.records.size());
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table_result.table.records.size());
+    for (const auto& record : table_result.table.records) {
+        std::vector<std::string> output_record;
+        output_record.reserve(record.values.size());
+        for (const auto& value : record.values) {
+            output_record.push_back(value.display_value);
+        }
+        deleted_flags.push_back(record.deleted);
+        records.push_back(std::move(output_record));
+    }
+
+    const DbfWriteResult create_result = create_dbf_table_file(path, fields, records);
+    if (!create_result.ok) {
+        return create_result;
+    }
+
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
+        if (!delete_result.ok) {
+            return delete_result;
+        }
+    }
+
+    return {.ok = true, .record_count = records.size()};
+}
+
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
@@ -1460,6 +1586,60 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
     }
 
     return {.ok = true, .record_count = kept_count};
+}
+
+DbfWriteResult pack_dbf_memo_file(const std::string& path) {
+    const DbfParseResult header_result = parse_dbf_header_from_file(path);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    DbfTableParseResult table_result = parse_dbf_table_from_file(path, header_result.header.record_count);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    bool has_memo_fields = false;
+    for (const auto& field : table_result.table.fields) {
+        if (is_memo_pointer_field(field.type)) {
+            has_memo_fields = true;
+            break;
+        }
+    }
+    if (!has_memo_fields) {
+        return {.ok = true, .record_count = table_result.table.records.size()};
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table_result.table.records.size());
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table_result.table.records.size());
+    for (const auto& record : table_result.table.records) {
+        std::vector<std::string> output_record;
+        output_record.reserve(record.values.size());
+        for (const auto& value : record.values) {
+            output_record.push_back(value.display_value);
+        }
+        deleted_flags.push_back(record.deleted);
+        records.push_back(std::move(output_record));
+    }
+
+    const DbfWriteResult create_result = create_dbf_table_file(path, table_result.table.fields, records);
+    if (!create_result.ok) {
+        return create_result;
+    }
+
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
+        if (!delete_result.ok) {
+            return delete_result;
+        }
+    }
+
+    return {.ok = true, .record_count = records.size()};
 }
 
 DbfWriteResult zap_dbf_table_file(const std::string& path) {

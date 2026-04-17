@@ -95,6 +95,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_parser.cpp
     src/runtime/prg_engine_runtime_config.cpp
+    src/runtime/prg_engine_table_structure_helpers.cpp
     src/runtime/xasset_methods.cpp
 )
 
@@ -403,6 +404,7 @@ if(COPPERFIN_BUILD_TESTS)
 
     add_executable(test_prg_engine
         tests/test_prg_engine.cpp
+        tests/prg_engine_test_support.cpp
     )
 
     target_link_libraries(test_prg_engine PRIVATE cf_xbase_runtime)
@@ -414,6 +416,51 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_prg_engine COMMAND $<TARGET_FILE:test_prg_engine>)
+
+    add_executable(test_prg_engine_sql_cursors
+        tests/test_prg_engine_sql_cursors.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_sql_cursors PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_sql_cursors PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_sql_cursors PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_sql_cursors COMMAND $<TARGET_FILE:test_prg_engine_sql_cursors>)
+
+    add_executable(test_prg_engine_table_mutation
+        tests/test_prg_engine_table_mutation.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_table_mutation PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_table_mutation PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_table_mutation PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_table_mutation COMMAND $<TARGET_FILE:test_prg_engine_table_mutation>)
+
+    add_executable(test_prg_engine_table_structure
+        tests/test_prg_engine_table_structure.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_table_structure PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_table_structure PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_table_structure PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_table_structure COMMAND $<TARGET_FILE:test_prg_engine_table_structure>)
 
     add_executable(test_xasset_methods
         tests/test_xasset_methods.cpp

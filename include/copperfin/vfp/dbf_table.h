@@ -53,6 +53,8 @@ DbfWriteResult create_dbf_table_file(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records);
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field);
+DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name);
+DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field);
 DbfWriteResult append_blank_record_to_file(const std::string& path);
 DbfWriteResult replace_record_field_value(
     const std::string& path,
@@ -65,6 +67,7 @@ DbfWriteResult set_record_deleted_flag(
     bool deleted);
 DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count);
 DbfWriteResult pack_dbf_table_file(const std::string& path);
+DbfWriteResult pack_dbf_memo_file(const std::string& path);
 DbfWriteResult zap_dbf_table_file(const std::string& path);
 
 }  // namespace copperfin::vfp
