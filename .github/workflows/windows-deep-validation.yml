@@ -1,0 +1,65 @@
+name: Windows Deep Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_configuration:
+        description: Native and managed build configuration.
+        required: true
+        default: Release
+        type: choice
+        options:
+          - Release
+          - Debug
+      run_designer_smoke_tests:
+        description: Run designer smoke executable after building it. Requires hosted-accessible sample assets.
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  windows-deep-validation:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Configure native build
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build native binaries and tests
+        run: cmake --build build --config ${{ inputs.build_configuration }} --parallel
+
+      - name: Run native CTest suite
+        run: ctest --test-dir build -C ${{ inputs.build_configuration }} --output-on-failure
+
+      - name: Build Visual Studio extension
+        run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }} /p:DeployExtension=false
+
+      - name: Build standalone Studio shell
+        run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
+
+      - name: Build designer smoke tests
+        run: msbuild vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
+
+      - name: Run designer smoke tests
+        if: ${{ inputs.run_designer_smoke_tests }}
+        run: vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe
+
+      - name: Upload Windows deep validation artifacts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}
+          path: |
+            build/${{ inputs.build_configuration }}/*.exe
+            vsix/Copperfin.VisualStudio/bin/${{ inputs.build_configuration }}/net472/*.vsix
+            vsix/Copperfin.Studio/bin/${{ inputs.build_configuration }}/net472/*.exe
+            vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/*.exe

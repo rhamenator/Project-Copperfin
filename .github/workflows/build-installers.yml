@@ -10,7 +10,7 @@ jobs:
   windows-installer:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Install NSIS
         run: |
@@ -27,7 +27,7 @@ jobs:
         run: cpack --config build/CPackConfig.cmake -C Release -G "NSIS;ZIP"
 
       - name: Upload Windows installer artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: copperfin-windows-installers
           path: |
@@ -37,7 +37,7 @@ jobs:
   macos-installer:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
@@ -49,7 +49,7 @@ jobs:
         run: cpack --config build/CPackConfig.cmake -G "productbuild;TGZ"
 
       - name: Upload macOS installer artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: copperfin-macos-installers
           path: |
@@ -59,7 +59,7 @@ jobs:
   linux-deb-rpm-installers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       - name: Install RPM tooling
         run: |
@@ -82,7 +82,7 @@ jobs:
         run: cpack --config build/CPackConfig.cmake -G TGZ
 
       - name: Upload Linux installer artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: copperfin-linux-installers
           path: |

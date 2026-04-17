@@ -4337,7 +4337,20 @@ struct PrgRuntimeSession::Impl {
             return make_number_value(static_cast<double>(array_subscript(*array, element, dimension)));
         }
         if (normalized_function == "ascan" && arguments.size() >= 2U) {
-            for (std::size_t index = 0U; index < array->values.size(); ++index) {
+            const std::size_t start = arguments.size() >= 3U
+                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
+                : 1U;
+            const std::size_t count = arguments.size() >= 4U
+                ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[3])))
+                : 0U;
+            if (start == 0U || start > array->values.size()) {
+                return make_number_value(0.0);
+            }
+            const std::size_t begin_index = start - 1U;
+            const std::size_t available = array->values.size() - begin_index;
+            const std::size_t scan_count = count == 0U ? available : std::min(count, available);
+            const std::size_t end_index = begin_index + scan_count;
+            for (std::size_t index = begin_index; index < end_index; ++index) {
                 if (value_as_string(array->values[index]) == value_as_string(arguments[1])) {
                     return make_number_value(static_cast<double>(index + 1U));
                 }

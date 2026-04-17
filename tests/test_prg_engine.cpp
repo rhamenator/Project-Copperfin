@@ -6486,6 +6486,10 @@ void test_runtime_array_mutator_functions() {
         "aSource[2,1] = 'D'\n"
         "aSource[2,2] = 'E'\n"
         "aSource[2,3] = 'F'\n"
+        "nScanDFromSecond = ASCAN(aSource, 'D', 2)\n"
+        "nScanAFromSecond = ASCAN(aSource, 'A', 2)\n"
+        "nScanCWindow = ASCAN(aSource, 'C', 2, 2)\n"
+        "nScanDWindowMiss = ASCAN(aSource, 'D', 2, 2)\n"
         "nElement = AELEMENT(aSource, 2, 2)\n"
         "nElementRow = ASUBSCRIPT(aSource, nElement, 1)\n"
         "nElementColumn = ASUBSCRIPT(aSource, nElement, 2)\n"
@@ -6519,6 +6523,10 @@ void test_runtime_array_mutator_functions() {
     const auto resize = state.globals.find("nresize");
     const auto len_after_resize = state.globals.find("nlenafterresize");
     const auto preserved_after_resize = state.globals.find("cpreservedafterresize");
+    const auto scan_d_from_second = state.globals.find("nscandfromsecond");
+    const auto scan_a_from_second = state.globals.find("nscanafromsecond");
+    const auto scan_c_window = state.globals.find("nscancwindow");
+    const auto scan_d_window_miss = state.globals.find("nscandwindowmiss");
     const auto element = state.globals.find("nelement");
     const auto element_row = state.globals.find("nelementrow");
     const auto element_column = state.globals.find("nelementcolumn");
@@ -6542,6 +6550,10 @@ void test_runtime_array_mutator_functions() {
     expect(resize != state.globals.end(), "ASIZE should return the new element count");
     expect(len_after_resize != state.globals.end(), "ALEN should reflect ASIZE result");
     expect(preserved_after_resize != state.globals.end(), "ASIZE should preserve existing values");
+    expect(scan_d_from_second != state.globals.end(), "ASCAN should support a start element");
+    expect(scan_a_from_second != state.globals.end(), "ASCAN should not match entries before the start element");
+    expect(scan_c_window != state.globals.end(), "ASCAN should support a bounded search window");
+    expect(scan_d_window_miss != state.globals.end(), "ASCAN bounded windows should stop before later matches");
     expect(element != state.globals.end(), "AELEMENT should return a linear element number");
     expect(element_row != state.globals.end(), "ASUBSCRIPT should resolve the element row");
     expect(element_column != state.globals.end(), "ASUBSCRIPT should resolve the element column");
@@ -6588,6 +6600,18 @@ void test_runtime_array_mutator_functions() {
     }
     if (preserved_after_resize != state.globals.end()) {
         expect(copperfin::runtime::format_value(preserved_after_resize->second) == "Zulu", "ASIZE should preserve shifted values");
+    }
+    if (scan_d_from_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_d_from_second->second) == "4", "ASCAN start element should scan later row-major values");
+    }
+    if (scan_a_from_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_a_from_second->second) == "0", "ASCAN start element should exclude earlier values");
+    }
+    if (scan_c_window != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_c_window->second) == "3", "ASCAN count should include values inside the requested window");
+    }
+    if (scan_d_window_miss != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_d_window_miss->second) == "0", "ASCAN count should exclude values after the requested window");
     }
     if (element != state.globals.end()) {
         expect(copperfin::runtime::format_value(element->second) == "5", "AELEMENT(aSource, 2, 2) should return row-major element 5");

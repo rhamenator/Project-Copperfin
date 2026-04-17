@@ -1,5 +1,10 @@
 # Project Copperfin
 
+[![Native CMake Validation](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation.yml)
+[![Build Standalone Installers](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-installers.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-installers.yml)
+[![Build Visual Studio VSIX](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-vsix.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-vsix.yml)
+[![Security Supply Chain Gate](https://github.com/rhamenator/Project-Copperfin/actions/workflows/security-supply-chain.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/security-supply-chain.yml)
+
 Project Copperfin is a clean-room blueprint for a modern successor to Visual FoxPro-style business application development.
 
 Current engineering priority:
@@ -145,6 +150,7 @@ GitHub validation:
 
 - `.github/workflows/native-validation.yml` runs the portable native CMake build and CTest suite on hosted Linux, macOS, and Windows runners for pushes, pull requests, and manual dispatch.
 - `.github/workflows/build-installers.yml` remains focused on packaging standalone installer artifacts and intentionally builds with tests disabled.
+- `.github/workflows/windows-deep-validation.yml` is manual dispatch only and runs a deeper Windows hosted build across native tests, VSIX, standalone Studio, and designer smoke test binaries.
 
 Current MVP scope:
 
