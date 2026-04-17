@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -13,7 +14,9 @@ enum class PrgValueKind {
     empty,
     boolean,
     number,
-    string
+    string,
+    int64,
+    uint64
 };
 
 struct PrgValue {
@@ -21,6 +24,8 @@ struct PrgValue {
     bool boolean_value = false;
     double number_value = 0.0;
     std::string string_value;
+    std::int64_t int64_value = 0;
+    std::uint64_t uint64_value = 0;
 };
 
 struct SourceLocation {

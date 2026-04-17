@@ -29,6 +29,22 @@
 #include <chrono>
 #include <utility>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#include <metahost.h>
+#pragma comment(lib, "mscoree.lib")
+#include <comdef.h>
+
+// Minimal COM interface declarations for .NET CLR v4 hosting.
+// We only need _AppDomain::Load_2, _Type::GetMethod_2, _MethodInfo::Invoke_3.
+// Rather than importing the full mscorlib.tlb (which collides with SDK headers),
+// we declare only what we need via IDispatch-based late binding.
+// The actual CLR invocation uses IDispatch::Invoke for safety and compatibility.
+#include <oaidl.h>
+#endif
+
 namespace copperfin::runtime {
 
 namespace {
@@ -172,6 +188,22 @@ struct RegisteredApiFunction {
     std::string dll_name;
 };
 
+struct DeclaredDllFunction {
+    std::string alias;          // Name used in PRG code (may equal function_name)
+    std::string function_name;  // Actual export name in DLL
+    std::string dll_path;       // Path to DLL/FLL/.NET assembly
+    std::string return_type;    // e.g. "INTEGER", "STRING", "DOUBLE", etc.
+    std::string param_types;    // Comma-separated param types
+    bool is_dotnet = false;
+#if defined(_WIN32)
+    HMODULE hmodule = nullptr;
+    FARPROC proc_address = nullptr;
+#endif
+    // .NET-specific (assembly!Namespace.Type.Method)
+    std::string dotnet_type_name;
+    std::string dotnet_method_name;
+};
+
 struct DataSessionState {
     int selected_work_area = 1;
     int next_work_area = 1;
@@ -185,9 +217,62 @@ struct RuntimeArray {
     std::vector<PrgValue> values;
 };
 
+// Wildcard match: '*' matches any sequence, '?' matches a single char (case-insensitive).
+static bool field_wildcard_match(const std::string& name, const std::string& pattern) {
+    const std::string n = uppercase_copy(name);
+    const std::string p = uppercase_copy(pattern);
+    // dp[i][j] = true if n[0..i-1] matches p[0..j-1]
+    const std::size_t ni = n.size(), pi = p.size();
+    std::vector<std::vector<bool>> dp(ni + 1U, std::vector<bool>(pi + 1U, false));
+    dp[0][0] = true;
+    for (std::size_t j = 1U; j <= pi; ++j) {
+        if (p[j - 1U] == '*') dp[0][j] = dp[0][j - 1U];
+    }
+    for (std::size_t i = 1U; i <= ni; ++i) {
+        for (std::size_t j = 1U; j <= pi; ++j) {
+            if (p[j - 1U] == '*') {
+                dp[i][j] = dp[i - 1U][j] || dp[i][j - 1U];
+            } else if (p[j - 1U] == '?' || p[j - 1U] == n[i - 1U]) {
+                dp[i][j] = dp[i - 1U][j - 1U];
+            }
+        }
+    }
+    return dp[ni][pi];
+}
+
+// Sentinels encoded as first element of the returned vector.
+// "__LIKE__"  = include only fields matching the wildcard pattern in element [1]
+// "__EXCEPT__" = include all fields NOT matching patterns in elements [1..]
 std::vector<std::string> parse_field_filter_clause(const std::string& fields_clause) {
+    const std::string trimmed = trim_copy(fields_clause);
+
+    if (starts_with_insensitive(trimmed, "LIKE ")) {
+        // FIELDS LIKE <pattern>  (single wildcard pattern)
+        const std::string pattern = collapse_identifier(trim_copy(trimmed.substr(5U)));
+        std::vector<std::string> result;
+        result.push_back("__LIKE__");
+        result.push_back(pattern);
+        return result;
+    }
+
+    if (starts_with_insensitive(trimmed, "EXCEPT ")) {
+        // FIELDS EXCEPT <name1, name2, ...>  (exact names or patterns to exclude)
+        std::vector<std::string> result;
+        result.push_back("__EXCEPT__");
+        std::string remaining = trim_copy(trimmed.substr(7U));
+        while (!remaining.empty()) {
+            const auto comma = remaining.find(',');
+            const std::string token = collapse_identifier(trim_copy(
+                comma == std::string::npos ? remaining : remaining.substr(0U, comma)));
+            if (!token.empty()) result.push_back(token);
+            if (comma == std::string::npos) break;
+            remaining = remaining.substr(comma + 1U);
+        }
+        return result;
+    }
+
     std::vector<std::string> field_filter;
-    std::string remaining = fields_clause;
+    std::string remaining = trimmed;
     while (!remaining.empty()) {
         const auto comma = remaining.find(',');
         const std::string token = collapse_identifier(trim_copy(
@@ -205,6 +290,20 @@ std::vector<std::string> parse_field_filter_clause(const std::string& fields_cla
 
 bool field_matches_filter(const std::string& field_name, const std::vector<std::string>& field_filter) {
     if (field_filter.empty()) {
+        return true;
+    }
+    if (!field_filter.empty() && field_filter[0] == "__LIKE__") {
+        if (field_filter.size() < 2U) return true;
+        return field_wildcard_match(field_name, field_filter[1]);
+    }
+    if (!field_filter.empty() && field_filter[0] == "__EXCEPT__") {
+        // Exclude if field matches any listed name/pattern.
+        for (std::size_t i = 1U; i < field_filter.size(); ++i) {
+            if (field_wildcard_match(field_name, field_filter[i]) ||
+                collapse_identifier(field_filter[i]) == collapse_identifier(field_name)) {
+                return false;
+            }
+        }
         return true;
     }
     return std::find_if(
@@ -602,10 +701,16 @@ struct PrgRuntimeSession::Impl {
     std::map<int, RuntimeOleObjectState> ole_objects;
     std::set<std::string> loaded_libraries;
     std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
+    std::map<std::string, DeclaredDllFunction> declared_dll_functions; // keyed by normalized alias
     bool entry_pause_pending = false;
     bool waiting_for_events = false;
     bool handling_error = false;
     std::optional<std::size_t> error_handler_return_depth;
+    // Saved fault position for RETRY / RESUME
+    std::string fault_frame_file_path;
+    std::string fault_frame_routine_name;
+    std::size_t fault_statement_index = 0U;
+    bool fault_pc_valid = false;
     std::optional<std::size_t> event_dispatch_return_depth;
     bool restore_event_loop_after_dispatch = false;
     std::size_t executed_statement_count = 0;
@@ -2704,6 +2809,416 @@ struct PrgRuntimeSession::Impl {
         return make_number_value(0.0);
     }
 
+    // ---------------------------------------------------------------------------
+    // invoke_declared_dll_function
+    // Called from ExpressionParser when declared_dll_invoke_callback_ is set.
+    // ---------------------------------------------------------------------------
+    PrgValue invoke_declared_dll_function(const std::string& fn_key, const std::vector<PrgValue>& args) {
+        const std::string key = normalize_identifier(fn_key);
+        const auto found = declared_dll_functions.find(key);
+        if (found == declared_dll_functions.end()) return make_empty_value();
+        const DeclaredDllFunction& declfn = found->second;
+
+        // Split comma-separated param_types string into a vector for indexed access
+        std::vector<std::string> param_type_list;
+        {
+            std::istringstream ss(declfn.param_types);
+            std::string tok;
+            while (std::getline(ss, tok, ',')) {
+                while (!tok.empty() && tok.front() == ' ') tok.erase(tok.begin());
+                while (!tok.empty() && tok.back() == ' ') tok.pop_back();
+                if (!tok.empty()) param_type_list.push_back(tok);
+            }
+        }
+
+        auto param_type_at = [&](std::size_t i) -> std::string {
+            return i < param_type_list.size() ? param_type_list[i] : std::string("integer");
+        };
+
+#if defined(_WIN32)
+        // Helper: convert PrgValue → VARIANT
+        auto to_variant = [&](const PrgValue& v, const std::string& ptype) -> VARIANT {
+            VARIANT var;
+            VariantInit(&var);
+            const std::string pt = normalize_identifier(ptype);
+            // by-ref marker stripped for marshalling
+            const bool by_ref = !pt.empty() && pt.back() == '@';
+            const std::string base = by_ref ? pt.substr(0, pt.size() - 1) : pt;
+            if (base == "string" || base == "c") {
+                std::string s = value_as_string(v);
+                var.vt = VT_BSTR;
+                int wlen = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+                std::wstring ws(wlen, 0);
+                MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, ws.data(), wlen);
+                var.bstrVal = SysAllocString(ws.c_str());
+            } else if (base == "double" || base == "d" || base == "f") {
+                var.vt = VT_R8;
+                var.dblVal = value_as_number(v);
+            } else if (base == "long" || base == "longlong" || base == "integer64" || base == "i64") {
+                var.vt = VT_I8;
+                var.llVal = static_cast<LONGLONG>(value_as_number(v));
+            } else {
+                // Default: INTEGER / SHORT / WORD → VT_I4
+                var.vt = VT_I4;
+                var.lVal = static_cast<LONG>(value_as_number(v));
+            }
+            return var;
+        };
+
+        // Helper: VARIANT → PrgValue based on return_type
+        auto from_variant = [&](const VARIANT& var) -> PrgValue {
+            const std::string rt = normalize_identifier(declfn.return_type);
+            if (rt == "c" || rt == "string") {
+                if (var.vt == VT_BSTR && var.bstrVal) {
+                    int len = WideCharToMultiByte(CP_UTF8, 0, var.bstrVal, -1, nullptr, 0, nullptr, nullptr);
+                    std::string s(len, 0);
+                    WideCharToMultiByte(CP_UTF8, 0, var.bstrVal, -1, s.data(), len, nullptr, nullptr);
+                    if (!s.empty() && s.back() == '\0') s.pop_back();
+                    return make_string_value(s);
+                }
+                return make_string_value({});
+            }
+            if (var.vt == VT_I8 || var.vt == VT_UI8) return make_number_value(static_cast<double>(var.llVal));
+            if (var.vt == VT_R4) return make_number_value(static_cast<double>(var.fltVal));
+            if (var.vt == VT_R8) return make_number_value(var.dblVal);
+            if (var.vt == VT_BOOL) return make_boolean_value(var.boolVal != VARIANT_FALSE);
+            // Integer family
+            if (var.vt == VT_I4 || var.vt == VT_UI4) return make_number_value(static_cast<double>(var.lVal));
+            if (var.vt == VT_I2 || var.vt == VT_UI2) return make_number_value(static_cast<double>(var.iVal));
+            if (var.vt == VT_I1 || var.vt == VT_UI1) return make_number_value(static_cast<double>(var.bVal));
+            return make_number_value(static_cast<double>(var.intVal));
+        };
+
+        if (declfn.is_dotnet) {
+            // ---------------------------------------------------------------
+            // .NET CLR hosting via COM (ICLRMetaHost / ICorRuntimeHost)
+            // ---------------------------------------------------------------
+            // Single-init static COM state (process-wide, non-thread-safe for
+            // simplicity; adequate for VFP-style single-threaded programs).
+            static ICorRuntimeHost* s_runtime_host = nullptr;
+            static bool s_clr_started = false;
+            if (!s_clr_started) {
+                ICLRMetaHost* metahost = nullptr;
+                HRESULT hr2 = CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost, reinterpret_cast<void**>(&metahost));
+                if (FAILED(hr2)) {
+                    last_error_message = "CLRCreateInstance failed: " + std::to_string(hr2);
+                    return make_empty_value();
+                }
+                ICLRRuntimeInfo* runtime_info = nullptr;
+                hr2 = metahost->GetRuntime(L"v4.0.30319", IID_ICLRRuntimeInfo, reinterpret_cast<void**>(&runtime_info));
+                if (FAILED(hr2)) {
+                    IEnumUnknown* enumerator = nullptr;
+                    metahost->EnumerateInstalledRuntimes(&enumerator);
+                    if (enumerator) {
+                        IUnknown* rt_unk = nullptr;
+                        ULONG fetched = 0;
+                        while (enumerator->Next(1, &rt_unk, &fetched) == S_OK && fetched > 0) {
+                            if (runtime_info) runtime_info->Release();
+                            rt_unk->QueryInterface(IID_ICLRRuntimeInfo, reinterpret_cast<void**>(&runtime_info));
+                            rt_unk->Release();
+                        }
+                        enumerator->Release();
+                    }
+                }
+                if (runtime_info == nullptr) {
+                    metahost->Release();
+                    last_error_message = "No CLR runtime found";
+                    return make_empty_value();
+                }
+                hr2 = runtime_info->GetInterface(CLSID_CorRuntimeHost, IID_ICorRuntimeHost, reinterpret_cast<void**>(&s_runtime_host));
+                runtime_info->Release();
+                metahost->Release();
+                if (FAILED(hr2) || s_runtime_host == nullptr) {
+                    last_error_message = "Failed to get ICorRuntimeHost: " + std::to_string(hr2);
+                    return make_empty_value();
+                }
+                s_runtime_host->Start();
+                s_clr_started = true;
+            }
+
+            // IDispatch late-binding helper: call a named method on a COM object
+            auto dispatch_call = [](IDispatch* obj, const wchar_t* method_name,
+                                     std::vector<VARIANT> args, VARIANT* ret_out) -> HRESULT {
+                BSTR bname = SysAllocString(method_name);
+                DISPID dispid = DISPID_UNKNOWN;
+                HRESULT hr = obj->GetIDsOfNames(IID_NULL, &bname, 1, LOCALE_USER_DEFAULT, &dispid);
+                SysFreeString(bname);
+                if (FAILED(hr)) return hr;
+                // IDispatch args must be in reverse order
+                std::reverse(args.begin(), args.end());
+                DISPPARAMS dp{};
+                dp.rgvarg = args.empty() ? nullptr : args.data();
+                dp.cArgs = static_cast<UINT>(args.size());
+                EXCEPINFO exc{};
+                return obj->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD,
+                                   &dp, ret_out, &exc, nullptr);
+            };
+
+            // Get default AppDomain as IDispatch
+            IUnknown* app_domain_unk = nullptr;
+            HRESULT hr = s_runtime_host->GetDefaultDomain(&app_domain_unk);
+            if (FAILED(hr) || app_domain_unk == nullptr) {
+                last_error_message = "GetDefaultDomain failed: " + std::to_string(hr);
+                return make_empty_value();
+            }
+            IDispatch* app_domain_disp = nullptr;
+            hr = app_domain_unk->QueryInterface(IID_IDispatch, reinterpret_cast<void**>(&app_domain_disp));
+            app_domain_unk->Release();
+            if (FAILED(hr) || app_domain_disp == nullptr) {
+                last_error_message = "AppDomain QueryInterface IDispatch failed";
+                return make_empty_value();
+            }
+
+            // Load assembly: AppDomain.LoadFrom(path)
+            std::wstring asm_path_w(declfn.dll_path.begin(), declfn.dll_path.end());
+            VARIANT vpath;
+            VariantInit(&vpath);
+            vpath.vt = VT_BSTR;
+            vpath.bstrVal = SysAllocString(asm_path_w.c_str());
+            VARIANT v_assembly;
+            VariantInit(&v_assembly);
+            hr = dispatch_call(app_domain_disp, L"Load", {vpath}, &v_assembly);
+            VariantClear(&vpath);
+            app_domain_disp->Release();
+
+            // Try LoadFrom on AppDomain.CurrentDomain if Load fails
+            if (FAILED(hr) || v_assembly.vt == VT_EMPTY || v_assembly.vt == VT_NULL) {
+                // We couldn't load: return a graceful empty
+                VariantClear(&v_assembly);
+                last_error_message = "Could not load .NET assembly: " + declfn.dll_path + " hr=" + std::to_string(hr);
+                return make_empty_value();
+            }
+
+            IDispatch* assembly_disp = nullptr;
+            if (v_assembly.vt == VT_DISPATCH) assembly_disp = v_assembly.pdispVal;
+            else if (v_assembly.vt == (VT_DISPATCH | VT_BYREF) && v_assembly.ppdispVal)
+                assembly_disp = *v_assembly.ppdispVal;
+            if (!assembly_disp) {
+                VariantClear(&v_assembly);
+                last_error_message = "Assembly is not IDispatch";
+                return make_empty_value();
+            }
+            assembly_disp->AddRef();
+            VariantClear(&v_assembly);
+
+            // GetType(type_name)
+            std::wstring type_name_w(declfn.dotnet_type_name.begin(), declfn.dotnet_type_name.end());
+            VARIANT vtn;
+            VariantInit(&vtn);
+            vtn.vt = VT_BSTR;
+            vtn.bstrVal = SysAllocString(type_name_w.c_str());
+            VARIANT v_type;
+            VariantInit(&v_type);
+            hr = dispatch_call(assembly_disp, L"GetType", {vtn}, &v_type);
+            VariantClear(&vtn);
+            assembly_disp->Release();
+            IDispatch* type_disp = nullptr;
+            if (SUCCEEDED(hr) && v_type.vt == VT_DISPATCH) type_disp = v_type.pdispVal;
+            if (!type_disp) {
+                VariantClear(&v_type);
+                last_error_message = "Type not found: " + declfn.dotnet_type_name;
+                return make_empty_value();
+            }
+            type_disp->AddRef();
+            VariantClear(&v_type);
+
+            // GetMethod(method_name)
+            std::wstring method_name_w(declfn.dotnet_method_name.begin(), declfn.dotnet_method_name.end());
+            VARIANT vmn;
+            VariantInit(&vmn);
+            vmn.vt = VT_BSTR;
+            vmn.bstrVal = SysAllocString(method_name_w.c_str());
+            VARIANT v_method;
+            VariantInit(&v_method);
+            hr = dispatch_call(type_disp, L"GetMethod", {vmn}, &v_method);
+            VariantClear(&vmn);
+            type_disp->Release();
+            IDispatch* method_disp = nullptr;
+            if (SUCCEEDED(hr) && v_method.vt == VT_DISPATCH) method_disp = v_method.pdispVal;
+            if (!method_disp) {
+                VariantClear(&v_method);
+                last_error_message = "Method not found: " + declfn.dotnet_method_name;
+                return make_empty_value();
+            }
+            method_disp->AddRef();
+            VariantClear(&v_method);
+
+            // Build args SAFEARRAY wrapped in VARIANT for Invoke(null, args[])
+            SAFEARRAY* sa = SafeArrayCreateVector(VT_VARIANT, 0, static_cast<ULONG>(args.size()));
+            for (LONG idx = 0; idx < static_cast<LONG>(args.size()); ++idx) {
+                const std::string ptype = param_type_at(static_cast<std::size_t>(idx));
+                VARIANT v = to_variant(args[static_cast<std::size_t>(idx)], ptype);
+                SafeArrayPutElement(sa, &idx, &v);
+                VariantClear(&v);
+            }
+            VARIANT vsa;
+            VariantInit(&vsa);
+            vsa.vt = VT_ARRAY | VT_VARIANT;
+            vsa.parray = sa;
+
+            VARIANT vnull;
+            VariantInit(&vnull);
+            vnull.vt = VT_NULL; // static method — null target
+
+            VARIANT ret_var;
+            VariantInit(&ret_var);
+            hr = dispatch_call(method_disp, L"Invoke", {vnull, vsa}, &ret_var);
+            VariantClear(&vsa); // also destroys sa
+            VariantClear(&vnull);
+            method_disp->Release();
+
+            if (FAILED(hr)) {
+                last_error_message = "Method invoke failed: " + std::to_string(hr);
+                return make_empty_value();
+            }
+            PrgValue result = from_variant(ret_var);
+            VariantClear(&ret_var);
+            return result;
+
+        } else {
+            // ---------------------------------------------------------------
+            // Native DLL invocation via proc_address
+            // ---------------------------------------------------------------
+            if (declfn.proc_address == nullptr) {
+                last_error_message = "No proc address for: " + declfn.function_name;
+                return make_empty_value();
+            }
+
+            // Build integer/double argument lists for common calling conventions.
+            // We support the same limited set as VFP's DECLARE: up to 8 args,
+            // typed as INTEGER/LONG/DOUBLE/STRING.
+            // For STRING params we pass a pointer to the UTF-8 buffer.
+            // We do not attempt to pack varargs generically; instead we use a
+            // dispatch table keyed on arg count (0-8), which covers the vast
+            // majority of real-world DLL calls.
+
+            // Convert args to a flat array of 64-bit values (integers/pointers)
+            // and a parallel doubles array.
+            std::vector<std::string> string_buffers; // keep alive through the call
+            struct Arg64 { __int64 i; double d; bool is_double; };
+            std::vector<Arg64> flat;
+            flat.reserve(args.size());
+            for (std::size_t idx = 0; idx < args.size(); ++idx) {
+                const std::string ptype = normalize_identifier(param_type_at(idx));
+                const std::string base_pt = (!ptype.empty() && ptype.back() == '@')
+                    ? ptype.substr(0, ptype.size() - 1) : ptype;
+                Arg64 a{};
+                if (base_pt == "double" || base_pt == "d" || base_pt == "f") {
+                    a.d = value_as_number(args[idx]);
+                    a.is_double = true;
+                } else if (base_pt == "string" || base_pt == "c") {
+                    std::string s = value_as_string(args[idx]);
+                    string_buffers.push_back(std::move(s));
+                    a.i = reinterpret_cast<__int64>(string_buffers.back().c_str());
+                } else {
+                    a.i = static_cast<__int64>(value_as_number(args[idx]));
+                }
+                flat.push_back(a);
+            }
+
+            // Extract all args as __int64 (works for int, ptr, and bitcast of double)
+            auto iarg = [&](std::size_t i) -> __int64 {
+                if (i >= flat.size()) return 0LL;
+                return flat[i].is_double
+                    ? *reinterpret_cast<const __int64*>(&flat[i].d)
+                    : flat[i].i;
+            };
+
+            // Call the function. We cast to a stdcall prototype (VFP default on x86
+            // for DECLARE; on x64 there is only one calling convention).
+            // Return value is either integer or double based on return_type.
+            const std::string rt = normalize_identifier(declfn.return_type);
+            const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
+            const bool ret_string = (rt == "c" || rt == "string");
+            const std::size_t nargs = flat.size();
+
+#if defined(_WIN64)
+            // On x64 Windows, calling convention is unified.
+            typedef __int64 (*FnI_0)();
+            typedef __int64 (*FnI_1)(__int64);
+            typedef __int64 (*FnI_2)(__int64,__int64);
+            typedef __int64 (*FnI_3)(__int64,__int64,__int64);
+            typedef __int64 (*FnI_4)(__int64,__int64,__int64,__int64);
+            typedef __int64 (*FnI_5)(__int64,__int64,__int64,__int64,__int64);
+            typedef __int64 (*FnI_6)(__int64,__int64,__int64,__int64,__int64,__int64);
+            typedef __int64 (*FnI_7)(__int64,__int64,__int64,__int64,__int64,__int64,__int64);
+            typedef __int64 (*FnI_8)(__int64,__int64,__int64,__int64,__int64,__int64,__int64,__int64);
+            typedef double (*FnD_0)();
+            typedef double (*FnD_1)(__int64);
+            typedef double (*FnD_2)(__int64,__int64);
+            typedef double (*FnD_3)(__int64,__int64,__int64);
+            typedef double (*FnD_4)(__int64,__int64,__int64,__int64);
+
+            FARPROC fn = declfn.proc_address;
+            __int64 iret = 0;
+            double dret = 0.0;
+            if (ret_double) {
+                switch (nargs) {
+                    case 0: dret = reinterpret_cast<FnD_0>(fn)(); break;
+                    case 1: dret = reinterpret_cast<FnD_1>(fn)(iarg(0)); break;
+                    case 2: dret = reinterpret_cast<FnD_2>(fn)(iarg(0),iarg(1)); break;
+                    case 3: dret = reinterpret_cast<FnD_3>(fn)(iarg(0),iarg(1),iarg(2)); break;
+                    default: dret = reinterpret_cast<FnD_4>(fn)(iarg(0),iarg(1),iarg(2),iarg(3)); break;
+                }
+                return make_number_value(dret);
+            } else {
+                switch (nargs) {
+                    case 0: iret = reinterpret_cast<FnI_0>(fn)(); break;
+                    case 1: iret = reinterpret_cast<FnI_1>(fn)(iarg(0)); break;
+                    case 2: iret = reinterpret_cast<FnI_2>(fn)(iarg(0),iarg(1)); break;
+                    case 3: iret = reinterpret_cast<FnI_3>(fn)(iarg(0),iarg(1),iarg(2)); break;
+                    case 4: iret = reinterpret_cast<FnI_4>(fn)(iarg(0),iarg(1),iarg(2),iarg(3)); break;
+                    case 5: iret = reinterpret_cast<FnI_5>(fn)(iarg(0),iarg(1),iarg(2),iarg(3),iarg(4)); break;
+                    case 6: iret = reinterpret_cast<FnI_6>(fn)(iarg(0),iarg(1),iarg(2),iarg(3),iarg(4),iarg(5)); break;
+                    case 7: iret = reinterpret_cast<FnI_7>(fn)(iarg(0),iarg(1),iarg(2),iarg(3),iarg(4),iarg(5),iarg(6)); break;
+                    default: iret = reinterpret_cast<FnI_8>(fn)(iarg(0),iarg(1),iarg(2),iarg(3),iarg(4),iarg(5),iarg(6),iarg(7)); break;
+                }
+                if (ret_string) {
+                    const char* p = reinterpret_cast<const char*>(iret);
+                    return make_string_value(p ? std::string(p) : std::string{});
+                }
+                return make_number_value(static_cast<double>(iret));
+            }
+#else
+            // x86: use __stdcall by default (VFP DECLARE default)
+            typedef __int32 (__stdcall *FnSI_0)();
+            typedef __int32 (__stdcall *FnSI_1)(__int32);
+            typedef __int32 (__stdcall *FnSI_2)(__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_3)(__int32,__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_4)(__int32,__int32,__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_5)(__int32,__int32,__int32,__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_6)(__int32,__int32,__int32,__int32,__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_7)(__int32,__int32,__int32,__int32,__int32,__int32,__int32);
+            typedef __int32 (__stdcall *FnSI_8)(__int32,__int32,__int32,__int32,__int32,__int32,__int32,__int32);
+
+            auto i32 = [&](std::size_t i) -> __int32 { return static_cast<__int32>(iarg(i)); };
+
+            FARPROC fn = declfn.proc_address;
+            __int32 iret = 0;
+            switch (nargs) {
+                case 0: iret = reinterpret_cast<FnSI_0>(fn)(); break;
+                case 1: iret = reinterpret_cast<FnSI_1>(fn)(i32(0)); break;
+                case 2: iret = reinterpret_cast<FnSI_2>(fn)(i32(0),i32(1)); break;
+                case 3: iret = reinterpret_cast<FnSI_3>(fn)(i32(0),i32(1),i32(2)); break;
+                case 4: iret = reinterpret_cast<FnSI_4>(fn)(i32(0),i32(1),i32(2),i32(3)); break;
+                case 5: iret = reinterpret_cast<FnSI_5>(fn)(i32(0),i32(1),i32(2),i32(3),i32(4)); break;
+                case 6: iret = reinterpret_cast<FnSI_6>(fn)(i32(0),i32(1),i32(2),i32(3),i32(4),i32(5)); break;
+                case 7: iret = reinterpret_cast<FnSI_7>(fn)(i32(0),i32(1),i32(2),i32(3),i32(4),i32(5),i32(6)); break;
+                default: iret = reinterpret_cast<FnSI_8>(fn)(i32(0),i32(1),i32(2),i32(3),i32(4),i32(5),i32(6),i32(7)); break;
+            }
+            if (ret_string) {
+                const char* p = reinterpret_cast<const char*>(iret);
+                return make_string_value(p ? std::string(p) : std::string{});
+            }
+            return make_number_value(static_cast<double>(iret));
+#endif
+        }
+#else
+        (void)args;
+        return make_empty_value();
+#endif
+    }
+
     bool open_table_cursor(
         const std::string& raw_path,
         const std::string& requested_alias,
@@ -4181,7 +4696,8 @@ public:
         std::function<PrgValue(const std::string&)> ole_property_callback,
         std::function<PrgValue(const std::string&)> eval_expression_callback,
         std::function<std::string(const std::string&)> set_callback,
-        std::function<void(const std::string&, const std::string&)> record_event_callback)
+        std::function<void(const std::string&, const std::string&)> record_event_callback,
+        std::function<PrgValue(const std::string&, const std::vector<PrgValue>&)> declared_dll_invoke_callback)
         : current_work_area_(current_work_area),
           next_free_work_area_callback_(std::move(next_free_work_area_callback)),
           resolve_work_area_callback_(std::move(resolve_work_area_callback)),
@@ -4222,6 +4738,7 @@ public:
           eval_expression_callback_(std::move(eval_expression_callback)),
           set_callback_(std::move(set_callback)),
           record_event_callback_(std::move(record_event_callback)),
+          declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
           text_(text),
           frame_(frame),
           globals_(globals),
@@ -4249,15 +4766,43 @@ private:
             if (match("<>")) {
                 left = make_boolean_value(!values_equal(left, parse_additive()));
             } else if (match("<=")) {
-                left = make_boolean_value(value_as_number(left) <= value_as_number(parse_additive()));
+                PrgValue right = parse_additive();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <=
+                                             static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_boolean_value(value_as_number(left) <= value_as_number(right));
+                }
             } else if (match(">=")) {
-                left = make_boolean_value(value_as_number(left) >= value_as_number(parse_additive()));
+                PrgValue right = parse_additive();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >=
+                                             static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_boolean_value(value_as_number(left) >= value_as_number(right));
+                }
             } else if (match("==") || match("=")) {
                 left = make_boolean_value(values_equal(left, parse_additive()));
             } else if (match("<")) {
-                left = make_boolean_value(value_as_number(left) < value_as_number(parse_additive()));
+                PrgValue right = parse_additive();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <
+                                             static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_boolean_value(value_as_number(left) < value_as_number(right));
+                }
             } else if (match(">")) {
-                left = make_boolean_value(value_as_number(left) > value_as_number(parse_additive()));
+                PrgValue right = parse_additive();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >
+                                             static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_boolean_value(value_as_number(left) > value_as_number(right));
+                }
             } else {
                 return left;
             }
@@ -4272,11 +4817,25 @@ private:
                 PrgValue right = parse_multiplicative();
                 if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
                     left = make_string_value(value_as_string(left) + value_as_string(right));
+                } else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                           (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    // Preserve integer arithmetic - use int64 as common type
+                    left = make_int64_value(
+                        static_cast<std::int64_t>(value_as_number(left)) +
+                        static_cast<std::int64_t>(value_as_number(right)));
                 } else {
                     left = make_number_value(value_as_number(left) + value_as_number(right));
                 }
             } else if (match("-")) {
-                left = make_number_value(value_as_number(left) - value_as_number(parse_multiplicative()));
+                PrgValue right = parse_multiplicative();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_int64_value(
+                        static_cast<std::int64_t>(value_as_number(left)) -
+                        static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_number_value(value_as_number(left) - value_as_number(right));
+                }
             } else {
                 return left;
             }
@@ -4288,9 +4847,25 @@ private:
         while (true) {
             skip_whitespace();
             if (match("*")) {
-                left = make_number_value(value_as_number(left) * value_as_number(parse_unary()));
+                PrgValue right = parse_unary();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    left = make_int64_value(
+                        static_cast<std::int64_t>(value_as_number(left)) *
+                        static_cast<std::int64_t>(value_as_number(right)));
+                } else {
+                    left = make_number_value(value_as_number(left) * value_as_number(right));
+                }
             } else if (match("/")) {
-                left = make_number_value(value_as_number(left) / value_as_number(parse_unary()));
+                PrgValue right = parse_unary();
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+                    const std::int64_t divisor = static_cast<std::int64_t>(value_as_number(right));
+                    if (divisor == 0) throw std::runtime_error("Division by zero in integer expression");
+                    left = make_int64_value(static_cast<std::int64_t>(value_as_number(left)) / divisor);
+                } else {
+                    left = make_number_value(value_as_number(left) / value_as_number(right));
+                }
             } else {
                 return left;
             }
@@ -4303,7 +4878,11 @@ private:
             return make_boolean_value(!value_as_bool(parse_unary()));
         }
         if (match("-")) {
-            return make_number_value(-value_as_number(parse_unary()));
+            PrgValue operand = parse_unary();
+            if (operand.kind == PrgValueKind::int64) {
+                return make_int64_value(-operand.int64_value);
+            }
+            return make_number_value(-value_as_number(operand));
         }
         return parse_primary();
     }
@@ -4735,6 +5314,110 @@ private:
             }
             return make_number_value(static_cast<double>(count));
         }
+        if ((function == "padl" || function == "padr" || function == "padc") && arguments.size() >= 2U) {
+            std::string src = value_as_string(arguments[0]);
+            const std::size_t width = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+            const char pad_char = (arguments.size() >= 3U && !value_as_string(arguments[2]).empty())
+                ? value_as_string(arguments[2])[0] : ' ';
+            if (src.size() > width) {
+                src = src.substr(src.size() - width);  // truncate from left like VFP
+            }
+            if (function == "padl") {
+                src = std::string(width - src.size(), pad_char) + src;
+            } else if (function == "padr") {
+                src += std::string(width - src.size(), pad_char);
+            } else {  // padc
+                const std::size_t total_pad = width - src.size();
+                const std::size_t left_pad = total_pad / 2U;
+                const std::size_t right_pad = total_pad - left_pad;
+                src = std::string(left_pad, pad_char) + src + std::string(right_pad, pad_char);
+            }
+            return make_string_value(std::move(src));
+        }
+        if (function == "chrtran" && arguments.size() >= 3U) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::string from_chars = value_as_string(arguments[1]);
+            const std::string to_chars = value_as_string(arguments[2]);
+            std::string result;
+            result.reserve(src.size());
+            for (const char c : src) {
+                const auto pos = from_chars.find(c);
+                if (pos == std::string::npos) {
+                    result += c;
+                } else if (pos < to_chars.size()) {
+                    result += to_chars[pos];
+                }
+                // else: delete character (to_chars shorter than from_chars)
+            }
+            return make_string_value(std::move(result));
+        }
+        if ((function == "getwordcount" || function == "getwordnum") && !arguments.empty()) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::string delim = (arguments.size() >= (function == "getwordcount" ? 2U : 3U))
+                ? value_as_string(arguments[function == "getwordcount" ? 1U : 2U])
+                : std::string{" "};
+            if (delim.empty()) {
+                return function == "getwordcount" ? make_number_value(1.0) : make_string_value(src);
+            }
+            std::vector<std::string> words;
+            std::size_t start = 0U;
+            while (start < src.size()) {
+                const std::size_t end = src.find(delim, start);
+                const std::string word = end == std::string::npos ? src.substr(start) : src.substr(start, end - start);
+                if (!word.empty()) words.push_back(word);
+                if (end == std::string::npos) break;
+                start = end + delim.size();
+            }
+            if (function == "getwordcount") {
+                return make_number_value(static_cast<double>(words.size()));
+            } else {
+                const std::size_t n = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+                return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
+            }
+        }
+        if (function == "strextract" && arguments.size() >= 3U) {
+            const std::string src = value_as_string(arguments[0]);
+            const std::string begin_delim = value_as_string(arguments[1]);
+            const std::string end_delim = value_as_string(arguments[2]);
+            const std::size_t occurrence = arguments.size() >= 4U
+                ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3]))) : 1U;
+            const int flags = arguments.size() >= 5U ? static_cast<int>(value_as_number(arguments[4])) : 0;
+            const bool case_insensitive = (flags & 2) != 0;
+            std::size_t search_pos = 0U;
+            std::size_t found_count = 0U;
+            while (search_pos <= src.size()) {
+                std::size_t begin_pos;
+                if (begin_delim.empty()) {
+                    begin_pos = 0U;
+                } else if (case_insensitive) {
+                    const std::string src_up = uppercase_copy(src.substr(search_pos));
+                    const std::string bd_up = uppercase_copy(begin_delim);
+                    const std::size_t rel = src_up.find(bd_up);
+                    begin_pos = rel == std::string::npos ? std::string::npos : search_pos + rel;
+                } else {
+                    begin_pos = src.find(begin_delim, search_pos);
+                }
+                if (begin_pos == std::string::npos) break;
+                const std::size_t content_start = begin_pos + begin_delim.size();
+                ++found_count;
+                if (found_count == occurrence) {
+                    if (end_delim.empty()) return make_string_value(src.substr(content_start));
+                    std::size_t end_pos;
+                    if (case_insensitive) {
+                        const std::string remaining_up = uppercase_copy(src.substr(content_start));
+                        const std::string ed_up = uppercase_copy(end_delim);
+                        const std::size_t rel = remaining_up.find(ed_up);
+                        end_pos = rel == std::string::npos ? std::string::npos : content_start + rel;
+                    } else {
+                        end_pos = src.find(end_delim, content_start);
+                    }
+                    if (end_pos == std::string::npos) return make_string_value(src.substr(content_start));
+                    return make_string_value(src.substr(content_start, end_pos - content_start));
+                }
+                search_pos = content_start;
+            }
+            return make_string_value(std::string{});
+        }
         // --- Type / null functions ---
         if (function == "empty" && !arguments.empty()) {
             const PrgValue& v = arguments[0];
@@ -4742,6 +5425,8 @@ private:
             if (v.kind == PrgValueKind::string) return make_boolean_value(trim_copy(v.string_value).empty());
             if (v.kind == PrgValueKind::number) return make_boolean_value(std::abs(v.number_value) < 0.000001);
             if (v.kind == PrgValueKind::boolean) return make_boolean_value(!v.boolean_value);
+            if (v.kind == PrgValueKind::int64) return make_boolean_value(v.int64_value == 0);
+            if (v.kind == PrgValueKind::uint64) return make_boolean_value(v.uint64_value == 0U);
             return make_boolean_value(true);
         }
         if ((function == "isnull" || function == "isempty") && !arguments.empty()) {
@@ -4752,6 +5437,8 @@ private:
             if (v.kind == PrgValueKind::empty) return make_string_value("U");
             if (v.kind == PrgValueKind::boolean) return make_string_value("L");
             if (v.kind == PrgValueKind::number) return make_string_value("N");
+            if (v.kind == PrgValueKind::int64) return make_string_value("I");
+            if (v.kind == PrgValueKind::uint64) return make_string_value("I");
             return make_string_value("C");
         }
         if (function == "type" && !arguments.empty()) {
@@ -4760,6 +5447,8 @@ private:
             if (result.kind == PrgValueKind::empty) return make_string_value("U");
             if (result.kind == PrgValueKind::boolean) return make_string_value("L");
             if (result.kind == PrgValueKind::number) return make_string_value("N");
+            if (result.kind == PrgValueKind::int64) return make_string_value("I");
+            if (result.kind == PrgValueKind::uint64) return make_string_value("I");
             return make_string_value("C");
         }
         // --- Conditional / coalesce ---
@@ -4807,7 +5496,10 @@ private:
         }
         if (function == "log" && !arguments.empty()) {
             const double v = value_as_number(arguments[0]);
-            return make_number_value(v > 0.0 ? std::log(v) : 0.0);
+            if (v <= 0.0) {
+                throw std::runtime_error("LOG() requires a positive argument (got " + std::to_string(v) + ")");
+            }
+            return make_number_value(std::log(v));
         }
         if (function == "pi") {
             return make_number_value(3.14159265358979323846);
@@ -4960,6 +5652,108 @@ private:
         if (function == "cursorsetprop" || function == "cursorgetprop") {
             return make_number_value(0.0);
         }
+        // --- CAST(<expr> AS <type>) ---
+        if (function == "cast" && !arguments.empty()) {
+            // raw_arguments[0] contains "<expr> AS <type>" - evaluate_function receives the
+            // pre-evaluated argument list, so we need the raw text of the first argument.
+            // We look for the type name in the raw first argument after the AS keyword.
+            std::string type_name;
+            if (!raw_arguments.empty()) {
+                const std::string raw = uppercase_copy(raw_arguments[0]);
+                const auto as_pos = raw.rfind(" AS ");
+                if (as_pos != std::string::npos) {
+                    type_name = trim_copy(raw.substr(as_pos + 4U));
+                }
+            }
+            const PrgValue src = arguments[0];
+            if (type_name == "INT64" || type_name == "LONGLONG" || type_name == "BIGINT") {
+                return make_int64_value(static_cast<std::int64_t>(value_as_number(src)));
+            }
+            if (type_name == "UINT64" || type_name == "ULONGLONG" || type_name == "UBIGINT") {
+                return make_uint64_value(static_cast<std::uint64_t>(value_as_number(src)));
+            }
+            if (type_name == "INT" || type_name == "INT32" || type_name == "INTEGER"
+                || type_name == "LONG" || type_name == "INT16" || type_name == "SHORT") {
+                return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(src))));
+            }
+            if (type_name == "BYTE" || type_name == "UINT8") {
+                return make_uint64_value(static_cast<std::uint64_t>(value_as_number(src)) & 0xFFULL);
+            }
+            if (type_name == "FLOAT" || type_name == "SINGLE") {
+                return make_number_value(static_cast<double>(static_cast<float>(value_as_number(src))));
+            }
+            if (type_name == "DOUBLE" || type_name == "NUMERIC") {
+                return make_number_value(value_as_number(src));
+            }
+            if (type_name == "STRING" || type_name == "CHAR" || type_name == "VARCHAR" || type_name == "CHARACTER") {
+                return make_string_value(value_as_string(src));
+            }
+            if (type_name == "LOGICAL" || type_name == "BOOL" || type_name == "BOOLEAN") {
+                return make_boolean_value(value_as_bool(src));
+            }
+            // Unknown cast type - return source unchanged
+            return src;
+        }
+        // --- Bitwise integer operations ---
+        if (function == "bitand" && arguments.size() >= 2U) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
+            return make_int64_value(a & b);
+        }
+        if (function == "bitor" && arguments.size() >= 2U) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
+            return make_int64_value(a | b);
+        }
+        if (function == "bitxor" && arguments.size() >= 2U) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
+            return make_int64_value(a ^ b);
+        }
+        if (function == "bitnot" && !arguments.empty()) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            return make_int64_value(~a);
+        }
+        if (function == "bitlshift" && arguments.size() >= 2U) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const int  n = static_cast<int>(value_as_number(arguments[1]));
+            return make_int64_value(a << n);
+        }
+        if (function == "bitrshift" && arguments.size() >= 2U) {
+            const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const int  n = static_cast<int>(value_as_number(arguments[1]));
+            return make_int64_value(a >> n);
+        }
+        // --- BINTOC / CTOBIN: binary byte-string packing (VFP-compatible) ---
+        if (function == "bintoc" && !arguments.empty()) {
+            // BINTOC(<number> [, <width>])  - packs as little-endian bytes
+            const auto val = static_cast<std::int64_t>(value_as_number(arguments[0]));
+            const int width = arguments.size() >= 2U
+                ? static_cast<int>(value_as_number(arguments[1]))
+                : 4;  // default 4 bytes like VFP
+            std::string result(static_cast<std::size_t>(width), '\0');
+            std::uint64_t uval = static_cast<std::uint64_t>(val);
+            for (int i = 0; i < width; ++i) {
+                result[static_cast<std::size_t>(i)] = static_cast<char>(uval & 0xFFU);
+                uval >>= 8;
+            }
+            return make_string_value(std::move(result));
+        }
+        if (function == "ctobin" && !arguments.empty()) {
+            // CTOBIN(<string> [, <type>]) - unpacks little-endian bytes
+            const std::string s = value_as_string(arguments[0]);
+            const std::string type = arguments.size() >= 2U
+                ? uppercase_copy(value_as_string(arguments[1]))
+                : std::string("N");  // default: unsigned (VFP N = INTEGER)
+            std::uint64_t uval = 0U;
+            for (std::size_t i = s.size(); i-- > 0U; ) {
+                uval = (uval << 8) | static_cast<std::uint8_t>(s[i]);
+            }
+            if (type == "N" || type == "INTEGER" || type == "INT") {
+                return make_int64_value(static_cast<std::int64_t>(uval));
+            }
+            return make_uint64_value(uval);
+        }
         if (function == "isdigit" && !arguments.empty()) {
             const std::string s = value_as_string(arguments[0]);
             return make_boolean_value(!s.empty() && std::isdigit(static_cast<unsigned char>(s[0])) != 0);
@@ -4975,6 +5769,14 @@ private:
         if (function == "isupper" && !arguments.empty()) {
             const std::string s = value_as_string(arguments[0]);
             return make_boolean_value(!s.empty() && std::isupper(static_cast<unsigned char>(s[0])) != 0);
+        }
+        // --- Declared DLL function invocation ---
+        if (declared_dll_invoke_callback_) {
+            PrgValue dll_result = declared_dll_invoke_callback_(function, arguments);
+            if (dll_result.kind != PrgValueKind::empty) {
+                return dll_result;
+            }
+            // If result is empty the callback may mean "not found", fall through.
         }
         return make_string_value(function);
     }
@@ -5108,6 +5910,17 @@ private:
         if (left.kind == PrgValueKind::boolean || right.kind == PrgValueKind::boolean) {
             return value_as_bool(left) == value_as_bool(right);
         }
+        // Exact integer equality when both sides are integer kinds
+        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64)) {
+            return left.kind == PrgValueKind::int64
+                ? (right.kind == PrgValueKind::int64
+                    ? left.int64_value == right.int64_value
+                    : left.int64_value >= 0 && static_cast<std::uint64_t>(left.int64_value) == right.uint64_value)
+                : (right.kind == PrgValueKind::uint64
+                    ? left.uint64_value == right.uint64_value
+                    : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value));
+        }
         return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
     }
 
@@ -5151,6 +5964,7 @@ private:
     std::function<PrgValue(const std::string&)> eval_expression_callback_;
     std::function<std::string(const std::string&)> set_callback_;
     std::function<void(const std::string&, const std::string&)> record_event_callback_;
+    std::function<PrgValue(const std::string&, const std::vector<PrgValue>&)> declared_dll_invoke_callback_;
     const std::string& text_;
     const Frame& frame_;
     const std::map<std::string, PrgValue>& globals_;
@@ -5396,7 +6210,7 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
             if (normalized_value == "off" || normalized_value == "false" || normalized_value == "0") {
                 return std::string("OFF");
             }
-            return uppercase_copy(found->second);
+            return std::string("OFF");
         },
         [this](const std::string& category, const std::string& detail) {
             events.push_back({
@@ -5404,6 +6218,9 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
                 .detail = detail,
                 .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location
             });
+        },
+        [this](const std::string& fn_key, const std::vector<PrgValue>& fn_args) -> PrgValue {
+            return invoke_declared_dll_function(fn_key, fn_args);
         });
     return parser.parse();
 }
@@ -6484,6 +7301,134 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         }
+        case StatementKind::declare_dll: {
+#if defined(_WIN32)
+            // statement.identifier       = function name (export)
+            // statement.expression       = dll_path
+            // statement.secondary_expression = return type
+            // statement.tertiary_expression  = param types
+            // statement.quaternary_expression = alias (optional)
+            const std::string fn_name = trim_copy(statement.identifier);
+            const std::string dll_path_raw = unquote_string(trim_copy(
+                value_as_string(evaluate_expression(statement.expression, frame))));
+            const std::string ret_type = uppercase_copy(trim_copy(statement.secondary_expression));
+            const std::string param_types_str = trim_copy(statement.tertiary_expression);
+            const std::string alias_raw = trim_copy(statement.quaternary_expression);
+            const std::string alias = alias_raw.empty() ? fn_name : alias_raw;
+            const std::string alias_key = normalize_identifier(alias);
+
+            if (fn_name.empty() || dll_path_raw.empty()) {
+                last_error_message = "DECLARE: missing function name or DLL path.";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            // Resolve path relative to current default directory
+            std::filesystem::path dll_fspath(dll_path_raw);
+            if (dll_fspath.is_relative()) {
+                dll_fspath = std::filesystem::path(current_default_directory()) / dll_fspath;
+            }
+            const std::wstring dll_wpath = dll_fspath.wstring();
+
+            DeclaredDllFunction declfn;
+            declfn.alias = alias;
+            declfn.function_name = fn_name;
+            declfn.dll_path = dll_fspath.string();
+            declfn.return_type = ret_type;
+            declfn.param_types = param_types_str;
+
+            // Attempt native LoadLibrary (.dll or .fll both treated the same)
+            HMODULE hmod = LoadLibraryW(dll_wpath.c_str());
+            if (!hmod) {
+                // Check if it's a .NET assembly by inspecting the PE CLR header
+                // PE Optional Header offset 0x168 (for PE32) or 0x178 (PE32+) contains CLR directory
+                bool is_dotnet_assembly = false;
+                {
+                    HANDLE hfile = CreateFileW(dll_wpath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+                    if (hfile != INVALID_HANDLE_VALUE) {
+                        // Read IMAGE_DOS_HEADER
+                        IMAGE_DOS_HEADER dos_header{};
+                        DWORD bytes_read = 0;
+                        if (ReadFile(hfile, &dos_header, sizeof(dos_header), &bytes_read, nullptr) &&
+                            bytes_read == sizeof(dos_header) && dos_header.e_magic == IMAGE_DOS_SIGNATURE) {
+                            // Seek to PE header
+                            SetFilePointer(hfile, static_cast<LONG>(dos_header.e_lfanew), nullptr, FILE_BEGIN);
+                            IMAGE_NT_HEADERS nt_headers{};
+                            if (ReadFile(hfile, &nt_headers, sizeof(nt_headers), &bytes_read, nullptr) &&
+                                bytes_read >= sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER) && 
+                                nt_headers.Signature == IMAGE_NT_SIGNATURE) {
+                                // Check CLR data directory (index 14 = IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR)
+                                const DWORD magic = nt_headers.OptionalHeader.Magic;
+                                if (magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC || magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+                                    const auto& clr_dir = nt_headers.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR];
+                                    if (clr_dir.VirtualAddress != 0 && clr_dir.Size != 0) {
+                                        is_dotnet_assembly = true;
+                                    }
+                                }
+                            }
+                        }
+                        CloseHandle(hfile);
+                    }
+                }
+
+                if (!is_dotnet_assembly) {
+                    const DWORD err = GetLastError();
+                    char msg_buf[256]{};
+                    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
+                                   err, 0, msg_buf, sizeof(msg_buf) - 1U, nullptr);
+                    last_error_message = "DECLARE: cannot load '" + declfn.dll_path + "': " + std::string(msg_buf);
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    if (dispatch_error_handler()) return {.ok = true};
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                // .NET assembly — mark for CLR invocation
+                declfn.is_dotnet = true;
+                // Parse Type.Method from function_name (convention: "Namespace.Type.Method" or "Type.Method")
+                const std::string full_name = fn_name;
+                const auto last_dot = full_name.rfind('.');
+                if (last_dot != std::string::npos && last_dot > 0U) {
+                    declfn.dotnet_type_name = full_name.substr(0U, last_dot);
+                    declfn.dotnet_method_name = full_name.substr(last_dot + 1U);
+                } else {
+                    declfn.dotnet_type_name = std::string{};
+                    declfn.dotnet_method_name = full_name;
+                }
+            } else {
+                declfn.hmodule = hmod;
+                declfn.proc_address = GetProcAddress(hmod, fn_name.c_str());
+                if (!declfn.proc_address) {
+                    // Try decorated name with leading underscore (cdecl x86)
+                    declfn.proc_address = GetProcAddress(hmod, ("_" + fn_name).c_str());
+                }
+                if (!declfn.proc_address) {
+                    last_error_message = "DECLARE: function '" + fn_name + "' not found in '" + declfn.dll_path + "'.";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    FreeLibrary(hmod);
+                    if (dispatch_error_handler()) return {.ok = true};
+                    return {.ok = false, .message = last_error_message};
+                }
+            }
+
+            declared_dll_functions[alias_key] = std::move(declfn);
+            events.push_back({
+                .category = "runtime.declare_dll",
+                .detail = alias + " IN " + dll_path_raw,
+                .location = statement.location
+            });
+            return {};
+#else
+            last_error_message = "DECLARE DLL is only supported on Windows.";
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            if (dispatch_error_handler()) return {.ok = true};
+            return {.ok = false, .message = last_error_message};
+#endif
+        }
         case StatementKind::set_datasession: {
             const int session_id = static_cast<int>(std::llround(value_as_number(evaluate_expression(statement.expression, frame))));
             current_data_session = std::max(1, session_id);
@@ -7428,6 +8373,47 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         }
+        case StatementKind::retry_statement: {
+            // RETRY: re-execute the faulting statement in the faulting frame
+            if (!fault_pc_valid) {
+                return {};  // If no fault PC saved, do nothing
+            }
+            handling_error = false;
+            error_handler_return_depth.reset();
+            fault_pc_valid = false;
+            // Unwind to the fault frame
+            while (!stack.empty()) {
+                if (stack.back().file_path == fault_frame_file_path &&
+                    stack.back().routine_name == fault_frame_routine_name) {
+                    stack.back().pc = fault_statement_index;
+                    return {.ok = true};
+                }
+                restore_private_declarations(stack.back());
+                stack.pop_back();
+            }
+            return {};
+        }
+        case StatementKind::resume_statement: {
+            // RESUME [NEXT]: continue after the faulting statement
+            if (!fault_pc_valid) {
+                return {};
+            }
+            handling_error = false;
+            error_handler_return_depth.reset();
+            fault_pc_valid = false;
+            const std::size_t resume_pc = fault_statement_index + 1U;
+            while (!stack.empty()) {
+                if (stack.back().file_path == fault_frame_file_path &&
+                    stack.back().routine_name == fault_frame_routine_name) {
+                    const Routine* r = stack.back().routine;
+                    stack.back().pc = (r && resume_pc < r->statements.size()) ? resume_pc : (r ? r->statements.size() : 0U);
+                    return {.ok = true};
+                }
+                restore_private_declarations(stack.back());
+                stack.pop_back();
+            }
+            return {};
+        }
         case StatementKind::no_op:
             return {};
     }
@@ -7579,6 +8565,11 @@ bool PrgRuntimeSession::Impl::dispatch_error_handler() {
         }
 
         handling_error = true;
+        // Save fault position for RETRY / RESUME
+        fault_frame_file_path = error_frame.file_path;
+        fault_frame_routine_name = error_frame.routine_name;
+        fault_statement_index = error_frame.pc > 0U ? error_frame.pc - 1U : 0U;
+        fault_pc_valid = true;
         error_handler_return_depth = stack.size();
         push_routine_frame(program.path, found->second, handler_arguments);
         events.push_back({

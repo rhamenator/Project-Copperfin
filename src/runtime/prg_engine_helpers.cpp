@@ -654,6 +654,20 @@ PrgValue make_string_value(std::string value) {
     return result;
 }
 
+PrgValue make_int64_value(std::int64_t value) {
+    PrgValue result;
+    result.kind = PrgValueKind::int64;
+    result.int64_value = value;
+    return result;
+}
+
+PrgValue make_uint64_value(std::uint64_t value) {
+    PrgValue result;
+    result.kind = PrgValueKind::uint64;
+    result.uint64_value = value;
+    return result;
+}
+
 bool value_as_bool(const PrgValue& value) {
     switch (value.kind) {
         case PrgValueKind::boolean:
@@ -662,6 +676,10 @@ bool value_as_bool(const PrgValue& value) {
             return std::abs(value.number_value) > 0.000001;
         case PrgValueKind::string:
             return !value.string_value.empty();
+        case PrgValueKind::int64:
+            return value.int64_value != 0;
+        case PrgValueKind::uint64:
+            return value.uint64_value != 0U;
         case PrgValueKind::empty:
             return false;
     }
@@ -676,6 +694,10 @@ double value_as_number(const PrgValue& value) {
             return value.number_value;
         case PrgValueKind::string:
             return value.string_value.empty() ? 0.0 : std::stod(value.string_value);
+        case PrgValueKind::int64:
+            return static_cast<double>(value.int64_value);
+        case PrgValueKind::uint64:
+            return static_cast<double>(value.uint64_value);
         case PrgValueKind::empty:
             return 0.0;
     }
@@ -697,6 +719,10 @@ std::string value_as_string(const PrgValue& value) {
         }
         case PrgValueKind::string:
             return value.string_value;
+        case PrgValueKind::int64:
+            return std::to_string(value.int64_value);
+        case PrgValueKind::uint64:
+            return std::to_string(value.uint64_value);
         case PrgValueKind::empty:
             return {};
     }

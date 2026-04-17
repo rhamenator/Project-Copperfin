@@ -38,6 +38,8 @@ PrgValue make_empty_value();
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
+PrgValue make_int64_value(std::int64_t value);
+PrgValue make_uint64_value(std::uint64_t value);
 bool value_as_bool(const PrgValue& value);
 double value_as_number(const PrgValue& value);
 std::string value_as_string(const PrgValue& value);

@@ -81,6 +81,9 @@ enum class StatementKind {
     scatter_command,
     gather_command,
     update_command,
+    retry_statement,
+    resume_statement,
+    declare_dll,
     no_op
 };
 

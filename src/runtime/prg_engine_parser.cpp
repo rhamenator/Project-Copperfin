@@ -621,6 +621,58 @@ Program parse_program(const std::string& path) {
             statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "BLANK"});
             statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
             statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
+        } else if (upper == "RETRY") {
+            statement.kind = StatementKind::retry_statement;
+        } else if (upper == "RESUME" || starts_with_insensitive(line, "RESUME ")) {
+            statement.kind = StatementKind::resume_statement;
+            // RESUME [NEXT | <line>] — store optional qualifier in expression
+            if (starts_with_insensitive(line, "RESUME ")) {
+                statement.expression = trim_copy(line.substr(7U));
+            }
+        } else if (starts_with_insensitive(line, "DECLARE ") &&
+                   !looks_like_array_declaration_body(line.substr(8U))) {
+            // DECLARE <rettype> <funcname> IN <dll> [AS <alias>] [(<params>)]
+            // Fields: identifier=alias(funcname), expression=dll_path,
+            //   secondary_expression=rettype, tertiary_expression=param_types
+            statement.kind = StatementKind::declare_dll;
+            const std::string body = trim_copy(line.substr(8U));
+            // Parse: <rettype> <funcname> IN <dll> ...
+            const std::size_t in_pos = find_keyword_top_level(body, "IN");
+            if (in_pos != std::string::npos) {
+                const std::string lhs = trim_copy(body.substr(0U, in_pos));
+                const std::string rhs = trim_copy(body.substr(in_pos + 2U));
+                // lhs = "<rettype> <funcname>"
+                const auto space_pos = lhs.find(' ');
+                if (space_pos != std::string::npos) {
+                    statement.secondary_expression = trim_copy(lhs.substr(0U, space_pos)); // rettype
+                    const std::string fn_part = trim_copy(lhs.substr(space_pos + 1U));
+                    // Strip parameter list if present: funcname [(params)]
+                    const auto paren_pos = fn_part.find('(');
+                    if (paren_pos != std::string::npos) {
+                        statement.identifier = trim_copy(fn_part.substr(0U, paren_pos));
+                        const auto close_paren = fn_part.rfind(')');
+                        if (close_paren != std::string::npos && close_paren > paren_pos) {
+                            statement.tertiary_expression = fn_part.substr(paren_pos + 1U, close_paren - paren_pos - 1U);
+                        }
+                    } else {
+                        statement.identifier = fn_part;
+                    }
+                } else {
+                    statement.identifier = lhs; // No rettype, just funcname
+                }
+                // rhs may include AS <alias>
+                const std::size_t as_pos = find_keyword_top_level(rhs, "AS");
+                if (as_pos != std::string::npos) {
+                    statement.expression = trim_copy(rhs.substr(0U, as_pos));
+                    statement.quaternary_expression = trim_copy(rhs.substr(as_pos + 2U)); // alias
+                } else {
+                    statement.expression = rhs; // dll_path
+                }
+            } else {
+                // Malformed — keep as no_op
+                statement.kind = StatementKind::no_op;
+                statement.expression = body;
+            }
         } else if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR")) {
             statement.kind = StatementKind::gather_command;
             const std::string body = trim_copy(line.substr(7U));
