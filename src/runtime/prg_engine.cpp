@@ -1920,6 +1920,82 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
+    std::vector<std::string> cursor_field_names(const CursorState& cursor) {
+        std::vector<std::string> names;
+        if (cursor.remote) {
+            if (!cursor.remote_records.empty()) {
+                names.reserve(cursor.remote_records.front().values.size());
+                for (const auto& value : cursor.remote_records.front().values) {
+                    names.push_back(value.field_name);
+                }
+                return names;
+            }
+            return {"ID", "NAME", "AMOUNT"};
+        }
+
+        if (cursor.source_path.empty()) {
+            return names;
+        }
+
+        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
+        if (!table_result.ok) {
+            last_error_message = table_result.error;
+            return {};
+        }
+
+        names.reserve(table_result.table.fields.size());
+        for (const auto& field : table_result.table.fields) {
+            names.push_back(field.name);
+        }
+        return names;
+    }
+
+    bool insert_record_values(
+        CursorState& cursor,
+        const Frame& frame,
+        const std::string& field_list_text,
+        const std::string& value_list_text) {
+        std::vector<std::string> fields;
+        if (trim_copy(field_list_text).empty()) {
+            fields = cursor_field_names(cursor);
+            if (fields.empty()) {
+                last_error_message = "INSERT INTO could not resolve target field names";
+                return false;
+            }
+        } else {
+            for (std::string field : split_csv_like(field_list_text)) {
+                field = trim_copy(std::move(field));
+                if (!field.empty()) {
+                    fields.push_back(field);
+                }
+            }
+        }
+
+        std::vector<std::string> values = split_csv_like(value_list_text);
+        if (fields.empty()) {
+            last_error_message = "INSERT INTO requires at least one target field";
+            return false;
+        }
+        if (values.size() != fields.size()) {
+            last_error_message = "INSERT INTO field/value counts do not match";
+            return false;
+        }
+
+        if (!append_blank_record(cursor)) {
+            return false;
+        }
+
+        std::vector<ReplaceAssignment> assignments;
+        assignments.reserve(fields.size());
+        for (std::size_t index = 0U; index < fields.size(); ++index) {
+            assignments.push_back({
+                .field_name = fields[index],
+                .expression = trim_copy(values[index])
+            });
+        }
+        return replace_current_record_fields(cursor, assignments, frame);
+    }
+
     bool append_blank_record(CursorState& cursor) {
         if (cursor.remote) {
             const std::size_t recno = cursor.remote_records.size() + 1U;
@@ -7122,6 +7198,34 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             });
             return {};
         }
+        case StatementKind::delete_from_command: {
+            CursorState* cursor = resolve_cursor_target_expression(statement.identifier, frame);
+            if (cursor == nullptr) {
+                last_error_message = "DELETE FROM target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            const std::string where_expression = trim_copy(statement.expression).empty()
+                ? ".T."
+                : statement.expression;
+            if (!set_deleted_flag(*cursor, frame, where_expression, statement.tertiary_expression, true)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            std::string delete_detail = cursor->alias;
+            if (!trim_copy(statement.expression).empty()) {
+                delete_detail += " WHERE " + statement.expression;
+            }
+            events.push_back({
+                .category = "runtime.delete_from",
+                .detail = delete_detail,
+                .location = statement.location
+            });
+            return {};
+        }
         case StatementKind::recall_command: {
             CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
             if (cursor == nullptr) {
@@ -7143,6 +7247,33 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = "runtime.recall",
                 .detail = recall_detail,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::insert_into_command: {
+            CursorState* cursor = resolve_cursor_target_expression(statement.identifier, frame);
+            if (cursor == nullptr) {
+                last_error_message = "INSERT INTO target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (trim_copy(statement.secondary_expression).empty()) {
+                last_error_message = "INSERT INTO requires a VALUES clause";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!insert_record_values(*cursor, frame, statement.expression, statement.secondary_expression)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.insert_into",
+                .detail = cursor->alias,
                 .location = statement.location
             });
             return {};

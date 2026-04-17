@@ -15,15 +15,15 @@ std::vector<std::string> split_csv_like(const std::string& text) {
     std::vector<std::string> parts;
     std::string current;
     int nesting = 0;
-    bool in_string = false;
+    char string_delimiter = '\0';
 
     for (char ch : text) {
-        if (ch == '\'') {
-            in_string = !in_string;
+        if ((ch == '\'' || ch == '"') && (string_delimiter == '\0' || string_delimiter == ch)) {
+            string_delimiter = string_delimiter == '\0' ? ch : '\0';
             current.push_back(ch);
             continue;
         }
-        if (!in_string) {
+        if (string_delimiter == '\0') {
             if (ch == '(' || ch == '[') {
                 ++nesting;
             } else if ((ch == ')' || ch == ']') && nesting > 0) {

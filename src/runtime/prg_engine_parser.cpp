@@ -416,6 +416,39 @@ Program parse_program(const std::string& path) {
                     statement.secondary_expression = in_clause;
                 }
             }
+        } else if (starts_with_insensitive(line, "DELETE FROM ")) {
+            statement.kind = StatementKind::delete_from_command;
+            const std::string body = trim_copy(line.substr(12U));
+            const std::size_t tail_start = find_first_keyword_top_level(body, {"WHERE", "FOR", "WHILE"});
+            statement.identifier = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            statement.expression = extract_command_clause(body, "WHERE", {"FOR", "WHILE"});
+            if (statement.expression.empty()) {
+                statement.expression = extract_command_clause(body, "FOR", {"WHERE", "WHILE"});
+            }
+            statement.tertiary_expression = extract_command_clause(body, "WHILE", {"WHERE", "FOR"});
+        } else if (starts_with_insensitive(line, "INSERT INTO ")) {
+            statement.kind = StatementKind::insert_into_command;
+            const std::string body = trim_copy(line.substr(12U));
+            const std::size_t values_position = find_keyword_top_level(body, "VALUES");
+            if (values_position == std::string::npos) {
+                statement.identifier = body;
+            } else {
+                std::string target = trim_copy(body.substr(0U, values_position));
+                const std::size_t open_paren = target.find('(');
+                if (open_paren != std::string::npos) {
+                    const std::size_t close_paren = target.rfind(')');
+                    if (close_paren != std::string::npos && close_paren > open_paren) {
+                        statement.expression = trim_copy(target.substr(open_paren + 1U, close_paren - open_paren - 1U));
+                        target = trim_copy(target.substr(0U, open_paren));
+                    }
+                }
+                statement.identifier = target;
+                std::string values = trim_copy(body.substr(values_position + 6U));
+                if (values.size() >= 2U && values.front() == '(' && values.back() == ')') {
+                    values = trim_copy(values.substr(1U, values.size() - 2U));
+                }
+                statement.secondary_expression = values;
+            }
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));

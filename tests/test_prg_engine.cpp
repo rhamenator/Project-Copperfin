@@ -6192,6 +6192,79 @@ void test_zap_truncates_local_table_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_insert_into_and_delete_from_local_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path other_path = temp_root / "other.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_people_dbf(other_path, {{"OTHER", 1}});
+
+    const fs::path main_path = temp_root / "insert_delete_from.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + other_path.string() + "' ALIAS Other IN 0\n"
+        "SELECT Other\n"
+        "cTarget = 'People'\n"
+        "INSERT INTO cTarget (AGE, NAME) VALUES (44, 'DELTA')\n"
+        "INSERT INTO cTarget VALUES ('ECHO', 55)\n"
+        "DELETE FROM cTarget WHERE AGE = 20\n"
+        "cSelectedAlias = ALIAS()\n"
+        "nPeopleCount = RECCOUNT('People')\n"
+        "nOtherRec = RECNO('Other')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "INSERT INTO / DELETE FROM script should complete");
+
+    const auto selected_alias = state.globals.find("cselectedalias");
+    const auto people_count = state.globals.find("npeoplecount");
+    const auto other_rec = state.globals.find("notherrec");
+    expect(selected_alias != state.globals.end(), "INSERT/DELETE FROM should preserve selected alias");
+    expect(people_count != state.globals.end(), "INSERT INTO should expose updated target RECCOUNT()");
+    expect(other_rec != state.globals.end(), "INSERT/DELETE FROM should preserve selected cursor position");
+    if (selected_alias != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(selected_alias->second)) == "OTHER", "INSERT/DELETE FROM should not select the target cursor");
+    }
+    if (people_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_count->second) == "5", "INSERT INTO should append two local records");
+    }
+    if (other_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec->second) == "1", "INSERT/DELETE FROM should leave the selected cursor pointer alone");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.insert_into";
+    }), "INSERT INTO should emit a runtime.insert_into event");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.delete_from";
+    }), "DELETE FROM should emit a runtime.delete_from event");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(people_path.string(), 10U);
+    expect(parse_result.ok, "INSERT INTO / DELETE FROM should leave the DBF readable");
+    expect(parse_result.table.records.size() == 5U, "INSERT INTO should persist appended records");
+    if (parse_result.table.records.size() == 5U) {
+        expect(parse_result.table.records[1].deleted, "DELETE FROM WHERE should tombstone the matching persisted record");
+        expect(parse_result.table.records[3].values[0].display_value == "DELTA", "INSERT INTO field list should map NAME by field name");
+        expect(parse_result.table.records[3].values[1].display_value == "44", "INSERT INTO field list should map AGE by field name");
+        expect(parse_result.table.records[4].values[0].display_value == "ECHO", "INSERT INTO without field list should map schema field order");
+        expect(parse_result.table.records[4].values[1].display_value == "55", "INSERT INTO without field list should persist numeric schema order");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_indexed_table_mutation_succeeds_for_structural_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_indexed_mutation_guard";
@@ -9882,6 +9955,7 @@ int main() {
     test_replace_for_updates_all_matching_records();
     test_pack_compacts_deleted_local_records();
     test_zap_truncates_local_table_records();
+    test_insert_into_and_delete_from_local_table();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();

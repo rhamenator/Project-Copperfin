@@ -49,6 +49,8 @@ enum class StatementKind {
     recall_command,
     pack_command,
     zap_command,
+    delete_from_command,
+    insert_into_command,
     go_command,
     skip_command,
     select_command,
