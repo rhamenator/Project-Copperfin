@@ -6061,6 +6061,137 @@ void test_replace_for_updates_all_matching_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_pack_compacts_deleted_local_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_pack";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    const auto original_size = std::filesystem::file_size(table_path);
+
+    const fs::path main_path = temp_root / "pack.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "DELETE FOR NAME = 'BRAVO'\n"
+        "PACK\n"
+        "nAfterPack = RECCOUNT()\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "GO 2\n"
+        "cSecond = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PACK script should complete");
+
+    const auto after_pack = state.globals.find("nafterpack");
+    const auto first = state.globals.find("cfirst");
+    const auto second = state.globals.find("csecond");
+    expect(after_pack != state.globals.end(), "PACK should expose updated RECCOUNT()");
+    expect(first != state.globals.end(), "PACK should preserve the first undeleted row");
+    expect(second != state.globals.end(), "PACK should compact later undeleted rows");
+    if (after_pack != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_pack->second) == "2", "PACK should reduce RECCOUNT() after deleted records are removed");
+    }
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA", "PACK should preserve row order before the deleted record");
+    }
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "CHARLIE", "PACK should move later rows into the compacted slot");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.pack";
+    }), "PACK should emit a runtime.pack event");
+    expect(std::filesystem::file_size(table_path) < original_size, "PACK should physically shrink the DBF file");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "PACK should leave the DBF readable");
+    expect(parse_result.table.records.size() == 2U, "PACK should persist only undeleted records");
+    if (parse_result.table.records.size() == 2U) {
+        expect(!parse_result.table.records[0].deleted, "PACK should write active row markers for kept row 1");
+        expect(!parse_result.table.records[1].deleted, "PACK should write active row markers for kept row 2");
+        expect(parse_result.table.records[1].values[0].display_value == "CHARLIE", "PACK should persist compacted row values");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_zap_truncates_local_table_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_zap";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const auto original_size = std::filesystem::file_size(table_path);
+
+    const fs::path main_path = temp_root / "zap.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "ZAP\n"
+        "nAfterZap = RECCOUNT()\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'DELTA', AGE WITH 40\n"
+        "nAfterAppend = RECCOUNT()\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ZAP script should complete");
+
+    const auto after_zap = state.globals.find("nafterzap");
+    const auto after_append = state.globals.find("nafterappend");
+    const auto name = state.globals.find("cname");
+    expect(after_zap != state.globals.end(), "ZAP should expose zero RECCOUNT()");
+    expect(after_append != state.globals.end(), "APPEND BLANK should work after ZAP");
+    expect(name != state.globals.end(), "field lookup should work after ZAP and append");
+    if (after_zap != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_zap->second) == "0", "ZAP should clear all records");
+    }
+    if (after_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_append->second) == "1", "APPEND BLANK after ZAP should create the first record");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "DELTA", "REPLACE after ZAP should persist new values");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.zap";
+    }), "ZAP should emit a runtime.zap event");
+    expect(std::filesystem::file_size(table_path) < original_size, "ZAP followed by one append should keep the DBF smaller than the original two-row table");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "ZAP should leave the DBF readable");
+    expect(parse_result.table.records.size() == 1U, "ZAP plus one append should persist one record");
+    if (parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "DELTA", "ZAP should preserve schema for later appended row values");
+        expect(parse_result.table.records[0].values[1].display_value == "40", "ZAP should preserve numeric schema for later appended row values");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_indexed_table_mutation_succeeds_for_structural_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_indexed_mutation_guard";
@@ -9749,6 +9880,8 @@ int main() {
     test_sql_result_cursor_filter_in_target_parity();
     test_local_table_mutation_and_scan_flow();
     test_replace_for_updates_all_matching_records();
+    test_pack_compacts_deleted_local_records();
+    test_zap_truncates_local_table_records();
     test_set_filter_scopes_local_cursor_visibility();
     test_set_filter_in_targets_nonselected_alias();
     test_do_while_and_loop_control_flow();

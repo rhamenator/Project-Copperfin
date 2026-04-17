@@ -78,6 +78,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `REPLACE`
 - `APPEND BLANK`
 - `DELETE`, `RECALL`
+- `PACK`, `ZAP`
 - `SET FILTER TO/OFF`
 - `SET ORDER TO TAG`
 - `SEEK`
@@ -100,6 +101,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `SCATTER MEMVAR` / `SCATTER TO <array>` — snapshot current record fields to `m.<fieldname>` variables or a first-pass one-dimensional array; `FIELDS` and `BLANK` are honored with typed values; first-pass
 - `GATHER MEMVAR` / `GATHER FROM <array>` — write `m.<fieldname>` variables or array elements back to current record via direct `replace_record_field_value` calls (type-faithful, no string-quote round-trip); `FIELDS` and `FOR` are honored; first-pass
 - `UPDATE` — first-pass local/remote cursor command forms, including `UPDATE <alias> SET ...`, `UPDATE SET ...` against the selected cursor, and `UPDATE IN <alias> SET ...`; `WHERE`/`FOR` scope clauses reuse scoped record replacement semantics
+- `PACK` / `ZAP` — first-pass local DBF table-maintenance commands; `PACK` physically removes deleted records while preserving schema and kept-row order, `ZAP` truncates the table to zero records while keeping it appendable; synthetic remote/result cursors get matching in-memory behavior
 
 The `m.` variable namespace prefix is also now correctly handled as a memory-variable alias across assignment, lookup, expression evaluation, and declarations: `m.<name>`, `M.<name>`, and bare `<name>` share the same local/global runtime binding, and `m.<name>` no longer falls through to OLE property resolution.
 
@@ -151,8 +153,9 @@ The official command inventory is much larger than the current runtime. The deep
 ### Local Table Mutation And Query Flow
 
 - add the table-editing and table-browse commands needed for real legacy business applications
-- the shared DBF/FPT mutation path now covers shipped local-table write families used by current runtime flows: memo-backed pointer fields (`M`/`G`/`P`), fixed-width numeric/date families (`B`/`I`/`Y`/`T`), first-pass var-length families (`V`/`Q`), constrained `NULL` token mutation semantics, staged write safety for DBF/memo updates (including staged-artifact cleanup), and indexed-table plus unsupported-layout fail-fast guards until real structural/indexed storage fidelity exists
-- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN`, first-pass `TOTAL` with `IN` targeting and local `N/F/I/Y` support, and `CALCULATE` families toward broader xBase parity
+- the shared DBF/FPT mutation path now covers shipped local-table write families used by current runtime flows: memo-backed pointer fields (`M`/`G`/`P`), fixed-width numeric/date families (`B`/`I`/`Y`/`T`), first-pass var-length families (`V`/`Q`), constrained `NULL` token mutation semantics, staged write safety for DBF/memo updates (including staged-artifact cleanup), physical `PACK` compaction, `ZAP` truncation, and indexed-table plus unsupported-layout fail-fast guards until real structural/indexed storage fidelity exists
+- extend the shipped filtering, locating, scanning, replacing, appending, deleting, recalling, packing, zapping, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN`, first-pass `TOTAL` with `IN` targeting and local `N/F/I/Y` support, and `CALCULATE` families toward broader xBase parity
+- deepen table-maintenance parity beyond the first-pass `PACK`/`ZAP` slice with `PACK MEMO`, exclusive-use/locking behavior, index rebuild/invalidated-order handling, and stronger diagnostics for unsafe structural layouts
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 
 ### Native Control Flow

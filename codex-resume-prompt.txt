@@ -1,0 +1,68 @@
+Canonical Copperfin resume prompt for automation and handoff.
+This file is the only prompt file that should be kept current. Treat `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md` as the source of truth, and delete or ignore ad hoc continuation prompts once their useful guidance has been merged back into those docs.
+
+Resume Project-Copperfin from the current repo state and continue with the highest-priority unfinished implementation slice. Do not re-plan the whole project unless the codebase has materially changed.
+
+Important:
+- Start by re-reading the current contents of:
+  - `E:\Project-Copperfin\remaining-work.md`
+  - `E:\Project-Copperfin\docs\22-vfp-language-reference-coverage.md`
+  - the runtime/data files directly relevant to the slice you choose
+  - the outstanding issues to be resolved, which have overlapping content
+- Stay implementation-first. Do not stop at analysis.
+- Use subagents when helpful for narrow read-only exploration or slice selection.
+- Prioritize Phase A runtime/data-engine compatibility over UI, IDE, or designer work.
+- Keep changes minimal and focused.
+- Fix mistakes you encounter in your changed area.
+- Validate the slice before stopping.
+- Update `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md` to match shipped behavior.
+
+Current shipped highlights worth remembering:
+- local DBF-backed runtime flow now covers `GO/GOTO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, `SET FILTER TO/OFF`, aggregate built-ins, command-level `CALCULATE`, first-pass command-level `COUNT` / `SUM` / `AVERAGE`, first-pass `TOTAL`, and core work-area/data-session behavior including `SELECT`, `USE`, `USE IN`, `USE AGAIN`, `SET DATASESSION`, and expression-based cursor designators for `SET FILTER ... IN`, `SELECT <expr>`, and `USE ... IN <expr>`
+- indexed runtime behavior now has first-pass `SET ORDER TO TAG`, `FOUND()`, `SET EXACT`, `SET NEAR`, command/function `SEEK`, `INDEXSEEK()`, `ORDER()`, and `TAG()` support plus conservative index metadata plumbing for `CDX/DCX/IDX/NDX/MDX`
+- recent runtime-language work also includes `DO CASE`, `DO WHILE`, `LOOP` / `CONTINUE` / `EXIT`, literal `TEXT/ENDTEXT`, `EVAL()`, `SET()`, `&macro`, `PRIVATE`, `STORE`, `WITH/ENDWITH`, `TRY/CATCH/FINALLY/ENDTRY`, `DO ... WITH @var` reference semantics, and `ELSEIF` branches
+- 2026-04-14: expanded PRG expression function coverage (~60 new functions) and new command execution surface. `evaluate_function()` now handles: `LEN`, `LEFT`, `RIGHT`, `UPPER`, `LOWER`, `LTRIM`/`TRIM`, `RTRIM`, `SPACE`, `REPLICATE`, `STRTRAN`, `STUFF`, `ASC`, `VAL`, `OCCURS`, `EMPTY`, `ISNULL`/`ISEMPTY`, `VARTYPE`, `TYPE`, `IIF`, `NVL`, `BETWEEN`, `INT`, `ABS`/`FABS`, `ROUND`, `MOD`, `SQRT`, `CEILING`/`FLOOR`, `EXP`, `LOG`, `PI`, `SIGN`, transcription date functions (`DATE`, `TIME`, `DATETIME`, `YEAR`, `MONTH`, `DAY`, `DTOS`, `CTOD`, `DTOC`, `TTOC`), array functions (`ALEN`, `ADEL`, `AINS`, `ASORT`, `ASCAN`, `ASIZE`), path functions (`GETENV`, `FULLPATH`, `JUSTFNAME`, `JUSTSTEM`, `JUSTEXT`, `ADDBS`), character-class functions (`ISDIGIT`, `ISALPHA`, `ISLOWER`, `ISUPPER`), and cursor functions (`CURSORSETPROP`/`CURSORGETPROP`). New commands added: `CLOSE ALL`/`CLOSE TABLES`/`CLOSE DATABASES`, `ERASE`/`DELETE FILE`, `COPY FILE ... TO`, `RENAME ... TO`, `?`/`??` print-to-event, `CREATE CURSOR`, `COPY TO`, `APPEND FROM`, `SCATTER MEMVAR`, `GATHER MEMVAR`. Committed as `75d5102`.
+- 2026-04-16: `COPY TO` and `COPY STRUCTURE TO` are now fully implemented (local DBF export via `create_dbf_table_file` with optional `FIELDS`/`FOR` filtering; `COPY STRUCTURE TO` emits schema only, zero records). `APPEND FROM` is now fully implemented (parses source DBF via `parse_dbf_table_from_file`, inserts each non-deleted record via `append_blank_record_to_file` + `replace_record_field_value`). `GATHER MEMVAR` correctness was fixed: the old string-quoted back-expression round-trip was replaced with direct per-field `replace_record_field_value` calls that preserve type fidelity. A related bug was fixed in the assignment handler: dotted identifiers with `m.` prefix were being incorrectly dispatched to the OLE property path; `m.` is now recognized as the VFP memory-variable namespace and stored as a plain variable. Four focused regression tests added to `test_prg_engine`; all pass.
+- 2026-04-16: `m.` memory-variable namespace parity is now tighter across assignment, lookup, expression evaluation, and declarations. `m.<name>`, `M.<name>`, and bare `<name>` share one local/global runtime binding, and prefixed references no longer fall through to OLE property resolution. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: `COPY TO ... TYPE SDF` and `APPEND FROM ... TYPE SDF` now have first-pass fixed-width text support using local DBF field descriptor widths, existing `FIELDS`/`FOR` export filtering, and the shared append/replace mutation path for import. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: `SCATTER` / `GATHER` now honor `FIELDS`, `BLANK`, typed memvar values, `GATHER ... FOR`, and first-pass one-dimensional arrays via `SCATTER TO <array>` / `GATHER FROM <array>`. `ALEN(<array>)`, `ALEN(<array>, 1/2)`, `array[1]`, and `array(1)` now work for runtime arrays created by this path. Focused `test_prg_engine` coverage passes. This is the intended substrate for the next `AERROR()` array slice.
+- 2026-04-16: `AERROR(<array>)` now populates a first-pass structured one-row/seven-column runtime error array for normal runtime errors: code, message, mixed-case error parameter, selected work area, and empty trigger/reserved columns. `SYS(2018)` exposes the uppercase error parameter, while `MESSAGE()`, `PROGRAM()`, `LINENO()`, `ERROR()`, and `ON('ERROR')` retain the richer handler context. `UPDATE <alias> SET field = expr [, ...] WHERE/FOR <expr>` also shipped as a scoped mutation command over local/remote cursors while preserving current-record `REPLACE` semantics. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: Runtime arrays now support first-pass `ACOPY()`, `AELEMENT()`, `ASIZE()`, `ASCAN()`, `ADEL()`, `AINS()`, `ASORT()`, and `ASUBSCRIPT()`. `UPDATE` grammar now also covers `UPDATE SET ...` against the selected cursor and `UPDATE IN <alias> SET ...`. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: Runtime arrays now support first-pass `DIMENSION`, array-form `DECLARE`, bracket/paren element assignment (`array[1] = ...`, `array[1,2] = ...`, `array(1) = ...`, `array(1,2) = ...`), declared 1D/2D `ALEN()` queries, and 2D preservation across `ASIZE()` growth. The shared command CSV splitter now keeps commas inside `[]` dimensions together. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: Runtime arrays now also support first-pass `ALINES()`, `ADIR()`, and `AFIELDS()`. Diagnostics now emit VFP-style `AERROR()` rows for SQL/ODBC-like `1526` failures and OLE/automation-like `1429` failures in addition to normal seven-column runtime errors. Text import/export now covers `COPY TO` / `APPEND FROM` `TYPE CSV` and `DELIMITED` paths, including CSV field-name headers, quoted character fields, matching-header skip on import, and VFP-style `WITH <enclosure>` plus `WITH CHARACTER <separator>` options. Focused `test_prg_engine` coverage passes.
+- 2026-04-16: `COPY TO ARRAY <array>` and `APPEND FROM ARRAY <array>` are now implemented. `COPY TO ARRAY` populates a two-dimensional runtime array (rows=qualifying records, cols=fields) with optional `FIELDS` and `FOR` filtering. `APPEND FROM ARRAY` appends each array row as a new record, mapping columns positionally to destination fields with optional `FIELDS` filtering. Two focused `test_prg_engine` regression tests (round-trip via source→array→dest DBF) pass.
+- Architecture/language guidance from 2026-04-16: keep runtime/file-format hot paths in fast native code by default; C# is allowed where it materially helps higher-level UI/tooling surfaces. If C# is used for visual surfaces, create companion files that remain maintainable in Visual Studio 2026 visual editors. Avoid broad refactors just to change language stacks. Future transpilation targets beyond the current scope can be selected later based on customer demand.
+- recent refactoring already extracted `prg_engine_helpers.{h,cpp}` and `prg_engine_command_helpers.{h,cpp}`, so prefer building on those seams instead of adding fresh monolith-only helpers unless there is a good reason
+- 2026-04-17: FIELDS LIKE/EXCEPT wildcard field filtering is now fully implemented: `field_wildcard_match()` helper, sentinel-prefix approach (`__LIKE__`/`__EXCEPT__`) in the field filter clause parser, and `parse_field_filter_clause` rewritten to support VFP `*`/`?` wildcard patterns and `EXCEPT <pattern>` negation. Focused `test_prg_engine` coverage passes.
+- 2026-04-17: ON ERROR / RETRY / RESUME fault-PC bookmarking is now fully implemented. `retry_statement` and `resume_statement` added to `StatementKind`. Fault PC fields on Impl (`fault_frame_file_path`, `fault_statement_index`, `fault_pc_valid`). `dispatch_error_handler` saves the fault PC; RETRY unwinds the stack and re-executes the faulting statement; RESUME advances past the fault. Focused `test_prg_engine` coverage passes.
+- 2026-04-17: String function extensions now include `PADL()`/`PADR()`/`PADC()` (padding with optional char, PADC splits L/R), `CHRTRAN()` (char-by-char translate/delete), `GETWORDCOUNT()`/`GETWORDNUM()` (delimiter-based word split), and `STREXTRACT()` (nth-occurrence delimited extraction with case-insensitive flag). Focused `test_prg_engine` coverage passes.
+- 2026-04-17: DECLARE DLL / .fll / .NET interop is now fully implemented. `DeclaredDllFunction` struct (`alias`, `function_name`, `dll_path`, `return_type`, `param_types` as comma-separated string, `is_dotnet`, `hmodule`, `proc_address`, `dotnet_type_name`, `dotnet_method_name`) lives in `prg_engine_internal.h`. Windows DLL/CLR headers added (`<windows.h>`, `<metahost.h>`, `#pragma comment(lib,"mscoree.lib")`, `<comdef.h>`, `<oaidl.h>`). `declared_dll_functions` map on Impl. DECLARE DLL parser added to `prg_engine_parser.cpp`. `invoke_declared_dll_function` method fully implemented:
+  - Native path: x64 typed function pointer dispatch (FnI_0..FnI_8, FnD_0..FnD_4) and x86 `__stdcall` dispatch (FnSI_0..FnSI_8); string args passed as `const char*` with UTF-8 buffers kept alive; return type `"c"`/`"string"` interprets return as `const char*`.
+  - .NET path: IDispatch late-binding CLR host (no `#import mscorlib.tlb` — that conflicts with WinSDK headers). `CLRCreateInstance` → `ICLRMetaHost` → `GetRuntime("v4.0.30319")` → `ICorRuntimeHost::Start()` → `GetDefaultDomain` as `IDispatch`. Assembly loaded via AppDomain::Load (IDispatch call); type/method located via `GetType`/`GetMethod`; args passed as SAFEARRAY of VARIANTs; return VARIANT unwrapped to PrgValue.
+  - `declared_dll_invoke_callback_` wired in ExpressionParser (arg 51, after `record_event_callback` arg 50 — order matters).
+  - Build clean, all `test_prg_engine` tests pass (8.08 sec, 100%).
+- 2026-04-17: `PACK` and `ZAP` now have first-pass runtime support. Local DBF-backed `PACK` physically removes deleted records while preserving schema and kept-row order; `ZAP` truncates the table to zero records while keeping it appendable through the existing mutation path. Synthetic remote/result cursors get matching in-memory behavior. `PACK MEMO` is explicitly guarded as not implemented rather than doing DBF compaction under the wrong spelling. Focused `test_prg_engine` coverage verifies `RECCOUNT()`, readable DBF output, file-size shrinkage, events, and append-after-`ZAP`; `test_dbf_table` and `test_prg_engine` pass.
+
+Workflow:
+1. Inspect the current repo state in the relevant files only.
+2. Identify the single best next adjacent runtime/data-engine slice.
+3. Implement it.
+4. Add or update focused regression tests.
+5. Run narrow validation relevant to the slice.
+   - Runtime/data slices: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine`
+   - Asset/index slices: also build and run `test_vfp_assets` when touched
+   - Run the corresponding executables under `E:\Project-Copperfin\build\Release\`
+6. Update docs/backlog.
+7. Summarize what changed, what passed, and the next likely slice.
+
+Default direction if no stronger signal appears from the current files:
+- Prefer the next adjacent runtime/data-engine slice after the shipped aggregate/query/work-area/index/expression-function work.
+- Strong candidates now are:
+  - remaining VFP expression functions not yet covered (check `docs/22-vfp-language-reference-coverage.md` for gaps)
+  - fault isolation and runtime diagnostics depth (#13) beyond the shipped first-pass `AERROR()` array — deeper VFP-compatible row shapes, additional native-like error codes, and richer `ON ERROR` surface
+  - debugger metadata improvements (#14) — variable inspection fidelity, call-stack frame names, source-location accuracy
+  - deeper `SCATTER`/`GATHER` field-type parity beyond the shipped first-pass memvar/array path, especially broader date/datetime formatting and multi-dimensional array behavior
+  - `COPY TO ... TYPE XLS` and adjacent non-DBF export/import formats beyond the shipped SDF path
+  - deepen `UPDATE` beyond the shipped first-pass scoped mutation command, including broader SQL grammar variants, joins/from clauses, and stronger remote cursor parity
+  - remaining adjacent local table/query commands beyond the current surface
+- Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

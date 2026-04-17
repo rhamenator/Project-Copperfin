@@ -428,6 +428,21 @@ Program parse_program(const std::string& path) {
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
+        } else if (upper == "PACK" || starts_with_insensitive(line, "PACK ")) {
+            statement.kind = StatementKind::pack_command;
+            const std::string body = upper == "PACK" ? std::string{} : trim_copy(line.substr(5U));
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "IN", {"MEMO", "DBF"});
+            if (statement.secondary_expression.empty() && starts_with_insensitive(body, "IN ")) {
+                statement.secondary_expression = trim_copy(body.substr(3U));
+            }
+        } else if (upper == "ZAP" || starts_with_insensitive(line, "ZAP ")) {
+            statement.kind = StatementKind::zap_command;
+            const std::string body = upper == "ZAP" ? std::string{} : trim_copy(line.substr(4U));
+            statement.secondary_expression = extract_command_clause(body, "IN");
+            if (statement.secondary_expression.empty() && starts_with_insensitive(body, "IN ")) {
+                statement.secondary_expression = trim_copy(body.substr(3U));
+            }
         } else if (starts_with_insensitive(line, "GOTO ") || starts_with_insensitive(line, "GO ")) {
             statement.kind = StatementKind::go_command;
             const std::string body = starts_with_insensitive(line, "GOTO ")

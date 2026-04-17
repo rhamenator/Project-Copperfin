@@ -1322,4 +1322,76 @@ DbfWriteResult set_record_deleted_flag(
     return {.ok = true, .record_count = header_result.header.record_count};
 }
 
+DbfWriteResult pack_dbf_table_file(const std::string& path) {
+    std::vector<std::uint8_t> bytes = read_binary_file(path);
+    if (bytes.empty()) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    const auto& header = header_result.header;
+    const std::size_t data_start = header.header_length;
+    const std::size_t original_record_count = header.record_count;
+    const std::size_t required_size = data_start + (original_record_count * static_cast<std::size_t>(header.record_length));
+    if (required_size > bytes.size()) {
+        return {.ok = false, .error = "Record data is truncated.", .record_count = original_record_count};
+    }
+
+    std::vector<std::uint8_t> packed;
+    packed.reserve(bytes.size());
+    packed.insert(packed.end(), bytes.begin(), bytes.begin() + static_cast<std::ptrdiff_t>(data_start));
+
+    std::uint32_t kept_count = 0U;
+    for (std::size_t record_index = 0U; record_index < original_record_count; ++record_index) {
+        const std::size_t record_offset = data_start + (record_index * static_cast<std::size_t>(header.record_length));
+        if (bytes[record_offset] == 0x2AU) {
+            continue;
+        }
+        packed.insert(
+            packed.end(),
+            bytes.begin() + static_cast<std::ptrdiff_t>(record_offset),
+            bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + header.record_length));
+        ++kept_count;
+    }
+
+    packed.push_back(0x1AU);
+    write_le_u32(packed, 4U, kept_count);
+    if (!write_binary_file(path, packed)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = original_record_count};
+    }
+
+    return {.ok = true, .record_count = kept_count};
+}
+
+DbfWriteResult zap_dbf_table_file(const std::string& path) {
+    std::vector<std::uint8_t> bytes = read_binary_file(path);
+    if (bytes.empty()) {
+        return {.ok = false, .error = "Unable to open table file."};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = header_result.error};
+    }
+
+    if (header_result.header.header_length > bytes.size()) {
+        return {.ok = false, .error = "Table header is truncated.", .record_count = header_result.header.record_count};
+    }
+
+    std::vector<std::uint8_t> truncated(
+        bytes.begin(),
+        bytes.begin() + static_cast<std::ptrdiff_t>(header_result.header.header_length));
+    truncated.push_back(0x1AU);
+    write_le_u32(truncated, 4U, 0U);
+    if (!write_binary_file(path, truncated)) {
+        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+    }
+
+    return {.ok = true, .record_count = 0U};
+}
+
 }  // namespace copperfin::vfp

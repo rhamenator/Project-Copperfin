@@ -2031,6 +2031,69 @@ struct PrgRuntimeSession::Impl {
         return true;
     }
 
+    bool pack_cursor(CursorState& cursor) {
+        const std::size_t original_recno = cursor.recno;
+        if (cursor.remote) {
+            cursor.remote_records.erase(
+                std::remove_if(
+                    cursor.remote_records.begin(),
+                    cursor.remote_records.end(),
+                    [](const vfp::DbfRecord& record) {
+                        return record.deleted;
+                    }),
+                cursor.remote_records.end());
+            for (std::size_t index = 0U; index < cursor.remote_records.size(); ++index) {
+                cursor.remote_records[index].record_index = index;
+            }
+            cursor.record_count = cursor.remote_records.size();
+            move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+            cursor.found = false;
+            return true;
+        }
+
+        if (cursor.source_path.empty()) {
+            last_error_message = "PACK requires a local table-backed cursor";
+            return false;
+        }
+
+        const auto result = vfp::pack_dbf_table_file(cursor.source_path);
+        if (!result.ok) {
+            last_error_message = result.error;
+            return false;
+        }
+
+        cursor.record_count = result.record_count;
+        move_cursor_to(cursor, static_cast<long long>(std::min(original_recno, cursor.record_count)));
+        cursor.found = false;
+        return true;
+    }
+
+    bool zap_cursor(CursorState& cursor) {
+        if (cursor.remote) {
+            cursor.remote_records.clear();
+            cursor.record_count = 0U;
+            move_cursor_to(cursor, 0);
+            cursor.found = false;
+            return true;
+        }
+
+        if (cursor.source_path.empty()) {
+            last_error_message = "ZAP requires a local table-backed cursor";
+            return false;
+        }
+
+        const auto result = vfp::zap_dbf_table_file(cursor.source_path);
+        if (!result.ok) {
+            last_error_message = result.error;
+            return false;
+        }
+
+        cursor.record_count = result.record_count;
+        move_cursor_to(cursor, 0);
+        cursor.found = false;
+        return true;
+    }
+
     std::string evaluate_cursor_designator_expression(const std::string& expression, const Frame& frame) {
         const std::string trimmed_expression = trim_copy(expression);
         if (trimmed_expression.empty()) {
@@ -7080,6 +7143,55 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             events.push_back({
                 .category = "runtime.recall",
                 .detail = recall_detail,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::pack_command: {
+            const std::string pack_options = uppercase_copy(trim_copy(statement.expression));
+            if (pack_options.find("MEMO") != std::string::npos && pack_options.find("DBF") == std::string::npos) {
+                last_error_message = "PACK MEMO is not implemented yet";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+            if (cursor == nullptr) {
+                last_error_message = "PACK target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!pack_cursor(*cursor)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.pack",
+                .detail = cursor->alias,
+                .location = statement.location
+            });
+            return {};
+        }
+        case StatementKind::zap_command: {
+            CursorState* cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+            if (cursor == nullptr) {
+                last_error_message = "ZAP target work area not found";
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+            if (!zap_cursor(*cursor)) {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
+            events.push_back({
+                .category = "runtime.zap",
+                .detail = cursor->alias,
                 .location = statement.location
             });
             return {};
