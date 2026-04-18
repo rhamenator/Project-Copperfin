@@ -495,38 +495,18 @@ namespace copperfin::runtime
                 return false;
             }
 
-            if (value.find('/') != std::string::npos || value.find(' ') != std::string::npos || value.find('T') != std::string::npos)
+            try
             {
-                return false;
+                hour = std::stoi(value.substr(0U, first_colon));
+                minute = std::stoi(value.substr(first_colon + 1U, second_colon - first_colon - 1U));
+                std::size_t second_end = second_colon + 1U;
+                while (second_end < value.size() && std::isdigit(static_cast<unsigned char>(value[second_end])) != 0)
+                {
+                    ++second_end;
+                }
+                second = std::stoi(value.substr(second_colon + 1U, second_end - second_colon - 1U));
             }
-
-            const auto parse_component = [&](const std::size_t start, const std::size_t end, int &out) -> bool
-            {
-                if (end <= start)
-                {
-                    return false;
-                }
-                for (std::size_t index = start; index < end; ++index)
-                {
-                    if (std::isdigit(static_cast<unsigned char>(value[index])) == 0)
-                    {
-                        return false;
-                    }
-                }
-                try
-                {
-                    out = std::stoi(value.substr(start, end - start));
-                }
-                catch (...)
-                {
-                    return false;
-                }
-                return true;
-            };
-
-            if (!parse_component(0U, first_colon, hour) ||
-                !parse_component(first_colon + 1U, second_colon, minute) ||
-                !parse_component(second_colon + 1U, value.size(), second))
+            catch (...)
             {
                 return false;
             }
@@ -8085,13 +8065,6 @@ namespace copperfin::runtime
                 }
                 if (function == "dtoc" && !arguments.empty())
                 {
-                    int year = 0;
-                    int month = 0;
-                    int day = 0;
-                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
-                    {
-                        return make_string_value(format_runtime_date_string(year, month, day));
-                    }
                     return make_string_value(value_as_string(arguments[0]));
                 }
                 if (function == "ttoc" && !arguments.empty())

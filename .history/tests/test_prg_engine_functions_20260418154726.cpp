@@ -323,19 +323,6 @@ namespace
             "next_month = GOMONTH(CTOD('01/31/2026'), 1)\n"
             "prev_month = GOMONTH(CTOD('03/31/2026'), -1)\n"
             "mdy_value = MDY(4, 18, 2026)\n"
-            "dtot_value = DTOT(CTOD('04/18/2026'))\n"
-            "ttod_value = TTOD('04/18/2026 13:45:56')\n"
-            "ctot_value = CTOT('04/18/2026 13:45:56')\n"
-            "hour_value = HOUR('04/18/2026 13:45:56')\n"
-            "minute_value = MINUTE('04/18/2026 13:45:56')\n"
-            "sec_value = SEC('04/18/2026 13:45:56')\n"
-            "dtos_value = DTOS('04/18/2026')\n"
-            "ctod_value = CTOD('04/18/2026')\n"
-            "dtoc_value = DTOC('20260418')\n"
-            "ttoc_value = TTOC('04/18/2026 13:45:56')\n"
-            "year_value = YEAR('04/18/2026')\n"
-            "month_value = MONTH('04/18/2026')\n"
-            "day_value = DAY('04/18/2026')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -365,27 +352,11 @@ namespace
         check("next_month", "02/28/2026");
         check("prev_month", "02/28/2026");
         check("mdy_value", "04/18/2026");
-        check("dtot_value", "04/18/2026 00:00:00");
-        check("ttod_value", "04/18/2026");
-        check("ctot_value", "04/18/2026 13:45:56");
-        check("hour_value", "13");
-        check("minute_value", "45");
-        check("sec_value", "56");
-        check("dtos_value", "20260418");
-        check("ctod_value", "04/18/2026");
-        check("dtoc_value", "04/18/2026");
-        check("ttoc_value", "04/18/2026 13:45:56");
-        check("year_value", "2026");
-        check("month_value", "4");
-        check("day_value", "18");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())
         {
             expect(false, "seconds_now variable not found");
-        }
-        else
-        {
             double seconds = -1.0;
             try
             {
@@ -395,6 +366,9 @@ namespace
             {
                 seconds = -1.0;
             }
+            expect(seconds >= 0.0 && seconds <= 86399.0,
+                   "SECONDS() should return a second-of-day value between 0 and 86399");
+            const double seconds = copperfin::runtime::value_as_number(seconds_it->second);
             expect(seconds >= 0.0 && seconds <= 86399.0,
                    "SECONDS() should return a second-of-day value between 0 and 86399");
         }

@@ -8085,13 +8085,6 @@ namespace copperfin::runtime
                 }
                 if (function == "dtoc" && !arguments.empty())
                 {
-                    int year = 0;
-                    int month = 0;
-                    int day = 0;
-                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
-                    {
-                        return make_string_value(format_runtime_date_string(year, month, day));
-                    }
                     return make_string_value(value_as_string(arguments[0]));
                 }
                 if (function == "ttoc" && !arguments.empty())

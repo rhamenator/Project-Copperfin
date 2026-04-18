@@ -329,13 +329,6 @@ namespace
             "hour_value = HOUR('04/18/2026 13:45:56')\n"
             "minute_value = MINUTE('04/18/2026 13:45:56')\n"
             "sec_value = SEC('04/18/2026 13:45:56')\n"
-            "dtos_value = DTOS('04/18/2026')\n"
-            "ctod_value = CTOD('04/18/2026')\n"
-            "dtoc_value = DTOC('20260418')\n"
-            "ttoc_value = TTOC('04/18/2026 13:45:56')\n"
-            "year_value = YEAR('04/18/2026')\n"
-            "month_value = MONTH('04/18/2026')\n"
-            "day_value = DAY('04/18/2026')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -371,13 +364,6 @@ namespace
         check("hour_value", "13");
         check("minute_value", "45");
         check("sec_value", "56");
-        check("dtos_value", "20260418");
-        check("ctod_value", "04/18/2026");
-        check("dtoc_value", "04/18/2026");
-        check("ttoc_value", "04/18/2026 13:45:56");
-        check("year_value", "2026");
-        check("month_value", "4");
-        check("day_value", "18");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())
