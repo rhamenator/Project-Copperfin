@@ -1,6 +1,5 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
-#include "copperfin/vfp/dbf_table.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -425,60 +424,6 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
-    void test_count_to_array_expression()
-    {
-        namespace fs = std::filesystem;
-        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_count_to_array";
-        std::error_code ignored;
-        fs::remove_all(temp_root, ignored);
-        fs::create_directories(temp_root);
-
-        const fs::path table_path = temp_root / "people.dbf";
-        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-            {.name = "NAME", .type = 'C', .length = 10U},
-            {.name = "AGE", .type = 'N', .length = 3U},
-        };
-        const std::vector<std::vector<std::string>> records{
-            {"Alice", "42"},
-            {"Bob", "35"},
-        };
-        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
-        expect(create_result.ok, "COUNT TO ARRAY test DBF fixture should be created");
-
-        const fs::path main_path = temp_root / "count_to_array.prg";
-        write_text(
-            main_path,
-            "USE '" + table_path.string() + "'\n"
-            "COUNT TO ARRAY aCount\n"
-            "nArrayLen = ALEN(aCount)\n"
-            "nCount = aCount[1]\n"
-            "RETURN\n");
-
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
-
-        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        expect(state.completed, "COUNT TO ARRAY script should complete");
-
-        const auto array_len = state.globals.find("narraylen");
-        const auto count = state.globals.find("ncount");
-
-        expect(array_len != state.globals.end(), "ALEN(aCount) should expose array element count");
-        expect(count != state.globals.end(), "aCount[1] should expose the count result");
-
-        if (array_len != state.globals.end()) {
-            expect(copperfin::runtime::format_value(array_len->second) == "1", "COUNT TO ARRAY should create a one-element array");
-        }
-        if (count != state.globals.end()) {
-            expect(copperfin::runtime::format_value(count->second) == "2", "COUNT TO ARRAY should store the record count");
-        }
-
-        fs::remove_all(temp_root, ignored);
-    }
-
 } // namespace
 
 int main()
@@ -487,7 +432,6 @@ int main()
     test_string_and_math_expression_functions();
     test_type_and_null_expression_functions();
     test_date_time_expression_functions();
-    test_count_to_array_expression();
 
     if (test_failures() != 0)
     {

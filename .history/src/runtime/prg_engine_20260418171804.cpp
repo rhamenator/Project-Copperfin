@@ -3758,7 +3758,7 @@ namespace copperfin::runtime
         {
             if (starts_with_insensitive(statement.identifier, "ARRAY "))
             {
-                // Robust: support COUNT TO ARRAY <name> using assign_array
+                // First-pass: support COUNT TO ARRAY <name>
                 std::string array_name = trim_copy(statement.identifier.substr(6));
                 if (array_name.empty()) {
                     error_message = uppercase_copy(function) + " TO ARRAY requires a target array name";
@@ -3767,12 +3767,16 @@ namespace copperfin::runtime
                 const std::vector<std::size_t> records = collect_aggregate_scope_records(
                     *cursor,
                     frame,
-                    parse_aggregate_scope_clause(statement.expression, std::string{}),
+                    parse_aggregate_scope_clause(statement.expression, std::ignore),
                     statement.secondary_expression,
                     statement.tertiary_expression);
                 const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
-                // Assign as a one-element array using the runtime helper
-                assign_array(array_name, {result}, 1);
+                // Assign as a one-element array in the arrays map
+                RuntimeArray arr;
+                arr.rows = 1;
+                arr.columns = 1;
+                arr.values.push_back(result);
+                arrays[normalize_memory_variable_identifier(array_name)] = arr;
                 return true;
             }
 

@@ -1,6 +1,5 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
-#include "copperfin/vfp/dbf_table.h"
 
 #include <cstdlib>
 #include <filesystem>
