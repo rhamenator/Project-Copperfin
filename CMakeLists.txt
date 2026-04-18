@@ -417,6 +417,21 @@ if(COPPERFIN_BUILD_TESTS)
 
     add_test(NAME test_prg_engine COMMAND $<TARGET_FILE:test_prg_engine>)
 
+    add_executable(test_prg_engine_arrays
+        tests/test_prg_engine_arrays.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_arrays PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_arrays PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_arrays PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_arrays COMMAND $<TARGET_FILE:test_prg_engine_arrays>)
+
     add_executable(test_prg_engine_sql_cursors
         tests/test_prg_engine_sql_cursors.cpp
         tests/prg_engine_test_support.cpp

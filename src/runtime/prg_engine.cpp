@@ -11,6 +11,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
@@ -4338,9 +4339,11 @@ struct PrgRuntimeSession::Impl {
             const int search_column = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : -1;
             const int flags = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
             const bool case_insensitive = (flags & 1) != 0;
+            const bool predicate_search = (flags & 16) != 0;
             const bool exact_match = (flags & 4) != 0
                 ? (flags & 2) != 0
                 : is_set_enabled("exact");
+            const std::string predicate_text = predicate_search ? trim_copy(value_as_string(arguments[1])) : std::string{};
             const auto array_value_matches = [&](const PrgValue& left, const PrgValue& right) {
                 if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
                     std::string left_value = value_as_string(left);
@@ -4358,6 +4361,96 @@ struct PrgRuntimeSession::Impl {
                 }
                 return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
             };
+            auto parse_predicate_block = [](const std::string& text) {
+                struct PredicateBlock {
+                    std::string parameter;
+                    std::string expression;
+                };
+                PredicateBlock block{std::string{}, trim_copy(text)};
+                if (text.size() >= 5U && text[0] == '{' && text[1] == '|') {
+                    const std::size_t parameter_end = text.find('|', 2U);
+                    if (parameter_end != std::string::npos) {
+                        const std::size_t close = text.rfind('}');
+                        const std::size_t expression_end = close == std::string::npos || close <= parameter_end
+                            ? text.size()
+                            : close;
+                        block.parameter = trim_copy(text.substr(2U, parameter_end - 2U));
+                        block.expression = trim_copy(text.substr(parameter_end + 1U, expression_end - parameter_end - 1U));
+                    }
+                }
+                return block;
+            };
+            const auto predicate_block = parse_predicate_block(predicate_text);
+            const std::array<std::string, 4U> predicate_metadata_names = {
+                normalize_memory_variable_identifier("_ASCANVALUE"),
+                normalize_memory_variable_identifier("_ASCANINDEX"),
+                normalize_memory_variable_identifier("_ASCANROW"),
+                normalize_memory_variable_identifier("_ASCANCOLUMN")
+            };
+            const std::string predicate_parameter_name = normalize_memory_variable_identifier(predicate_block.parameter);
+            std::map<std::string, std::optional<PrgValue>> saved_globals;
+            std::map<std::string, std::optional<PrgValue>> saved_locals;
+            auto snapshot_predicate_binding = [&](Frame& frame, const std::string& name) {
+                if (name.empty() || saved_globals.contains(name)) {
+                    return;
+                }
+                if (const auto global = globals.find(name); global != globals.end()) {
+                    saved_globals[name] = global->second;
+                } else {
+                    saved_globals[name] = std::nullopt;
+                }
+                if (const auto local = frame.locals.find(name); local != frame.locals.end()) {
+                    saved_locals[name] = local->second;
+                } else {
+                    saved_locals[name] = std::nullopt;
+                }
+            };
+            if (predicate_search && !stack.empty()) {
+                Frame& frame = stack.back();
+                for (const std::string& name : predicate_metadata_names) {
+                    snapshot_predicate_binding(frame, name);
+                }
+                snapshot_predicate_binding(frame, predicate_parameter_name);
+            }
+            auto restore_predicate_bindings = [&]() {
+                if (stack.empty()) {
+                    return;
+                }
+                Frame& frame = stack.back();
+                for (const auto& [name, value] : saved_globals) {
+                    if (value) {
+                        globals[name] = *value;
+                    } else {
+                        globals.erase(name);
+                    }
+                }
+                for (const auto& [name, value] : saved_locals) {
+                    if (value) {
+                        frame.locals[name] = *value;
+                    } else {
+                        frame.locals.erase(name);
+                    }
+                }
+            };
+            const auto predicate_value_matches = [&](const PrgValue& value, std::size_t linear_index) {
+                if (!predicate_search) {
+                    return false;
+                }
+                if (predicate_block.expression.empty() || stack.empty()) {
+                    return false;
+                }
+                Frame& frame = stack.back();
+                const std::size_t row = array->columns > 0U ? (linear_index / array->columns) + 1U : linear_index + 1U;
+                const std::size_t column = array->columns > 0U ? (linear_index % array->columns) + 1U : 1U;
+                assign_variable(frame, "_ASCANVALUE", value);
+                assign_variable(frame, "_ASCANINDEX", make_number_value(static_cast<double>(linear_index + 1U)));
+                assign_variable(frame, "_ASCANROW", make_number_value(static_cast<double>(row)));
+                assign_variable(frame, "_ASCANCOLUMN", make_number_value(static_cast<double>(column)));
+                if (!predicate_block.parameter.empty()) {
+                    assign_variable(frame, predicate_block.parameter, value);
+                }
+                return value_as_bool(evaluate_expression(predicate_block.expression, frame));
+            };
             const std::size_t start = raw_start <= 0.0
                 ? 1U
                 : static_cast<std::size_t>(raw_start);
@@ -4365,11 +4458,13 @@ struct PrgRuntimeSession::Impl {
                 ? 0U
                 : static_cast<std::size_t>(raw_count);
             if (start == 0U || start > array->values.size()) {
+                restore_predicate_bindings();
                 return make_number_value(0.0);
             }
             if (search_column > 0 && array->columns > 1U) {
                 const std::size_t column = static_cast<std::size_t>(search_column);
                 if (column > array->columns) {
+                    restore_predicate_bindings();
                     return make_number_value(0.0);
                 }
                 const std::size_t start_row = (start - 1U) / array->columns;
@@ -4377,12 +4472,17 @@ struct PrgRuntimeSession::Impl {
                 const std::size_t rows_to_scan = count == 0U ? available_rows : std::min(count, available_rows);
                 for (std::size_t row = start_row; row < start_row + rows_to_scan; ++row) {
                     const std::size_t index = (row * array->columns) + (column - 1U);
-                    if (index < array->values.size() && array_value_matches(array->values[index], arguments[1])) {
-                        return make_number_value((flags & 8) != 0
+                    if (index < array->values.size() &&
+                            (predicate_value_matches(array->values[index], index) ||
+                                (!predicate_search && array_value_matches(array->values[index], arguments[1])))) {
+                        const PrgValue result = make_number_value((flags & 8) != 0
                             ? static_cast<double>(row + 1U)
                             : static_cast<double>(index + 1U));
+                        restore_predicate_bindings();
+                        return result;
                     }
                 }
+                restore_predicate_bindings();
                 return make_number_value(0.0);
             }
             const std::size_t begin_index = start - 1U;
@@ -4390,12 +4490,16 @@ struct PrgRuntimeSession::Impl {
             const std::size_t scan_count = count == 0U ? available : std::min(count, available);
             const std::size_t end_index = begin_index + scan_count;
             for (std::size_t index = begin_index; index < end_index; ++index) {
-                if (array_value_matches(array->values[index], arguments[1])) {
-                    return make_number_value((flags & 8) != 0 && array->columns > 1U
+                if (predicate_value_matches(array->values[index], index) ||
+                        (!predicate_search && array_value_matches(array->values[index], arguments[1]))) {
+                    const PrgValue result = make_number_value((flags & 8) != 0 && array->columns > 1U
                         ? static_cast<double>((index / array->columns) + 1U)
                         : static_cast<double>(index + 1U));
+                    restore_predicate_bindings();
+                    return result;
                 }
             }
+            restore_predicate_bindings();
             return make_number_value(0.0);
         }
         if (normalized_function == "adel" && arguments.size() >= 2U) {

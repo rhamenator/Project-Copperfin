@@ -111,7 +111,7 @@ The native runtime/parser currently has first-pass support for these command fam
 
 The `m.` variable namespace prefix is also now correctly handled as a memory-variable alias across assignment, lookup, expression evaluation, and declarations: `m.<name>`, `M.<name>`, and bare `<name>` share the same local/global runtime binding, and `m.<name>` no longer falls through to OLE property resolution.
 
-Runtime arrays now have first-pass direct element reads and writes through both bracket and parenthesis syntax (`array[1]`, `array[1,2]`, `array(1)`, `array(1,2)`), including declared arrays and arrays resized through `ASIZE()`.
+Runtime arrays now have first-pass direct element reads and writes through both bracket and parenthesis syntax (`array[1]`, `array[1,2]`, `array(1)`, `array(1,2)`), including declared arrays and arrays resized through `ASIZE()`. The array helper surface now also covers `ACOPY()` row-major copies over one- and two-dimensional arrays, `AELEMENT()` / `ASUBSCRIPT()` index conversion, `ASCAN()` start/count scans with column, case-insensitive, exactness, row-return, and first-pass predicate-expression search support, `ASORT()` start/count windows plus descending/case-insensitive/numeric-aware ordering and two-dimensional row sorting by the start element's column, and two-dimensional `ADEL()` / `AINS()` row/column shifting.
 
 The current xAsset runtime surface behind those commands is now green at the first-pass runtime level: `DO FORM` is backed by generated `SCX/VCX` bootstrap sources that sequence `DataEnvironment` open/close hooks plus root-object lifecycle methods where present, `REPORT FORM` and `LABEL FORM` now both support preview/event-loop and `TO FILE` execution lanes, and menu assets now have executable startup/action/cleanup bootstrap modeling through the shared `MNX` xAsset path.
 
@@ -124,7 +124,7 @@ The expression/function layer currently has first-pass support for these VFP-fac
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
 - first-pass `ALEN()` for runtime arrays created by `SCATTER TO <array>`, `AERROR(<array>)`, `DIMENSION` / array-form `DECLARE`, and `ASIZE()`, including total element count and dimension queries
 - first-pass `AERROR(<array>)` with VFP-aligned seven-column rows for normal runtime errors, plus SQL/ODBC-like `1526` and OLE/automation-like `1429` row shapes carrying provider-specific detail placeholders where Copperfin does not yet have live provider payloads
-- first-pass runtime array helpers over Copperfin runtime arrays: `ACOPY()`, `ADIR()`, `AELEMENT()`, `AFIELDS()`, `ALINES()`, `ASIZE()`, `ASCAN()`, `ADEL()`, `AINS()`, `ASORT()`, and `ASUBSCRIPT()`
+- first-pass runtime array helpers over Copperfin runtime arrays: `ACOPY()`, `ADIR()`, `AELEMENT()`, `AFIELDS()`, `ALINES()`, `ASIZE()`, `ASCAN()`, `ADEL()`, `AINS()`, `ASORT()`, and `ASUBSCRIPT()`; the focused array regression target now exercises predicate-style `ASCAN()` searches and common two-dimensional `ACOPY()` row/column workflows separately from the legacy catch-all PRG-engine test
 - `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
 - `CREATEOBJECT()`, `GETOBJECT()`
@@ -147,6 +147,12 @@ The official command inventory is much larger than the current runtime. The deep
 - command-surface and expression/runtime-state depth: #7, #8
 - OLE/COM and automation compatibility: #10, #11
 - automation fault containment and diagnostics: #12, #13, #14
+
+### Runtime Arrays And Expressions
+
+- keep array compatibility work focused on official helper semantics and real FoxPro migration idioms; the current surface covers declared arrays, table/array transfer commands, metadata helpers, mutation helpers, sorting, scanning, and common row/column copy workflows, but it is still a first-pass runtime model rather than a complete VFP array engine
+- deepen predicate and macro expression fidelity around `ASCAN()` and related helpers after the first-pass string/block-style predicate path, especially where installed VFP help describes code-block or macro-expanded behavior that should not leak temporary scan metadata into user state
+- continue moving new array regressions into `tests/test_prg_engine_arrays.cpp` / `test_prg_engine_arrays` instead of expanding the legacy `test_prg_engine.cpp` catch-all
 
 ### Work Areas, Sessions, And Indexed Data
 
