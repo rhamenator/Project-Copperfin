@@ -6514,6 +6514,14 @@ void test_runtime_array_mutator_functions() {
         "nCopyAll = ACOPY(aSource, aFlat)\n"
         "nFlatLen = ALEN(aFlat)\n"
         "cFlatSix = aFlat[6]\n"
+        "DIMENSION aNumericSort[3]\n"
+        "aNumericSort[1] = 10\n"
+        "aNumericSort[2] = 2\n"
+        "aNumericSort[3] = 1\n"
+        "nSortNumeric = ASORT(aNumericSort)\n"
+        "nSortNumericOne = aNumericSort[1]\n"
+        "nSortNumericTwo = aNumericSort[2]\n"
+        "nSortNumericThree = aNumericSort[3]\n"
         "DIMENSION aSortWindow[5]\n"
         "aSortWindow[1] = 'A'\n"
         "aSortWindow[2] = 'B'\n"
@@ -6540,6 +6548,49 @@ void test_runtime_array_mutator_functions() {
         "cRowsSecondSortRow1Col1 = aRows[1,1]\n"
         "cRowsSecondSortRow2Col1 = aRows[2,1]\n"
         "cRowsSecondSortRow3Col1 = aRows[3,1]\n"
+        "DIMENSION aDeleteRow[3,2]\n"
+        "aDeleteRow[1,1] = 'A'\n"
+        "aDeleteRow[1,2] = 'B'\n"
+        "aDeleteRow[2,1] = 'C'\n"
+        "aDeleteRow[2,2] = 'D'\n"
+        "aDeleteRow[3,1] = 'E'\n"
+        "aDeleteRow[3,2] = 'F'\n"
+        "nDeleteRow = ADEL(aDeleteRow, 2)\n"
+        "cDeleteRow21 = aDeleteRow[2,1]\n"
+        "cDeleteRow22 = aDeleteRow[2,2]\n"
+        "cDeleteRow31Type = VARTYPE(aDeleteRow[3,1])\n"
+        "DIMENSION aDeleteColumn[2,3]\n"
+        "aDeleteColumn[1,1] = 'A'\n"
+        "aDeleteColumn[1,2] = 'B'\n"
+        "aDeleteColumn[1,3] = 'C'\n"
+        "aDeleteColumn[2,1] = 'D'\n"
+        "aDeleteColumn[2,2] = 'E'\n"
+        "aDeleteColumn[2,3] = 'F'\n"
+        "nDeleteColumn = ADEL(aDeleteColumn, 2, 2)\n"
+        "cDeleteColumn12 = aDeleteColumn[1,2]\n"
+        "cDeleteColumn22 = aDeleteColumn[2,2]\n"
+        "cDeleteColumn13Type = VARTYPE(aDeleteColumn[1,3])\n"
+        "DIMENSION aInsertRow[3,2]\n"
+        "aInsertRow[1,1] = 'A'\n"
+        "aInsertRow[1,2] = 'B'\n"
+        "aInsertRow[2,1] = 'C'\n"
+        "aInsertRow[2,2] = 'D'\n"
+        "aInsertRow[3,1] = 'E'\n"
+        "aInsertRow[3,2] = 'F'\n"
+        "nInsertRow = AINS(aInsertRow, 2)\n"
+        "cInsertRow21Type = VARTYPE(aInsertRow[2,1])\n"
+        "cInsertRow31 = aInsertRow[3,1]\n"
+        "DIMENSION aInsertColumn[2,3]\n"
+        "aInsertColumn[1,1] = 'A'\n"
+        "aInsertColumn[1,2] = 'B'\n"
+        "aInsertColumn[1,3] = 'C'\n"
+        "aInsertColumn[2,1] = 'D'\n"
+        "aInsertColumn[2,2] = 'E'\n"
+        "aInsertColumn[2,3] = 'F'\n"
+        "nInsertColumn = AINS(aInsertColumn, 2, 2)\n"
+        "cInsertColumn12Type = VARTYPE(aInsertColumn[1,2])\n"
+        "cInsertColumn13 = aInsertColumn[1,3]\n"
+        "cInsertColumn23 = aInsertColumn[2,3]\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -6583,6 +6634,10 @@ void test_runtime_array_mutator_functions() {
     const auto copy_all = state.globals.find("ncopyall");
     const auto flat_len = state.globals.find("nflatlen");
     const auto flat_six = state.globals.find("cflatsix");
+    const auto sort_numeric = state.globals.find("nsortnumeric");
+    const auto sort_numeric_one = state.globals.find("nsortnumericone");
+    const auto sort_numeric_two = state.globals.find("nsortnumerictwo");
+    const auto sort_numeric_three = state.globals.find("nsortnumericthree");
     const auto sort_window = state.globals.find("nsortwindow");
     const auto sort_window_one = state.globals.find("csortwindowone");
     const auto sort_window_two = state.globals.find("csortwindowtwo");
@@ -6596,6 +6651,21 @@ void test_runtime_array_mutator_functions() {
     const auto rows_second_sort_row1_col1 = state.globals.find("crowssecondsortrow1col1");
     const auto rows_second_sort_row2_col1 = state.globals.find("crowssecondsortrow2col1");
     const auto rows_second_sort_row3_col1 = state.globals.find("crowssecondsortrow3col1");
+    const auto delete_row = state.globals.find("ndeleterow");
+    const auto delete_row_21 = state.globals.find("cdeleterow21");
+    const auto delete_row_22 = state.globals.find("cdeleterow22");
+    const auto delete_row_31_type = state.globals.find("cdeleterow31type");
+    const auto delete_column = state.globals.find("ndeletecolumn");
+    const auto delete_column_12 = state.globals.find("cdeletecolumn12");
+    const auto delete_column_22 = state.globals.find("cdeletecolumn22");
+    const auto delete_column_13_type = state.globals.find("cdeletecolumn13type");
+    const auto insert_row = state.globals.find("ninsertrow");
+    const auto insert_row_21_type = state.globals.find("cinsertrow21type");
+    const auto insert_row_31 = state.globals.find("cinsertrow31");
+    const auto insert_column = state.globals.find("ninsertcolumn");
+    const auto insert_column_12_type = state.globals.find("cinsertcolumn12type");
+    const auto insert_column_13 = state.globals.find("cinsertcolumn13");
+    const auto insert_column_23 = state.globals.find("cinsertcolumn23");
 
     expect(scan_alpha != state.globals.end(), "ASCAN should return a captured position");
     expect(scan_alpha_insensitive != state.globals.end(), "ASCAN should support case-insensitive flags");
@@ -6629,9 +6699,14 @@ void test_runtime_array_mutator_functions() {
     expect(copy_all != state.globals.end(), "ACOPY should copy all remaining source elements by default");
     expect(flat_len != state.globals.end(), "ACOPY should grow a one-dimensional target when needed");
     expect(flat_six != state.globals.end(), "ACOPY should preserve the final copied source element");
+    expect(sort_numeric != state.globals.end(), "ASORT should sort numeric arrays using numeric order");
     expect(sort_window != state.globals.end(), "ASORT should sort bounded one-dimensional windows");
     expect(sort_rows_by_first != state.globals.end(), "ASORT should sort two-dimensional arrays by row");
     expect(sort_rows_by_second_from_row2 != state.globals.end(), "ASORT should sort a two-dimensional row subset by start column");
+    expect(delete_row != state.globals.end(), "ADEL should delete rows in two-dimensional arrays");
+    expect(delete_column != state.globals.end(), "ADEL should delete columns in two-dimensional arrays");
+    expect(insert_row != state.globals.end(), "AINS should insert rows in two-dimensional arrays");
+    expect(insert_column != state.globals.end(), "AINS should insert columns in two-dimensional arrays");
 
     if (scan_alpha != state.globals.end()) {
         expect(copperfin::runtime::format_value(scan_alpha->second) == "2", "ASCAN should find Alpha in the original second slot");
@@ -6658,7 +6733,7 @@ void test_runtime_array_mutator_functions() {
         expect(copperfin::runtime::format_value(insert_ok->second) == "1", "AINS should report success");
     }
     if (after_insert_first_type != state.globals.end()) {
-        expect(copperfin::runtime::format_value(after_insert_first_type->second) == "U", "AINS should insert an empty slot");
+        expect(copperfin::runtime::format_value(after_insert_first_type->second) == "L", "AINS should insert a false slot");
     }
     if (after_insert_second != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_insert_second->second) == "Zulu", "AINS should shift Zulu into the second slot");
@@ -6729,6 +6804,18 @@ void test_runtime_array_mutator_functions() {
     if (flat_six != state.globals.end()) {
         expect(copperfin::runtime::format_value(flat_six->second) == "F", "ACOPY should copy the final element into the grown flat target");
     }
+    if (sort_numeric != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_numeric->second) == "1", "ASORT numeric array should report success");
+    }
+    if (sort_numeric_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_numeric_one->second) == "1", "ASORT numeric array should sort 1 first");
+    }
+    if (sort_numeric_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_numeric_two->second) == "2", "ASORT numeric array should sort 2 second");
+    }
+    if (sort_numeric_three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_numeric_three->second) == "10", "ASORT numeric array should sort 10 after 2");
+    }
     if (sort_window != state.globals.end()) {
         expect(copperfin::runtime::format_value(sort_window->second) == "1", "ASORT bounded window should report success");
     }
@@ -6767,6 +6854,51 @@ void test_runtime_array_mutator_functions() {
     }
     if (rows_second_sort_row3_col1 != state.globals.end()) {
         expect(copperfin::runtime::format_value(rows_second_sort_row3_col1->second) == "C", "ASORT subset sort should leave the higher key later");
+    }
+    if (delete_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_row->second) == "1", "ADEL row should report success");
+    }
+    if (delete_row_21 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_row_21->second) == "E", "ADEL row should shift later rows up");
+    }
+    if (delete_row_22 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_row_22->second) == "F", "ADEL row should preserve shifted row columns");
+    }
+    if (delete_row_31_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_row_31_type->second) == "L", "ADEL row should fill the last row with false values");
+    }
+    if (delete_column != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_column->second) == "1", "ADEL column should report success");
+    }
+    if (delete_column_12 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_column_12->second) == "C", "ADEL column should shift later columns left");
+    }
+    if (delete_column_22 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_column_22->second) == "F", "ADEL column should shift every row");
+    }
+    if (delete_column_13_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(delete_column_13_type->second) == "L", "ADEL column should fill the last column with false values");
+    }
+    if (insert_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_row->second) == "1", "AINS row should report success");
+    }
+    if (insert_row_21_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_row_21_type->second) == "L", "AINS row should fill inserted row with false values");
+    }
+    if (insert_row_31 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_row_31->second) == "C", "AINS row should shift rows down and drop the former last row");
+    }
+    if (insert_column != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_column->second) == "1", "AINS column should report success");
+    }
+    if (insert_column_12_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_column_12_type->second) == "L", "AINS column should fill inserted column with false values");
+    }
+    if (insert_column_13 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_column_13->second) == "B", "AINS column should shift row columns right");
+    }
+    if (insert_column_23 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insert_column_23->second) == "E", "AINS column should shift every row and drop former last column");
     }
 
     fs::remove_all(temp_root, ignored);

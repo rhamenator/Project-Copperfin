@@ -4400,26 +4400,85 @@ struct PrgRuntimeSession::Impl {
         }
         if (normalized_function == "adel" && arguments.size() >= 2U) {
             const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
-            if (position == 0U || position > array->values.size()) {
-                return make_number_value(0.0);
-            }
-            for (std::size_t index = position - 1U; index + 1U < array->values.size(); ++index) {
-                array->values[index] = array->values[index + 1U];
-            }
-            if (!array->values.empty()) {
-                array->values.back() = make_empty_value();
+            const int row_or_column = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 1;
+            if (array->columns > 1U) {
+                if (row_or_column == 2) {
+                    if (position == 0U || position > array->columns) {
+                        return make_number_value(0.0);
+                    }
+                    for (std::size_t row = 0U; row < array->rows; ++row) {
+                        for (std::size_t column = position - 1U; column + 1U < array->columns; ++column) {
+                            array->values[(row * array->columns) + column] =
+                                array->values[(row * array->columns) + column + 1U];
+                        }
+                        array->values[(row * array->columns) + array->columns - 1U] = make_boolean_value(false);
+                    }
+                } else {
+                    if (position == 0U || position > array->rows) {
+                        return make_number_value(0.0);
+                    }
+                    for (std::size_t row = position - 1U; row + 1U < array->rows; ++row) {
+                        for (std::size_t column = 0U; column < array->columns; ++column) {
+                            array->values[(row * array->columns) + column] =
+                                array->values[((row + 1U) * array->columns) + column];
+                        }
+                    }
+                    const std::size_t last_row = array->rows - 1U;
+                    for (std::size_t column = 0U; column < array->columns; ++column) {
+                        array->values[(last_row * array->columns) + column] = make_boolean_value(false);
+                    }
+                }
+            } else {
+                if (position == 0U || position > array->values.size()) {
+                    return make_number_value(0.0);
+                }
+                for (std::size_t index = position - 1U; index + 1U < array->values.size(); ++index) {
+                    array->values[index] = array->values[index + 1U];
+                }
+                if (!array->values.empty()) {
+                    array->values.back() = make_boolean_value(false);
+                }
             }
             return make_number_value(1.0);
         }
         if (normalized_function == "ains" && arguments.size() >= 2U) {
             const std::size_t position = static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[1])));
-            if (position == 0U || position > array->values.size()) {
-                return make_number_value(0.0);
+            const int row_or_column = arguments.size() >= 3U ? static_cast<int>(std::llround(value_as_number(arguments[2]))) : 1;
+            if (array->columns > 1U) {
+                if (row_or_column == 2) {
+                    if (position == 0U || position > array->columns) {
+                        return make_number_value(0.0);
+                    }
+                    for (std::size_t row = 0U; row < array->rows; ++row) {
+                        for (std::size_t column = array->columns - 1U; column > position - 1U; --column) {
+                            array->values[(row * array->columns) + column] =
+                                array->values[(row * array->columns) + column - 1U];
+                        }
+                        array->values[(row * array->columns) + position - 1U] = make_boolean_value(false);
+                    }
+                } else {
+                    if (position == 0U || position > array->rows) {
+                        return make_number_value(0.0);
+                    }
+                    for (std::size_t row = array->rows - 1U; row > position - 1U; --row) {
+                        for (std::size_t column = 0U; column < array->columns; ++column) {
+                            array->values[(row * array->columns) + column] =
+                                array->values[((row - 1U) * array->columns) + column];
+                        }
+                    }
+                    for (std::size_t column = 0U; column < array->columns; ++column) {
+                        array->values[((position - 1U) * array->columns) + column] = make_boolean_value(false);
+                    }
+                }
+            } else {
+                if (position == 0U || position > array->values.size()) {
+                    return make_number_value(0.0);
+                }
+                for (std::size_t index = array->values.size() - 1U; index > position - 1U; --index) {
+                    array->values[index] = array->values[index - 1U];
+                }
+                array->values[position - 1U] = make_boolean_value(false);
             }
-            for (std::size_t index = array->values.size() - 1U; index > position - 1U; --index) {
-                array->values[index] = array->values[index - 1U];
-            }
-            array->values[position - 1U] = make_empty_value();
             return make_number_value(1.0);
         }
         if (normalized_function == "asort") {
@@ -4429,11 +4488,21 @@ struct PrgRuntimeSession::Impl {
             const int flags = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
             const bool descending = raw_order > 0.0;
             const bool case_insensitive = (flags & 1) != 0;
+            const auto is_numeric_array_value = [](const PrgValue& value) {
+                return value.kind == PrgValueKind::number ||
+                    value.kind == PrgValueKind::int64 ||
+                    value.kind == PrgValueKind::uint64;
+            };
             const auto sort_key = [&](const PrgValue& value) {
                 std::string key = value_as_string(value);
                 return case_insensitive ? uppercase_copy(std::move(key)) : key;
             };
             const auto value_less = [&](const PrgValue& left, const PrgValue& right) {
+                if (is_numeric_array_value(left) && is_numeric_array_value(right)) {
+                    const double left_number = value_as_number(left);
+                    const double right_number = value_as_number(right);
+                    return descending ? right_number < left_number : left_number < right_number;
+                }
                 const std::string left_key = sort_key(left);
                 const std::string right_key = sort_key(right);
                 return descending ? right_key < left_key : left_key < right_key;
