@@ -3756,26 +3756,6 @@ namespace copperfin::runtime
             const std::string &function,
             std::string &error_message)
         {
-            if (starts_with_insensitive(statement.identifier, "ARRAY "))
-            {
-                // Robust: support COUNT TO ARRAY <name> using assign_array
-                std::string array_name = trim_copy(statement.identifier.substr(6));
-                if (array_name.empty()) {
-                    error_message = uppercase_copy(function) + " TO ARRAY requires a target array name";
-                    return false;
-                }
-                const std::vector<std::size_t> records = collect_aggregate_scope_records(
-                    *cursor,
-                    frame,
-                    parse_aggregate_scope_clause(statement.expression, std::string{}),
-                    statement.secondary_expression,
-                    statement.tertiary_expression);
-                const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
-                // Assign as a one-element array using the runtime helper
-                assign_array(array_name, {result}, 1);
-                return true;
-            }
-
             CursorState *cursor = resolve_cursor_target_expression(statement.quaternary_expression, frame);
             if (cursor == nullptr)
             {
@@ -3784,8 +3764,46 @@ namespace copperfin::runtime
                                     : uppercase_copy(function) + " target work area not found";
                 return false;
             }
+
+            const std::string target_text = trim_copy(statement.identifier);
+            bool to_array = false;
+            std::string array_name;
+            if (!target_text.empty() && starts_with_insensitive(target_text, "ARRAY"))
+            {
+                std::string array_target_tail = trim_copy(target_text.substr(5U));
+                if (!array_target_tail.empty() && array_target_tail.front() == ',')
+                {
+                    array_target_tail = trim_copy(array_target_tail.substr(1U));
+                }
+                if (array_target_tail.empty())
+                {
+                    error_message = uppercase_copy(function) + " TO ARRAY requires a target array name";
+                    return false;
+                }
+
+                std::vector<std::string> array_targets = split_csv_like(array_target_tail);
+                for (std::string &candidate : array_targets)
+                {
+                    candidate = trim_copy(std::move(candidate));
+                }
+                array_targets.erase(
+                    std::remove_if(array_targets.begin(), array_targets.end(), [](const std::string &candidate)
+                                   { return candidate.empty(); }),
+                    array_targets.end());
+                if (array_targets.size() != 1U)
+                {
+                    error_message = uppercase_copy(function) + " TO ARRAY accepts exactly one array target";
+                    return false;
+                }
+
+                array_name = array_targets.front();
+                to_array = true;
+            }
+
+            std::string expression_text;
+            const AggregateScopeClause scope = parse_aggregate_scope_clause(statement.expression, expression_text);
             std::vector<std::string> targets;
-            if (!statement.identifier.empty())
+            if (!to_array && !statement.identifier.empty())
             {
                 targets = split_csv_like(statement.identifier);
             }
@@ -3793,9 +3811,6 @@ namespace copperfin::runtime
             {
                 target = trim_copy(std::move(target));
             }
-
-            std::string expression_text;
-            const AggregateScopeClause scope = parse_aggregate_scope_clause(statement.expression, expression_text);
 
             if (function == "count")
             {
@@ -3818,7 +3833,11 @@ namespace copperfin::runtime
                     statement.secondary_expression,
                     statement.tertiary_expression);
                 const PrgValue result = aggregate_record_values(*cursor, function, {}, records, frame);
-                if (!targets.empty())
+                if (to_array)
+                {
+                    assign_array(array_name, {result}, 1U);
+                }
+                else if (!targets.empty())
                 {
                     assign_variable(frame, targets.front(), result);
                 }
@@ -3862,6 +3881,19 @@ namespace copperfin::runtime
                 scope,
                 statement.secondary_expression,
                 statement.tertiary_expression);
+
+            if (to_array)
+            {
+                std::vector<PrgValue> array_values;
+                array_values.reserve(expressions.size());
+                for (const std::string &expression : expressions)
+                {
+                    array_values.push_back(aggregate_record_values(*cursor, function, expression, records, frame));
+                }
+                assign_array(array_name, array_values, 1U);
+                return true;
+            }
+
             for (std::size_t index = 0; index < expressions.size(); ++index)
             {
                 const PrgValue result = aggregate_record_values(*cursor, function, expressions[index], records, frame);
