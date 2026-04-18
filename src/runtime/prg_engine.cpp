@@ -799,14 +799,13 @@ struct PrgRuntimeSession::Impl {
         std::vector<PrgValue> call_arguments = {},
         std::vector<std::optional<std::string>> call_argument_references = {}) {
         Program& program = load_program(path);
-        stack.push_back({
-            .file_path = program.path,
-            .routine_name = "main",
-            .routine = &program.main,
-            .pc = 0,
-            .call_arguments = std::move(call_arguments),
-            .call_argument_references = std::move(call_argument_references)
-        });
+        Frame frame;
+        frame.file_path = program.path;
+        frame.routine_name = "main";
+        frame.routine = &program.main;
+        frame.call_arguments = std::move(call_arguments);
+        frame.call_argument_references = std::move(call_argument_references);
+        stack.push_back(std::move(frame));
     }
 
     void push_routine_frame(
@@ -814,14 +813,13 @@ struct PrgRuntimeSession::Impl {
         const Routine& routine,
         std::vector<PrgValue> call_arguments = {},
         std::vector<std::optional<std::string>> call_argument_references = {}) {
-        stack.push_back({
-            .file_path = normalize_path(path),
-            .routine_name = routine.name,
-            .routine = &routine,
-            .pc = 0,
-            .call_arguments = std::move(call_arguments),
-            .call_argument_references = std::move(call_argument_references)
-        });
+        Frame frame;
+        frame.file_path = normalize_path(path);
+        frame.routine_name = routine.name;
+        frame.routine = &routine;
+        frame.call_arguments = std::move(call_arguments);
+        frame.call_argument_references = std::move(call_argument_references);
+        stack.push_back(std::move(frame));
     }
 
     const Statement* current_statement() const {
@@ -3133,6 +3131,7 @@ struct PrgRuntimeSession::Impl {
         if (found == declared_dll_functions.end()) return make_empty_value();
         const DeclaredDllFunction& declfn = found->second;
 
+#if defined(_WIN32)
         // Split comma-separated param_types string into a vector for indexed access
         std::vector<std::string> param_type_list;
         {
@@ -3149,7 +3148,6 @@ struct PrgRuntimeSession::Impl {
             return i < param_type_list.size() ? param_type_list[i] : std::string("integer");
         };
 
-#if defined(_WIN32)
         // Helper: convert PrgValue → VARIANT
         auto to_variant = [&](const PrgValue& v, const std::string& ptype) -> VARIANT {
             VARIANT var;
@@ -3528,6 +3526,7 @@ struct PrgRuntimeSession::Impl {
 #endif
         }
 #else
+        (void)declfn;
         (void)args;
         return make_empty_value();
 #endif
@@ -3598,22 +3597,20 @@ struct PrgRuntimeSession::Impl {
 
             DataSessionState& session = current_session_state();
             session.aliases[target_area] = alias;
-            session.cursors[target_area] = CursorState{
-                .work_area = target_area,
-                .alias = alias,
-                .source_path = resolved_path,
-                .dbf_identity = dbf_identity,
-                .source_kind = "table",
-                .remote = false,
-                .field_count = field_count,
-                .record_count = record_count,
-                .recno = record_count == 0U ? 0U : 1U,
-                .found = false,
-                .bof = record_count == 0U,
-                .eof = record_count == 0U,
-                .orders = std::move(orders),
-                .field_rules = field_rules
-            };
+            CursorState cursor;
+            cursor.work_area = target_area;
+            cursor.alias = alias;
+            cursor.source_path = resolved_path;
+            cursor.dbf_identity = dbf_identity;
+            cursor.source_kind = "table";
+            cursor.field_count = field_count;
+            cursor.record_count = record_count;
+            cursor.recno = record_count == 0U ? 0U : 1U;
+            cursor.bof = record_count == 0U;
+            cursor.eof = record_count == 0U;
+            cursor.orders = std::move(orders);
+            cursor.field_rules = field_rules;
+            session.cursors[target_area] = std::move(cursor);
             return true;
         } else if (alias.empty()) {
             alias = "sqlresult" + std::to_string(next_available_work_area());
@@ -3649,22 +3646,21 @@ struct PrgRuntimeSession::Impl {
                 remote_records.push_back(make_synthetic_sql_record(recno));
             }
         }
-        session.cursors[target_area] = CursorState{
-            .work_area = target_area,
-            .alias = alias,
-            .source_path = resolved_path,
-            .dbf_identity = dbf_identity,
-            .source_kind = remote ? "sql-cursor" : "table",
-            .remote = remote,
-            .field_count = field_count,
-            .record_count = record_count,
-            .recno = record_count == 0U ? 0U : 1U,
-            .found = false,
-            .bof = record_count == 0U,
-            .eof = record_count == 0U,
-            .remote_records = std::move(remote_records),
-            .field_rules = field_rules
-        };
+        CursorState cursor;
+        cursor.work_area = target_area;
+        cursor.alias = alias;
+        cursor.source_path = resolved_path;
+        cursor.dbf_identity = dbf_identity;
+        cursor.source_kind = remote ? "sql-cursor" : "table";
+        cursor.remote = remote;
+        cursor.field_count = field_count;
+        cursor.record_count = record_count;
+        cursor.recno = record_count == 0U ? 0U : 1U;
+        cursor.bof = record_count == 0U;
+        cursor.eof = record_count == 0U;
+        cursor.remote_records = std::move(remote_records);
+        cursor.field_rules = field_rules;
+        session.cursors[target_area] = std::move(cursor);
         if (remote && sql_handle > 0) {
             auto& connections = current_sql_connections();
             auto found = connections.find(sql_handle);
@@ -4337,13 +4333,56 @@ struct PrgRuntimeSession::Impl {
             return make_number_value(static_cast<double>(array_subscript(*array, element, dimension)));
         }
         if (normalized_function == "ascan" && arguments.size() >= 2U) {
-            const std::size_t start = arguments.size() >= 3U
-                ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
-                : 1U;
-            const std::size_t count = arguments.size() >= 4U
-                ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[3])))
-                : 0U;
+            const double raw_start = arguments.size() >= 3U ? value_as_number(arguments[2]) : 1.0;
+            const double raw_count = arguments.size() >= 4U ? value_as_number(arguments[3]) : -1.0;
+            const int search_column = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : -1;
+            const int flags = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
+            const bool case_insensitive = (flags & 1) != 0;
+            const bool exact_match = (flags & 4) != 0
+                ? (flags & 2) != 0
+                : is_set_enabled("exact");
+            const auto array_value_matches = [&](const PrgValue& left, const PrgValue& right) {
+                if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
+                    std::string left_value = value_as_string(left);
+                    std::string right_value = value_as_string(right);
+                    if (case_insensitive) {
+                        left_value = uppercase_copy(std::move(left_value));
+                        right_value = uppercase_copy(std::move(right_value));
+                    }
+                    return exact_match
+                        ? left_value == right_value
+                        : left_value.rfind(right_value, 0U) == 0U;
+                }
+                if (left.kind == PrgValueKind::boolean || right.kind == PrgValueKind::boolean) {
+                    return value_as_bool(left) == value_as_bool(right);
+                }
+                return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+            };
+            const std::size_t start = raw_start <= 0.0
+                ? 1U
+                : static_cast<std::size_t>(raw_start);
+            const std::size_t count = raw_count <= 0.0
+                ? 0U
+                : static_cast<std::size_t>(raw_count);
             if (start == 0U || start > array->values.size()) {
+                return make_number_value(0.0);
+            }
+            if (search_column > 0 && array->columns > 1U) {
+                const std::size_t column = static_cast<std::size_t>(search_column);
+                if (column > array->columns) {
+                    return make_number_value(0.0);
+                }
+                const std::size_t start_row = (start - 1U) / array->columns;
+                const std::size_t available_rows = array->rows > start_row ? array->rows - start_row : 0U;
+                const std::size_t rows_to_scan = count == 0U ? available_rows : std::min(count, available_rows);
+                for (std::size_t row = start_row; row < start_row + rows_to_scan; ++row) {
+                    const std::size_t index = (row * array->columns) + (column - 1U);
+                    if (index < array->values.size() && array_value_matches(array->values[index], arguments[1])) {
+                        return make_number_value((flags & 8) != 0
+                            ? static_cast<double>(row + 1U)
+                            : static_cast<double>(index + 1U));
+                    }
+                }
                 return make_number_value(0.0);
             }
             const std::size_t begin_index = start - 1U;
@@ -4351,8 +4390,10 @@ struct PrgRuntimeSession::Impl {
             const std::size_t scan_count = count == 0U ? available : std::min(count, available);
             const std::size_t end_index = begin_index + scan_count;
             for (std::size_t index = begin_index; index < end_index; ++index) {
-                if (value_as_string(array->values[index]) == value_as_string(arguments[1])) {
-                    return make_number_value(static_cast<double>(index + 1U));
+                if (array_value_matches(array->values[index], arguments[1])) {
+                    return make_number_value((flags & 8) != 0 && array->columns > 1U
+                        ? static_cast<double>((index / array->columns) + 1U)
+                        : static_cast<double>(index + 1U));
                 }
             }
             return make_number_value(0.0);
@@ -4382,9 +4423,59 @@ struct PrgRuntimeSession::Impl {
             return make_number_value(1.0);
         }
         if (normalized_function == "asort") {
-            std::sort(array->values.begin(), array->values.end(), [](const PrgValue& left, const PrgValue& right) {
-                return value_as_string(left) < value_as_string(right);
+            const double raw_start = arguments.size() >= 2U ? value_as_number(arguments[1]) : 1.0;
+            const double raw_count = arguments.size() >= 3U ? value_as_number(arguments[2]) : -1.0;
+            const double raw_order = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
+            const int flags = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+            const bool descending = raw_order > 0.0;
+            const bool case_insensitive = (flags & 1) != 0;
+            const auto sort_key = [&](const PrgValue& value) {
+                std::string key = value_as_string(value);
+                return case_insensitive ? uppercase_copy(std::move(key)) : key;
+            };
+            const auto value_less = [&](const PrgValue& left, const PrgValue& right) {
+                const std::string left_key = sort_key(left);
+                const std::string right_key = sort_key(right);
+                return descending ? right_key < left_key : left_key < right_key;
+            };
+            const std::size_t start = raw_start <= 0.0
+                ? 1U
+                : static_cast<std::size_t>(raw_start);
+            if (start == 0U || start > array->values.size()) {
+                return make_number_value(-1.0);
+            }
+            if (array->columns <= 1U) {
+                const std::size_t begin_index = start - 1U;
+                const std::size_t available = array->values.size() - begin_index;
+                const std::size_t count = raw_count <= 0.0
+                    ? available
+                    : std::min(static_cast<std::size_t>(raw_count), available);
+                std::sort(array->values.begin() + static_cast<std::ptrdiff_t>(begin_index),
+                    array->values.begin() + static_cast<std::ptrdiff_t>(begin_index + count),
+                    value_less);
+                return make_number_value(1.0);
+            }
+            const std::size_t start_index = start - 1U;
+            const std::size_t start_row = start_index / array->columns;
+            const std::size_t sort_column = start_index % array->columns;
+            const std::size_t available_rows = array->rows > start_row ? array->rows - start_row : 0U;
+            const std::size_t rows_to_sort = raw_count <= 0.0
+                ? available_rows
+                : std::min(static_cast<std::size_t>(raw_count), available_rows);
+            std::vector<std::vector<PrgValue>> rows;
+            rows.reserve(rows_to_sort);
+            for (std::size_t row = start_row; row < start_row + rows_to_sort; ++row) {
+                const auto row_begin = array->values.begin() + static_cast<std::ptrdiff_t>(row * array->columns);
+                rows.emplace_back(row_begin, row_begin + static_cast<std::ptrdiff_t>(array->columns));
+            }
+            std::sort(rows.begin(), rows.end(), [&](const auto& left, const auto& right) {
+                return value_less(left[sort_column], right[sort_column]);
             });
+            for (std::size_t offset = 0U; offset < rows.size(); ++offset) {
+                const std::size_t row = start_row + offset;
+                std::copy(rows[offset].begin(), rows[offset].end(),
+                    array->values.begin() + static_cast<std::ptrdiff_t>(row * array->columns));
+            }
             return make_number_value(1.0);
         }
         return make_number_value(0.0);
@@ -4891,11 +4982,11 @@ struct PrgRuntimeSession::Impl {
             return {.ok = false, .message = last_error_message};
         }
 
-        const auto open_result = studio::open_document({
-            .path = asset_path.string(),
-            .read_only = true,
-            .load_full_table = true
-        });
+        studio::StudioOpenRequest request;
+        request.path = asset_path.string();
+        request.read_only = true;
+        request.load_full_table = true;
+        const auto open_result = studio::open_document(request);
         if (!open_result.ok) {
             last_error_message = open_result.error;
             last_fault_location = statement.location;
@@ -4921,7 +5012,7 @@ struct PrgRuntimeSession::Impl {
                     .location = statement.location
                 });
             }
-            return {.waiting_for_events = true};
+            return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
         }
 
         const std::filesystem::path output_path = resolve_report_output_path(statement.tertiary_expression, frame);
@@ -5966,29 +6057,37 @@ private:
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
             const std::tm local_tm = local_time_from_time_t(tt);
-            char buf[16];
-            std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d",
-                local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900);
-            return make_string_value(buf);
+            std::ostringstream stream;
+            stream << std::setfill('0')
+                << std::setw(2) << local_tm.tm_mon + 1 << '/'
+                << std::setw(2) << local_tm.tm_mday << '/'
+                << std::setw(4) << local_tm.tm_year + 1900;
+            return make_string_value(stream.str());
         }
         if (function == "time") {
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
             const std::tm local_tm = local_time_from_time_t(tt);
-            char buf[12];
-            std::snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
-                local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
-            return make_string_value(buf);
+            std::ostringstream stream;
+            stream << std::setfill('0')
+                << std::setw(2) << local_tm.tm_hour << ':'
+                << std::setw(2) << local_tm.tm_min << ':'
+                << std::setw(2) << local_tm.tm_sec;
+            return make_string_value(stream.str());
         }
         if (function == "datetime") {
             const auto now = std::chrono::system_clock::now();
             const auto tt = std::chrono::system_clock::to_time_t(now);
             const std::tm local_tm = local_time_from_time_t(tt);
-            char buf[24];
-            std::snprintf(buf, sizeof(buf), "%02d/%02d/%04d %02d:%02d:%02d",
-                local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_year + 1900,
-                local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec);
-            return make_string_value(buf);
+            std::ostringstream stream;
+            stream << std::setfill('0')
+                << std::setw(2) << local_tm.tm_mon + 1 << '/'
+                << std::setw(2) << local_tm.tm_mday << '/'
+                << std::setw(4) << local_tm.tm_year + 1900 << ' '
+                << std::setw(2) << local_tm.tm_hour << ':'
+                << std::setw(2) << local_tm.tm_min << ':'
+                << std::setw(2) << local_tm.tm_sec;
+            return make_string_value(stream.str());
         }
         if (function == "year" && !arguments.empty()) {
             // If argument looks like a date string MM/DD/YYYY, extract year
@@ -6659,11 +6758,11 @@ PrgValue PrgRuntimeSession::Impl::evaluate_expression(
 std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap(
     const std::string& asset_path,
     bool include_read_events) {
-    const auto open_result = studio::open_document({
-        .path = asset_path,
-        .read_only = true,
-        .load_full_table = true
-    });
+    studio::StudioOpenRequest request;
+    request.path = asset_path;
+    request.read_only = true;
+    request.load_full_table = true;
+    const auto open_result = studio::open_document(request);
     if (!open_result.ok) {
         last_error_message = open_result.error;
         return std::nullopt;
@@ -6967,7 +7066,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .detail = statement.expression,
                 .location = statement.location
             });
-            return {.waiting_for_events = true};
+            return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
         case StatementKind::release_surface:
             waiting_for_events = false;
             events.push_back({
@@ -6978,7 +7077,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             return {};
         case StatementKind::return_statement:
             pop_frame();
-            return {.frame_returned = true};
+            return {.ok = true, .waiting_for_events = false, .frame_returned = true, .message = {}};
         case StatementKind::do_case_statement:
             frame.cases.push_back({
                 .do_case_statement_index = frame.pc - 1U,
@@ -7263,7 +7362,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 .detail = "READ EVENTS entered",
                 .location = statement.location
             });
-            return {.waiting_for_events = true};
+            return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
         case StatementKind::clear_events:
             waiting_for_events = false;
             restore_event_loop_after_dispatch = false;
@@ -7930,7 +8029,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     last_error_message = "DECLARE: cannot load '" + declfn.dll_path + "': " + std::string(msg_buf);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
-                    if (dispatch_error_handler()) return {.ok = true};
+                    if (dispatch_error_handler()) return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                     return {.ok = false, .message = last_error_message};
                 }
 
@@ -7958,7 +8057,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     FreeLibrary(hmod);
-                    if (dispatch_error_handler()) return {.ok = true};
+                    if (dispatch_error_handler()) return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                     return {.ok = false, .message = last_error_message};
                 }
             }
@@ -7974,7 +8073,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
             last_error_message = "DECLARE DLL is only supported on Windows.";
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
-            if (dispatch_error_handler()) return {.ok = true};
+            if (dispatch_error_handler()) return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
             return {.ok = false, .message = last_error_message};
 #endif
         }
@@ -9083,7 +9182,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                 if (stack.back().file_path == fault_frame_file_path &&
                     stack.back().routine_name == fault_frame_routine_name) {
                     stack.back().pc = fault_statement_index;
-                    return {.ok = true};
+                    return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                 }
                 restore_private_declarations(stack.back());
                 stack.pop_back();
@@ -9104,7 +9203,7 @@ ExecutionOutcome PrgRuntimeSession::Impl::execute_current_statement() {
                     stack.back().routine_name == fault_frame_routine_name) {
                     const Routine* r = stack.back().routine;
                     stack.back().pc = (r && resume_pc < r->statements.size()) ? resume_pc : (r ? r->statements.size() : 0U);
-                    return {.ok = true};
+                    return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                 }
                 restore_private_declarations(stack.back());
                 stack.pop_back();

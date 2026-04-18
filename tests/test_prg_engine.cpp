@@ -20,6 +20,10 @@
 #include <system_error>
 #include <vector>
 
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+
 namespace {
 
 using namespace copperfin::test_support;
@@ -6468,6 +6472,7 @@ void test_runtime_array_mutator_functions() {
         "USE '" + table_path.string() + "'\n"
         "SCATTER FIELDS FIRST, SECOND TO aTools\n"
         "nScanAlpha = ASCAN(aTools, 'Alpha')\n"
+        "nScanAlphaInsensitive = ASCAN(aTools, 'alpha', -1, -1, -1, 1)\n"
         "nSortOk = ASORT(aTools)\n"
         "cSortedFirst = aTools[1]\n"
         "cSortedSecond = aTools[2]\n"
@@ -6486,10 +6491,19 @@ void test_runtime_array_mutator_functions() {
         "aSource[2,1] = 'D'\n"
         "aSource[2,2] = 'E'\n"
         "aSource[2,3] = 'F'\n"
+        "DIMENSION aScanFlags[1]\n"
+        "aScanFlags[1] = 'Product'\n"
+        "SET EXACT ON\n"
+        "nScanProdExactDefault = ASCAN(aScanFlags, 'Prod')\n"
+        "nScanProdExactOff = ASCAN(aScanFlags, 'Prod', -1, -1, -1, 4)\n"
+        "nScanProductInsensitiveExact = ASCAN(aScanFlags, 'product', -1, -1, -1, 7)\n"
+        "SET EXACT OFF\n"
         "nScanDFromSecond = ASCAN(aSource, 'D', 2)\n"
         "nScanAFromSecond = ASCAN(aSource, 'A', 2)\n"
         "nScanCWindow = ASCAN(aSource, 'C', 2, 2)\n"
         "nScanDWindowMiss = ASCAN(aSource, 'D', 2, 2)\n"
+        "nScanEColumnElement = ASCAN(aSource, 'E', -1, -1, 2, 0)\n"
+        "nScanEColumnRow = ASCAN(aSource, 'E', -1, -1, 2, 8)\n"
         "nElement = AELEMENT(aSource, 2, 2)\n"
         "nElementRow = ASUBSCRIPT(aSource, nElement, 1)\n"
         "nElementColumn = ASUBSCRIPT(aSource, nElement, 2)\n"
@@ -6500,6 +6514,32 @@ void test_runtime_array_mutator_functions() {
         "nCopyAll = ACOPY(aSource, aFlat)\n"
         "nFlatLen = ALEN(aFlat)\n"
         "cFlatSix = aFlat[6]\n"
+        "DIMENSION aSortWindow[5]\n"
+        "aSortWindow[1] = 'A'\n"
+        "aSortWindow[2] = 'B'\n"
+        "aSortWindow[3] = 'D'\n"
+        "aSortWindow[4] = 'C'\n"
+        "aSortWindow[5] = 'E'\n"
+        "nSortWindow = ASORT(aSortWindow, 2, 3, 1)\n"
+        "cSortWindowOne = aSortWindow[1]\n"
+        "cSortWindowTwo = aSortWindow[2]\n"
+        "cSortWindowThree = aSortWindow[3]\n"
+        "cSortWindowFour = aSortWindow[4]\n"
+        "cSortWindowFive = aSortWindow[5]\n"
+        "DIMENSION aRows[3,2]\n"
+        "aRows[1,1] = 'G'\n"
+        "aRows[1,2] = 'A'\n"
+        "aRows[2,1] = 'C'\n"
+        "aRows[2,2] = 'Z'\n"
+        "aRows[3,1] = 'B'\n"
+        "aRows[3,2] = 'N'\n"
+        "nSortRowsByFirst = ASORT(aRows, 1)\n"
+        "cRowsFirstSortRow1Col1 = aRows[1,1]\n"
+        "cRowsFirstSortRow1Col2 = aRows[1,2]\n"
+        "nSortRowsBySecondFromRow2 = ASORT(aRows, 4)\n"
+        "cRowsSecondSortRow1Col1 = aRows[1,1]\n"
+        "cRowsSecondSortRow2Col1 = aRows[2,1]\n"
+        "cRowsSecondSortRow3Col1 = aRows[3,1]\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -6512,6 +6552,7 @@ void test_runtime_array_mutator_functions() {
     expect(state.completed, "runtime array mutator script should complete");
 
     const auto scan_alpha = state.globals.find("nscanalpha");
+    const auto scan_alpha_insensitive = state.globals.find("nscanalphainsensitive");
     const auto sort_ok = state.globals.find("nsortok");
     const auto sorted_first = state.globals.find("csortedfirst");
     const auto sorted_second = state.globals.find("csortedsecond");
@@ -6523,10 +6564,15 @@ void test_runtime_array_mutator_functions() {
     const auto resize = state.globals.find("nresize");
     const auto len_after_resize = state.globals.find("nlenafterresize");
     const auto preserved_after_resize = state.globals.find("cpreservedafterresize");
+    const auto scan_prod_exact_default = state.globals.find("nscanprodexactdefault");
+    const auto scan_prod_exact_off = state.globals.find("nscanprodexactoff");
+    const auto scan_product_insensitive_exact = state.globals.find("nscanproductinsensitiveexact");
     const auto scan_d_from_second = state.globals.find("nscandfromsecond");
     const auto scan_a_from_second = state.globals.find("nscanafromsecond");
     const auto scan_c_window = state.globals.find("nscancwindow");
     const auto scan_d_window_miss = state.globals.find("nscandwindowmiss");
+    const auto scan_e_column_element = state.globals.find("nscanecolumnelement");
+    const auto scan_e_column_row = state.globals.find("nscanecolumnrow");
     const auto element = state.globals.find("nelement");
     const auto element_row = state.globals.find("nelementrow");
     const auto element_column = state.globals.find("nelementcolumn");
@@ -6537,8 +6583,22 @@ void test_runtime_array_mutator_functions() {
     const auto copy_all = state.globals.find("ncopyall");
     const auto flat_len = state.globals.find("nflatlen");
     const auto flat_six = state.globals.find("cflatsix");
+    const auto sort_window = state.globals.find("nsortwindow");
+    const auto sort_window_one = state.globals.find("csortwindowone");
+    const auto sort_window_two = state.globals.find("csortwindowtwo");
+    const auto sort_window_three = state.globals.find("csortwindowthree");
+    const auto sort_window_four = state.globals.find("csortwindowfour");
+    const auto sort_window_five = state.globals.find("csortwindowfive");
+    const auto sort_rows_by_first = state.globals.find("nsortrowsbyfirst");
+    const auto rows_first_sort_row1_col1 = state.globals.find("crowsfirstsortrow1col1");
+    const auto rows_first_sort_row1_col2 = state.globals.find("crowsfirstsortrow1col2");
+    const auto sort_rows_by_second_from_row2 = state.globals.find("nsortrowsbysecondfromrow2");
+    const auto rows_second_sort_row1_col1 = state.globals.find("crowssecondsortrow1col1");
+    const auto rows_second_sort_row2_col1 = state.globals.find("crowssecondsortrow2col1");
+    const auto rows_second_sort_row3_col1 = state.globals.find("crowssecondsortrow3col1");
 
     expect(scan_alpha != state.globals.end(), "ASCAN should return a captured position");
+    expect(scan_alpha_insensitive != state.globals.end(), "ASCAN should support case-insensitive flags");
     expect(sort_ok != state.globals.end(), "ASORT should return a status");
     expect(sorted_first != state.globals.end(), "ASORT should leave a readable first element");
     expect(sorted_second != state.globals.end(), "ASORT should leave a readable second element");
@@ -6550,10 +6610,15 @@ void test_runtime_array_mutator_functions() {
     expect(resize != state.globals.end(), "ASIZE should return the new element count");
     expect(len_after_resize != state.globals.end(), "ALEN should reflect ASIZE result");
     expect(preserved_after_resize != state.globals.end(), "ASIZE should preserve existing values");
+    expect(scan_prod_exact_default != state.globals.end(), "ASCAN should respect SET EXACT by default");
+    expect(scan_prod_exact_off != state.globals.end(), "ASCAN flags should allow exact-off matching");
+    expect(scan_product_insensitive_exact != state.globals.end(), "ASCAN flags should combine case-insensitive and exact matching");
     expect(scan_d_from_second != state.globals.end(), "ASCAN should support a start element");
     expect(scan_a_from_second != state.globals.end(), "ASCAN should not match entries before the start element");
     expect(scan_c_window != state.globals.end(), "ASCAN should support a bounded search window");
     expect(scan_d_window_miss != state.globals.end(), "ASCAN bounded windows should stop before later matches");
+    expect(scan_e_column_element != state.globals.end(), "ASCAN should support column-restricted scans");
+    expect(scan_e_column_row != state.globals.end(), "ASCAN should optionally return the matched row");
     expect(element != state.globals.end(), "AELEMENT should return a linear element number");
     expect(element_row != state.globals.end(), "ASUBSCRIPT should resolve the element row");
     expect(element_column != state.globals.end(), "ASUBSCRIPT should resolve the element column");
@@ -6564,9 +6629,15 @@ void test_runtime_array_mutator_functions() {
     expect(copy_all != state.globals.end(), "ACOPY should copy all remaining source elements by default");
     expect(flat_len != state.globals.end(), "ACOPY should grow a one-dimensional target when needed");
     expect(flat_six != state.globals.end(), "ACOPY should preserve the final copied source element");
+    expect(sort_window != state.globals.end(), "ASORT should sort bounded one-dimensional windows");
+    expect(sort_rows_by_first != state.globals.end(), "ASORT should sort two-dimensional arrays by row");
+    expect(sort_rows_by_second_from_row2 != state.globals.end(), "ASORT should sort a two-dimensional row subset by start column");
 
     if (scan_alpha != state.globals.end()) {
         expect(copperfin::runtime::format_value(scan_alpha->second) == "2", "ASCAN should find Alpha in the original second slot");
+    }
+    if (scan_alpha_insensitive != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_alpha_insensitive->second) == "2", "ASCAN flag 1 should find case-insensitive matches");
     }
     if (sort_ok != state.globals.end()) {
         expect(copperfin::runtime::format_value(sort_ok->second) == "1", "ASORT should report success");
@@ -6601,6 +6672,15 @@ void test_runtime_array_mutator_functions() {
     if (preserved_after_resize != state.globals.end()) {
         expect(copperfin::runtime::format_value(preserved_after_resize->second) == "Zulu", "ASIZE should preserve shifted values");
     }
+    if (scan_prod_exact_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_prod_exact_default->second) == "0", "ASCAN should respect SET EXACT ON without override flags");
+    }
+    if (scan_prod_exact_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_prod_exact_off->second) == "1", "ASCAN flag 4 should allow prefix matches with exact off");
+    }
+    if (scan_product_insensitive_exact != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_product_insensitive_exact->second) == "1", "ASCAN flags 1+2+4 should match exactly without case sensitivity");
+    }
     if (scan_d_from_second != state.globals.end()) {
         expect(copperfin::runtime::format_value(scan_d_from_second->second) == "4", "ASCAN start element should scan later row-major values");
     }
@@ -6612,6 +6692,12 @@ void test_runtime_array_mutator_functions() {
     }
     if (scan_d_window_miss != state.globals.end()) {
         expect(copperfin::runtime::format_value(scan_d_window_miss->second) == "0", "ASCAN count should exclude values after the requested window");
+    }
+    if (scan_e_column_element != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_e_column_element->second) == "5", "ASCAN should find E in column 2 as element 5");
+    }
+    if (scan_e_column_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_e_column_row->second) == "2", "ASCAN flag 8 should return the matched row");
     }
     if (element != state.globals.end()) {
         expect(copperfin::runtime::format_value(element->second) == "5", "AELEMENT(aSource, 2, 2) should return row-major element 5");
@@ -6642,6 +6728,45 @@ void test_runtime_array_mutator_functions() {
     }
     if (flat_six != state.globals.end()) {
         expect(copperfin::runtime::format_value(flat_six->second) == "F", "ACOPY should copy the final element into the grown flat target");
+    }
+    if (sort_window != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window->second) == "1", "ASORT bounded window should report success");
+    }
+    if (sort_window_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window_one->second) == "A", "ASORT bounded window should preserve earlier elements");
+    }
+    if (sort_window_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window_two->second) == "D", "ASORT descending bounded window should move D first");
+    }
+    if (sort_window_three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window_three->second) == "C", "ASORT descending bounded window should move C second");
+    }
+    if (sort_window_four != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window_four->second) == "B", "ASORT descending bounded window should move B third");
+    }
+    if (sort_window_five != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_window_five->second) == "E", "ASORT bounded window should preserve later elements");
+    }
+    if (sort_rows_by_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_rows_by_first->second) == "1", "ASORT two-dimensional row sort should report success");
+    }
+    if (rows_first_sort_row1_col1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_first_sort_row1_col1->second) == "B", "ASORT should move the row with the lowest first column first");
+    }
+    if (rows_first_sort_row1_col2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_first_sort_row1_col2->second) == "N", "ASORT should preserve paired columns while moving rows");
+    }
+    if (sort_rows_by_second_from_row2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sort_rows_by_second_from_row2->second) == "1", "ASORT two-dimensional subset sort should report success");
+    }
+    if (rows_second_sort_row1_col1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_second_sort_row1_col1->second) == "B", "ASORT subset sort should preserve rows before the start row");
+    }
+    if (rows_second_sort_row2_col1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_second_sort_row2_col1->second) == "G", "ASORT subset sort should use the starting element column as key");
+    }
+    if (rows_second_sort_row3_col1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_second_sort_row3_col1->second) == "C", "ASORT subset sort should leave the higher key later");
     }
 
     fs::remove_all(temp_root, ignored);
