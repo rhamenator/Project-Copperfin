@@ -53,6 +53,7 @@ Current shipped highlights worth remembering:
 - 2026-04-18: GitHub validation is now active for hosted Linux/macOS/Windows native CMake + CTest, and manual-only Windows deep validation covers native tests plus VSIX/Studio/smoke-test builds. Keep that workflow dispatch-only; do not add scheduled runs unless explicitly asked. The most recent manual Windows deep validation after the array-sort/mutation slice was green.
 - 2026-04-18: Runtime array parity advanced again. `ASCAN()` supports search columns, case-insensitive/exactness/row-return flags, bounded scans, and first-pass predicate-expression search under flag `16`; predicate search accepts a string expression over `_ASCANVALUE`, `_ASCANINDEX`, `_ASCANROW`, and `_ASCANCOLUMN`, plus a stringified `{|x| ...}` block-style form. `ASORT()` supports start/count windows, descending order, case-insensitive keys, numeric-aware ordering, and two-dimensional row sorting by the start element's column. `ADEL()`/`AINS()` support VFP-style row/column shifting in two-dimensional arrays. `ACOPY()` row-major behavior is now covered for common two-dimensional row and column-helper workflows.
 - 2026-04-18: PRG-engine regression splitting continued with `tests/test_prg_engine_arrays.cpp` / `test_prg_engine_arrays`. New array coverage belongs there when it is not tightly coupled to a broader legacy catch-all scenario. Local validation on Linux passed through `ninja -C build test` with 18/18 CTest tests green.
+- 2026-04-18: `ASCAN()` predicate search now accepts unquoted block-style arguments such as `ASCAN(a, {|x| x > 8}, -1, -1, -1, 16)` by preserving braced literals through the expression parser. Array declaration/metadata tests were moved out of `tests/test_prg_engine.cpp` into `tests/test_prg_engine_arrays.cpp`, and a new `tests/test_prg_engine_functions.cpp` / `test_prg_engine_functions` target now covers portable path expression helpers. `JUSTPATH()`, `JUSTFNAME()`, `JUSTSTEM()`, `JUSTEXT()`, and new `JUSTDRIVE()` string-parse Windows and POSIX path forms consistently across hosts.
 
 Workflow:
 1. Inspect the current repo state in the relevant files only.
@@ -60,8 +61,8 @@ Workflow:
 3. Implement it.
 4. Add or update focused regression tests.
 5. Run narrow validation relevant to the slice.
-   - Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays`
-   - Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine test_prg_engine_arrays && ninja -C build test`
+   - Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays test_prg_engine_functions`
+   - Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine test_prg_engine_arrays test_prg_engine_functions && ninja -C build test`
    - Asset/index slices: also build and run `test_vfp_assets` when touched
    - Run the corresponding executables under `E:\Project-Copperfin\build\Release\`
 6. Update docs/backlog.
@@ -72,6 +73,7 @@ Default direction if no stronger signal appears from the current files:
 - Strong candidates now are:
   - remaining VFP expression functions not yet covered (check `docs/22-vfp-language-reference-coverage.md` for gaps)
   - deeper runtime array semantics where official VFP behavior is still only approximated, especially predicate/code-block fidelity, macro-expanded array expressions, and remaining edge cases around mixed-type helper behavior
+  - keep splitting focused function/array/data-command tests out of `tests/test_prg_engine.cpp` before adding more broad runtime coverage there
   - fault isolation and runtime diagnostics depth (#13) beyond the shipped first-pass `AERROR()` array — deeper VFP-compatible row shapes, additional native-like error codes, and richer `ON ERROR` surface
   - debugger metadata improvements (#14) — variable inspection fidelity, call-stack frame names, source-location accuracy
   - deeper `SCATTER`/`GATHER` field-type parity beyond the shipped first-pass memvar/array path, especially broader date/datetime formatting and multi-dimensional array behavior

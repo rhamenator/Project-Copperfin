@@ -55,6 +55,65 @@ namespace copperfin::runtime {
 
 namespace {
 
+std::size_t portable_path_separator_position(const std::string& path) {
+    const std::size_t slash = path.find_last_of('/');
+    const std::size_t backslash = path.find_last_of('\\');
+    if (slash == std::string::npos) {
+        return backslash;
+    }
+    if (backslash == std::string::npos) {
+        return slash;
+    }
+    return std::max(slash, backslash);
+}
+
+std::string portable_path_drive(const std::string& path) {
+    if (path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':') {
+        return path.substr(0U, 2U);
+    }
+    if (path.size() >= 2U && (path[0] == '\\' || path[0] == '/') && path[1] == path[0]) {
+        const std::size_t server_end = path.find_first_of("\\/", 2U);
+        if (server_end != std::string::npos) {
+            const std::size_t share_end = path.find_first_of("\\/", server_end + 1U);
+            if (share_end != std::string::npos) {
+                return path.substr(0U, share_end);
+            }
+        }
+    }
+    return {};
+}
+
+std::string portable_path_parent(const std::string& path) {
+    const std::size_t separator = portable_path_separator_position(path);
+    if (separator == std::string::npos) {
+        return {};
+    }
+    if (separator == 0U) {
+        return path.substr(0U, 1U);
+    }
+    if (separator == 2U && path.size() >= 3U && path[1] == ':') {
+        return path.substr(0U, 3U);
+    }
+    return path.substr(0U, separator);
+}
+
+std::string portable_path_filename(const std::string& path) {
+    const std::size_t separator = portable_path_separator_position(path);
+    return separator == std::string::npos ? path : path.substr(separator + 1U);
+}
+
+std::string portable_path_extension(const std::string& path) {
+    const std::string filename = portable_path_filename(path);
+    const std::size_t dot = filename.find_last_of('.');
+    return dot == std::string::npos || dot == 0U ? std::string{} : filename.substr(dot + 1U);
+}
+
+std::string portable_path_stem(const std::string& path) {
+    const std::string filename = portable_path_filename(path);
+    const std::size_t dot = filename.find_last_of('.');
+    return dot == std::string::npos || dot == 0U ? filename : filename.substr(0U, dot);
+}
+
 struct LoopState {
     std::size_t for_statement_index = 0;
     std::size_t endfor_statement_index = 0;
@@ -5494,6 +5553,9 @@ private:
         if (peek() == '\'') {
             return make_string_value(parse_string());
         }
+        if (peek() == '{') {
+            return make_string_value(parse_braced_literal());
+        }
         if (peek() == '.') {
             if (match(".T.") || match(".t.")) {
                 return make_boolean_value(true);
@@ -5814,7 +5876,7 @@ private:
             return make_string_value(start >= source.size() ? std::string{} : source.substr(start, length));
         }
         if (function == "justpath" && !arguments.empty()) {
-            return make_string_value(std::filesystem::path(value_as_string(arguments[0])).parent_path().string());
+            return make_string_value(portable_path_parent(value_as_string(arguments[0])));
         }
         if (function == "str" && !arguments.empty()) {
             std::ostringstream stream;
@@ -6335,14 +6397,16 @@ private:
             return make_string_value(std::filesystem::absolute(p).string());
         }
         if (function == "justfname" && !arguments.empty()) {
-            return make_string_value(std::filesystem::path(value_as_string(arguments[0])).filename().string());
+            return make_string_value(portable_path_filename(value_as_string(arguments[0])));
         }
         if (function == "juststem" && !arguments.empty()) {
-            return make_string_value(std::filesystem::path(value_as_string(arguments[0])).stem().string());
+            return make_string_value(portable_path_stem(value_as_string(arguments[0])));
         }
         if (function == "justext" && !arguments.empty()) {
-            const auto ext = std::filesystem::path(value_as_string(arguments[0])).extension().string();
-            return make_string_value(!ext.empty() && ext[0] == '.' ? ext.substr(1U) : ext);
+            return make_string_value(portable_path_extension(value_as_string(arguments[0])));
+        }
+        if (function == "justdrive" && !arguments.empty()) {
+            return make_string_value(portable_path_drive(value_as_string(arguments[0])));
         }
         if (function == "addbs" && !arguments.empty()) {
             std::string path = value_as_string(arguments[0]);
@@ -6516,6 +6580,41 @@ private:
                 continue;
             }
             break;
+        }
+        return text_.substr(start, position_ - start);
+    }
+
+    std::string parse_braced_literal() {
+        skip_whitespace();
+        if (peek() != '{') {
+            return {};
+        }
+        const std::size_t start = position_;
+        std::size_t depth = 0U;
+        while (position_ < text_.size()) {
+            const char ch = text_[position_++];
+            if (ch == '\'') {
+                while (position_ < text_.size()) {
+                    const char string_ch = text_[position_++];
+                    if (string_ch == '\'') {
+                        break;
+                    }
+                }
+                continue;
+            }
+            if (ch == '{') {
+                ++depth;
+                continue;
+            }
+            if (ch == '}') {
+                if (depth == 0U) {
+                    break;
+                }
+                --depth;
+                if (depth == 0U) {
+                    break;
+                }
+            }
         }
         return text_.substr(start, position_ - start);
     }
