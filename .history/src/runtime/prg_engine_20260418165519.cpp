@@ -1,27 +1,31 @@
-#include <ctime>
         // Julian date conversion helpers
-        // Astronomical Julian day (Fliegel-Van Flandern)
+        // VFP-compatible Julian date conversion (days since 12/31/1899)
         int date_to_julian(int year, int month, int day)
         {
-            // Astronomical Julian day (Fliegel-Van Flandern), minus 702 to match test expectation
-            return ((1461 * (year + 4800 + (month - 14) / 12)) / 4
-                 + (367 * (month - 2 - 12 * ((month - 14) / 12))) / 12
-                 - (3 * ((year + 4900 + (month - 14) / 12) / 100)) / 4
-                 + day - 32075) - 702;
+            // VFP: Julian = days since 12/31/1899
+            std::tm base = {};
+            base.tm_year = 1899 - 1900;
+            base.tm_mon = 11;
+            base.tm_mday = 31;
+            std::tm target = {};
+            target.tm_year = year - 1900;
+            target.tm_mon = month - 1;
+            target.tm_mday = day;
+            std::time_t base_time = std::mktime(&base);
+            std::time_t target_time = std::mktime(&target);
+            return static_cast<int>((target_time - base_time) / (60 * 60 * 24));
         }
 
         void julian_to_date(int julian, int &year, int &month, int &day)
         {
-            int l = (julian + 702) + 68569;
-            int n = (4 * l) / 146097;
-            l = l - (146097 * n + 3) / 4;
-            int i = (4000 * (l + 1)) / 1461001;
-            l = l - (1461 * i) / 4 + 31;
-            int j = (80 * l) / 2447;
-            day = l - (2447 * j) / 80;
-            l = j / 11;
-            month = j + 2 - (12 * l);
-            year = 100 * (n - 49) + i + l;
+            std::tm base = {};
+            base.tm_year = 1899 - 1900;
+            base.tm_mon = 11;
+            base.tm_mday = 31 + julian;
+            std::mktime(&base);
+            year = base.tm_year + 1900;
+            month = base.tm_mon + 1;
+            day = base.tm_mday;
         }
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_command_helpers.h"

@@ -1,18 +1,14 @@
-#include <ctime>
         // Julian date conversion helpers
-        // Astronomical Julian day (Fliegel-Van Flandern)
         int date_to_julian(int year, int month, int day)
         {
-            // Astronomical Julian day (Fliegel-Van Flandern), minus 702 to match test expectation
-            return ((1461 * (year + 4800 + (month - 14) / 12)) / 4
-                 + (367 * (month - 2 - 12 * ((month - 14) / 12))) / 12
-                 - (3 * ((year + 4900 + (month - 14) / 12) / 100)) / 4
-                 + day - 32075) - 702;
+            // Fliegel-Van Flandern algorithm
+            return 367 * year - (7 * (year + ((month + 9) / 12)) / 4) + (275 * month) / 9 + day + 1721013;
         }
 
         void julian_to_date(int julian, int &year, int &month, int &day)
         {
-            int l = (julian + 702) + 68569;
+            // Fliegel-Van Flandern algorithm
+            int l = julian + 68569;
             int n = (4 * l) / 146097;
             l = l - (146097 * n + 3) / 4;
             int i = (4000 * (l + 1)) / 1461001;
@@ -8242,7 +8238,7 @@ namespace copperfin::runtime
                 if (function == "isleapyear" && !arguments.empty())
                 {
                     int year = static_cast<int>(value_as_number(arguments[0]));
-                    return is_leap_year(year) ? make_string_value(".T.") : make_string_value(".F.");
+                    return make_boolean_value(is_leap_year(year));
                 }
                 // --- Array / variable helpers ---
                 if (function == "alen" && !arguments.empty())

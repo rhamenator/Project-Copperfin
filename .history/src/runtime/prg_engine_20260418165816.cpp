@@ -3,16 +3,16 @@
         // Astronomical Julian day (Fliegel-Van Flandern)
         int date_to_julian(int year, int month, int day)
         {
-            // Astronomical Julian day (Fliegel-Van Flandern), minus 702 to match test expectation
-            return ((1461 * (year + 4800 + (month - 14) / 12)) / 4
+            // Astronomical Julian day (Fliegel-Van Flandern)
+            return (1461 * (year + 4800 + (month - 14) / 12)) / 4
                  + (367 * (month - 2 - 12 * ((month - 14) / 12))) / 12
                  - (3 * ((year + 4900 + (month - 14) / 12) / 100)) / 4
-                 + day - 32075) - 702;
+                 + day - 32075;
         }
 
         void julian_to_date(int julian, int &year, int &month, int &day)
         {
-            int l = (julian + 702) + 68569;
+            int l = julian + 68569;
             int n = (4 * l) / 146097;
             l = l - (146097 * n + 3) / 4;
             int i = (4000 * (l + 1)) / 1461001;
