@@ -10302,7 +10302,12 @@ namespace copperfin::runtime
                     alias = unquote_string(statement.identifier);
                 }
                 const bool allow_again = normalize_identifier(statement.tertiary_expression) == "again";
-                if (!open_table_cursor(target, alias, statement.secondary_expression, allow_again, false, 0, {}, 0U))
+                std::string in_target = statement.secondary_expression;
+                if (allow_again && trim_copy(in_target).empty())
+                {
+                    in_target = "0";
+                }
+                if (!open_table_cursor(target, alias, in_target, allow_again, false, 0, {}, 0U))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;

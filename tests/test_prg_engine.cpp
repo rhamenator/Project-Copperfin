@@ -3777,6 +3777,69 @@ void test_use_again_and_alias_collision_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_again_without_in_allocates_new_area_and_preserves_alias_selection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_again_without_in";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO"});
+
+    const fs::path main_path = temp_root / "use_again_without_in.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS P1 IN 0\n"
+        "nAreaP1 = SELECT()\n"
+        "USE '" + table_path.string() + "' AGAIN ALIAS P2\n"
+        "nAreaP2 = SELECT()\n"
+        "nP1Area = SELECT('P1')\n"
+        "nP2Area = SELECT('P2')\n"
+        "SELECT P1\n"
+        "nSelectedAfterSelectP1 = SELECT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "USE AGAIN without IN should complete and preserve both aliases");
+
+    const auto area_p1 = state.globals.find("nareap1");
+    const auto area_p2 = state.globals.find("nareap2");
+    const auto p1_area = state.globals.find("np1area");
+    const auto p2_area = state.globals.find("np2area");
+    const auto selected_after_select_p1 = state.globals.find("nselectedafterselectp1");
+
+    expect(area_p1 != state.globals.end(), "initial work area should be captured");
+    expect(area_p2 != state.globals.end(), "work area after USE AGAIN should be captured");
+    expect(p1_area != state.globals.end(), "SELECT('P1') lookup should be captured");
+    expect(p2_area != state.globals.end(), "SELECT('P2') lookup should be captured");
+    expect(selected_after_select_p1 != state.globals.end(), "SELECT P1 result should be captured");
+
+    if (area_p1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_p1->second) == "1", "initial USE IN 0 should allocate area 1");
+    }
+    if (area_p2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(area_p2->second) == "2", "USE AGAIN without IN should allocate a new work area");
+    }
+    if (p1_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(p1_area->second) == "1", "P1 alias should remain bound to area 1");
+    }
+    if (p2_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(p2_area->second) == "2", "P2 alias should bind to area 2");
+    }
+    if (selected_after_select_p1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(selected_after_select_p1->second) == "1", "SELECT P1 should successfully target the original alias");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_use_in_selected_alias_replacement_clears_old_alias_and_order_state() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_selected_alias_replacement";
@@ -7369,6 +7432,7 @@ int main() {
     test_foxtools_registration_is_scoped_by_data_session();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
+    test_use_again_without_in_allocates_new_area_and_preserves_alias_selection();
     test_use_in_selected_alias_replacement_clears_old_alias_and_order_state();
     test_select_missing_alias_is_an_error();
     test_use_in_missing_alias_is_an_error();
