@@ -114,6 +114,30 @@ std::string portable_path_stem(const std::string& path) {
     return dot == std::string::npos || dot == 0U ? filename : filename.substr(0U, dot);
 }
 
+std::string portable_force_extension(const std::string& path, std::string extension) {
+    if (!extension.empty() && extension[0] == '.') {
+        extension.erase(extension.begin());
+    }
+    const std::size_t separator = portable_path_separator_position(path);
+    const std::size_t filename_start = separator == std::string::npos ? 0U : separator + 1U;
+    const std::size_t dot = path.find_last_of('.');
+    const bool has_extension = dot != std::string::npos && dot >= filename_start && dot != filename_start;
+    const std::string stem_path = has_extension ? path.substr(0U, dot) : path;
+    return extension.empty() ? stem_path : stem_path + "." + extension;
+}
+
+std::string portable_force_path(const std::string& path, std::string directory) {
+    const std::string filename = portable_path_filename(path);
+    if (directory.empty()) {
+        return filename;
+    }
+    const char separator = directory.find('\\') != std::string::npos ? '\\' : '/';
+    if (directory.back() != '\\' && directory.back() != '/') {
+        directory += separator;
+    }
+    return directory + filename;
+}
+
 struct LoopState {
     std::size_t for_statement_index = 0;
     std::size_t endfor_statement_index = 0;
@@ -6084,14 +6108,19 @@ private:
             }
             return make_string_value(std::move(src));
         }
-        if (function == "chrtran" && arguments.size() >= 3U) {
+        if ((function == "chrtran" || function == "chrtranc") && arguments.size() >= 3U) {
+            const bool case_insensitive = function == "chrtranc";
             const std::string src = value_as_string(arguments[0]);
             const std::string from_chars = value_as_string(arguments[1]);
             const std::string to_chars = value_as_string(arguments[2]);
+            const std::string from_lookup = case_insensitive ? uppercase_copy(from_chars) : from_chars;
             std::string result;
             result.reserve(src.size());
             for (const char c : src) {
-                const auto pos = from_chars.find(c);
+                const char lookup = case_insensitive
+                    ? static_cast<char>(std::toupper(static_cast<unsigned char>(c)))
+                    : c;
+                const auto pos = from_lookup.find(lookup);
                 if (pos == std::string::npos) {
                     result += c;
                 } else if (pos < to_chars.size()) {
@@ -6407,6 +6436,12 @@ private:
         }
         if (function == "justdrive" && !arguments.empty()) {
             return make_string_value(portable_path_drive(value_as_string(arguments[0])));
+        }
+        if (function == "forceext" && arguments.size() >= 2U) {
+            return make_string_value(portable_force_extension(value_as_string(arguments[0]), value_as_string(arguments[1])));
+        }
+        if (function == "forcepath" && arguments.size() >= 2U) {
+            return make_string_value(portable_force_path(value_as_string(arguments[0]), value_as_string(arguments[1])));
         }
         if (function == "addbs" && !arguments.empty()) {
             std::string path = value_as_string(arguments[0]);
