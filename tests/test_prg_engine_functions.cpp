@@ -157,7 +157,7 @@ namespace
         const fs::path main_path = temp_root / "str_math.prg";
         write_text(
             main_path,
-            "l = LEN('hello')\n"
+                "l = LEN('hello')\n"
             "lft = LEFT('hello', 3)\n"
             "rgt = RIGHT('hello', 2)\n"
             "up = UPPER('hello')\n"
@@ -192,6 +192,10 @@ namespace
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
             "inlist_miss = INLIST(4, 1, 2, 3)\n"
+                "getwordcount_1 = GETWORDCOUNT('one two three')\n"
+                "getwordcount_2 = GETWORDCOUNT('a,b,c', ',')\n"
+                "getwordnum_1 = GETWORDNUM('one two three', 2)\n"
+                "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -247,6 +251,10 @@ namespace
         check("like_miss", "false");
         check("inlist_hit", "true");
         check("inlist_miss", "false");
+        check("getwordcount_1", "3");
+        check("getwordcount_2", "3");
+        check("getwordnum_1", "two");
+        check("getwordnum_2", "c");
 
         fs::remove_all(temp_root, ignored);
     }
