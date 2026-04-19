@@ -42,6 +42,6 @@ Use related open community projects to learn:
 - what the community had to fix
 - how features were organized
 - what extension points mattered
-
 Do not let them silently define architecture without documenting why.
 
+<!-- End of clean-room rules -->
