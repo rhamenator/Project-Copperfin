@@ -8086,73 +8086,63 @@ namespace copperfin::runtime
                 }
                 if (function == "year" && !arguments.empty())
                 {
-                    // If argument looks like a date string MM/DD/YYYY, extract year
-                    const std::string s = value_as_string(arguments[0]);
-                    const auto last_slash = s.rfind('/');
-                    if (last_slash != std::string::npos && last_slash + 1U < s.size())
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
                     {
-                        try
-                        {
-                            return make_number_value(std::stod(s.substr(last_slash + 1U)));
-                        }
-                        catch (...)
-                        {
-                        }
+                        return make_number_value(static_cast<double>(year));
                     }
                     return make_number_value(0.0);
                 }
                 if (function == "month" && !arguments.empty())
                 {
-                    const std::string s = value_as_string(arguments[0]);
-                    const auto first_slash = s.find('/');
-                    if (first_slash != std::string::npos)
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
                     {
-                        try
-                        {
-                            return make_number_value(std::stod(s.substr(0U, first_slash)));
-                        }
-                        catch (...)
-                        {
-                        }
+                        return make_number_value(static_cast<double>(month));
                     }
                     return make_number_value(0.0);
                 }
                 if (function == "day" && !arguments.empty())
                 {
-                    const std::string s = value_as_string(arguments[0]);
-                    const auto first_slash = s.find('/');
-                    const auto second_slash = first_slash != std::string::npos ? s.find('/', first_slash + 1U) : std::string::npos;
-                    if (first_slash != std::string::npos && second_slash != std::string::npos)
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
                     {
-                        try
-                        {
-                            return make_number_value(std::stod(s.substr(first_slash + 1U, second_slash - first_slash - 1U)));
-                        }
-                        catch (...)
-                        {
-                        }
+                        return make_number_value(static_cast<double>(day));
                     }
                     return make_number_value(0.0);
                 }
                 if (function == "dtos" && !arguments.empty())
                 {
-                    // Convert MM/DD/YYYY to YYYYMMDD
-                    const std::string s = value_as_string(arguments[0]);
-                    const auto first_slash = s.find('/');
-                    const auto second_slash = first_slash != std::string::npos ? s.find('/', first_slash + 1U) : std::string::npos;
-                    if (first_slash != std::string::npos && second_slash != std::string::npos)
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
                     {
-                        const std::string month = s.substr(0U, first_slash);
-                        const std::string day = s.substr(first_slash + 1U, second_slash - first_slash - 1U);
-                        const std::string year = s.substr(second_slash + 1U);
-                        return make_string_value(year + (month.size() == 1U ? "0" + month : month) + (day.size() == 1U ? "0" + day : day));
+                        return make_string_value(std::string{});
                     }
-                    return make_string_value(s);
+                    std::ostringstream stream;
+                    stream << std::setfill('0')
+                           << std::setw(4) << year
+                           << std::setw(2) << month
+                           << std::setw(2) << day;
+                    return make_string_value(stream.str());
                 }
                 if (function == "ctod" && !arguments.empty())
                 {
-                    // Accept a date string and return it as-is (we store dates as strings)
-                    return make_string_value(value_as_string(arguments[0]));
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    {
+                        return make_string_value(format_runtime_date_string(year, month, day));
+                    }
+                    return make_string_value(std::string{});
                 }
                 if (function == "dtoc" && !arguments.empty())
                 {
@@ -8167,7 +8157,22 @@ namespace copperfin::runtime
                 }
                 if (function == "ttoc" && !arguments.empty())
                 {
-                    return make_string_value(value_as_string(arguments[0]));
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    int hour = 0;
+                    int minute = 0;
+                    int second = 0;
+                    const std::string value = value_as_string(arguments[0]);
+                    if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second))
+                    {
+                        return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                    }
+                    if (parse_runtime_date_string(value, year, month, day))
+                    {
+                        return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+                    }
+                    return make_string_value(std::string{});
                 }
                 if (function == "ctot" && !arguments.empty())
                 {
@@ -8283,12 +8288,17 @@ namespace copperfin::runtime
                     int day = static_cast<int>(value_as_number(arguments[0]));
                     int month = static_cast<int>(value_as_number(arguments[1]));
                     int year = static_cast<int>(value_as_number(arguments[2]));
+                    const int max_day = days_in_month(year, month);
+                    if (max_day == 0 || day < 1 || day > max_day)
+                    {
+                        return make_string_value(std::string{});
+                    }
                     return make_string_value(format_runtime_date_string(year, month, day));
                 }
                 if (function == "isleapyear" && !arguments.empty())
                 {
                     int year = static_cast<int>(value_as_number(arguments[0]));
-                    return is_leap_year(year) ? make_string_value(".T.") : make_string_value(".F.");
+                    return make_boolean_value(is_leap_year(year));
                 }
                 // --- Array / variable helpers ---
                 if (function == "alen" && !arguments.empty())

@@ -345,11 +345,18 @@ namespace
             "year_value = YEAR('04/18/2026')\n"
             "month_value = MONTH('04/18/2026')\n"
             "day_value = DAY('04/18/2026')\n"
+            "year_compact = YEAR('20260418')\n"
+            "month_compact = MONTH('20260418')\n"
+            "day_compact = DAY('20260418')\n"
+            "dtos_compact = DTOS('20260418')\n"
+            "ctod_invalid = CTOD('not-a-date')\n"
+            "ttoc_date = TTOC('20260418')\n"
             "ttoj_value = TTOJ('04/18/2026')\n"
             "jtot_value = JTOT(ttoj_value)\n"
             "dtoj_value = DTOJ('04/18/2026')\n"
             "jtod_value = JTOD(dtoj_value)\n"
             "dmy_value = DMY(18, 4, 2026)\n"
+            "dmy_invalid = DMY(31, 2, 2026)\n"
             "isleap_2024 = ISLEAPYEAR(2024)\n"
             "isleap_2026 = ISLEAPYEAR(2026)\n"
             "seconds_now = SECONDS()\n"
@@ -394,13 +401,20 @@ namespace
         check("year_value", "2026");
         check("month_value", "4");
         check("day_value", "18");
+        check("year_compact", "2026");
+        check("month_compact", "4");
+        check("day_compact", "18");
+        check("dtos_compact", "20260418");
+        check("ctod_invalid", "");
+        check("ttoc_date", "04/18/2026 00:00:00");
         check("ttoj_value", "2460447");
         check("jtot_value", "04/18/2026");
         check("dtoj_value", "2460447");
         check("jtod_value", "04/18/2026");
         check("dmy_value", "04/18/2026");
-        check("isleap_2024", ".T.");
-        check("isleap_2026", ".F.");
+        check("dmy_invalid", "");
+        check("isleap_2024", "true");
+        check("isleap_2026", "false");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())
