@@ -499,7 +499,7 @@ The platform should directly answer the objections that likely made long-term VF
 
 ## Reference-Informed Product Lessons
 
-Derived from the inspected VFP/VFPX materials:
+Derived from the inspected VFP and community-maintained ecosystem materials:
 
 - foundation classes matter
 - reporting is a major subsystem

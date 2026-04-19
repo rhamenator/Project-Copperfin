@@ -11,7 +11,7 @@ Build a new platform informed by behavior, file formats, workflows, and public/c
 - observed product behavior
 - metadata and file formats
 - your own historical code
-- VFPX community-maintained projects where licensing allows use and study
+- community-maintained FoxPro/xBase projects where licensing allows use and study
 
 ## Restricted Inputs
 
@@ -25,7 +25,7 @@ Build a new platform informed by behavior, file formats, workflows, and public/c
 2. Prefer behavior tests over implementation mimicry.
 3. Normalize imported metadata into new internal schemas.
 4. Keep modern security decisions explicit when legacy behavior is unsafe.
-5. Record where a feature came from: docs, behavior tests, VFPX, or your own prior work.
+5. Record where a feature came from: docs, behavior tests, community projects, or your own prior work.
 
 ## Recommended Repo Hygiene When This Moves Into Source Control
 
@@ -37,7 +37,7 @@ Build a new platform informed by behavior, file formats, workflows, and public/c
 
 ## Safe Use Of Community Projects
 
-Use VFPX and related open projects to learn:
+Use related open community projects to learn:
 
 - what the community had to fix
 - how features were organized

@@ -45,7 +45,7 @@ Current limitations:
 - the debugger pane is a first runtime-facing surface, not yet the finished VFP 9-level watch/coverage/task-window experience
 - the new project utility panes are still summary-first panes, not yet the full interactive VFP 9-equivalent Project Explorer/Data Explorer/Object Browser/Coverage toolchain
 - database federation and polyglot query translation are now modeled in the shell, but the actual backend translators still need deeper implementation beyond the current architectural contract
-- FoxPro editor assistance is still a first pass inspired by VFPX and XSharp patterns, not yet a full semantic language service with rename, refactor, or complete symbol resolution
+- FoxPro editor assistance is still a first pass inspired by community and external xBase tooling patterns, not yet a full semantic language service with rename, refactor, or complete symbol resolution
 
 Why VS 2022 as the baseline:
 

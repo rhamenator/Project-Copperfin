@@ -13,7 +13,7 @@ Reference sources:
 
 - installed VFP 9 tree
 - mounted VFP 9 media
-- VFPX-maintained projects
+- community-maintained FoxPro/xBase projects
 - local xBase/FoxPro-era code on `E:\`
 
 ## Phase 1: Data Foundation

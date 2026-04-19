@@ -29,8 +29,8 @@ Copperfin should eventually provide:
 
 - Keep the trusted runtime, data engine, and compatibility core native-first.
 - Do not let designer or shell shortcuts dictate runtime semantics.
-- Treat XSharp as an accelerator for language-service, project-system, and modern tooling ideas.
-- Treat VFPX as an accelerator for FoxPro-specific workflow, tooling, and parity expectations.
+- Treat external xBase-family tooling as an accelerator for language-service, project-system, and modern tooling ideas.
+- Treat community-maintained FoxPro tooling as an accelerator for FoxPro-specific workflow, tooling, and parity expectations.
 - Reuse ideas and reference behavior aggressively, but keep Copperfin implementation clean-room.
 - Do not start real cross-platform host work until the Windows runtime and standalone IDE core are stable enough to port.
 - Treat this file and `docs/22-vfp-language-reference-coverage.md` as the backlog source of truth; `codex-resume-prompt.txt` is the canonical continuation prompt for automation, and ad hoc prompt files should be merged back here or deleted once stale.
@@ -522,7 +522,7 @@ The baseline language-service surface is now shipped. What remains here is depth
 
 - The shipped baseline includes first-pass definition resolution and project browsing.
 - Follow-on work should add richer peek/reference workflows and safe rename/refactor behavior.
-- Build more semantic editor behavior inspired by XSharp without forcing Copperfin into XSharp’s runtime model.
+- Build more semantic editor behavior inspired by external xBase tooling patterns without forcing Copperfin into another runtime model.
 
 ### G3. IntelliSense Inputs
 
@@ -585,11 +585,11 @@ Do not start broad host-porting work until the Windows-first stack is solid.
 - Port the standalone IDE and portable core for Red Hat/Fedora and Debian-family targets first.
 - Do not couple Linux progress to Visual Studio-specific assumptions.
 
-## XSharp Incorporation Plan
+## External Tooling Incorporation Plan (Language Service And IDE)
 
-XSharp may save substantial tooling time, but it should be used selectively.
+External xBase-family tooling may save substantial tooling time, but it should be used selectively.
 
-### Use XSharp As A Model For
+### Use External Tooling As A Model For
 
 - language-service structure
 - project-system layering
@@ -598,24 +598,24 @@ XSharp may save substantial tooling time, but it should be used selectively.
 - debugger/tool-window organization
 - modern xBase-family tooling strategy inside Visual Studio
 
-### Do Not Blindly Import From XSharp
+### Do Not Blindly Import From External Tooling
 
 - runtime semantics
 - compiler behavior
-- language differences where XSharp diverges from VFP
+- language differences where external tooling diverges from VFP
 - assumptions that would distort FoxPro/VFP compatibility
 
-### Immediate XSharp Follow-Up
+### Immediate Language-Service Follow-Up
 
-- audit the XSharp language-service and project-system layers for concepts we still lack
+- audit mature external language-service and project-system layers for concepts we still lack
 - identify which pieces can be mirrored clean-room in Copperfin
 - prefer architecture and workflow ideas over direct feature cloning
 
-## VFPX Incorporation Plan
+## Community Workflow Tooling Incorporation Plan
 
-VFPX should continue to inform FoxPro-specific parity and workflows.
+Community-maintained FoxPro tooling should continue to inform parity and workflows.
 
-### Highest-Value VFPX Inputs
+### Highest-Value Community Inputs
 
 - `GoToDefinition`
 - `FoxcodePlus`
@@ -653,7 +653,7 @@ Good agent tasks:
 - improve one data/index format implementation
 - improve one designer family on top of an already-stable model
 - strengthen one language-service feature against the shared project index
-- extract lessons from one XSharp or VFPX subsystem into a clean-room implementation note
+- extract lessons from one external/community subsystem into a clean-room implementation note
 
 Bad agent tasks:
 
