@@ -490,6 +490,55 @@ void test_eval_macro_and_runtime_state_semantics() {
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "macro_deep.prg",
+        "cFieldExpr = 'cValue'\n"
+        "cRowExpr = '1'\n"
+        "cValue = 'HELLO'\n"
+        "DIMENSION aData[2]\n"
+        "aData[1] = 'ALPHA'\n"
+        "aData[2] = 'BRAVO'\n"
+        "cResult1 = aData[&cRowExpr]\n"
+        "cResult2 = LEN(&cFieldExpr)\n"
+        "cTarget = 'cResult3'\n"
+        "&cTarget = 'MACROASSIGN'\n"
+        "cParamExpr = 'cParamValue'\n"
+        "cParamValue = 'PARAMVAL'\n"
+        "DO testparam WITH &cParamExpr\n"
+        "RETURN\n"
+        "PROCEDURE testparam\n"
+        "LPARAMETERS p1\n"
+        "cParamResult = p1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession macro_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = (temp_root / "macro_deep.prg").string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+    const auto macro_state = macro_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto cResult1 = macro_state.globals.find("cresult1");
+    const auto cResult2 = macro_state.globals.find("cresult2");
+    const auto cResult3 = macro_state.globals.find("cresult3");
+    const auto cParamResult = macro_state.globals.find("cparamresult");
+    expect(cResult1 != macro_state.globals.end(), "macro in array subscript should resolve");
+    expect(cResult2 != macro_state.globals.end(), "macro in function argument should resolve");
+    expect(cResult3 != macro_state.globals.end(), "macro in assignment target should resolve");
+    expect(cParamResult != macro_state.globals.end(), "macro in parameter passing should resolve");
+    if (cResult1 != macro_state.globals.end()) {
+        expect(copperfin::runtime::format_value(cResult1->second) == "ALPHA", "macro in array subscript should yield correct value");
+    }
+    if (cResult2 != macro_state.globals.end()) {
+        expect(copperfin::runtime::format_value(cResult2->second) == "5", "macro in function argument should yield correct value");
+    }
+    if (cResult3 != macro_state.globals.end()) {
+        expect(copperfin::runtime::format_value(cResult3->second) == "MACROASSIGN", "macro in assignment target should assign correctly");
+    }
+    if (cParamResult != macro_state.globals.end()) {
+        expect(copperfin::runtime::format_value(cParamResult->second) == "PARAMVAL", "macro in parameter passing should yield correct value");
+    }
+
     const fs::path new_default = temp_root / "workspace";
     fs::create_directories(new_default);
 

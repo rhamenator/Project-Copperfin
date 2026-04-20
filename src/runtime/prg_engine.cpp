@@ -8643,13 +8643,13 @@ namespace copperfin::runtime
                 {
                     return make_empty_value();
                 }
-
+                // Always treat macro expansion as an expression, not just a string
                 const PrgValue expanded_value = eval_expression_callback_(expanded);
                 if (expanded_value.kind != PrgValueKind::empty)
                 {
                     return expanded_value;
                 }
-
+                // If not an expression, return as string
                 return make_string_value(expanded);
             }
 
@@ -9161,7 +9161,16 @@ namespace copperfin::runtime
             {
             case StatementKind::assignment:
             {
-                const std::string assignment_identifier = apply_with_context(statement.identifier, frame);
+                std::string assignment_identifier = apply_with_context(statement.identifier, frame);
+                if (!assignment_identifier.empty() && assignment_identifier.front() == '&')
+                {
+                    const PrgValue expanded_identifier = evaluate_expression(assignment_identifier, frame);
+                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
+                    if (!expanded_text.empty())
+                    {
+                        assignment_identifier = expanded_text;
+                    }
+                }
                 const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
                 if (assign_array_element(assignment_identifier, frame, assignment_value))
                 {
