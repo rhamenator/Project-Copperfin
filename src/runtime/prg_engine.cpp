@@ -7196,6 +7196,41 @@ namespace copperfin::runtime
                     const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     const std::string order_designator = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
                     return make_boolean_value(seek_callback_(search_key, true, designator, order_designator));
+                if (function == "transform" && !arguments.empty())
+                {
+                    const std::string picture = arguments.size() >= 2U ? uppercase_copy(value_as_string(arguments[1])) : std::string{};
+                    if (!picture.empty())
+                    {
+                        if (picture.find("@!") != std::string::npos)
+                        {
+                            return make_string_value(uppercase_copy(value_as_string(arguments[0])));
+                        }
+                        if (picture.find("@L") != std::string::npos)
+                        {
+                            std::string value = value_as_string(arguments[0]);
+                            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch)
+                                           { return static_cast<char>(std::tolower(ch)); });
+                            return make_string_value(std::move(value));
+                        }
+
+                        const std::size_t decimal_pos = picture.find('.');
+                        if (decimal_pos != std::string::npos)
+                        {
+                            std::size_t decimals = 0U;
+                            for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index)
+                            {
+                                if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0')
+                                {
+                                    ++decimals;
+                                }
+                            }
+                            std::ostringstream stream;
+                            stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
+                            return make_string_value(stream.str());
+                        }
+                    }
+                    return make_string_value(value_as_string(arguments[0]));
+                }
                 }
                 if (function == "indexseek" && !arguments.empty())
                 {
@@ -7405,6 +7440,41 @@ namespace copperfin::runtime
                     stream << std::llround(value_as_number(arguments[0]));
                     return make_string_value(stream.str());
                 }
+                if (function == "transform" && !arguments.empty())
+                {
+                    const std::string picture = arguments.size() >= 2U ? uppercase_copy(value_as_string(arguments[1])) : std::string{};
+                    if (!picture.empty())
+                    {
+                        if (picture.find("@!") != std::string::npos)
+                        {
+                            return make_string_value(uppercase_copy(value_as_string(arguments[0])));
+                        }
+                        if (picture.find("@L") != std::string::npos)
+                        {
+                            std::string value = value_as_string(arguments[0]);
+                            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch)
+                                           { return static_cast<char>(std::tolower(ch)); });
+                            return make_string_value(std::move(value));
+                        }
+
+                        const std::size_t decimal_pos = picture.find('.');
+                        if (decimal_pos != std::string::npos)
+                        {
+                            std::size_t decimals = 0U;
+                            for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index)
+                            {
+                                if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0')
+                                {
+                                    ++decimals;
+                                }
+                            }
+                            std::ostringstream stream;
+                            stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
+                            return make_string_value(stream.str());
+                        }
+                    }
+                    return make_string_value(value_as_string(arguments[0]));
+                }
                 if (function == "alltrim" && !arguments.empty())
                 {
                     return make_string_value(trim_copy(value_as_string(arguments[0])));
@@ -7422,6 +7492,10 @@ namespace copperfin::runtime
                     return make_number_value(static_cast<double>(aerror_callback_(raw_arguments[0])));
                 }
                 if (function == "eval" && !arguments.empty())
+                {
+                    return eval_expression_callback_(value_as_string(arguments[0]));
+                }
+                if (function == "evaluate" && !arguments.empty())
                 {
                     return eval_expression_callback_(value_as_string(arguments[0]));
                 }
@@ -7863,6 +7937,10 @@ namespace copperfin::runtime
                 if (function == "type" && !arguments.empty())
                 {
                     const std::string expr = trim_copy(value_as_string(arguments[0]));
+                    if (is_bare_identifier_text(expr) && array_exists_callback_(expr))
+                    {
+                        return make_string_value("A");
+                    }
                     const PrgValue result = eval_expression_callback_(expr);
                     if (result.kind == PrgValueKind::empty)
                         return make_string_value("U");
@@ -9077,7 +9155,7 @@ namespace copperfin::runtime
                 {
                     return std::string("OFF");
                 }
-                return std::string("OFF");
+                return found->second;
             },
             [this](const std::string &category, const std::string &detail)
             {
@@ -9226,7 +9304,15 @@ namespace copperfin::runtime
                 return {};
             case StatementKind::do_command:
             {
-                const std::string target = trim_copy(statement.identifier);
+                std::string target = trim_copy(statement.identifier);
+                if (!target.empty() && target.front() == '&')
+                {
+                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                    if (!expanded_target.empty())
+                    {
+                        target = expanded_target;
+                    }
+                }
                 std::vector<PrgValue> call_arguments;
                 std::vector<std::optional<std::string>> call_argument_references;
                 if (!trim_copy(statement.expression).empty())

@@ -297,6 +297,41 @@ void test_do_form_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_do_command_macro_target() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_macro_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "do_macro_target.prg";
+    write_text(
+        main_path,
+        "cProc = 'worker'\n"
+        "DO &cProc\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "nWorkerRan = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO &macro-target script should complete");
+
+    const auto worker_ran = state.globals.find("nworkerran");
+    expect(worker_ran != state.globals.end(), "DO &macro target should resolve and invoke the routine");
+    if (worker_ran != state.globals.end()) {
+        expect(copperfin::runtime::format_value(worker_ran->second) == "1", "DO &macro target routine should run exactly once");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_export_vfp_compatibility_corpus_script() {
     namespace fs = std::filesystem;
     const fs::path repo_root = fs::path(__FILE__).parent_path().parent_path();
@@ -7436,6 +7471,7 @@ int main() {
     test_report_form_to_file_renders_without_event_loop_pause();
     test_label_form_to_file_renders_without_event_loop_pause();
     test_do_form_pause();
+    test_do_command_macro_target();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();
     test_eval_macro_and_runtime_state_semantics();
