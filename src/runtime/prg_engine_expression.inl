@@ -959,7 +959,9 @@
                                                        ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
                                                        : 1U;
                     const int flags = arguments.size() >= 5U ? static_cast<int>(value_as_number(arguments[4])) : 0;
-                    const bool case_insensitive = (flags & 2) != 0;
+                    const bool case_insensitive = (flags & 1) != 0;
+                    const bool end_delimiter_optional = (flags & 2) != 0;
+                    const bool include_delimiters = (flags & 4) != 0;
                     std::size_t search_pos = 0U;
                     std::size_t found_count = 0U;
                     while (search_pos <= src.size())
@@ -1001,8 +1003,14 @@
                                 end_pos = src.find(end_delim, content_start);
                             }
                             if (end_pos == std::string::npos)
-                                return make_string_value(src.substr(content_start));
-                            return make_string_value(src.substr(content_start, end_pos - content_start));
+                            {
+                                return end_delimiter_optional
+                                           ? make_string_value(include_delimiters ? src.substr(begin_pos) : src.substr(content_start))
+                                           : make_string_value(std::string{});
+                            }
+                            return make_string_value(include_delimiters
+                                                         ? src.substr(begin_pos, end_pos + end_delim.size() - begin_pos)
+                                                         : src.substr(content_start, end_pos - content_start));
                         }
                         search_pos = content_start;
                     }

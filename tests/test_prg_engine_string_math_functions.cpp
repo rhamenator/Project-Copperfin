@@ -80,6 +80,11 @@ namespace
             "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
             "getwordnum_multi_delim = GETWORDNUM('a,b;c', 3, ',;')\n"
             "getwordnum_tab = GETWORDNUM('one' + CHR(9) + 'two', 2)\n"
+            "strextract_case_sensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>')\n"
+            "strextract_case_insensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>', 1, 1)\n"
+            "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
+            "strextract_missing_end_allowed = STREXTRACT('a=one;b=two', 'b=', ';', 1, 2)\n"
+            "strextract_include_delims = STREXTRACT('<id>42</id>', '<id>', '</id>', 1, 4)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -154,6 +159,11 @@ namespace
         check("getwordnum_2", "c");
         check("getwordnum_multi_delim", "c");
         check("getwordnum_tab", "two");
+        check("strextract_case_sensitive", "");
+        check("strextract_case_insensitive", "Beta");
+        check("strextract_missing_end_default", "");
+        check("strextract_missing_end_allowed", "two");
+        check("strextract_include_delims", "<id>42</id>");
 
         fs::remove_all(temp_root, ignored);
     }
