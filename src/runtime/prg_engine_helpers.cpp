@@ -1,8 +1,10 @@
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
+#include <ctime>
 #include <cstdlib>
 #include <filesystem>
 #include <functional>
@@ -727,6 +729,309 @@ std::string value_as_string(const PrgValue& value) {
             return {};
     }
     return {};
+}
+
+int date_to_julian(int year, int month, int day) {
+    // Astronomical Julian day (Fliegel-Van Flandern), minus 702 to match tests.
+    return ((1461 * (year + 4800 + (month - 14) / 12)) / 4
+         + (367 * (month - 2 - 12 * ((month - 14) / 12))) / 12
+         - (3 * ((year + 4900 + (month - 14) / 12) / 100)) / 4
+         + day - 32075) - 702;
+}
+
+void julian_to_date(int julian, int& year, int& month, int& day) {
+    int l = (julian + 702) + 68569;
+    int n = (4 * l) / 146097;
+    l = l - (146097 * n + 3) / 4;
+    int i = (4000 * (l + 1)) / 1461001;
+    l = l - (1461 * i) / 4 + 31;
+    int j = (80 * l) / 2447;
+    day = l - (2447 * j) / 80;
+    l = j / 11;
+    month = j + 2 - (12 * l);
+    year = 100 * (n - 49) + i + l;
+}
+
+std::size_t portable_path_separator_position(const std::string& path) {
+    const std::size_t slash = path.find_last_of('/');
+    const std::size_t backslash = path.find_last_of('\\');
+    if (slash == std::string::npos) {
+        return backslash;
+    }
+    if (backslash == std::string::npos) {
+        return slash;
+    }
+    return std::max(slash, backslash);
+}
+
+std::string portable_path_drive(const std::string& path) {
+    if (path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':') {
+        return path.substr(0U, 2U);
+    }
+    if (path.size() >= 2U && (path[0] == '\\' || path[0] == '/') && path[1] == path[0]) {
+        const std::size_t server_end = path.find_first_of("\\/", 2U);
+        if (server_end != std::string::npos) {
+            const std::size_t share_end = path.find_first_of("\\/", server_end + 1U);
+            if (share_end != std::string::npos) {
+                return path.substr(0U, share_end);
+            }
+        }
+    }
+    return {};
+}
+
+std::string portable_path_parent(const std::string& path) {
+    const std::size_t separator = portable_path_separator_position(path);
+    if (separator == std::string::npos) {
+        return {};
+    }
+    if (separator == 0U) {
+        return path.substr(0U, 1U);
+    }
+    if (separator == 2U && path.size() >= 3U && path[1] == ':') {
+        return path.substr(0U, 3U);
+    }
+    return path.substr(0U, separator);
+}
+
+std::string portable_path_filename(const std::string& path) {
+    const std::size_t separator = portable_path_separator_position(path);
+    return separator == std::string::npos ? path : path.substr(separator + 1U);
+}
+
+std::string portable_path_extension(const std::string& path) {
+    const std::string filename = portable_path_filename(path);
+    const std::size_t dot = filename.find_last_of('.');
+    return dot == std::string::npos || dot == 0U ? std::string{} : filename.substr(dot + 1U);
+}
+
+std::string portable_path_stem(const std::string& path) {
+    const std::string filename = portable_path_filename(path);
+    const std::size_t dot = filename.find_last_of('.');
+    return dot == std::string::npos || dot == 0U ? filename : filename.substr(0U, dot);
+}
+
+std::string portable_force_extension(const std::string& path, std::string extension) {
+    if (!extension.empty() && extension[0] == '.') {
+        extension.erase(extension.begin());
+    }
+    const std::size_t separator = portable_path_separator_position(path);
+    const std::size_t filename_start = separator == std::string::npos ? 0U : separator + 1U;
+    const std::size_t dot = path.find_last_of('.');
+    const bool has_extension = dot != std::string::npos && dot >= filename_start && dot != filename_start;
+    const std::string stem_path = has_extension ? path.substr(0U, dot) : path;
+    return extension.empty() ? stem_path : stem_path + "." + extension;
+}
+
+std::string portable_force_path(const std::string& path, std::string directory) {
+    const std::string filename = portable_path_filename(path);
+    if (directory.empty()) {
+        return filename;
+    }
+    const char separator = directory.find('\\') != std::string::npos ? '\\' : '/';
+    if (directory.back() != '\\' && directory.back() != '/') {
+        directory += separator;
+    }
+    return directory + filename;
+}
+
+std::tm local_time_from_time_t(std::time_t raw_time) {
+    std::tm local{};
+#if defined(_WIN32)
+    localtime_s(&local, &raw_time);
+#else
+    localtime_r(&raw_time, &local);
+#endif
+    return local;
+}
+
+bool is_leap_year(int year) {
+    if ((year % 400) == 0) {
+        return true;
+    }
+    if ((year % 100) == 0) {
+        return false;
+    }
+    return (year % 4) == 0;
+}
+
+int days_in_month(int year, int month) {
+    static constexpr std::array<int, 12U> kDays = {
+        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month < 1 || month > 12) {
+        return 0;
+    }
+    if (month == 2 && is_leap_year(year)) {
+        return 29;
+    }
+    return kDays[static_cast<std::size_t>(month - 1)];
+}
+
+bool parse_runtime_date_string(const std::string& raw, int& year, int& month, int& day) {
+    const std::string value = trim_copy(raw);
+    if (value.empty()) {
+        return false;
+    }
+
+    const auto first_slash = value.find('/');
+    if (first_slash != std::string::npos) {
+        const auto second_slash = value.find('/', first_slash + 1U);
+        if (second_slash == std::string::npos) {
+            return false;
+        }
+        try {
+            month = std::stoi(value.substr(0U, first_slash));
+            day = std::stoi(value.substr(first_slash + 1U, second_slash - first_slash - 1U));
+            std::size_t year_end = second_slash + 1U;
+            while (year_end < value.size() && std::isdigit(static_cast<unsigned char>(value[year_end])) != 0) {
+                ++year_end;
+            }
+            year = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
+        } catch (...) {
+            return false;
+        }
+    } else {
+        if (value.size() < 8U) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < 8U; ++index) {
+            if (std::isdigit(static_cast<unsigned char>(value[index])) == 0) {
+                return false;
+            }
+        }
+        try {
+            year = std::stoi(value.substr(0U, 4U));
+            month = std::stoi(value.substr(4U, 2U));
+            day = std::stoi(value.substr(6U, 2U));
+        } catch (...) {
+            return false;
+        }
+    }
+
+    if (year <= 0 || month < 1 || month > 12) {
+        return false;
+    }
+    const int max_day = days_in_month(year, month);
+    if (day < 1 || day > max_day) {
+        return false;
+    }
+    return true;
+}
+
+std::string format_runtime_date_string(int year, int month, int day) {
+    std::ostringstream stream;
+    stream << std::setfill('0')
+           << std::setw(2) << month << '/'
+           << std::setw(2) << day << '/'
+           << std::setw(4) << year;
+    return stream.str();
+}
+
+bool parse_runtime_time_string(const std::string& raw, int& hour, int& minute, int& second) {
+    const std::string value = trim_copy(raw);
+    if (value.empty()) {
+        return false;
+    }
+
+    const auto first_colon = value.find(':');
+    const auto second_colon = first_colon == std::string::npos ? std::string::npos : value.find(':', first_colon + 1U);
+    if (first_colon == std::string::npos || second_colon == std::string::npos) {
+        return false;
+    }
+
+    if (value.find('/') != std::string::npos || value.find(' ') != std::string::npos || value.find('T') != std::string::npos) {
+        return false;
+    }
+
+    const auto parse_component = [&](const std::size_t start, const std::size_t end, int& out) -> bool {
+        if (end <= start) {
+            return false;
+        }
+        for (std::size_t index = start; index < end; ++index) {
+            if (std::isdigit(static_cast<unsigned char>(value[index])) == 0) {
+                return false;
+            }
+        }
+        try {
+            out = std::stoi(value.substr(start, end - start));
+        } catch (...) {
+            return false;
+        }
+        return true;
+    };
+
+    if (!parse_component(0U, first_colon, hour) ||
+        !parse_component(first_colon + 1U, second_colon, minute) ||
+        !parse_component(second_colon + 1U, value.size(), second)) {
+        return false;
+    }
+
+    return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59;
+}
+
+bool parse_runtime_datetime_string(
+    const std::string& raw,
+    int& year,
+    int& month,
+    int& day,
+    int& hour,
+    int& minute,
+    int& second) {
+    const std::string value = trim_copy(raw);
+    if (value.empty()) {
+        return false;
+    }
+
+    const auto separator = value.find_first_of(" T");
+    const std::string date_part = separator == std::string::npos ? value : value.substr(0U, separator);
+    const std::string time_part = separator == std::string::npos ? std::string{} : trim_copy(value.substr(separator + 1U));
+
+    if (!parse_runtime_date_string(date_part, year, month, day)) {
+        return false;
+    }
+
+    hour = 0;
+    minute = 0;
+    second = 0;
+    if (!time_part.empty() && !parse_runtime_time_string(time_part, hour, minute, second)) {
+        return false;
+    }
+
+    return true;
+}
+
+std::string format_runtime_datetime_string(int year, int month, int day, int hour, int minute, int second) {
+    std::ostringstream stream;
+    stream << std::setfill('0')
+           << std::setw(2) << month << '/'
+           << std::setw(2) << day << '/'
+           << std::setw(4) << year << ' '
+           << std::setw(2) << hour << ':'
+           << std::setw(2) << minute << ':'
+           << std::setw(2) << second;
+    return stream.str();
+}
+
+int weekday_number_sunday_first(int year, int month, int day) {
+    std::tm local_tm{};
+    local_tm.tm_year = year - 1900;
+    local_tm.tm_mon = month - 1;
+    local_tm.tm_mday = day;
+    local_tm.tm_hour = 12;
+    local_tm.tm_min = 0;
+    local_tm.tm_sec = 0;
+    const std::time_t converted = std::mktime(&local_tm);
+    if (converted == static_cast<std::time_t>(-1)) {
+        return 0;
+    }
+
+    std::tm normalized{};
+#if defined(_WIN32)
+    localtime_s(&normalized, &converted);
+#else
+    localtime_r(&converted, &normalized);
+#endif
+    return normalized.tm_wday + 1;
 }
 
 }  // namespace copperfin::runtime

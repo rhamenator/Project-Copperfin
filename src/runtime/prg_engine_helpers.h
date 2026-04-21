@@ -3,6 +3,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 
+#include <ctime>
 #include <optional>
 #include <string>
 #include <utility>
@@ -43,5 +44,32 @@ PrgValue make_uint64_value(std::uint64_t value);
 bool value_as_bool(const PrgValue& value);
 double value_as_number(const PrgValue& value);
 std::string value_as_string(const PrgValue& value);
+
+int date_to_julian(int year, int month, int day);
+void julian_to_date(int julian, int& year, int& month, int& day);
+std::size_t portable_path_separator_position(const std::string& path);
+std::string portable_path_drive(const std::string& path);
+std::string portable_path_parent(const std::string& path);
+std::string portable_path_filename(const std::string& path);
+std::string portable_path_extension(const std::string& path);
+std::string portable_path_stem(const std::string& path);
+std::string portable_force_extension(const std::string& path, std::string extension);
+std::string portable_force_path(const std::string& path, std::string directory);
+bool parse_runtime_date_string(const std::string& raw, int& year, int& month, int& day);
+std::string format_runtime_date_string(int year, int month, int day);
+bool parse_runtime_time_string(const std::string& raw, int& hour, int& minute, int& second);
+bool parse_runtime_datetime_string(
+    const std::string& raw,
+    int& year,
+    int& month,
+    int& day,
+    int& hour,
+    int& minute,
+    int& second);
+std::string format_runtime_datetime_string(int year, int month, int day, int hour, int minute, int second);
+int weekday_number_sunday_first(int year, int month, int day);
+std::tm local_time_from_time_t(std::time_t raw_time);
+bool is_leap_year(int year);
+int days_in_month(int year, int month);
 
 }  // namespace copperfin::runtime
