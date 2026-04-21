@@ -2,6 +2,7 @@
 
 #include "prg_engine_helpers.h"
 
+#include <cctype>
 #include <cmath>
 
 namespace copperfin::runtime {
@@ -75,6 +76,22 @@ std::optional<PrgValue> evaluate_type_function(
     if (function == "between" && arguments.size() >= 3U) {
         const double value = value_as_number(arguments[0]);
         return make_boolean_value(value >= value_as_number(arguments[1]) && value <= value_as_number(arguments[2]));
+    }
+    if (function == "isdigit" && !arguments.empty()) {
+        const std::string s = value_as_string(arguments[0]);
+        return make_boolean_value(!s.empty() && std::isdigit(static_cast<unsigned char>(s[0])) != 0);
+    }
+    if (function == "isalpha" && !arguments.empty()) {
+        const std::string s = value_as_string(arguments[0]);
+        return make_boolean_value(!s.empty() && std::isalpha(static_cast<unsigned char>(s[0])) != 0);
+    }
+    if (function == "islower" && !arguments.empty()) {
+        const std::string s = value_as_string(arguments[0]);
+        return make_boolean_value(!s.empty() && std::islower(static_cast<unsigned char>(s[0])) != 0);
+    }
+    if (function == "isupper" && !arguments.empty()) {
+        const std::string s = value_as_string(arguments[0]);
+        return make_boolean_value(!s.empty() && std::isupper(static_cast<unsigned char>(s[0])) != 0);
     }
 
     return std::nullopt;

@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cctype>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -277,6 +279,226 @@ std::optional<PrgValue> evaluate_string_function(
         }
         const std::size_t n = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
+    }
+    if ((function == "at" || function == "atc") && arguments.size() >= 2U) {
+        const bool case_insensitive = function == "atc";
+        std::string needle = value_as_string(arguments[0]);
+        std::string haystack = value_as_string(arguments[1]);
+        const std::size_t occurrence = arguments.size() >= 3U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           : 1U;
+        if (case_insensitive) {
+            needle = uppercase_copy(std::move(needle));
+            haystack = uppercase_copy(std::move(haystack));
+        }
+        if (needle.empty()) {
+            return make_number_value(0.0);
+        }
+        std::size_t found_count = 0U;
+        std::size_t search_pos = 0U;
+        while (search_pos <= haystack.size()) {
+            const auto found = haystack.find(needle, search_pos);
+            if (found == std::string::npos) {
+                break;
+            }
+            ++found_count;
+            if (found_count == occurrence) {
+                return make_number_value(static_cast<double>(found + 1U));
+            }
+            search_pos = found + needle.size();
+        }
+        return make_number_value(0.0);
+    }
+    if ((function == "rat" || function == "ratc") && arguments.size() >= 2U) {
+        const bool case_insensitive = function == "ratc";
+        std::string needle = value_as_string(arguments[0]);
+        std::string haystack = value_as_string(arguments[1]);
+        const std::size_t occurrence = arguments.size() >= 3U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           : 1U;
+        if (case_insensitive) {
+            needle = uppercase_copy(std::move(needle));
+            haystack = uppercase_copy(std::move(haystack));
+        }
+        if (needle.empty()) {
+            return make_number_value(0.0);
+        }
+        std::size_t found_count = 0U;
+        std::size_t search_pos = std::string::npos;
+        while (true) {
+            const auto found = haystack.rfind(needle, search_pos);
+            if (found == std::string::npos) {
+                break;
+            }
+            ++found_count;
+            if (found_count == occurrence) {
+                return make_number_value(static_cast<double>(found + 1U));
+            }
+            if (found == 0U) {
+                break;
+            }
+            search_pos = found - 1U;
+        }
+        return make_number_value(0.0);
+    }
+    if ((function == "atline" || function == "atcline" || function == "ratline") && arguments.size() >= 2U) {
+        const bool reverse = function == "ratline";
+        const bool case_insensitive = function == "atcline";
+        std::string needle = value_as_string(arguments[0]);
+        std::vector<std::string> lines = split_text_lines(value_as_string(arguments[1]));
+        const std::size_t occurrence = arguments.size() >= 3U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           : 1U;
+        if (case_insensitive) {
+            needle = uppercase_copy(std::move(needle));
+            for (std::string& line : lines) {
+                line = uppercase_copy(std::move(line));
+            }
+        }
+        if (needle.empty()) {
+            return make_number_value(0.0);
+        }
+        std::size_t found_count = 0U;
+        if (reverse) {
+            for (std::size_t index = lines.size(); index > 0U; --index) {
+                if (lines[index - 1U].find(needle) == std::string::npos) {
+                    continue;
+                }
+                ++found_count;
+                if (found_count == occurrence) {
+                    return make_number_value(static_cast<double>(index));
+                }
+            }
+        } else {
+            for (std::size_t index = 0U; index < lines.size(); ++index) {
+                if (lines[index].find(needle) == std::string::npos) {
+                    continue;
+                }
+                ++found_count;
+                if (found_count == occurrence) {
+                    return make_number_value(static_cast<double>(index + 1U));
+                }
+            }
+        }
+        return make_number_value(0.0);
+    }
+    if (function == "substr" && arguments.size() >= 2U) {
+        const std::string source = value_as_string(arguments[0]);
+        const std::size_t start = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1]) - 1.0));
+        const std::size_t length = arguments.size() >= 3U
+                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                       : std::string::npos;
+        return make_string_value(start >= source.size() ? std::string{} : source.substr(start, length));
+    }
+    if (function == "alltrim" && !arguments.empty()) {
+        return make_string_value(trim_copy(value_as_string(arguments[0])));
+    }
+    if (function == "chr" && !arguments.empty()) {
+        return make_string_value(std::string(1U, static_cast<char>(std::llround(value_as_number(arguments[0])))));
+    }
+    if (function == "str" && !arguments.empty()) {
+        const int decimals = arguments.size() >= 3U
+                                 ? static_cast<int>(std::max(0.0, value_as_number(arguments[2])))
+                                 : 0;
+        std::ostringstream stream;
+        stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
+        std::string result = stream.str();
+        if (arguments.size() >= 2U) {
+            const int width = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            if (width > 0) {
+                if (result.size() > static_cast<std::size_t>(width)) {
+                    return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
+                }
+                if (result.size() < static_cast<std::size_t>(width)) {
+                    result.insert(result.begin(), static_cast<std::size_t>(width) - result.size(), ' ');
+                }
+            }
+        }
+        return make_string_value(std::move(result));
+    }
+    if (function == "transform" && !arguments.empty()) {
+        const std::string picture = arguments.size() >= 2U ? uppercase_copy(value_as_string(arguments[1])) : std::string{};
+        if (!picture.empty()) {
+            if (picture.find("@!") != std::string::npos) {
+                return make_string_value(uppercase_copy(value_as_string(arguments[0])));
+            }
+            if (picture.find("@L") != std::string::npos) {
+                std::string value = value_as_string(arguments[0]);
+                std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+                    return static_cast<char>(std::tolower(ch));
+                });
+                return make_string_value(std::move(value));
+            }
+            const std::size_t decimal_pos = picture.find('.');
+            if (decimal_pos != std::string::npos) {
+                std::size_t decimals = 0U;
+                for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
+                    if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
+                        ++decimals;
+                    }
+                }
+                std::ostringstream stream;
+                stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
+                return make_string_value(stream.str());
+            }
+        }
+        return make_string_value(value_as_string(arguments[0]));
+    }
+    if (function == "strextract" && arguments.size() >= 3U) {
+        const std::string src = value_as_string(arguments[0]);
+        const std::string begin_delim = value_as_string(arguments[1]);
+        const std::string end_delim = value_as_string(arguments[2]);
+        const std::size_t occurrence = arguments.size() >= 4U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
+                                           : 1U;
+        const int flags = arguments.size() >= 5U ? static_cast<int>(value_as_number(arguments[4])) : 0;
+        const bool case_insensitive = (flags & 1) != 0;
+        const bool end_delimiter_optional = (flags & 2) != 0;
+        const bool include_delimiters = (flags & 4) != 0;
+        std::size_t search_pos = 0U;
+        std::size_t found_count = 0U;
+        while (search_pos <= src.size()) {
+            std::size_t begin_pos;
+            if (begin_delim.empty()) {
+                begin_pos = 0U;
+            } else if (case_insensitive) {
+                const std::string src_up = uppercase_copy(src.substr(search_pos));
+                const std::string bd_up = uppercase_copy(begin_delim);
+                const std::size_t rel = src_up.find(bd_up);
+                begin_pos = rel == std::string::npos ? std::string::npos : search_pos + rel;
+            } else {
+                begin_pos = src.find(begin_delim, search_pos);
+            }
+            if (begin_pos == std::string::npos) {
+                break;
+            }
+            const std::size_t content_start = begin_pos + begin_delim.size();
+            ++found_count;
+            if (found_count == occurrence) {
+                if (end_delim.empty()) {
+                    return make_string_value(src.substr(content_start));
+                }
+                std::size_t end_pos;
+                if (case_insensitive) {
+                    const std::string remaining_up = uppercase_copy(src.substr(content_start));
+                    const std::string ed_up = uppercase_copy(end_delim);
+                    const std::size_t rel = remaining_up.find(ed_up);
+                    end_pos = rel == std::string::npos ? std::string::npos : content_start + rel;
+                } else {
+                    end_pos = src.find(end_delim, content_start);
+                }
+                if (end_pos == std::string::npos) {
+                    return end_delimiter_optional
+                               ? make_string_value(include_delimiters ? src.substr(begin_pos) : src.substr(content_start))
+                               : make_string_value(std::string{});
+                }
+                return make_string_value(include_delimiters
+                                             ? src.substr(begin_pos, end_pos + end_delim.size() - begin_pos)
+                                             : src.substr(content_start, end_pos - content_start));
+            }
+            search_pos = content_start;
+        }
+        return make_string_value(std::string{});
     }
 
     return std::nullopt;

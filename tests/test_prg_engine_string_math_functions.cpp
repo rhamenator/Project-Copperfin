@@ -85,6 +85,11 @@ namespace
             "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
             "strextract_missing_end_allowed = STREXTRACT('a=one;b=two', 'b=', ';', 1, 2)\n"
             "strextract_include_delims = STREXTRACT('<id>42</id>', '<id>', '</id>', 1, 4)\n"
+            "substr_basic = SUBSTR('hello', 2, 3)\n"
+            "substr_no_len = SUBSTR('hello', 3)\n"
+            "alltrim_basic = ALLTRIM('  hi  ')\n"
+            "transform_decimal = TRANSFORM(3.14159, '9.9')\n"
+            "transform_upper = TRANSFORM('hello', '@!')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -164,6 +169,11 @@ namespace
         check("strextract_missing_end_default", "");
         check("strextract_missing_end_allowed", "two");
         check("strextract_include_delims", "<id>42</id>");
+        check("substr_basic", "ell");
+        check("substr_no_len", "llo");
+        check("alltrim_basic", "hi");
+        check("transform_decimal", "3.1");
+        check("transform_upper", "HELLO");
 
         fs::remove_all(temp_root, ignored);
     }

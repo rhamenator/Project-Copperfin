@@ -1049,4 +1049,30 @@ int weekday_number_sunday_first(int year, int month, int day) {
     return normalized.tm_wday + 1;
 }
 
+std::vector<std::string> split_text_lines(const std::string& contents)
+{
+    std::vector<std::string> lines;
+    std::string current;
+    for (std::size_t index = 0U; index < contents.size(); ++index)
+    {
+        const char ch = contents[index];
+        if (ch == '\r' || ch == '\n')
+        {
+            lines.push_back(current);
+            current.clear();
+            if (ch == '\r' && index + 1U < contents.size() && contents[index + 1U] == '\n')
+            {
+                ++index;
+            }
+            continue;
+        }
+        current.push_back(ch);
+    }
+    if (!current.empty() || (!contents.empty() && contents.back() != '\r' && contents.back() != '\n'))
+    {
+        lines.push_back(current);
+    }
+    return lines;
+}
+
 }  // namespace copperfin::runtime

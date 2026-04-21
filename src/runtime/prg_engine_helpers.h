@@ -72,5 +72,6 @@ int weekday_number_sunday_first(int year, int month, int day);
 std::tm local_time_from_time_t(std::time_t raw_time);
 bool is_leap_year(int year);
 int days_in_month(int year, int month);
+std::vector<std::string> split_text_lines(const std::string& contents);
 
 }  // namespace copperfin::runtime

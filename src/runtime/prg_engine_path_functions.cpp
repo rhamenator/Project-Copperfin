@@ -20,6 +20,9 @@ std::optional<PrgValue> evaluate_path_function(
     if (function == "justfname" && !arguments.empty()) {
         return make_string_value(portable_path_filename(value_as_string(arguments[0])));
     }
+    if (function == "justpath" && !arguments.empty()) {
+        return make_string_value(portable_path_parent(value_as_string(arguments[0])));
+    }
     if (function == "juststem" && !arguments.empty()) {
         return make_string_value(portable_path_stem(value_as_string(arguments[0])));
     }

@@ -35,6 +35,14 @@ namespace
             "not_em = EMPTY('hi')\n"
             "nvl_result = NVL('', 'fallback')\n"
             "nvl_ok = NVL('value', 'fallback')\n"
+            "isdigit_yes = ISDIGIT('5abc')\n"
+            "isdigit_no = ISDIGIT('abc')\n"
+            "isalpha_yes = ISALPHA('abc')\n"
+            "isalpha_no = ISALPHA('5abc')\n"
+            "islower_yes = ISLOWER('abc')\n"
+            "islower_no = ISLOWER('ABC')\n"
+            "isupper_yes = ISUPPER('ABC')\n"
+            "isupper_no = ISUPPER('abc')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -64,6 +72,14 @@ namespace
         check("not_em", "false");
         check("nvl_result", "");
         check("nvl_ok", "value");
+        check("isdigit_yes", "true");
+        check("isdigit_no", "false");
+        check("isalpha_yes", "true");
+        check("isalpha_no", "false");
+        check("islower_yes", "true");
+        check("islower_no", "false");
+        check("isupper_yes", "true");
+        check("isupper_no", "false");
 
         fs::remove_all(temp_root, ignored);
     }
