@@ -211,6 +211,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: Runtime source-size cleanup continued by extracting portable path expression helpers into dedicated `prg_engine_path_functions` sources. The focused path regression target guards `FULLPATH()`, `JUST*`, `FORCE*`, and `ADDBS()` behavior while `prg_engine_expression.inl` drops to roughly 1.5K lines.
 
+- 2026-04-21: Date/time conversion parity gained compact sortable datetime input support for `CTOT()` and `TTOD()`. Focused `test_prg_engine_date_time_functions` coverage now accepts `YYYYMMDDHHMMSS` input and normalizes it to `MM/DD/YYYY HH:MM:SS` or `MM/DD/YYYY` output respectively.
+
 - 2026-04-21: Runtime source-size cleanup continued by extracting numeric math expression helpers into dedicated `prg_engine_numeric_functions` sources. The focused string/math regression target guards the move while `prg_engine_expression.inl` drops to roughly 1.5K lines.
 
 - 2026-04-21: `STREXTRACT()` expression parity tightened with focused TDD coverage against the Visual FoxPro flag semantics: bit `1` enables case-insensitive delimiter search, bit `2` allows a missing end delimiter to return the trailing content, and bit `4` includes delimiters in the returned expression.

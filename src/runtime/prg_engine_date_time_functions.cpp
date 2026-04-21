@@ -19,6 +19,37 @@ bool valid_runtime_date(int year, int month, int day) {
     return max_day != 0 && day >= 1 && day <= max_day;
 }
 
+bool parse_sortable_datetime(
+    const std::string& value,
+    int& year,
+    int& month,
+    int& day,
+    int& hour,
+    int& minute,
+    int& second) {
+    const std::string source = trim_copy(value);
+    if (source.size() != 14U ||
+        !std::all_of(source.begin(), source.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+        return false;
+    }
+
+    try {
+        year = std::stoi(source.substr(0U, 4U));
+        month = std::stoi(source.substr(4U, 2U));
+        day = std::stoi(source.substr(6U, 2U));
+        hour = std::stoi(source.substr(8U, 2U));
+        minute = std::stoi(source.substr(10U, 2U));
+        second = std::stoi(source.substr(12U, 2U));
+    } catch (...) {
+        return false;
+    }
+
+    return valid_runtime_date(year, month, day) &&
+           hour >= 0 && hour <= 23 &&
+           minute >= 0 && minute <= 59 &&
+           second >= 0 && second <= 59;
+}
+
 std::string format_sortable_datetime(int year, int month, int day, int hour, int minute, int second) {
     std::ostringstream stream;
     stream << std::setfill('0')
@@ -394,7 +425,9 @@ std::optional<PrgValue> evaluate_date_time_function(
         int hour = 0;
         int minute = 0;
         int second = 0;
-        if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+        const std::string value = value_as_string(arguments[0]);
+        if (!parse_runtime_datetime_string(value, year, month, day, hour, minute, second) &&
+            !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
             return make_string_value(std::string{});
         }
         return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
@@ -415,7 +448,9 @@ std::optional<PrgValue> evaluate_date_time_function(
         int hour = 0;
         int minute = 0;
         int second = 0;
-        if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+        const std::string value = value_as_string(arguments[0]);
+        if (!parse_runtime_datetime_string(value, year, month, day, hour, minute, second) &&
+            !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
             return make_string_value(std::string{});
         }
         return make_string_value(format_runtime_date_string(year, month, day));

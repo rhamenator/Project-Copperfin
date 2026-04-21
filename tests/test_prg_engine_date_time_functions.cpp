@@ -41,7 +41,9 @@ namespace
             "mdy_value = MDY(4, 18, 2026)\n"
             "dtot_value = DTOT(CTOD('04/18/2026'))\n"
             "ttod_value = TTOD('04/18/2026 13:45:56')\n"
+            "ttod_compact_datetime = TTOD('20260418134556')\n"
             "ctot_value = CTOT('04/18/2026 13:45:56')\n"
+            "ctot_compact_datetime = CTOT('20260418134556')\n"
             "hour_value = HOUR('04/18/2026 13:45:56')\n"
             "minute_value = MINUTE('04/18/2026 13:45:56')\n"
             "sec_value = SEC('04/18/2026 13:45:56')\n"
@@ -131,7 +133,9 @@ namespace
         check("mdy_value", "04/18/2026");
         check("dtot_value", "04/18/2026 00:00:00");
         check("ttod_value", "04/18/2026");
+        check("ttod_compact_datetime", "04/18/2026");
         check("ctot_value", "04/18/2026 13:45:56");
+        check("ctot_compact_datetime", "04/18/2026 13:45:56");
         check("hour_value", "13");
         check("minute_value", "45");
         check("sec_value", "56");
