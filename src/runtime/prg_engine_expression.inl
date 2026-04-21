@@ -10,6 +10,11 @@
         const std::string& function,
         const std::vector<PrgValue>& arguments,
         bool exact_string_compare);
+    std::optional<PrgValue> evaluate_type_function(
+        const std::string& function,
+        const std::vector<PrgValue>& arguments,
+        const std::function<bool(const std::string&)>& array_exists_callback,
+        const std::function<PrgValue(const std::string&)>& eval_expression_callback);
 
     namespace
     {
@@ -1016,76 +1021,9 @@
                     }
                     return make_string_value(std::string{});
                 }
-                // --- Type / null functions ---
-                if (function == "empty" && !arguments.empty())
+                if (const auto type_result = evaluate_type_function(function, arguments, array_exists_callback_, eval_expression_callback_))
                 {
-                    const PrgValue &v = arguments[0];
-                    if (v.kind == PrgValueKind::empty)
-                        return make_boolean_value(true);
-                    if (v.kind == PrgValueKind::string)
-                        return make_boolean_value(trim_copy(v.string_value).empty());
-                    if (v.kind == PrgValueKind::number)
-                        return make_boolean_value(std::abs(v.number_value) < 0.000001);
-                    if (v.kind == PrgValueKind::boolean)
-                        return make_boolean_value(!v.boolean_value);
-                    if (v.kind == PrgValueKind::int64)
-                        return make_boolean_value(v.int64_value == 0);
-                    if (v.kind == PrgValueKind::uint64)
-                        return make_boolean_value(v.uint64_value == 0U);
-                    return make_boolean_value(true);
-                }
-                if ((function == "isnull" || function == "isempty") && !arguments.empty())
-                {
-                    return make_boolean_value(arguments[0].kind == PrgValueKind::empty);
-                }
-                if (function == "vartype" && !arguments.empty())
-                {
-                    const PrgValue &v = arguments[0];
-                    if (v.kind == PrgValueKind::empty)
-                        return make_string_value("U");
-                    if (v.kind == PrgValueKind::boolean)
-                        return make_string_value("L");
-                    if (v.kind == PrgValueKind::number)
-                        return make_string_value("N");
-                    if (v.kind == PrgValueKind::int64)
-                        return make_string_value("I");
-                    if (v.kind == PrgValueKind::uint64)
-                        return make_string_value("I");
-                    return make_string_value("C");
-                }
-                if (function == "type" && !arguments.empty())
-                {
-                    const std::string expr = trim_copy(value_as_string(arguments[0]));
-                    if (is_bare_identifier_text(expr) && array_exists_callback_(expr))
-                    {
-                        return make_string_value("A");
-                    }
-                    const PrgValue result = eval_expression_callback_(expr);
-                    if (result.kind == PrgValueKind::empty)
-                        return make_string_value("U");
-                    if (result.kind == PrgValueKind::boolean)
-                        return make_string_value("L");
-                    if (result.kind == PrgValueKind::number)
-                        return make_string_value("N");
-                    if (result.kind == PrgValueKind::int64)
-                        return make_string_value("I");
-                    if (result.kind == PrgValueKind::uint64)
-                        return make_string_value("I");
-                    return make_string_value("C");
-                }
-                // --- Conditional / coalesce ---
-                if (function == "iif" && arguments.size() >= 3U)
-                {
-                    return value_as_bool(arguments[0]) ? arguments[1] : arguments[2];
-                }
-                if (function == "nvl" && arguments.size() >= 2U)
-                {
-                    return arguments[0].kind == PrgValueKind::empty ? arguments[1] : arguments[0];
-                }
-                if (function == "between" && arguments.size() >= 3U)
-                {
-                    const double v = value_as_number(arguments[0]);
-                    return make_boolean_value(v >= value_as_number(arguments[1]) && v <= value_as_number(arguments[2]));
+                    return *type_result;
                 }
                 // --- Numeric math ---
                 if (function == "int" && !arguments.empty())

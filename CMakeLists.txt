@@ -98,6 +98,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_runtime_config.cpp
     src/runtime/prg_engine_string_functions.cpp
     src/runtime/prg_engine_table_structure_helpers.cpp
+    src/runtime/prg_engine_type_functions.cpp
     src/runtime/xasset_methods.cpp
 )
 

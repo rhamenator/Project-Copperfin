@@ -213,6 +213,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: Focused expression-function test splitting continued by moving runtime-surface utility coverage (`EVALUATE()`, `TRANSFORM()`, `TYPE()`, and `SET()`) into dedicated `test_prg_engine_runtime_surface_functions`. The original `test_prg_engine_functions` target is now narrowed to type/null helper coverage.
 
+- 2026-04-21: Runtime source-size cleanup continued by extracting type/null and simple conditional expression helpers into dedicated `prg_engine_type_functions` sources. The now-narrow `test_prg_engine_functions` target guards `EMPTY()`, `VARTYPE()`, `NVL()`, and related behavior while `prg_engine_expression.inl` drops to roughly 1.6K lines.
+
 - 2026-04-21: Expression `PADL()` / `PADR()` / `PADC()` truncation parity tightened with focused TDD coverage in `test_prg_engine_string_math_functions`. `PADL()` now keeps the rightmost characters on overflow, `PADR()` keeps the leftmost characters, and `PADC()` keeps the centered slice while preserving existing default/custom padding behavior.
 
 - 2026-04-21: Focused expression-function test splitting continued by moving aggregate `TO ARRAY` coverage into dedicated `test_prg_engine_aggregate_array_functions`. The mixed `test_prg_engine_functions` target now keeps only type/null and runtime-surface expression coverage.
