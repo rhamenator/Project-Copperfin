@@ -373,11 +373,19 @@ namespace
             "eomonth_minus = EOMONTH('03/10/2026', -1)\n"
             "dtos_compact = DTOS('20260418')\n"
             "ctod_invalid = CTOD('not-a-date')\n"
+            "ctod_trailing_invalid = CTOD('04/18/2026junk')\n"
+            "ctod_compact_trailing_invalid = CTOD('20260418junk')\n"
             "ttoc_date = TTOC('20260418')\n"
             "ttoj_value = TTOJ('04/18/2026')\n"
+            "ttoj_datetime = TTOJ('04/18/2026 13:45:56')\n"
+            "ttoj_invalid = TTOJ('not-a-date')\n"
             "jtot_value = JTOT(ttoj_value)\n"
+            "jtot_invalid = JTOT(0)\n"
             "dtoj_value = DTOJ('04/18/2026')\n"
+            "dtoj_invalid = DTOJ('not-a-date')\n"
+            "dtoj_trailing_invalid = DTOJ('04/18/2026junk')\n"
             "jtod_value = JTOD(dtoj_value)\n"
+            "jtod_invalid = JTOD(0)\n"
             "dmy_value = DMY(18, 4, 2026)\n"
             "dmy_invalid = DMY(31, 2, 2026)\n"
             "isleap_2024 = ISLEAPYEAR(2024)\n"
@@ -452,11 +460,19 @@ namespace
         check("eomonth_minus", "02/28/2026");
         check("dtos_compact", "20260418");
         check("ctod_invalid", "");
+        check("ctod_trailing_invalid", "");
+        check("ctod_compact_trailing_invalid", "");
         check("ttoc_date", "04/18/2026 00:00:00");
         check("ttoj_value", "2460447");
+        check("ttoj_datetime", "2460447");
+        check("ttoj_invalid", "0");
         check("jtot_value", "04/18/2026");
+        check("jtot_invalid", "");
         check("dtoj_value", "2460447");
+        check("dtoj_invalid", "0");
+        check("dtoj_trailing_invalid", "0");
         check("jtod_value", "04/18/2026");
+        check("jtod_invalid", "");
         check("dmy_value", "04/18/2026");
         check("dmy_invalid", "");
         check("isleap_2024", "true");

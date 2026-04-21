@@ -1875,15 +1875,26 @@
                 if ((function == "ttoj" || function == "dtoj") && !arguments.empty())
                 {
                     int year = 0, month = 0, day = 0;
-                    if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    if (function == "ttoj")
+                    {
+                        int hour = 0, minute = 0, second = 0;
+                        if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second))
+                            return make_number_value(0.0);
+                    }
+                    else if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    {
                         return make_number_value(0.0);
+                    }
                     return make_number_value(static_cast<double>(date_to_julian(year, month, day)));
                 }
                 if ((function == "jtot" || function == "jtod") && !arguments.empty())
                 {
                     int julian = static_cast<int>(value_as_number(arguments[0]));
                     int year = 0, month = 0, day = 0;
-                    julian_to_date(julian, year, month, day);
+                    if (!julian_to_runtime_date(julian, year, month, day))
+                    {
+                        return make_string_value(std::string{});
+                    }
                     return make_string_value(format_runtime_date_string(year, month, day));
                 }
                 if (function == "dmy" && arguments.size() >= 3U)

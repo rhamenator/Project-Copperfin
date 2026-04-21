@@ -752,6 +752,18 @@ void julian_to_date(int julian, int& year, int& month, int& day) {
     year = 100 * (n - 49) + i + l;
 }
 
+bool julian_to_runtime_date(int julian, int& year, int& month, int& day) {
+    static const int kMinimumJulian = date_to_julian(1, 1, 1);
+    static const int kMaximumJulian = date_to_julian(9999, 12, 31);
+    if (julian < kMinimumJulian || julian > kMaximumJulian) {
+        return false;
+    }
+
+    julian_to_date(julian, year, month, day);
+    const int max_day = days_in_month(year, month);
+    return max_day > 0 && day >= 1 && day <= max_day;
+}
+
 std::size_t portable_path_separator_position(const std::string& path) {
     const std::size_t slash = path.find_last_of('/');
     const std::size_t backslash = path.find_last_of('\\');
@@ -886,12 +898,15 @@ bool parse_runtime_date_string(const std::string& raw, int& year, int& month, in
             while (year_end < value.size() && std::isdigit(static_cast<unsigned char>(value[year_end])) != 0) {
                 ++year_end;
             }
+            if (year_end != value.size()) {
+                return false;
+            }
             year = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
         } catch (...) {
             return false;
         }
     } else {
-        if (value.size() < 8U) {
+        if (value.size() != 8U) {
             return false;
         }
         for (std::size_t index = 0U; index < 8U; ++index) {

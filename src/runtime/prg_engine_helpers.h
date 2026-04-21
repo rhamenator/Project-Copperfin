@@ -47,6 +47,7 @@ std::string value_as_string(const PrgValue& value);
 
 int date_to_julian(int year, int month, int day);
 void julian_to_date(int julian, int& year, int& month, int& day);
+bool julian_to_runtime_date(int julian, int& year, int& month, int& day);
 std::size_t portable_path_separator_position(const std::string& path);
 std::string portable_path_drive(const std::string& path);
 std::string portable_path_parent(const std::string& path);
