@@ -325,6 +325,11 @@ namespace
         write_text(
             main_path,
             "d = CTOD('04/18/2026')\n"
+            "date_ctor = DATE(2026, 4, 18)\n"
+            "date_ctor_invalid = DATE(2026, 2, 31)\n"
+            "datetime_ctor = DATETIME(2026, 4, 18, 13, 45, 56)\n"
+            "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
+            "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
             "dow_default = DOW(d)\n"
             "dow_monday = DOW(d, 2)\n"
             "day_name = CDOW(d)\n"
@@ -388,6 +393,11 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
+        check("date_ctor", "04/18/2026");
+        check("date_ctor_invalid", "");
+        check("datetime_ctor", "04/18/2026 13:45:56");
+        check("datetime_ctor_partial", "04/18/2026 00:00:00");
+        check("datetime_ctor_invalid", "");
         check("dow_default", "7");
         check("dow_monday", "6");
         check("day_name", "Saturday");

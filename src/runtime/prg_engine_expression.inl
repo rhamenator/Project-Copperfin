@@ -1364,6 +1364,19 @@
                 // --- Date / time helpers ---
                 if (function == "date")
                 {
+                    if (arguments.size() >= 3U)
+                    {
+                        const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                        const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
+                        const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
+                        const int max_day = days_in_month(year, month);
+                        if (max_day == 0 || day < 1 || day > max_day)
+                        {
+                            return make_string_value(std::string{});
+                        }
+                        return make_string_value(format_runtime_date_string(year, month, day));
+                    }
+
                     const auto now = std::chrono::system_clock::now();
                     const auto tt = std::chrono::system_clock::to_time_t(now);
                     const std::tm local_tm = local_time_from_time_t(tt);
@@ -1388,6 +1401,24 @@
                 }
                 if (function == "datetime")
                 {
+                    if (arguments.size() >= 3U)
+                    {
+                        const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                        const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
+                        const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
+                        const int hour = arguments.size() >= 4U ? static_cast<int>(std::llround(value_as_number(arguments[3]))) : 0;
+                        const int minute = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+                        const int second = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
+
+                        const int max_day = days_in_month(year, month);
+                        if (max_day == 0 || day < 1 || day > max_day ||
+                            hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59)
+                        {
+                            return make_string_value(std::string{});
+                        }
+                        return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                    }
+
                     const auto now = std::chrono::system_clock::now();
                     const auto tt = std::chrono::system_clock::to_time_t(now);
                     const std::tm local_tm = local_time_from_time_t(tt);
