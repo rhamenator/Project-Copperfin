@@ -1643,6 +1643,25 @@
                            << std::setw(2) << day;
                     return make_string_value(stream.str());
                 }
+                if (function == "stod" && !arguments.empty())
+                {
+                    const std::string source = trim_copy(value_as_string(arguments[0]));
+                    if (source.size() != 8U ||
+                        !std::all_of(source.begin(), source.end(), [](unsigned char ch)
+                                     { return std::isdigit(ch) != 0; }))
+                    {
+                        return make_string_value(std::string{});
+                    }
+
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (!parse_runtime_date_string(source, year, month, day))
+                    {
+                        return make_string_value(std::string{});
+                    }
+                    return make_string_value(format_runtime_date_string(year, month, day));
+                }
                 if (function == "ctod" && !arguments.empty())
                 {
                     int year = 0;
@@ -1681,6 +1700,30 @@
                     if (parse_runtime_date_string(value, year, month, day))
                     {
                         return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+                    }
+                    return make_string_value(std::string{});
+                }
+                if (function == "ttos" && !arguments.empty())
+                {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    int hour = 0;
+                    int minute = 0;
+                    int second = 0;
+                    const std::string value = value_as_string(arguments[0]);
+                    if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second) ||
+                        parse_runtime_date_string(value, year, month, day))
+                    {
+                        std::ostringstream stream;
+                        stream << std::setfill('0')
+                               << std::setw(4) << year
+                               << std::setw(2) << month
+                               << std::setw(2) << day
+                               << std::setw(2) << hour
+                               << std::setw(2) << minute
+                               << std::setw(2) << second;
+                        return make_string_value(stream.str());
                     }
                     return make_string_value(std::string{});
                 }
