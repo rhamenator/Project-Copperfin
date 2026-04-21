@@ -417,6 +417,66 @@ if(COPPERFIN_BUILD_TESTS)
 
     add_test(NAME test_prg_engine COMMAND $<TARGET_FILE:test_prg_engine>)
 
+    add_executable(test_prg_engine_work_areas
+        tests/test_prg_engine_work_areas.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_work_areas PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_work_areas PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_work_areas PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_work_areas COMMAND $<TARGET_FILE:test_prg_engine_work_areas>)
+
+    add_executable(test_prg_engine_seek_index
+        tests/test_prg_engine_seek_index.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_seek_index PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_seek_index PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_seek_index PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_seek_index COMMAND $<TARGET_FILE:test_prg_engine_seek_index>)
+
+    add_executable(test_prg_engine_control_flow
+        tests/test_prg_engine_control_flow.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_control_flow PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_control_flow PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_control_flow PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_control_flow COMMAND $<TARGET_FILE:test_prg_engine_control_flow>)
+
+    add_executable(test_prg_engine_data_io
+        tests/test_prg_engine_data_io.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_data_io PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_data_io PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_data_io PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_data_io COMMAND $<TARGET_FILE:test_prg_engine_data_io>)
+
     add_executable(test_prg_engine_arrays
         tests/test_prg_engine_arrays.cpp
         tests/prg_engine_test_support.cpp
