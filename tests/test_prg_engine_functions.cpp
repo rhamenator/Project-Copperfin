@@ -58,6 +58,10 @@ namespace
             "chrtranc_value = CHRTRANC('aAbBcc', 'AB', 'xy')\n"
             "chrtranc_delete = CHRTRANC('Alpha Beta', 'AE', 'x')\n"
             "proper_value = PROPER('legacy fox-pro APP')\n"
+            "str_default = STR(42.7)\n"
+            "str_width = STR(42, 5)\n"
+            "str_decimals = STR(42.678, 8, 2)\n"
+            "str_overflow = STR(123456, 3)\n"
             "like_hit = LIKE('A?C*', 'abc legacy')\n"
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
@@ -117,6 +121,10 @@ namespace
         check("chrtranc_value", "xxyycc");
         check("chrtranc_delete", "xlphx Btx");
         check("proper_value", "Legacy Fox-Pro App");
+        check("str_default", "43");
+        check("str_width", "   42");
+        check("str_decimals", "   42.68");
+        check("str_overflow", "***");
         check("like_hit", "true");
         check("like_miss", "false");
         check("inlist_hit", "true");

@@ -774,9 +774,28 @@
                 }
                 if (function == "str" && !arguments.empty())
                 {
+                    const int decimals = arguments.size() >= 3U
+                                             ? static_cast<int>(std::max(0.0, value_as_number(arguments[2])))
+                                             : 0;
                     std::ostringstream stream;
-                    stream << std::llround(value_as_number(arguments[0]));
-                    return make_string_value(stream.str());
+                    stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
+                    std::string result = stream.str();
+                    if (arguments.size() >= 2U)
+                    {
+                        const int width = static_cast<int>(std::llround(value_as_number(arguments[1])));
+                        if (width > 0)
+                        {
+                            if (result.size() > static_cast<std::size_t>(width))
+                            {
+                                return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
+                            }
+                            if (result.size() < static_cast<std::size_t>(width))
+                            {
+                                result.insert(result.begin(), static_cast<std::size_t>(width) - result.size(), ' ');
+                            }
+                        }
+                    }
+                    return make_string_value(std::move(result));
                 }
                 if (function == "transform" && !arguments.empty())
                 {
