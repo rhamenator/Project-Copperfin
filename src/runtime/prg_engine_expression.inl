@@ -1529,6 +1529,73 @@
                     }
                     return make_number_value(0.0);
                 }
+                if (function == "quarter" && !arguments.empty())
+                {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    {
+                        return make_number_value(0.0);
+                    }
+                    const int quarter = ((month - 1) / 3) + 1;
+                    return make_number_value(static_cast<double>(quarter));
+                }
+                if (function == "week" && !arguments.empty())
+                {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    {
+                        return make_number_value(0.0);
+                    }
+
+                    int first_day = 1;
+                    if (arguments.size() >= 2U)
+                    {
+                        first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
+                        if (first_day < 1 || first_day > 7)
+                        {
+                            first_day = 1;
+                        }
+                    }
+
+                    const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
+                    const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
+                    const int offset = (jan1_weekday - first_day + 7) % 7;
+                    const int week_number = ((day_of_year + offset - 1) / 7) + 1;
+                    return make_number_value(static_cast<double>(week_number));
+                }
+                if (function == "eomonth" && !arguments.empty())
+                {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day))
+                    {
+                        return make_string_value(std::string{});
+                    }
+
+                    long long delta = 0;
+                    if (arguments.size() >= 2U)
+                    {
+                        delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+                    }
+
+                    long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
+                    long long adjusted_year = month_index / 12LL;
+                    long long adjusted_month_index = month_index % 12LL;
+                    if (adjusted_month_index < 0LL)
+                    {
+                        adjusted_month_index += 12LL;
+                        --adjusted_year;
+                    }
+
+                    const int adjusted_month = static_cast<int>(adjusted_month_index + 1LL);
+                    const int adjusted_day = days_in_month(static_cast<int>(adjusted_year), adjusted_month);
+                    return make_string_value(format_runtime_date_string(static_cast<int>(adjusted_year), adjusted_month, adjusted_day));
+                }
                 if (function == "dtos" && !arguments.empty())
                 {
                     int year = 0;

@@ -348,6 +348,13 @@ namespace
             "year_compact = YEAR('20260418')\n"
             "month_compact = MONTH('20260418')\n"
             "day_compact = DAY('20260418')\n"
+            "quarter_value = QUARTER('04/18/2026')\n"
+            "quarter_compact = QUARTER('20261231')\n"
+            "week_value = WEEK('04/18/2026')\n"
+            "week_monday = WEEK('01/05/2026', 2)\n"
+            "eomonth_value = EOMONTH('04/18/2026')\n"
+            "eomonth_plus = EOMONTH('01/10/2026', 1)\n"
+            "eomonth_minus = EOMONTH('03/10/2026', -1)\n"
             "dtos_compact = DTOS('20260418')\n"
             "ctod_invalid = CTOD('not-a-date')\n"
             "ttoc_date = TTOC('20260418')\n"
@@ -404,6 +411,13 @@ namespace
         check("year_compact", "2026");
         check("month_compact", "4");
         check("day_compact", "18");
+        check("quarter_value", "2");
+        check("quarter_compact", "4");
+        check("week_value", "16");
+        check("week_monday", "2");
+        check("eomonth_value", "04/30/2026");
+        check("eomonth_plus", "02/28/2026");
+        check("eomonth_minus", "02/28/2026");
         check("dtos_compact", "20260418");
         check("ctod_invalid", "");
         check("ttoc_date", "04/18/2026 00:00:00");
