@@ -360,9 +360,15 @@ std::optional<PrgValue> evaluate_date_time_function(
         int second = 0;
         const std::string value = value_as_string(arguments[0]);
         if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second)) {
+            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+                return make_string_value(format_sortable_datetime(year, month, day, hour, minute, second));
+            }
             return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
         }
         if (parse_runtime_date_string(value, year, month, day)) {
+            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+                return make_string_value(format_sortable_datetime(year, month, day, 0, 0, 0));
+            }
             return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
         }
         return make_string_value(std::string{});

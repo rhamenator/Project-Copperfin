@@ -215,6 +215,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: Runtime source-size cleanup continued by extracting the main string helper expression dispatch into dedicated `prg_engine_string_functions` sources. The focused string/math regression target guards the move while reducing `prg_engine_expression.inl` by another roughly 270 lines.
 
+- 2026-04-21: `TTOC()` expression conversion parity gained focused compact output support: `TTOC(datetime, 1)` now returns deterministic `YYYYMMDDHHMMSS` output while preserving default normalized datetime behavior.
+
 - 2026-04-21: Expression `STR()` gained first-pass width/decimal formatting parity under focused TDD coverage. The runtime now honors `STR(value, width)`, `STR(value, width, decimals)`, right-justifies into the requested width, rounds fixed decimals, and emits asterisks for overflow.
 
 - 2026-04-21: Focused expression-function test splitting continued by moving string/math helper coverage into dedicated `test_prg_engine_string_math_functions`. The split isolates the `LEN`/`LEFT`/`RIGHT`/case/trim/math/search/word/`STR()` utility batch from the remaining aggregate and runtime-surface coverage.
