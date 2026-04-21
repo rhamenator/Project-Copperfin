@@ -1169,7 +1169,7 @@
                     const std::string src = value_as_string(arguments[0]);
                     const std::string delim = (arguments.size() >= (function == "getwordcount" ? 2U : 3U))
                                                   ? value_as_string(arguments[function == "getwordcount" ? 1U : 2U])
-                                                  : std::string{" "};
+                                                  : std::string{" \t\r\n"};
                     if (delim.empty())
                     {
                         return function == "getwordcount" ? make_number_value(1.0) : make_string_value(src);
@@ -1178,13 +1178,18 @@
                     std::size_t start = 0U;
                     while (start < src.size())
                     {
-                        const std::size_t end = src.find(delim, start);
-                        const std::string word = end == std::string::npos ? src.substr(start) : src.substr(start, end - start);
-                        if (!word.empty())
-                            words.push_back(word);
-                        if (end == std::string::npos)
+                        start = src.find_first_not_of(delim, start);
+                        if (start == std::string::npos)
+                        {
                             break;
-                        start = end + delim.size();
+                        }
+                        const std::size_t end = src.find_first_of(delim, start);
+                        words.push_back(end == std::string::npos ? src.substr(start) : src.substr(start, end - start));
+                        if (end == std::string::npos)
+                        {
+                            break;
+                        }
+                        start = end + 1U;
                     }
                     if (function == "getwordcount")
                     {

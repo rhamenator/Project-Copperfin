@@ -213,6 +213,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: Focused expression-function test splitting continued by moving string/math helper coverage into dedicated `test_prg_engine_string_math_functions`. The split isolates the `LEN`/`LEFT`/`RIGHT`/case/trim/math/search/word/`STR()` utility batch from the remaining aggregate and runtime-surface coverage.
 
+- 2026-04-21: `GETWORDCOUNT()` / `GETWORDNUM()` expression parity tightened with focused TDD coverage. Delimiter arguments now behave as delimiter-character sets instead of one literal delimiter substring, and default delimiters now include common whitespace such as tabs and line breaks.
+
 - 2026-04-21: Runtime source-size cleanup continued by extracting expression date/time helper dispatch from `prg_engine_expression.inl` into dedicated `prg_engine_date_time_functions` sources. The move keeps the existing focused `test_prg_engine_functions` date/time coverage as the regression guard while reducing the expression parser include by roughly 545 lines.
 
 - 2026-04-21: Focused expression-function test splitting continued by moving date/time expression regressions into a dedicated `test_prg_engine_date_time_functions` target. The original `test_prg_engine_functions` target now keeps the remaining path/string/math/type/null/aggregate/runtime-surface batches smaller, while the date/time target owns constructor, conversion, week, Julian, and invalid-input coverage.

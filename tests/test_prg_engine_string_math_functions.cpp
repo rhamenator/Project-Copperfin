@@ -65,10 +65,14 @@ namespace
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
             "inlist_miss = INLIST(4, 1, 2, 3)\n"
-                "getwordcount_1 = GETWORDCOUNT('one two three')\n"
-                "getwordcount_2 = GETWORDCOUNT('a,b,c', ',')\n"
-                "getwordnum_1 = GETWORDNUM('one two three', 2)\n"
-                "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
+            "getwordcount_1 = GETWORDCOUNT('one two three')\n"
+            "getwordcount_2 = GETWORDCOUNT('a,b,c', ',')\n"
+            "getwordcount_multi_delim = GETWORDCOUNT('a,b;c', ',;')\n"
+            "getwordcount_tab = GETWORDCOUNT('one' + CHR(9) + 'two')\n"
+            "getwordnum_1 = GETWORDNUM('one two three', 2)\n"
+            "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
+            "getwordnum_multi_delim = GETWORDNUM('a,b;c', 3, ',;')\n"
+            "getwordnum_tab = GETWORDNUM('one' + CHR(9) + 'two', 2)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -130,8 +134,12 @@ namespace
         check("inlist_miss", "false");
         check("getwordcount_1", "3");
         check("getwordcount_2", "3");
+        check("getwordcount_multi_delim", "3");
+        check("getwordcount_tab", "2");
         check("getwordnum_1", "two");
         check("getwordnum_2", "c");
+        check("getwordnum_multi_delim", "c");
+        check("getwordnum_tab", "two");
 
         fs::remove_all(temp_root, ignored);
     }
