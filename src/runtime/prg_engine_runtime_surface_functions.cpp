@@ -2,6 +2,7 @@
 
 #include "prg_engine_helpers.h"
 
+#include <filesystem>
 #include <cmath>
 #include <cstdint>
 
@@ -10,7 +11,67 @@ namespace copperfin::runtime {
 std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
-    const std::vector<std::string>& raw_arguments) {
+    const std::vector<std::string>& raw_arguments,
+    const std::string& default_directory,
+    const std::string& frame_file_path,
+    const std::string& last_error_message,
+    int last_error_code,
+    const std::string& last_error_procedure,
+    std::size_t last_error_line,
+    const std::string& error_handler,
+    const std::function<int(const std::string&)>& aerror_callback,
+    const std::function<PrgValue(const std::string&)>& eval_expression_callback,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    if (function == "file" && !arguments.empty()) {
+        std::filesystem::path path(value_as_string(arguments[0]));
+        if (path.is_relative()) {
+            path = std::filesystem::path(default_directory) / path;
+        }
+        return make_boolean_value(std::filesystem::exists(path));
+    }
+    if (function == "sys") {
+        if (!arguments.empty()) {
+            const long long sys_code = std::llround(value_as_number(arguments[0]));
+            if (sys_code == 16) {
+                return make_string_value(frame_file_path);
+            }
+            if (sys_code == 2018) {
+                return make_string_value(uppercase_copy(runtime_error_parameter(last_error_message)));
+            }
+        }
+        return make_string_value("0");
+    }
+    if (function == "message") {
+        return make_string_value(last_error_message);
+    }
+    if (function == "aerror" && !raw_arguments.empty()) {
+        return make_number_value(static_cast<double>(aerror_callback(raw_arguments[0])));
+    }
+    if ((function == "eval" || function == "evaluate") && !arguments.empty()) {
+        return eval_expression_callback(value_as_string(arguments[0]));
+    }
+    if (function == "set" && !arguments.empty()) {
+        return make_string_value(set_callback(value_as_string(arguments[0])));
+    }
+    if (function == "error") {
+        return make_number_value(static_cast<double>(last_error_code));
+    }
+    if (function == "program") {
+        return make_string_value(last_error_procedure);
+    }
+    if (function == "lineno") {
+        return make_number_value(static_cast<double>(last_error_line));
+    }
+    if (function == "version") {
+        return make_number_value(arguments.empty() ? 9.0 : 0.0);
+    }
+    if (function == "on" && !arguments.empty()) {
+        return make_string_value(uppercase_copy(value_as_string(arguments[0])) == "ERROR" ? error_handler : std::string{});
+    }
+    if (function == "messagebox" && !arguments.empty()) {
+        return make_number_value(1.0);
+    }
+
     if (function == "cast" && !arguments.empty()) {
         std::string type_name;
         if (!raw_arguments.empty()) {

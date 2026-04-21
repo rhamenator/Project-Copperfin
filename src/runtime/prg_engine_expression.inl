@@ -25,7 +25,17 @@
     std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
-        const std::vector<std::string>& raw_arguments);
+        const std::vector<std::string>& raw_arguments,
+        const std::string& default_directory,
+        const std::string& frame_file_path,
+        const std::string& last_error_message,
+        int last_error_code,
+        const std::string& last_error_procedure,
+        std::size_t last_error_line,
+        const std::string& error_handler,
+        const std::function<int(const std::string&)>& aerror_callback,
+        const std::function<PrgValue(const std::string&)>& eval_expression_callback,
+        const std::function<std::string(const std::string&)>& set_callback);
 
     namespace
     {
@@ -621,75 +631,6 @@
                     }
                     return callfn_callback_(handle, call_arguments);
                 }
-                if (function == "file" && !arguments.empty())
-                {
-                    std::filesystem::path path(value_as_string(arguments[0]));
-                    if (path.is_relative())
-                    {
-                        path = std::filesystem::path(default_directory_) / path;
-                    }
-                    return make_boolean_value(std::filesystem::exists(path));
-                }
-                if (function == "sys")
-                {
-                    if (!arguments.empty())
-                    {
-                        const long long sys_code = std::llround(value_as_number(arguments[0]));
-                        if (sys_code == 16)
-                        {
-                            return make_string_value(frame_.file_path);
-                        }
-                        if (sys_code == 2018)
-                        {
-                            return make_string_value(uppercase_copy(runtime_error_parameter(last_error_message_)));
-                        }
-                    }
-                    return make_string_value("0");
-                }
-                if (function == "message")
-                {
-                    return make_string_value(last_error_message_);
-                }
-                if (function == "aerror" && !raw_arguments.empty())
-                {
-                    return make_number_value(static_cast<double>(aerror_callback_(raw_arguments[0])));
-                }
-                if (function == "eval" && !arguments.empty())
-                {
-                    return eval_expression_callback_(value_as_string(arguments[0]));
-                }
-                if (function == "evaluate" && !arguments.empty())
-                {
-                    return eval_expression_callback_(value_as_string(arguments[0]));
-                }
-                if (function == "set" && !arguments.empty())
-                {
-                    return make_string_value(set_callback_(value_as_string(arguments[0])));
-                }
-                if (function == "error")
-                {
-                    return make_number_value(static_cast<double>(last_error_code_));
-                }
-                if (function == "program")
-                {
-                    return make_string_value(last_error_procedure_);
-                }
-                if (function == "lineno")
-                {
-                    return make_number_value(static_cast<double>(last_error_line_));
-                }
-                if (function == "version")
-                {
-                    return make_number_value(arguments.empty() ? 9.0 : 0.0);
-                }
-                if (function == "on" && !arguments.empty())
-                {
-                    return make_string_value(uppercase_copy(value_as_string(arguments[0])) == "ERROR" ? error_handler_ : std::string{});
-                }
-                if (function == "messagebox" && !arguments.empty())
-                {
-                    return make_number_value(1.0);
-                }
                 if (function == "createobject" && !arguments.empty())
                 {
                     const std::string prog_id = value_as_string(arguments[0]);
@@ -789,7 +730,19 @@
                     return *path_result;
                 }
                 if (const auto runtime_surface_result =
-                        evaluate_runtime_surface_function(function, arguments, raw_arguments))
+                        evaluate_runtime_surface_function(function,
+                                                          arguments,
+                                                          raw_arguments,
+                                                          default_directory_,
+                                                          frame_.file_path,
+                                                          last_error_message_,
+                                                          last_error_code_,
+                                                          last_error_procedure_,
+                                                          last_error_line_,
+                                                          error_handler_,
+                                                          aerror_callback_,
+                                                          eval_expression_callback_,
+                                                          set_callback_))
                 {
                     return *runtime_surface_result;
                 }

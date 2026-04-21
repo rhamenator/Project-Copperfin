@@ -27,10 +27,15 @@ namespace
         write_text(
             main_path,
             "x = 5\n"
+            "cExistingFile = 'runtime_surface_extensions.prg'\n"
             "DIMENSION aValues[2]\n"
             "aValues[1] = 'A'\n"
             "aValues[2] = 'B'\n"
+            "lFileHit = FILE(cExistingFile)\n"
+            "lFileMiss = FILE('missing-file.prg')\n"
             "nEval = EVALUATE('x + 7')\n"
+            "cSysScript = SYS(16)\n"
+            "cSysDefault = SYS(999)\n"
             "cTransformDefault = TRANSFORM(x)\n"
             "cTransformPicture = TRANSFORM(3.14159, '999.00')\n"
             "cTransformUpper = TRANSFORM('legacy', '@!')\n"
@@ -49,9 +54,15 @@ namespace
             "cPacked = BINTOC(16909060, 4)\n"
             "nUnpacked = CTOBIN(cPacked, 'N')\n"
             "nCursorProp = CURSORGETPROP('Buffering')\n"
+            "nVersion = VERSION()\n"
+            "nVersionArg = VERSION(1)\n"
             "lNumLock = NUMLOCK()\n"
+            "cOnErrorDefault = ON('ERROR')\n"
+            "nMessageBox = MESSAGEBOX('hi')\n"
             "SET PATH TO '/tmp/copperfin'\n"
             "cPathValue = SET('PATH')\n"
+            "ON ERROR DO somehandler\n"
+            "cOnErrorHandler = ON('ERROR')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -76,6 +87,11 @@ namespace
         };
 
         check("neval", "12");
+        check("cexistingfile", "runtime_surface_extensions.prg");
+        check("lfilehit", "true");
+        check("lfilemiss", "false");
+        check("csysscript", main_path.string());
+        check("csysdefault", "0");
         check("ctransformdefault", "5");
         check("ctransformpicture", "3.14");
         check("ctransformupper", "LEGACY");
@@ -93,8 +109,13 @@ namespace
         check("nbitrshift", "4");
         check("nunpacked", "16909060");
         check("ncursorprop", "0");
+        check("nversion", "9");
+        check("nversionarg", "0");
         check("lnumlock", "false");
+        check("conerrordefault", "");
+        check("nmessagebox", "1");
         check("cpathvalue", "TO '/tmp/copperfin'");
+        check("conerrorhandler", "DO somehandler");
 
         fs::remove_all(temp_root, ignored);
     }

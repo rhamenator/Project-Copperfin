@@ -121,6 +121,21 @@ std::string take_keyword_value(const std::string& text, const std::string& keywo
     return take_first_token(text.substr(position + pattern.size()));
 }
 
+std::string runtime_error_parameter(const std::string& message) {
+    const std::size_t quoted_start = message.find('\'');
+    if (quoted_start != std::string::npos) {
+        const std::size_t quoted_end = message.find('\'', quoted_start + 1U);
+        if (quoted_end != std::string::npos && quoted_end > quoted_start + 1U) {
+            return message.substr(quoted_start + 1U, quoted_end - quoted_start - 1U);
+        }
+    }
+    const std::size_t colon = message.rfind(':');
+    if (colon != std::string::npos && colon + 1U < message.size()) {
+        return trim_copy(message.substr(colon + 1U));
+    }
+    return message;
+}
+
 std::string uppercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return static_cast<char>(std::toupper(ch));

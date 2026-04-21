@@ -237,6 +237,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: `GETWORDCOUNT()` / `GETWORDNUM()` expression parity tightened with focused TDD coverage. Delimiter arguments now behave as delimiter-character sets instead of one literal delimiter substring, and default delimiters now include common whitespace such as tabs and line breaks.
 
+- 2026-04-21: Runtime source-size cleanup continued by extracting callback-backed runtime-surface expression helpers from `prg_engine_expression.inl` into `prg_engine_runtime_surface_functions`: `FILE()`, `SYS()`, `MESSAGE()`, `AERROR()`, `EVAL()` / `EVALUATE()`, `SET()`, `ERROR()`, `PROGRAM()`, `LINENO()`, `VERSION()`, `ON()`, and `MESSAGEBOX()`. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down the extracted file/system/configuration helpers, while existing `test_prg_engine_control_flow` coverage continues guarding the error-state helpers.
+
 - 2026-04-21: `DTOC()` expression conversion parity gained focused support for optional compact output mode: `DTOC(date, 1)` now returns deterministic `YYYYMMDD` output while preserving default normalized `MM/DD/YYYY` behavior.
 
 - 2026-04-21: Runtime source-size cleanup continued by extracting expression date/time helper dispatch from `prg_engine_expression.inl` into dedicated `prg_engine_date_time_functions` sources. The move keeps the existing focused `test_prg_engine_functions` date/time coverage as the regression guard while reducing the expression parser include by roughly 545 lines.

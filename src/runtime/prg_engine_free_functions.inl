@@ -526,25 +526,6 @@
             return 1;
         }
 
-        std::string runtime_error_parameter(const std::string &message)
-        {
-            const std::size_t quoted_start = message.find('\'');
-            if (quoted_start != std::string::npos)
-            {
-                const std::size_t quoted_end = message.find('\'', quoted_start + 1U);
-                if (quoted_end != std::string::npos && quoted_end > quoted_start + 1U)
-                {
-                    return message.substr(quoted_start + 1U, quoted_end - quoted_start - 1U);
-                }
-            }
-            const std::size_t colon = message.rfind(':');
-            if (colon != std::string::npos && colon + 1U < message.size())
-            {
-                return trim_copy(message.substr(colon + 1U));
-            }
-            return message;
-        }
-
         vfp::DbfRecord make_synthetic_sql_record(std::size_t recno)
         {
             const auto synthetic_name = [&]()
