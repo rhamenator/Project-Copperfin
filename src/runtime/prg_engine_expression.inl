@@ -1592,10 +1592,45 @@
                         }
                     }
 
+                    int first_week_mode = 1;
+                    if (arguments.size() >= 3U)
+                    {
+                        first_week_mode = static_cast<int>(std::llround(value_as_number(arguments[2])));
+                        if (first_week_mode < 1 || first_week_mode > 3)
+                        {
+                            first_week_mode = 1;
+                        }
+                    }
+
                     const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
                     const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
                     const int offset = (jan1_weekday - first_day + 7) % 7;
-                    const int week_number = ((day_of_year + offset - 1) / 7) + 1;
+                    const int days_in_jan1_week = 7 - offset;
+
+                    int week_number = 0;
+                    if (first_week_mode == 1)
+                    {
+                        // Mode 1: week containing Jan 1 is week 1.
+                        week_number = ((day_of_year + offset - 1) / 7) + 1;
+                    }
+                    else if (first_week_mode == 2)
+                    {
+                        // Mode 2: first full week (all 7 days) is week 1.
+                        const int first_week_start_day_of_year = (offset == 0) ? 1 : (8 - offset);
+                        if (day_of_year >= first_week_start_day_of_year)
+                        {
+                            week_number = ((day_of_year - first_week_start_day_of_year) / 7) + 1;
+                        }
+                    }
+                    else
+                    {
+                        // Mode 3: first week with >= 4 days is week 1.
+                        const int first_week_start_day_of_year = (days_in_jan1_week >= 4) ? 1 : (1 + days_in_jan1_week);
+                        if (day_of_year >= first_week_start_day_of_year)
+                        {
+                            week_number = ((day_of_year - first_week_start_day_of_year) / 7) + 1;
+                        }
+                    }
                     return make_number_value(static_cast<double>(week_number));
                 }
                 if (function == "eomonth" && !arguments.empty())
