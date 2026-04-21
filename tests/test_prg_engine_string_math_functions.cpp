@@ -61,6 +61,13 @@ namespace
             "str_width = STR(42, 5)\n"
             "str_decimals = STR(42.678, 8, 2)\n"
             "str_overflow = STR(123456, 3)\n"
+            "padl_default = PADL('fox', 5)\n"
+            "padr_default = PADR('fox', 5)\n"
+            "padc_default = PADC('fox', 7)\n"
+            "padl_truncate = PADL('abcdef', 3)\n"
+            "padr_truncate = PADR('abcdef', 3)\n"
+            "padc_truncate = PADC('abcdef', 3)\n"
+            "pad_custom = PADL('7', 3, '0')\n"
             "like_hit = LIKE('A?C*', 'abc legacy')\n"
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
@@ -128,6 +135,13 @@ namespace
         check("str_width", "   42");
         check("str_decimals", "   42.68");
         check("str_overflow", "***");
+        check("padl_default", "  fox");
+        check("padr_default", "fox  ");
+        check("padc_default", "  fox  ");
+        check("padl_truncate", "def");
+        check("padr_truncate", "abc");
+        check("padc_truncate", "bcd");
+        check("pad_custom", "007");
         check("like_hit", "true");
         check("like_miss", "false");
         check("inlist_hit", "true");

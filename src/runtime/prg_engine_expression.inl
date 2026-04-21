@@ -1079,7 +1079,18 @@
                                               : ' ';
                     if (src.size() > width)
                     {
-                        src = src.substr(src.size() - width); // truncate from left like VFP
+                        if (function == "padl")
+                        {
+                            src = src.substr(src.size() - width);
+                        }
+                        else if (function == "padr")
+                        {
+                            src = src.substr(0U, width);
+                        }
+                        else
+                        {
+                            src = src.substr((src.size() - width) / 2U, width);
+                        }
                     }
                     if (function == "padl")
                     {
