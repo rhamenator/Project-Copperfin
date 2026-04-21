@@ -508,6 +508,21 @@ if(COPPERFIN_BUILD_TESTS)
 
     add_test(NAME test_prg_engine_functions COMMAND $<TARGET_FILE:test_prg_engine_functions>)
 
+    add_executable(test_prg_engine_date_time_functions
+        tests/test_prg_engine_date_time_functions.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_date_time_functions PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_date_time_functions PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_date_time_functions PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_date_time_functions COMMAND $<TARGET_FILE:test_prg_engine_date_time_functions>)
+
     add_executable(test_prg_engine_sql_cursors
         tests/test_prg_engine_sql_cursors.cpp
         tests/prg_engine_test_support.cpp
