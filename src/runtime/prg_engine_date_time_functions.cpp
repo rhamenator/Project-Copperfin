@@ -31,6 +31,15 @@ std::string format_sortable_datetime(int year, int month, int day, int hour, int
     return stream.str();
 }
 
+std::string format_sortable_date(int year, int month, int day) {
+    std::ostringstream stream;
+    stream << std::setfill('0')
+           << std::setw(4) << year
+           << std::setw(2) << month
+           << std::setw(2) << day;
+    return stream.str();
+}
+
 std::string current_runtime_date() {
     const auto now = std::chrono::system_clock::now();
     const auto tt = std::chrono::system_clock::to_time_t(now);
@@ -335,6 +344,9 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = 0;
         int day = 0;
         if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
+                return make_string_value(format_sortable_date(year, month, day));
+            }
             return make_string_value(format_runtime_date_string(year, month, day));
         }
         return make_string_value(value_as_string(arguments[0]));

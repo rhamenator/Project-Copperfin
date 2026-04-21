@@ -50,6 +50,7 @@ namespace
             "stod_invalid = STOD('2026-04-18')\n"
             "ctod_value = CTOD('04/18/2026')\n"
             "dtoc_value = DTOC('20260418')\n"
+            "dtoc_compact_flag = DTOC('04/18/2026', 1)\n"
             "ttoc_value = TTOC('04/18/2026 13:45:56')\n"
             "ttos_value = TTOS('04/18/2026 13:45:56')\n"
             "ttos_date = TTOS('04/18/2026')\n"
@@ -137,6 +138,7 @@ namespace
         check("stod_invalid", "");
         check("ctod_value", "04/18/2026");
         check("dtoc_value", "04/18/2026");
+        check("dtoc_compact_flag", "20260418");
         check("ttoc_value", "04/18/2026 13:45:56");
         check("ttos_value", "20260418134556");
         check("ttos_date", "20260418000000");
