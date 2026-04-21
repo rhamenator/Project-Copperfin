@@ -9386,6 +9386,65 @@ namespace copperfin::runtime
                     std::move(call_argument_references));
                 return {};
             }
+                case StatementKind::call_command:
+                {
+                    std::string target = trim_copy(statement.identifier);
+                    if (!target.empty() && target.front() == '&')
+                    {
+                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                        if (!expanded_target.empty())
+                        {
+                            target = expanded_target;
+                        }
+                    }
+                    std::vector<PrgValue> call_arguments;
+                    std::vector<std::optional<std::string>> call_argument_references;
+                    // CALL does not take arguments in classic VFP, but Copperfin may extend for macro compatibility
+                    // For now, mimic DO semantics for macro/compat surface
+                    if (!trim_copy(statement.expression).empty())
+                    {
+                        for (const std::string &raw_argument : split_csv_like(statement.expression))
+                        {
+                            const std::string argument_expression = trim_copy(raw_argument);
+                            if (!argument_expression.empty())
+                            {
+                                if (argument_expression.front() == '@')
+                                {
+                                    const std::string reference_name = trim_copy(argument_expression.substr(1U));
+                                    if (is_bare_identifier_text(reference_name))
+                                    {
+                                        call_arguments.push_back(lookup_variable(frame, reference_name));
+                                        call_argument_references.push_back(reference_name);
+                                        continue;
+                                    }
+                                }
+                                call_arguments.push_back(evaluate_expression(argument_expression, frame));
+                                call_argument_references.push_back(std::nullopt);
+                            }
+                        }
+                    }
+                    Program &program = load_program(frame.file_path);
+                    if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
+                    {
+                        if (!can_push_frame())
+                        {
+                            last_error_message = call_depth_limit_message();
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        push_routine_frame(
+                            program.path,
+                            routine->second,
+                            std::move(call_arguments),
+                            std::move(call_argument_references));
+                        return {};
+                    }
+                    last_error_message = "Unable to resolve CALL target: " + target;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
             case StatementKind::do_form:
             {
                 const std::filesystem::path form_path = resolve_asset_path(statement.identifier, ".scx");

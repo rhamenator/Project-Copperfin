@@ -90,6 +90,7 @@ enum class StatementKind {
     retry_statement,
     resume_statement,
     declare_dll,
+    call_command,
     no_op
 };
 

@@ -273,6 +273,10 @@ Program parse_program(const std::string& path) {
                 statement.identifier = trim_copy(body.substr(0U, with_position));
                 statement.expression = trim_copy(body.substr(with_position + 4U));
             }
+            } else if (starts_with_insensitive(line, "CALL ")) {
+                statement.kind = StatementKind::call_command;
+                const std::string body = trim_copy(line.substr(5U));
+                statement.identifier = body;
         } else if (upper == "READ EVENTS") {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {
