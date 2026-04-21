@@ -94,6 +94,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine.cpp
     src/runtime/prg_engine_helpers.cpp
+    src/runtime/prg_engine_numeric_functions.cpp
     src/runtime/prg_engine_parser.cpp
     src/runtime/prg_engine_runtime_config.cpp
     src/runtime/prg_engine_string_functions.cpp
