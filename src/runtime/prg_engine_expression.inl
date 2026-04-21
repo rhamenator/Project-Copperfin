@@ -1602,34 +1602,49 @@
                         }
                     }
 
-                    const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
-                    const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
-                    const int offset = (jan1_weekday - first_day + 7) % 7;
-                    const int days_in_jan1_week = 7 - offset;
-
-                    int week_number = 0;
                     if (first_week_mode == 1)
                     {
                         // Mode 1: week containing Jan 1 is week 1.
-                        week_number = ((day_of_year + offset - 1) / 7) + 1;
+                        const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
+                        const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
+                        const int offset = (jan1_weekday - first_day + 7) % 7;
+                        return make_number_value(static_cast<double>(((day_of_year + offset - 1) / 7) + 1));
                     }
-                    else if (first_week_mode == 2)
-                    {
-                        // Mode 2: first full week (all 7 days) is week 1.
-                        const int first_week_start_day_of_year = (offset == 0) ? 1 : (8 - offset);
-                        if (day_of_year >= first_week_start_day_of_year)
+
+                    const auto week_one_start_julian = [&](int week_year) {
+                        const int jan1_julian = date_to_julian(week_year, 1, 1);
+                        const int jan1_weekday = weekday_number_sunday_first(week_year, 1, 1);
+                        const int offset = (jan1_weekday - first_day + 7) % 7;
+                        if (first_week_mode == 2)
                         {
-                            week_number = ((day_of_year - first_week_start_day_of_year) / 7) + 1;
+                            // Mode 2: first full week (all 7 days) is week 1.
+                            return jan1_julian + ((offset == 0) ? 0 : (7 - offset));
                         }
+
+                        // Mode 3: first week with >= 4 days is week 1. That week
+                        // can start in late December of the previous calendar year.
+                        const int days_in_jan1_week = 7 - offset;
+                        return days_in_jan1_week >= 4
+                                   ? jan1_julian - offset
+                                   : jan1_julian + days_in_jan1_week;
+                    };
+
+                    const int date_julian = date_to_julian(year, month, day);
+                    const int current_start = week_one_start_julian(year);
+                    const int next_start = week_one_start_julian(year + 1);
+                    int week_number = 0;
+                    if (date_julian < current_start)
+                    {
+                        const int previous_start = week_one_start_julian(year - 1);
+                        week_number = ((date_julian - previous_start) / 7) + 1;
+                    }
+                    else if (date_julian >= next_start)
+                    {
+                        week_number = ((date_julian - next_start) / 7) + 1;
                     }
                     else
                     {
-                        // Mode 3: first week with >= 4 days is week 1.
-                        const int first_week_start_day_of_year = (days_in_jan1_week >= 4) ? 1 : (1 + days_in_jan1_week);
-                        if (day_of_year >= first_week_start_day_of_year)
-                        {
-                            week_number = ((day_of_year - first_week_start_day_of_year) / 7) + 1;
-                        }
+                        week_number = ((date_julian - current_start) / 7) + 1;
                     }
                     return make_number_value(static_cast<double>(week_number));
                 }
