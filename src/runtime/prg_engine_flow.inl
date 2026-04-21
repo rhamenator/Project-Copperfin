@@ -2,6 +2,8 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
+#if defined(COPPERFIN_PRG_ENGINE_IMPL_CONTEXT)
+
         void restore_private_declarations(Frame &frame)
         {
             for (const auto &[name, saved] : frame.private_saved_values)
@@ -648,3 +650,5 @@
                               .location = statement.location});
             return {};
         }
+
+#endif // defined(COPPERFIN_PRG_ENGINE_IMPL_CONTEXT)

@@ -324,7 +324,9 @@ namespace copperfin::runtime
 
 #include "prg_engine_variables.inl"
 #include "prg_engine_arrays.inl"
+#define COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
 #include "prg_engine_flow.inl"
+#undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
         bool dispatch_error_handler();
         ExecutionOutcome execute_current_statement();

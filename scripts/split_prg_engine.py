@@ -36,6 +36,23 @@ GROUPS = [
     (5646, 6288, "prg_engine_flow.inl",             "impl"),
 ]
 
+
+def build_header_comment(name, location):
+    header = [f"// {name}\n"]
+    if location == "anon":
+        header.append(
+            "// Free helper functions. Included inside anonymous "
+            "namespace in prg_engine.cpp.\n"
+        )
+    else:
+        header.append(
+            "// PrgRuntimeSession::Impl method group. Included "
+            "inside Impl struct in prg_engine.cpp.\n"
+        )
+    header.append("// This file must not be compiled separately.\n\n")
+    return "".join(header)
+
+
 def main():
     # Backup original
     backup = TARGET + ".bak"
@@ -50,9 +67,12 @@ def main():
 
     # Verify line count matches expectations
     # Groups reference 1-based line numbers; convert to 0-based indices
-    for start, end, name, loc in GROUPS:
+    for _, end, name, _ in GROUPS:
         if end > total_lines:
-            print(f"ERROR: group {name} end={end} exceeds file length {total_lines}")
+            print(
+                "ERROR: group "
+                f"{name} end={end} exceeds file length {total_lines}"
+            )
             return
 
     # Process groups in REVERSE order to preserve line numbers
@@ -60,18 +80,14 @@ def main():
     groups_reversed = list(reversed(GROUPS))
     for start, end, name, loc in groups_reversed:
         s = start - 1  # 0-based inclusive
-        e = end         # 0-based exclusive (line at index e is line end+1, 1-based)
+        # 0-based exclusive (line at index e is line end+1, 1-based)
+        e = end
 
         group_lines = lines[s:e]
 
         # Write the .inl file
         inl_path = os.path.join(SRC_DIR, name)
-        header_comment = f"// {name}\n"
-        if loc == "anon":
-            header_comment += "// Free helper functions. Included inside anonymous namespace in prg_engine.cpp.\n"
-        else:
-            header_comment += "// PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.\n"
-        header_comment += "// This file must not be compiled separately.\n\n"
+        header_comment = build_header_comment(name, loc)
 
         with open(inl_path, "w", encoding="utf-8") as f:
             f.write(header_comment)
@@ -96,6 +112,7 @@ def main():
         with open(path) as f:
             n = sum(1 for _ in f)
         print(f"  {name:45s}  {n:5d} lines")
+
 
 if __name__ == "__main__":
     main()
