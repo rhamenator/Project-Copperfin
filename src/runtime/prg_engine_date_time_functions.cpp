@@ -1,0 +1,493 @@
+#include "prg_engine_date_time_functions.h"
+
+#include "prg_engine_helpers.h"
+
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cmath>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+
+namespace copperfin::runtime {
+
+namespace {
+
+bool valid_runtime_date(int year, int month, int day) {
+    const int max_day = days_in_month(year, month);
+    return max_day != 0 && day >= 1 && day <= max_day;
+}
+
+std::string format_sortable_datetime(int year, int month, int day, int hour, int minute, int second) {
+    std::ostringstream stream;
+    stream << std::setfill('0')
+           << std::setw(4) << year
+           << std::setw(2) << month
+           << std::setw(2) << day
+           << std::setw(2) << hour
+           << std::setw(2) << minute
+           << std::setw(2) << second;
+    return stream.str();
+}
+
+std::string current_runtime_date() {
+    const auto now = std::chrono::system_clock::now();
+    const auto tt = std::chrono::system_clock::to_time_t(now);
+    const std::tm local_tm = local_time_from_time_t(tt);
+    return format_runtime_date_string(local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday);
+}
+
+std::string current_runtime_datetime() {
+    const auto now = std::chrono::system_clock::now();
+    const auto tt = std::chrono::system_clock::to_time_t(now);
+    const std::tm local_tm = local_time_from_time_t(tt);
+    return format_runtime_datetime_string(
+        local_tm.tm_year + 1900,
+        local_tm.tm_mon + 1,
+        local_tm.tm_mday,
+        local_tm.tm_hour,
+        local_tm.tm_min,
+        local_tm.tm_sec);
+}
+
+int current_second_of_day() {
+    const auto now = std::chrono::system_clock::now();
+    const auto tt = std::chrono::system_clock::to_time_t(now);
+    const std::tm local_tm = local_time_from_time_t(tt);
+    return (local_tm.tm_hour * 3600) + (local_tm.tm_min * 60) + local_tm.tm_sec;
+}
+
+}  // namespace
+
+std::optional<PrgValue> evaluate_date_time_function(
+    const std::string& function,
+    const std::vector<PrgValue>& arguments) {
+    if (function == "date") {
+        if (arguments.size() >= 3U) {
+            const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
+            if (!valid_runtime_date(year, month, day)) {
+                return make_string_value(std::string{});
+            }
+            return make_string_value(format_runtime_date_string(year, month, day));
+        }
+        return make_string_value(current_runtime_date());
+    }
+    if (function == "time") {
+        const auto now = std::chrono::system_clock::now();
+        const auto tt = std::chrono::system_clock::to_time_t(now);
+        const std::tm local_tm = local_time_from_time_t(tt);
+        std::ostringstream stream;
+        stream << std::setfill('0')
+               << std::setw(2) << local_tm.tm_hour << ':'
+               << std::setw(2) << local_tm.tm_min << ':'
+               << std::setw(2) << local_tm.tm_sec;
+        return make_string_value(stream.str());
+    }
+    if (function == "datetime") {
+        if (arguments.size() >= 3U) {
+            const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
+            const int hour = arguments.size() >= 4U ? static_cast<int>(std::llround(value_as_number(arguments[3]))) : 0;
+            const int minute = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+            const int second = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
+            if (!valid_runtime_date(year, month, day) ||
+                hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+                return make_string_value(std::string{});
+            }
+            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+        }
+        return make_string_value(current_runtime_datetime());
+    }
+    if (function == "seconds") {
+        return make_number_value(static_cast<double>(current_second_of_day()));
+    }
+    if (function == "mdy" && arguments.size() >= 3U) {
+        const int month = static_cast<int>(std::llround(value_as_number(arguments[0])));
+        const int day = static_cast<int>(std::llround(value_as_number(arguments[1])));
+        const int year = static_cast<int>(std::llround(value_as_number(arguments[2])));
+        if (!valid_runtime_date(year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_date_string(year, month, day));
+    }
+    if (function == "dow" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_number_value(0.0);
+        }
+        int weekday = weekday_number_sunday_first(year, month, day);
+        if (arguments.size() >= 2U) {
+            int first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            if (first_day < 1 || first_day > 7) {
+                first_day = 1;
+            }
+            weekday = ((weekday - first_day + 7) % 7) + 1;
+        }
+        return make_number_value(static_cast<double>(weekday));
+    }
+    if (function == "cdow" && !arguments.empty()) {
+        static constexpr std::array<const char*, 7U> kNames = {
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        const int weekday = weekday_number_sunday_first(year, month, day);
+        if (weekday < 1 || weekday > 7) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(kNames[static_cast<std::size_t>(weekday - 1)]);
+    }
+    if (function == "cmonth" && !arguments.empty()) {
+        static constexpr std::array<const char*, 12U> kNames = {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"};
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(kNames[static_cast<std::size_t>(month - 1)]);
+    }
+    if (function == "gomonth" && arguments.size() >= 2U) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        const long long delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+        long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
+        long long adjusted_year = month_index / 12LL;
+        long long adjusted_month_index = month_index % 12LL;
+        if (adjusted_month_index < 0LL) {
+            adjusted_month_index += 12LL;
+            --adjusted_year;
+        }
+        const int adjusted_month = static_cast<int>(adjusted_month_index + 1LL);
+        const int adjusted_day = std::min(day, days_in_month(static_cast<int>(adjusted_year), adjusted_month));
+        return make_string_value(format_runtime_date_string(static_cast<int>(adjusted_year), adjusted_month, adjusted_day));
+    }
+    if (function == "year" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        return make_number_value(parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)
+                                     ? static_cast<double>(year)
+                                     : 0.0);
+    }
+    if (function == "month" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        return make_number_value(parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)
+                                     ? static_cast<double>(month)
+                                     : 0.0);
+    }
+    if (function == "day" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        return make_number_value(parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)
+                                     ? static_cast<double>(day)
+                                     : 0.0);
+    }
+    if (function == "quarter" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_number_value(0.0);
+        }
+        return make_number_value(static_cast<double>(((month - 1) / 3) + 1));
+    }
+    if (function == "week" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_number_value(0.0);
+        }
+
+        int first_day = 1;
+        if (arguments.size() >= 2U) {
+            first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            if (first_day < 1 || first_day > 7) {
+                first_day = 1;
+            }
+        }
+
+        int first_week_mode = 1;
+        if (arguments.size() >= 3U) {
+            first_week_mode = static_cast<int>(std::llround(value_as_number(arguments[2])));
+            if (first_week_mode < 1 || first_week_mode > 3) {
+                first_week_mode = 1;
+            }
+        }
+
+        if (first_week_mode == 1) {
+            const int day_of_year = date_to_julian(year, month, day) - date_to_julian(year, 1, 1) + 1;
+            const int jan1_weekday = weekday_number_sunday_first(year, 1, 1);
+            const int offset = (jan1_weekday - first_day + 7) % 7;
+            return make_number_value(static_cast<double>(((day_of_year + offset - 1) / 7) + 1));
+        }
+
+        const auto week_one_start_julian = [&](int week_year) {
+            const int jan1_julian = date_to_julian(week_year, 1, 1);
+            const int jan1_weekday = weekday_number_sunday_first(week_year, 1, 1);
+            const int offset = (jan1_weekday - first_day + 7) % 7;
+            if (first_week_mode == 2) {
+                return jan1_julian + ((offset == 0) ? 0 : (7 - offset));
+            }
+
+            const int days_in_jan1_week = 7 - offset;
+            return days_in_jan1_week >= 4
+                       ? jan1_julian - offset
+                       : jan1_julian + days_in_jan1_week;
+        };
+
+        const int date_julian = date_to_julian(year, month, day);
+        const int current_start = week_one_start_julian(year);
+        const int next_start = week_one_start_julian(year + 1);
+        if (date_julian < current_start) {
+            const int previous_start = week_one_start_julian(year - 1);
+            return make_number_value(static_cast<double>(((date_julian - previous_start) / 7) + 1));
+        }
+        if (date_julian >= next_start) {
+            return make_number_value(static_cast<double>(((date_julian - next_start) / 7) + 1));
+        }
+        return make_number_value(static_cast<double>(((date_julian - current_start) / 7) + 1));
+    }
+    if (function == "eomonth" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+
+        long long delta = 0;
+        if (arguments.size() >= 2U) {
+            delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+        }
+
+        long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
+        long long adjusted_year = month_index / 12LL;
+        long long adjusted_month_index = month_index % 12LL;
+        if (adjusted_month_index < 0LL) {
+            adjusted_month_index += 12LL;
+            --adjusted_year;
+        }
+
+        const int adjusted_month = static_cast<int>(adjusted_month_index + 1LL);
+        const int adjusted_day = days_in_month(static_cast<int>(adjusted_year), adjusted_month);
+        return make_string_value(format_runtime_date_string(static_cast<int>(adjusted_year), adjusted_month, adjusted_day));
+    }
+    if (function == "dtos" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        std::ostringstream stream;
+        stream << std::setfill('0')
+               << std::setw(4) << year
+               << std::setw(2) << month
+               << std::setw(2) << day;
+        return make_string_value(stream.str());
+    }
+    if (function == "stod" && !arguments.empty()) {
+        const std::string source = trim_copy(value_as_string(arguments[0]));
+        if (source.size() != 8U ||
+            !std::all_of(source.begin(), source.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+            return make_string_value(std::string{});
+        }
+
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(source, year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_date_string(year, month, day));
+    }
+    if (function == "ctod" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(format_runtime_date_string(year, month, day));
+        }
+        return make_string_value(std::string{});
+    }
+    if (function == "dtoc" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(format_runtime_date_string(year, month, day));
+        }
+        return make_string_value(value_as_string(arguments[0]));
+    }
+    if (function == "ttoc" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        const std::string value = value_as_string(arguments[0]);
+        if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second)) {
+            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+        }
+        if (parse_runtime_date_string(value, year, month, day)) {
+            return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+        }
+        return make_string_value(std::string{});
+    }
+    if (function == "ttos" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        const std::string value = value_as_string(arguments[0]);
+        if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second) ||
+            parse_runtime_date_string(value, year, month, day)) {
+            return make_string_value(format_sortable_datetime(year, month, day, hour, minute, second));
+        }
+        return make_string_value(std::string{});
+    }
+    if (function == "ctot" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+    }
+    if (function == "dtot" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+    }
+    if (function == "ttod" && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_date_string(year, month, day));
+    }
+    if (function == "hour" && !arguments.empty()) {
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        if (parse_runtime_time_string(value_as_string(arguments[0]), hour, minute, second)) {
+            return make_number_value(static_cast<double>(hour));
+        }
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+            return make_number_value(static_cast<double>(hour));
+        }
+        return make_number_value(0.0);
+    }
+    if (function == "minute" && !arguments.empty()) {
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        if (parse_runtime_time_string(value_as_string(arguments[0]), hour, minute, second)) {
+            return make_number_value(static_cast<double>(minute));
+        }
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+            return make_number_value(static_cast<double>(minute));
+        }
+        return make_number_value(0.0);
+    }
+    if (function == "sec" && !arguments.empty()) {
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        if (parse_runtime_time_string(value_as_string(arguments[0]), hour, minute, second)) {
+            return make_number_value(static_cast<double>(second));
+        }
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+            return make_number_value(static_cast<double>(second));
+        }
+        return make_number_value(0.0);
+    }
+    if ((function == "ttoj" || function == "dtoj") && !arguments.empty()) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (function == "ttoj") {
+            int hour = 0;
+            int minute = 0;
+            int second = 0;
+            if (!parse_runtime_datetime_string(value_as_string(arguments[0]), year, month, day, hour, minute, second)) {
+                return make_number_value(0.0);
+            }
+        } else if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+            return make_number_value(0.0);
+        }
+        return make_number_value(static_cast<double>(date_to_julian(year, month, day)));
+    }
+    if ((function == "jtot" || function == "jtod") && !arguments.empty()) {
+        int julian = static_cast<int>(value_as_number(arguments[0]));
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        if (!julian_to_runtime_date(julian, year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_date_string(year, month, day));
+    }
+    if (function == "dmy" && arguments.size() >= 3U) {
+        int day = static_cast<int>(value_as_number(arguments[0]));
+        int month = static_cast<int>(value_as_number(arguments[1]));
+        int year = static_cast<int>(value_as_number(arguments[2]));
+        if (!valid_runtime_date(year, month, day)) {
+            return make_string_value(std::string{});
+        }
+        return make_string_value(format_runtime_date_string(year, month, day));
+    }
+    if (function == "isleapyear" && !arguments.empty()) {
+        int year = static_cast<int>(value_as_number(arguments[0]));
+        return make_boolean_value(is_leap_year(year));
+    }
+
+    return std::nullopt;
+}
+
+}  // namespace copperfin::runtime
