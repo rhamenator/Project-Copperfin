@@ -53,6 +53,7 @@ namespace
             "dtoc_compact_flag = DTOC('04/18/2026', 1)\n"
             "ttoc_value = TTOC('04/18/2026 13:45:56')\n"
             "ttoc_compact_flag = TTOC('04/18/2026 13:45:56', 1)\n"
+            "ttoc_date_compact_flag = TTOC('04/18/2026', 1)\n"
             "ttos_value = TTOS('04/18/2026 13:45:56')\n"
             "ttos_date = TTOS('04/18/2026')\n"
             "year_value = YEAR('04/18/2026')\n"
@@ -142,6 +143,7 @@ namespace
         check("dtoc_compact_flag", "20260418");
         check("ttoc_value", "04/18/2026 13:45:56");
         check("ttoc_compact_flag", "20260418134556");
+        check("ttoc_date_compact_flag", "20260418000000");
         check("ttos_value", "20260418134556");
         check("ttos_date", "20260418000000");
         check("year_value", "2026");
