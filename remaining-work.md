@@ -211,6 +211,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-21: Expression `PADL()` / `PADR()` / `PADC()` truncation parity tightened with focused TDD coverage in `test_prg_engine_string_math_functions`. `PADL()` now keeps the rightmost characters on overflow, `PADR()` keeps the leftmost characters, and `PADC()` keeps the centered slice while preserving existing default/custom padding behavior.
 
+- 2026-04-21: Focused expression-function test splitting continued by moving aggregate `TO ARRAY` coverage into dedicated `test_prg_engine_aggregate_array_functions`. The mixed `test_prg_engine_functions` target now keeps only type/null and runtime-surface expression coverage.
+
 - 2026-04-21: Expression `STR()` gained first-pass width/decimal formatting parity under focused TDD coverage. The runtime now honors `STR(value, width)`, `STR(value, width, decimals)`, right-justifies into the requested width, rounds fixed decimals, and emits asterisks for overflow.
 
 - 2026-04-21: Focused expression-function test splitting continued by moving string/math helper coverage into dedicated `test_prg_engine_string_math_functions`. The split isolates the `LEN`/`LEFT`/`RIGHT`/case/trim/math/search/word/`STR()` utility batch from the remaining aggregate and runtime-surface coverage.
