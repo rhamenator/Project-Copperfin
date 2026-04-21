@@ -1,0 +1,262 @@
+// prg_engine_session.inl
+// PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
+// This file must not be compiled separately.
+
+        Program &load_program(const std::string &path)
+        {
+            const std::string normalized = normalize_path(path);
+            const auto existing = programs.find(normalized);
+            if (existing != programs.end())
+            {
+                return existing->second;
+            }
+            auto [inserted, _] = programs.emplace(normalized, parse_program(normalized));
+            return inserted->second;
+        }
+
+        void push_main_frame(
+            const std::string &path,
+            std::vector<PrgValue> call_arguments = {},
+            std::vector<std::optional<std::string>> call_argument_references = {})
+        {
+            Program &program = load_program(path);
+            Frame frame;
+            frame.file_path = program.path;
+            frame.routine_name = "main";
+            frame.routine = &program.main;
+            frame.call_arguments = std::move(call_arguments);
+            frame.call_argument_references = std::move(call_argument_references);
+            stack.push_back(std::move(frame));
+        }
+
+        void push_routine_frame(
+            const std::string &path,
+            const Routine &routine,
+            std::vector<PrgValue> call_arguments = {},
+            std::vector<std::optional<std::string>> call_argument_references = {})
+        {
+            Frame frame;
+            frame.file_path = normalize_path(path);
+            frame.routine_name = routine.name;
+            frame.routine = &routine;
+            frame.call_arguments = std::move(call_arguments);
+            frame.call_argument_references = std::move(call_argument_references);
+            stack.push_back(std::move(frame));
+        }
+
+        const Statement *current_statement() const
+        {
+            if (stack.empty())
+            {
+                return nullptr;
+            }
+            const Frame &frame = stack.back();
+            if (frame.routine == nullptr || frame.pc >= frame.routine->statements.size())
+            {
+                return nullptr;
+            }
+            return &frame.routine->statements[frame.pc];
+        }
+
+        void capture_last_error_context(const Frame &frame, const Statement &statement)
+        {
+            if (last_fault_location.file_path.empty())
+            {
+                last_fault_location = statement.location;
+            }
+            if (last_fault_statement.empty())
+            {
+                last_fault_statement = statement.text;
+            }
+            last_error_code = classify_runtime_error_code(last_error_message);
+            last_error_procedure = frame.routine_name;
+        }
+
+        DataSessionState &current_session_state()
+        {
+            auto [iterator, _] = data_sessions.try_emplace(current_data_session);
+            iterator->second.selected_work_area = std::max(1, iterator->second.selected_work_area);
+            iterator->second.next_work_area = std::max(1, iterator->second.next_work_area);
+            return iterator->second;
+        }
+
+        const DataSessionState &current_session_state() const
+        {
+            const auto found = data_sessions.find(current_data_session);
+            if (found != data_sessions.end())
+            {
+                return found->second;
+            }
+            static const DataSessionState empty_session{};
+            return empty_session;
+        }
+
+        int current_selected_work_area() const
+        {
+            return current_session_state().selected_work_area;
+        }
+
+        std::string &current_default_directory()
+        {
+            auto [iterator, _] = default_directory_by_session.try_emplace(current_data_session, startup_default_directory);
+            return iterator->second;
+        }
+
+        const std::string &current_default_directory() const
+        {
+            const auto found = default_directory_by_session.find(current_data_session);
+            if (found != default_directory_by_session.end())
+            {
+                return found->second;
+            }
+
+            return startup_default_directory;
+        }
+
+        std::map<int, RuntimeSqlConnectionState> &current_sql_connections()
+        {
+            auto [iterator, _] = sql_connections_by_session.try_emplace(current_data_session);
+            return iterator->second;
+        }
+
+        const std::map<int, RuntimeSqlConnectionState> &current_sql_connections() const
+        {
+            const auto found = sql_connections_by_session.find(current_data_session);
+            if (found != sql_connections_by_session.end())
+            {
+                return found->second;
+            }
+
+            static const std::map<int, RuntimeSqlConnectionState> empty_connections;
+            return empty_connections;
+        }
+
+        int &current_sql_handle_counter()
+        {
+            auto [iterator, _] = next_sql_handle_by_session.try_emplace(current_data_session, 1);
+            iterator->second = std::max(1, iterator->second);
+            return iterator->second;
+        }
+
+        int &current_api_handle_counter()
+        {
+            auto [iterator, _] = next_api_handle_by_session.try_emplace(current_data_session, 1);
+            iterator->second = std::max(1, iterator->second);
+            return iterator->second;
+        }
+
+        std::map<int, RegisteredApiFunction> &current_registered_api_functions()
+        {
+            auto [iterator, _] = registered_api_functions_by_session.try_emplace(current_data_session);
+            return iterator->second;
+        }
+
+        const std::map<int, RegisteredApiFunction> &current_registered_api_functions() const
+        {
+            const auto found = registered_api_functions_by_session.find(current_data_session);
+            if (found != registered_api_functions_by_session.end())
+            {
+                return found->second;
+            }
+
+            static const std::map<int, RegisteredApiFunction> empty_registered_functions;
+            return empty_registered_functions;
+        }
+
+        RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {})
+        {
+            RuntimePauseState state;
+            state.paused = reason != DebugPauseReason::completed;
+            state.completed = reason == DebugPauseReason::completed;
+            state.waiting_for_events = waiting_for_events;
+            state.reason = reason;
+            state.message = std::move(message);
+            state.executed_statement_count = executed_statement_count;
+            state.globals = globals;
+            state.events = events;
+            const DataSessionState &session = current_session_state();
+            state.work_area.selected = session.selected_work_area;
+            state.work_area.data_session = current_data_session;
+            state.work_area.aliases = session.aliases;
+            for (const auto &[_, cursor] : session.cursors)
+            {
+                state.cursors.push_back({.work_area = cursor.work_area,
+                                         .alias = cursor.alias,
+                                         .source_path = cursor.source_path,
+                                         .source_kind = cursor.source_kind,
+                                         .filter_expression = cursor.filter_expression,
+                                         .remote = cursor.remote,
+                                         .record_count = cursor.record_count,
+                                         .recno = cursor.recno,
+                                         .bof = cursor.bof,
+                                         .eof = cursor.eof});
+            }
+            for (const auto &[_, connection] : current_sql_connections())
+            {
+                state.sql_connections.push_back(connection);
+            }
+            for (const auto &[_, object] : ole_objects)
+            {
+                state.ole_objects.push_back(object);
+            }
+
+            if (reason == DebugPauseReason::error)
+            {
+                const auto error_event = std::find_if(events.rbegin(), events.rend(), [](const RuntimeEvent &event)
+                                                      { return event.category == "runtime.error"; });
+                if (error_event != events.rend())
+                {
+                    state.location = error_event->location;
+                }
+                else if (!last_fault_location.file_path.empty())
+                {
+                    state.location = last_fault_location;
+                }
+                if (!last_fault_statement.empty())
+                {
+                    state.statement_text = last_fault_statement;
+                }
+            }
+            else if (const Statement *statement = current_statement())
+            {
+                state.location = statement->location;
+                state.statement_text = statement->text;
+            }
+
+            for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
+            {
+                RuntimeStackFrame frame;
+                frame.file_path = iterator->file_path;
+                frame.routine_name = iterator->routine_name;
+                if (iterator->routine != nullptr && iterator->pc < iterator->routine->statements.size())
+                {
+                    frame.line = iterator->routine->statements[iterator->pc].location.line;
+                }
+                frame.locals = iterator->locals;
+                state.call_stack.push_back(std::move(frame));
+            }
+
+            last_state = state;
+            return state;
+        }
+
+        [[nodiscard]] bool can_push_frame() const
+        {
+            return stack.size() < max_call_depth;
+        }
+
+        [[nodiscard]] std::string call_depth_limit_message() const
+        {
+            return "Runtime guardrail: maximum call depth (" + std::to_string(max_call_depth) + ") exceeded.";
+        }
+
+        [[nodiscard]] std::string step_budget_limit_message() const
+        {
+            return "Runtime guardrail: maximum executed statements (" + std::to_string(max_executed_statements) + ") exceeded.";
+        }
+
+        [[nodiscard]] std::string loop_iteration_limit_message() const
+        {
+            return "Runtime guardrail: maximum loop iterations (" + std::to_string(max_loop_iterations) + ") exceeded.";
+        }
+
