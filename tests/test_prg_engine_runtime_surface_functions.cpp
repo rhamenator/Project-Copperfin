@@ -36,6 +36,20 @@ namespace
             "cTransformUpper = TRANSFORM('legacy', '@!')\n"
             "cTypeArray = TYPE('aValues')\n"
             "cTypeUnknown = TYPE('notDefinedAnywhere')\n"
+            "nCastInt = CAST(7.9 AS INTEGER)\n"
+            "nCastByte = CAST(513 AS BYTE)\n"
+            "cCastString = CAST(123 AS STRING)\n"
+            "lCastBool = CAST(0 AS LOGICAL)\n"
+            "nBitAnd = BITAND(6, 3)\n"
+            "nBitOr = BITOR(6, 3)\n"
+            "nBitXor = BITXOR(6, 3)\n"
+            "nBitNot = BITNOT(0)\n"
+            "nBitLShift = BITLSHIFT(3, 2)\n"
+            "nBitRShift = BITRSHIFT(16, 2)\n"
+            "cPacked = BINTOC(16909060, 4)\n"
+            "nUnpacked = CTOBIN(cPacked, 'N')\n"
+            "nCursorProp = CURSORGETPROP('Buffering')\n"
+            "lNumLock = NUMLOCK()\n"
             "SET PATH TO '/tmp/copperfin'\n"
             "cPathValue = SET('PATH')\n"
             "RETURN\n");
@@ -67,6 +81,19 @@ namespace
         check("ctransformupper", "LEGACY");
         check("ctypearray", "A");
         check("ctypeunknown", "U");
+        check("ncastint", "7");
+        check("ncastbyte", "1");
+        check("ccaststring", "123");
+        check("lcastbool", "false");
+        check("nbitand", "2");
+        check("nbitor", "7");
+        check("nbitxor", "5");
+        check("nbitnot", "-1");
+        check("nbitlshift", "12");
+        check("nbitrshift", "4");
+        check("nunpacked", "16909060");
+        check("ncursorprop", "0");
+        check("lnumlock", "false");
         check("cpathvalue", "TO '/tmp/copperfin'");
 
         fs::remove_all(temp_root, ignored);

@@ -22,6 +22,10 @@
         const std::string& function,
         const std::vector<PrgValue>& arguments,
         const std::string& default_directory);
+    std::optional<PrgValue> evaluate_runtime_surface_function(
+        const std::string& function,
+        const std::vector<PrgValue>& arguments,
+        const std::vector<std::string>& raw_arguments);
 
     namespace
     {
@@ -400,7 +404,37 @@
                         {
                             const std::size_t argument_start = position_;
                             arguments.push_back(parse_comparison());
-                            raw_arguments.push_back(trim_copy(text_.substr(argument_start, position_ - argument_start)));
+
+                            std::size_t argument_end = position_;
+                            skip_whitespace();
+                            if (normalize_identifier(identifier) == "cast" && arguments.size() == 1U)
+                            {
+                                const std::size_t as_start = position_;
+                                const std::string remaining = lowercase_copy(text_.substr(position_));
+                                if (remaining.rfind("as", 0U) == 0U &&
+                                    (remaining.size() == 2U || std::isspace(static_cast<unsigned char>(remaining[2])) != 0))
+                                {
+                                    position_ += 2U;
+                                    skip_whitespace();
+                                    while (position_ < text_.size())
+                                    {
+                                        const char ch = text_[position_];
+                                        if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_')
+                                        {
+                                            ++position_;
+                                            continue;
+                                        }
+                                        break;
+                                    }
+                                    argument_end = position_;
+                                }
+                                else
+                                {
+                                    position_ = as_start;
+                                }
+                            }
+                            raw_arguments.push_back(
+                                trim_copy(text_.substr(argument_start, argument_end - argument_start)));
                             skip_whitespace();
                             if (match(")"))
                             {
@@ -1064,136 +1098,10 @@
                 {
                     return *path_result;
                 }
-                if (function == "numlock" || function == "capslock" || function == "scrolllock")
+                if (const auto runtime_surface_result =
+                        evaluate_runtime_surface_function(function, arguments, raw_arguments))
                 {
-                    return make_boolean_value(false);
-                }
-                if (function == "cursorsetprop" || function == "cursorgetprop")
-                {
-                    return make_number_value(0.0);
-                }
-                // --- CAST(<expr> AS <type>) ---
-                if (function == "cast" && !arguments.empty())
-                {
-                    // raw_arguments[0] contains "<expr> AS <type>" - evaluate_function receives the
-                    // pre-evaluated argument list, so we need the raw text of the first argument.
-                    // We look for the type name in the raw first argument after the AS keyword.
-                    std::string type_name;
-                    if (!raw_arguments.empty())
-                    {
-                        const std::string raw = uppercase_copy(raw_arguments[0]);
-                        const auto as_pos = raw.rfind(" AS ");
-                        if (as_pos != std::string::npos)
-                        {
-                            type_name = trim_copy(raw.substr(as_pos + 4U));
-                        }
-                    }
-                    const PrgValue src = arguments[0];
-                    if (type_name == "INT64" || type_name == "LONGLONG" || type_name == "BIGINT")
-                    {
-                        return make_int64_value(static_cast<std::int64_t>(value_as_number(src)));
-                    }
-                    if (type_name == "UINT64" || type_name == "ULONGLONG" || type_name == "UBIGINT")
-                    {
-                        return make_uint64_value(static_cast<std::uint64_t>(value_as_number(src)));
-                    }
-                    if (type_name == "INT" || type_name == "INT32" || type_name == "INTEGER" || type_name == "LONG" || type_name == "INT16" || type_name == "SHORT")
-                    {
-                        return make_int64_value(static_cast<std::int64_t>(std::trunc(value_as_number(src))));
-                    }
-                    if (type_name == "BYTE" || type_name == "UINT8")
-                    {
-                        return make_uint64_value(static_cast<std::uint64_t>(value_as_number(src)) & 0xFFULL);
-                    }
-                    if (type_name == "FLOAT" || type_name == "SINGLE")
-                    {
-                        return make_number_value(static_cast<double>(static_cast<float>(value_as_number(src))));
-                    }
-                    if (type_name == "DOUBLE" || type_name == "NUMERIC")
-                    {
-                        return make_number_value(value_as_number(src));
-                    }
-                    if (type_name == "STRING" || type_name == "CHAR" || type_name == "VARCHAR" || type_name == "CHARACTER")
-                    {
-                        return make_string_value(value_as_string(src));
-                    }
-                    if (type_name == "LOGICAL" || type_name == "BOOL" || type_name == "BOOLEAN")
-                    {
-                        return make_boolean_value(value_as_bool(src));
-                    }
-                    // Unknown cast type - return source unchanged
-                    return src;
-                }
-                // --- Bitwise integer operations ---
-                if (function == "bitand" && arguments.size() >= 2U)
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
-                    return make_int64_value(a & b);
-                }
-                if (function == "bitor" && arguments.size() >= 2U)
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
-                    return make_int64_value(a | b);
-                }
-                if (function == "bitxor" && arguments.size() >= 2U)
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const auto b = static_cast<std::int64_t>(value_as_number(arguments[1]));
-                    return make_int64_value(a ^ b);
-                }
-                if (function == "bitnot" && !arguments.empty())
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    return make_int64_value(~a);
-                }
-                if (function == "bitlshift" && arguments.size() >= 2U)
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const int n = static_cast<int>(value_as_number(arguments[1]));
-                    return make_int64_value(a << n);
-                }
-                if (function == "bitrshift" && arguments.size() >= 2U)
-                {
-                    const auto a = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const int n = static_cast<int>(value_as_number(arguments[1]));
-                    return make_int64_value(a >> n);
-                }
-                // --- BINTOC / CTOBIN: binary byte-string packing (VFP-compatible) ---
-                if (function == "bintoc" && !arguments.empty())
-                {
-                    // BINTOC(<number> [, <width>])  - packs as little-endian bytes
-                    const auto val = static_cast<std::int64_t>(value_as_number(arguments[0]));
-                    const int width = arguments.size() >= 2U
-                                          ? static_cast<int>(value_as_number(arguments[1]))
-                                          : 4; // default 4 bytes like VFP
-                    std::string result(static_cast<std::size_t>(width), '\0');
-                    std::uint64_t uval = static_cast<std::uint64_t>(val);
-                    for (int i = 0; i < width; ++i)
-                    {
-                        result[static_cast<std::size_t>(i)] = static_cast<char>(uval & 0xFFU);
-                        uval >>= 8;
-                    }
-                    return make_string_value(std::move(result));
-                }
-                if (function == "ctobin" && !arguments.empty())
-                {
-                    // CTOBIN(<string> [, <type>]) - unpacks little-endian bytes
-                    const std::string s = value_as_string(arguments[0]);
-                    const std::string type = arguments.size() >= 2U
-                                                 ? uppercase_copy(value_as_string(arguments[1]))
-                                                 : std::string("N"); // default: unsigned (VFP N = INTEGER)
-                    std::uint64_t uval = 0U;
-                    for (std::size_t i = s.size(); i-- > 0U;)
-                    {
-                        uval = (uval << 8) | static_cast<std::uint8_t>(s[i]);
-                    }
-                    if (type == "N" || type == "INTEGER" || type == "INT")
-                    {
-                        return make_int64_value(static_cast<std::int64_t>(uval));
-                    }
-                    return make_uint64_value(uval);
+                    return *runtime_surface_result;
                 }
                 if (function == "isdigit" && !arguments.empty())
                 {

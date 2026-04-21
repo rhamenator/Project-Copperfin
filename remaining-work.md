@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-21: Runtime-surface expression dispatch was reduced again by extracting `CAST()`, bitwise helpers (`BITAND()` / `BITOR()` / `BITXOR()` / `BITNOT()` / `BITLSHIFT()` / `BITRSHIFT()`), binary conversion helpers (`BINTOC()` / `CTOBIN()`), and the current first-pass `CURSORGETPROP()` / `CURSORSETPROP()` / lock-key probe stubs into dedicated `prg_engine_runtime_surface_functions` sources. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down those helpers outside the legacy catch-all paths.
+
 - 2026-04-21: Runtime source-size cleanup continued by extracting portable path expression helpers into dedicated `prg_engine_path_functions` sources. The focused path regression target guards `FULLPATH()`, `JUST*`, `FORCE*`, and `ADDBS()` behavior while `prg_engine_expression.inl` drops to roughly 1.5K lines.
 
 - 2026-04-21: Date/time conversion parity gained compact sortable datetime input support for `CTOT()` and `TTOD()`. Focused `test_prg_engine_date_time_functions` coverage now accepts `YYYYMMDDHHMMSS` input and normalizes it to `MM/DD/YYYY HH:MM:SS` or `MM/DD/YYYY` output respectively.
