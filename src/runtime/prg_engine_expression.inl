@@ -18,6 +18,10 @@
     std::optional<PrgValue> evaluate_numeric_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments);
+    std::optional<PrgValue> evaluate_path_function(
+        const std::string& function,
+        const std::vector<PrgValue>& arguments,
+        const std::string& default_directory);
 
     namespace
     {
@@ -1056,43 +1060,9 @@
                     const std::string env_key = value_as_string(arguments[0]);
                     return make_string_value(get_environment_variable_value(env_key).value_or(std::string{}));
                 }
-                if (function == "fullpath" && !arguments.empty())
+                if (const auto path_result = evaluate_path_function(function, arguments, default_directory_))
                 {
-                    std::filesystem::path p(value_as_string(arguments[0]));
-                    if (p.is_relative())
-                        p = std::filesystem::path(default_directory_) / p;
-                    return make_string_value(std::filesystem::absolute(p).string());
-                }
-                if (function == "justfname" && !arguments.empty())
-                {
-                    return make_string_value(portable_path_filename(value_as_string(arguments[0])));
-                }
-                if (function == "juststem" && !arguments.empty())
-                {
-                    return make_string_value(portable_path_stem(value_as_string(arguments[0])));
-                }
-                if (function == "justext" && !arguments.empty())
-                {
-                    return make_string_value(portable_path_extension(value_as_string(arguments[0])));
-                }
-                if (function == "justdrive" && !arguments.empty())
-                {
-                    return make_string_value(portable_path_drive(value_as_string(arguments[0])));
-                }
-                if (function == "forceext" && arguments.size() >= 2U)
-                {
-                    return make_string_value(portable_force_extension(value_as_string(arguments[0]), value_as_string(arguments[1])));
-                }
-                if (function == "forcepath" && arguments.size() >= 2U)
-                {
-                    return make_string_value(portable_force_path(value_as_string(arguments[0]), value_as_string(arguments[1])));
-                }
-                if (function == "addbs" && !arguments.empty())
-                {
-                    std::string path = value_as_string(arguments[0]);
-                    if (!path.empty() && path.back() != '\\' && path.back() != '/')
-                        path += '\\';
-                    return make_string_value(std::move(path));
+                    return *path_result;
                 }
                 if (function == "numlock" || function == "capslock" || function == "scrolllock")
                 {
