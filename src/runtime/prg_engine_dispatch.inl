@@ -1665,30 +1665,8 @@
             }
             case StatementKind::close_command:
             {
-                // CLOSE ALL / CLOSE TABLES / CLOSE DATABASES
-                DataSessionState &session = current_session_state();
-                std::vector<int> areas;
-                areas.reserve(session.cursors.size());
-                for (const auto &[area, _cursor] : session.cursors)
-                {
-                    areas.push_back(area);
-                }
-                for (const int area : areas)
-                {
-                    close_cursor(std::to_string(area));
-                }
-
-                const std::string close_scope = normalize_identifier(statement.expression);
-                if (close_scope == "all" || close_scope == "databases" || close_scope == "database")
-                {
-                    current_sql_connections().clear();
-                    current_registered_api_functions().clear();
-                    ole_objects.clear();
-                    close_all_file_io_handles();
-                }
-                events.push_back({.category = "runtime.close",
-                                  .detail = statement.expression.empty() ? "ALL" : statement.expression,
-                                  .location = statement.location});
+                close_runtime_scope(statement.expression.empty() ? std::string{"ALL"} : statement.expression,
+                                    statement.location);
                 return {};
             }
             case StatementKind::erase_command:
@@ -3038,14 +3016,8 @@
                 // before the final QUIT cleanup/unwind executes.
                 if (!handling_shutdown)
                 {
-                    const std::string inline_shutdown = uppercase_copy(trim_copy(shutdown_handler));
-                    if (inline_shutdown == "CLEAR EVENTS")
+                    if (execute_inline_shutdown_clause(statement.location))
                     {
-                        waiting_for_events = false;
-                        restore_event_loop_after_dispatch = false;
-                        events.push_back({.category = "runtime.shutdown_handler",
-                                          .detail = "CLEAR EVENTS",
-                                          .location = statement.location});
                     }
                     else if (dispatch_shutdown_handler(frame, statement.location))
                     {

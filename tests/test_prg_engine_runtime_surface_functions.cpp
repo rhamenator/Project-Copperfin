@@ -77,11 +77,14 @@ namespace
             "nVersionArg = VERSION(1)\n"
             "lNumLock = NUMLOCK()\n"
             "cOnErrorDefault = ON('ERROR')\n"
+            "cOnShutdownDefault = ON('SHUTDOWN')\n"
             "nMessageBox = MESSAGEBOX('hi')\n"
             "SET PATH TO '/tmp/copperfin'\n"
             "cPathValue = SET('PATH')\n"
             "ON ERROR DO somehandler\n"
             "cOnErrorHandler = ON('ERROR')\n"
+            "ON SHUTDOWN CLOSE DATABASES ALL\n"
+            "cOnShutdownHandler = ON('SHUTDOWN')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -146,9 +149,11 @@ namespace
         check("nversionarg", "0");
         check("lnumlock", "false");
         check("conerrordefault", "");
+        check("conshutdowndefault", "");
         check("nmessagebox", "1");
         check("cpathvalue", "TO '/tmp/copperfin'");
         check("conerrorhandler", "DO somehandler");
+        check("conshutdownhandler", "CLOSE DATABASES ALL");
 
         const auto os_value = state.globals.find("cos");
         expect(os_value != state.globals.end() && !copperfin::runtime::format_value(os_value->second).empty(),

@@ -156,6 +156,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& last_error_procedure,
     std::size_t last_error_line,
     const std::string& error_handler,
+    const std::string& shutdown_handler,
     const std::function<int(const std::string&)>& aerror_callback,
     const std::function<PrgValue(const std::string&)>& eval_expression_callback,
     const std::function<std::string(const std::string&)>& set_callback) {
@@ -243,7 +244,14 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return make_number_value(arguments.empty() ? 9.0 : 0.0);
     }
     if (function == "on" && !arguments.empty()) {
-        return make_string_value(uppercase_copy(value_as_string(arguments[0])) == "ERROR" ? error_handler : std::string{});
+        const std::string topic = uppercase_copy(value_as_string(arguments[0]));
+        if (topic == "ERROR") {
+            return make_string_value(error_handler);
+        }
+        if (topic == "SHUTDOWN") {
+            return make_string_value(shutdown_handler);
+        }
+        return make_string_value(std::string{});
     }
     if (function == "messagebox" && !arguments.empty()) {
         return make_number_value(1.0);

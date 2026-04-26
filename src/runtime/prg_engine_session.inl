@@ -202,6 +202,66 @@
             loaded_libraries.clear();
         }
 
+        void close_runtime_scope(const std::string &scope, const SourceLocation &location)
+        {
+            DataSessionState &session = current_session_state();
+            std::vector<int> areas;
+            areas.reserve(session.cursors.size());
+            for (const auto &[area, _cursor] : session.cursors)
+            {
+                areas.push_back(area);
+            }
+            for (const int area : areas)
+            {
+                close_cursor(std::to_string(area));
+            }
+
+            const auto [scope_name, _scope_tail] = split_first_word(scope);
+            const std::string close_scope = normalize_identifier(scope_name.empty() ? scope : scope_name);
+            if (close_scope == "all" || close_scope == "databases" || close_scope == "database")
+            {
+                current_sql_connections().clear();
+                current_registered_api_functions().clear();
+                ole_objects.clear();
+                close_all_file_io_handles();
+            }
+
+            events.push_back({.category = "runtime.close",
+                              .detail = scope.empty() ? "ALL" : scope,
+                              .location = location});
+        }
+
+        bool execute_inline_shutdown_clause(const SourceLocation &location)
+        {
+            const std::string trimmed = trim_copy(shutdown_handler);
+            const std::string upper = uppercase_copy(trimmed);
+            if (upper.empty())
+            {
+                return false;
+            }
+            if (upper == "CLEAR EVENTS")
+            {
+                waiting_for_events = false;
+                restore_event_loop_after_dispatch = false;
+                events.push_back({.category = "runtime.shutdown_handler",
+                                  .detail = "CLEAR EVENTS",
+                                  .location = location});
+                return true;
+            }
+            if (upper == "CLOSE ALL" || upper == "CLOSE TABLES" || upper == "CLOSE DATABASE" ||
+                upper == "CLOSE DATABASES" || upper == "CLOSE DATABASES ALL")
+            {
+                const std::size_t space_pos = upper.find(' ');
+                const std::string scope = space_pos != std::string::npos ? trim_copy(upper.substr(space_pos + 1U)) : std::string{"ALL"};
+                events.push_back({.category = "runtime.shutdown_handler",
+                                  .detail = upper,
+                                  .location = location});
+                close_runtime_scope(scope, location);
+                return true;
+            }
+            return false;
+        }
+
         void perform_quit(const SourceLocation &location)
         {
             waiting_for_events = false;

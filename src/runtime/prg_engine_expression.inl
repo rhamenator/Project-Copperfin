@@ -34,6 +34,7 @@
         const std::string& last_error_procedure,
         std::size_t last_error_line,
         const std::string& error_handler,
+        const std::string& shutdown_handler,
         const std::function<int(const std::string&)>& aerror_callback,
         const std::function<PrgValue(const std::string&)>& eval_expression_callback,
         const std::function<std::string(const std::string&)>& set_callback);
@@ -54,6 +55,7 @@
                 const std::string &last_error_procedure,
                 std::size_t last_error_line,
                 const std::string &error_handler,
+                const std::string &shutdown_handler,
                 bool exact_string_compare,
                 int current_work_area,
                 std::function<int()> next_free_work_area_callback,
@@ -154,6 +156,7 @@
                   last_error_procedure_(last_error_procedure),
                   last_error_line_(last_error_line),
                   error_handler_(error_handler),
+                shutdown_handler_(shutdown_handler),
                   exact_string_compare_(exact_string_compare)
             {
             }
@@ -809,6 +812,7 @@
                                                           last_error_procedure_,
                                                           last_error_line_,
                                                           error_handler_,
+                                                          shutdown_handler_,
                                                           aerror_callback_,
                                                           eval_expression_callback_,
                                                           set_callback_))
@@ -1107,6 +1111,7 @@
             const std::string &last_error_procedure_;
             std::size_t last_error_line_ = 0;
             const std::string &error_handler_;
+            const std::string &shutdown_handler_;
             bool exact_string_compare_ = false;
             std::size_t position_ = 0;
         };

@@ -20,6 +20,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& last_error_procedure,
     std::size_t last_error_line,
     const std::string& error_handler,
+    const std::string& shutdown_handler,
     const std::function<int(const std::string&)>& aerror_callback,
     const std::function<PrgValue(const std::string&)>& eval_expression_callback,
     const std::function<std::string(const std::string&)>& set_callback);

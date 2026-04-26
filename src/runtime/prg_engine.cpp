@@ -368,6 +368,7 @@ namespace copperfin::runtime
             last_error_procedure,
             last_fault_location.line,
             error_handler,
+            shutdown_handler,
             is_set_enabled("exact"),
             current_selected_work_area(),
             [this]()

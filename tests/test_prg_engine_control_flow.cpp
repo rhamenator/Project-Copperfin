@@ -2404,6 +2404,53 @@ void test_on_shutdown_do_cleanup_can_call_quit_without_recursing() {
     fs::remove_all(tmp, ign);
 }
 
+void test_on_shutdown_inline_close_databases_all_runs_before_quit() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_on_shutdown_close_databases_all";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+
+    write_text(tmp / "held.txt", "seed");
+
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+               "ON SHUTDOWN CLOSE DATABASES ALL\n"
+               "READ EVENTS\n"
+               "RETURN\n"
+               "PROCEDURE RequestQuit\n"
+               "    nConn = SQLCONNECT('dsn=Northwind')\n"
+               "    obj = CREATEOBJECT('Sample.Object')\n"
+               "    nHandle = FOPEN('held.txt', 2)\n"
+               "    QUIT\n"
+               "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+
+    const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "READ EVENTS should pause before inline shutdown close runs");
+
+    const bool dispatched = session.dispatch_event_handler("RequestQuit");
+    expect(dispatched, "RequestQuit should dispatch from READ EVENTS");
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ON SHUTDOWN CLOSE DATABASES ALL + QUIT should complete cleanly");
+    expect(state.sql_connections.empty(), "Inline CLOSE DATABASES ALL should leave no SQL connections");
+    expect(state.ole_objects.empty(), "Inline CLOSE DATABASES ALL should leave no OLE handles");
+
+    const bool has_shutdown = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.shutdown_handler" && e.detail == "CLOSE DATABASES ALL"; });
+    expect(has_shutdown, "ON SHUTDOWN CLOSE DATABASES ALL should emit runtime.shutdown_handler event");
+
+    const bool has_close = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.close" && e.detail == "DATABASES ALL"; });
+    expect(has_close, "Inline shutdown close clause should emit runtime.close event");
+
+    fs::remove_all(tmp, ign);
+}
+
 void test_quit_closes_open_database_and_runtime_handles() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_quit_resource_cleanup";
@@ -2510,6 +2557,7 @@ int main() {
     test_quit_cancelled_by_callback();
     test_on_shutdown_clear_events_runs_and_quit_completes();
     test_on_shutdown_do_cleanup_can_call_quit_without_recursing();
+    test_on_shutdown_inline_close_databases_all_runs_before_quit();
     test_shutdown_handler_quit_exits_event_loop_without_clear_events();
     test_shutdown_handler_cleanup_code_remains_harmless();
     test_quit_closes_open_database_and_runtime_handles();
