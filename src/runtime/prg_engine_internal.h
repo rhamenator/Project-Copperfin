@@ -60,6 +60,7 @@ enum class StatementKind {
     set_library,
     set_datasession,
     set_default,
+    set_memowidth,
     on_error,
     with_statement,
     endwith_statement,

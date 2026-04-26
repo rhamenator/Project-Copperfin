@@ -288,6 +288,7 @@ namespace copperfin::runtime
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;
+        std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::set<std::string> loaded_libraries;
@@ -634,6 +635,11 @@ namespace copperfin::runtime
                 events.push_back({.category = category,
                                   .detail = detail,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            },
+            [this]()
+            {
+                const auto found = memowidth_by_session.find(current_data_session);
+                return found != memowidth_by_session.end() ? found->second : 50U;
             },
             [this](const std::string &fn_key, const std::vector<PrgValue> &fn_args) -> PrgValue
             {

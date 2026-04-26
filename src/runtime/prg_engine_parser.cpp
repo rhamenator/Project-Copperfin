@@ -531,6 +531,9 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SET DEFAULT TO ")) {
             statement.kind = StatementKind::set_default;
             statement.expression = trim_copy(line.substr(15U));
+        } else if (starts_with_insensitive(line, "SET MEMOWIDTH TO ")) {
+            statement.kind = StatementKind::set_memowidth;
+            statement.expression = trim_copy(line.substr(16U));
         } else if (starts_with_insensitive(line, "SET ")) {
             statement.kind = StatementKind::set_command;
             statement.expression = trim_copy(line.substr(4U));

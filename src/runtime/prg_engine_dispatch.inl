@@ -1511,6 +1511,13 @@
                 }
                 return {};
             }
+            case StatementKind::set_memowidth:
+            {
+                const double width_value = value_as_number(evaluate_expression(statement.expression, frame));
+                const std::size_t new_width = static_cast<std::size_t>(std::max(1.0, std::min(32767.0, width_value)));
+                memowidth_by_session[current_data_session] = new_width;
+                return {};
+            }
             case StatementKind::on_error:
                 error_handler = statement.expression;
                 return {};

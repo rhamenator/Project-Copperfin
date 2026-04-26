@@ -188,7 +188,8 @@ std::vector<std::string> memo_width_lines(const std::string& source, std::size_t
 std::optional<PrgValue> evaluate_string_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
-    bool exact_string_compare) {
+    bool exact_string_compare,
+    std::size_t memo_width) {
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
@@ -426,7 +427,7 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {
-        return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0])).size()));
+         return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0]), memo_width).size()));
     }
     if (function == "mline" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
@@ -440,7 +441,7 @@ std::optional<PrgValue> evaluate_string_function(
         if (start >= source.size()) {
             return make_string_value(std::string{});
         }
-        const std::vector<std::string> lines = memo_width_lines(source.substr(start));
+        const std::vector<std::string> lines = memo_width_lines(source.substr(start), memo_width);
         const std::size_t line_index = static_cast<std::size_t>(requested_line);
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }

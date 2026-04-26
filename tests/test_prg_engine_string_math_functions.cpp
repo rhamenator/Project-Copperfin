@@ -119,6 +119,13 @@ namespace
             "wrap_first = MLINE(wrap_text, 1)\n"
             "wrap_second = MLINE(wrap_text, 2)\n"
             "offset_line = MLINE(memo_text, 1, 12)\n"
+            "SET MEMOWIDTH TO 10\n"
+            "memo_width_value = _MLINE\n"
+            "narrow_wrap_text = 'abc def ghi jkl mno'\n"
+            "narrow_count = MEMLINES(narrow_wrap_text)\n"
+            "narrow_first = MLINE(narrow_wrap_text, 1)\n"
+            "narrow_second = MLINE(narrow_wrap_text, 2)\n"
+            "narrow_third = MLINE(narrow_wrap_text, 3)\n"
             "strextract_case_sensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>')\n"
             "strextract_case_insensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>', 1, 1)\n"
             "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
@@ -238,6 +245,11 @@ namespace
         check("wrap_first", "one two three four five six seven eight nine ten");
         check("wrap_second", "eleven twelve");
         check("offset_line", "second line\nstill second");
+        check("memo_width_value", "10");
+        check("narrow_count", "3");
+        check("narrow_first", "abc def");
+        check("narrow_second", "ghi jkl");
+        check("narrow_third", "mno");
         check("strextract_case_sensitive", "");
         check("strextract_case_insensitive", "Beta");
         check("strextract_missing_end_default", "");

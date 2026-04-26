@@ -9,7 +9,8 @@
     std::optional<PrgValue> evaluate_string_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
-        bool exact_string_compare);
+        bool exact_string_compare,
+        std::size_t memo_width = 50U);
     std::optional<PrgValue> evaluate_type_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -97,6 +98,7 @@
                 std::function<PrgValue(const std::string &)> eval_expression_callback,
                 std::function<std::string(const std::string &)> set_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
+                std::function<std::size_t()> memowidth_callback,
                 std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
@@ -141,6 +143,7 @@
                   eval_expression_callback_(std::move(eval_expression_callback)),
                   set_callback_(std::move(set_callback)),
                   record_event_callback_(std::move(record_event_callback)),
+                  memowidth_callback_(std::move(memowidth_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
                   text_(text),
                   frame_(frame),
@@ -755,7 +758,7 @@
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
                     return make_number_value(static_cast<double>(sql_set_prop_callback_(handle, value_as_string(arguments[1]), arguments[2])));
                 }
-                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_))
+                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_, memowidth_callback_()))
                 {
                     return *string_result;
                 }
@@ -845,6 +848,10 @@
                 if (const auto field = field_lookup_callback_(identifier))
                 {
                     return *field;
+                }
+                if (normalize_identifier(identifier) == "_mline")
+                {
+                    return make_number_value(static_cast<double>(memowidth_callback_()));
                 }
                 if (normalized.find('.') != std::string::npos)
                 {
@@ -1089,6 +1096,7 @@
             std::function<PrgValue(const std::string &)> eval_expression_callback_;
             std::function<std::string(const std::string &)> set_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
+            std::function<std::size_t()> memowidth_callback_;
             std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;
