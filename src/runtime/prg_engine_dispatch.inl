@@ -1384,9 +1384,19 @@
                 {
                     if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
-                        normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape")
+                        normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
+                        normalized_name == "century")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
+                    }
+                    else if (normalized_name == "date")
+                    {
+                        std::string date_value = trim_copy(option_value);
+                        if (starts_with_insensitive(date_value, "TO "))
+                        {
+                            date_value = trim_copy(date_value.substr(3U));
+                        }
+                        current_set_state()[normalized_name] = uppercase_copy(date_value.empty() ? std::string{"MDY"} : date_value);
                     }
                     else
                     {
@@ -3098,4 +3108,3 @@
 
         return {};
     }
-

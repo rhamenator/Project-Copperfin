@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-26: Date/time expression helpers now honor first-pass `SET DATE TO` and `SET CENTURY` runtime state. `CTOD()`, `DTOC()`, `CTOT()`, `TTOC()`, `TTOD()`, `DTOT()`, `DATE()`, and `DATETIME()` keep the existing MDY/four-digit default, while explicit `DMY`/`BRITISH`-style and `YMD`/`ANSI`-style date orders plus two-digit century-off formatting round-trip through `SET()` and the date/time helper surface. Focused `test_prg_engine_date_time_functions` coverage passes.
+
 - 2026-04-26: File system helper coverage gained `FILESIZE()` expression function. The implementation resolves relative paths against the runtime default directory, returns file size in bytes for existing files, and returns 0 for missing files or empty arguments. Focused `test_prg_engine_runtime_surface_functions` coverage validates relative/absolute paths and missing-file behavior. This completes the first-pass file metadata helper surface alongside the existing `FILE()`, `HOME()`, and path helpers.
 
 - 2026-04-26: String expression memo-line coverage now includes session-scoped `SET MEMOWIDTH TO` and `_MLINE` state wiring. `MEMLINES()` and `MLINE()` consume the active session memo width, `_MLINE` exposes the current setting, and focused string/math regression coverage validates width-dependent wrapping behavior plus line extraction after runtime width changes.

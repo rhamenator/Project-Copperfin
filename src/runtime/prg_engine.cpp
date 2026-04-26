@@ -633,6 +633,10 @@ namespace copperfin::runtime
                 const auto found = current_set_state().find(normalized_name);
                 if (found == current_set_state().end())
                 {
+                    if (normalized_name == "century")
+                    {
+                        return std::string("ON");
+                    }
                     return std::string("OFF");
                 }
 

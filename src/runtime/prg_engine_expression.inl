@@ -5,7 +5,8 @@
 
     std::optional<PrgValue> evaluate_date_time_function(
         const std::string& function,
-        const std::vector<PrgValue>& arguments);
+        const std::vector<PrgValue>& arguments,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_string_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -773,7 +774,7 @@
                 {
                     return *numeric_result;
                 }
-                if (const auto date_time_result = evaluate_date_time_function(function, arguments))
+                if (const auto date_time_result = evaluate_date_time_function(function, arguments, set_callback_))
                 {
                     return *date_time_result;
                 }

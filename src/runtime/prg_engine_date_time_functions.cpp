@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cmath>
 #include <cctype>
+#include <functional>
 #include <iomanip>
 #include <sstream>
 
@@ -71,6 +72,159 @@ std::string format_sortable_date(int year, int month, int day) {
     return stream.str();
 }
 
+std::string normalize_date_order(const std::function<std::string(const std::string&)>& set_callback) {
+    std::string value = uppercase_copy(trim_copy(set_callback("DATE")));
+    if (value == "BRITISH" || value == "FRENCH" || value == "GERMAN" || value == "ITALIAN") {
+        return "DMY";
+    }
+    if (value == "ANSI" || value == "JAPAN" || value == "JAPANESE") {
+        return "YMD";
+    }
+    if (value == "MDY" || value == "DMY" || value == "YMD") {
+        return value;
+    }
+    return "MDY";
+}
+
+bool is_century_enabled(const std::function<std::string(const std::string&)>& set_callback) {
+    return uppercase_copy(trim_copy(set_callback("CENTURY"))) != "OFF";
+}
+
+std::string format_runtime_date_for_set(
+    int year,
+    int month,
+    int day,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::string order = normalize_date_order(set_callback);
+    const bool century = is_century_enabled(set_callback);
+
+    std::ostringstream stream;
+    stream << std::setfill('0');
+    const auto write_year = [&]() {
+        if (century) {
+            stream << std::setw(4) << year;
+        } else {
+            stream << std::setw(2) << (std::abs(year) % 100);
+        }
+    };
+
+    if (order == "DMY") {
+        stream << std::setw(2) << day << '/' << std::setw(2) << month << '/';
+        write_year();
+    } else if (order == "YMD") {
+        write_year();
+        stream << '/' << std::setw(2) << month << '/' << std::setw(2) << day;
+    } else {
+        stream << std::setw(2) << month << '/' << std::setw(2) << day << '/';
+        write_year();
+    }
+    return stream.str();
+}
+
+std::string format_runtime_datetime_for_set(
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    std::ostringstream stream;
+    stream << format_runtime_date_for_set(year, month, day, set_callback)
+           << ' ' << std::setfill('0')
+           << std::setw(2) << hour << ':'
+           << std::setw(2) << minute << ':'
+           << std::setw(2) << second;
+    return stream.str();
+}
+
+bool parse_runtime_date_for_set(
+    const std::string& raw,
+    int& year,
+    int& month,
+    int& day,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    if (parse_runtime_date_string(raw, year, month, day)) {
+        if (year >= 0 && year < 100) {
+            year += year < 50 ? 2000 : 1900;
+        }
+        return true;
+    }
+
+    const std::string value = trim_copy(raw);
+    const auto first_slash = value.find('/');
+    if (first_slash == std::string::npos) {
+        return false;
+    }
+    const auto second_slash = value.find('/', first_slash + 1U);
+    if (second_slash == std::string::npos || value.find('/', second_slash + 1U) != std::string::npos) {
+        return false;
+    }
+
+    try {
+        const int first = std::stoi(value.substr(0U, first_slash));
+        const int second = std::stoi(value.substr(first_slash + 1U, second_slash - first_slash - 1U));
+        std::size_t year_end = second_slash + 1U;
+        while (year_end < value.size() && std::isdigit(static_cast<unsigned char>(value[year_end])) != 0) {
+            ++year_end;
+        }
+        if (year_end != value.size()) {
+            return false;
+        }
+        year = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
+
+        const std::string order = normalize_date_order(set_callback);
+        if (order == "DMY") {
+            day = first;
+            month = second;
+        } else if (order == "YMD") {
+            year = first;
+            month = second;
+            day = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
+        } else {
+            month = first;
+            day = second;
+        }
+    } catch (...) {
+        return false;
+    }
+
+    if (year >= 0 && year < 100) {
+        year += year < 50 ? 2000 : 1900;
+    }
+    return valid_runtime_date(year, month, day);
+}
+
+bool parse_runtime_datetime_for_set(
+    const std::string& raw,
+    int& year,
+    int& month,
+    int& day,
+    int& hour,
+    int& minute,
+    int& second,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    if (parse_runtime_datetime_string(raw, year, month, day, hour, minute, second)) {
+        if (year >= 0 && year < 100) {
+            year += year < 50 ? 2000 : 1900;
+        }
+        return true;
+    }
+
+    const std::string value = trim_copy(raw);
+    const auto separator = value.find_first_of(" T");
+    const std::string date_part = separator == std::string::npos ? value : value.substr(0U, separator);
+    const std::string time_part = separator == std::string::npos ? std::string{} : trim_copy(value.substr(separator + 1U));
+    if (!parse_runtime_date_for_set(date_part, year, month, day, set_callback)) {
+        return false;
+    }
+
+    hour = 0;
+    minute = 0;
+    second = 0;
+    return time_part.empty() || parse_runtime_time_string(time_part, hour, minute, second);
+}
+
 std::string current_runtime_date() {
     const auto now = std::chrono::system_clock::now();
     const auto tt = std::chrono::system_clock::to_time_t(now);
@@ -102,7 +256,8 @@ int current_second_of_day() {
 
 std::optional<PrgValue> evaluate_date_time_function(
     const std::string& function,
-    const std::vector<PrgValue>& arguments) {
+    const std::vector<PrgValue>& arguments,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (function == "date") {
         if (arguments.size() >= 3U) {
             const int year = static_cast<int>(std::llround(value_as_number(arguments[0])));
@@ -111,9 +266,14 @@ std::optional<PrgValue> evaluate_date_time_function(
             if (!valid_runtime_date(year, month, day)) {
                 return make_string_value(std::string{});
             }
-            return make_string_value(format_runtime_date_string(year, month, day));
+            return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
         }
-        return make_string_value(current_runtime_date());
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        return parse_runtime_date_string(current_runtime_date(), year, month, day)
+                   ? make_string_value(format_runtime_date_for_set(year, month, day, set_callback))
+                   : make_string_value(current_runtime_date());
     }
     if (function == "time") {
         const auto now = std::chrono::system_clock::now();
@@ -138,9 +298,17 @@ std::optional<PrgValue> evaluate_date_time_function(
                 hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
                 return make_string_value(std::string{});
             }
-            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+            return make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback));
         }
-        return make_string_value(current_runtime_datetime());
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
+        return parse_runtime_datetime_string(current_runtime_datetime(), year, month, day, hour, minute, second)
+                   ? make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback))
+                   : make_string_value(current_runtime_datetime());
     }
     if (function == "seconds") {
         return make_number_value(static_cast<double>(current_second_of_day()));
@@ -152,13 +320,13 @@ std::optional<PrgValue> evaluate_date_time_function(
         if (!valid_runtime_date(year, month, day)) {
             return make_string_value(std::string{});
         }
-        return make_string_value(format_runtime_date_string(year, month, day));
+        return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
     }
     if (function == "dow" && !arguments.empty()) {
         int year = 0;
         int month = 0;
         int day = 0;
-        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (!parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             return make_number_value(0.0);
         }
         int weekday = weekday_number_sunday_first(year, month, day);
@@ -177,7 +345,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
-        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (!parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             return make_string_value(std::string{});
         }
         const int weekday = weekday_number_sunday_first(year, month, day);
@@ -193,7 +361,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
-        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (!parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             return make_string_value(std::string{});
         }
         return make_string_value(kNames[static_cast<std::size_t>(month - 1)]);
@@ -365,8 +533,8 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
-        if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
-            return make_string_value(format_runtime_date_string(year, month, day));
+        if (parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
+            return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
         }
         return make_string_value(std::string{});
     }
@@ -374,11 +542,11 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
-        if (parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
                 return make_string_value(format_sortable_date(year, month, day));
             }
-            return make_string_value(format_runtime_date_string(year, month, day));
+            return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
         }
         return make_string_value(value_as_string(arguments[0]));
     }
@@ -390,17 +558,17 @@ std::optional<PrgValue> evaluate_date_time_function(
         int minute = 0;
         int second = 0;
         const std::string value = value_as_string(arguments[0]);
-        if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second)) {
+        if (parse_runtime_datetime_for_set(value, year, month, day, hour, minute, second, set_callback)) {
             if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
                 return make_string_value(format_sortable_datetime(year, month, day, hour, minute, second));
             }
-            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+            return make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback));
         }
-        if (parse_runtime_date_string(value, year, month, day)) {
+        if (parse_runtime_date_for_set(value, year, month, day, set_callback)) {
             if (arguments.size() >= 2U && static_cast<int>(std::llround(value_as_number(arguments[1]))) == 1) {
                 return make_string_value(format_sortable_datetime(year, month, day, 0, 0, 0));
             }
-            return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+            return make_string_value(format_runtime_datetime_for_set(year, month, day, 0, 0, 0, set_callback));
         }
         return make_string_value(std::string{});
     }
@@ -412,8 +580,8 @@ std::optional<PrgValue> evaluate_date_time_function(
         int minute = 0;
         int second = 0;
         const std::string value = value_as_string(arguments[0]);
-        if (parse_runtime_datetime_string(value, year, month, day, hour, minute, second) ||
-            parse_runtime_date_string(value, year, month, day)) {
+        if (parse_runtime_datetime_for_set(value, year, month, day, hour, minute, second, set_callback) ||
+            parse_runtime_date_for_set(value, year, month, day, set_callback)) {
             return make_string_value(format_sortable_datetime(year, month, day, hour, minute, second));
         }
         return make_string_value(std::string{});
@@ -426,20 +594,20 @@ std::optional<PrgValue> evaluate_date_time_function(
         int minute = 0;
         int second = 0;
         const std::string value = value_as_string(arguments[0]);
-        if (!parse_runtime_datetime_string(value, year, month, day, hour, minute, second) &&
+        if (!parse_runtime_datetime_for_set(value, year, month, day, hour, minute, second, set_callback) &&
             !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
             return make_string_value(std::string{});
         }
-        return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+        return make_string_value(format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback));
     }
     if (function == "dtot" && !arguments.empty()) {
         int year = 0;
         int month = 0;
         int day = 0;
-        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (!parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             return make_string_value(std::string{});
         }
-        return make_string_value(format_runtime_datetime_string(year, month, day, 0, 0, 0));
+        return make_string_value(format_runtime_datetime_for_set(year, month, day, 0, 0, 0, set_callback));
     }
     if (function == "ttod" && !arguments.empty()) {
         int year = 0;
@@ -449,11 +617,11 @@ std::optional<PrgValue> evaluate_date_time_function(
         int minute = 0;
         int second = 0;
         const std::string value = value_as_string(arguments[0]);
-        if (!parse_runtime_datetime_string(value, year, month, day, hour, minute, second) &&
+        if (!parse_runtime_datetime_for_set(value, year, month, day, hour, minute, second, set_callback) &&
             !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
             return make_string_value(std::string{});
         }
-        return make_string_value(format_runtime_date_string(year, month, day));
+        return make_string_value(format_runtime_date_for_set(year, month, day, set_callback));
     }
     if (function == "hour" && !arguments.empty()) {
         int hour = 0;

@@ -97,6 +97,21 @@ namespace
             "dmy_invalid = DMY(31, 2, 2026)\n"
             "isleap_2024 = ISLEAPYEAR(2024)\n"
             "isleap_2026 = ISLEAPYEAR(2026)\n"
+            "SET DATE TO DMY\n"
+            "date_set_dmy = SET('DATE')\n"
+            "ctod_dmy = CTOD('18/04/2026')\n"
+            "dtoc_dmy = DTOC('18/04/2026')\n"
+            "ttoc_dmy = TTOC('18/04/2026 13:45:56')\n"
+            "SET CENTURY OFF\n"
+            "century_off = SET('CENTURY')\n"
+            "dtoc_century_off = DTOC('18/04/2026')\n"
+            "SET DATE TO YMD\n"
+            "date_set_ymd = SET('DATE')\n"
+            "dtoc_ymd_century_off = DTOC('2026/04/18')\n"
+            "ctot_ymd_century_off = CTOT('2026/04/18 13:45:56')\n"
+            "SET CENTURY ON\n"
+            "century_on = SET('CENTURY')\n"
+            "dtoc_ymd_century_on = DTOC('2026/04/18')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -189,6 +204,17 @@ namespace
         check("dmy_invalid", "");
         check("isleap_2024", "true");
         check("isleap_2026", "false");
+        check("date_set_dmy", "DMY");
+        check("ctod_dmy", "18/04/2026");
+        check("dtoc_dmy", "18/04/2026");
+        check("ttoc_dmy", "18/04/2026 13:45:56");
+        check("century_off", "OFF");
+        check("dtoc_century_off", "18/04/26");
+        check("date_set_ymd", "YMD");
+        check("dtoc_ymd_century_off", "26/04/18");
+        check("ctot_ymd_century_off", "26/04/18 13:45:56");
+        check("century_on", "ON");
+        check("dtoc_ymd_century_on", "2026/04/18");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())
