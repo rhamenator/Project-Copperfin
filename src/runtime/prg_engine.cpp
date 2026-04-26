@@ -612,6 +612,12 @@ namespace copperfin::runtime
                 {
                     return current_default_directory();
                 }
+                if (normalized_name == "memowidth")
+                {
+                    const auto found_memowidth = memowidth_by_session.find(current_data_session);
+                    const std::size_t memo_width = found_memowidth != memowidth_by_session.end() ? found_memowidth->second : 50U;
+                    return std::to_string(memo_width);
+                }
 
                 const auto found = current_set_state().find(normalized_name);
                 if (found == current_set_state().end())

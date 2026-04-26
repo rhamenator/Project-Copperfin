@@ -119,8 +119,10 @@ namespace
             "wrap_first = MLINE(wrap_text, 1)\n"
             "wrap_second = MLINE(wrap_text, 2)\n"
             "offset_line = MLINE(memo_text, 1, 12)\n"
+            "memo_width_set_default = SET('MEMOWIDTH')\n"
             "SET MEMOWIDTH TO 10\n"
             "memo_width_value = _MLINE\n"
+            "memo_width_set_after = SET('MEMOWIDTH')\n"
             "narrow_wrap_text = 'abc def ghi jkl mno'\n"
             "narrow_count = MEMLINES(narrow_wrap_text)\n"
             "narrow_first = MLINE(narrow_wrap_text, 1)\n"
@@ -245,7 +247,9 @@ namespace
         check("wrap_first", "one two three four five six seven eight nine ten");
         check("wrap_second", "eleven twelve");
         check("offset_line", "second line\nstill second");
+        check("memo_width_set_default", "50");
         check("memo_width_value", "10");
+        check("memo_width_set_after", "10");
         check("narrow_count", "3");
         check("narrow_first", "abc def");
         check("narrow_second", "ghi jkl");
