@@ -39,6 +39,11 @@
                 return populate_fields_array(array_name, designator);
             }
 
+            if (normalized_function == "aused")
+            {
+                return populate_used_aliases_array(array_name);
+            }
+
             if (normalized_function == "asize")
             {
                 const std::size_t rows = arguments.size() >= 2U
@@ -534,4 +539,3 @@
             assign_array(name, std::move(values), 7U);
             return 1;
         }
-

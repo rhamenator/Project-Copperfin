@@ -390,6 +390,14 @@ namespace copperfin::runtime
                 const CursorState *cursor = resolve_cursor_target(designator);
                 return cursor == nullptr ? 0U : cursor->field_count;
             },
+            [this](std::size_t index, const std::string &designator)
+            {
+                return cursor_field_name(designator, index);
+            },
+            [this](const std::string &field_name, std::size_t index, const std::string &designator)
+            {
+                return cursor_field_size(designator, field_name, index);
+            },
             [this](const std::string &designator)
             {
                 const CursorState *cursor = resolve_cursor_target(designator);

@@ -361,25 +361,49 @@
         std::vector<std::string> cursor_field_names(const CursorState &cursor)
         {
             std::vector<std::string> names;
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(cursor);
+            names.reserve(fields.size());
+            for (const auto &field : fields)
+            {
+                names.push_back(field.name);
+            }
+            return names;
+        }
+
+        std::vector<vfp::DbfFieldDescriptor> cursor_field_descriptors(const CursorState &cursor)
+        {
+            std::vector<vfp::DbfFieldDescriptor> fields;
             if (cursor.remote)
             {
+                const auto add_remote_field = [&](const std::string &name, char type)
+                {
+                    fields.push_back(vfp::DbfFieldDescriptor{
+                        .name = name,
+                        .type = type,
+                        .length = static_cast<std::uint8_t>(type == 'N' || type == 'F' ? 18U : 32U),
+                        .decimal_count = 0U});
+                };
+
                 if (!cursor.remote_records.empty())
                 {
-                    names.reserve(cursor.remote_records.front().values.size());
+                    fields.reserve(cursor.remote_records.front().values.size());
                     for (const auto &value : cursor.remote_records.front().values)
                     {
-                        names.push_back(value.field_name);
+                        const char type = value.field_type == '\0' ? 'C' : value.field_type;
+                        add_remote_field(value.field_name, type);
                     }
-                    return names;
+                    return fields;
                 }
-                return {"ID", "NAME", "AMOUNT"};
+                add_remote_field("ID", 'N');
+                add_remote_field("NAME", 'C');
+                add_remote_field("AMOUNT", 'N');
+                return fields;
             }
 
             if (cursor.source_path.empty())
             {
-                return names;
+                return fields;
             }
-
             const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
             if (!table_result.ok)
             {
@@ -387,12 +411,45 @@
                 return {};
             }
 
-            names.reserve(table_result.table.fields.size());
-            for (const auto &field : table_result.table.fields)
+            return table_result.table.fields;
+        }
+
+        std::string cursor_field_name(const std::string &designator, std::size_t one_based_index)
+        {
+            if (one_based_index == 0U)
             {
-                names.push_back(field.name);
+                return {};
             }
-            return names;
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr)
+            {
+                return {};
+            }
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+            return one_based_index <= fields.size() ? fields[one_based_index - 1U].name : std::string{};
+        }
+
+        std::size_t cursor_field_size(const std::string &designator, const std::string &field_name, std::size_t one_based_index)
+        {
+            const CursorState *cursor = resolve_cursor_target(designator);
+            if (cursor == nullptr)
+            {
+                return 0U;
+            }
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+            if (one_based_index > 0U)
+            {
+                return one_based_index <= fields.size() ? fields[one_based_index - 1U].length : 0U;
+            }
+            const std::string normalized_field = collapse_identifier(field_name);
+            const auto found = std::find_if(
+                fields.begin(),
+                fields.end(),
+                [&](const vfp::DbfFieldDescriptor &field)
+                {
+                    return collapse_identifier(field.name) == normalized_field;
+                });
+            return found == fields.end() ? 0U : found->length;
         }
 
         std::optional<std::string> current_record_field_display_value(CursorState &cursor, const std::string &field_name)
@@ -832,4 +889,3 @@
         {
             return resolve_cursor_target(evaluate_cursor_designator_expression(raw_designator, frame));
         }
-

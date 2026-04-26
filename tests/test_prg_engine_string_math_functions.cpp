@@ -40,6 +40,25 @@ namespace
             "c = MOD(10, 3)\n"
             "d = ROUND(3.567, 2)\n"
             "e = SIGN(-5)\n"
+            "log10_value = LOG10(1000)\n"
+            "sin_value = ROUND(SIN(DTOR(30)), 4)\n"
+            "cos_value = ROUND(COS(DTOR(60)), 4)\n"
+            "tan_value = ROUND(TAN(DTOR(45)), 4)\n"
+            "asin_value = ROUND(RTOD(ASIN(0.5)), 4)\n"
+            "acos_value = ROUND(RTOD(ACOS(0.5)), 4)\n"
+            "atan_value = ROUND(RTOD(ATAN(1)), 4)\n"
+            "atn2_value = ROUND(RTOD(ATN2(0, -1)), 4)\n"
+            "dtor_value = ROUND(DTOR(180), 4)\n"
+            "rtod_value = ROUND(RTOD(PI()), 4)\n"
+            "min_num = MIN(8, 3, 5)\n"
+            "max_num = MAX(8, 3, 5)\n"
+            "min_str = MIN('beta', 'alpha', 'gamma')\n"
+            "max_str = MAX('beta', 'alpha', 'gamma')\n"
+            "rgb_black = RGB(0, 0, 0)\n"
+            "rgb_sample = RGB(1, 2, 3)\n"
+            "rgb_clamped = RGB(-1, 300, 255)\n"
+            "rand_seeded = RAND(-123)\n"
+            "rand_next = RAND()\n"
             "f = IIF(.T., 'yes', 'no')\n"
             "g = BETWEEN(5, 1, 10)\n"
             "h = OCCURS('l', 'hello world')\n"
@@ -57,6 +76,15 @@ namespace
             "chrtranc_value = CHRTRANC('aAbBcc', 'AB', 'xy')\n"
             "chrtranc_delete = CHRTRANC('Alpha Beta', 'AE', 'x')\n"
             "proper_value = PROPER('legacy fox-pro APP')\n"
+            "strconv_lower = STRCONV('MiXeD', 7)\n"
+            "strconv_upper = STRCONV('MiXeD', 8)\n"
+            "strconv_passthrough = STRCONV('MiXeD', 1)\n"
+            "soundex_tamar = SOUNDEX('Tamar')\n"
+            "soundex_ted = SOUNDEX('ted')\n"
+            "soundex_smith = SOUNDEX('Smith')\n"
+            "soundex_schmidt = SOUNDEX('Schmidt')\n"
+            "difference_tamar_ted = DIFFERENCE('tamar', 'ted')\n"
+            "difference_ted_teddy = DIFFERENCE('ted', 'teddy')\n"
             "str_default = STR(42.7)\n"
             "str_width = STR(42, 5)\n"
             "str_decimals = STR(42.678, 8, 2)\n"
@@ -80,6 +108,17 @@ namespace
             "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
             "getwordnum_multi_delim = GETWORDNUM('a,b;c', 3, ',;')\n"
             "getwordnum_tab = GETWORDNUM('one' + CHR(9) + 'two', 2)\n"
+            "memo_text = 'first line' + CHR(13) + CHR(10) + 'second line' + CHR(10) + 'still second' + CHR(13) + 'third line'\n"
+            "memline_count = MEMLINES(memo_text)\n"
+            "mline_one = MLINE(memo_text, 1)\n"
+            "mline_two = MLINE(memo_text, 2)\n"
+            "mline_three = MLINE(memo_text, 3)\n"
+            "mline_missing = MLINE(memo_text, 4)\n"
+            "wrap_text = 'one two three four five six seven eight nine ten eleven twelve'\n"
+            "wrap_count = MEMLINES(wrap_text)\n"
+            "wrap_first = MLINE(wrap_text, 1)\n"
+            "wrap_second = MLINE(wrap_text, 2)\n"
+            "offset_line = MLINE(memo_text, 1, 12)\n"
             "strextract_case_sensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>')\n"
             "strextract_case_insensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>', 1, 1)\n"
             "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
@@ -125,6 +164,23 @@ namespace
         check("c", "1");
         check("d", "3.57");
         check("e", "-1");
+        check("log10_value", "3");
+        check("sin_value", "0.5");
+        check("cos_value", "0.5");
+        check("tan_value", "1");
+        check("asin_value", "30");
+        check("acos_value", "60");
+        check("atan_value", "45");
+        check("atn2_value", "180");
+        check("dtor_value", "3.1416");
+        check("rtod_value", "180");
+        check("min_num", "3");
+        check("max_num", "8");
+        check("min_str", "alpha");
+        check("max_str", "gamma");
+        check("rgb_black", "0");
+        check("rgb_sample", "197121");
+        check("rgb_clamped", "16776960");
         check("f", "yes");
         check("g", "true");
         check("h", "3");
@@ -141,6 +197,15 @@ namespace
         check("chrtranc_value", "xxyycc");
         check("chrtranc_delete", "xlphx Btx");
         check("proper_value", "Legacy Fox-Pro App");
+        check("strconv_lower", "mixed");
+        check("strconv_upper", "MIXED");
+        check("strconv_passthrough", "MiXeD");
+        check("soundex_tamar", "T560");
+        check("soundex_ted", "T300");
+        check("soundex_smith", "S530");
+        check("soundex_schmidt", "S530");
+        check("difference_tamar_ted", "2");
+        check("difference_ted_teddy", "4");
         check("str_default", "43");
         check("str_width", "   42");
         check("str_decimals", "   42.68");
@@ -164,6 +229,15 @@ namespace
         check("getwordnum_2", "c");
         check("getwordnum_multi_delim", "c");
         check("getwordnum_tab", "two");
+        check("memline_count", "3");
+        check("mline_one", "first line");
+        check("mline_two", "second line\nstill second");
+        check("mline_three", "third line");
+        check("mline_missing", "");
+        check("wrap_count", "2");
+        check("wrap_first", "one two three four five six seven eight nine ten");
+        check("wrap_second", "eleven twelve");
+        check("offset_line", "second line\nstill second");
         check("strextract_case_sensitive", "");
         check("strextract_case_insensitive", "Beta");
         check("strextract_missing_end_default", "");
@@ -174,6 +248,27 @@ namespace
         check("alltrim_basic", "hi");
         check("transform_decimal", "3.1");
         check("transform_upper", "HELLO");
+
+        for (const char *name : {"rand_seeded", "rand_next"})
+        {
+            const std::string name_text{name};
+            const auto it = state.globals.find(name_text);
+            if (it == state.globals.end())
+            {
+                expect(false, name_text + " variable not found");
+                continue;
+            }
+            double value = -1.0;
+            try
+            {
+                value = std::stod(copperfin::runtime::format_value(it->second));
+            }
+            catch (...)
+            {
+                value = -1.0;
+            }
+            expect(value >= 0.0 && value < 1.0, name_text + " should be in the RAND() range [0, 1)");
+        }
 
         fs::remove_all(temp_root, ignored);
     }

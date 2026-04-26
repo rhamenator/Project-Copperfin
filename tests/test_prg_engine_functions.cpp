@@ -33,6 +33,11 @@ namespace
             "em = EMPTY('')\n"
             "em2 = EMPTY(0)\n"
             "not_em = EMPTY('hi')\n"
+            "blank_empty = ISBLANK('')\n"
+            "blank_spaces = ISBLANK('   ')\n"
+            "blank_text = ISBLANK('hi')\n"
+            "blank_zero = ISBLANK(0)\n"
+            "blank_false = ISBLANK(.F.)\n"
             "nvl_result = NVL('', 'fallback')\n"
             "nvl_ok = NVL('value', 'fallback')\n"
             "isdigit_yes = ISDIGIT('5abc')\n"
@@ -43,6 +48,8 @@ namespace
             "islower_no = ISLOWER('ABC')\n"
             "isupper_yes = ISUPPER('ABC')\n"
             "isupper_no = ISUPPER('abc')\n"
+            "isleadbyte_ascii = ISLEADBYTE('A')\n"
+            "isleadbyte_empty = ISLEADBYTE('')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -70,6 +77,11 @@ namespace
         check("em", "true");
         check("em2", "true");
         check("not_em", "false");
+        check("blank_empty", "true");
+        check("blank_spaces", "true");
+        check("blank_text", "false");
+        check("blank_zero", "false");
+        check("blank_false", "false");
         check("nvl_result", "");
         check("nvl_ok", "value");
         check("isdigit_yes", "true");
@@ -80,6 +92,8 @@ namespace
         check("islower_no", "false");
         check("isupper_yes", "true");
         check("isupper_no", "false");
+        check("isleadbyte_ascii", "false");
+        check("isleadbyte_empty", "false");
 
         fs::remove_all(temp_root, ignored);
     }

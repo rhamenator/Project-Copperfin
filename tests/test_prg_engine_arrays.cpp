@@ -279,6 +279,10 @@ void test_array_metadata_and_text_functions() {
     write_text(
         main_path,
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS People\n"
+        "nUsedCount = AUSED(aUsed)\n"
+        "nUsedCols = ALEN(aUsed, 2)\n"
+        "cUsedAlias = aUsed[1,1]\n"
+        "nUsedArea = aUsed[1,2]\n"
         "nLineCount = ALINES(aLines, ' red ' + CHR(13) + CHR(10) + 'blue', 1)\n"
         "cLineOne = aLines[1]\n"
         "cLineTwo = aLines[2]\n"
@@ -307,6 +311,10 @@ void test_array_metadata_and_text_functions() {
     expect(state.completed, "array metadata and text function script should complete");
 
     const auto line_count = state.globals.find("nlinecount");
+    const auto used_count = state.globals.find("nusedcount");
+    const auto used_cols = state.globals.find("nusedcols");
+    const auto used_alias = state.globals.find("cusedalias");
+    const auto used_area = state.globals.find("nusedarea");
     const auto line_one = state.globals.find("clineone");
     const auto line_two = state.globals.find("clinetwo");
     const auto file_count = state.globals.find("nfilecount");
@@ -324,6 +332,10 @@ void test_array_metadata_and_text_functions() {
     const auto field_two_decimals = state.globals.find("nfieldtwodecimals");
 
     expect(line_count != state.globals.end(), "ALINES should return a count");
+    expect(used_count != state.globals.end(), "AUSED should return an open alias count");
+    expect(used_cols != state.globals.end(), "AUSED should expose its metadata column count");
+    expect(used_alias != state.globals.end(), "AUSED should populate the open alias");
+    expect(used_area != state.globals.end(), "AUSED should populate the open work area");
     expect(line_one != state.globals.end(), "ALINES should populate first line");
     expect(line_two != state.globals.end(), "ALINES should populate second line");
     expect(file_count != state.globals.end(), "ADIR should return a count");
@@ -342,6 +354,18 @@ void test_array_metadata_and_text_functions() {
 
     if (line_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(line_count->second) == "2", "ALINES should split two lines");
+    }
+    if (used_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_count->second) == "1", "AUSED should report one open cursor in the current data session");
+    }
+    if (used_cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_cols->second) == "2", "AUSED should expose alias and work-area columns");
+    }
+    if (used_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_alias->second) == "People", "AUSED should expose the open alias");
+    }
+    if (used_area != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_area->second) == "1", "AUSED should expose the open work area number");
     }
     if (line_one != state.globals.end()) {
         expect(copperfin::runtime::format_value(line_one->second) == "red", "ALINES flag 1 should trim the first line");

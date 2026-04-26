@@ -5,8 +5,30 @@
 #include <filesystem>
 #include <cmath>
 #include <cstdint>
+#include <stdexcept>
 
 namespace copperfin::runtime {
+
+namespace {
+
+std::uint32_t bitwise_value(const PrgValue& value) {
+    return static_cast<std::uint32_t>(
+        static_cast<std::int32_t>(std::llround(value_as_number(value))));
+}
+
+std::int64_t signed_bitwise_result(std::uint32_t value) {
+    return static_cast<std::int64_t>(static_cast<std::int32_t>(value));
+}
+
+int bit_position(const PrgValue& value) {
+    const int position = static_cast<int>(std::llround(value_as_number(value)));
+    if (position < 0 || position > 31) {
+        throw std::runtime_error("Bit position must be between 0 and 31");
+    }
+    return position;
+}
+
+}  // namespace
 
 std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& function,
@@ -115,23 +137,43 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     }
 
     if (function == "bitand" && arguments.size() >= 2U) {
-        const auto left = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        const auto right = static_cast<std::int64_t>(value_as_number(arguments[1]));
-        return make_int64_value(left & right);
+        std::uint32_t result = bitwise_value(arguments[0]);
+        for (std::size_t index = 1U; index < arguments.size(); ++index) {
+            result &= bitwise_value(arguments[index]);
+        }
+        return make_int64_value(signed_bitwise_result(result));
     }
     if (function == "bitor" && arguments.size() >= 2U) {
-        const auto left = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        const auto right = static_cast<std::int64_t>(value_as_number(arguments[1]));
-        return make_int64_value(left | right);
+        std::uint32_t result = bitwise_value(arguments[0]);
+        for (std::size_t index = 1U; index < arguments.size(); ++index) {
+            result |= bitwise_value(arguments[index]);
+        }
+        return make_int64_value(signed_bitwise_result(result));
     }
     if (function == "bitxor" && arguments.size() >= 2U) {
-        const auto left = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        const auto right = static_cast<std::int64_t>(value_as_number(arguments[1]));
-        return make_int64_value(left ^ right);
+        std::uint32_t result = bitwise_value(arguments[0]);
+        for (std::size_t index = 1U; index < arguments.size(); ++index) {
+            result ^= bitwise_value(arguments[index]);
+        }
+        return make_int64_value(signed_bitwise_result(result));
     }
     if (function == "bitnot" && !arguments.empty()) {
-        const auto value = static_cast<std::int64_t>(value_as_number(arguments[0]));
-        return make_int64_value(~value);
+        return make_int64_value(signed_bitwise_result(~bitwise_value(arguments[0])));
+    }
+    if (function == "bitclear" && arguments.size() >= 2U) {
+        const std::uint32_t value = bitwise_value(arguments[0]);
+        const std::uint32_t mask = 1U << bit_position(arguments[1]);
+        return make_int64_value(signed_bitwise_result(value & ~mask));
+    }
+    if (function == "bitset" && arguments.size() >= 2U) {
+        const std::uint32_t value = bitwise_value(arguments[0]);
+        const std::uint32_t mask = 1U << bit_position(arguments[1]);
+        return make_int64_value(signed_bitwise_result(value | mask));
+    }
+    if (function == "bittest" && arguments.size() >= 2U) {
+        const std::uint32_t value = bitwise_value(arguments[0]);
+        const std::uint32_t mask = 1U << bit_position(arguments[1]);
+        return make_boolean_value((value & mask) != 0U);
     }
     if (function == "bitlshift" && arguments.size() >= 2U) {
         const auto value = static_cast<std::int64_t>(value_as_number(arguments[0]));

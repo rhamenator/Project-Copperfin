@@ -50,6 +50,11 @@ void test_alter_table_drop_and_alter_column_rewrite() {
         "INSERT INTO People (NAME, ACTIVE) VALUES ('CHARLIE', .T.)\n"
         "nCount = RECCOUNT()\n"
         "nFields = FCOUNT('People')\n"
+        "cField1 = FIELD(1, 'People')\n"
+        "cField3 = FIELD(3)\n"
+        "cFieldMissing = FIELD(4, 'People')\n"
+        "nSizeName = FSIZE('NAME', 'People')\n"
+        "nSizeActive = FSIZE(2)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -62,13 +67,38 @@ void test_alter_table_drop_and_alter_column_rewrite() {
     expect(state.completed, "ALTER TABLE DROP/ALTER COLUMN script should complete");
     const auto count = state.globals.find("ncount");
     const auto field_count = state.globals.find("nfields");
+    const auto field1 = state.globals.find("cfield1");
+    const auto field3 = state.globals.find("cfield3");
+    const auto field_missing = state.globals.find("cfieldmissing");
+    const auto size_name = state.globals.find("nsizename");
+    const auto size_active = state.globals.find("nsizeactive");
     expect(count != state.globals.end(), "ALTER TABLE script should expose record count");
     expect(field_count != state.globals.end(), "ALTER TABLE script should expose field count");
+    expect(field1 != state.globals.end(), "FIELD(1, alias) should be captured for local cursor schema");
+    expect(field3 != state.globals.end(), "FIELD(3) should be captured for current local cursor schema");
+    expect(field_missing != state.globals.end(), "FIELD() beyond schema should be captured as empty");
+    expect(size_name != state.globals.end(), "FSIZE(name, alias) should be captured for local cursor schema");
+    expect(size_active != state.globals.end(), "FSIZE(index) should be captured for current local cursor schema");
     if (count != state.globals.end()) {
         expect(copperfin::runtime::format_value(count->second) == "3", "INSERT after ALTER TABLE should append one row");
     }
     if (field_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(field_count->second) == "3", "ALTER TABLE should update open cursor field count");
+    }
+    if (field1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field1->second) == "NAME", "FIELD(1, alias) should return the first field name");
+    }
+    if (field3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field3->second) == "STATUS", "FIELD(3) should return the current cursor's third field name");
+    }
+    if (field_missing != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_missing->second).empty(), "FIELD() beyond the schema should return an empty string");
+    }
+    if (size_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(size_name->second) == "12", "FSIZE(name, alias) should reflect ALTER COLUMN width");
+    }
+    if (size_active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(size_active->second) == "1", "FSIZE(index) should return the current cursor field width");
     }
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);

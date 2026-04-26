@@ -408,21 +408,16 @@
                 return make_number_value(0.0);
             }
             CursorState *cursor = resolve_cursor_target(designator);
-            if (cursor == nullptr || cursor->source_path.empty())
+            if (cursor == nullptr)
             {
                 assign_array(target_name, {}, 16U);
                 return make_number_value(0.0);
             }
-            const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, 1U);
-            if (!table_result.ok)
-            {
-                assign_array(target_name, {}, 16U);
-                return make_number_value(0.0);
-            }
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
 
             std::vector<PrgValue> values;
-            values.reserve(table_result.table.fields.size() * 16U);
-            for (const auto &field : table_result.table.fields)
+            values.reserve(fields.size() * 16U);
+            for (const auto &field : fields)
             {
                 values.push_back(make_string_value(field.name));
                 values.push_back(make_string_value(std::string(1U, static_cast<char>(std::toupper(static_cast<unsigned char>(field.type))))));
@@ -442,6 +437,29 @@
                 values.push_back(make_empty_value());
             }
             assign_array(target_name, std::move(values), 16U);
-            return make_number_value(static_cast<double>(table_result.table.fields.size()));
+            return make_number_value(static_cast<double>(fields.size()));
         }
 
+        PrgValue populate_used_aliases_array(const std::string &target_name)
+        {
+            if (trim_copy(target_name).empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            std::vector<PrgValue> values;
+            values.reserve(current_session_state().cursors.size() * 2U);
+            for (const auto &[work_area, cursor] : current_session_state().cursors)
+            {
+                if (cursor.alias.empty())
+                {
+                    continue;
+                }
+                values.push_back(make_string_value(cursor.alias));
+                values.push_back(make_number_value(static_cast<double>(work_area)));
+            }
+
+            const std::size_t rows = values.size() / 2U;
+            assign_array(target_name, std::move(values), 2U);
+            return make_number_value(static_cast<double>(rows));
+        }

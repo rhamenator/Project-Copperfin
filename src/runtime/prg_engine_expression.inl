@@ -61,6 +61,8 @@
                 std::function<bool(const std::string &)> used_callback,
                 std::function<std::string(const std::string &)> dbf_lookup_callback,
                 std::function<std::size_t(const std::string &)> field_count_callback,
+                std::function<std::string(std::size_t, const std::string &)> field_name_callback,
+                std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback,
                 std::function<std::size_t(const std::string &)> record_count_callback,
                 std::function<std::size_t(const std::string &)> recno_callback,
                 std::function<bool(const std::string &)> found_callback,
@@ -102,6 +104,8 @@
                   used_callback_(std::move(used_callback)),
                   dbf_lookup_callback_(std::move(dbf_lookup_callback)),
                   field_count_callback_(std::move(field_count_callback)),
+                  field_name_callback_(std::move(field_name_callback)),
+                  field_size_callback_(std::move(field_size_callback)),
                   record_count_callback_(std::move(record_count_callback)),
                   recno_callback_(std::move(recno_callback)),
                   found_callback_(std::move(found_callback)),
@@ -482,6 +486,32 @@
                     const std::string member_path = function.substr(member_separator + 1U);
                     return ole_invoke_callback_(base_name, member_path, arguments);
                 }
+                if ((function == "min" || function == "max") && arguments.size() >= 2U)
+                {
+                    PrgValue result = arguments.front();
+                    for (std::size_t index = 1U; index < arguments.size(); ++index)
+                    {
+                        const PrgValue &candidate = arguments[index];
+                        bool candidate_wins = false;
+                        if (result.kind == PrgValueKind::string || candidate.kind == PrgValueKind::string)
+                        {
+                            candidate_wins = function == "min"
+                                                 ? value_as_string(candidate) < value_as_string(result)
+                                                 : value_as_string(candidate) > value_as_string(result);
+                        }
+                        else
+                        {
+                            candidate_wins = function == "min"
+                                                 ? value_as_number(candidate) < value_as_number(result)
+                                                 : value_as_number(candidate) > value_as_number(result);
+                        }
+                        if (candidate_wins)
+                        {
+                            result = candidate;
+                        }
+                    }
+                    return result;
+                }
                 if (function == "count" || function == "sum" || function == "avg" || function == "average" || function == "min" || function == "max")
                 {
                     return aggregate_callback_(function, raw_arguments);
@@ -518,6 +548,35 @@
                 {
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
                     return make_number_value(static_cast<double>(field_count_callback_(designator)));
+                }
+                if (function == "field")
+                {
+                    if (arguments.empty())
+                    {
+                        return make_string_value({});
+                    }
+                    const auto index = static_cast<std::size_t>(std::max<long long>(0LL, std::llround(value_as_number(arguments[0]))));
+                    const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    return make_string_value(field_name_callback_(index, designator));
+                }
+                if (function == "fsize")
+                {
+                    if (arguments.empty())
+                    {
+                        return make_number_value(0.0);
+                    }
+                    std::size_t index = 0U;
+                    std::string field_name;
+                    if (arguments[0].kind == PrgValueKind::string)
+                    {
+                        field_name = value_as_string(arguments[0]);
+                    }
+                    else
+                    {
+                        index = static_cast<std::size_t>(std::max<long long>(0LL, std::llround(value_as_number(arguments[0]))));
+                    }
+                    const std::string designator = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    return make_number_value(static_cast<double>(field_size_callback_(field_name, index, designator)));
                 }
                 if (function == "reccount")
                 {
@@ -714,7 +773,7 @@
                 }
                 if ((function == "acopy" || function == "adel" || function == "adir" || function == "aelement" ||
                      function == "afields" || function == "ains" || function == "alines" || function == "asort" ||
-                     function == "ascan" || function == "asize" || function == "asubscript") &&
+                     function == "ascan" || function == "asize" || function == "asubscript" || function == "aused") &&
                     !arguments.empty())
                 {
                     return array_function_callback_(function, raw_arguments, arguments);
@@ -987,6 +1046,8 @@
             std::function<bool(const std::string &)> used_callback_;
             std::function<std::string(const std::string &)> dbf_lookup_callback_;
             std::function<std::size_t(const std::string &)> field_count_callback_;
+            std::function<std::string(std::size_t, const std::string &)> field_name_callback_;
+            std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback_;
             std::function<std::size_t(const std::string &)> record_count_callback_;
             std::function<std::size_t(const std::string &)> recno_callback_;
             std::function<bool(const std::string &)> found_callback_;

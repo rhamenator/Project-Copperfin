@@ -17,6 +17,9 @@ std::optional<PrgValue> evaluate_path_function(
         }
         return make_string_value(std::filesystem::absolute(path).string());
     }
+    if (function == "curdir") {
+        return make_string_value(default_directory);
+    }
     if (function == "justfname" && !arguments.empty()) {
         return make_string_value(portable_path_filename(value_as_string(arguments[0])));
     }
@@ -37,6 +40,13 @@ std::optional<PrgValue> evaluate_path_function(
     }
     if (function == "forcepath" && arguments.size() >= 2U) {
         return make_string_value(portable_force_path(value_as_string(arguments[0]), value_as_string(arguments[1])));
+    }
+    if (function == "defaultext" && arguments.size() >= 2U) {
+        const std::string path = value_as_string(arguments[0]);
+        if (!portable_path_extension(path).empty()) {
+            return make_string_value(path);
+        }
+        return make_string_value(portable_force_extension(path, value_as_string(arguments[1])));
     }
     if (function == "addbs" && !arguments.empty()) {
         std::string path = value_as_string(arguments[0]);

@@ -46,9 +46,17 @@ namespace
             "cCastString = CAST(123 AS STRING)\n"
             "lCastBool = CAST(0 AS LOGICAL)\n"
             "nBitAnd = BITAND(6, 3)\n"
+            "nBitAndMulti = BITAND(15, 7, 3)\n"
             "nBitOr = BITOR(6, 3)\n"
+            "nBitOrMulti = BITOR(1, 4, 8)\n"
             "nBitXor = BITXOR(6, 3)\n"
+            "nBitXorMulti = BITXOR(1, 3, 7)\n"
             "nBitNot = BITNOT(0)\n"
+            "nBitClear = BITCLEAR(7, 1)\n"
+            "nBitSet = BITSET(4, 1)\n"
+            "lBitTestHit = BITTEST(6, 1)\n"
+            "lBitTestMiss = BITTEST(6, 0)\n"
+            "nBitHigh = BITSET(0, 31)\n"
             "nBitLShift = BITLSHIFT(3, 2)\n"
             "nBitRShift = BITRSHIFT(16, 2)\n"
             "cPacked = BINTOC(16909060, 4)\n"
@@ -102,9 +110,17 @@ namespace
         check("ccaststring", "123");
         check("lcastbool", "false");
         check("nbitand", "2");
+        check("nbitandmulti", "3");
         check("nbitor", "7");
+        check("nbitormulti", "13");
         check("nbitxor", "5");
+        check("nbitxormulti", "5");
         check("nbitnot", "-1");
+        check("nbitclear", "5");
+        check("nbitset", "6");
+        check("lbittesthit", "true");
+        check("lbittestmiss", "false");
+        check("nbithigh", "-2147483648");
         check("nbitlshift", "12");
         check("nbitrshift", "4");
         check("nunpacked", "16909060");

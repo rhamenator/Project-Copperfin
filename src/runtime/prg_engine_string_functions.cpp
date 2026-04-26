@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::runtime {
@@ -64,6 +65,122 @@ bool expression_values_equal(const PrgValue& left, const PrgValue& right, bool e
                           : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value));
     }
     return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+}
+
+char soundex_digit(char ch) {
+    switch (static_cast<char>(std::toupper(static_cast<unsigned char>(ch)))) {
+        case 'B':
+        case 'F':
+        case 'P':
+        case 'V':
+            return '1';
+        case 'C':
+        case 'G':
+        case 'J':
+        case 'K':
+        case 'Q':
+        case 'S':
+        case 'X':
+        case 'Z':
+            return '2';
+        case 'D':
+        case 'T':
+            return '3';
+        case 'L':
+            return '4';
+        case 'M':
+        case 'N':
+            return '5';
+        case 'R':
+            return '6';
+        default:
+            return '0';
+    }
+}
+
+std::string soundex_code(const std::string& source) {
+    std::string letters;
+    letters.reserve(source.size());
+    for (const char ch : source) {
+        if (std::isalpha(static_cast<unsigned char>(ch)) != 0) {
+            letters.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(ch))));
+        }
+    }
+    if (letters.empty()) {
+        return "0000";
+    }
+
+    std::string result;
+    result.reserve(4U);
+    result.push_back(letters.front());
+    char previous_digit = soundex_digit(letters.front());
+    for (std::size_t index = 1U; index < letters.size() && result.size() < 4U; ++index) {
+        const char digit = soundex_digit(letters[index]);
+        if (digit != '0' && digit != previous_digit) {
+            result.push_back(digit);
+        }
+        previous_digit = digit;
+    }
+    result.resize(4U, '0');
+    return result;
+}
+
+std::vector<std::string> memo_width_lines(const std::string& source, std::size_t width = 50U) {
+    width = std::max<std::size_t>(1U, width);
+    std::vector<std::string> lines;
+    std::size_t pos = 0U;
+    while (pos < source.size()) {
+        if (source[pos] == '\r') {
+            lines.emplace_back();
+            ++pos;
+            if (pos < source.size() && source[pos] == '\n') {
+                ++pos;
+            }
+            continue;
+        }
+
+        const std::size_t cr_pos = source.find('\r', pos);
+        const std::size_t hard_end = cr_pos == std::string::npos ? source.size() : cr_pos;
+        std::size_t remaining = hard_end - pos;
+        if (remaining == 0U) {
+            lines.emplace_back();
+            pos = hard_end + 1U;
+            if (pos < source.size() && source[pos] == '\n') {
+                ++pos;
+            }
+            continue;
+        }
+
+        const std::size_t take_limit = std::min(width, remaining);
+        std::size_t take = take_limit;
+        if (remaining > width) {
+            const std::string_view window(source.data() + pos, take_limit);
+            const std::size_t space = window.find_last_of(' ');
+            if (space != std::string_view::npos && space > 0U) {
+                take = space;
+            }
+        }
+
+        std::string line = source.substr(pos, take);
+        while (!line.empty() && line.back() == ' ') {
+            line.pop_back();
+        }
+        lines.push_back(std::move(line));
+        pos += take;
+        while (pos < hard_end && source[pos] == ' ') {
+            ++pos;
+        }
+        if (pos >= hard_end && cr_pos != std::string::npos) {
+            pos = hard_end + 1U;
+            if (pos < source.size() && source[pos] == '\n') {
+                ++pos;
+            }
+        }
+    }
+    if (source.empty()) {
+        lines.emplace_back();
+    }
+    return lines;
 }
 
 }  // namespace
@@ -239,6 +356,34 @@ std::optional<PrgValue> evaluate_string_function(
         }
         return make_string_value(std::move(src));
     }
+    if (function == "strconv" && arguments.size() >= 2U) {
+        std::string src = value_as_string(arguments[0]);
+        const int mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
+        if (mode == 7) {
+            std::transform(src.begin(), src.end(), src.begin(), [](unsigned char ch) {
+                return static_cast<char>(std::tolower(ch));
+            });
+        } else if (mode == 8) {
+            std::transform(src.begin(), src.end(), src.begin(), [](unsigned char ch) {
+                return static_cast<char>(std::toupper(ch));
+            });
+        }
+        return make_string_value(std::move(src));
+    }
+    if (function == "soundex" && !arguments.empty()) {
+        return make_string_value(soundex_code(value_as_string(arguments[0])));
+    }
+    if (function == "difference" && arguments.size() >= 2U) {
+        const std::string left = soundex_code(value_as_string(arguments[0]));
+        const std::string right = soundex_code(value_as_string(arguments[1]));
+        int score = 0;
+        for (std::size_t index = 0U; index < std::min(left.size(), right.size()); ++index) {
+            if (left[index] == right[index]) {
+                ++score;
+            }
+        }
+        return make_number_value(static_cast<double>(score));
+    }
     if (function == "like" && arguments.size() >= 2U) {
         return make_boolean_value(wildcard_match_insensitive_local(
             value_as_string(arguments[0]),
@@ -279,6 +424,25 @@ std::optional<PrgValue> evaluate_string_function(
         }
         const std::size_t n = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
+    }
+    if (function == "memlines" && !arguments.empty()) {
+        return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0])).size()));
+    }
+    if (function == "mline" && arguments.size() >= 2U) {
+        const std::string source = value_as_string(arguments[0]);
+        const double requested_line = value_as_number(arguments[1]);
+        if (requested_line <= 0.0) {
+            return make_string_value(std::string{});
+        }
+        const std::size_t start = arguments.size() >= 3U
+                                      ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                      : 0U;
+        if (start >= source.size()) {
+            return make_string_value(std::string{});
+        }
+        const std::vector<std::string> lines = memo_width_lines(source.substr(start));
+        const std::size_t line_index = static_cast<std::size_t>(requested_line);
+        return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
     if ((function == "at" || function == "atc") && arguments.size() >= 2U) {
         const bool case_insensitive = function == "atc";

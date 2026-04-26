@@ -39,8 +39,11 @@ namespace
             "cPosixExt = JUSTEXT(cPosixPath)\n"
             "cForcedExt = FORCEEXT(cWinPath, 'h')\n"
             "cForcedExtWithDot = FORCEEXT(cWinPath, '.hpp')\n"
+            "cDefaultExtAdded = DEFAULTEXT('D:\\generated\\report', 'frx')\n"
+            "cDefaultExtKept = DEFAULTEXT('D:\\generated\\report.frx', 'bak')\n"
             "cForcedPath = FORCEPATH(cWinPath, 'D:\\generated')\n"
             "cForcedPosixPath = FORCEPATH(cPosixPath, '/tmp/generated')\n"
+            "cCurrentDir = CURDIR()\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
@@ -61,8 +64,11 @@ namespace
         const auto posix_ext = state.globals.find("cposixext");
         const auto forced_ext = state.globals.find("cforcedext");
         const auto forced_ext_with_dot = state.globals.find("cforcedextwithdot");
+        const auto default_ext_added = state.globals.find("cdefaultextadded");
+        const auto default_ext_kept = state.globals.find("cdefaultextkept");
         const auto forced_path = state.globals.find("cforcedpath");
         const auto forced_posix_path = state.globals.find("cforcedposixpath");
+        const auto current_dir = state.globals.find("ccurrentdir");
 
         expect(drive != state.globals.end(), "JUSTDRIVE result should be captured");
         expect(win_dir != state.globals.end(), "Windows JUSTPATH result should be captured");
@@ -75,8 +81,11 @@ namespace
         expect(posix_ext != state.globals.end(), "POSIX JUSTEXT result should be captured");
         expect(forced_ext != state.globals.end(), "FORCEEXT result should be captured");
         expect(forced_ext_with_dot != state.globals.end(), "FORCEEXT dotted-extension result should be captured");
+        expect(default_ext_added != state.globals.end(), "DEFAULTEXT add result should be captured");
+        expect(default_ext_kept != state.globals.end(), "DEFAULTEXT keep result should be captured");
         expect(forced_path != state.globals.end(), "FORCEPATH Windows result should be captured");
         expect(forced_posix_path != state.globals.end(), "FORCEPATH POSIX result should be captured");
+        expect(current_dir != state.globals.end(), "CURDIR result should be captured");
 
         if (drive != state.globals.end())
         {
@@ -132,6 +141,16 @@ namespace
             expect(copperfin::runtime::format_value(forced_ext_with_dot->second) == "E:\\Project-Copperfin\\src\\runtime\\prg_engine.hpp",
                    "FORCEEXT should accept a leading dot in the requested extension");
         }
+        if (default_ext_added != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(default_ext_added->second) == "D:\\generated\\report.frx",
+                   "DEFAULTEXT should append an extension only when one is missing");
+        }
+        if (default_ext_kept != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(default_ext_kept->second) == "D:\\generated\\report.frx",
+                   "DEFAULTEXT should preserve an existing extension");
+        }
         if (forced_path != state.globals.end())
         {
             expect(copperfin::runtime::format_value(forced_path->second) == "D:\\generated\\prg_engine.cpp",
@@ -141,6 +160,11 @@ namespace
         {
             expect(copperfin::runtime::format_value(forced_posix_path->second) == "/tmp/generated/prg_engine.cpp",
                    "FORCEPATH should replace a POSIX-style directory");
+        }
+        if (current_dir != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(current_dir->second) == temp_root.string(),
+                   "CURDIR should expose the runtime working directory");
         }
 
         fs::remove_all(temp_root, ignored);

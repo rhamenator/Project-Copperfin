@@ -57,6 +57,16 @@ std::optional<PrgValue> evaluate_type_function(
     if ((function == "isnull" || function == "isempty") && !arguments.empty()) {
         return make_boolean_value(arguments[0].kind == PrgValueKind::empty);
     }
+    if (function == "isblank" && !arguments.empty()) {
+        const PrgValue& value = arguments[0];
+        if (value.kind == PrgValueKind::empty) {
+            return make_boolean_value(true);
+        }
+        if (value.kind == PrgValueKind::string) {
+            return make_boolean_value(trim_copy(value.string_value).empty());
+        }
+        return make_boolean_value(false);
+    }
     if (function == "vartype" && !arguments.empty()) {
         return make_string_value(vartype_code(arguments[0]));
     }
@@ -92,6 +102,9 @@ std::optional<PrgValue> evaluate_type_function(
     if (function == "isupper" && !arguments.empty()) {
         const std::string s = value_as_string(arguments[0]);
         return make_boolean_value(!s.empty() && std::isupper(static_cast<unsigned char>(s[0])) != 0);
+    }
+    if (function == "isleadbyte" && !arguments.empty()) {
+        return make_boolean_value(false);
     }
 
     return std::nullopt;

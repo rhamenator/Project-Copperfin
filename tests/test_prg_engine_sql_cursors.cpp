@@ -27,6 +27,12 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
         "lUsed = USED('sqlcust')\n"
         "cDbf = DBF('sqlcust')\n"
         "nFields = FCOUNT('sqlcust')\n"
+        "cField2 = FIELD(2, 'sqlcust')\n"
+        "nSizeAmount = FSIZE('AMOUNT', 'sqlcust')\n"
+        "nSizeName = FSIZE(2, 'sqlcust')\n"
+        "nAFieldCount = AFIELDS(aSqlFields, 'sqlcust')\n"
+        "cAField2 = aSqlFields[2,1]\n"
+        "nAField2Size = aSqlFields[2,3]\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -41,10 +47,22 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     const auto used = state.globals.find("lused");
     const auto dbf = state.globals.find("cdbf");
     const auto fields = state.globals.find("nfields");
+    const auto field2 = state.globals.find("cfield2");
+    const auto size_amount = state.globals.find("nsizeamount");
+    const auto size_name = state.globals.find("nsizename");
+    const auto afield_count = state.globals.find("nafieldcount");
+    const auto afield2 = state.globals.find("cafield2");
+    const auto afield2_size = state.globals.find("nafield2size");
 
     expect(used != state.globals.end(), "USED('sqlcust') should be captured for the SQL cursor");
     expect(dbf != state.globals.end(), "DBF('sqlcust') should be captured for the SQL cursor");
     expect(fields != state.globals.end(), "FCOUNT('sqlcust') should be captured for the SQL cursor");
+    expect(field2 != state.globals.end(), "FIELD(index, alias) should be captured for the SQL cursor");
+    expect(size_amount != state.globals.end(), "FSIZE(name, alias) should be captured for the SQL cursor");
+    expect(size_name != state.globals.end(), "FSIZE(index, alias) should be captured for the SQL cursor");
+    expect(afield_count != state.globals.end(), "AFIELDS(array, alias) should be captured for the SQL cursor");
+    expect(afield2 != state.globals.end(), "AFIELDS should populate SQL cursor field names");
+    expect(afield2_size != state.globals.end(), "AFIELDS should populate SQL cursor field widths");
 
     if (used != state.globals.end()) {
         expect(copperfin::runtime::format_value(used->second) == "true", "USED('sqlcust') should report true for a materialized SQL cursor");
@@ -54,6 +72,24 @@ void test_cursor_identity_functions_for_sql_result_cursors() {
     }
     if (fields != state.globals.end()) {
         expect(copperfin::runtime::format_value(fields->second) == "3", "FCOUNT('sqlcust') should expose the synthetic SQL cursor schema");
+    }
+    if (field2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field2->second) == "NAME", "FIELD(index, alias) should expose synthetic SQL field order");
+    }
+    if (size_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(size_amount->second) == "18", "FSIZE(name, alias) should expose synthetic SQL numeric width");
+    }
+    if (size_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(size_name->second) == "32", "FSIZE(index, alias) should expose synthetic SQL character width");
+    }
+    if (afield_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(afield_count->second) == "3", "AFIELDS(array, alias) should expose synthetic SQL field count");
+    }
+    if (afield2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(afield2->second) == "NAME", "AFIELDS should expose synthetic SQL field order");
+    }
+    if (afield2_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(afield2_size->second) == "32", "AFIELDS should expose synthetic SQL field width");
     }
 
     fs::remove_all(temp_root, ignored);
