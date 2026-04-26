@@ -1,5 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -159,11 +160,121 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_filesize_expression_function()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_filesize";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        // Create a test file with known content
+        const fs::path test_file_path = temp_root / "testfile.txt";
+        const std::string test_content = "Hello, World! This is a test file.";
+        write_text(test_file_path, test_content);
+
+        const fs::path main_path = temp_root / "filesize_test.prg";
+        write_text(
+            main_path,
+            "cTestFile = 'testfile.txt'\n"
+            "nFileSize = FILESIZE(cTestFile)\n"
+            "nMissingFile = FILESIZE('missing-file.txt')\n"
+            "nEmptyArg = FILESIZE()\n"
+            "nAbsolutePath = FILESIZE('" + test_file_path.string() + "')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "FILESIZE() test script should complete");
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        // Test file size matches the test content length
+        check("nfilesize", std::to_string(test_content.length()));
+        
+        // Missing file should return 0
+        check("nmissingfile", "0");
+        
+        // Empty argument should return 0
+        check("nemptyarg", "0");
+        
+        // Absolute path should also work
+        check("nabsolutepath", std::to_string(test_content.length()));
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_recsize_reclength_expression_functions()
+    {
+        // Simple test to validate RECSIZE/RECLENGTH functionality
+        // For now, just verify the functions exist and return 0 for non-existent cursors
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_recsize";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "recsize_test.prg";
+        write_text(
+            main_path,
+            "nRecSizeClosed = RECSIZE()\n"
+            "nRecLengthClosed = RECLENGTH()\n"
+            "nRecSizeNoArea = RECSIZE('nonexistent')\n"
+            "nRecLengthNoArea = RECLENGTH('nonexistent')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "RECSIZE/RECLENGTH test script should complete");
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        // All values should be 0 since we're not using any tables
+        check("nrecsizeclosed", "0");
+        check("nreclengthclosed", "0");
+        check("nrecsizenoarea", "0");
+        check("nreclengthnoarea", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
 {
     test_expression_runtime_surface_extensions();
+    test_filesize_expression_function();
+    test_recsize_reclength_expression_functions();
 
     if (test_failures() != 0)
     {

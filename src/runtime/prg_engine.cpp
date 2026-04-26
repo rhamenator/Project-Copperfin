@@ -167,6 +167,7 @@ namespace copperfin::runtime
             bool remote = false;
             std::size_t field_count = 0;
             std::size_t record_count = 0;
+            std::size_t record_length = 0;
             std::size_t recno = 0;
             bool found = false;
             bool bof = true;
@@ -402,6 +403,11 @@ namespace copperfin::runtime
             {
                 const CursorState *cursor = resolve_cursor_target(designator);
                 return cursor == nullptr ? 0U : cursor->record_count;
+            },
+            [this](const std::string &designator)
+            {
+                const CursorState *cursor = resolve_cursor_target(designator);
+                return cursor == nullptr ? 0U : cursor->record_length;
             },
             [this](const std::string &designator)
             {

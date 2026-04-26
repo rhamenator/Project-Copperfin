@@ -49,6 +49,7 @@
                 dbf_identity = resolved_path;
                 field_count = table_result.table.fields.size();
                 record_count = table_result.table.header.record_count;
+                std::size_t record_length = table_result.table.header.record_length;
                 std::vector<CursorState::OrderState> orders = load_cursor_orders(resolved_path);
                 if (alias.empty())
                 {
@@ -84,6 +85,7 @@
                 cursor.source_kind = "table";
                 cursor.field_count = field_count;
                 cursor.record_count = record_count;
+                cursor.record_length = record_length;
                 cursor.recno = record_count == 0U ? 0U : 1U;
                 cursor.bof = record_count == 0U;
                 cursor.eof = record_count == 0U;

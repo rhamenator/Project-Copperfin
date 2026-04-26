@@ -128,6 +128,18 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string path = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
         return make_number_value(static_cast<double>(drive_type_value(path, default_directory)));
     }
+    if (function == "filesize") {
+        if (arguments.empty()) {
+            return make_number_value(0.0);
+        }
+        std::error_code ignored;
+        const std::filesystem::path path = filesystem_probe_path(value_as_string(arguments[0]), default_directory);
+        if (!std::filesystem::exists(path, ignored)) {
+            return make_number_value(0.0);
+        }
+        const auto size = std::filesystem::file_size(path, ignored);
+        return make_number_value(ignored ? 0.0 : static_cast<double>(size));
+    }
     if (function == "message") {
         return make_string_value(last_error_message);
     }

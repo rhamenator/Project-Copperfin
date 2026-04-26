@@ -64,6 +64,7 @@
                 std::function<std::string(std::size_t, const std::string &)> field_name_callback,
                 std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback,
                 std::function<std::size_t(const std::string &)> record_count_callback,
+                std::function<std::size_t(const std::string &)> record_length_callback,
                 std::function<std::size_t(const std::string &)> recno_callback,
                 std::function<bool(const std::string &)> found_callback,
                 std::function<bool(const std::string &)> eof_callback,
@@ -107,6 +108,7 @@
                   field_name_callback_(std::move(field_name_callback)),
                   field_size_callback_(std::move(field_size_callback)),
                   record_count_callback_(std::move(record_count_callback)),
+                  record_length_callback_(std::move(record_length_callback)),
                   recno_callback_(std::move(recno_callback)),
                   found_callback_(std::move(found_callback)),
                   eof_callback_(std::move(eof_callback)),
@@ -583,6 +585,11 @@
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
                     return make_number_value(static_cast<double>(record_count_callback_(designator)));
                 }
+                if (function == "recsize" || function == "reclength")
+                {
+                    const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+                    return make_number_value(static_cast<double>(record_length_callback_(designator)));
+                }
                 if (function == "recno")
                 {
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
@@ -1049,6 +1056,7 @@
             std::function<std::string(std::size_t, const std::string &)> field_name_callback_;
             std::function<std::size_t(const std::string &, std::size_t, const std::string &)> field_size_callback_;
             std::function<std::size_t(const std::string &)> record_count_callback_;
+            std::function<std::size_t(const std::string &)> record_length_callback_;
             std::function<std::size_t(const std::string &)> recno_callback_;
             std::function<bool(const std::string &)> found_callback_;
             std::function<bool(const std::string &)> eof_callback_;
