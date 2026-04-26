@@ -13,4 +13,6 @@ std::optional<PrgValue> evaluate_file_io_function(
     const std::vector<PrgValue>& arguments,
     const std::string& default_directory);
 
+void close_all_file_io_handles();
+
 }  // namespace copperfin::runtime

@@ -2252,6 +2252,64 @@ void test_shutdown_handler_cleanup_code_remains_harmless() {
     fs::remove_all(tmp, ign);
 }
 
+void test_quit_closes_open_database_and_runtime_handles() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_quit_resource_cleanup";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "a.dbf", {"alpha", "beta"});
+    write_text(temp_root / "held.txt", "seed");
+
+    const fs::path quit_path = temp_root / "quit_cleanup.prg";
+    write_text(
+        quit_path,
+        "USE '" + (temp_root / "a.dbf").string() + "'\n"
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "obj = CREATEOBJECT('Sample.Object')\n"
+        "nHandle = FOPEN('held.txt', 2)\n"
+        "QUIT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = quit_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "QUIT cleanup script should complete");
+    expect(state.cursors.empty(), "QUIT should close open database cursors/work areas");
+    expect(state.work_area.aliases.empty(), "QUIT should clear work-area aliases");
+    expect(state.sql_connections.empty(), "QUIT should disconnect open SQL connections");
+    expect(state.ole_objects.empty(), "QUIT should release tracked OLE object handles");
+
+    const auto handle_it = state.globals.find("nhandle");
+    expect(handle_it != state.globals.end(), "FOPEN handle should be captured before QUIT");
+    int handle = 1;
+    if (handle_it != state.globals.end()) {
+        handle = static_cast<int>(handle_it->second.number_value);
+    }
+
+    const fs::path verify_path = temp_root / "verify_handle_closed.prg";
+    write_text(
+        verify_path,
+        "nClose = FCLOSE(" + std::to_string(handle) + ")\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession verify_session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = verify_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+    const auto verify_state = verify_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(verify_state.completed, "verification script should complete");
+
+    const auto close_it = verify_state.globals.find("nclose");
+    expect(close_it != verify_state.globals.end(), "verification script should expose FCLOSE result");
+    if (close_it != verify_state.globals.end()) {
+        expect(close_it->second.number_value == -1.0,
+               "QUIT should already close FOPEN handles so follow-up FCLOSE returns -1");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -2299,6 +2357,7 @@ int main() {
     test_quit_cancelled_by_callback();
     test_shutdown_handler_quit_exits_event_loop_without_clear_events();
     test_shutdown_handler_cleanup_code_remains_harmless();
+    test_quit_closes_open_database_and_runtime_handles();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

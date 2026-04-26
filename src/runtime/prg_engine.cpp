@@ -2,6 +2,7 @@
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_internal.h"
+#include "prg_engine_file_io_functions.h"
 #include "prg_engine_runtime_config.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "copperfin/runtime/xasset_methods.h"

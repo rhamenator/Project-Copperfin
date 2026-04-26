@@ -3026,6 +3026,7 @@
                 // cleanup implicit so callers do not need explicit CLEAR EVENTS.
                 waiting_for_events = false;
                 restore_event_loop_after_dispatch = false;
+                cleanup_runtime_resources_for_shutdown();
                 events.push_back({.category = "runtime.quit",
                                   .detail = "QUIT",
                                   .location = statement.location});

@@ -163,6 +163,45 @@
             return empty_registered_functions;
         }
 
+        void cleanup_runtime_resources_for_shutdown()
+        {
+            // Release open work areas/cursors across all data sessions.
+            for (auto &[_, session] : data_sessions)
+            {
+                session.cursors.clear();
+                session.aliases.clear();
+                session.selected_work_area = 1;
+                session.next_work_area = 1;
+            }
+
+            // Release synthetic SQL/OLE/runtime interop state.
+            sql_connections_by_session.clear();
+            next_sql_handle_by_session.clear();
+            registered_api_functions_by_session.clear();
+            next_api_handle_by_session.clear();
+            ole_objects.clear();
+
+            // Ensure FOPEN handles are closed so files are not left locked.
+            close_all_file_io_handles();
+
+#if defined(_WIN32)
+            // Release any DLL handles loaded through DECLARE ... IN.
+            std::set<HMODULE> released_modules;
+            for (auto &[_, declfn] : declared_dll_functions)
+            {
+                if (declfn.hmodule != nullptr && !released_modules.contains(declfn.hmodule))
+                {
+                    FreeLibrary(declfn.hmodule);
+                    released_modules.insert(declfn.hmodule);
+                }
+                declfn.hmodule = nullptr;
+                declfn.proc_address = nullptr;
+            }
+#endif
+            declared_dll_functions.clear();
+            loaded_libraries.clear();
+        }
+
         RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {})
         {
             RuntimePauseState state;

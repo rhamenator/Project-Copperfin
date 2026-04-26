@@ -295,4 +295,15 @@ std::optional<PrgValue> evaluate_file_io_function(
     return std::nullopt;
 }
 
+void close_all_file_io_handles() {
+    auto& handles = open_file_handles();
+    for (auto& [_, opened] : handles) {
+        if (opened.file != nullptr) {
+            std::fclose(opened.file);
+            opened.file = nullptr;
+        }
+    }
+    handles.clear();
+}
+
 }  // namespace copperfin::runtime
