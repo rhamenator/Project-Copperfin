@@ -2177,6 +2177,81 @@ void test_quit_cancelled_by_callback() {
     fs::remove_all(tmp, ign);
 }
 
+void test_shutdown_handler_quit_exits_event_loop_without_clear_events() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_shutdown_quit_without_clear";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+               "READ EVENTS\n"
+               "RETURN\n"
+               "PROCEDURE AppShutdown\n"
+               "QUIT\n"
+               "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+
+    const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "READ EVENTS should place runtime into event-loop pause");
+
+    const bool dispatched = session.dispatch_event_handler("AppShutdown");
+    expect(dispatched, "shutdown event handler should dispatch while in READ EVENTS");
+
+    const auto completed = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(completed.completed, "QUIT inside shutdown handler should complete runtime without CLEAR EVENTS");
+    expect(completed.reason == copperfin::runtime::DebugPauseReason::completed,
+           "runtime should report completed after shutdown QUIT");
+
+    const bool has_quit = std::any_of(completed.events.begin(), completed.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; });
+    expect(has_quit, "shutdown QUIT should emit runtime.quit event");
+
+    fs::remove_all(tmp, ign);
+}
+
+void test_shutdown_handler_cleanup_code_remains_harmless() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_shutdown_quit_with_clear";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+               "READ EVENTS\n"
+               "RETURN\n"
+               "PROCEDURE AppShutdown\n"
+               "CLEAR EVENTS\n"
+               "QUIT\n"
+               "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+
+    const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "READ EVENTS should place runtime into event-loop pause");
+
+    const bool dispatched = session.dispatch_event_handler("AppShutdown");
+    expect(dispatched, "shutdown event handler should dispatch while in READ EVENTS");
+
+    const auto completed = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(completed.completed, "CLEAR EVENTS + QUIT shutdown path should complete cleanly");
+    expect(completed.reason == copperfin::runtime::DebugPauseReason::completed,
+           "runtime should report completed after cleanup-enhanced shutdown handler");
+
+    const bool has_quit = std::any_of(completed.events.begin(), completed.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; });
+    expect(has_quit, "cleanup-enhanced shutdown path should still emit runtime.quit event");
+
+    fs::remove_all(tmp, ign);
+}
+
 
 }  // namespace
 
@@ -2222,6 +2297,8 @@ int main() {
     test_cancel_halts_execution();
     test_quit_emits_event();
     test_quit_cancelled_by_callback();
+    test_shutdown_handler_quit_exits_event_loop_without_clear_events();
+    test_shutdown_handler_cleanup_code_remains_harmless();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

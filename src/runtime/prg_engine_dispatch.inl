@@ -3022,6 +3022,10 @@
                     return {};
                 }
                 // Confirmed (or no callback) — unwind entire call stack
+                // QUIT represents application shutdown intent; make event-loop
+                // cleanup implicit so callers do not need explicit CLEAR EVENTS.
+                waiting_for_events = false;
+                restore_event_loop_after_dispatch = false;
                 events.push_back({.category = "runtime.quit",
                                   .detail = "QUIT",
                                   .location = statement.location});
