@@ -1278,6 +1278,55 @@
             {
                 const auto [option_name, option_value] = split_first_word(statement.expression);
                 const std::string normalized_name = normalize_identifier(option_name);
+                const auto normalize_boolean_set_value = [&](const std::string &raw_value) -> std::string
+                {
+                    auto map_boolean_token = [](const std::string &raw_token) -> std::optional<std::string>
+                    {
+                        const std::string normalized_token = normalize_identifier(raw_token);
+                        if (normalized_token.empty() || normalized_token == "on" || normalized_token == "true" || normalized_token == "1" ||
+                            normalized_token == ".t." || normalized_token == "yes" || normalized_token == "y")
+                        {
+                            return std::string{"on"};
+                        }
+                        if (normalized_token == "off" || normalized_token == "false" || normalized_token == "0" ||
+                            normalized_token == ".f." || normalized_token == "no" || normalized_token == "n")
+                        {
+                            return std::string{"off"};
+                        }
+                        return std::nullopt;
+                    };
+
+                    std::string candidate = trim_copy(raw_value);
+                    if (starts_with_insensitive(candidate, "TO "))
+                    {
+                        candidate = trim_copy(candidate.substr(3U));
+                    }
+
+                    if (const auto mapped = map_boolean_token(candidate))
+                    {
+                        return *mapped;
+                    }
+
+                    if (!candidate.empty())
+                    {
+                        const PrgValue evaluated = evaluate_expression(candidate, frame);
+                        if (evaluated.kind == PrgValueKind::boolean)
+                        {
+                            return value_as_bool(evaluated) ? "on" : "off";
+                        }
+                        if (evaluated.kind == PrgValueKind::number || evaluated.kind == PrgValueKind::int64 || evaluated.kind == PrgValueKind::uint64)
+                        {
+                            return std::abs(value_as_number(evaluated)) > 0.000001 ? "on" : "off";
+                        }
+                        if (const auto mapped = map_boolean_token(value_as_string(evaluated)))
+                        {
+                            return *mapped;
+                        }
+                    }
+
+                    return raw_value;
+                };
+
                 if (normalized_name == "filter")
                 {
                     std::string filter_clause = trim_copy(option_value);
@@ -1323,7 +1372,14 @@
                 }
                 if (!normalized_name.empty())
                 {
-                    current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
+                    if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near")
+                    {
+                        current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
+                    }
+                    else
+                    {
+                        current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
+                    }
                 }
                 else
                 {

@@ -626,11 +626,13 @@ namespace copperfin::runtime
                 }
 
                 const std::string normalized_value = normalize_identifier(found->second);
-                if (normalized_value.empty() || normalized_value == "on" || normalized_value == "true" || normalized_value == "1")
+                if (normalized_value.empty() || normalized_value == "on" || normalized_value == "true" || normalized_value == "1" ||
+                    normalized_value == ".t." || normalized_value == "yes" || normalized_value == "y")
                 {
                     return std::string("ON");
                 }
-                if (normalized_value == "off" || normalized_value == "false" || normalized_value == "0")
+                if (normalized_value == "off" || normalized_value == "false" || normalized_value == "0" ||
+                    normalized_value == ".f." || normalized_value == "no" || normalized_value == "n")
                 {
                     return std::string("OFF");
                 }

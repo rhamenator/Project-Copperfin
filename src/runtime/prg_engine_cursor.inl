@@ -523,7 +523,8 @@
             }
 
             const std::string normalized_value = normalize_identifier(found->second);
-            return normalized_value != "off" && normalized_value != "false" && normalized_value != "0";
+                     return normalized_value != "off" && normalized_value != "false" && normalized_value != "0" &&
+                         normalized_value != ".f." && normalized_value != "no" && normalized_value != "n";
         }
 
         std::map<std::string, std::string> &current_set_state()

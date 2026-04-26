@@ -552,12 +552,18 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cNearBefore = SET('NEAR')\n"
         "SET NEAR ON\n"
         "cNearAfter = SET('NEAR')\n"
+        "SET NEAR TO .F.\n"
+        "cNearAfterToFalse = SET('NEAR')\n"
         "cExactBefore = SET('EXACT')\n"
         "SET EXACT ON\n"
         "cExactAfter = SET('EXACT')\n"
+        "SET EXACT TO 'OFF'\n"
+        "cExactAfterToStringOff = SET('EXACT')\n"
         "cDeletedBefore = SET('DELETED')\n"
         "SET DELETED ON\n"
         "cDeletedAfter = SET('DELETED')\n"
+        "SET DELETED TO 0\n"
+        "cDeletedAfterToZero = SET('DELETED')\n"
         "cPathBefore = SET('PATH')\n"
         "lPathFileBefore = FILE('path_only_session.txt')\n"
         "SET PATH TO '" + path_probe_dir.string() + "'\n"
@@ -601,10 +607,13 @@ void test_eval_macro_and_runtime_state_semantics() {
 
     const auto near_before = state.globals.find("cnearbefore");
     const auto near_after = state.globals.find("cnearafter");
+    const auto near_after_to_false = state.globals.find("cnearaftertofalse");
     const auto exact_before = state.globals.find("cexactbefore");
     const auto exact_after = state.globals.find("cexactafter");
+    const auto exact_after_to_string_off = state.globals.find("cexactaftertostringoff");
     const auto deleted_before = state.globals.find("cdeletedbefore");
     const auto deleted_after = state.globals.find("cdeletedafter");
+    const auto deleted_after_to_zero = state.globals.find("cdeletedaftertozero");
     const auto path_before = state.globals.find("cpathbefore");
     const auto path_after = state.globals.find("cpathafter");
     const auto path_file_before = state.globals.find("lpathfilebefore");
@@ -633,10 +642,13 @@ void test_eval_macro_and_runtime_state_semantics() {
 
     expect(near_before != state.globals.end(), "SET('NEAR') before enabling it should be captured");
     expect(near_after != state.globals.end(), "SET('NEAR') after enabling it should be captured");
+    expect(near_after_to_false != state.globals.end(), "SET('NEAR') after SET NEAR TO .F. should be captured");
     expect(exact_before != state.globals.end(), "SET('EXACT') before enabling it should be captured");
     expect(exact_after != state.globals.end(), "SET('EXACT') after enabling it should be captured");
+    expect(exact_after_to_string_off != state.globals.end(), "SET('EXACT') after SET EXACT TO 'OFF' should be captured");
     expect(deleted_before != state.globals.end(), "SET('DELETED') before enabling it should be captured");
     expect(deleted_after != state.globals.end(), "SET('DELETED') after enabling it should be captured");
+    expect(deleted_after_to_zero != state.globals.end(), "SET('DELETED') after SET DELETED TO 0 should be captured");
     expect(path_before != state.globals.end(), "SET('PATH') before change should be captured");
     expect(path_after != state.globals.end(), "SET('PATH') after change should be captured");
     expect(path_file_before != state.globals.end(), "FILE() before SET PATH should be captured");
@@ -669,17 +681,26 @@ void test_eval_macro_and_runtime_state_semantics() {
     if (near_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_after->second) == "ON", "SET('NEAR') should report ON after SET NEAR ON");
     }
+    if (near_after_to_false != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_after_to_false->second) == "OFF", "SET('NEAR') should report OFF after SET NEAR TO .F.");
+    }
     if (exact_before != state.globals.end()) {
         expect(copperfin::runtime::format_value(exact_before->second) == "OFF", "SET('EXACT') should report OFF before it is enabled");
     }
     if (exact_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(exact_after->second) == "ON", "SET('EXACT') should report ON after SET EXACT ON");
     }
+    if (exact_after_to_string_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_after_to_string_off->second) == "OFF", "SET('EXACT') should report OFF after SET EXACT TO 'OFF'");
+    }
     if (deleted_before != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted_before->second) == "OFF", "SET('DELETED') should report OFF before it is enabled");
     }
     if (deleted_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted_after->second) == "ON", "SET('DELETED') should report ON after SET DELETED ON");
+    }
+    if (deleted_after_to_zero != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_after_to_zero->second) == "OFF", "SET('DELETED') should report OFF after SET DELETED TO 0");
     }
     if (path_before != state.globals.end()) {
         expect(copperfin::runtime::format_value(path_before->second) == "OFF", "SET('PATH') should report OFF before it is configured");
@@ -751,13 +772,13 @@ void test_eval_macro_and_runtime_state_semantics() {
             "path-only files should not resolve in a fresh session without SET PATH configuration");
     }
     if (near_restored != state.globals.end()) {
-        expect(copperfin::runtime::format_value(near_restored->second) == "ON", "restoring the original data session should restore its SET() state");
+        expect(copperfin::runtime::format_value(near_restored->second) == "OFF", "restoring the original data session should restore its toggled SET() state");
     }
     if (exact_restored != state.globals.end()) {
-        expect(copperfin::runtime::format_value(exact_restored->second) == "ON", "restoring the original data session should restore its SET('EXACT') value");
+        expect(copperfin::runtime::format_value(exact_restored->second) == "OFF", "restoring the original data session should restore its toggled SET('EXACT') value");
     }
     if (deleted_restored != state.globals.end()) {
-        expect(copperfin::runtime::format_value(deleted_restored->second) == "ON", "restoring the original data session should restore its SET('DELETED') value");
+        expect(copperfin::runtime::format_value(deleted_restored->second) == "OFF", "restoring the original data session should restore its toggled SET('DELETED') value");
     }
     if (path_restored != state.globals.end()) {
         const std::string normalized_path_restored = lowercase_copy(copperfin::runtime::format_value(path_restored->second));
