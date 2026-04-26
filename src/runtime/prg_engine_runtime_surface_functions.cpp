@@ -2,10 +2,12 @@
 
 #include "prg_engine_helpers.h"
 
-#include <filesystem>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include <filesystem>
 #include <stdexcept>
+#include <system_error>
 
 namespace copperfin::runtime {
 
@@ -26,6 +28,45 @@ int bit_position(const PrgValue& value) {
         throw std::runtime_error("Bit position must be between 0 and 31");
     }
     return position;
+}
+
+std::string host_os_name() {
+#if defined(_WIN32)
+    return "Windows";
+#elif defined(__APPLE__)
+    return "macOS";
+#elif defined(__linux__)
+    return "Linux";
+#elif defined(__unix__)
+    return "Unix";
+#else
+    return "Unknown";
+#endif
+}
+
+std::filesystem::path filesystem_probe_path(const std::string& raw_path, const std::string& default_directory) {
+    std::filesystem::path path(raw_path.empty() ? default_directory : raw_path);
+    if (path.is_relative()) {
+        path = std::filesystem::path(default_directory) / path;
+    }
+    return path.lexically_normal();
+}
+
+double available_disk_space(const std::string& raw_path, const std::string& default_directory) {
+    std::error_code ignored;
+    const auto info = std::filesystem::space(filesystem_probe_path(raw_path, default_directory), ignored);
+    return ignored ? 0.0 : static_cast<double>(info.available);
+}
+
+int drive_type_value(const std::string& raw_path, const std::string& default_directory) {
+    std::error_code ignored;
+    const std::filesystem::path path = filesystem_probe_path(raw_path, default_directory);
+    if (!std::filesystem::exists(path, ignored)) {
+        return 0;
+    }
+    return std::filesystem::is_directory(path, ignored) || std::filesystem::is_regular_file(path, ignored)
+               ? 3
+               : 1;
 }
 
 }  // namespace
@@ -54,14 +95,38 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     if (function == "sys") {
         if (!arguments.empty()) {
             const long long sys_code = std::llround(value_as_number(arguments[0]));
+            if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
+                return make_string_value(default_directory);
+            }
             if (sys_code == 16) {
                 return make_string_value(frame_file_path);
             }
             if (sys_code == 2018) {
                 return make_string_value(uppercase_copy(runtime_error_parameter(last_error_message)));
             }
+            if (sys_code == 2020) {
+                return make_string_value(format_value(make_number_value(available_disk_space({}, default_directory))));
+            }
+            if (sys_code == 2023) {
+                std::error_code ignored;
+                return make_string_value(std::filesystem::temp_directory_path(ignored).string());
+            }
         }
         return make_string_value("0");
+    }
+    if (function == "home") {
+        return make_string_value(default_directory);
+    }
+    if (function == "os") {
+        return make_string_value(host_os_name());
+    }
+    if (function == "diskspace") {
+        const std::string path = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+        return make_number_value(available_disk_space(path, default_directory));
+    }
+    if (function == "drivetype") {
+        const std::string path = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+        return make_number_value(static_cast<double>(drive_type_value(path, default_directory)));
     }
     if (function == "message") {
         return make_string_value(last_error_message);

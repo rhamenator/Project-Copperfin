@@ -36,6 +36,16 @@ namespace
             "nEval = EVALUATE('x + 7')\n"
             "cSysScript = SYS(16)\n"
             "cSysDefault = SYS(999)\n"
+            "cHome = HOME()\n"
+            "cOs = OS()\n"
+            "nDiskSpace = DISKSPACE()\n"
+            "lDiskSpacePositive = nDiskSpace > 0\n"
+            "nDriveType = DRIVETYPE()\n"
+            "nMissingDriveType = DRIVETYPE('missing-path')\n"
+            "cSysCurrent = SYS(2003)\n"
+            "cSysTemp = SYS(2023)\n"
+            "cSysDisk = SYS(2020)\n"
+            "lSysDiskPositive = VAL(cSysDisk) > 0\n"
             "cTransformDefault = TRANSFORM(x)\n"
             "cTransformPicture = TRANSFORM(3.14159, '999.00')\n"
             "cTransformUpper = TRANSFORM('legacy', '@!')\n"
@@ -100,6 +110,12 @@ namespace
         check("lfilemiss", "false");
         check("csysscript", main_path.string());
         check("csysdefault", "0");
+        check("chome", temp_root.string());
+        check("ldiskspacepositive", "true");
+        check("ndrivetype", "3");
+        check("nmissingdrivetype", "0");
+        check("csyscurrent", temp_root.string());
+        check("lsysdiskpositive", "true");
         check("ctransformdefault", "5");
         check("ctransformpicture", "3.14");
         check("ctransformupper", "LEGACY");
@@ -132,6 +148,13 @@ namespace
         check("nmessagebox", "1");
         check("cpathvalue", "TO '/tmp/copperfin'");
         check("conerrorhandler", "DO somehandler");
+
+        const auto os_value = state.globals.find("cos");
+        expect(os_value != state.globals.end() && !copperfin::runtime::format_value(os_value->second).empty(),
+               "OS() should expose a non-empty host OS label");
+        const auto temp_value = state.globals.find("csystemp");
+        expect(temp_value != state.globals.end() && !copperfin::runtime::format_value(temp_value->second).empty(),
+               "SYS(2023) should expose a non-empty temporary path");
 
         fs::remove_all(temp_root, ignored);
     }
