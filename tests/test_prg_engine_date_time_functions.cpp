@@ -32,6 +32,7 @@ namespace
             "datetime_ctor = DATETIME(2026, 4, 18, 13, 45, 56)\n"
             "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
             "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
+            "mark_default = SET('MARK')\n"
             "dow_default = DOW(d)\n"
             "dow_monday = DOW(d, 2)\n"
             "day_name = CDOW(d)\n"
@@ -112,6 +113,15 @@ namespace
             "SET CENTURY ON\n"
             "century_on = SET('CENTURY')\n"
             "dtoc_ymd_century_on = DTOC('2026/04/18')\n"
+            "SET MARK TO '-'\n"
+            "mark_hyphen = SET('MARK')\n"
+            "dtoc_mark_hyphen = DTOC('2026-04-18')\n"
+            "ctot_mark_hyphen = CTOT('2026-04-18 13:45:56')\n"
+            "SET DATE TO DMY\n"
+            "SET MARK TO '.'\n"
+            "mark_dot = SET('MARK')\n"
+            "dtoc_mark_dot_dmy = DTOC('18.04.2026')\n"
+            "ttoc_mark_dot_dmy = TTOC('18.04.2026 13:45:56')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -139,6 +149,7 @@ namespace
         check("datetime_ctor", "04/18/2026 13:45:56");
         check("datetime_ctor_partial", "04/18/2026 00:00:00");
         check("datetime_ctor_invalid", "");
+        check("mark_default", "/");
         check("dow_default", "7");
         check("dow_monday", "6");
         check("day_name", "Saturday");
@@ -215,6 +226,12 @@ namespace
         check("ctot_ymd_century_off", "26/04/18 13:45:56");
         check("century_on", "ON");
         check("dtoc_ymd_century_on", "2026/04/18");
+        check("mark_hyphen", "-");
+        check("dtoc_mark_hyphen", "2026-04-18");
+        check("ctot_mark_hyphen", "2026-04-18 13:45:56");
+        check("mark_dot", ".");
+        check("dtoc_mark_dot_dmy", "18.04.2026");
+        check("ttoc_mark_dot_dmy", "18.04.2026 13:45:56");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())

@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-26: Date separator runtime state gained first-pass `SET MARK TO` support. `SET('MARK')` now defaults to `/`, explicit separators such as `-` and `.` round-trip through `SET()`, and the date/time helper path uses the configured separator when formatting and parsing common `MDY`/`DMY`/`YMD` date values. Focused `test_prg_engine_date_time_functions` coverage passes.
+
 - 2026-04-26: Date/time expression helpers now honor first-pass `SET DATE TO` and `SET CENTURY` runtime state. `CTOD()`, `DTOC()`, `CTOT()`, `TTOC()`, `TTOD()`, `DTOT()`, `DATE()`, and `DATETIME()` keep the existing MDY/four-digit default, while explicit `DMY`/`BRITISH`-style and `YMD`/`ANSI`-style date orders plus two-digit century-off formatting round-trip through `SET()` and the date/time helper surface. Focused `test_prg_engine_date_time_functions` coverage passes.
 
 - 2026-04-26: File system helper coverage gained `FILESIZE()` expression function. The implementation resolves relative paths against the runtime default directory, returns file size in bytes for existing files, and returns 0 for missing files or empty arguments. Focused `test_prg_engine_runtime_surface_functions` coverage validates relative/absolute paths and missing-file behavior. This completes the first-pass file metadata helper surface alongside the existing `FILE()`, `HOME()`, and path helpers.

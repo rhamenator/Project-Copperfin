@@ -90,6 +90,11 @@ bool is_century_enabled(const std::function<std::string(const std::string&)>& se
     return uppercase_copy(trim_copy(set_callback("CENTURY"))) != "OFF";
 }
 
+std::string date_mark(const std::function<std::string(const std::string&)>& set_callback) {
+    const std::string mark = trim_copy(set_callback("MARK"));
+    return mark.empty() || uppercase_copy(mark) == "OFF" ? std::string{"/"} : mark;
+}
+
 std::string format_runtime_date_for_set(
     int year,
     int month,
@@ -97,6 +102,7 @@ std::string format_runtime_date_for_set(
     const std::function<std::string(const std::string&)>& set_callback) {
     const std::string order = normalize_date_order(set_callback);
     const bool century = is_century_enabled(set_callback);
+    const std::string mark = date_mark(set_callback);
 
     std::ostringstream stream;
     stream << std::setfill('0');
@@ -109,13 +115,13 @@ std::string format_runtime_date_for_set(
     };
 
     if (order == "DMY") {
-        stream << std::setw(2) << day << '/' << std::setw(2) << month << '/';
+        stream << std::setw(2) << day << mark << std::setw(2) << month << mark;
         write_year();
     } else if (order == "YMD") {
         write_year();
-        stream << '/' << std::setw(2) << month << '/' << std::setw(2) << day;
+        stream << mark << std::setw(2) << month << mark << std::setw(2) << day;
     } else {
-        stream << std::setw(2) << month << '/' << std::setw(2) << day << '/';
+        stream << std::setw(2) << month << mark << std::setw(2) << day << mark;
         write_year();
     }
     return stream.str();
@@ -152,47 +158,67 @@ bool parse_runtime_date_for_set(
     }
 
     const std::string value = trim_copy(raw);
-    const auto first_slash = value.find('/');
-    if (first_slash == std::string::npos) {
-        return false;
-    }
-    const auto second_slash = value.find('/', first_slash + 1U);
-    if (second_slash == std::string::npos || value.find('/', second_slash + 1U) != std::string::npos) {
-        return false;
-    }
-
-    try {
-        const int first = std::stoi(value.substr(0U, first_slash));
-        const int second = std::stoi(value.substr(first_slash + 1U, second_slash - first_slash - 1U));
-        std::size_t year_end = second_slash + 1U;
-        while (year_end < value.size() && std::isdigit(static_cast<unsigned char>(value[year_end])) != 0) {
-            ++year_end;
-        }
-        if (year_end != value.size()) {
+    const std::string mark = date_mark(set_callback);
+    const auto parse_component = [](const std::string& component, int& output) -> bool {
+        if (component.empty() ||
+            !std::all_of(component.begin(), component.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
             return false;
         }
-        year = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
+        try {
+            output = std::stoi(component);
+        } catch (...) {
+            return false;
+        }
+        return true;
+    };
+
+    const auto parse_with_mark = [&](const std::string& delimiter) -> bool {
+        if (delimiter.empty()) {
+            return false;
+        }
+        const auto first_sep = value.find(delimiter);
+        if (first_sep == std::string::npos) {
+            return false;
+        }
+        const auto second_sep = value.find(delimiter, first_sep + delimiter.size());
+        if (second_sep == std::string::npos || value.find(delimiter, second_sep + delimiter.size()) != std::string::npos) {
+            return false;
+        }
+
+        int first = 0;
+        int second = 0;
+        int third = 0;
+        if (!parse_component(value.substr(0U, first_sep), first) ||
+            !parse_component(value.substr(first_sep + delimiter.size(), second_sep - first_sep - delimiter.size()), second) ||
+            !parse_component(value.substr(second_sep + delimiter.size()), third)) {
+            return false;
+        }
 
         const std::string order = normalize_date_order(set_callback);
         if (order == "DMY") {
             day = first;
             month = second;
+            year = third;
         } else if (order == "YMD") {
             year = first;
             month = second;
-            day = std::stoi(value.substr(second_slash + 1U, year_end - second_slash - 1U));
+            day = third;
         } else {
             month = first;
             day = second;
+            year = third;
         }
-    } catch (...) {
-        return false;
-    }
 
-    if (year >= 0 && year < 100) {
-        year += year < 50 ? 2000 : 1900;
+        if (year >= 0 && year < 100) {
+            year += year < 50 ? 2000 : 1900;
+        }
+        return valid_runtime_date(year, month, day);
+    };
+
+    if (parse_with_mark(mark)) {
+        return true;
     }
-    return valid_runtime_date(year, month, day);
+    return mark != "/" && parse_with_mark("/");
 }
 
 bool parse_runtime_datetime_for_set(

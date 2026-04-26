@@ -1398,6 +1398,16 @@
                         }
                         current_set_state()[normalized_name] = uppercase_copy(date_value.empty() ? std::string{"MDY"} : date_value);
                     }
+                    else if (normalized_name == "mark")
+                    {
+                        std::string mark_value = trim_copy(option_value);
+                        if (starts_with_insensitive(mark_value, "TO "))
+                        {
+                            mark_value = trim_copy(mark_value.substr(3U));
+                        }
+                        mark_value = unquote_string(mark_value);
+                        current_set_state()[normalized_name] = mark_value.empty() ? std::string{"/"} : mark_value;
+                    }
                     else
                     {
                         current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
