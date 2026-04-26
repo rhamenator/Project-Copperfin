@@ -154,12 +154,17 @@ namespace
             "transform_decimal = TRANSFORM(3.14159, '9.9')\n"
             "point_default = SET('POINT')\n"
             "separator_default = SET('SEPARATOR')\n"
+            "currency_default = SET('CURRENCY')\n"
             "transform_group_default = TRANSFORM(1234.5, '999,999.99')\n"
+            "transform_currency_default = TRANSFORM(1234.5, '$999,999.99')\n"
             "SET POINT TO ','\n"
             "SET SEPARATOR TO '.'\n"
+            "SET CURRENCY TO 'USD '\n"
             "point_after = SET('POINT')\n"
             "separator_after = SET('SEPARATOR')\n"
+            "currency_after = SET('CURRENCY')\n"
             "transform_group_euro = TRANSFORM(1234.5, '999,999.99')\n"
+            "transform_currency_custom = TRANSFORM(1234.5, '$999,999.99')\n"
             "transform_decimal_euro = TRANSFORM(3.14159, '9.9')\n"
             "transform_upper = TRANSFORM('hello', '@!')\n"
             "RETURN\n");
@@ -302,10 +307,14 @@ namespace
         check("transform_decimal", "3.1");
         check("point_default", ".");
         check("separator_default", ",");
+        check("currency_default", "$");
         check("transform_group_default", "1,234.50");
+        check("transform_currency_default", "$1,234.50");
         check("point_after", ",");
         check("separator_after", ".");
+        check("currency_after", "USD ");
         check("transform_group_euro", "1.234,50");
+        check("transform_currency_custom", "USD 1.234,50");
         check("transform_decimal_euro", "3,1");
         check("transform_upper", "HELLO");
 

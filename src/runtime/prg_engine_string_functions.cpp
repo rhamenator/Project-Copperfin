@@ -283,16 +283,19 @@ std::string set_symbol(
     const std::function<std::string(const std::string&)>& set_callback,
     const std::string& option_name,
     const std::string& default_value) {
-    const std::string value = trim_copy(set_callback(option_name));
-    return value.empty() || uppercase_copy(value) == "OFF" ? default_value : value;
+    const std::string value = set_callback(option_name);
+    const std::string trimmed = trim_copy(value);
+    return trimmed.empty() || uppercase_copy(trimmed) == "OFF" ? default_value : value;
 }
 
 std::string apply_numeric_picture_symbols(
     std::string value,
     bool group_thousands,
+    bool currency_picture,
     const std::function<std::string(const std::string&)>& set_callback) {
     const std::string point = set_symbol(set_callback, "POINT", ".");
     const std::string separator = set_symbol(set_callback, "SEPARATOR", ",");
+    const std::string currency = set_symbol(set_callback, "CURRENCY", "$");
     const std::size_t decimal_pos = value.find('.');
     std::string integer_part = decimal_pos == std::string::npos ? value : value.substr(0U, decimal_pos);
     const std::string fraction_part = decimal_pos == std::string::npos ? std::string{} : value.substr(decimal_pos + 1U);
@@ -305,9 +308,10 @@ std::string apply_numeric_picture_symbols(
     }
 
     if (decimal_pos == std::string::npos) {
-        return integer_part;
+        return currency_picture ? currency + integer_part : integer_part;
     }
-    return integer_part + point + fraction_part;
+    std::string formatted = integer_part + point + fraction_part;
+    return currency_picture ? currency + formatted : formatted;
 }
 
 }  // namespace
@@ -759,7 +763,11 @@ std::optional<PrgValue> evaluate_string_function(
                 }
                 std::ostringstream stream;
                 stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
-                return make_string_value(apply_numeric_picture_symbols(stream.str(), picture.find(',') != std::string::npos, set_callback));
+                return make_string_value(apply_numeric_picture_symbols(
+                    stream.str(),
+                    picture.find(',') != std::string::npos,
+                    picture.find('$') != std::string::npos,
+                    set_callback));
             }
         }
         return make_string_value(value_as_string(arguments[0]));

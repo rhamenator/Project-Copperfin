@@ -661,6 +661,10 @@ namespace copperfin::runtime
                     {
                         return std::string(",");
                     }
+                    if (normalized_name == "currency")
+                    {
+                        return std::string("$");
+                    }
                     return std::string("OFF");
                 }
 

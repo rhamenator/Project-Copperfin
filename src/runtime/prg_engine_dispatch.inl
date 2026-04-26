@@ -1442,7 +1442,7 @@
                         mark_value = unquote_string(mark_value);
                         current_set_state()[normalized_name] = mark_value.empty() ? std::string{"/"} : mark_value;
                     }
-                    else if (normalized_name == "point" || normalized_name == "separator")
+                    else if (normalized_name == "point" || normalized_name == "separator" || normalized_name == "currency")
                     {
                         std::string symbol_value = trim_copy(option_value);
                         if (starts_with_insensitive(symbol_value, "TO "))
@@ -1451,7 +1451,7 @@
                         }
                         symbol_value = unquote_string(symbol_value);
                         current_set_state()[normalized_name] = symbol_value.empty()
-                                                                  ? (normalized_name == "point" ? std::string{"."} : std::string{","})
+                                                                  ? (normalized_name == "point" ? std::string{"."} : (normalized_name == "separator" ? std::string{","} : std::string{"$"}))
                                                                   : symbol_value;
                     }
                     else

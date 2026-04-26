@@ -209,7 +209,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
-- 2026-04-26: Numeric picture formatting gained first-pass `SET POINT TO` and `SET SEPARATOR TO` state. `SET('POINT')` now defaults to `.`, `SET('SEPARATOR')` defaults to `,`, explicit symbols round-trip through `SET()`, and `TRANSFORM(<number>, <picture>)` applies the configured decimal point and grouped thousands separator when the picture includes numeric decimal/group markers. Focused `test_prg_engine_string_math_functions` coverage passes.
+- 2026-04-26: Numeric picture formatting gained first-pass `SET POINT TO`, `SET SEPARATOR TO`, and `SET CURRENCY TO` state. `SET('POINT')` now defaults to `.`, `SET('SEPARATOR')` defaults to `,`, `SET('CURRENCY')` defaults to `$`, explicit symbols round-trip through `SET()`, and `TRANSFORM(<number>, <picture>)` applies the configured decimal point, grouped thousands separator, and currency symbol when the picture includes numeric decimal/group/currency markers. Focused `test_prg_engine_string_math_functions` coverage passes.
 
 - 2026-04-26: Week-number runtime state gained first-pass `SET FDOW TO` and `SET FWEEK TO` support. `SET('FDOW')` and `SET('FWEEK')` default to `1`, validate configured ranges, and now provide the default first-day and first-week modes for `WEEK(date)` when callers omit explicit arguments; explicit `WEEK(date, firstDay[, firstWeekMode])` arguments still override session state. Focused `test_prg_engine_date_time_functions` coverage passes.
 
