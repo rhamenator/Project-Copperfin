@@ -98,6 +98,8 @@ enum class StatementKind {
     clear_memory_command,
     cancel_statement,
     quit_statement,
+    doevents_command,
+    on_shutdown_statement,
     no_op
 };
 

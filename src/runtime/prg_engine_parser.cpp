@@ -315,6 +315,8 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {
             statement.kind = StatementKind::clear_events;
+        } else if (upper == "DOEVENTS") {
+            statement.kind = StatementKind::doevents_command;
         } else if (starts_with_insensitive(line, "LPARAMETERS ")) {
             statement.kind = StatementKind::lparameters_declaration;
             statement.names = split_csv_like(line.substr(12U));

@@ -725,6 +725,16 @@
                                   .detail = "CLEAR EVENTS",
                                   .location = statement.location});
                 return {};
+            case StatementKind::doevents_command:
+                // DOEVENTS: Pump pending event queue without blocking indefinitely.
+                // In a GUI app, this allows UI responsiveness during long operations.
+                // For now, we emit an event and yield to allow background processing.
+                events.push_back({.category = "runtime.event_loop",
+                                  .detail = "DOEVENTS",
+                                  .location = statement.location});
+                // Cooperative yield: brief pause to allow OS event processing
+                // (In a real GUI framework, this would dispatch queued events)
+                return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
             case StatementKind::seek_command:
             {
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
