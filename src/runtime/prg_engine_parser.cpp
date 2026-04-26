@@ -574,6 +574,9 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
             statement.expression = trim_copy(line.substr(9U));
+        } else if (starts_with_insensitive(line, "ON SHUTDOWN ")) {
+            statement.kind = StatementKind::on_shutdown;
+            statement.expression = trim_copy(line.substr(12U));
         } else if (starts_with_insensitive(line, "PUBLIC ")) {
             statement.kind = StatementKind::public_declaration;
             statement.names = split_csv_like(line.substr(7U));

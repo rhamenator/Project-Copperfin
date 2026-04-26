@@ -62,6 +62,7 @@ enum class StatementKind {
     set_default,
     set_memowidth,
     on_error,
+    on_shutdown,
     with_statement,
     endwith_statement,
     try_statement,

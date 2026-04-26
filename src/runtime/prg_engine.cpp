@@ -286,6 +286,7 @@ namespace copperfin::runtime
         int last_error_code = 0;
         std::string last_error_procedure;
         std::string error_handler;
+        std::string shutdown_handler;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
@@ -302,7 +303,11 @@ namespace copperfin::runtime
         bool entry_pause_pending = false;
         bool waiting_for_events = false;
         bool handling_error = false;
+        bool handling_shutdown = false;
         std::optional<std::size_t> error_handler_return_depth;
+        std::optional<std::size_t> shutdown_handler_return_depth;
+        bool quit_pending_after_shutdown = false;
+        SourceLocation pending_quit_location{};
         // Saved fault position for RETRY / RESUME
         std::string fault_frame_file_path;
         std::string fault_frame_routine_name;
@@ -869,6 +874,16 @@ namespace copperfin::runtime
                 {
                     error_handler_return_depth.reset();
                     handling_error = false;
+                }
+                if (shutdown_handler_return_depth.has_value() && stack.size() <= *shutdown_handler_return_depth)
+                {
+                    shutdown_handler_return_depth.reset();
+                    handling_shutdown = false;
+                    if (quit_pending_after_shutdown)
+                    {
+                        perform_quit(pending_quit_location);
+                        continue;
+                    }
                 }
                 if (stack.empty())
                 {

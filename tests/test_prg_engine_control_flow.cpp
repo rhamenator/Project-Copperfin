@@ -2312,6 +2312,98 @@ void test_shutdown_handler_cleanup_code_remains_harmless() {
     fs::remove_all(tmp, ign);
 }
 
+void test_on_shutdown_clear_events_runs_and_quit_completes() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_on_shutdown_clear_events";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+               "ON SHUTDOWN CLEAR EVENTS\n"
+               "QUIT\n"
+               "after_quit = 1\n"
+               "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "ON SHUTDOWN CLEAR EVENTS + QUIT should complete cleanly");
+    expect(state.globals.find("after_quit") == state.globals.end(), "QUIT should prevent statements after it from running");
+
+    const bool has_shutdown = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.shutdown_handler" && e.detail == "CLEAR EVENTS"; });
+    expect(has_shutdown, "ON SHUTDOWN CLEAR EVENTS should emit runtime.shutdown_handler event");
+
+    const bool has_quit = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; });
+    expect(has_quit, "QUIT should still emit runtime.quit after ON SHUTDOWN CLEAR EVENTS");
+
+    fs::remove_all(tmp, ign);
+}
+
+void test_on_shutdown_do_cleanup_can_call_quit_without_recursing() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_on_shutdown_do_cleanup";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+
+    write_text(tmp / "held.txt", "seed");
+
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+               "ON SHUTDOWN DO CleanupProcedure\n"
+               "READ EVENTS\n"
+               "RETURN\n"
+               "PROCEDURE RequestQuit\n"
+               "    nConn = SQLCONNECT('dsn=Northwind')\n"
+               "    obj = CREATEOBJECT('Sample.Object')\n"
+               "    nHandle = FOPEN('held.txt', 2)\n"
+               "    QUIT\n"
+               "ENDPROC\n"
+               "PROCEDURE CleanupProcedure\n"
+               "    cleanup_marker = 1\n"
+               "    CLEAR EVENTS\n"
+               "    CLOSE DATABASES ALL\n"
+               "    QUIT\n"
+               "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+
+    const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "READ EVENTS should pause before requesting quit");
+
+    const bool dispatched = session.dispatch_event_handler("RequestQuit");
+    expect(dispatched, "RequestQuit should dispatch from READ EVENTS");
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ON SHUTDOWN DO cleanup with nested QUIT should complete cleanly");
+
+    const auto cleanup = state.globals.find("cleanup_marker");
+    expect(cleanup != state.globals.end(), "CleanupProcedure should run before final quit");
+    if (cleanup != state.globals.end()) {
+        expect(cleanup->second.number_value == 1.0, "CleanupProcedure should set cleanup_marker");
+    }
+
+    const bool has_shutdown = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.shutdown_handler" && e.detail == "CleanupProcedure"; });
+    expect(has_shutdown, "ON SHUTDOWN DO CleanupProcedure should emit runtime.shutdown_handler event");
+
+    const std::size_t quit_event_count = static_cast<std::size_t>(std::count_if(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; }));
+    expect(quit_event_count == 1U, "Nested QUIT inside shutdown handler should not recurse into multiple quit events");
+
+    expect(state.sql_connections.empty(), "Shutdown cleanup QUIT path should leave no SQL connections");
+    expect(state.ole_objects.empty(), "Shutdown cleanup QUIT path should leave no OLE objects");
+
+    fs::remove_all(tmp, ign);
+}
+
 void test_quit_closes_open_database_and_runtime_handles() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_quit_resource_cleanup";
@@ -2416,6 +2508,8 @@ int main() {
     test_cancel_halts_execution();
     test_quit_emits_event();
     test_quit_cancelled_by_callback();
+    test_on_shutdown_clear_events_runs_and_quit_completes();
+    test_on_shutdown_do_cleanup_can_call_quit_without_recursing();
     test_shutdown_handler_quit_exits_event_loop_without_clear_events();
     test_shutdown_handler_cleanup_code_remains_harmless();
     test_quit_closes_open_database_and_runtime_handles();

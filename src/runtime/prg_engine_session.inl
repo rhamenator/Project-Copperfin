@@ -202,6 +202,115 @@
             loaded_libraries.clear();
         }
 
+        void perform_quit(const SourceLocation &location)
+        {
+            waiting_for_events = false;
+            restore_event_loop_after_dispatch = false;
+            event_dispatch_return_depth.reset();
+            handling_error = false;
+            error_handler_return_depth.reset();
+            handling_shutdown = false;
+            shutdown_handler_return_depth.reset();
+            quit_pending_after_shutdown = false;
+            pending_quit_location = {};
+
+            cleanup_runtime_resources_for_shutdown();
+            events.push_back({.category = "runtime.quit",
+                              .detail = "QUIT",
+                              .location = location});
+
+            while (stack.size() > 1U)
+            {
+                restore_private_declarations(stack.back());
+                stack.pop_back();
+            }
+            if (!stack.empty())
+            {
+                Frame &top = stack.back();
+                if (top.routine != nullptr)
+                {
+                    top.pc = top.routine->statements.size();
+                }
+            }
+        }
+
+        bool dispatch_shutdown_handler(const Frame &source_frame, const SourceLocation &location)
+        {
+            if (handling_shutdown || stack.empty())
+            {
+                return false;
+            }
+
+            std::string handler = trim_copy(shutdown_handler);
+            if (handler.empty())
+            {
+                return false;
+            }
+            if (!starts_with_insensitive(handler, "DO "))
+            {
+                return false;
+            }
+
+            handler = trim_copy(handler.substr(3U));
+            if (handler.empty())
+            {
+                return false;
+            }
+
+            std::string handler_arguments_clause;
+            const std::size_t with_position = find_keyword_top_level(handler, "WITH");
+            if (with_position != std::string::npos)
+            {
+                handler_arguments_clause = trim_copy(handler.substr(with_position + 4U));
+                handler = trim_copy(handler.substr(0U, with_position));
+            }
+            if (handler.empty())
+            {
+                return false;
+            }
+
+            std::vector<PrgValue> handler_arguments;
+            if (!handler_arguments_clause.empty())
+            {
+                for (const std::string &raw_argument : split_csv_like(handler_arguments_clause))
+                {
+                    const std::string argument_expression = trim_copy(raw_argument);
+                    if (!argument_expression.empty())
+                    {
+                        handler_arguments.push_back(evaluate_expression(argument_expression, source_frame));
+                    }
+                }
+            }
+
+            for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
+            {
+                Program &program = load_program(iterator->file_path);
+                const auto found = program.routines.find(normalize_identifier(handler));
+                if (found == program.routines.end())
+                {
+                    continue;
+                }
+                if (!can_push_frame())
+                {
+                    return false;
+                }
+
+                handling_shutdown = true;
+                shutdown_handler_return_depth = stack.size();
+                quit_pending_after_shutdown = true;
+                pending_quit_location = location;
+                push_routine_frame(program.path, found->second, handler_arguments);
+                events.push_back({.category = "runtime.shutdown_handler",
+                                  .detail = handler_arguments.empty()
+                                                ? found->second.name
+                                                : found->second.name + " WITH " + std::to_string(handler_arguments.size()) + " argument(s)",
+                                  .location = location});
+                return true;
+            }
+
+            return false;
+        }
+
         RuntimePauseState build_pause_state(DebugPauseReason reason, std::string message = {})
         {
             RuntimePauseState state;

@@ -93,6 +93,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `SET`
 - `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover both open work-area cursors and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
 - `ON ERROR`
+- `ON SHUTDOWN` — first-pass shutdown-handler semantics for `ON SHUTDOWN DO <routine> [WITH ...]` plus the common inline `ON SHUTDOWN CLEAR EVENTS` form; shutdown routines run before final `QUIT` completion and nested `QUIT` inside the shutdown routine is treated as the terminal quit rather than recursing indefinitely
 - `PUBLIC`
 - `LOCAL`
 - `PRIVATE`
@@ -138,6 +139,8 @@ That SQL slice now includes session-scoped synthetic cursor materialization that
 The current session/runtime-state slice also now keeps `SET DEFAULT TO` data-session-local, so `SET('DEFAULT')` and relative path resolution restore correctly after `SET DATASESSION` switches instead of leaking one session's default directory into another, and focused regression coverage now locks down the local-table counterpart to the shipped SQL selection-flow behavior so `SELECT 0`, `USE IN <selected-alias>`, and plain `USE` keep reusing each session's selected empty work area after session switches. Boolean runtime `SET` options used by search/filter semantics (`NEAR`, `EXACT`, `DELETED`) now also normalize `SET ... TO` forms and logical token variants (`.T./.F.`, `1/0`, `true/false`, `yes/no`) to stable runtime state and `SET()` readback values across data-session switches.
 
 `ON ERROR` now also has a richer first-pass compatibility lane: `ON ERROR DO <routine> WITH ...` can pass evaluated handler arguments, and handlers can inspect first-pass runtime fault metadata through `MESSAGE()`, `PROGRAM()`, `LINENO()`, `ERROR()`, `AERROR()`, `SYS(2018)`, and `ON('ERROR')` while execution resumes after the handler returns. Static PRG diagnostics are also now wired through the Studio document-open path so analyzer findings surface to editor-facing consumers instead of staying runtime-only.
+
+`ON SHUTDOWN` now has a first-pass compatibility lane as well. `QUIT` checks for an active shutdown handler and, if configured, executes `ON SHUTDOWN DO <routine> [WITH ...]` before the final quit cleanup/unwind. The common inline compatibility form `ON SHUTDOWN CLEAR EVENTS` is also recognized. Shutdown handlers can still perform explicit cleanup such as `CLEAR EVENTS`, `CLOSE DATABASES ALL`, and even a nested `QUIT`; Copperfin treats that nested quit as the final terminal quit instead of recursively dispatching shutdown again.
 
 The current PRG-engine slice now also supports first-pass `WITH/ENDWITH` member binding for leading-dot object access and first-pass `TRY/CATCH/FINALLY/ENDTRY` control flow, plus first-pass `DO ... WITH @var` reference semantics so `LPARAMETERS` assignments can write back into caller variables where needed for FoxPro-style procedure behavior.
 

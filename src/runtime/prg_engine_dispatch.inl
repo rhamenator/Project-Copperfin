@@ -1577,6 +1577,9 @@
             case StatementKind::on_error:
                 error_handler = statement.expression;
                 return {};
+            case StatementKind::on_shutdown:
+                shutdown_handler = statement.expression;
+                return {};
             case StatementKind::public_declaration:
                 for (const auto &name : statement.names)
                 {
@@ -3030,28 +3033,30 @@
                                       .location = statement.location});
                     return {};
                 }
-                // Confirmed (or no callback) — unwind entire call stack
-                // QUIT represents application shutdown intent; make event-loop
-                // cleanup implicit so callers do not need explicit CLEAR EVENTS.
-                waiting_for_events = false;
-                restore_event_loop_after_dispatch = false;
-                cleanup_runtime_resources_for_shutdown();
-                events.push_back({.category = "runtime.quit",
-                                  .detail = "QUIT",
-                                  .location = statement.location});
-                while (stack.size() > 1U)
+
+                // First-pass ON SHUTDOWN compatibility: support a shutdown routine
+                // before the final QUIT cleanup/unwind executes.
+                if (!handling_shutdown)
                 {
-                    restore_private_declarations(stack.back());
-                    stack.pop_back();
-                }
-                if (!stack.empty())
-                {
-                    Frame &top = stack.back();
-                    if (top.routine != nullptr)
+                    const std::string inline_shutdown = uppercase_copy(trim_copy(shutdown_handler));
+                    if (inline_shutdown == "CLEAR EVENTS")
                     {
-                        top.pc = top.routine->statements.size();
+                        waiting_for_events = false;
+                        restore_event_loop_after_dispatch = false;
+                        events.push_back({.category = "runtime.shutdown_handler",
+                                          .detail = "CLEAR EVENTS",
+                                          .location = statement.location});
+                    }
+                    else if (dispatch_shutdown_handler(frame, statement.location))
+                    {
+                        return {};
                     }
                 }
+
+                // Confirmed (or no callback) — unwind entire call stack.
+                // QUIT represents application shutdown intent; make event-loop
+                // cleanup implicit so callers do not need explicit CLEAR EVENTS.
+                perform_quit(statement.location);
                 return {};
             }
         }
