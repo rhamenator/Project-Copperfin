@@ -191,6 +191,17 @@ std::optional<PrgValue> evaluate_string_function(
     const std::vector<PrgValue>& arguments,
     bool exact_string_compare,
     std::size_t memo_width) {
+    const auto optional_line_width = [&](std::size_t argument_index) {
+        if (argument_index >= arguments.size()) {
+            return memo_width;
+        }
+        const double parsed_width = value_as_number(arguments[argument_index]);
+        if (parsed_width <= 0.0) {
+            return memo_width;
+        }
+        return static_cast<std::size_t>(std::max(1.0, parsed_width));
+    };
+
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
@@ -442,7 +453,8 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {
-         return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0]), memo_width).size()));
+        const std::size_t line_width = optional_line_width(1U);
+        return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0]), line_width).size()));
     }
     if (function == "mline" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
@@ -456,7 +468,8 @@ std::optional<PrgValue> evaluate_string_function(
         if (start >= source.size()) {
             return make_string_value(std::string{});
         }
-        const std::vector<std::string> lines = memo_width_lines(source.substr(start), memo_width);
+        const std::size_t line_width = optional_line_width(3U);
+        const std::vector<std::string> lines = memo_width_lines(source.substr(start), line_width);
         const std::size_t line_index = static_cast<std::size_t>(requested_line);
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }

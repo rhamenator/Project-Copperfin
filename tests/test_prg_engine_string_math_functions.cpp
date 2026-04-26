@@ -119,8 +119,11 @@ namespace
             "mline_missing = MLINE(memo_text, 4)\n"
             "wrap_text = 'one two three four five six seven eight nine ten eleven twelve'\n"
             "wrap_count = MEMLINES(wrap_text)\n"
+            "wrap_count_width8 = MEMLINES(wrap_text, 8)\n"
+            "wrap_count_width0 = MEMLINES(wrap_text, 0)\n"
             "wrap_first = MLINE(wrap_text, 1)\n"
             "wrap_second = MLINE(wrap_text, 2)\n"
+            "wrap_second_width8 = MLINE(wrap_text, 2, 0, 8)\n"
             "offset_line = MLINE(memo_text, 1, 12)\n"
             "memo_width_set_default = SET('MEMOWIDTH')\n"
             "SET MEMOWIDTH TO 10\n"
@@ -250,8 +253,11 @@ namespace
         check("mline_three", "third line");
         check("mline_missing", "");
         check("wrap_count", "2");
+        check("wrap_count_width8", "11");
+        check("wrap_count_width0", "2");
         check("wrap_first", "one two three four five six seven eight nine ten");
         check("wrap_second", "eleven twelve");
+        check("wrap_second_width8", "three");
         check("offset_line", "second line\nstill second");
         check("memo_width_set_default", "50");
         check("memo_width_value", "10");
