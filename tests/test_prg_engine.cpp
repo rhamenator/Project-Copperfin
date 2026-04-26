@@ -1095,6 +1095,136 @@ void test_set_state_variables_strictdate_enginebehavior_optimize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_state_variables_talk_safety_escape() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "test_set_flags";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path prg_path = temp_root / "set_flags_test.prg";
+    write_text(
+        prg_path,
+        "* Test SET TALK, SAFETY, ESCAPE\n"
+        "cTalkBefore = SET('TALK')\n"
+        "cSafetyBefore = SET('SAFETY')\n"
+        "cEscapeBefore = SET('ESCAPE')\n"
+        "\n"
+        "SET TALK TO 1\n"
+        "cTalkAfterOne = SET('TALK')\n"
+        "SET TALK TO 'false'\n"
+        "cTalkAfterFalse = SET('TALK')\n"
+        "\n"
+        "SET SAFETY TO .T.\n"
+        "cSafetyAfterTrue = SET('SAFETY')\n"
+        "SET SAFETY TO 0\n"
+        "cSafetyAfterZero = SET('SAFETY')\n"
+        "\n"
+        "SET ESCAPE ON\n"
+        "cEscapeAfterOn = SET('ESCAPE')\n"
+        "SET ESCAPE TO 'no'\n"
+        "cEscapeAfterNo = SET('ESCAPE')\n"
+        "\n"
+        "SET DATASESSION TO 2\n"
+        "cTalkSession2 = SET('TALK')\n"
+        "cSafetySession2 = SET('SAFETY')\n"
+        "cEscapeSession2 = SET('ESCAPE')\n"
+        "\n"
+        "SET DATASESSION TO 1\n"
+        "cTalkRestored = SET('TALK')\n"
+        "cSafetyRestored = SET('SAFETY')\n"
+        "cEscapeRestored = SET('ESCAPE')\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = prg_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "set_flags_test script should complete");
+
+    const auto talk_before = state.globals.find("ctalkbefore");
+    const auto safety_before = state.globals.find("csafetybefore");
+    const auto escape_before = state.globals.find("cescapebefore");
+    const auto talk_after_one = state.globals.find("ctalkafterone");
+    const auto talk_after_false = state.globals.find("ctalkafterfalse");
+    const auto safety_after_true = state.globals.find("csafetyaftertrue");
+    const auto safety_after_zero = state.globals.find("csafetyafterzero");
+    const auto escape_after_on = state.globals.find("cescapeafteron");
+    const auto escape_after_no = state.globals.find("cescapeafterno");
+    const auto talk_session2 = state.globals.find("ctalksession2");
+    const auto safety_session2 = state.globals.find("csafetysession2");
+    const auto escape_session2 = state.globals.find("cescapesession2");
+    const auto talk_restored = state.globals.find("ctalkrestored");
+    const auto safety_restored = state.globals.find("csafetyrestored");
+    const auto escape_restored = state.globals.find("cescaperestored");
+
+    expect(talk_before != state.globals.end(), "SET('TALK') before change should be captured");
+    expect(safety_before != state.globals.end(), "SET('SAFETY') before change should be captured");
+    expect(escape_before != state.globals.end(), "SET('ESCAPE') before change should be captured");
+    expect(talk_after_one != state.globals.end(), "SET('TALK') after SET TALK TO 1 should be captured");
+    expect(talk_after_false != state.globals.end(), "SET('TALK') after SET TALK TO 'false' should be captured");
+    expect(safety_after_true != state.globals.end(), "SET('SAFETY') after SET SAFETY TO .T. should be captured");
+    expect(safety_after_zero != state.globals.end(), "SET('SAFETY') after SET SAFETY TO 0 should be captured");
+    expect(escape_after_on != state.globals.end(), "SET('ESCAPE') after SET ESCAPE ON should be captured");
+    expect(escape_after_no != state.globals.end(), "SET('ESCAPE') after SET ESCAPE TO 'no' should be captured");
+    expect(talk_session2 != state.globals.end(), "SET('TALK') in session 2 should be captured");
+    expect(safety_session2 != state.globals.end(), "SET('SAFETY') in session 2 should be captured");
+    expect(escape_session2 != state.globals.end(), "SET('ESCAPE') in session 2 should be captured");
+    expect(talk_restored != state.globals.end(), "SET('TALK') after restoring session 1 should be captured");
+    expect(safety_restored != state.globals.end(), "SET('SAFETY') after restoring session 1 should be captured");
+    expect(escape_restored != state.globals.end(), "SET('ESCAPE') after restoring session 1 should be captured");
+
+    if (talk_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(talk_before->second) == "OFF", "SET('TALK') should default to OFF");
+    }
+    if (safety_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(safety_before->second) == "OFF", "SET('SAFETY') should default to OFF");
+    }
+    if (escape_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(escape_before->second) == "OFF", "SET('ESCAPE') should default to OFF");
+    }
+    if (talk_after_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(talk_after_one->second) == "ON", "SET('TALK') should report ON after SET TALK TO 1");
+    }
+    if (talk_after_false != state.globals.end()) {
+        expect(copperfin::runtime::format_value(talk_after_false->second) == "OFF", "SET('TALK') should report OFF after SET TALK TO 'false'");
+    }
+    if (safety_after_true != state.globals.end()) {
+        expect(copperfin::runtime::format_value(safety_after_true->second) == "ON", "SET('SAFETY') should report ON after SET SAFETY TO .T.");
+    }
+    if (safety_after_zero != state.globals.end()) {
+        expect(copperfin::runtime::format_value(safety_after_zero->second) == "OFF", "SET('SAFETY') should report OFF after SET SAFETY TO 0");
+    }
+    if (escape_after_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(escape_after_on->second) == "ON", "SET('ESCAPE') should report ON after SET ESCAPE ON");
+    }
+    if (escape_after_no != state.globals.end()) {
+        expect(copperfin::runtime::format_value(escape_after_no->second) == "OFF", "SET('ESCAPE') should report OFF after SET ESCAPE TO 'no'");
+    }
+    if (talk_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(talk_session2->second) == "OFF", "SET('TALK') in a fresh session should be OFF");
+    }
+    if (safety_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(safety_session2->second) == "OFF", "SET('SAFETY') in a fresh session should be OFF");
+    }
+    if (escape_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(escape_session2->second) == "OFF", "SET('ESCAPE') in a fresh session should be OFF");
+    }
+    if (talk_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(talk_restored->second) == "OFF", "restoring session 1 should restore SET('TALK') to its prior OFF state");
+    }
+    if (safety_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(safety_restored->second) == "OFF", "restoring session 1 should restore SET('SAFETY') to its prior OFF state");
+    }
+    if (escape_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(escape_restored->second) == "OFF", "restoring session 1 should restore SET('ESCAPE') to its prior OFF state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1114,6 +1244,7 @@ int main() {
     test_sql_pass_through_rows_affected_and_provider_hint();
     test_sql_prepare_and_connection_properties();
     test_set_state_variables_strictdate_enginebehavior_optimize();
+    test_set_state_variables_talk_safety_escape();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
