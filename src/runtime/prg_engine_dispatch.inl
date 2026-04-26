@@ -1674,6 +1674,15 @@
                 {
                     close_cursor(std::to_string(area));
                 }
+
+                const std::string close_scope = normalize_identifier(statement.expression);
+                if (close_scope == "all" || close_scope == "databases" || close_scope == "database")
+                {
+                    current_sql_connections().clear();
+                    current_registered_api_functions().clear();
+                    ole_objects.clear();
+                    close_all_file_io_handles();
+                }
                 events.push_back({.category = "runtime.close",
                                   .detail = statement.expression.empty() ? "ALL" : statement.expression,
                                   .location = statement.location});

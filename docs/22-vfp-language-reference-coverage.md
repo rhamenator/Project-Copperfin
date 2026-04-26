@@ -91,6 +91,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `SET DATASESSION TO`
 - `SET DEFAULT TO`
 - `SET`
+- `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover both open work-area cursors and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
 - `ON ERROR`
 - `PUBLIC`
 - `LOCAL`

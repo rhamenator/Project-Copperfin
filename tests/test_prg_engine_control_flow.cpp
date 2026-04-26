@@ -1929,6 +1929,66 @@ void test_close_command_closes_all_work_areas() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_close_all_releases_runtime_handles() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_close_handles";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(temp_root / "held.txt", "seed");
+
+    const fs::path main_path = temp_root / "close_handles.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "obj = CREATEOBJECT('Sample.Object')\n"
+        "nHandle = FOPEN('held.txt', 2)\n"
+        "CLOSE ALL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLOSE ALL handle cleanup script should complete");
+    expect(state.sql_connections.empty(), "CLOSE ALL should disconnect SQL handles");
+    expect(state.ole_objects.empty(), "CLOSE ALL should release OLE object handles");
+
+    const auto handle_it = state.globals.find("nhandle");
+    expect(handle_it != state.globals.end(), "FOPEN handle should be captured before CLOSE ALL");
+    int handle = 1;
+    if (handle_it != state.globals.end()) {
+        handle = static_cast<int>(handle_it->second.number_value);
+    }
+
+    const fs::path verify_path = temp_root / "verify_close_handles.prg";
+    write_text(
+        verify_path,
+        "nClose = FCLOSE(" + std::to_string(handle) + ")\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession verify_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = verify_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+    const auto verify_state = verify_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(verify_state.completed, "verification script should complete");
+
+    const auto close_it = verify_state.globals.find("nclose");
+    expect(close_it != verify_state.globals.end(), "verification script should expose FCLOSE result");
+    if (close_it != verify_state.globals.end()) {
+        expect(close_it->second.number_value == -1.0,
+               "CLOSE ALL should already close FOPEN handles so follow-up FCLOSE returns -1");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_erase_copy_rename_file_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_file_ops";
@@ -2344,6 +2404,7 @@ int main() {
     test_do_with_by_reference_updates_caller_variable();
     test_print_command_emits_event();
     test_close_command_closes_all_work_areas();
+    test_close_all_releases_runtime_handles();
     test_erase_copy_rename_file_commands();
     test_for_each_iterates_array_elements();
     test_for_each_single_element_expression();
