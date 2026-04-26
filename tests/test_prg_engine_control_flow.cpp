@@ -2143,6 +2143,41 @@ void test_quit_emits_event() {
 }
 
 
+void test_quit_cancelled_by_callback() {
+    // When quit_confirm_callback returns false, QUIT should be cancelled:
+    // execution continues after the QUIT statement and y should reach 999.
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_quit_cancel";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "y = 5\nQUIT\ny = 999\nRETURN\n");
+    copperfin::runtime::RuntimeSessionOptions opts;
+    opts.startup_path = prg.string();
+    opts.working_directory = tmp.string();
+    opts.stop_on_entry = false;
+    opts.quit_confirm_callback = []() -> bool { return false; };  // user said no
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(opts);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Execution should complete normally after quit was cancelled");
+    // y should have reached 999 — the line after QUIT was executed
+    const auto it = state.globals.find("y");
+    expect(it != state.globals.end(), "Variable y should exist");
+    if (it != state.globals.end()) {
+        expect(it->second.number_value == 999.0, "y should be 999 after QUIT was cancelled");
+    }
+    const bool has_cancelled = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit_cancelled"; });
+    expect(has_cancelled, "QUIT cancelled should emit runtime.quit_cancelled event");
+    const bool has_quit = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; });
+    expect(!has_quit, "runtime.quit event should NOT be emitted when QUIT is cancelled");
+    fs::remove_all(tmp, ign);
+}
+
+
 }  // namespace
 
 int main() {
@@ -2186,6 +2221,7 @@ int main() {
     test_clear_memory_erases_all_globals();
     test_cancel_halts_execution();
     test_quit_emits_event();
+    test_quit_cancelled_by_callback();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

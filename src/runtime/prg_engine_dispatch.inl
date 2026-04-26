@@ -3009,11 +3009,22 @@
             }
             case StatementKind::quit_statement:
             {
-                // QUIT — signal host to exit (runtime records the event; host decides)
+                // QUIT — ask host via callback whether the user confirms quitting.
+                // In VFP this could produce "Cannot quit Visual FoxPro" in certain
+                // contexts. Here we give the host a chance to show a confirmation
+                // dialog; if the user declines, QUIT is silently cancelled.
+                if (options.quit_confirm_callback && !options.quit_confirm_callback())
+                {
+                    // User chose not to quit — cancel and continue after QUIT statement
+                    events.push_back({.category = "runtime.quit_cancelled",
+                                      .detail = "QUIT cancelled by user",
+                                      .location = statement.location});
+                    return {};
+                }
+                // Confirmed (or no callback) — unwind entire call stack
                 events.push_back({.category = "runtime.quit",
                                   .detail = "QUIT",
                                   .location = statement.location});
-                // Unwind entire call stack same as CANCEL
                 while (stack.size() > 1U)
                 {
                     restore_private_declarations(stack.back());

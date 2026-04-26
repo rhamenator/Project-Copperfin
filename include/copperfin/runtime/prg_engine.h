@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -146,6 +147,9 @@ struct RuntimeSessionOptions {
     std::string temp_directory;
     std::size_t scheduler_yield_statement_interval = 4096;
     std::size_t scheduler_yield_sleep_ms = 1;
+    // Called when QUIT executes. Return true to allow quit; false to cancel it
+    // (e.g. show a dialog asking the user to confirm). Null means always quit.
+    std::function<bool()> quit_confirm_callback;
 };
 
 class PrgRuntimeSession {

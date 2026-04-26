@@ -526,7 +526,16 @@ int main(int argc, char** argv) {
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
         .startup_path = effective_startup_source,
         .working_directory = working_directory,
-        .stop_on_entry = false
+        .stop_on_entry = false,
+        .quit_confirm_callback = []() -> bool {
+            std::cerr << "\nDo you want to quit this application? [y/N]: ";
+            std::cerr.flush();
+            std::string answer;
+            if (!std::getline(std::cin, answer)) {
+                return true;  // EOF or non-interactive stdin — allow quit
+            }
+            return !answer.empty() && (answer[0] == 'y' || answer[0] == 'Y');
+        }
     });
     for (const auto& breakpoint_arg : breakpoint_args) {
         if (const auto breakpoint = parse_breakpoint(breakpoint_arg, effective_startup_source)) {
