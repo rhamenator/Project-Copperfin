@@ -35,6 +35,8 @@ namespace
             "mark_default = SET('MARK')\n"
             "hours_default = SET('HOURS')\n"
             "seconds_set_default = SET('SECONDS')\n"
+            "fdow_default = SET('FDOW')\n"
+            "fweek_default = SET('FWEEK')\n"
             "dow_default = DOW(d)\n"
             "dow_monday = DOW(d, 2)\n"
             "day_name = CDOW(d)\n"
@@ -78,6 +80,19 @@ namespace
             "week_mode3_jan1 = WEEK('01/01/2026', 1, 3)\n"
             "week_mode3_jan4 = WEEK('01/04/2026', 1, 3)\n"
             "week_mode3_dec_rollover = WEEK('12/29/2024', 1, 3)\n"
+            "week_fdow_before = WEEK('01/04/2026')\n"
+            "SET FDOW TO 2\n"
+            "fdow_after = SET('FDOW')\n"
+            "week_fdow_after = WEEK('01/04/2026')\n"
+            "week_fdow_explicit = WEEK('01/04/2026', 1)\n"
+            "SET FWEEK TO 2\n"
+            "fweek_after = SET('FWEEK')\n"
+            "week_fweek_after = WEEK('01/01/2026')\n"
+            "week_fweek_explicit = WEEK('01/01/2026', 1, 1)\n"
+            "SET FDOW TO 1\n"
+            "SET FWEEK TO 3\n"
+            "fweek_after_three = SET('FWEEK')\n"
+            "week_fweek_three = WEEK('01/01/2026')\n"
             "eomonth_value = EOMONTH('04/18/2026')\n"
             "eomonth_plus = EOMONTH('01/10/2026', 1)\n"
             "eomonth_minus = EOMONTH('03/10/2026', -1)\n"
@@ -168,6 +183,8 @@ namespace
         check("mark_default", "/");
         check("hours_default", "24");
         check("seconds_set_default", "ON");
+        check("fdow_default", "1");
+        check("fweek_default", "1");
         check("dow_default", "7");
         check("dow_monday", "6");
         check("day_name", "Saturday");
@@ -211,6 +228,15 @@ namespace
         check("week_mode3_jan1", "53");
         check("week_mode3_jan4", "1");
         check("week_mode3_dec_rollover", "1");
+        check("week_fdow_before", "2");
+        check("fdow_after", "2");
+        check("week_fdow_after", "1");
+        check("week_fdow_explicit", "2");
+        check("fweek_after", "2");
+        check("week_fweek_after", "52");
+        check("week_fweek_explicit", "1");
+        check("fweek_after_three", "3");
+        check("week_fweek_three", "53");
         check("eomonth_value", "04/30/2026");
         check("eomonth_plus", "02/28/2026");
         check("eomonth_minus", "02/28/2026");

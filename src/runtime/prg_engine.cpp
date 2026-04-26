@@ -649,6 +649,10 @@ namespace copperfin::runtime
                     {
                         return std::string("ON");
                     }
+                    if (normalized_name == "fdow" || normalized_name == "fweek")
+                    {
+                        return std::string("1");
+                    }
                     return std::string("OFF");
                 }
 

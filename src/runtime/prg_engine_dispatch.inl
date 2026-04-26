@@ -1399,6 +1399,30 @@
                         hours_value = unquote_string(hours_value);
                         current_set_state()[normalized_name] = normalize_identifier(hours_value) == "12" ? std::string{"12"} : std::string{"24"};
                     }
+                    else if (normalized_name == "fdow" || normalized_name == "fweek")
+                    {
+                        std::string numeric_value = trim_copy(option_value);
+                        if (starts_with_insensitive(numeric_value, "TO "))
+                        {
+                            numeric_value = trim_copy(numeric_value.substr(3U));
+                        }
+                        numeric_value = unquote_string(numeric_value);
+                        int parsed_value = 1;
+                        try
+                        {
+                            parsed_value = static_cast<int>(std::llround(value_as_number(evaluate_expression(numeric_value, frame))));
+                        }
+                        catch (...)
+                        {
+                            parsed_value = 1;
+                        }
+                        const int max_value = normalized_name == "fdow" ? 7 : 3;
+                        if (parsed_value < 1 || parsed_value > max_value)
+                        {
+                            parsed_value = 1;
+                        }
+                        current_set_state()[normalized_name] = std::to_string(parsed_value);
+                    }
                     else if (normalized_name == "date")
                     {
                         std::string date_value = trim_copy(option_value);

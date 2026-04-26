@@ -103,6 +103,21 @@ bool include_seconds(const std::function<std::string(const std::string&)>& set_c
     return uppercase_copy(trim_copy(set_callback("SECONDS"))) != "OFF";
 }
 
+int set_int_value(
+    const std::function<std::string(const std::string&)>& set_callback,
+    const std::string& option_name,
+    int default_value,
+    int min_value,
+    int max_value) {
+    int value = default_value;
+    try {
+        value = std::stoi(trim_copy(set_callback(option_name)));
+    } catch (...) {
+        value = default_value;
+    }
+    return value < min_value || value > max_value ? default_value : value;
+}
+
 std::string format_runtime_time_for_set(
     int hour,
     int minute,
@@ -475,11 +490,11 @@ std::optional<PrgValue> evaluate_date_time_function(
         int year = 0;
         int month = 0;
         int day = 0;
-        if (!parse_runtime_date_string(value_as_string(arguments[0]), year, month, day)) {
+        if (!parse_runtime_date_for_set(value_as_string(arguments[0]), year, month, day, set_callback)) {
             return make_number_value(0.0);
         }
 
-        int first_day = 1;
+        int first_day = set_int_value(set_callback, "FDOW", 1, 1, 7);
         if (arguments.size() >= 2U) {
             first_day = static_cast<int>(std::llround(value_as_number(arguments[1])));
             if (first_day < 1 || first_day > 7) {
@@ -487,7 +502,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             }
         }
 
-        int first_week_mode = 1;
+        int first_week_mode = set_int_value(set_callback, "FWEEK", 1, 1, 3);
         if (arguments.size() >= 3U) {
             first_week_mode = static_cast<int>(std::llround(value_as_number(arguments[2])));
             if (first_week_mode < 1 || first_week_mode > 3) {

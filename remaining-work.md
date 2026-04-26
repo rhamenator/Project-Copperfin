@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-26: Week-number runtime state gained first-pass `SET FDOW TO` and `SET FWEEK TO` support. `SET('FDOW')` and `SET('FWEEK')` default to `1`, validate configured ranges, and now provide the default first-day and first-week modes for `WEEK(date)` when callers omit explicit arguments; explicit `WEEK(date, firstDay[, firstWeekMode])` arguments still override session state. Focused `test_prg_engine_date_time_functions` coverage passes.
+
 - 2026-04-26: Date/time display state gained first-pass `SET HOURS TO 12/24` and `SET SECONDS ON/OFF` support. `SET('HOURS')` now defaults to `24`, `SET('SECONDS')` defaults to `ON`, and `TIME()` plus date/time string helpers use the configured 12-hour/24-hour and seconds-display settings while preserving the existing 24-hour-with-seconds default. Focused `test_prg_engine_date_time_functions` coverage passes.
 
 - 2026-04-26: Date separator runtime state gained first-pass `SET MARK TO` support. `SET('MARK')` now defaults to `/`, explicit separators such as `-` and `.` round-trip through `SET()`, and the date/time helper path uses the configured separator when formatting and parsing common `MDY`/`DMY`/`YMD` date values. Focused `test_prg_engine_date_time_functions` coverage passes.
