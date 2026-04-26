@@ -33,6 +33,8 @@ namespace
             "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
             "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
             "mark_default = SET('MARK')\n"
+            "hours_default = SET('HOURS')\n"
+            "seconds_set_default = SET('SECONDS')\n"
             "dow_default = DOW(d)\n"
             "dow_monday = DOW(d, 2)\n"
             "day_name = CDOW(d)\n"
@@ -122,6 +124,20 @@ namespace
             "mark_dot = SET('MARK')\n"
             "dtoc_mark_dot_dmy = DTOC('18.04.2026')\n"
             "ttoc_mark_dot_dmy = TTOC('18.04.2026 13:45:56')\n"
+            "SET DATE TO MDY\n"
+            "SET MARK TO '/'\n"
+            "SET HOURS TO 12\n"
+            "hours_12 = SET('HOURS')\n"
+            "ttoc_hours_12 = TTOC('04/18/2026 13:45:56')\n"
+            "SET SECONDS OFF\n"
+            "seconds_off = SET('SECONDS')\n"
+            "ttoc_hours_12_seconds_off = TTOC('04/18/2026 13:45:56')\n"
+            "SET HOURS TO 24\n"
+            "hours_24 = SET('HOURS')\n"
+            "ttoc_hours_24_seconds_off = TTOC('04/18/2026 13:45:56')\n"
+            "SET SECONDS ON\n"
+            "seconds_on = SET('SECONDS')\n"
+            "ttoc_hours_24_seconds_on = TTOC('04/18/2026 13:45:56')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -150,6 +166,8 @@ namespace
         check("datetime_ctor_partial", "04/18/2026 00:00:00");
         check("datetime_ctor_invalid", "");
         check("mark_default", "/");
+        check("hours_default", "24");
+        check("seconds_set_default", "ON");
         check("dow_default", "7");
         check("dow_monday", "6");
         check("day_name", "Saturday");
@@ -232,6 +250,14 @@ namespace
         check("mark_dot", ".");
         check("dtoc_mark_dot_dmy", "18.04.2026");
         check("ttoc_mark_dot_dmy", "18.04.2026 13:45:56");
+        check("hours_12", "12");
+        check("ttoc_hours_12", "04/18/2026 01:45:56 PM");
+        check("seconds_off", "OFF");
+        check("ttoc_hours_12_seconds_off", "04/18/2026 01:45 PM");
+        check("hours_24", "24");
+        check("ttoc_hours_24_seconds_off", "04/18/2026 13:45");
+        check("seconds_on", "ON");
+        check("ttoc_hours_24_seconds_on", "04/18/2026 13:45:56");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())

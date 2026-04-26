@@ -1385,9 +1385,19 @@
                     if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
-                        normalized_name == "century")
+                        normalized_name == "century" || normalized_name == "seconds")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
+                    }
+                    else if (normalized_name == "hours")
+                    {
+                        std::string hours_value = trim_copy(option_value);
+                        if (starts_with_insensitive(hours_value, "TO "))
+                        {
+                            hours_value = trim_copy(hours_value.substr(3U));
+                        }
+                        hours_value = unquote_string(hours_value);
+                        current_set_state()[normalized_name] = normalize_identifier(hours_value) == "12" ? std::string{"12"} : std::string{"24"};
                     }
                     else if (normalized_name == "date")
                     {

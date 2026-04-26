@@ -95,6 +95,41 @@ std::string date_mark(const std::function<std::string(const std::string&)>& set_
     return mark.empty() || uppercase_copy(mark) == "OFF" ? std::string{"/"} : mark;
 }
 
+bool use_twelve_hour_clock(const std::function<std::string(const std::string&)>& set_callback) {
+    return trim_copy(set_callback("HOURS")) == "12";
+}
+
+bool include_seconds(const std::function<std::string(const std::string&)>& set_callback) {
+    return uppercase_copy(trim_copy(set_callback("SECONDS"))) != "OFF";
+}
+
+std::string format_runtime_time_for_set(
+    int hour,
+    int minute,
+    int second,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    std::ostringstream stream;
+    stream << std::setfill('0');
+    if (use_twelve_hour_clock(set_callback)) {
+        const bool afternoon = hour >= 12;
+        int display_hour = hour % 12;
+        if (display_hour == 0) {
+            display_hour = 12;
+        }
+        stream << std::setw(2) << display_hour << ':' << std::setw(2) << minute;
+        if (include_seconds(set_callback)) {
+            stream << ':' << std::setw(2) << second;
+        }
+        stream << (afternoon ? " PM" : " AM");
+    } else {
+        stream << std::setw(2) << hour << ':' << std::setw(2) << minute;
+        if (include_seconds(set_callback)) {
+            stream << ':' << std::setw(2) << second;
+        }
+    }
+    return stream.str();
+}
+
 std::string format_runtime_date_for_set(
     int year,
     int month,
@@ -137,10 +172,7 @@ std::string format_runtime_datetime_for_set(
     const std::function<std::string(const std::string&)>& set_callback) {
     std::ostringstream stream;
     stream << format_runtime_date_for_set(year, month, day, set_callback)
-           << ' ' << std::setfill('0')
-           << std::setw(2) << hour << ':'
-           << std::setw(2) << minute << ':'
-           << std::setw(2) << second;
+           << ' ' << format_runtime_time_for_set(hour, minute, second, set_callback);
     return stream.str();
 }
 
@@ -305,12 +337,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         const auto now = std::chrono::system_clock::now();
         const auto tt = std::chrono::system_clock::to_time_t(now);
         const std::tm local_tm = local_time_from_time_t(tt);
-        std::ostringstream stream;
-        stream << std::setfill('0')
-               << std::setw(2) << local_tm.tm_hour << ':'
-               << std::setw(2) << local_tm.tm_min << ':'
-               << std::setw(2) << local_tm.tm_sec;
-        return make_string_value(stream.str());
+        return make_string_value(format_runtime_time_for_set(local_tm.tm_hour, local_tm.tm_min, local_tm.tm_sec, set_callback));
     }
     if (function == "datetime") {
         if (arguments.size() >= 3U) {

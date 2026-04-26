@@ -641,6 +641,14 @@ namespace copperfin::runtime
                     {
                         return std::string("/");
                     }
+                    if (normalized_name == "hours")
+                    {
+                        return std::string("24");
+                    }
+                    if (normalized_name == "seconds")
+                    {
+                        return std::string("ON");
+                    }
                     return std::string("OFF");
                 }
 
