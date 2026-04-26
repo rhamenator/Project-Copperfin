@@ -92,6 +92,7 @@ add_library(cf_prg_analysis
 add_library(cf_xbase_runtime
     src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine_date_time_functions.cpp
+    src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_numeric_functions.cpp
@@ -527,6 +528,21 @@ if(COPPERFIN_BUILD_TESTS)
     endif()
 
     add_test(NAME test_prg_engine_runtime_surface_functions COMMAND $<TARGET_FILE:test_prg_engine_runtime_surface_functions>)
+
+    add_executable(test_prg_engine_file_io_functions
+        tests/test_prg_engine_file_io_functions.cpp
+        tests/prg_engine_test_support.cpp
+    )
+
+    target_link_libraries(test_prg_engine_file_io_functions PRIVATE cf_xbase_runtime)
+
+    if(MSVC)
+        target_compile_options(test_prg_engine_file_io_functions PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_prg_engine_file_io_functions PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
+    add_test(NAME test_prg_engine_file_io_functions COMMAND $<TARGET_FILE:test_prg_engine_file_io_functions>)
 
     add_executable(test_prg_engine_aggregate_array_functions
         tests/test_prg_engine_aggregate_array_functions.cpp

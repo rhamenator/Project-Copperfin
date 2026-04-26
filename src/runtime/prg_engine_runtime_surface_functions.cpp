@@ -1,5 +1,6 @@
 #include "prg_engine_runtime_surface_functions.h"
 
+#include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 
 #include <cmath>
@@ -158,6 +159,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<int(const std::string&)>& aerror_callback,
     const std::function<PrgValue(const std::string&)>& eval_expression_callback,
     const std::function<std::string(const std::string&)>& set_callback) {
+    if (const auto file_io_result = evaluate_file_io_function(function, arguments, default_directory)) {
+        return file_io_result;
+    }
+
     if (function == "file" && !arguments.empty()) {
         std::error_code ignored;
         const std::filesystem::path path =
