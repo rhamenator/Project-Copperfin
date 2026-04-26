@@ -552,6 +552,12 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cNearBefore = SET('NEAR')\n"
         "SET NEAR ON\n"
         "cNearAfter = SET('NEAR')\n"
+        "cExactBefore = SET('EXACT')\n"
+        "SET EXACT ON\n"
+        "cExactAfter = SET('EXACT')\n"
+        "cDeletedBefore = SET('DELETED')\n"
+        "SET DELETED ON\n"
+        "cDeletedAfter = SET('DELETED')\n"
         "cPathBefore = SET('PATH')\n"
         "lPathFileBefore = FILE('path_only_session.txt')\n"
         "SET PATH TO '" + path_probe_dir.string() + "'\n"
@@ -568,12 +574,16 @@ void test_eval_macro_and_runtime_state_semantics() {
         "nAreaAfterClose = SELECT('People')\n"
         "SET DATASESSION TO 2\n"
         "cNearSession2 = SET('NEAR')\n"
+        "cExactSession2 = SET('EXACT')\n"
+        "cDeletedSession2 = SET('DELETED')\n"
         "cPathSession2 = SET('PATH')\n"
         "cDefaultSession2 = SET('DEFAULT')\n"
         "lFileSession2 = FILE('people.dbf')\n"
         "lPathFileSession2 = FILE('path_only_session.txt')\n"
         "SET DATASESSION TO 1\n"
         "cNearRestored = SET('NEAR')\n"
+        "cExactRestored = SET('EXACT')\n"
+        "cDeletedRestored = SET('DELETED')\n"
         "cPathRestored = SET('PATH')\n"
         "cDefaultRestored = SET('DEFAULT')\n"
         "lFileRestored = FILE('people.dbf')\n"
@@ -591,6 +601,10 @@ void test_eval_macro_and_runtime_state_semantics() {
 
     const auto near_before = state.globals.find("cnearbefore");
     const auto near_after = state.globals.find("cnearafter");
+    const auto exact_before = state.globals.find("cexactbefore");
+    const auto exact_after = state.globals.find("cexactafter");
+    const auto deleted_before = state.globals.find("cdeletedbefore");
+    const auto deleted_after = state.globals.find("cdeletedafter");
     const auto path_before = state.globals.find("cpathbefore");
     const auto path_after = state.globals.find("cpathafter");
     const auto path_file_before = state.globals.find("lpathfilebefore");
@@ -603,11 +617,15 @@ void test_eval_macro_and_runtime_state_semantics() {
     const auto used_after_close = state.globals.find("lusedafterclose");
     const auto area_after_close = state.globals.find("nareaafterclose");
     const auto near_session2 = state.globals.find("cnearsession2");
+    const auto exact_session2 = state.globals.find("cexactsession2");
+    const auto deleted_session2 = state.globals.find("cdeletedsession2");
     const auto path_session2 = state.globals.find("cpathsession2");
     const auto default_session2 = state.globals.find("cdefaultsession2");
     const auto file_session2 = state.globals.find("lfilesession2");
     const auto path_file_session2 = state.globals.find("lpathfilesession2");
     const auto near_restored = state.globals.find("cnearrestored");
+    const auto exact_restored = state.globals.find("cexactrestored");
+    const auto deleted_restored = state.globals.find("cdeletedrestored");
     const auto path_restored = state.globals.find("cpathrestored");
     const auto default_restored = state.globals.find("cdefaultrestored");
     const auto file_restored = state.globals.find("lfilerestored");
@@ -615,6 +633,10 @@ void test_eval_macro_and_runtime_state_semantics() {
 
     expect(near_before != state.globals.end(), "SET('NEAR') before enabling it should be captured");
     expect(near_after != state.globals.end(), "SET('NEAR') after enabling it should be captured");
+    expect(exact_before != state.globals.end(), "SET('EXACT') before enabling it should be captured");
+    expect(exact_after != state.globals.end(), "SET('EXACT') after enabling it should be captured");
+    expect(deleted_before != state.globals.end(), "SET('DELETED') before enabling it should be captured");
+    expect(deleted_after != state.globals.end(), "SET('DELETED') after enabling it should be captured");
     expect(path_before != state.globals.end(), "SET('PATH') before change should be captured");
     expect(path_after != state.globals.end(), "SET('PATH') after change should be captured");
     expect(path_file_before != state.globals.end(), "FILE() before SET PATH should be captured");
@@ -627,11 +649,15 @@ void test_eval_macro_and_runtime_state_semantics() {
     expect(used_after_close != state.globals.end(), "USE IN <expr> close semantics should be captured");
     expect(area_after_close != state.globals.end(), "SELECT('alias') after USE IN <expr> should be captured");
     expect(near_session2 != state.globals.end(), "SET('NEAR') in a fresh second session should be captured");
+    expect(exact_session2 != state.globals.end(), "SET('EXACT') in a fresh second session should be captured");
+    expect(deleted_session2 != state.globals.end(), "SET('DELETED') in a fresh second session should be captured");
     expect(path_session2 != state.globals.end(), "SET('PATH') in a fresh second session should be captured");
     expect(default_session2 != state.globals.end(), "SET('DEFAULT') in a fresh second session should be captured");
     expect(file_session2 != state.globals.end(), "FILE() in a fresh second session should be captured");
     expect(path_file_session2 != state.globals.end(), "FILE() for a SET PATH-only file in a fresh second session should be captured");
     expect(near_restored != state.globals.end(), "SET('NEAR') after restoring the original session should be captured");
+    expect(exact_restored != state.globals.end(), "SET('EXACT') after restoring the original session should be captured");
+    expect(deleted_restored != state.globals.end(), "SET('DELETED') after restoring the original session should be captured");
     expect(path_restored != state.globals.end(), "SET('PATH') after restoring the original session should be captured");
     expect(default_restored != state.globals.end(), "SET('DEFAULT') after restoring the original session should be captured");
     expect(file_restored != state.globals.end(), "FILE() after restoring the original session should be captured");
@@ -642,6 +668,18 @@ void test_eval_macro_and_runtime_state_semantics() {
     }
     if (near_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_after->second) == "ON", "SET('NEAR') should report ON after SET NEAR ON");
+    }
+    if (exact_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_before->second) == "OFF", "SET('EXACT') should report OFF before it is enabled");
+    }
+    if (exact_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_after->second) == "ON", "SET('EXACT') should report ON after SET EXACT ON");
+    }
+    if (deleted_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_before->second) == "OFF", "SET('DELETED') should report OFF before it is enabled");
+    }
+    if (deleted_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_after->second) == "ON", "SET('DELETED') should report ON after SET DELETED ON");
     }
     if (path_before != state.globals.end()) {
         expect(copperfin::runtime::format_value(path_before->second) == "OFF", "SET('PATH') should report OFF before it is configured");
@@ -687,6 +725,12 @@ void test_eval_macro_and_runtime_state_semantics() {
     if (near_session2 != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_session2->second) == "OFF", "SET() state should stay isolated in a fresh data session");
     }
+    if (exact_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_session2->second) == "OFF", "SET('EXACT') should stay isolated in a fresh data session");
+    }
+    if (deleted_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_session2->second) == "OFF", "SET('DELETED') should stay isolated in a fresh data session");
+    }
     if (path_session2 != state.globals.end()) {
         expect(copperfin::runtime::format_value(path_session2->second) == "OFF",
                "SET('PATH') should stay isolated in a fresh data session");
@@ -708,6 +752,12 @@ void test_eval_macro_and_runtime_state_semantics() {
     }
     if (near_restored != state.globals.end()) {
         expect(copperfin::runtime::format_value(near_restored->second) == "ON", "restoring the original data session should restore its SET() state");
+    }
+    if (exact_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact_restored->second) == "ON", "restoring the original data session should restore its SET('EXACT') value");
+    }
+    if (deleted_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_restored->second) == "ON", "restoring the original data session should restore its SET('DELETED') value");
     }
     if (path_restored != state.globals.end()) {
         const std::string normalized_path_restored = lowercase_copy(copperfin::runtime::format_value(path_restored->second));
