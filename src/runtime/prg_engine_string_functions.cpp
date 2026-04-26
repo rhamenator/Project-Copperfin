@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cctype>
+#include <functional>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -278,13 +279,45 @@ std::vector<std::string> memo_width_lines_with_options(
     return memo_width_lines(source, line_width, tab_width, flags);
 }
 
+std::string set_symbol(
+    const std::function<std::string(const std::string&)>& set_callback,
+    const std::string& option_name,
+    const std::string& default_value) {
+    const std::string value = trim_copy(set_callback(option_name));
+    return value.empty() || uppercase_copy(value) == "OFF" ? default_value : value;
+}
+
+std::string apply_numeric_picture_symbols(
+    std::string value,
+    bool group_thousands,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::string point = set_symbol(set_callback, "POINT", ".");
+    const std::string separator = set_symbol(set_callback, "SEPARATOR", ",");
+    const std::size_t decimal_pos = value.find('.');
+    std::string integer_part = decimal_pos == std::string::npos ? value : value.substr(0U, decimal_pos);
+    const std::string fraction_part = decimal_pos == std::string::npos ? std::string{} : value.substr(decimal_pos + 1U);
+
+    if (group_thousands) {
+        std::size_t start = integer_part.empty() || integer_part.front() != '-' ? 0U : 1U;
+        for (std::size_t insert_pos = integer_part.size(); insert_pos > start + 3U; insert_pos -= 3U) {
+            integer_part.insert(insert_pos - 3U, separator);
+        }
+    }
+
+    if (decimal_pos == std::string::npos) {
+        return integer_part;
+    }
+    return integer_part + point + fraction_part;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_string_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     bool exact_string_compare,
-    std::size_t memo_width) {
+    std::size_t memo_width,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
@@ -726,7 +759,7 @@ std::optional<PrgValue> evaluate_string_function(
                 }
                 std::ostringstream stream;
                 stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
-                return make_string_value(stream.str());
+                return make_string_value(apply_numeric_picture_symbols(stream.str(), picture.find(',') != std::string::npos, set_callback));
             }
         }
         return make_string_value(value_as_string(arguments[0]));

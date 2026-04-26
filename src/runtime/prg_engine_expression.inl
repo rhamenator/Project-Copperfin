@@ -11,7 +11,8 @@
         const std::string& function,
         const std::vector<PrgValue>& arguments,
         bool exact_string_compare,
-        std::size_t memo_width = 50U);
+        std::size_t memo_width,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_type_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -762,7 +763,7 @@
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
                     return make_number_value(static_cast<double>(sql_set_prop_callback_(handle, value_as_string(arguments[1]), arguments[2])));
                 }
-                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_, memowidth_callback_()))
+                if (const auto string_result = evaluate_string_function(function, arguments, exact_string_compare_, memowidth_callback_(), set_callback_))
                 {
                     return *string_result;
                 }

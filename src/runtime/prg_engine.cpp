@@ -653,6 +653,14 @@ namespace copperfin::runtime
                     {
                         return std::string("1");
                     }
+                    if (normalized_name == "point")
+                    {
+                        return std::string(".");
+                    }
+                    if (normalized_name == "separator")
+                    {
+                        return std::string(",");
+                    }
                     return std::string("OFF");
                 }
 

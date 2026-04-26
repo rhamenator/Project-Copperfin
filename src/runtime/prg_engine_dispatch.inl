@@ -1442,6 +1442,18 @@
                         mark_value = unquote_string(mark_value);
                         current_set_state()[normalized_name] = mark_value.empty() ? std::string{"/"} : mark_value;
                     }
+                    else if (normalized_name == "point" || normalized_name == "separator")
+                    {
+                        std::string symbol_value = trim_copy(option_value);
+                        if (starts_with_insensitive(symbol_value, "TO "))
+                        {
+                            symbol_value = trim_copy(symbol_value.substr(3U));
+                        }
+                        symbol_value = unquote_string(symbol_value);
+                        current_set_state()[normalized_name] = symbol_value.empty()
+                                                                  ? (normalized_name == "point" ? std::string{"."} : std::string{","})
+                                                                  : symbol_value;
+                    }
                     else
                     {
                         current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;
