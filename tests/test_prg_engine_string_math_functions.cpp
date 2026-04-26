@@ -75,6 +75,9 @@ namespace
             "chrtran_value = CHRTRAN('a1b2c3', '123', 'xyz')\n"
             "chrtranc_value = CHRTRANC('aAbBcc', 'AB', 'xy')\n"
             "chrtranc_delete = CHRTRANC('Alpha Beta', 'AE', 'x')\n"
+            "strtran_start = STRTRAN('abcabcabc', 'abc', 'X', 2)\n"
+            "strtran_count = STRTRAN('abcabcabc', 'abc', 'X', 2, 1)\n"
+            "strtran_none = STRTRAN('abcabcabc', 'abc', 'X', 5, 1)\n"
             "proper_value = PROPER('legacy fox-pro APP')\n"
             "strconv_lower = STRCONV('MiXeD', 7)\n"
             "strconv_upper = STRCONV('MiXeD', 8)\n"
@@ -205,6 +208,9 @@ namespace
         check("chrtran_value", "axbycz");
         check("chrtranc_value", "xxyycc");
         check("chrtranc_delete", "xlphx Btx");
+        check("strtran_start", "abcXX");
+        check("strtran_count", "abcXabc");
+        check("strtran_none", "abcabcabc");
         check("proper_value", "Legacy Fox-Pro App");
         check("strconv_lower", "mixed");
         check("strconv_upper", "MIXED");

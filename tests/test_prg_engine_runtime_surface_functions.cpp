@@ -173,6 +173,13 @@ namespace
         const std::string test_content = "Hello, World! This is a test file.";
         write_text(test_file_path, test_content);
 
+        // Create a file only discoverable via SET PATH
+        const fs::path path_probe_dir = temp_root / "path_probe";
+        fs::create_directories(path_probe_dir);
+        const fs::path path_only_file_path = path_probe_dir / "path_only.txt";
+        const std::string path_only_content = "Found only through SET PATH";
+        write_text(path_only_file_path, path_only_content);
+
         const fs::path main_path = temp_root / "filesize_test.prg";
         write_text(
             main_path,
@@ -181,6 +188,10 @@ namespace
             "nMissingFile = FILESIZE('missing-file.txt')\n"
             "nEmptyArg = FILESIZE()\n"
             "nAbsolutePath = FILESIZE('" + test_file_path.string() + "')\n"
+            "lPathFileBefore = FILE('path_only.txt')\n"
+            "SET PATH TO '" + path_probe_dir.string() + "'\n"
+            "lPathFileAfter = FILE('path_only.txt')\n"
+            "nPathFileSize = FILESIZE('path_only.txt')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -215,6 +226,11 @@ namespace
         
         // Absolute path should also work
         check("nabsolutepath", std::to_string(test_content.length()));
+
+        // SET PATH resolution should make path-only file discoverable
+        check("lpathfilebefore", "false");
+        check("lpathfileafter", "true");
+        check("npathfilesize", std::to_string(path_only_content.length()));
 
         fs::remove_all(temp_root, ignored);
     }

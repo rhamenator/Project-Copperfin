@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cctype>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -239,17 +240,31 @@ std::optional<PrgValue> evaluate_string_function(
         std::string src = value_as_string(arguments[0]);
         const std::string find = value_as_string(arguments[1]);
         const std::string repl = value_as_string(arguments[2]);
+        const std::size_t start_occurrence = arguments.size() >= 4U
+                                                 ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
+                                                 : 1U;
+        const std::size_t occurrence_limit = arguments.size() >= 5U
+                                                 ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[4])))
+                                                 : std::numeric_limits<std::size_t>::max();
         if (!find.empty()) {
             std::string result;
             std::size_t pos = 0U;
+            std::size_t match_index = 0U;
+            std::size_t replaced_count = 0U;
             while (pos < src.size()) {
                 const std::size_t found = src.find(find, pos);
                 if (found == std::string::npos) {
                     result += src.substr(pos);
                     break;
                 }
+                ++match_index;
                 result += src.substr(pos, found - pos);
-                result += repl;
+                if (match_index >= start_occurrence && replaced_count < occurrence_limit) {
+                    result += repl;
+                    ++replaced_count;
+                } else {
+                    result += find;
+                }
                 pos = found + find.size();
             }
             src = std::move(result);
