@@ -967,6 +967,134 @@ void test_sql_prepare_and_connection_properties() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_state_variables_strictdate_enginebehavior_optimize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "test_set_vars";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path prg_path = temp_root / "set_vars_test.prg";
+    write_text(
+        prg_path,
+        "* Test SET STRICTDATE, ENGINEBEHAVIOR, OPTIMIZE\n"
+        "nTest = 1\n"
+        "cStrictDateBefore = SET('STRICTDATE')\n"
+        "cEngineBehaviorBefore = SET('ENGINEBEHAVIOR')\n"
+        "cOptimizeBefore = SET('OPTIMIZE')\n"
+        "\n"
+        "SET STRICTDATE ON\n"
+        "cStrictDateAfter = SET('STRICTDATE')\n"
+        "\n"
+        "SET ENGINEBEHAVIOR ON\n"
+        "cEngineBehaviorAfter = SET('ENGINEBEHAVIOR')\n"
+        "\n"
+        "SET OPTIMIZE ON\n"
+        "cOptimizeAfter = SET('OPTIMIZE')\n"
+        "\n"
+        "* Test boolean variants\n"
+        "SET STRICTDATE TO .F.\n"
+        "cStrictDateAfterOff = SET('STRICTDATE')\n"
+        "\n"
+        "SET OPTIMIZE TO 'false'\n"
+        "cOptimizeAfterFalse = SET('OPTIMIZE')\n"
+        "\n"
+        "* Test data session isolation\n"
+        "SET DATASESSION TO 2\n"
+        "cStrictDateSession2 = SET('STRICTDATE')\n"
+        "cEngineBehaviorSession2 = SET('ENGINEBEHAVIOR')\n"
+        "cOptimizeSession2 = SET('OPTIMIZE')\n"
+        "\n"
+        "SET DATASESSION TO 1\n"
+        "cStrictDateRestored = SET('STRICTDATE')\n"
+        "cEngineBehaviorRestored = SET('ENGINEBEHAVIOR')\n"
+        "cOptimizeRestored = SET('OPTIMIZE')\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = prg_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "set_vars_test script should complete");
+
+    const auto strictdate_before = state.globals.find("cstrictdatebefore");
+    const auto strictdate_after = state.globals.find("cstrictdateafter");
+    const auto strictdate_after_off = state.globals.find("cstrictdateafteroff");
+    const auto enginebehavior_before = state.globals.find("cenginebehaviorbefore");
+    const auto enginebehavior_after = state.globals.find("cenginebehaviorafter");
+    const auto optimize_before = state.globals.find("coptimizebefore");
+    const auto optimize_after = state.globals.find("coptimizeafter");
+    const auto optimize_after_false = state.globals.find("coptimizeafterfalse");
+    const auto strictdate_session2 = state.globals.find("cstrictdatesession2");
+    const auto enginebehavior_session2 = state.globals.find("cenginebehaviorsession2");
+    const auto optimize_session2 = state.globals.find("coptimizesession2");
+    const auto strictdate_restored = state.globals.find("cstrictdaterestored");
+    const auto enginebehavior_restored = state.globals.find("cenginebehaviorrestored");
+    const auto optimize_restored = state.globals.find("coptimizerestored");
+
+    expect(strictdate_before != state.globals.end(), "SET('STRICTDATE') before change should be captured");
+    expect(strictdate_after != state.globals.end(), "SET('STRICTDATE') after SET STRICTDATE ON should be captured");
+    expect(strictdate_after_off != state.globals.end(), "SET('STRICTDATE') after SET STRICTDATE TO .F. should be captured");
+    expect(enginebehavior_before != state.globals.end(), "SET('ENGINEBEHAVIOR') before change should be captured");
+    expect(enginebehavior_after != state.globals.end(), "SET('ENGINEBEHAVIOR') after SET ENGINEBEHAVIOR TO 'VFP' should be captured");
+    expect(optimize_before != state.globals.end(), "SET('OPTIMIZE') before change should be captured");
+    expect(optimize_after != state.globals.end(), "SET('OPTIMIZE') after SET OPTIMIZE ON should be captured");
+    expect(optimize_after_false != state.globals.end(), "SET('OPTIMIZE') after SET OPTIMIZE TO 'false' should be captured");
+    expect(strictdate_session2 != state.globals.end(), "SET('STRICTDATE') in session 2 should be captured");
+    expect(enginebehavior_session2 != state.globals.end(), "SET('ENGINEBEHAVIOR') in session 2 should be captured");
+    expect(optimize_session2 != state.globals.end(), "SET('OPTIMIZE') in session 2 should be captured");
+    expect(strictdate_restored != state.globals.end(), "SET('STRICTDATE') after restoring session 1 should be captured");
+    expect(enginebehavior_restored != state.globals.end(), "SET('ENGINEBEHAVIOR') after restoring session 1 should be captured");
+    expect(optimize_restored != state.globals.end(), "SET('OPTIMIZE') after restoring session 1 should be captured");
+
+    if (strictdate_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(strictdate_before->second) == "OFF", "SET('STRICTDATE') should default to OFF");
+    }
+    if (strictdate_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(strictdate_after->second) == "ON", "SET('STRICTDATE') should report ON after SET STRICTDATE ON");
+    }
+    if (strictdate_after_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(strictdate_after_off->second) == "OFF", "SET('STRICTDATE') should report OFF after SET STRICTDATE TO .F.");
+    }
+    if (enginebehavior_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(enginebehavior_before->second) == "OFF", "SET('ENGINEBEHAVIOR') should default to OFF");
+    }
+    if (enginebehavior_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(enginebehavior_after->second) == "ON", "SET('ENGINEBEHAVIOR') should report ON after SET ENGINEBEHAVIOR ON");
+    }
+    if (optimize_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(optimize_before->second) == "OFF", "SET('OPTIMIZE') should default to OFF");
+    }
+    if (optimize_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(optimize_after->second) == "ON", "SET('OPTIMIZE') should report ON after SET OPTIMIZE ON");
+    }
+    if (optimize_after_false != state.globals.end()) {
+        expect(copperfin::runtime::format_value(optimize_after_false->second) == "OFF", "SET('OPTIMIZE') should report OFF after SET OPTIMIZE TO 'false'");
+    }
+    if (strictdate_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(strictdate_session2->second) == "OFF", "SET('STRICTDATE') in a fresh session should be OFF");
+    }
+    if (enginebehavior_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(enginebehavior_session2->second) == "OFF", "SET('ENGINEBEHAVIOR') in a fresh session should be OFF");
+    }
+    if (optimize_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(optimize_session2->second) == "OFF", "SET('OPTIMIZE') in a fresh session should be OFF");
+    }
+    if (strictdate_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(strictdate_restored->second) == "OFF", "restoring session 1 should restore SET('STRICTDATE') to its state after SET STRICTDATE TO .F.");
+    }
+    if (enginebehavior_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(enginebehavior_restored->second) == "ON", "restoring session 1 should restore SET('ENGINEBEHAVIOR') to its state after SET ENGINEBEHAVIOR ON");
+    }
+    if (optimize_restored != state.globals.end()) {
+        expect(copperfin::runtime::format_value(optimize_restored->second) == "OFF", "restoring session 1 should restore SET('OPTIMIZE') to its state after SET OPTIMIZE TO 'false'");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -985,6 +1113,7 @@ int main() {
     test_sql_and_ole_compatibility_functions();
     test_sql_pass_through_rows_affected_and_provider_hint();
     test_sql_prepare_and_connection_properties();
+    test_set_state_variables_strictdate_enginebehavior_optimize();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

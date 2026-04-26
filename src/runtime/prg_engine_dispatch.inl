@@ -1382,7 +1382,8 @@
                 }
                 if (!normalized_name.empty())
                 {
-                    if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near")
+                    if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
+                        normalized_name == "strictdate" || normalized_name == "optimize")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
                     }
