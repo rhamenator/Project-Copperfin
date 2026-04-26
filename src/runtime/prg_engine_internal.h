@@ -92,6 +92,11 @@ enum class StatementKind {
     resume_statement,
     declare_dll,
     call_command,
+    for_each_statement,
+    release_command,
+    clear_memory_command,
+    cancel_statement,
+    quit_statement,
     no_op
 };
 

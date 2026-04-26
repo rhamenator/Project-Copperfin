@@ -2864,7 +2864,172 @@
             }
             case StatementKind::no_op:
                 return {};
+            case StatementKind::for_each_statement:
+            {
+                // FOR EACH <element> IN <collection>
+                // Collection may be a declared array or any expression.
+                const std::string var_name = normalize_memory_variable_identifier(statement.identifier);
+                const std::string collection_expr = statement.expression;
+
+                // Build the element snapshot at loop entry (only once per loop push)
+                const auto existing_loop = std::find_if(frame.loops.rbegin(), frame.loops.rend(),
+                    [&](const LoopState &l) { return l.for_statement_index == (frame.pc - 1U); });
+                if (existing_loop != frame.loops.rend())
+                {
+                    // Already entered; the ENDFOR/LOOP continuation handles iteration
+                    return {};
+                }
+
+                // Snapshot collection elements
+                std::vector<PrgValue> elements;
+                const std::string coll_norm = normalize_memory_variable_identifier(collection_expr);
+                if (const RuntimeArray *arr = find_array(coll_norm); arr != nullptr)
+                {
+                    elements = arr->values;
+                }
+                else
+                {
+                    // Evaluate as expression; treat result as single element
+                    const PrgValue result = evaluate_expression(collection_expr, frame);
+                    elements.push_back(result);
+                }
+
+                if (elements.empty())
+                {
+                    // Skip the loop body entirely
+                    if (const auto dest = find_matching_endfor(frame, frame.pc - 1U))
+                    {
+                        frame.pc = *dest + 1U;
+                    }
+                    return {};
+                }
+
+                // Assign first element and enter loop
+                assign_variable(frame, var_name, elements[0]);
+                frame.loops.push_back({
+                    .for_statement_index = frame.pc - 1U,
+                    .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                    .variable_name = var_name,
+                    .is_for_each = true,
+                    .each_values = std::move(elements),
+                    .each_index = 0U
+                });
+                return {};
             }
+            case StatementKind::release_command:
+            {
+                if (statement.identifier == "all")
+                {
+                    // RELEASE ALL [LIKE <pattern> | EXCEPT <pattern>]
+                    const std::string mode = statement.expression; // "like", "except", or ""
+                    const std::string pattern = statement.secondary_expression;
+                    if (mode.empty())
+                    {
+                        // RELEASE ALL — erase all globals that are not PUBLIC-pinned arrays
+                        globals.clear();
+                        arrays.clear();
+                    }
+                    else
+                    {
+                        std::vector<std::string> to_erase;
+                        for (const auto &[name, val] : globals)
+                        {
+                            const bool matches = wildcard_match_insensitive(pattern, name);
+                            if ((mode == "like" && matches) || (mode == "except" && !matches))
+                            {
+                                to_erase.push_back(name);
+                            }
+                        }
+                        for (const auto &name : to_erase)
+                        {
+                            globals.erase(name);
+                            arrays.erase(name);
+                        }
+                    }
+                }
+                else
+                {
+                    // RELEASE <varlist>
+                    for (const auto &raw : statement.names)
+                    {
+                        const std::string name = normalize_memory_variable_identifier(trim_copy(raw));
+                        globals.erase(name);
+                        arrays.erase(name);
+                        // Also remove from current frame locals if declared LOCAL
+                        frame.locals.erase(name);
+                        frame.local_names.erase(name);
+                    }
+                }
+                events.push_back({.category = "runtime.release",
+                                  .detail = statement.identifier,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::clear_memory_command:
+            {
+                // CLEAR MEMORY — release all public/global variables and arrays
+                // CLEAR ALL — same plus closes all tables and releases procedures
+                globals.clear();
+                arrays.clear();
+                if (statement.identifier == "all")
+                {
+                    // Also close all open work areas
+                    for (auto &[session_id, session] : data_sessions)
+                    {
+                        session.cursors.clear();
+                        session.aliases.clear();
+                    }
+                }
+                events.push_back({.category = "runtime.clear_memory",
+                                  .detail = statement.identifier,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::cancel_statement:
+            {
+                // CANCEL — abort execution and return to top level
+                events.push_back({.category = "runtime.cancel",
+                                  .detail = "CANCEL",
+                                  .location = statement.location});
+                // Unwind entire call stack
+                while (stack.size() > 1U)
+                {
+                    restore_private_declarations(stack.back());
+                    stack.pop_back();
+                }
+                if (!stack.empty())
+                {
+                    Frame &top = stack.back();
+                    if (top.routine != nullptr)
+                    {
+                        top.pc = top.routine->statements.size();
+                    }
+                }
+                return {};
+            }
+            case StatementKind::quit_statement:
+            {
+                // QUIT — signal host to exit (runtime records the event; host decides)
+                events.push_back({.category = "runtime.quit",
+                                  .detail = "QUIT",
+                                  .location = statement.location});
+                // Unwind entire call stack same as CANCEL
+                while (stack.size() > 1U)
+                {
+                    restore_private_declarations(stack.back());
+                    stack.pop_back();
+                }
+                if (!stack.empty())
+                {
+                    Frame &top = stack.back();
+                    if (top.routine != nullptr)
+                    {
+                        top.pc = top.routine->statements.size();
+                    }
+                }
+                return {};
+            }
+        }
         }
         catch (const std::bad_alloc &)
         {

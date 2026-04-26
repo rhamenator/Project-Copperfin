@@ -102,7 +102,7 @@
             for (std::size_t index = pc + 1U; index < frame.routine->statements.size(); ++index)
             {
                 const auto kind = frame.routine->statements[index].kind;
-                if (kind == StatementKind::for_statement)
+                if (kind == StatementKind::for_statement || kind == StatementKind::for_each_statement)
                 {
                     ++depth;
                 }
@@ -443,6 +443,34 @@
             }
 
             LoopState &loop = frame.loops.back();
+
+            // FOR EACH loops use a separate continuation path
+            if (loop.is_for_each)
+            {
+                ++loop.each_index;
+                ++loop.iteration_count;
+                if (loop.iteration_count > max_loop_iterations)
+                {
+                    last_error_message = loop_iteration_limit_message();
+                    return {.ok = false, .message = last_error_message};
+                }
+                if (loop.each_index < loop.each_values.size())
+                {
+                    assign_variable(frame, loop.variable_name, loop.each_values[loop.each_index]);
+                    frame.pc = loop.for_statement_index + 1U;
+                }
+                else
+                {
+                    const std::size_t completion_pc = loop.endfor_statement_index + 1U;
+                    frame.loops.pop_back();
+                    if (jump_after_completion)
+                    {
+                        frame.pc = completion_pc;
+                    }
+                }
+                return {};
+            }
+
             ++loop.iteration_count;
             if (loop.iteration_count > max_loop_iterations)
             {

@@ -1966,6 +1966,182 @@ void test_erase_copy_rename_file_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_for_each_iterates_array_elements() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_array";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+        "DIMENSION fruits(3)\n"
+        "fruits(1) = 'apple'\n"
+        "fruits(2) = 'banana'\n"
+        "fruits(3) = 'cherry'\n"
+        "result = ''\n"
+        "FOR EACH elem IN fruits\n"
+        "    result = result + elem + ','\n"
+        "ENDFOR\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOR EACH over array should complete");
+    const auto it = state.globals.find("result");
+    expect(it != state.globals.end(), "result should be set after FOR EACH");
+    expect(it->second.string_value == "apple,banana,cherry,", "FOR EACH should iterate all array elements");
+    fs::remove_all(tmp, ign);
+}
+
+void test_for_each_single_element_expression() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_scalar";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+        "result = ''\n"
+        "FOR EACH item IN 'hello'\n"
+        "    result = item\n"
+        "ENDFOR\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOR EACH over scalar should complete");
+    const auto it = state.globals.find("result");
+    expect(it != state.globals.end(), "result should be set");
+    expect(it->second.string_value == "hello", "FOR EACH scalar treats expression as single element");
+    fs::remove_all(tmp, ign);
+}
+
+void test_release_vars_erases_named_globals() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_vars";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "x = 10\ny = 20\nRELEASE x\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE should not crash");
+    expect(state.globals.find("x") == state.globals.end(), "x should be released");
+    expect(state.globals.find("y") != state.globals.end(), "y should still exist");
+    fs::remove_all(tmp, ign);
+}
+
+void test_release_all_clears_all_globals() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_all";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "a = 1\nb = 2\nRELEASE ALL\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL should complete");
+    expect(state.globals.find("a") == state.globals.end(), "a should be released by RELEASE ALL");
+    expect(state.globals.find("b") == state.globals.end(), "b should be released by RELEASE ALL");
+    fs::remove_all(tmp, ign);
+}
+
+void test_release_all_like_pattern() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_like";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "tmp_a = 1\ntmp_b = 2\nkeep_me = 3\nRELEASE ALL LIKE tmp_*\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL LIKE should complete");
+    expect(state.globals.find("tmp_a") == state.globals.end(), "tmp_a should be released");
+    expect(state.globals.find("tmp_b") == state.globals.end(), "tmp_b should be released");
+    expect(state.globals.find("keep_me") != state.globals.end(), "keep_me should survive LIKE tmp_*");
+    fs::remove_all(tmp, ign);
+}
+
+void test_release_all_except_pattern() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_except";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "keep_x = 1\ngone_y = 2\nRELEASE ALL EXCEPT keep_*\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL EXCEPT should complete");
+    expect(state.globals.find("keep_x") != state.globals.end(), "keep_x should survive EXCEPT keep_*");
+    expect(state.globals.find("gone_y") == state.globals.end(), "gone_y should be released");
+    fs::remove_all(tmp, ign);
+}
+
+void test_clear_memory_erases_all_globals() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_clear_memory";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "p = 42\nq = 99\nCLEAR MEMORY\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLEAR MEMORY should complete");
+    expect(state.globals.find("p") == state.globals.end(), "p should be cleared");
+    expect(state.globals.find("q") == state.globals.end(), "q should be cleared");
+    fs::remove_all(tmp, ign);
+}
+
+void test_cancel_halts_execution() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_cancel";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "x = 1\nCANCEL\nx = 999\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CANCEL should terminate cleanly");
+    const auto it = state.globals.find("x");
+    if (it != state.globals.end()) {
+        expect(it->second.number_value == 1.0, "CANCEL should prevent execution of statements after it");
+    }
+    const bool has_cancel = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.cancel"; });
+    expect(has_cancel, "CANCEL should emit runtime.cancel event");
+    fs::remove_all(tmp, ign);
+}
+
+void test_quit_emits_event() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_quit";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg, "y = 5\nQUIT\ny = 999\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "QUIT should terminate cleanly");
+    const bool has_quit = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &e) { return e.category == "runtime.quit"; });
+    expect(has_quit, "QUIT should emit runtime.quit event");
+    fs::remove_all(tmp, ign);
+}
+
 
 }  // namespace
 
@@ -2001,6 +2177,15 @@ int main() {
     test_print_command_emits_event();
     test_close_command_closes_all_work_areas();
     test_erase_copy_rename_file_commands();
+    test_for_each_iterates_array_elements();
+    test_for_each_single_element_expression();
+    test_release_vars_erases_named_globals();
+    test_release_all_clears_all_globals();
+    test_release_all_like_pattern();
+    test_release_all_except_pattern();
+    test_clear_memory_erases_all_globals();
+    test_cancel_halts_execution();
+    test_quit_emits_event();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

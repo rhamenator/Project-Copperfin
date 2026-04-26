@@ -186,6 +186,15 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::else_statement;
         } else if (upper == "ENDIF") {
             statement.kind = StatementKind::endif_statement;
+        } else if (starts_with_insensitive(line, "FOR EACH ")) {
+            // FOR EACH <element> IN <collection>
+            statement.kind = StatementKind::for_each_statement;
+            const std::string body = trim_copy(line.substr(9U));
+            const std::size_t in_pos = find_keyword_top_level(body, "IN");
+            if (in_pos != std::string::npos) {
+                statement.identifier = trim_copy(body.substr(0U, in_pos));
+                statement.expression = trim_copy(body.substr(in_pos + 2U));
+            }
         } else if (starts_with_insensitive(line, "FOR ")) {
             statement.kind = StatementKind::for_statement;
             const std::string body = trim_copy(line.substr(4U));
@@ -263,6 +272,31 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::release_surface;
             statement.identifier = "menu";
             statement.expression = trim_copy(line.substr(13U));
+        } else if (upper == "RELEASE ALL" || starts_with_insensitive(line, "RELEASE ALL ")) {
+            // RELEASE ALL [LIKE <pattern> | EXCEPT <pattern>]
+            statement.kind = StatementKind::release_command;
+            statement.identifier = "all";
+            const std::string rest = trim_copy(line.substr(11U));
+            const std::string rest_upper = uppercase_copy(rest);
+            if (starts_with_insensitive(rest, "LIKE ")) {
+                statement.expression = "like";
+                statement.secondary_expression = trim_copy(rest.substr(5U));
+            } else if (starts_with_insensitive(rest, "EXCEPT ")) {
+                statement.expression = "except";
+                statement.secondary_expression = trim_copy(rest.substr(7U));
+            }
+        } else if (starts_with_insensitive(line, "RELEASE ")) {
+            // RELEASE <varlist>
+            statement.kind = StatementKind::release_command;
+            statement.identifier = "vars";
+            statement.names = split_csv_like(trim_copy(line.substr(8U)));
+        } else if (upper == "CLEAR MEMORY" || upper == "CLEAR ALL") {
+            statement.kind = StatementKind::clear_memory_command;
+            statement.identifier = upper == "CLEAR ALL" ? "all" : "memory";
+        } else if (upper == "CANCEL") {
+            statement.kind = StatementKind::cancel_statement;
+        } else if (upper == "QUIT") {
+            statement.kind = StatementKind::quit_statement;
         } else if (starts_with_insensitive(line, "DO ")) {
             statement.kind = StatementKind::do_command;
             const std::string body = trim_copy(line.substr(3U));
