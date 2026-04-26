@@ -125,6 +125,15 @@ namespace
             "wrap_second = MLINE(wrap_text, 2)\n"
             "wrap_second_width8 = MLINE(wrap_text, 2, 0, 8)\n"
             "offset_line = MLINE(memo_text, 1, 12)\n"
+            "tab_text = 'aa' + CHR(9) + 'bb' + CHR(9) + 'cc'\n"
+            "tab_default = MLINE(tab_text, 1, 0, 40)\n"
+            "tab_expanded = MLINE(tab_text, 1, 0, 40, 4)\n"
+            "tab_count_expanded = MEMLINES(tab_text, 40, 4)\n"
+            "lf_text = 'alpha' + CHR(10) + 'beta' + CHR(10) + 'gamma'\n"
+            "lf_count_default = MEMLINES(lf_text, 80, 4, 0)\n"
+            "lf_count_break = MEMLINES(lf_text, 80, 4, 1)\n"
+            "lf_second_default = MLINE(lf_text, 2, 0, 80, 4, 0)\n"
+            "lf_second_break = MLINE(lf_text, 2, 0, 80, 4, 1)\n"
             "memo_width_set_default = SET('MEMOWIDTH')\n"
             "SET MEMOWIDTH TO 10\n"
             "memo_width_value = _MLINE\n"
@@ -259,6 +268,13 @@ namespace
         check("wrap_second", "eleven twelve");
         check("wrap_second_width8", "three");
         check("offset_line", "second line\nstill second");
+        check("tab_default", "aa\tbb\tcc");
+        check("tab_expanded", "aa  bb  cc");
+        check("tab_count_expanded", "1");
+        check("lf_count_default", "1");
+        check("lf_count_break", "3");
+        check("lf_second_default", "");
+        check("lf_second_break", "beta");
         check("memo_width_set_default", "50");
         check("memo_width_value", "10");
         check("memo_width_set_after", "10");

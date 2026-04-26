@@ -184,6 +184,100 @@ std::vector<std::string> memo_width_lines(const std::string& source, std::size_t
     return lines;
 }
 
+std::string expand_tabs(const std::string& source, std::size_t tab_width) {
+    tab_width = std::max<std::size_t>(1U, tab_width);
+    std::string expanded;
+    expanded.reserve(source.size());
+    std::size_t column = 0U;
+    for (const char ch : source) {
+        if (ch == '\t') {
+            const std::size_t spaces = tab_width - (column % tab_width);
+            expanded.append(spaces, ' ');
+            column += spaces;
+            continue;
+        }
+        expanded.push_back(ch);
+        if (ch == '\r' || ch == '\n') {
+            column = 0U;
+        } else {
+            ++column;
+        }
+    }
+    return expanded;
+}
+
+std::vector<std::string> memo_width_lines(
+    const std::string& source,
+    std::size_t width,
+    std::size_t tab_width,
+    std::size_t flags) {
+    std::string normalized = tab_width == 0U ? source : expand_tabs(source, tab_width);
+    if ((flags & 1U) != 0U) {
+        std::string lf_normalized;
+        lf_normalized.reserve(normalized.size());
+        bool previous_was_cr = false;
+        for (const char ch : normalized) {
+            if (ch == '\n') {
+                if (!previous_was_cr) {
+                    lf_normalized.push_back('\r');
+                }
+                previous_was_cr = false;
+                continue;
+            }
+            previous_was_cr = ch == '\r';
+            lf_normalized.push_back(ch);
+        }
+        normalized = std::move(lf_normalized);
+    }
+    return memo_width_lines(normalized, width);
+}
+
+std::size_t optional_positive_size_argument(
+    const std::vector<PrgValue>& arguments,
+    std::size_t argument_index,
+    std::size_t fallback_value,
+    double minimum_value = 1.0) {
+    if (argument_index >= arguments.size()) {
+        return fallback_value;
+    }
+    const double parsed_value = value_as_number(arguments[argument_index]);
+    if (parsed_value < minimum_value) {
+        return fallback_value;
+    }
+    return static_cast<std::size_t>(parsed_value);
+}
+
+std::size_t optional_flag_argument(
+    const std::vector<PrgValue>& arguments,
+    std::size_t argument_index,
+    std::size_t fallback_value) {
+    if (argument_index >= arguments.size()) {
+        return fallback_value;
+    }
+    return static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[argument_index])));
+}
+
+std::vector<std::string> memo_width_lines_with_options(
+    const std::string& source,
+    const std::vector<PrgValue>& arguments,
+    std::size_t width_argument_index,
+    std::size_t default_width,
+    std::size_t tab_width_argument_index,
+    std::size_t flags_argument_index) {
+    const std::size_t line_width = optional_positive_size_argument(
+        arguments,
+        width_argument_index,
+        default_width,
+        0.000001);
+    const std::size_t tab_width = optional_positive_size_argument(
+        arguments,
+        tab_width_argument_index,
+        0U,
+        1.0);
+    const std::size_t flags = optional_flag_argument(arguments, flags_argument_index, 0U);
+    return memo_width_lines(source, line_width, tab_width, flags);
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_string_function(
@@ -191,17 +285,6 @@ std::optional<PrgValue> evaluate_string_function(
     const std::vector<PrgValue>& arguments,
     bool exact_string_compare,
     std::size_t memo_width) {
-    const auto optional_line_width = [&](std::size_t argument_index) {
-        if (argument_index >= arguments.size()) {
-            return memo_width;
-        }
-        const double parsed_width = value_as_number(arguments[argument_index]);
-        if (parsed_width <= 0.0) {
-            return memo_width;
-        }
-        return static_cast<std::size_t>(std::max(1.0, parsed_width));
-    };
-
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
@@ -453,8 +536,14 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {
-        const std::size_t line_width = optional_line_width(1U);
-        return make_number_value(static_cast<double>(memo_width_lines(value_as_string(arguments[0]), line_width).size()));
+        const std::vector<std::string> lines = memo_width_lines_with_options(
+            value_as_string(arguments[0]),
+            arguments,
+            1U,
+            memo_width,
+            2U,
+            3U);
+        return make_number_value(static_cast<double>(lines.size()));
     }
     if (function == "mline" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
@@ -468,8 +557,13 @@ std::optional<PrgValue> evaluate_string_function(
         if (start >= source.size()) {
             return make_string_value(std::string{});
         }
-        const std::size_t line_width = optional_line_width(3U);
-        const std::vector<std::string> lines = memo_width_lines(source.substr(start), line_width);
+        const std::vector<std::string> lines = memo_width_lines_with_options(
+            source.substr(start),
+            arguments,
+            3U,
+            memo_width,
+            4U,
+            5U);
         const std::size_t line_index = static_cast<std::size_t>(requested_line);
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
