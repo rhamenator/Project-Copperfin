@@ -173,8 +173,20 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     if (function == "sys") {
         if (!arguments.empty()) {
             const long long sys_code = std::llround(value_as_number(arguments[0]));
+            if (sys_code == 3) {
+                return make_string_value("Copperfin Runtime 0.1");
+            }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
+            }
+            if (sys_code == 7) {
+                return make_string_value(host_os_name());
+            }
+            if (sys_code == 11) {
+                return make_string_value("0");
+            }
+            if (sys_code == 13) {
+                return make_string_value("0");
             }
             if (sys_code == 16) {
                 return make_string_value(frame_file_path);

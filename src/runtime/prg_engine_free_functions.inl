@@ -33,6 +33,24 @@
 #endif
         }
 
+        bool set_environment_variable_value(const std::string &name, const std::string &value)
+        {
+            if (name.empty())
+            {
+                return false;
+            }
+
+#if defined(_WIN32)
+            return _putenv_s(name.c_str(), value.c_str()) == 0;
+#else
+            if (value.empty())
+            {
+                return unsetenv(name.c_str()) == 0;
+            }
+            return setenv(name.c_str(), value.c_str(), 1) == 0;
+#endif
+        }
+
         // Wildcard match: '*' matches any sequence, '?' matches a single char (case-insensitive).
         static bool field_wildcard_match(const std::string &name, const std::string &pattern)
         {

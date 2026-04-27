@@ -801,10 +801,20 @@
                     return array_function_callback_(function, raw_arguments, arguments);
                 }
                 // --- Misc ---
+                if (function == "pcount")
+                {
+                    return make_number_value(static_cast<double>(frame_.call_arguments.size()));
+                }
                 if (function == "getenv" && !arguments.empty())
                 {
                     const std::string env_key = value_as_string(arguments[0]);
                     return make_string_value(get_environment_variable_value(env_key).value_or(std::string{}));
+                }
+                if (function == "putenv" && arguments.size() >= 2U)
+                {
+                    const std::string env_key = value_as_string(arguments[0]);
+                    const std::string env_value = value_as_string(arguments[1]);
+                    return make_boolean_value(set_environment_variable_value(env_key, env_value));
                 }
                 if (function == "txnlevel")
                 {

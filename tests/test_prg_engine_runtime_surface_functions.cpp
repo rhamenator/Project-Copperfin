@@ -289,6 +289,77 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_environment_and_sys_introspection_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_env_sys_helpers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const std::string env_name = "COPPERFIN_RUNTIME_SURFACE_ENV_HELPER";
+        const fs::path main_path = temp_root / "env_and_sys_introspection.prg";
+        write_text(
+            main_path,
+            "nPCountMain = PCOUNT()\n"
+            "DO pcount_helper WITH 10, 'x', .T.\n"
+            "lPutEnvSet = PUTENV('" + env_name + "', 'runtime-surface-value')\n"
+            "cGetEnvSet = GETENV('" + env_name + "')\n"
+            "lPutEnvClear = PUTENV('" + env_name + "', '')\n"
+            "cGetEnvCleared = GETENV('" + env_name + "')\n"
+            "cSys3 = SYS(3)\n"
+            "cSys7 = SYS(7)\n"
+            "cSys11 = SYS(11)\n"
+            "cSys13 = SYS(13)\n"
+            "RETURN\n"
+            "\n"
+            "PROCEDURE pcount_helper\n"
+            "LPARAMETERS p1, p2, p3, p4\n"
+            "nPCountRoutine = PCOUNT()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "environment and SYS helper script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("npcountmain", "0");
+        check("npcountroutine", "3");
+        check("lputenvset", "true");
+        check("cgetenvset", "runtime-surface-value");
+        check("lputenvclear", "true");
+        check("cgetenvcleared", "");
+        check("csys11", "0");
+        check("csys13", "0");
+
+        const auto sys3_value = state.globals.find("csys3");
+        expect(sys3_value != state.globals.end() && !copperfin::runtime::format_value(sys3_value->second).empty(),
+               "SYS(3) should expose a non-empty runtime build token");
+
+        const auto sys7_value = state.globals.find("csys7");
+        expect(sys7_value != state.globals.end() && !copperfin::runtime::format_value(sys7_value->second).empty(),
+               "SYS(7) should expose a non-empty host descriptor");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -296,6 +367,7 @@ int main()
     test_expression_runtime_surface_extensions();
     test_filesize_expression_function();
     test_recsize_reclength_expression_functions();
+    test_environment_and_sys_introspection_functions();
 
     if (test_failures() != 0)
     {
