@@ -714,6 +714,184 @@ void test_runtime_array_mutator_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_save_to_writes_variables_to_file() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_to";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "session_state.mem";
+    const fs::path main_path = temp_root / "save_to_test.prg";
+    write_text(
+        main_path,
+        "x = 'hello'\n"
+        "nVal = 42\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE TO script should complete");
+    expect(fs::exists(mem_path), "SAVE TO should create a .mem file");
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("x=C:hello") != std::string::npos,
+            "SAVE TO should persist character variable x");
+        expect(contents.find("nval=N:42") != std::string::npos,
+            "SAVE TO should persist numeric variable nVal");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_loads_variables_from_file() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_from";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "roundtrip.mem";
+
+    const fs::path save_path = temp_root / "save_source.prg";
+    write_text(
+        save_path,
+        "x = 'hello'\n"
+        "nVal = 42\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession save_session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = save_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+        const auto save_state = save_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(save_state.completed, "SAVE TO setup script should complete before RESTORE FROM test");
+    }
+
+    const fs::path restore_path = temp_root / "restore_target.prg";
+    write_text(
+        restore_path,
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "restored_x = x\n"
+        "restored_n = nVal\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession restore_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = restore_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(restore_state.completed, "RESTORE FROM script should complete");
+
+    const auto restored_x = restore_state.globals.find("restored_x");
+    const auto restored_n = restore_state.globals.find("restored_n");
+    expect(restored_x != restore_state.globals.end(), "RESTORE FROM should restore character variable x");
+    expect(restored_n != restore_state.globals.end(), "RESTORE FROM should restore numeric variable nVal");
+    if (restored_x != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_x->second) == "hello",
+            "RESTORE FROM should keep x value");
+    }
+    if (restored_n != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_n->second) == "42",
+            "RESTORE FROM should keep nVal value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_additive_merges_variables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "additive.mem";
+    const fs::path main_path = temp_root / "restore_additive.prg";
+    write_text(
+        main_path,
+        "existing = 'kept'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "another = 'new'\n"
+        "RESTORE FROM '" + mem_path.string() + "' ADDITIVE\n"
+        "after_existing = existing\n"
+        "after_another = another\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RESTORE FROM ADDITIVE script should complete");
+
+    const auto after_existing = state.globals.find("after_existing");
+    const auto after_another = state.globals.find("after_another");
+    expect(after_existing != state.globals.end(), "RESTORE FROM ADDITIVE should retain saved existing variable");
+    expect(after_another != state.globals.end(), "RESTORE FROM ADDITIVE should retain non-file variable another");
+    if (after_existing != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_existing->second) == "kept",
+            "RESTORE FROM ADDITIVE should preserve saved existing value");
+    }
+    if (after_another != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_another->second) == "new",
+            "RESTORE FROM ADDITIVE should preserve additive local global variable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_to_like_pattern_filters_variables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_like";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "filtered.mem";
+    const fs::path main_path = temp_root / "save_like.prg";
+    write_text(
+        main_path,
+        "cName = 'Alice'\n"
+        "nAge = 30\n"
+        "SAVE TO '" + mem_path.string() + "' ALL LIKE c*\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE TO ALL LIKE script should complete");
+    expect(fs::exists(mem_path), "SAVE TO ALL LIKE should create output file");
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("cname=C:Alice") != std::string::npos,
+            "SAVE TO ALL LIKE should include matching cName variable");
+        expect(contents.find("nage=N:30") == std::string::npos,
+            "SAVE TO ALL LIKE should exclude non-matching nAge variable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_emits_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to";
@@ -1493,6 +1671,199 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_wait_window_command_emits_runtime_wait_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_wait_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "wait_test.prg";
+    write_text(
+        main_path,
+        "WAIT WINDOW \"Please wait...\" TO wResult\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "WAIT WINDOW script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> wait_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.wait") {
+            wait_events.push_back(event);
+        }
+    }
+
+    expect(wait_events.size() == 1U, "WAIT WINDOW command should emit one runtime.wait event");
+    if (wait_events.size() >= 1U) {
+        expect(wait_events[0].detail.find("mode=WINDOW") != std::string::npos,
+            "WAIT WINDOW event should report mode=WINDOW");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_wait_clear_command_emits_runtime_wait_clear_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_wait_clear_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "wait_clear_test.prg";
+    write_text(
+        main_path,
+        "WAIT CLEAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "WAIT CLEAR script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> wait_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.wait") {
+            wait_events.push_back(event);
+        }
+    }
+
+    expect(wait_events.size() == 1U, "WAIT CLEAR command should emit one runtime.wait event");
+    if (wait_events.size() >= 1U) {
+        expect(wait_events[0].detail.find("mode=CLEAR") != std::string::npos,
+            "WAIT CLEAR event should report mode=CLEAR");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_keyboard_command_emits_runtime_keyboard_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_keyboard_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "keyboard_test.prg";
+    write_text(
+        main_path,
+        "KEYBOARD \"ABC\"\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "KEYBOARD script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> kb_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.keyboard") {
+            kb_events.push_back(event);
+        }
+    }
+
+    expect(kb_events.size() == 1U, "KEYBOARD command should emit one runtime.keyboard event");
+    if (kb_events.size() >= 1U) {
+        expect(kb_events[0].detail.find("keys=ABC") != std::string::npos,
+            "KEYBOARD event should include the keys payload");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_display_structure_emits_runtime_display_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "display_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "DISPLAY STRUCTURE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY STRUCTURE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_events.push_back(event);
+        }
+    }
+
+    expect(display_events.size() == 1U, "DISPLAY STRUCTURE command should emit one runtime.display event");
+    if (display_events.size() >= 1U) {
+        expect(display_events[0].detail.find("mode=STRUCTURE") != std::string::npos,
+            "DISPLAY STRUCTURE event should report mode=STRUCTURE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_list_status_emits_runtime_list_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "list_test.prg";
+    write_text(
+        main_path,
+        "LIST STATUS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LIST STATUS script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.list") {
+            list_events.push_back(event);
+        }
+    }
+
+    expect(list_events.size() == 1U, "LIST STATUS command should emit one runtime.list event");
+    if (list_events.size() >= 1U) {
+        expect(list_events[0].detail.find("mode=STATUS") != std::string::npos,
+            "LIST STATUS event should report mode=STATUS");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1500,6 +1871,10 @@ int main() {
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
     test_runtime_array_mutator_functions();
+    test_save_to_writes_variables_to_file();
+    test_restore_from_loads_variables_from_file();
+    test_restore_from_additive_merges_variables();
+    test_save_to_like_pattern_filters_variables();
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
     test_copy_structure_to_creates_empty_schema();
@@ -1517,6 +1892,11 @@ int main() {
     test_change_command_emits_runtime_change_event();
     test_input_command_emits_runtime_input_event_with_prompt();
     test_accept_command_emits_runtime_accept_event_with_prompt();
+    test_wait_window_command_emits_runtime_wait_event();
+    test_wait_clear_command_emits_runtime_wait_clear_event();
+    test_keyboard_command_emits_runtime_keyboard_event();
+    test_display_structure_emits_runtime_display_event();
+    test_list_status_emits_runtime_list_event();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

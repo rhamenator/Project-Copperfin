@@ -2274,6 +2274,240 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::save_memvars_command:
+            {
+                namespace fs = std::filesystem;
+
+                std::string destination = unquote_string(trim_copy(
+                    value_as_string(evaluate_expression(statement.expression, frame))));
+                if (destination.empty())
+                {
+                    last_error_message = "SAVE TO: filename required";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                fs::path destination_path(destination);
+                if (destination_path.extension().empty())
+                {
+                    destination_path += ".mem";
+                }
+                if (destination_path.is_relative())
+                {
+                    destination_path = fs::path(current_default_directory()) / destination_path;
+                }
+                destination_path = destination_path.lexically_normal();
+
+                std::string filter_mode;
+                std::string filter_pattern;
+                if (starts_with_insensitive(statement.identifier, "LIKE:"))
+                {
+                    filter_mode = "like";
+                    filter_pattern = trim_copy(statement.identifier.substr(5U));
+                }
+                else if (starts_with_insensitive(statement.identifier, "EXCEPT:"))
+                {
+                    filter_mode = "except";
+                    filter_pattern = trim_copy(statement.identifier.substr(7U));
+                }
+
+                std::map<std::string, PrgValue> visible_variables = globals;
+                for (const auto &[name, value] : frame.locals)
+                {
+                    visible_variables[name] = value;
+                }
+
+                if (!destination_path.parent_path().empty())
+                {
+                    std::error_code ignored;
+                    fs::create_directories(destination_path.parent_path(), ignored);
+                }
+
+                std::ofstream output(destination_path, std::ios::binary);
+                if (!output.good())
+                {
+                    last_error_message = "SAVE TO: unable to open output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::size_t saved_count = 0U;
+                for (const auto &[name, value] : visible_variables)
+                {
+                    bool include_variable = true;
+                    if (!filter_mode.empty())
+                    {
+                        const bool matches = wildcard_match_insensitive(filter_pattern, name);
+                        include_variable = filter_mode == "like" ? matches : !matches;
+                    }
+                    if (!include_variable)
+                    {
+                        continue;
+                    }
+
+                    char type_code = 'C';
+                    std::string serialized_value;
+                    switch (value.kind)
+                    {
+                    case PrgValueKind::boolean:
+                        type_code = 'L';
+                        serialized_value = value.boolean_value ? "true" : "false";
+                        break;
+                    case PrgValueKind::number:
+                    case PrgValueKind::int64:
+                    case PrgValueKind::uint64:
+                        type_code = 'N';
+                        serialized_value = value_as_string(value);
+                        break;
+                    case PrgValueKind::string:
+                    {
+                        int year = 0;
+                        int month = 0;
+                        int day = 0;
+                        serialized_value = value.string_value;
+                        type_code = parse_runtime_date_string(serialized_value, year, month, day) ? 'D' : 'C';
+                        break;
+                    }
+                    case PrgValueKind::empty:
+                        type_code = 'C';
+                        serialized_value.clear();
+                        break;
+                    }
+
+                    output << name << "=" << type_code << ":" << serialized_value << "\n";
+                    ++saved_count;
+                }
+
+                output.close();
+                if (!output.good())
+                {
+                    last_error_message = "SAVE TO: unable to write output file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                events.push_back({.category = "runtime.save_memory",
+                                  .detail = destination_path.string() + " (" + std::to_string(saved_count) + " variables)",
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::restore_memvars_command:
+            {
+                namespace fs = std::filesystem;
+
+                std::string source = unquote_string(trim_copy(
+                    value_as_string(evaluate_expression(statement.expression, frame))));
+                if (source.empty())
+                {
+                    last_error_message = "RESTORE FROM: filename required";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                fs::path source_path(source);
+                if (source_path.extension().empty())
+                {
+                    source_path += ".mem";
+                }
+                if (source_path.is_relative())
+                {
+                    source_path = fs::path(current_default_directory()) / source_path;
+                }
+                source_path = source_path.lexically_normal();
+
+                std::ifstream input(source_path, std::ios::binary);
+                if (!input.good())
+                {
+                    last_error_message = "RESTORE FROM: unable to open source file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const bool additive = normalize_identifier(statement.identifier) == "additive";
+                if (!additive)
+                {
+                    globals.clear();
+                }
+
+                std::size_t restored_count = 0U;
+                std::string line;
+                while (std::getline(input, line))
+                {
+                    if (!line.empty() && line.back() == '\r')
+                    {
+                        line.pop_back();
+                    }
+                    if (line.empty())
+                    {
+                        continue;
+                    }
+
+                    const std::size_t equals_position = line.find('=');
+                    if (equals_position == std::string::npos)
+                    {
+                        continue;
+                    }
+                    const std::size_t colon_position = line.find(':', equals_position + 1U);
+                    if (colon_position == std::string::npos)
+                    {
+                        continue;
+                    }
+
+                    const std::string name = normalize_memory_variable_identifier(line.substr(0U, equals_position));
+                    if (name.empty())
+                    {
+                        continue;
+                    }
+
+                    const std::string raw_type = trim_copy(line.substr(equals_position + 1U, colon_position - equals_position - 1U));
+                    const char type_code = raw_type.empty()
+                                               ? 'C'
+                                               : static_cast<char>(std::toupper(static_cast<unsigned char>(raw_type.front())));
+                    const std::string raw_value = line.substr(colon_position + 1U);
+
+                    PrgValue restored_value;
+                    if (type_code == 'L')
+                    {
+                        const std::string normalized_bool = normalize_identifier(raw_value);
+                        const bool bool_value = normalized_bool == "true" ||
+                                                normalized_bool == ".t." ||
+                                                normalized_bool == "t" ||
+                                                normalized_bool == "1" ||
+                                                normalized_bool == "y" ||
+                                                normalized_bool == "yes";
+                        restored_value = make_boolean_value(bool_value);
+                    }
+                    else if (type_code == 'N')
+                    {
+                        char *number_end = nullptr;
+                        const double parsed = std::strtod(raw_value.c_str(), &number_end);
+                        restored_value = (number_end != raw_value.c_str() && number_end != nullptr && *number_end == '\0')
+                                             ? make_number_value(parsed)
+                                             : make_number_value(0.0);
+                    }
+                    else if (type_code == 'D')
+                    {
+                        restored_value = make_string_value(trim_copy(raw_value));
+                    }
+                    else
+                    {
+                        restored_value = make_string_value(raw_value);
+                    }
+
+                    globals[name] = restored_value;
+                    ++restored_count;
+                }
+
+                events.push_back({.category = "runtime.restore_memory",
+                                  .detail = source_path.string() + " (" + std::to_string(restored_count) + " variables)",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::copy_to_command:
             {
                 // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]
@@ -3212,6 +3446,69 @@
                     detail += "target=" + statement.identifier;
                 }
                 events.push_back({.category = "runtime.accept",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::wait_command:
+            {
+                std::string detail;
+                if (!statement.identifier.empty())
+                {
+                    detail += "mode=" + statement.identifier;
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.wait",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::keyboard_command:
+            {
+                std::string detail;
+                if (!statement.expression.empty())
+                {
+                    detail += "keys=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.keyboard",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::display_command:
+            {
+                std::string detail;
+                if (!statement.identifier.empty())
+                {
+                    detail += "mode=" + statement.identifier;
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.display",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::list_command:
+            {
+                std::string detail;
+                if (!statement.identifier.empty())
+                {
+                    detail += "mode=" + statement.identifier;
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.list",
                                   .detail = detail,
                                   .location = statement.location});
                 return {};

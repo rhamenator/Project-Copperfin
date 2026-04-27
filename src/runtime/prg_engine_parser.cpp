@@ -588,6 +588,60 @@ Program parse_program(const std::string& path) {
             } else {
                 statement.identifier = trim_copy(body);
             }
+        } else if (upper == "WAIT" || starts_with_insensitive(line, "WAIT ")) {
+            statement.kind = StatementKind::wait_command;
+            const std::string body = upper == "WAIT" ? std::string{} : trim_copy(line.substr(5U));
+            const std::string body_upper = uppercase_copy(body);
+            if (body_upper == "CLEAR" || starts_with_insensitive(body, "CLEAR")) {
+                statement.identifier = "CLEAR";
+            } else if (starts_with_insensitive(body, "WINDOW ") || body_upper == "WINDOW") {
+                statement.identifier = "WINDOW";
+                const std::string window_body = body_upper == "WINDOW" ? std::string{} : trim_copy(body.substr(7U));
+                statement.expression = window_body;
+            } else {
+                statement.expression = body;
+            }
+        } else if (starts_with_insensitive(line, "KEYBOARD ") || upper == "KEYBOARD") {
+            statement.kind = StatementKind::keyboard_command;
+            const std::string body = upper == "KEYBOARD" ? std::string{} : trim_copy(line.substr(9U));
+            // Strip surrounding quotes if present
+            if (body.size() >= 2U && (body.front() == '"' || body.front() == '\'') && body.back() == body.front()) {
+                statement.expression = body.substr(1U, body.size() - 2U);
+            } else {
+                statement.expression = body;
+            }
+        } else if (starts_with_insensitive(line, "DISPLAY ") || upper == "DISPLAY") {
+            statement.kind = StatementKind::display_command;
+            const std::string body = upper == "DISPLAY" ? std::string{} : trim_copy(line.substr(8U));
+            if (starts_with_insensitive(body, "STRUCTURE")) {
+                statement.identifier = "STRUCTURE";
+                statement.expression = body.size() > 9U ? trim_copy(body.substr(9U)) : std::string{};
+            } else if (starts_with_insensitive(body, "STATUS")) {
+                statement.identifier = "STATUS";
+                statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
+            } else if (starts_with_insensitive(body, "MEMORY")) {
+                statement.identifier = "MEMORY";
+                statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
+            } else {
+                statement.identifier = "RECORDS";
+                statement.expression = body;
+            }
+        } else if (upper == "LIST" || starts_with_insensitive(line, "LIST ")) {
+            statement.kind = StatementKind::list_command;
+            const std::string body = upper == "LIST" ? std::string{} : trim_copy(line.substr(5U));
+            if (starts_with_insensitive(body, "STRUCTURE")) {
+                statement.identifier = "STRUCTURE";
+                statement.expression = body.size() > 9U ? trim_copy(body.substr(9U)) : std::string{};
+            } else if (starts_with_insensitive(body, "STATUS")) {
+                statement.identifier = "STATUS";
+                statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
+            } else if (starts_with_insensitive(body, "MEMORY")) {
+                statement.identifier = "MEMORY";
+                statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
+            } else {
+                statement.identifier = "RECORDS";
+                statement.expression = body;
+            }
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;
             statement.expression = trim_copy(line.substr(7U));
@@ -743,6 +797,31 @@ Program parse_program(const std::string& path) {
                 statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
             } else {
                 statement.identifier = body;
+            }
+        } else if (starts_with_insensitive(line, "SAVE SCREEN")) {
+            // SAVE SCREEN is a UI/surface command and is not part of memory-variable persistence.
+            statement.kind = StatementKind::no_op;
+        } else if (starts_with_insensitive(line, "SAVE TO ")) {
+            // SAVE TO <filename> [ALL LIKE <pattern> | ALL EXCEPT <pattern>]
+            statement.kind = StatementKind::save_memvars_command;
+            const std::string body = trim_copy(line.substr(8U));
+            const auto tail_start = find_first_keyword_top_level(body, {"ALL", "LIKE", "EXCEPT"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            const std::string like_pattern = extract_command_clause(body, "LIKE", {"EXCEPT"});
+            const std::string except_pattern = extract_command_clause(body, "EXCEPT", {"LIKE"});
+            if (!like_pattern.empty()) {
+                statement.identifier = "LIKE:" + like_pattern;
+            } else if (!except_pattern.empty()) {
+                statement.identifier = "EXCEPT:" + except_pattern;
+            }
+        } else if (starts_with_insensitive(line, "RESTORE FROM ")) {
+            // RESTORE FROM <filename> [ADDITIVE]
+            statement.kind = StatementKind::restore_memvars_command;
+            const std::string body = trim_copy(line.substr(13U));
+            const auto tail_start = find_first_keyword_top_level(body, {"ADDITIVE"});
+            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            if (has_keyword(body, "ADDITIVE")) {
+                statement.identifier = "ADDITIVE";
             }
         } else if (starts_with_insensitive(line, "COPY TO ARRAY ")) {
             // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]

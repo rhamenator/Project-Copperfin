@@ -360,6 +360,88 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_object_reflection_runtime_surface_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_object_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "object_reflection_runtime_surface.prg";
+        write_text(
+            main_path,
+            "oOne = CREATEOBJECT('Scripting.Dictionary')\n"
+            "oTwo = CREATEOBJECT('Scripting.Dictionary')\n"
+            "lCompDiff = COMPOBJ(oOne, oTwo)\n"
+            "lCompSame = COMPOBJ(oOne, oOne)\n"
+            "lCompNotObject = COMPOBJ('x', 'x')\n"
+            "nMembersBefore = AMEMBERS(aMembersOut, oOne)\n"
+            "lPemMissing = PEMSTATUS(oOne, 'missingprop', 1)\n"
+            "lAdd = ADDPROPERTY(oOne, 'SampleProp', 42)\n"
+            "lPemExistsAfterAdd = PEMSTATUS(oOne, 'SampleProp', 1)\n"
+            "nMembersAfter = AMEMBERS(aMembersOut, oOne, 1)\n"
+            "nClassCount = ACLASS(aClass, oOne)\n"
+            "lRemove = REMOVEPROPERTY(oOne, 'SampleProp')\n"
+            "lPemExistsAfterRemove = PEMSTATUS(oOne, 'SampleProp', 1)\n"
+            "lRemoveMissing = REMOVEPROPERTY(oOne, 'SampleProp')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+         expect(state.completed,
+               std::string("object reflection runtime-surface script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line) +
+                   " stmt='" + state.statement_text + "'");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcompdiff", "false");
+        check("lcompsame", "true");
+        check("lcompnotobject", "false");
+        check("lpemmissing", "false");
+        check("ladd", "true");
+        check("lpemexistsafteradd", "true");
+        check("lremove", "true");
+        check("lpemexistsafterremove", "false");
+        check("lremovemissing", "false");
+
+        const auto members_before = state.globals.find("nmembersbefore");
+        const double members_before_count =
+            members_before == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(members_before->second));
+        expect(members_before != state.globals.end() && members_before_count >= 0.0,
+               "AMEMBERS() before ADDPROPERTY should return a non-negative numeric count");
+
+        const auto members_after = state.globals.find("nmembersafter");
+        const double members_after_count =
+            members_after == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(members_after->second));
+         expect(members_after != state.globals.end() && members_after_count >= 0.0,
+             "AMEMBERS() after ADDPROPERTY should return a non-negative numeric count");
+
+        const auto class_count = state.globals.find("nclasscount");
+        const double class_count_value =
+            class_count == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(class_count->second));
+         expect(class_count != state.globals.end() && class_count_value >= 0.0,
+             "ACLASS() should return a non-negative numeric count");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -368,6 +450,7 @@ int main()
     test_filesize_expression_function();
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
+    test_object_reflection_runtime_surface_functions();
 
     if (test_failures() != 0)
     {

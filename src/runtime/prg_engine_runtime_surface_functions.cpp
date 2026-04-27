@@ -159,9 +159,199 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& shutdown_handler,
     const std::function<int(const std::string&)>& aerror_callback,
     const std::function<PrgValue(const std::string&)>& eval_expression_callback,
-    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::function<std::string(const std::string&)>& set_callback,
+    const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
+    const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
+    const std::function<void(const std::string&, const std::string&)>& record_event_callback) {
+    auto record_runtime_warning = [&](const std::string& detail) {
+        if (record_event_callback) {
+            record_event_callback("runtime.warning", detail);
+        }
+    };
+
     if (const auto file_io_result = evaluate_file_io_function(function, arguments, default_directory)) {
         return file_io_result;
+    }
+
+    auto safe_int_argument = [&](std::size_t index, int default_value) {
+        if (index >= arguments.size()) {
+            return default_value;
+        }
+        const PrgValue& value = arguments[index];
+        switch (value.kind) {
+            case PrgValueKind::boolean:
+                return value.boolean_value ? 1 : 0;
+            case PrgValueKind::number:
+                return static_cast<int>(std::llround(value.number_value));
+            case PrgValueKind::int64:
+                return static_cast<int>(value.int64_value);
+            case PrgValueKind::uint64:
+                return static_cast<int>(value.uint64_value);
+            case PrgValueKind::string:
+                try {
+                    return value.string_value.empty() ? default_value : static_cast<int>(std::llround(std::stod(value.string_value)));
+                } catch (...) {
+                    return default_value;
+                }
+            case PrgValueKind::empty:
+                return default_value;
+        }
+        return default_value;
+    };
+
+    if (function == "compobj" && arguments.size() >= 2U) {
+        int handle_left = 0;
+        int handle_right = 0;
+        std::string prog_id_left;
+        std::string prog_id_right;
+        if (!parse_object_handle_reference(arguments[0], handle_left, prog_id_left) ||
+            !parse_object_handle_reference(arguments[1], handle_right, prog_id_right)) {
+            return make_boolean_value(false);
+        }
+        if (handle_left != handle_right) {
+            return make_boolean_value(false);
+        }
+        if (!resolve_object_callback) {
+            record_runtime_warning("COMPOBJ() uses stub object resolution (no runtime object callback)");
+            return make_boolean_value(false);
+        }
+        RuntimeOleObjectState* left = resolve_object_callback(arguments[0]);
+        RuntimeOleObjectState* right = resolve_object_callback(arguments[1]);
+        return make_boolean_value(left != nullptr && right != nullptr && left == right);
+    }
+
+    if (function == "amembers" && arguments.size() >= 2U && !raw_arguments.empty()) {
+        const std::string array_name = trim_copy(raw_arguments[0]);
+        try {
+            const int flags = safe_int_argument(2U, 0);
+            if (!resolve_object_callback || !assign_array_callback) {
+                record_runtime_warning("AMEMBERS() uses stub behavior (no object/array callback)");
+                if (assign_array_callback && !array_name.empty()) {
+                    assign_array_callback(array_name, {});
+                }
+                return make_number_value(0.0);
+            }
+
+            RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[1]);
+            if (runtime_object == nullptr || array_name.empty()) {
+                if (!array_name.empty()) {
+                    assign_array_callback(array_name, {});
+                }
+                return make_number_value(0.0);
+            }
+
+            const bool include_properties = flags == 0 || flags == 1;
+            std::vector<PrgValue> member_names;
+            if (include_properties) {
+                member_names.reserve(runtime_object->properties.size());
+                for (const auto& [name, value] : runtime_object->properties) {
+                    (void)value;
+                    member_names.push_back(make_string_value(name));
+                }
+            }
+            assign_array_callback(array_name, member_names);
+            return make_number_value(static_cast<double>(member_names.size()));
+        } catch (...) {
+            record_runtime_warning("AMEMBERS() fallback: unable to enumerate members, returning empty array");
+            if (assign_array_callback && !array_name.empty()) {
+                assign_array_callback(array_name, {});
+            }
+            return make_number_value(0.0);
+        }
+    }
+
+    if (function == "aclass" && arguments.size() >= 2U && !raw_arguments.empty()) {
+        const std::string array_name = trim_copy(raw_arguments[0]);
+        try {
+            if (!resolve_object_callback || !assign_array_callback) {
+                record_runtime_warning("ACLASS() uses stub behavior (no object/array callback)");
+                if (assign_array_callback && !array_name.empty()) {
+                    assign_array_callback(array_name, {});
+                }
+                return make_number_value(0.0);
+            }
+
+            RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[1]);
+            if (runtime_object == nullptr || array_name.empty()) {
+                if (!array_name.empty()) {
+                    assign_array_callback(array_name, {});
+                }
+                return make_number_value(0.0);
+            }
+
+            std::vector<PrgValue> class_chain;
+            std::string class_name = uppercase_copy(trim_copy(runtime_object->prog_id));
+            if (class_name.empty()) {
+                class_name = "CUSTOM";
+            }
+            class_chain.push_back(make_string_value(class_name));
+            if (class_name != "OBJECT") {
+                class_chain.push_back(make_string_value("OBJECT"));
+            }
+            assign_array_callback(array_name, class_chain);
+            return make_number_value(static_cast<double>(class_chain.size()));
+        } catch (...) {
+            record_runtime_warning("ACLASS() fallback: unable to enumerate class chain");
+            if (assign_array_callback && !array_name.empty()) {
+                assign_array_callback(array_name, {});
+            }
+            return make_number_value(0.0);
+        }
+    }
+
+    if (function == "pemstatus" && arguments.size() >= 3U) {
+        if (!resolve_object_callback) {
+            record_runtime_warning("PEMSTATUS() uses stub object resolution (no runtime object callback)");
+            return make_boolean_value(false);
+        }
+        RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
+        const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+        const int attribute = safe_int_argument(2U, 0);
+        if (runtime_object == nullptr || member_name.empty()) {
+            return make_boolean_value(false);
+        }
+        if (attribute == 1) {
+            return make_boolean_value(runtime_object->properties.contains(member_name));
+        }
+        if (attribute == 3 || attribute == 5) {
+            return make_boolean_value(false);
+        }
+        return make_boolean_value(false);
+    }
+
+    if (function == "addproperty" && arguments.size() >= 2U) {
+        if (!resolve_object_callback) {
+            record_runtime_warning("ADDPROPERTY() uses stub behavior (no runtime object callback)");
+            return make_boolean_value(true);
+        }
+        RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
+        if (runtime_object == nullptr) {
+            return make_boolean_value(false);
+        }
+        const std::string property_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+        if (property_name.empty()) {
+            return make_boolean_value(false);
+        }
+        const PrgValue initial_value = arguments.size() >= 3U ? arguments[2] : make_empty_value();
+        runtime_object->properties[property_name] = initial_value;
+        return make_boolean_value(true);
+    }
+
+    if (function == "removeproperty" && arguments.size() >= 2U) {
+        if (!resolve_object_callback) {
+            record_runtime_warning("REMOVEPROPERTY() uses stub behavior (no runtime object callback)");
+            return make_boolean_value(true);
+        }
+        RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
+        if (runtime_object == nullptr) {
+            return make_boolean_value(false);
+        }
+        const std::string property_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+        if (property_name.empty()) {
+            return make_boolean_value(false);
+        }
+        const std::size_t removed = runtime_object->properties.erase(property_name);
+        return make_boolean_value(removed != 0U);
     }
 
     if (function == "file" && !arguments.empty()) {

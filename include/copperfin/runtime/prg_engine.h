@@ -117,6 +117,7 @@ struct RuntimeOleObjectState {
     std::string source;
     std::string last_action;
     int action_count = 0;
+    std::map<std::string, PrgValue> properties;
 };
 
 struct RuntimePauseState {

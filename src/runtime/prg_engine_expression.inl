@@ -39,7 +39,10 @@
         const std::string& shutdown_handler,
         const std::function<int(const std::string&)>& aerror_callback,
         const std::function<PrgValue(const std::string&)>& eval_expression_callback,
-        const std::function<std::string(const std::string&)>& set_callback);
+        const std::function<std::string(const std::string&)>& set_callback,
+        const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
+        const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
+        const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
     namespace
     {
@@ -103,6 +106,8 @@
                 std::function<PrgValue(const std::string &)> eval_expression_callback,
                 std::function<std::string(const std::string &)> set_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
+                std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
+                std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
@@ -149,6 +154,8 @@
                   eval_expression_callback_(std::move(eval_expression_callback)),
                   set_callback_(std::move(set_callback)),
                   record_event_callback_(std::move(record_event_callback)),
+                  resolve_object_callback_(std::move(resolve_object_callback)),
+                  assign_array_callback_(std::move(assign_array_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
                   text_(text),
@@ -846,7 +853,10 @@
                                                           shutdown_handler_,
                                                           aerror_callback_,
                                                           eval_expression_callback_,
-                                                          set_callback_))
+                                                          set_callback_,
+                                                          resolve_object_callback_,
+                                                          assign_array_callback_,
+                                                          record_event_callback_))
                 {
                     return *runtime_surface_result;
                 }
@@ -1132,6 +1142,8 @@
             std::function<PrgValue(const std::string &)> eval_expression_callback_;
             std::function<std::string(const std::string &)> set_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
+            std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
+            std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback_;
             const std::string &text_;

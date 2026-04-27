@@ -91,6 +91,8 @@ enum class StatementKind {
     alter_table_command,
     copy_to_command,
     append_from_command,
+    save_memvars_command,
+    restore_memvars_command,
     scatter_command,
     gather_command,
     update_command,
@@ -109,6 +111,10 @@ enum class StatementKind {
     change_command,
     input_command,
     accept_command,
+    wait_command,
+    keyboard_command,
+    display_command,
+    list_command,
     no_op
 };
 

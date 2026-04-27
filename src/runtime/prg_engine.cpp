@@ -752,6 +752,15 @@ namespace copperfin::runtime
                                   .detail = detail,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             },
+            [this](const PrgValue &value) -> RuntimeOleObjectState *
+            {
+                auto object = resolve_ole_object(value);
+                return object.has_value() ? *object : nullptr;
+            },
+            [this](const std::string &name, std::vector<PrgValue> values)
+            {
+                assign_array(name, std::move(values));
+            },
             [this]()
             {
                 const auto found = memowidth_by_session.find(current_data_session);
