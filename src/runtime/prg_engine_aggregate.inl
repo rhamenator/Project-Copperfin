@@ -7,6 +7,38 @@
             const std::vector<std::string> &raw_arguments,
             const Frame &frame)
         {
+            const auto is_numeric_aggregate_field = [](char field_type)
+            {
+                switch (field_type)
+                {
+                case 'N':
+                case 'n':
+                case 'F':
+                case 'f':
+                case 'B':
+                case 'b':
+                case 'I':
+                case 'i':
+                case 'Y':
+                case 'y':
+                    return true;
+                default:
+                    return false;
+                }
+            };
+            const auto first_numeric_field_expression = [&](const CursorState &cursor) -> std::string
+            {
+                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(cursor);
+                const auto found = std::find_if(
+                    fields.begin(),
+                    fields.end(),
+                    [&](const vfp::DbfFieldDescriptor &field)
+                    {
+                        return is_numeric_aggregate_field(field.type);
+                    });
+                return found == fields.end() ? std::string{} : found->name;
+            };
+
             std::string value_expression;
             std::string condition_expression;
             std::string designator;
@@ -57,6 +89,19 @@
             if (cursor->record_count == 0U || (!cursor->remote && cursor->source_path.empty()))
             {
                 return make_number_value(0.0);
+            }
+
+            if (function != "count" && trim_copy(value_expression).empty())
+            {
+                value_expression = first_numeric_field_expression(*cursor);
+                if (value_expression.empty())
+                {
+                    if (function == "min" || function == "max")
+                    {
+                        return make_empty_value();
+                    }
+                    return make_number_value(0.0);
+                }
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(*cursor);
@@ -685,30 +730,81 @@
                 return true;
             }
 
-            if (normalize_identifier(expression_text) == "all")
+            const auto is_numeric_aggregate_field = [](char field_type)
             {
-                error_message = uppercase_copy(function) + " without explicit expressions is not implemented yet";
-                return false;
-            }
-            if (expression_text.empty())
+                switch (field_type)
+                {
+                case 'N':
+                case 'n':
+                case 'F':
+                case 'f':
+                case 'B':
+                case 'b':
+                case 'I':
+                case 'i':
+                case 'Y':
+                case 'y':
+                    return true;
+                default:
+                    return false;
+                }
+            };
+            const auto first_numeric_field_expression = [&]() -> std::string
             {
-                error_message = uppercase_copy(function) + " requires one or more expressions";
-                return false;
-            }
+                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+                const auto found = std::find_if(
+                    fields.begin(),
+                    fields.end(),
+                    [&](const vfp::DbfFieldDescriptor &field)
+                    {
+                        return is_numeric_aggregate_field(field.type);
+                    });
+                return found == fields.end() ? std::string{} : found->name;
+            };
 
-            std::vector<std::string> expressions = split_csv_like(expression_text);
-            for (std::string &expression : expressions)
+            std::vector<std::string> expressions;
+            const std::string normalized_expression = normalize_identifier(expression_text);
+            if (expression_text.empty() || normalized_expression == "all")
             {
-                expression = trim_copy(std::move(expression));
+                const std::string implicit_expression = first_numeric_field_expression();
+                if (implicit_expression.empty())
+                {
+                    const PrgValue fallback = (function == "min" || function == "max")
+                                                  ? make_empty_value()
+                                                  : make_number_value(0.0);
+                    if (to_array)
+                    {
+                        assign_array(array_name, {fallback}, 1U);
+                    }
+                    else if (!targets.empty())
+                    {
+                        if (targets.size() > 1U)
+                        {
+                            error_message = uppercase_copy(function) + " TO requires one variable per aggregate expression";
+                            return false;
+                        }
+                        assign_variable(frame, targets.front(), fallback);
+                    }
+                    return true;
+                }
+                expressions.push_back(implicit_expression);
             }
-            expressions.erase(
-                std::remove_if(expressions.begin(), expressions.end(), [](const std::string &expression)
-                               { return expression.empty(); }),
-                expressions.end());
-            if (expressions.empty())
+            else
             {
-                error_message = uppercase_copy(function) + " requires one or more expressions";
-                return false;
+                expressions = split_csv_like(expression_text);
+                for (std::string &expression : expressions)
+                {
+                    expression = trim_copy(std::move(expression));
+                }
+                expressions.erase(
+                    std::remove_if(expressions.begin(), expressions.end(), [](const std::string &expression)
+                                   { return expression.empty(); }),
+                    expressions.end());
+                if (expressions.empty())
+                {
+                    error_message = uppercase_copy(function) + " requires one or more expressions";
+                    return false;
+                }
             }
             if (!targets.empty() && targets.size() != expressions.size())
             {

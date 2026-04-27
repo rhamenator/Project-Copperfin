@@ -279,6 +279,145 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_expression_aggregate_functions_without_explicit_expressions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aggregate_no_expression_functions";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "people.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "NAME", .type = 'C', .length = 10U},
+            {.name = "AGE", .type = 'N', .length = 5U},
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"Alice", "10"},
+            {"Bob", "20"},
+            {"Cara", "30"},
+            {"Dan", "40"},
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+        expect(create_result.ok, "aggregate function no-expression fixture should be created");
+
+        const fs::path main_path = temp_root / "aggregate_no_expression_functions.prg";
+        write_text(
+            main_path,
+            "USE '" + table_path.string() + "'\n"
+            "nCountAll = COUNT()\n"
+            "nSumAll = SUM()\n"
+            "nAvgAll = AVG()\n"
+            "nMinAll = MIN()\n"
+            "nMaxAll = MAX()\n"
+            "SET FILTER TO AGE >= 20\n"
+            "DELETE FOR AGE = 40\n"
+            "SET DELETED ON\n"
+            "nCountVisible = COUNT()\n"
+            "nSumVisible = SUM()\n"
+            "nAvgVisible = AVG()\n"
+            "nMinVisible = MIN()\n"
+            "nMaxVisible = MAX()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "aggregate no-expression function script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ncountall", "4");
+        check("nsumall", "100");
+        check("navgall", "25");
+        check("nminall", "10");
+        check("nmaxall", "40");
+        check("ncountvisible", "2");
+        check("nsumvisible", "50");
+        check("navgvisible", "25");
+        check("nminvisible", "20");
+        check("nmaxvisible", "30");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_expression_aggregate_functions_without_numeric_fields()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aggregate_no_expression_no_numeric";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "labels.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "NAME", .type = 'C', .length = 12U},
+            {.name = "CITY", .type = 'C', .length = 12U},
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"Alice", "Seattle"},
+            {"Bob", "Portland"},
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+        expect(create_result.ok, "aggregate no-numeric fixture should be created");
+
+        const fs::path main_path = temp_root / "aggregate_no_expression_no_numeric.prg";
+        write_text(
+            main_path,
+            "USE '" + table_path.string() + "'\n"
+            "nCountRows = COUNT()\n"
+            "nSumNoNumeric = SUM()\n"
+            "nAvgNoNumeric = AVG()\n"
+            "xMinNoNumeric = MIN()\n"
+            "xMaxNoNumeric = MAX()\n"
+            "cMinType = VARTYPE(xMinNoNumeric)\n"
+            "cMaxType = VARTYPE(xMaxNoNumeric)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "aggregate no-numeric function script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ncountrows", "2");
+        check("nsumnonumeric", "0");
+        check("navgnonumeric", "0");
+        check("cmintype", "U");
+        check("cmaxtype", "U");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 
 } // namespace
 
@@ -288,6 +427,8 @@ int main()
     test_sum_and_average_to_array_expression();
     test_aggregate_to_array_scope_and_in_targeting();
     test_aggregate_to_array_diagnostics();
+    test_expression_aggregate_functions_without_explicit_expressions();
+    test_expression_aggregate_functions_without_numeric_fields();
 
     if (test_failures() != 0)
     {

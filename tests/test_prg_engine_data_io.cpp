@@ -1981,6 +1981,15 @@ void test_getfile_command_emits_runtime_getfile_event_with_clause_details() {
             "GETFILE event should include filter detail");
         expect(dialog_events[0].detail.find("target=lcPath") != std::string::npos,
             "GETFILE event should include target detail");
+        expect(dialog_events[0].detail.find("result=''") != std::string::npos,
+            "GETFILE event should include deterministic empty-string result detail");
+    }
+
+    const auto path_value = state.globals.find("lcpath");
+    expect(path_value != state.globals.end(), "GETFILE TO target should be assigned");
+    if (path_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(path_value->second).empty(),
+            "GETFILE TO target should default to an empty string when host response is unavailable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2027,6 +2036,15 @@ void test_putfile_command_emits_runtime_putfile_event_with_clause_details() {
             "PUTFILE event should include filter detail");
         expect(dialog_events[0].detail.find("target=lcSavePath") != std::string::npos,
             "PUTFILE event should include target detail");
+        expect(dialog_events[0].detail.find("result=''") != std::string::npos,
+            "PUTFILE event should include deterministic empty-string result detail");
+    }
+
+    const auto save_path_value = state.globals.find("lcsavepath");
+    expect(save_path_value != state.globals.end(), "PUTFILE TO target should be assigned");
+    if (save_path_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(save_path_value->second).empty(),
+            "PUTFILE TO target should default to an empty string when host response is unavailable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2071,6 +2089,15 @@ void test_getdir_command_emits_runtime_getdir_event_with_clause_details() {
             "GETDIR event should include default detail");
         expect(dialog_events[0].detail.find("target=lcDir") != std::string::npos,
             "GETDIR event should include target detail");
+        expect(dialog_events[0].detail.find("result=''") != std::string::npos,
+            "GETDIR event should include deterministic empty-string result detail");
+    }
+
+    const auto dir_value = state.globals.find("lcdir");
+    expect(dir_value != state.globals.end(), "GETDIR TO target should be assigned");
+    if (dir_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(dir_value->second).empty(),
+            "GETDIR TO target should default to an empty string when host response is unavailable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2115,6 +2142,134 @@ void test_inputbox_command_emits_runtime_inputbox_event_with_clause_details() {
             "INPUTBOX event should include default detail");
         expect(dialog_events[0].detail.find("target=lcAnswer") != std::string::npos,
             "INPUTBOX event should include target detail");
+        expect(dialog_events[0].detail.find("result=''") != std::string::npos,
+            "INPUTBOX event should include deterministic empty-string result detail");
+    }
+
+    const auto answer_value = state.globals.find("lcanswer");
+    expect(answer_value != state.globals.end(), "INPUTBOX TO target should be assigned");
+    if (answer_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(answer_value->second).empty(),
+            "INPUTBOX TO target should default to an empty string when host response is unavailable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_dialog_commands_parenthesized_forms_assign_targets_and_extract_positional_details() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dialog_parenthesized";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "dialog_parenthesized_test.prg";
+    write_text(
+        main_path,
+        "LOCAL lcLocalFile\n"
+        "GETFILE(\"*.dbf\", \"Pick a file\", \"Open\", \"./data\") TO lcLocalFile\n"
+        "cLocalFileResult = lcLocalFile\n"
+        "PUTFILE(\"*.txt\", \"Save as\", \"Save\", \"./out\") TO cPut\n"
+        "GETDIR(\"./workspace\", \"Choose folder\", \"Browse\") TO m.cMemDir\n"
+        "INPUTBOX(\"Enter value\", \"Question\", \"42\") TO cAnswer\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "parenthesized dialog script should complete");
+
+    const auto local_file_result = state.globals.find("clocalfileresult");
+    const auto put_result = state.globals.find("cput");
+    const auto mem_dir_result = state.globals.find("cmemdir");
+    const auto answer_result = state.globals.find("canswer");
+    expect(local_file_result != state.globals.end(), "GETFILE TO LOCAL target should be assignable and readable in-scope");
+    expect(put_result != state.globals.end(), "PUTFILE TO target should be assigned");
+    expect(mem_dir_result != state.globals.end(), "GETDIR TO m.<var> target should be assigned through memory-variable path");
+    expect(answer_result != state.globals.end(), "INPUTBOX TO target should be assigned");
+
+    if (local_file_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(local_file_result->second).empty(),
+            "GETFILE parenthesized TO LOCAL target should default to empty string");
+    }
+    if (put_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(put_result->second).empty(),
+            "PUTFILE parenthesized TO target should default to empty string");
+    }
+    if (mem_dir_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(mem_dir_result->second).empty(),
+            "GETDIR parenthesized TO m.<var> target should default to empty string");
+    }
+    if (answer_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(answer_result->second).empty(),
+            "INPUTBOX parenthesized TO target should default to empty string");
+    }
+
+    const auto find_event = [&](const std::string& category) -> const copperfin::runtime::RuntimeEvent* {
+        for (const auto& event : state.events) {
+            if (event.category == category) {
+                return &event;
+            }
+        }
+        return nullptr;
+    };
+
+    const auto* getfile_event = find_event("runtime.getfile");
+    const auto* putfile_event = find_event("runtime.putfile");
+    const auto* getdir_event = find_event("runtime.getdir");
+    const auto* inputbox_event = find_event("runtime.inputbox");
+    expect(getfile_event != nullptr, "GETFILE parenthesized call should emit runtime.getfile event");
+    expect(putfile_event != nullptr, "PUTFILE parenthesized call should emit runtime.putfile event");
+    expect(getdir_event != nullptr, "GETDIR parenthesized call should emit runtime.getdir event");
+    expect(inputbox_event != nullptr, "INPUTBOX parenthesized call should emit runtime.inputbox event");
+
+    if (getfile_event != nullptr) {
+        expect(getfile_event->detail.find("filter=\"*.dbf\"") != std::string::npos,
+            "GETFILE positional extraction should map first argument to filter");
+        expect(getfile_event->detail.find("prompt=\"Pick a file\"") != std::string::npos,
+            "GETFILE positional extraction should map second argument to prompt");
+        expect(getfile_event->detail.find("title=\"Open\"") != std::string::npos,
+            "GETFILE positional extraction should map third argument to title");
+        expect(getfile_event->detail.find("default=\"./data\"") != std::string::npos,
+            "GETFILE positional extraction should map fourth argument to default");
+        expect(getfile_event->detail.find("target=lcLocalFile") != std::string::npos,
+            "GETFILE parenthesized event should retain TO target detail");
+    }
+    if (putfile_event != nullptr) {
+        expect(putfile_event->detail.find("filter=\"*.txt\"") != std::string::npos,
+            "PUTFILE positional extraction should map first argument to filter");
+        expect(putfile_event->detail.find("prompt=\"Save as\"") != std::string::npos,
+            "PUTFILE positional extraction should map second argument to prompt");
+        expect(putfile_event->detail.find("title=\"Save\"") != std::string::npos,
+            "PUTFILE positional extraction should map third argument to title");
+        expect(putfile_event->detail.find("default=\"./out\"") != std::string::npos,
+            "PUTFILE positional extraction should map fourth argument to default");
+        expect(putfile_event->detail.find("target=cPut") != std::string::npos,
+            "PUTFILE parenthesized event should retain TO target detail");
+    }
+    if (getdir_event != nullptr) {
+        expect(getdir_event->detail.find("default=\"./workspace\"") != std::string::npos,
+            "GETDIR positional extraction should map first argument to default");
+        expect(getdir_event->detail.find("prompt=\"Choose folder\"") != std::string::npos,
+            "GETDIR positional extraction should map second argument to prompt");
+        expect(getdir_event->detail.find("title=\"Browse\"") != std::string::npos,
+            "GETDIR positional extraction should map third argument to title");
+        expect(getdir_event->detail.find("target=m.cMemDir") != std::string::npos,
+            "GETDIR parenthesized event should retain TO target detail");
+    }
+    if (inputbox_event != nullptr) {
+        expect(inputbox_event->detail.find("prompt=\"Enter value\"") != std::string::npos,
+            "INPUTBOX positional extraction should map first argument to prompt");
+        expect(inputbox_event->detail.find("title=\"Question\"") != std::string::npos,
+            "INPUTBOX positional extraction should map second argument to title");
+        expect(inputbox_event->detail.find("default=\"42\"") != std::string::npos,
+            "INPUTBOX positional extraction should map third argument to default");
+        expect(inputbox_event->detail.find("target=cAnswer") != std::string::npos,
+            "INPUTBOX parenthesized event should retain TO target detail");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -2350,6 +2505,7 @@ int main() {
     test_putfile_command_emits_runtime_putfile_event_with_clause_details();
     test_getdir_command_emits_runtime_getdir_event_with_clause_details();
     test_inputbox_command_emits_runtime_inputbox_event_with_clause_details();
+    test_dialog_commands_parenthesized_forms_assign_targets_and_extract_positional_details();
     test_wait_window_command_emits_runtime_wait_event();
     test_wait_clear_command_emits_runtime_wait_clear_event();
     test_keyboard_command_emits_runtime_keyboard_event();

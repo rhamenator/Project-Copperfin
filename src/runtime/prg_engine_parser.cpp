@@ -136,6 +136,81 @@ Statement make_statement(StatementKind kind, const std::string& path, std::size_
     return statement;
 }
 
+bool has_wrapping_parentheses(const std::string& text) {
+    const std::string trimmed = trim_copy(text);
+    if (trimmed.size() < 2U || trimmed.front() != '(' || trimmed.back() != ')') {
+        return false;
+    }
+
+    int nesting = 0;
+    char quote_delimiter = '\0';
+    for (std::size_t index = 0; index < trimmed.size(); ++index) {
+        const char ch = trimmed[index];
+        if ((ch == '\'' || ch == '"') && (quote_delimiter == '\0' || quote_delimiter == ch)) {
+            quote_delimiter = quote_delimiter == '\0' ? ch : '\0';
+            continue;
+        }
+        if (quote_delimiter != '\0') {
+            continue;
+        }
+
+        if (ch == '(') {
+            ++nesting;
+            continue;
+        }
+        if (ch == ')') {
+            --nesting;
+            if (nesting == 0 && index + 1U < trimmed.size()) {
+                return false;
+            }
+        }
+    }
+    return nesting == 0;
+}
+
+std::string parse_dialog_command_body(const std::string& line, const std::string& keyword) {
+    if (uppercase_copy(trim_copy(line)) == keyword) {
+        return {};
+    }
+
+    const std::string function_prefix = keyword + "(";
+    const std::string command_prefix = keyword + " ";
+    if (starts_with_insensitive(line, function_prefix)) {
+        return trim_copy(line.substr(keyword.size()));
+    }
+    if (starts_with_insensitive(line, command_prefix)) {
+        return trim_copy(line.substr(keyword.size() + 1U));
+    }
+    return {};
+}
+
+std::string strip_dialog_argument_wrapping(std::string body) {
+    body = trim_copy(std::move(body));
+    while (has_wrapping_parentheses(body)) {
+        body = trim_copy(body.substr(1U, body.size() - 2U));
+    }
+    return body;
+}
+
+std::string extract_dialog_target_clause(std::string& body) {
+    const std::size_t to_pos = find_keyword_top_level(body, "TO");
+    if (to_pos == std::string::npos) {
+        return {};
+    }
+
+    std::string target = trim_copy(body.substr(to_pos + 2U));
+    body = trim_copy(body.substr(0U, to_pos));
+    target = trim_copy(target);
+    return target;
+}
+
+void assign_dialog_positional_if_empty(std::string& field, const std::vector<std::string>& arguments, std::size_t index) {
+    if (!field.empty() || index >= arguments.size()) {
+        return;
+    }
+    field = trim_copy(arguments[index]);
+}
+
 }  // namespace
 
 Program parse_program(const std::string& path) {
@@ -620,89 +695,95 @@ Program parse_program(const std::string& path) {
             }
         } else if (upper == "GETFILE" || starts_with_insensitive(line, "GETFILE ") || starts_with_insensitive(line, "GETFILE(")) {
             statement.kind = StatementKind::getfile_command;
-            std::string body;
-            if (upper == "GETFILE") {
-                body = {};
-            } else if (starts_with_insensitive(line, "GETFILE(")) {
-                body = trim_copy(line.substr(7U));
-            } else {
-                body = trim_copy(line.substr(8U));
-            }
+            std::string body = parse_dialog_command_body(line, "GETFILE");
+            const std::string target_part = extract_dialog_target_clause(body);
+            body = strip_dialog_argument_wrapping(std::move(body));
+
             statement.expression = body;
-            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER", "TO"});
-            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER", "TO"});
-            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER", "TO"});
-            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT", "TO"});
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
-                if (!target_part.empty()) {
-                    statement.names.push_back(target_part);
-                }
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER"});
+            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT"});
+
+            const bool has_named_clause = find_first_keyword_top_level(body, {"PROMPT", "TITLE", "DEFAULT", "FILTER"}) != std::string::npos;
+            if (!has_named_clause) {
+                const std::vector<std::string> arguments = split_csv_like(body);
+                assign_dialog_positional_if_empty(statement.identifier, arguments, 0U);
+                assign_dialog_positional_if_empty(statement.secondary_expression, arguments, 1U);
+                assign_dialog_positional_if_empty(statement.tertiary_expression, arguments, 2U);
+                assign_dialog_positional_if_empty(statement.quaternary_expression, arguments, 3U);
+            }
+
+            if (!target_part.empty()) {
+                statement.names.push_back(target_part);
             }
         } else if (upper == "PUTFILE" || starts_with_insensitive(line, "PUTFILE ") || starts_with_insensitive(line, "PUTFILE(")) {
             statement.kind = StatementKind::putfile_command;
-            std::string body;
-            if (upper == "PUTFILE") {
-                body = {};
-            } else if (starts_with_insensitive(line, "PUTFILE(")) {
-                body = trim_copy(line.substr(7U));
-            } else {
-                body = trim_copy(line.substr(8U));
-            }
+            std::string body = parse_dialog_command_body(line, "PUTFILE");
+            const std::string target_part = extract_dialog_target_clause(body);
+            body = strip_dialog_argument_wrapping(std::move(body));
+
             statement.expression = body;
-            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER", "TO"});
-            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER", "TO"});
-            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER", "TO"});
-            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT", "TO"});
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
-                if (!target_part.empty()) {
-                    statement.names.push_back(target_part);
-                }
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER"});
+            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT"});
+
+            const bool has_named_clause = find_first_keyword_top_level(body, {"PROMPT", "TITLE", "DEFAULT", "FILTER"}) != std::string::npos;
+            if (!has_named_clause) {
+                const std::vector<std::string> arguments = split_csv_like(body);
+                assign_dialog_positional_if_empty(statement.identifier, arguments, 0U);
+                assign_dialog_positional_if_empty(statement.secondary_expression, arguments, 1U);
+                assign_dialog_positional_if_empty(statement.tertiary_expression, arguments, 2U);
+                assign_dialog_positional_if_empty(statement.quaternary_expression, arguments, 3U);
+            }
+
+            if (!target_part.empty()) {
+                statement.names.push_back(target_part);
             }
         } else if (upper == "GETDIR" || starts_with_insensitive(line, "GETDIR ") || starts_with_insensitive(line, "GETDIR(")) {
             statement.kind = StatementKind::getdir_command;
-            std::string body;
-            if (upper == "GETDIR") {
-                body = {};
-            } else if (starts_with_insensitive(line, "GETDIR(")) {
-                body = trim_copy(line.substr(6U));
-            } else {
-                body = trim_copy(line.substr(7U));
-            }
+            std::string body = parse_dialog_command_body(line, "GETDIR");
+            const std::string target_part = extract_dialog_target_clause(body);
+            body = strip_dialog_argument_wrapping(std::move(body));
+
             statement.expression = body;
-            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "TO"});
-            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "TO"});
-            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "TO"});
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
-                if (!target_part.empty()) {
-                    statement.names.push_back(target_part);
-                }
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE"});
+
+            const bool has_named_clause = find_first_keyword_top_level(body, {"PROMPT", "TITLE", "DEFAULT"}) != std::string::npos;
+            if (!has_named_clause) {
+                const std::vector<std::string> arguments = split_csv_like(body);
+                assign_dialog_positional_if_empty(statement.quaternary_expression, arguments, 0U);
+                assign_dialog_positional_if_empty(statement.secondary_expression, arguments, 1U);
+                assign_dialog_positional_if_empty(statement.tertiary_expression, arguments, 2U);
+            }
+
+            if (!target_part.empty()) {
+                statement.names.push_back(target_part);
             }
         } else if (upper == "INPUTBOX" || starts_with_insensitive(line, "INPUTBOX ") || starts_with_insensitive(line, "INPUTBOX(")) {
             statement.kind = StatementKind::inputbox_command;
-            std::string body;
-            if (upper == "INPUTBOX") {
-                body = {};
-            } else if (starts_with_insensitive(line, "INPUTBOX(")) {
-                body = trim_copy(line.substr(8U));
-            } else {
-                body = trim_copy(line.substr(9U));
-            }
+            std::string body = parse_dialog_command_body(line, "INPUTBOX");
+            const std::string target_part = extract_dialog_target_clause(body);
+            body = strip_dialog_argument_wrapping(std::move(body));
+
             statement.expression = body;
-            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "TO"});
-            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "TO"});
-            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "TO"});
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
-                if (!target_part.empty()) {
-                    statement.names.push_back(target_part);
-                }
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE"});
+
+            const bool has_named_clause = find_first_keyword_top_level(body, {"PROMPT", "TITLE", "DEFAULT"}) != std::string::npos;
+            if (!has_named_clause) {
+                const std::vector<std::string> arguments = split_csv_like(body);
+                assign_dialog_positional_if_empty(statement.secondary_expression, arguments, 0U);
+                assign_dialog_positional_if_empty(statement.tertiary_expression, arguments, 1U);
+                assign_dialog_positional_if_empty(statement.quaternary_expression, arguments, 2U);
+            }
+
+            if (!target_part.empty()) {
+                statement.names.push_back(target_part);
             }
         } else if (upper == "WAIT" || starts_with_insensitive(line, "WAIT ")) {
             statement.kind = StatementKind::wait_command;

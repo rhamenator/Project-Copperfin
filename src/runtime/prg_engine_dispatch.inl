@@ -42,6 +42,27 @@
                 return detail;
             };
 
+            auto assign_dialog_target_value = [&](const Statement &dialog_statement, Frame &dialog_frame, std::string &detail)
+            {
+                if (dialog_statement.names.empty())
+                {
+                    return;
+                }
+                const std::string target_name = trim_copy(dialog_statement.names.front());
+                if (target_name.empty())
+                {
+                    return;
+                }
+
+                assign_variable(dialog_frame, target_name, make_string_value(""));
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += "result='";
+                detail += "'";
+            };
+
             switch (statement.kind)
             {
             case StatementKind::assignment:
@@ -3670,6 +3691,7 @@
                     if (!detail.empty()) detail += " ";
                     detail += "clause=" + statement.expression;
                 }
+                assign_dialog_target_value(statement, frame, detail);
                 events.push_back({.category = "runtime.getfile",
                                   .detail = detail,
                                   .location = statement.location});
@@ -3707,6 +3729,7 @@
                     if (!detail.empty()) detail += " ";
                     detail += "clause=" + statement.expression;
                 }
+                assign_dialog_target_value(statement, frame, detail);
                 events.push_back({.category = "runtime.putfile",
                                   .detail = detail,
                                   .location = statement.location});
@@ -3739,6 +3762,7 @@
                     if (!detail.empty()) detail += " ";
                     detail += "clause=" + statement.expression;
                 }
+                assign_dialog_target_value(statement, frame, detail);
                 events.push_back({.category = "runtime.getdir",
                                   .detail = detail,
                                   .location = statement.location});
@@ -3771,6 +3795,7 @@
                     if (!detail.empty()) detail += " ";
                     detail += "clause=" + statement.expression;
                 }
+                assign_dialog_target_value(statement, frame, detail);
                 events.push_back({.category = "runtime.inputbox",
                                   .detail = detail,
                                   .location = statement.location});
