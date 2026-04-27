@@ -376,12 +376,29 @@ namespace
             "lCompDiff = COMPOBJ(oOne, oTwo)\n"
             "lCompSame = COMPOBJ(oOne, oOne)\n"
             "lCompNotObject = COMPOBJ('x', 'x')\n"
-            "nMembersBefore = AMEMBERS(aMembersOut, oOne)\n"
+            "nMembersAll = AMEMBERS(aMembersOut, oOne, 0)\n"
+            "nMembersProperties = AMEMBERS(aMembersProps, oOne, 1)\n"
+            "nMembersMethods = AMEMBERS(aMembersMethods, oOne, 2)\n"
+            "nMembersEvents = AMEMBERS(aMembersEvents, oOne, 4)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oOne, 3)\n"
+            "cMemberAllFirst = aMembersOut[1]\n"
+            "cMemberAllLast = aMembersOut[nMembersAll]\n"
+            "cMemberMethodsFirst = aMembersMethods[1]\n"
+            "cMemberMethodsLast = aMembersMethods[nMembersMethods]\n"
+            "cMemberPropsFirst = aMembersProps[1]\n"
+            "cMemberPropsLast = aMembersProps[nMembersProperties]\n"
             "lPemMissing = PEMSTATUS(oOne, 'missingprop', 1)\n"
+            "lPemMethodExists = PEMSTATUS(oOne, 'add', 1)\n"
+            "lPemPropertyExists = PEMSTATUS(oOne, 'comparemode', 1)\n"
+            "lPemReadOnlyCount = PEMSTATUS(oOne, 'count', 5)\n"
+            "lPemReadOnlyCompareMode = PEMSTATUS(oOne, 'comparemode', 5)\n"
+            "lPemReadOnlyMethod = PEMSTATUS(oOne, 'add', 5)\n"
             "lAdd = ADDPROPERTY(oOne, 'SampleProp', 42)\n"
             "lPemExistsAfterAdd = PEMSTATUS(oOne, 'SampleProp', 1)\n"
-            "nMembersAfter = AMEMBERS(aMembersOut, oOne, 1)\n"
+            "nMembersAfterAddProperties = AMEMBERS(aMembersPropsAfterAdd, oOne, 1)\n"
             "nClassCount = ACLASS(aClass, oOne)\n"
+            "cClassFirst = aClass[1]\n"
+            "cClassSecond = aClass[2]\n"
             "lRemove = REMOVEPROPERTY(oOne, 'SampleProp')\n"
             "lPemExistsAfterRemove = PEMSTATUS(oOne, 'SampleProp', 1)\n"
             "lRemoveMissing = REMOVEPROPERTY(oOne, 'SampleProp')\n"
@@ -415,29 +432,37 @@ namespace
         check("lcompsame", "true");
         check("lcompnotobject", "false");
         check("lpemmissing", "false");
+        check("lpemmethodexists", "true");
+        check("lpempropertyexists", "true");
+        check("lpemreadonlycount", "true");
+        check("lpemreadonlycomparemode", "false");
+        check("lpemreadonlymethod", "false");
         check("ladd", "true");
         check("lpemexistsafteradd", "true");
         check("lremove", "true");
         check("lpemexistsafterremove", "false");
         check("lremovemissing", "false");
 
-        const auto members_before = state.globals.find("nmembersbefore");
-        const double members_before_count =
-            members_before == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(members_before->second));
-        expect(members_before != state.globals.end() && members_before_count >= 0.0,
-               "AMEMBERS() before ADDPROPERTY should return a non-negative numeric count");
-
-        const auto members_after = state.globals.find("nmembersafter");
-        const double members_after_count =
-            members_after == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(members_after->second));
-         expect(members_after != state.globals.end() && members_after_count >= 0.0,
-             "AMEMBERS() after ADDPROPERTY should return a non-negative numeric count");
+        check("nmembersall", "9");
+        check("nmembersproperties", "2");
+        check("nmembersmethods", "7");
+        check("nmembersevents", "0");
+        check("nmembersunion", "9");
+        check("cmemberallfirst", "ADD");
+        check("cmemberalllast", "REMOVEALL");
+        check("cmembermethodsfirst", "ADD");
+        check("cmembermethodslast", "REMOVEALL");
+        check("cmemberpropsfirst", "COMPAREMODE");
+        check("cmemberpropslast", "COUNT");
+        check("nmembersafteraddproperties", "3");
+        check("cclassfirst", "DICTIONARY");
+        check("cclasssecond", "OBJECT");
 
         const auto class_count = state.globals.find("nclasscount");
         const double class_count_value =
             class_count == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(class_count->second));
-         expect(class_count != state.globals.end() && class_count_value >= 0.0,
-             "ACLASS() should return a non-negative numeric count");
+         expect(class_count != state.globals.end() && class_count_value == 2.0,
+             "ACLASS() should return [class, OBJECT] with two rows");
 
         fs::remove_all(temp_root, ignored);
     }

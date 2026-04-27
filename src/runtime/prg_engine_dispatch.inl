@@ -2277,6 +2277,38 @@
             case StatementKind::save_memvars_command:
             {
                 namespace fs = std::filesystem;
+                const auto escape_memvar_value = [](const std::string &raw) {
+                    std::string escaped;
+                    escaped.reserve(raw.size());
+                    for (const char ch : raw)
+                    {
+                        switch (ch)
+                        {
+                        case '\\':
+                            escaped += "\\\\";
+                            break;
+                        case '\n':
+                            escaped += "\\n";
+                            break;
+                        case '\r':
+                            escaped += "\\r";
+                            break;
+                        case '\t':
+                            escaped += "\\t";
+                            break;
+                        case '=':
+                            escaped += "\\=";
+                            break;
+                        case ':':
+                            escaped += "\\:";
+                            break;
+                        default:
+                            escaped.push_back(ch);
+                            break;
+                        }
+                    }
+                    return escaped;
+                };
 
                 std::string destination = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
@@ -2371,12 +2403,12 @@
                         break;
                     }
                     case PrgValueKind::empty:
-                        type_code = 'C';
+                        type_code = 'E';
                         serialized_value.clear();
                         break;
                     }
 
-                    output << name << "=" << type_code << ":" << serialized_value << "\n";
+                    output << name << "=" << type_code << ":" << escape_memvar_value(serialized_value) << "\n";
                     ++saved_count;
                 }
 
@@ -2397,6 +2429,52 @@
             case StatementKind::restore_memvars_command:
             {
                 namespace fs = std::filesystem;
+                const auto unescape_memvar_value = [](const std::string &encoded) {
+                    std::string unescaped;
+                    unescaped.reserve(encoded.size());
+                    for (std::size_t index = 0U; index < encoded.size(); ++index)
+                    {
+                        const char ch = encoded[index];
+                        if (ch != '\\')
+                        {
+                            unescaped.push_back(ch);
+                            continue;
+                        }
+
+                        if (index + 1U >= encoded.size())
+                        {
+                            unescaped.push_back('\\');
+                            continue;
+                        }
+
+                        const char next = encoded[++index];
+                        switch (next)
+                        {
+                        case '\\':
+                            unescaped.push_back('\\');
+                            break;
+                        case 'n':
+                            unescaped.push_back('\n');
+                            break;
+                        case 'r':
+                            unescaped.push_back('\r');
+                            break;
+                        case 't':
+                            unescaped.push_back('\t');
+                            break;
+                        case '=':
+                            unescaped.push_back('=');
+                            break;
+                        case ':':
+                            unescaped.push_back(':');
+                            break;
+                        default:
+                            unescaped.push_back(next);
+                            break;
+                        }
+                    }
+                    return unescaped;
+                };
 
                 std::string source = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
@@ -2468,7 +2546,7 @@
                     const char type_code = raw_type.empty()
                                                ? 'C'
                                                : static_cast<char>(std::toupper(static_cast<unsigned char>(raw_type.front())));
-                    const std::string raw_value = line.substr(colon_position + 1U);
+                    const std::string raw_value = unescape_memvar_value(line.substr(colon_position + 1U));
 
                     PrgValue restored_value;
                     if (type_code == 'L')
@@ -2484,15 +2562,20 @@
                     }
                     else if (type_code == 'N')
                     {
+                        const std::string numeric_text = trim_copy(raw_value);
                         char *number_end = nullptr;
-                        const double parsed = std::strtod(raw_value.c_str(), &number_end);
-                        restored_value = (number_end != raw_value.c_str() && number_end != nullptr && *number_end == '\0')
+                        const double parsed = std::strtod(numeric_text.c_str(), &number_end);
+                        restored_value = (number_end != numeric_text.c_str() && number_end != nullptr && *number_end == '\0')
                                              ? make_number_value(parsed)
                                              : make_number_value(0.0);
                     }
                     else if (type_code == 'D')
                     {
                         restored_value = make_string_value(trim_copy(raw_value));
+                    }
+                    else if (type_code == 'E')
+                    {
+                        restored_value = make_empty_value();
                     }
                     else
                     {

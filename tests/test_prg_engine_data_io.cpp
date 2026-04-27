@@ -892,6 +892,275 @@ void test_save_to_like_pattern_filters_variables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_save_to_except_pattern_filters_variables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "filtered.mem";
+    const fs::path main_path = temp_root / "save_except.prg";
+    write_text(
+        main_path,
+        "cName = 'Alice'\n"
+        "nAge = 30\n"
+        "SAVE TO '" + mem_path.string() + "' ALL EXCEPT c*\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE TO ALL EXCEPT script should complete");
+    expect(fs::exists(mem_path), "SAVE TO ALL EXCEPT should create output file");
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("cname=C:Alice") == std::string::npos,
+            "SAVE TO ALL EXCEPT should exclude matching cName variable");
+        expect(contents.find("nage=N:30") != std::string::npos,
+            "SAVE TO ALL EXCEPT should include non-matching nAge variable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_restore_auto_mem_extension_without_explicit_extension() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_auto_extension";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path base_path = temp_root / "session_state";
+    const fs::path mem_path = temp_root / "session_state.mem";
+    const fs::path main_path = temp_root / "save_restore_auto_extension.prg";
+    write_text(
+        main_path,
+        "x = 'auto'\n"
+        "SAVE TO '" + base_path.string() + "'\n"
+        "x = 'changed'\n"
+        "RESTORE FROM '" + base_path.string() + "'\n"
+        "restored_x = x\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE/RESTORE without explicit extension should complete");
+    expect(fs::exists(mem_path), "SAVE TO without extension should append .mem");
+
+    const auto restored_x = state.globals.find("restored_x");
+    expect(restored_x != state.globals.end(), "RESTORE FROM without extension should load saved variable");
+    if (restored_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_x->second) == "auto",
+            "RESTORE FROM without extension should read from the auto-appended .mem file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_restore_round_trips_escaped_string_and_types() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_escaped";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "escaped.mem";
+    const fs::path save_path = temp_root / "save_escaped.prg";
+    write_text(
+        save_path,
+        "cEscaped = 'left=right:slash\\' + CHR(10) + 'line2' + CHR(9) + 'tail'\n"
+        "lFlag = .T.\n"
+        "nAmount = 12.5\n"
+        "dStamp = '01/15/2026'\n"
+        "PUBLIC eOnly\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession save_session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = save_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+        const auto save_state = save_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(save_state.completed, "SAVE TO escaped setup script should complete");
+    }
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("cescaped=C:") != std::string::npos,
+            "SAVE TO should persist escaped string variable");
+        expect(contents.find("left\\=right\\:") != std::string::npos,
+            "SAVE TO should escape delimiter-sensitive characters");
+        expect(contents.find("slash\\\\") != std::string::npos,
+            "SAVE TO should escape literal backslashes");
+        expect(contents.find("\\nline2\\t") != std::string::npos,
+            "SAVE TO should escape newline and tab control characters");
+        expect(contents.find("dstamp=D:01/15/2026") != std::string::npos,
+            "SAVE TO should persist recognized date values using type code D");
+        expect(contents.find("eonly=E:") != std::string::npos,
+            "SAVE TO should persist explicit empty values using type code E");
+    }
+
+    const fs::path restore_path = temp_root / "restore_escaped.prg";
+    write_text(
+        restore_path,
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "restored_s = cEscaped\n"
+        "restored_l = lFlag\n"
+        "restored_n = nAmount\n"
+        "restored_d = dStamp\n"
+        "restored_e_type = VARTYPE(eOnly)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession restore_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = restore_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(restore_state.completed, "RESTORE FROM escaped script should complete");
+
+    const auto restored_s = restore_state.globals.find("restored_s");
+    const auto restored_l = restore_state.globals.find("restored_l");
+    const auto restored_n = restore_state.globals.find("restored_n");
+    const auto restored_d = restore_state.globals.find("restored_d");
+    const auto restored_e_type = restore_state.globals.find("restored_e_type");
+    const auto restored_empty = restore_state.globals.find("eonly");
+
+    expect(restored_s != restore_state.globals.end(), "RESTORE FROM should restore escaped string variable");
+    expect(restored_l != restore_state.globals.end(), "RESTORE FROM should restore logical variable");
+    expect(restored_n != restore_state.globals.end(), "RESTORE FROM should restore numeric variable");
+    expect(restored_d != restore_state.globals.end(), "RESTORE FROM should restore date variable");
+    expect(restored_e_type != restore_state.globals.end(), "RESTORE FROM should restore explicit empty variable");
+    expect(restored_empty != restore_state.globals.end(), "RESTORE FROM should materialize explicit empty variables");
+
+    if (restored_s != restore_state.globals.end()) {
+        const std::string expected = std::string("left=right:slash\\") + "\n" + "line2" + "\t" + "tail";
+        expect(copperfin::runtime::format_value(restored_s->second) == expected,
+            "RESTORE FROM should unescape delimiter-sensitive and control characters");
+    }
+    if (restored_l != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_l->second) == "true",
+            "RESTORE FROM should preserve logical type fidelity");
+    }
+    if (restored_n != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_n->second) == "12.5",
+            "RESTORE FROM should preserve numeric type fidelity");
+    }
+    if (restored_d != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_d->second) == "01/15/2026",
+            "RESTORE FROM should preserve date values");
+    }
+    if (restored_e_type != restore_state.globals.end()) {
+        const std::string restored_type = copperfin::runtime::format_value(restored_e_type->second);
+        expect(restored_type == "X" || restored_type == "U",
+            "RESTORE FROM should preserve explicit empty value kind");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_rejects_numeric_trailing_garbage() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_numeric_garbage";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "numeric.mem";
+    write_text(mem_path, "ngood=N:12.5\nnbad=N:12.5oops\n");
+
+    const fs::path main_path = temp_root / "restore_numeric_garbage.prg";
+    write_text(
+        main_path,
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "after_good = nGood\n"
+        "after_bad = nBad\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RESTORE FROM numeric garbage script should complete");
+
+    const auto after_good = state.globals.find("after_good");
+    const auto after_bad = state.globals.find("after_bad");
+    expect(after_good != state.globals.end(), "RESTORE FROM should parse valid numeric values");
+    expect(after_bad != state.globals.end(), "RESTORE FROM should still materialize invalid numeric entries");
+    if (after_good != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_good->second) == "12.5",
+            "RESTORE FROM should keep valid numeric values");
+    }
+    if (after_bad != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_bad->second) == "0",
+            "RESTORE FROM should reject numerics with trailing garbage and fall back to 0");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_without_additive_clears_prior_globals() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_non_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "state.mem";
+    const fs::path main_path = temp_root / "restore_non_additive.prg";
+    write_text(
+        main_path,
+        "from_file = 'saved'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "stale_only = 'drop-me'\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "after_from_file = from_file\n"
+        "after_stale_type = VARTYPE(stale_only)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RESTORE FROM non-additive script should complete");
+
+    const auto after_from_file = state.globals.find("after_from_file");
+    const auto after_stale_type = state.globals.find("after_stale_type");
+    expect(after_from_file != state.globals.end(), "non-additive RESTORE should restore file-backed variables");
+    expect(after_stale_type != state.globals.end(), "non-additive RESTORE should allow stale variable type inspection");
+
+    if (after_from_file != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_from_file->second) == "saved",
+            "non-additive RESTORE should keep file-backed values");
+    }
+    if (after_stale_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_stale_type->second) == "U",
+            "non-additive RESTORE should clear globals not present in the .mem file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_emits_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to";
@@ -1875,6 +2144,11 @@ int main() {
     test_restore_from_loads_variables_from_file();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
+    test_save_to_except_pattern_filters_variables();
+    test_save_restore_auto_mem_extension_without_explicit_extension();
+    test_save_restore_round_trips_escaped_string_and_types();
+    test_restore_from_without_additive_clears_prior_globals();
+    test_restore_from_rejects_numeric_trailing_garbage();
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
     test_copy_structure_to_creates_empty_schema();

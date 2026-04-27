@@ -3,10 +3,12 @@
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
+#include <set>
 #include <stdexcept>
 #include <system_error>
 
@@ -143,6 +145,67 @@ int drive_type_value(const std::string& raw_path, const std::string& default_dir
                : 1;
 }
 
+std::string class_token_from_prog_id(const std::string& prog_id) {
+    std::string token = trim_copy(prog_id);
+    const std::size_t separator = token.find_last_of('.');
+    if (separator != std::string::npos && separator + 1U < token.size()) {
+        token = token.substr(separator + 1U);
+    }
+    token = uppercase_copy(trim_copy(std::move(token)));
+    return token.empty() ? "CUSTOM" : token;
+}
+
+bool object_has_member(const std::vector<std::string>& members, const std::string& normalized_member_name) {
+    return std::find_if(members.begin(), members.end(), [&](const std::string& member) {
+               return normalize_identifier(member) == normalized_member_name;
+           }) != members.end();
+}
+
+bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object) {
+    return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
+}
+
+std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState& runtime_object, int flags) {
+    const bool include_all = flags == 0;
+    const bool include_properties = include_all || ((flags & 1) != 0);
+    const bool include_methods = include_all || ((flags & 2) != 0);
+    const bool include_events = include_all || ((flags & 4) != 0);
+
+    std::set<std::string> unique_members;
+    if (include_properties) {
+        for (const auto& [name, value] : runtime_object.properties) {
+            (void)value;
+            unique_members.insert(normalize_identifier(name));
+        }
+    }
+    if (include_methods) {
+        for (const auto& method_name : runtime_object.methods) {
+            unique_members.insert(normalize_identifier(method_name));
+        }
+    }
+    if (include_events) {
+        for (const auto& event_name : runtime_object.events) {
+            unique_members.insert(normalize_identifier(event_name));
+        }
+    }
+
+    std::vector<std::string> members;
+    members.reserve(unique_members.size());
+    for (const std::string& member_name : unique_members) {
+        members.push_back(uppercase_copy(member_name));
+    }
+
+    std::sort(members.begin(), members.end(), [](const std::string& left, const std::string& right) {
+        const std::string normalized_left = lowercase_copy(left);
+        const std::string normalized_right = lowercase_copy(right);
+        if (normalized_left == normalized_right) {
+            return left < right;
+        }
+        return normalized_left < normalized_right;
+    });
+    return members;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_runtime_surface_function(
@@ -240,14 +303,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 return make_number_value(0.0);
             }
 
-            const bool include_properties = flags == 0 || flags == 1;
             std::vector<PrgValue> member_names;
-            if (include_properties) {
-                member_names.reserve(runtime_object->properties.size());
-                for (const auto& [name, value] : runtime_object->properties) {
-                    (void)value;
-                    member_names.push_back(make_string_value(name));
-                }
+            const std::vector<std::string> member_tokens = collect_object_member_names(*runtime_object, flags);
+            member_names.reserve(member_tokens.size());
+            for (const std::string& member_name : member_tokens) {
+                member_names.push_back(make_string_value(member_name));
             }
             assign_array_callback(array_name, member_names);
             return make_number_value(static_cast<double>(member_names.size()));
@@ -280,14 +340,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             }
 
             std::vector<PrgValue> class_chain;
-            std::string class_name = uppercase_copy(trim_copy(runtime_object->prog_id));
-            if (class_name.empty()) {
-                class_name = "CUSTOM";
-            }
+            const std::string class_name = class_token_from_prog_id(runtime_object->prog_id);
             class_chain.push_back(make_string_value(class_name));
-            if (class_name != "OBJECT") {
-                class_chain.push_back(make_string_value("OBJECT"));
-            }
+            class_chain.push_back(make_string_value("OBJECT"));
             assign_array_callback(array_name, class_chain);
             return make_number_value(static_cast<double>(class_chain.size()));
         } catch (...) {
@@ -311,10 +366,17 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (attribute == 1) {
-            return make_boolean_value(runtime_object->properties.contains(member_name));
+            const bool exists = runtime_object->properties.contains(member_name) ||
+                                object_has_member(runtime_object->methods, member_name) ||
+                                object_has_member(runtime_object->events, member_name);
+            return make_boolean_value(exists);
         }
-        if (attribute == 3 || attribute == 5) {
+        if (attribute == 3) {
             return make_boolean_value(false);
+        }
+        if (attribute == 5) {
+            const bool readonly = is_scripting_dictionary_object(*runtime_object) && member_name == "count";
+            return make_boolean_value(readonly);
         }
         return make_boolean_value(false);
     }

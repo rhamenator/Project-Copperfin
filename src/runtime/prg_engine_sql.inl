@@ -384,12 +384,29 @@
         int register_ole_object(const std::string &prog_id, const std::string &source)
         {
             const int handle = next_ole_handle++;
-            ole_objects.emplace(handle, RuntimeOleObjectState{
-                                            .handle = handle,
-                                            .prog_id = prog_id,
-                                            .source = source,
-                                            .last_action = source,
-                                            .action_count = 1});
+            RuntimeOleObjectState object_state{
+                .handle = handle,
+                .prog_id = prog_id,
+                .source = source,
+                .last_action = source,
+                .action_count = 1};
+
+            const std::string normalized_prog_id = normalize_identifier(prog_id);
+            if (normalized_prog_id == "scripting.dictionary")
+            {
+                object_state.methods = {
+                    "add",
+                    "exists",
+                    "item",
+                    "remove",
+                    "removeall",
+                    "keys",
+                    "items"};
+                object_state.properties["count"] = make_number_value(0.0);
+                object_state.properties["comparemode"] = make_number_value(0.0);
+            }
+
+            ole_objects.emplace(handle, std::move(object_state));
             return handle;
         }
 
