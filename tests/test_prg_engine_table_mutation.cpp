@@ -787,6 +787,144 @@ void test_update_command_sets_scoped_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_rollback_transaction_replays_local_dbf_changes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'MUTATED', AGE WITH 999\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'TEMP', AGE WITH 100\n"
+        "ROLLBACK\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "nFirstAge = AGE\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ROLLBACK script should complete");
+
+    const auto first = state.globals.find("cfirst");
+    const auto first_age = state.globals.find("nfirstage");
+    const auto count = state.globals.find("ncount");
+    expect(first != state.globals.end(), "ROLLBACK script should capture first record name");
+    expect(first_age != state.globals.end(), "ROLLBACK script should capture first record age");
+    expect(count != state.globals.end(), "ROLLBACK script should capture record count");
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA", "ROLLBACK should restore original NAME field values");
+    }
+    if (first_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_age->second) == "10", "ROLLBACK should restore original numeric field values");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2", "ROLLBACK should remove rows appended within the transaction");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.rollback";
+    }), "ROLLBACK should emit runtime.transaction.rollback");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "ROLLBACK should keep DBF readable");
+    expect(parse_result.table.records.size() == 2U, "ROLLBACK should restore the original DBF row count");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "ROLLBACK should restore row 1 text values");
+        expect(parse_result.table.records[0].values[1].display_value == "10", "ROLLBACK should restore row 1 numeric values");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_startup_replays_pending_transaction_journal() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_replay";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path writer_path = temp_root / "writer.prg";
+    write_text(
+        writer_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'BROKEN', AGE WITH 777\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'PENDING', AGE WITH 1\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = writer_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+        const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(writer_state.completed, "transaction writer script should complete");
+    }
+
+    const fs::path reader_path = temp_root / "reader.prg";
+    write_text(
+        reader_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "nFirstAge = AGE\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = reader_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+    const auto state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "replay reader script should complete");
+
+    const auto first = state.globals.find("cfirst");
+    const auto first_age = state.globals.find("nfirstage");
+    const auto count = state.globals.find("ncount");
+    expect(first != state.globals.end(), "startup replay script should capture first record name");
+    expect(first_age != state.globals.end(), "startup replay script should capture first record age");
+    expect(count != state.globals.end(), "startup replay script should capture record count");
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA", "startup replay should restore NAME after interrupted transaction");
+    }
+    if (first_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_age->second) == "10", "startup replay should restore AGE after interrupted transaction");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2", "startup replay should remove rows created by interrupted transaction");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.replay";
+    }), "startup session should emit runtime.transaction.replay when crash recovery runs");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -801,6 +939,8 @@ int main() {
     test_indexed_table_mutation_succeeds_for_structural_indexes();
     test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
     test_update_command_sets_scoped_records();
+    test_rollback_transaction_replays_local_dbf_changes();
+    test_startup_replays_pending_transaction_journal();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

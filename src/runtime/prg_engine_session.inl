@@ -163,6 +163,381 @@
             return 0;
         }
 
+        std::filesystem::path transaction_journal_root_directory() const
+        {
+            return runtime_temp_directory / "transactions";
+        }
+
+        bool write_transaction_journal_file(const TransactionJournalState &state) const
+        {
+            std::error_code directory_error;
+            std::filesystem::create_directories(state.root_path, directory_error);
+            if (directory_error)
+            {
+                return false;
+            }
+
+            std::ofstream output(state.journal_path, std::ios::binary | std::ios::trunc);
+            if (!output)
+            {
+                return false;
+            }
+
+            output << "VERSION\t1\n";
+            output << "LEVEL\t" << state.level << "\n";
+            for (const auto &[_, entry] : state.tracked_files)
+            {
+                output << "FILE\t"
+                       << entry.original_path << "\t"
+                       << (entry.existed_at_start ? "1" : "0") << "\t"
+                       << entry.backup_path << "\n";
+            }
+
+            output.flush();
+            return output.good();
+        }
+
+        std::vector<std::filesystem::path> transaction_companion_paths(const std::string &table_path) const
+        {
+            std::vector<std::filesystem::path> paths;
+            const std::filesystem::path source = std::filesystem::path(normalize_path(table_path)).lexically_normal();
+            if (source.empty())
+            {
+                return paths;
+            }
+
+            paths.push_back(source);
+
+            const auto push_if_unique = [&paths](const std::filesystem::path &candidate)
+            {
+                const std::filesystem::path normalized = candidate.lexically_normal();
+                if (std::find(paths.begin(), paths.end(), normalized) == paths.end())
+                {
+                    paths.push_back(normalized);
+                }
+            };
+
+            push_if_unique(source.parent_path() / (source.stem().string() + ".fpt"));
+            push_if_unique(source.parent_path() / (source.stem().string() + ".cdx"));
+            return paths;
+        }
+
+        bool replay_transaction_journal_state(const TransactionJournalState &state)
+        {
+            bool ok = true;
+            std::error_code ignored;
+            for (const auto &[_, entry] : state.tracked_files)
+            {
+                const std::filesystem::path original(entry.original_path);
+                if (entry.existed_at_start)
+                {
+                    if (!entry.backup_path.empty())
+                    {
+                        const std::filesystem::path backup(entry.backup_path);
+                        if (std::filesystem::exists(backup, ignored))
+                        {
+                            std::error_code copy_error;
+                            std::filesystem::create_directories(original.parent_path(), copy_error);
+                            copy_error.clear();
+                            std::filesystem::copy_file(backup, original, std::filesystem::copy_options::overwrite_existing, copy_error);
+                            if (copy_error)
+                            {
+                                ok = false;
+                            }
+                        }
+                    }
+                }
+                else if (std::filesystem::exists(original, ignored))
+                {
+                    std::filesystem::remove(original, ignored);
+                }
+            }
+
+            std::filesystem::remove_all(state.root_path, ignored);
+            return ok;
+        }
+
+        bool load_transaction_journal_from_file(
+            const std::filesystem::path &journal_path,
+            TransactionJournalState &state)
+        {
+            std::ifstream input(journal_path, std::ios::binary);
+            if (!input)
+            {
+                return false;
+            }
+
+            state = TransactionJournalState{};
+            state.root_path = journal_path.parent_path();
+            state.journal_path = journal_path;
+
+            std::string line;
+            while (std::getline(input, line))
+            {
+                if (!line.empty() && line.back() == '\r')
+                {
+                    line.pop_back();
+                }
+
+                std::vector<std::string> tokens;
+                std::size_t token_start = 0;
+                while (token_start <= line.size())
+                {
+                    const std::size_t separator = line.find('\t', token_start);
+                    if (separator == std::string::npos)
+                    {
+                        tokens.push_back(line.substr(token_start));
+                        break;
+                    }
+                    tokens.push_back(line.substr(token_start, separator - token_start));
+                    token_start = separator + 1;
+                }
+                if (tokens.empty())
+                {
+                    continue;
+                }
+                if (tokens[0] == "LEVEL" && tokens.size() >= 2U)
+                {
+                    try
+                    {
+                        state.level = std::max(0, std::stoi(tokens[1]));
+                    }
+                    catch (...)
+                    {
+                        state.level = 0;
+                    }
+                    continue;
+                }
+                if (tokens[0] == "FILE" && tokens.size() >= 4U)
+                {
+                    TransactionJournalFileEntry entry;
+                    entry.original_path = tokens[1];
+                    entry.existed_at_start = tokens[2] == "1";
+                    entry.backup_path = tokens[3];
+                    state.tracked_files[normalize_path(entry.original_path)] = std::move(entry);
+                }
+            }
+
+            return true;
+        }
+
+        void replay_pending_transaction_journals()
+        {
+            const std::filesystem::path root = transaction_journal_root_directory();
+            std::error_code ignored;
+            if (!std::filesystem::exists(root, ignored))
+            {
+                return;
+            }
+
+            for (const auto &entry : std::filesystem::directory_iterator(root, ignored))
+            {
+                if (ignored)
+                {
+                    break;
+                }
+                if (!entry.is_directory())
+                {
+                    continue;
+                }
+
+                const std::filesystem::path journal_path = entry.path() / "journal.log";
+                if (!std::filesystem::exists(journal_path, ignored))
+                {
+                    continue;
+                }
+
+                TransactionJournalState state;
+                if (!load_transaction_journal_from_file(journal_path, state))
+                {
+                    std::filesystem::remove_all(entry.path(), ignored);
+                    continue;
+                }
+
+                if (replay_transaction_journal_state(state))
+                {
+                    events.push_back({.category = "runtime.transaction.replay",
+                                      .detail = journal_path.string(),
+                                      .location = {}});
+                }
+            }
+        }
+
+        TransactionJournalState &current_transaction_journal()
+        {
+            auto [iterator, _] = transaction_journal_by_session.try_emplace(current_data_session);
+            return iterator->second;
+        }
+
+        bool begin_transaction_journal_if_needed()
+        {
+            if (current_transaction_level() <= 0)
+            {
+                return true;
+            }
+
+            TransactionJournalState &journal = current_transaction_journal();
+            if (!journal.journal_path.empty())
+            {
+                return true;
+            }
+
+            const unsigned long long process_id =
+#if defined(_WIN32)
+                static_cast<unsigned long long>(::_getpid());
+#else
+                static_cast<unsigned long long>(::getpid());
+#endif
+            const std::string nonce = std::to_string(static_cast<unsigned long long>(std::time(nullptr))) +
+                                      "_" + std::to_string(process_id) +
+                                      "_" + std::to_string(static_cast<unsigned long long>(current_data_session));
+            journal.root_path = transaction_journal_root_directory() / ("txn_" + nonce);
+            journal.journal_path = journal.root_path / "journal.log";
+            journal.level = current_transaction_level();
+            if (!write_transaction_journal_file(journal))
+            {
+                last_error_message = "Unable to initialize transaction journal";
+                return false;
+            }
+            return true;
+        }
+
+        bool sync_transaction_journal_level()
+        {
+            auto found = transaction_journal_by_session.find(current_data_session);
+            if (found == transaction_journal_by_session.end())
+            {
+                return true;
+            }
+
+            found->second.level = current_transaction_level();
+            if (found->second.journal_path.empty())
+            {
+                return true;
+            }
+
+            if (!write_transaction_journal_file(found->second))
+            {
+                last_error_message = "Unable to persist transaction journal state";
+                return false;
+            }
+            return true;
+        }
+
+        bool ensure_transaction_backup_for_table(const std::string &table_path)
+        {
+            if (current_transaction_level() <= 0)
+            {
+                return true;
+            }
+            if (!begin_transaction_journal_if_needed())
+            {
+                return false;
+            }
+
+            TransactionJournalState &journal = current_transaction_journal();
+            std::error_code ignored;
+            for (const auto &path : transaction_companion_paths(table_path))
+            {
+                const std::string key = normalize_path(path.string());
+                if (journal.tracked_files.contains(key))
+                {
+                    continue;
+                }
+
+                TransactionJournalFileEntry entry;
+                entry.original_path = key;
+                entry.existed_at_start = std::filesystem::exists(path, ignored);
+                if (entry.existed_at_start)
+                {
+                    const std::filesystem::path backup_path = journal.root_path /
+                                                              ("backup_" + std::to_string(journal.tracked_files.size()) +
+                                                               path.extension().string());
+                    std::error_code copy_error;
+                    std::filesystem::create_directories(backup_path.parent_path(), copy_error);
+                    copy_error.clear();
+                    std::filesystem::copy_file(path, backup_path, std::filesystem::copy_options::overwrite_existing, copy_error);
+                    if (copy_error)
+                    {
+                        last_error_message = "Unable to create transaction backup for: " + key;
+                        return false;
+                    }
+                    entry.backup_path = backup_path.string();
+                }
+
+                journal.tracked_files.emplace(key, std::move(entry));
+                if (!write_transaction_journal_file(journal))
+                {
+                    last_error_message = "Unable to persist transaction backup journal";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        void refresh_local_cursors_after_transaction_replay()
+        {
+            DataSessionState &session = current_session_state();
+            for (auto &[_, cursor] : session.cursors)
+            {
+                if (cursor.remote || cursor.source_path.empty())
+                {
+                    continue;
+                }
+
+                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
+                if (!table_result.ok)
+                {
+                    continue;
+                }
+
+                cursor.record_count = table_result.table.header.record_count;
+                cursor.field_count = table_result.table.fields.size();
+                cursor.record_length = table_result.table.header.record_length;
+                if (cursor.record_count == 0U)
+                {
+                    move_cursor_to(cursor, 0);
+                }
+                else
+                {
+                    move_cursor_to(cursor, static_cast<long long>(std::min<std::size_t>(cursor.recno == 0U ? 1U : cursor.recno, cursor.record_count)));
+                }
+            }
+        }
+
+        bool rollback_active_transaction_journal()
+        {
+            auto found = transaction_journal_by_session.find(current_data_session);
+            if (found == transaction_journal_by_session.end())
+            {
+                return true;
+            }
+
+            if (!replay_transaction_journal_state(found->second))
+            {
+                last_error_message = "Failed to replay transaction journal";
+                return false;
+            }
+
+            transaction_journal_by_session.erase(found);
+            refresh_local_cursors_after_transaction_replay();
+            return true;
+        }
+
+        void commit_active_transaction_journal()
+        {
+            auto found = transaction_journal_by_session.find(current_data_session);
+            if (found == transaction_journal_by_session.end())
+            {
+                return;
+            }
+
+            std::error_code ignored;
+            std::filesystem::remove_all(found->second.root_path, ignored);
+            transaction_journal_by_session.erase(found);
+        }
+
         std::map<int, RegisteredApiFunction> &current_registered_api_functions()
         {
             auto [iterator, _] = registered_api_functions_by_session.try_emplace(current_data_session);

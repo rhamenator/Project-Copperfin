@@ -258,6 +258,21 @@ namespace copperfin::runtime
             std::vector<PrgValue> values;
         };
 
+        struct TransactionJournalFileEntry
+        {
+            std::string original_path;
+            std::string backup_path;
+            bool existed_at_start = false;
+        };
+
+        struct TransactionJournalState
+        {
+            int level = 0;
+            std::filesystem::path root_path;
+            std::filesystem::path journal_path;
+            std::map<std::string, TransactionJournalFileEntry> tracked_files;
+        };
+
 #include "prg_engine_free_functions.inl"
     } // namespace
 
@@ -295,6 +310,7 @@ namespace copperfin::runtime
         std::map<int, int> next_sql_handle_by_session;
         std::map<int, int> next_api_handle_by_session;
         std::map<int, int> transaction_level_by_session;
+        std::map<int, TransactionJournalState> transaction_journal_by_session;
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;
@@ -1106,6 +1122,7 @@ namespace copperfin::runtime
                                           ";max_executed_statements=" + std::to_string(impl->max_executed_statements) +
                                           ";max_loop_iterations=" + std::to_string(impl->max_loop_iterations),
                                 .location = {}});
+        impl->replay_pending_transaction_journals();
         impl->push_main_frame(effective.startup_path);
         impl->entry_pause_pending = effective.stop_on_entry;
         return PrgRuntimeSession(std::move(impl));

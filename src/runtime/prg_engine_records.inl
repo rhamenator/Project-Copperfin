@@ -330,6 +330,10 @@
                 last_error_message = "REPLACE requires a current local record";
                 return false;
             }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
+                return false;
+            }
 
             for (const auto &assignment : assignments)
             {
@@ -710,6 +714,10 @@
                 last_error_message = "APPEND BLANK requires a local table-backed cursor";
                 return false;
             }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
+                return false;
+            }
 
             const auto result = vfp::append_blank_record_to_file(cursor.source_path);
             if (!result.ok)
@@ -770,6 +778,10 @@
             if (cursor.source_path.empty())
             {
                 last_error_message = "This command requires a local table-backed cursor";
+                return false;
+            }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
                 return false;
             }
 
@@ -866,6 +878,10 @@
             {
                 return false;
             }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
+                return false;
+            }
 
             const auto result = vfp::pack_dbf_table_file(cursor.source_path);
             if (!result.ok)
@@ -897,6 +913,10 @@
                 return false;
             }
             if (!ensure_exclusive_table_maintenance(cursor, "ZAP"))
+            {
+                return false;
+            }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
             {
                 return false;
             }

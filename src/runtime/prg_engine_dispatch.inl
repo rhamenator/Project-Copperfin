@@ -719,11 +719,36 @@
                                   .location = statement.location});
                 return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
             case StatementKind::clear_events:
+            {
                 waiting_for_events = false;
+                restore_event_loop_after_dispatch = false;
+                events.push_back({.category = "runtime.event_loop",
+                                  .detail = "CLEAR EVENTS",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::begin_transaction:
             {
                 int &level = current_transaction_level();
+                const bool opening_root_transaction = level == 0;
                 ++level;
+                if (opening_root_transaction)
+                {
+                    if (!begin_transaction_journal_if_needed() || !sync_transaction_journal_level())
+                    {
+                        --level;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                }
+                else if (!sync_transaction_journal_level())
+                {
+                    --level;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 events.push_back({.category = "runtime.transaction.begin",
                                   .detail = std::to_string(level),
                                   .location = statement.location});
@@ -736,6 +761,17 @@
                 {
                     --level;
                 }
+                if (level == 0)
+                {
+                    commit_active_transaction_journal();
+                }
+                else if (!sync_transaction_journal_level())
+                {
+                    ++level;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 events.push_back({.category = "runtime.transaction.end",
                                   .detail = std::to_string(level),
                                   .location = statement.location});
@@ -744,17 +780,18 @@
             case StatementKind::rollback_transaction:
             {
                 int &level = current_transaction_level();
+                if (level > 0 && !rollback_active_transaction_journal())
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 level = 0;
                 events.push_back({.category = "runtime.transaction.rollback",
                                   .detail = "0",
                                   .location = statement.location});
                 return {};
             }
-                restore_event_loop_after_dispatch = false;
-                events.push_back({.category = "runtime.event_loop",
-                                  .detail = "CLEAR EVENTS",
-                                  .location = statement.location});
-                return {};
             case StatementKind::doevents_command:
                 // DOEVENTS: Pump pending event queue without blocking indefinitely.
                 // In a GUI app, this allows UI responsiveness during long operations.
