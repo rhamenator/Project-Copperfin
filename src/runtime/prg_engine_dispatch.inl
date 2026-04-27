@@ -63,11 +63,9 @@
                 detail += "'";
             };
 
-            switch (statement.kind)
+            auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
             {
-            case StatementKind::assignment:
-            {
-                std::string assignment_identifier = apply_with_context(statement.identifier, frame);
+                std::string assignment_identifier = apply_with_context(raw_identifier, frame);
                 if (!assignment_identifier.empty() && assignment_identifier.front() == '&')
                 {
                     const PrgValue expanded_identifier = evaluate_expression(assignment_identifier, frame);
@@ -77,7 +75,6 @@
                         assignment_identifier = expanded_text;
                     }
                 }
-                const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
                 if (assign_array_element(assignment_identifier, frame, assignment_value))
                 {
                     return {};
@@ -119,6 +116,14 @@
                     assign_variable(frame, assignment_identifier, assignment_value);
                 }
                 return {};
+            };
+
+            switch (statement.kind)
+            {
+            case StatementKind::assignment:
+            {
+                const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
+                return assign_runtime_target_value(statement.identifier, assignment_value);
             }
             case StatementKind::expression:
                 if (!statement.expression.empty())
@@ -1299,6 +1304,12 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     const auto pack_result = vfp::pack_dbf_memo_file(cursor->source_path);
                     if (!pack_result.ok)
                     {
@@ -2079,7 +2090,11 @@
                 const PrgValue result = evaluate_expression(statement.expression, frame);
                 for (const auto &name : statement.names)
                 {
-                    assign_variable(frame, trim_copy(name), result);
+                    ExecutionOutcome outcome = assign_runtime_target_value(trim_copy(name), result);
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
                 }
                 return {};
             }
@@ -2226,6 +2241,13 @@
                     }
                 }
 
+                if (!ensure_transaction_backup_for_table(table_path.string()))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
                 if (!create_result.ok)
                 {
@@ -2285,6 +2307,13 @@
                 if (fields.empty())
                 {
                     last_error_message = "CREATE TABLE requires at least one supported field declaration";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                if (!ensure_transaction_backup_for_table(table_path.string()))
+                {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2352,6 +2381,13 @@
                     table_path = std::filesystem::path(current_default_directory()) / table_path;
                 }
                 table_path = table_path.lexically_normal();
+
+                if (!ensure_transaction_backup_for_table(table_path.string()))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
 
                 vfp::DbfWriteResult add_result;
                 std::optional<TableFieldDeclaration> declaration;
@@ -3097,6 +3133,12 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     const std::size_t num_rows = array_length(array_name, 1);
                     const std::size_t num_cols = std::max<std::size_t>(1U, array_length(array_name, 2));
                     std::size_t appended_count = 0U;
@@ -3220,6 +3262,12 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
 
                     std::size_t appended_count = 0U;
                     for (const std::string &line : split_sdf_lines(buffer.str()))
@@ -3304,6 +3352,12 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
 
                     const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     std::size_t appended_count = 0U;
@@ -3382,6 +3436,12 @@
                 }
 
                 // Append each qualifying source record into the destination cursor
+                if (!ensure_transaction_backup_for_table(cursor->source_path))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 std::size_t appended_count = 0U;
                 for (const auto &src_rec : src_result.table.records)
                 {
@@ -3529,6 +3589,12 @@
                                       .detail = use_memvar ? "memvar skipped" : statement.expression + " skipped",
                                       .location = statement.location});
                     return {};
+                }
+                if (!cursor->remote && !ensure_transaction_backup_for_table(cursor->source_path))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);

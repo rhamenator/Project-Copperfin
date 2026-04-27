@@ -544,6 +544,63 @@ void test_macro_expanded_array_helpers_and_access() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_store_uses_assignment_target_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_store_targets";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "store_targets.prg";
+    write_text(
+        main_path,
+        "DIMENSION aVals[3]\n"
+        "cMacroTarget = 'aVals[2]'\n"
+        "STORE 5 TO aVals[1]\n"
+        "STORE 6 TO &cMacroTarget\n"
+        "STORE 7 TO nScalar, aVals[3]\n"
+        "nOne = aVals[1]\n"
+        "nTwo = aVals[2]\n"
+        "nThree = aVals[3]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "STORE target semantics script should complete");
+
+    const auto scalar = state.globals.find("nscalar");
+    const auto one = state.globals.find("none");
+    const auto two = state.globals.find("ntwo");
+    const auto three = state.globals.find("nthree");
+    expect(scalar != state.globals.end(), "STORE should still assign scalar targets");
+    expect(one != state.globals.end(), "STORE should assign direct array element targets");
+    expect(two != state.globals.end(), "STORE should assign macro-expanded array element targets");
+    expect(three != state.globals.end(), "STORE should assign mixed scalar/array targets");
+    if (scalar != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scalar->second) == "7",
+            "STORE should assign scalar targets through the shared assignment path");
+    }
+    if (one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(one->second) == "5",
+            "STORE should assign direct array element targets");
+    }
+    if (two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(two->second) == "6",
+            "STORE should assign macro-expanded array element targets");
+    }
+    if (three != state.globals.end()) {
+        expect(copperfin::runtime::format_value(three->second) == "7",
+            "STORE should assign array targets alongside scalar targets");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -552,6 +609,7 @@ int main() {
     test_array_dimension_and_element_assignment();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
+    test_store_uses_assignment_target_semantics();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

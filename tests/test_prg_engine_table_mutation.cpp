@@ -853,6 +853,102 @@ void test_rollback_transaction_replays_local_dbf_changes() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_rollback_transaction_replays_append_from_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_append_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "rollback_append_array.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "DIMENSION aRows[1,2]\n"
+        "aRows[1,1] = 'TEMP'\n"
+        "aRows[1,2] = 99\n"
+        "BEGIN TRANSACTION\n"
+        "APPEND FROM ARRAY aRows\n"
+        "ROLLBACK\n"
+        "nCount = RECCOUNT()\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY rollback script should complete");
+
+    const auto count = state.globals.find("ncount");
+    const auto first = state.globals.find("cfirst");
+    expect(count != state.globals.end(), "APPEND FROM ARRAY rollback should capture record count");
+    expect(first != state.globals.end(), "APPEND FROM ARRAY rollback should capture first record");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1", "ROLLBACK should remove APPEND FROM ARRAY rows");
+    }
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA", "ROLLBACK should preserve original row after APPEND FROM ARRAY");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "APPEND FROM ARRAY rollback should leave DBF readable");
+    expect(parse_result.table.records.size() == 1U, "APPEND FROM ARRAY rollback should restore original row count on disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_rollback_transaction_removes_created_table_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_create_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "created_txn.dbf";
+    const fs::path main_path = temp_root / "rollback_create_table.prg";
+    write_text(
+        main_path,
+        "BEGIN TRANSACTION\n"
+        "CREATE TABLE '" + table_path.string() + "' (NAME C(10), AGE N(3))\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'TEMP', AGE WITH 42\n"
+        "ROLLBACK\n"
+        "lUsedAfter = USED('created_txn')\n"
+        "lFileAfter = FILE('" + table_path.string() + "')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CREATE TABLE rollback script should complete");
+
+    const auto used_after = state.globals.find("lusedafter");
+    const auto file_after = state.globals.find("lfileafter");
+    expect(used_after != state.globals.end(), "CREATE TABLE rollback should capture USED()");
+    expect(file_after != state.globals.end(), "CREATE TABLE rollback should capture FILE()");
+    if (used_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used_after->second) == "false", "ROLLBACK should close a cursor whose created table was removed");
+    }
+    if (file_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(file_after->second) == "false", "ROLLBACK should remove a table created inside the transaction");
+    }
+    expect(!fs::exists(table_path), "CREATE TABLE rollback should remove the DBF from disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_replays_pending_transaction_journal() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_replay";
@@ -940,6 +1036,8 @@ int main() {
     test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
     test_update_command_sets_scoped_records();
     test_rollback_transaction_replays_local_dbf_changes();
+    test_rollback_transaction_replays_append_from_array();
+    test_rollback_transaction_removes_created_table_cursor();
     test_startup_replays_pending_transaction_journal();
 
     if (test_failures() != 0) {

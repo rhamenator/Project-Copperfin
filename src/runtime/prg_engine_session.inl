@@ -573,16 +573,25 @@
         void refresh_local_cursors_after_transaction_replay()
         {
             DataSessionState &session = current_session_state();
-            for (auto &[_, cursor] : session.cursors)
+            std::vector<int> closed_areas;
+            for (auto &[area, cursor] : session.cursors)
             {
                 if (cursor.remote || cursor.source_path.empty())
                 {
                     continue;
                 }
 
+                std::error_code ignored;
+                if (!std::filesystem::exists(cursor.source_path, ignored))
+                {
+                    closed_areas.push_back(area);
+                    continue;
+                }
+
                 const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
                 if (!table_result.ok)
                 {
+                    closed_areas.push_back(area);
                     continue;
                 }
 
@@ -597,6 +606,15 @@
                 {
                     move_cursor_to(cursor, static_cast<long long>(std::min<std::size_t>(cursor.recno == 0U ? 1U : cursor.recno, cursor.record_count)));
                 }
+            }
+
+            for (const int area : closed_areas)
+            {
+                session.aliases.erase(area);
+                session.table_locks.erase(area);
+                session.record_locks.erase(area);
+                session.cursors.erase(area);
+                session.next_work_area = std::min(session.next_work_area, area);
             }
         }
 
