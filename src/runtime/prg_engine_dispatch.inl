@@ -720,6 +720,36 @@
                 return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
             case StatementKind::clear_events:
                 waiting_for_events = false;
+            case StatementKind::begin_transaction:
+            {
+                int &level = current_transaction_level();
+                ++level;
+                events.push_back({.category = "runtime.transaction.begin",
+                                  .detail = std::to_string(level),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::end_transaction:
+            {
+                int &level = current_transaction_level();
+                if (level > 0)
+                {
+                    --level;
+                }
+                events.push_back({.category = "runtime.transaction.end",
+                                  .detail = std::to_string(level),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::rollback_transaction:
+            {
+                int &level = current_transaction_level();
+                level = 0;
+                events.push_back({.category = "runtime.transaction.rollback",
+                                  .detail = "0",
+                                  .location = statement.location});
+                return {};
+            }
                 restore_event_loop_after_dispatch = false;
                 events.push_back({.category = "runtime.event_loop",
                                   .detail = "CLEAR EVENTS",

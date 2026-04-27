@@ -1225,6 +1225,99 @@ void test_set_state_variables_talk_safety_escape() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_transaction_processing_txnlevel_and_sessions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "test_transactions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path prg_path = temp_root / "transactions_test.prg";
+    write_text(
+        prg_path,
+        "nTxnStart = TXNLEVEL()\n"
+        "BEGIN TRANSACTION\n"
+        "nTxnAfterBegin1 = TXNLEVEL()\n"
+        "BEGIN TRANSACTION\n"
+        "nTxnAfterBegin2 = TXNLEVEL()\n"
+        "END TRANSACTION\n"
+        "nTxnAfterEnd = TXNLEVEL()\n"
+        "ROLLBACK\n"
+        "nTxnAfterRollback = TXNLEVEL()\n"
+        "SET DATASESSION TO 2\n"
+        "nTxnSession2 = TXNLEVEL()\n"
+        "BEGIN TRANSACTION\n"
+        "nTxnSession2AfterBegin = TXNLEVEL()\n"
+        "SET DATASESSION TO 1\n"
+        "nTxnRestoredSession1 = TXNLEVEL()\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = prg_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "transactions_test script should complete");
+
+    const auto txn_start = state.globals.find("ntxnstart");
+    const auto txn_after_begin_1 = state.globals.find("ntxnafterbegin1");
+    const auto txn_after_begin_2 = state.globals.find("ntxnafterbegin2");
+    const auto txn_after_end = state.globals.find("ntxnafterend");
+    const auto txn_after_rollback = state.globals.find("ntxnafterrollback");
+    const auto txn_session2 = state.globals.find("ntxnsession2");
+    const auto txn_session2_after_begin = state.globals.find("ntxnsession2afterbegin");
+    const auto txn_restored_session1 = state.globals.find("ntxnrestoredsession1");
+
+    expect(txn_start != state.globals.end(), "TXNLEVEL() at start should be captured");
+    expect(txn_after_begin_1 != state.globals.end(), "TXNLEVEL() after first BEGIN TRANSACTION should be captured");
+    expect(txn_after_begin_2 != state.globals.end(), "TXNLEVEL() after second BEGIN TRANSACTION should be captured");
+    expect(txn_after_end != state.globals.end(), "TXNLEVEL() after END TRANSACTION should be captured");
+    expect(txn_after_rollback != state.globals.end(), "TXNLEVEL() after ROLLBACK should be captured");
+    expect(txn_session2 != state.globals.end(), "TXNLEVEL() in session 2 should be captured");
+    expect(txn_session2_after_begin != state.globals.end(), "TXNLEVEL() after BEGIN TRANSACTION in session 2 should be captured");
+    expect(txn_restored_session1 != state.globals.end(), "TXNLEVEL() after restoring session 1 should be captured");
+
+    if (txn_start != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_start->second) == "0", "TXNLEVEL() should start at 0");
+    }
+    if (txn_after_begin_1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_after_begin_1->second) == "1", "first BEGIN TRANSACTION should raise TXNLEVEL() to 1");
+    }
+    if (txn_after_begin_2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_after_begin_2->second) == "2", "second BEGIN TRANSACTION should raise TXNLEVEL() to 2");
+    }
+    if (txn_after_end != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_after_end->second) == "1", "END TRANSACTION should decrement TXNLEVEL() by one");
+    }
+    if (txn_after_rollback != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_after_rollback->second) == "0", "ROLLBACK should reset TXNLEVEL() to 0");
+    }
+    if (txn_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_session2->second) == "0", "a fresh data session should start with TXNLEVEL() == 0");
+    }
+    if (txn_session2_after_begin != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_session2_after_begin->second) == "1", "BEGIN TRANSACTION in session 2 should affect only session 2");
+    }
+    if (txn_restored_session1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(txn_restored_session1->second) == "0", "restoring session 1 should restore session 1 TXNLEVEL() state");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.begin";
+    }), "BEGIN TRANSACTION should emit runtime.transaction.begin events");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.end";
+    }), "END TRANSACTION should emit runtime.transaction.end events");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.rollback";
+    }), "ROLLBACK should emit runtime.transaction.rollback events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1245,6 +1338,7 @@ int main() {
     test_sql_prepare_and_connection_properties();
     test_set_state_variables_strictdate_enginebehavior_optimize();
     test_set_state_variables_talk_safety_escape();
+    test_transaction_processing_txnlevel_and_sessions();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

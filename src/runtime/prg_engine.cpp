@@ -294,6 +294,7 @@ namespace copperfin::runtime
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
         std::map<int, int> next_api_handle_by_session;
+        std::map<int, int> transaction_level_by_session;
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;
@@ -635,6 +636,10 @@ namespace copperfin::runtime
                     const auto found_memowidth = memowidth_by_session.find(current_data_session);
                     const std::size_t memo_width = found_memowidth != memowidth_by_session.end() ? found_memowidth->second : 50U;
                     return std::to_string(memo_width);
+                }
+                if (normalized_name == "txnlevel")
+                {
+                    return std::to_string(current_transaction_level());
                 }
                 if (normalized_name == "fields")
                 {

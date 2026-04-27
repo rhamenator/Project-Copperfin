@@ -806,6 +806,18 @@
                     const std::string env_key = value_as_string(arguments[0]);
                     return make_string_value(get_environment_variable_value(env_key).value_or(std::string{}));
                 }
+                if (function == "txnlevel")
+                {
+                    const std::string level_text = trim_copy(set_callback_("TXNLEVEL"));
+                    try
+                    {
+                        return make_number_value(std::stod(level_text.empty() ? "0" : level_text));
+                    }
+                    catch (...)
+                    {
+                        return make_number_value(0.0);
+                    }
+                }
                 if (const auto path_result = evaluate_path_function(function, arguments, default_directory_))
                 {
                     return *path_result;

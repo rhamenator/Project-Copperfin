@@ -315,6 +315,12 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {
             statement.kind = StatementKind::clear_events;
+        } else if (upper == "BEGIN TRANSACTION") {
+            statement.kind = StatementKind::begin_transaction;
+        } else if (upper == "END TRANSACTION") {
+            statement.kind = StatementKind::end_transaction;
+        } else if (upper == "ROLLBACK" || upper == "ROLLBACK TRANSACTION") {
+            statement.kind = StatementKind::rollback_transaction;
         } else if (upper == "DOEVENTS") {
             statement.kind = StatementKind::doevents_command;
         } else if (starts_with_insensitive(line, "LPARAMETERS ")) {

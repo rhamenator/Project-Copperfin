@@ -145,6 +145,24 @@
             return iterator->second;
         }
 
+        int &current_transaction_level()
+        {
+            auto [iterator, _] = transaction_level_by_session.try_emplace(current_data_session, 0);
+            iterator->second = std::max(0, iterator->second);
+            return iterator->second;
+        }
+
+        int current_transaction_level() const
+        {
+            const auto found = transaction_level_by_session.find(current_data_session);
+            if (found != transaction_level_by_session.end())
+            {
+                return std::max(0, found->second);
+            }
+
+            return 0;
+        }
+
         std::map<int, RegisteredApiFunction> &current_registered_api_functions()
         {
             auto [iterator, _] = registered_api_functions_by_session.try_emplace(current_data_session);
