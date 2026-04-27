@@ -3158,6 +3158,64 @@
                 }
                 return {};
             }
+            case StatementKind::edit_command:
+            {
+                std::string detail;
+                if (!statement.expression.empty())
+                {
+                    detail += "memo=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.edit",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::change_command:
+            {
+                std::string detail;
+                if (!statement.expression.empty())
+                {
+                    detail += "fields=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.change",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::input_command:
+            {
+                std::string detail;
+                if (!statement.expression.empty())
+                {
+                    detail += "prompt=" + statement.expression;
+                }
+                if (!statement.identifier.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.identifier;
+                }
+                events.push_back({.category = "runtime.input",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::accept_command:
+            {
+                std::string detail;
+                if (!statement.expression.empty())
+                {
+                    detail += "prompt=" + statement.expression;
+                }
+                if (!statement.identifier.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.identifier;
+                }
+                events.push_back({.category = "runtime.accept",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::no_op:
                 return {};
             case StatementKind::for_each_statement:

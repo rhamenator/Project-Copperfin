@@ -554,6 +554,40 @@ Program parse_program(const std::string& path) {
             statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
             statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "IN"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
+        } else if (upper == "EDIT" || starts_with_insensitive(line, "EDIT ")) {
+            statement.kind = StatementKind::edit_command;
+            const std::string body = upper == "EDIT" ? std::string{} : trim_copy(line.substr(5U));
+            statement.expression = extract_command_clause(body, "MEMO", {});
+        } else if (upper == "CHANGE" || starts_with_insensitive(line, "CHANGE ")) {
+            statement.kind = StatementKind::change_command;
+            const std::string body = upper == "CHANGE" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = extract_command_clause(body, "FIELD", {});
+        } else if (starts_with_insensitive(line, "INPUT ") || upper == "INPUT") {
+            statement.kind = StatementKind::input_command;
+            const std::string body = upper == "INPUT" ? std::string{} : trim_copy(line.substr(6U));
+            // Body: ["<prompt>"] TO <var>
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string prompt_part = trim_copy(body.substr(0U, to_pos));
+                const std::string var_part = trim_copy(body.substr(to_pos + 2U));
+                statement.expression = prompt_part;
+                statement.identifier = var_part;
+            } else {
+                statement.identifier = trim_copy(body);
+            }
+        } else if (starts_with_insensitive(line, "ACCEPT ") || upper == "ACCEPT") {
+            statement.kind = StatementKind::accept_command;
+            const std::string body = upper == "ACCEPT" ? std::string{} : trim_copy(line.substr(7U));
+            // Body: ["<prompt>"] TO <var>
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string prompt_part = trim_copy(body.substr(0U, to_pos));
+                const std::string var_part = trim_copy(body.substr(to_pos + 2U));
+                statement.expression = prompt_part;
+                statement.identifier = var_part;
+            } else {
+                statement.identifier = trim_copy(body);
+            }
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;
             statement.expression = trim_copy(line.substr(7U));

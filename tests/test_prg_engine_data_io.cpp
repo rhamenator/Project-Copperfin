@@ -1329,6 +1329,170 @@ void test_browse_emits_effective_cursor_view_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_edit_command_emits_runtime_edit_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_edit_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "edit_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "EDIT\n"
+        "EDIT MEMO notes\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "EDIT script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> edit_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.edit") {
+            edit_events.push_back(event);
+        }
+    }
+
+    expect(edit_events.size() == 2U, "EDIT commands should emit two runtime.edit events");
+    if (edit_events.size() >= 2U) {
+        expect(edit_events[1].detail.find("memo=notes") != std::string::npos,
+            "EDIT MEMO should record the memo field name");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_change_command_emits_runtime_change_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_change_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "change_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "CHANGE\n"
+        "CHANGE FIELD NAME,AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CHANGE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> change_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.change") {
+            change_events.push_back(event);
+        }
+    }
+
+    expect(change_events.size() == 2U, "CHANGE commands should emit two runtime.change events");
+    if (change_events.size() >= 2U) {
+        expect(change_events[1].detail.find("fields=NAME,AGE") != std::string::npos,
+            "CHANGE FIELD should record the field list");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_input_command_emits_runtime_input_event_with_prompt() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_input_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "input_test.prg";
+    write_text(
+        main_path,
+        "INPUT \"Enter a value: \" TO myvar\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "INPUT script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> input_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.input") {
+            input_events.push_back(event);
+        }
+    }
+
+    expect(input_events.size() == 1U, "INPUT command should emit one runtime.input event");
+    if (input_events.size() >= 1U) {
+        expect(input_events[0].detail.find("prompt=") != std::string::npos,
+            "INPUT event should include the prompt field");
+        expect(input_events[0].detail.find("target=myvar") != std::string::npos,
+            "INPUT event should include the target variable name");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_accept_command_emits_runtime_accept_event_with_prompt() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_accept_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "accept_test.prg";
+    write_text(
+        main_path,
+        "ACCEPT \"Enter your name: \" TO username\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ACCEPT script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> accept_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.accept") {
+            accept_events.push_back(event);
+        }
+    }
+
+    expect(accept_events.size() == 1U, "ACCEPT command should emit one runtime.accept event");
+    if (accept_events.size() >= 1U) {
+        expect(accept_events[0].detail.find("prompt=") != std::string::npos,
+            "ACCEPT event should include the prompt field");
+        expect(accept_events[0].detail.find("target=username") != std::string::npos,
+            "ACCEPT event should include the target variable name");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1349,6 +1513,10 @@ int main() {
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();
+    test_edit_command_emits_runtime_edit_event();
+    test_change_command_emits_runtime_change_event();
+    test_input_command_emits_runtime_input_event_with_prompt();
+    test_accept_command_emits_runtime_accept_event_with_prompt();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

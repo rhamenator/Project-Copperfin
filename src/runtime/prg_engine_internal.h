@@ -105,6 +105,10 @@ enum class StatementKind {
     quit_statement,
     doevents_command,
     on_shutdown_statement,
+    edit_command,
+    change_command,
+    input_command,
+    accept_command,
     no_op
 };
 
