@@ -822,6 +822,17 @@
             return true;
         }
 
+        bool ensure_exclusive_table_maintenance(const CursorState &cursor, const std::string &command_name)
+        {
+            if (cursor.remote || cursor.exclusive)
+            {
+                return true;
+            }
+
+            last_error_message = command_name + " requires exclusive use of the target cursor";
+            return false;
+        }
+
         bool pack_cursor(CursorState &cursor)
         {
             const std::size_t original_recno = cursor.recno;
@@ -849,6 +860,10 @@
             if (cursor.source_path.empty())
             {
                 last_error_message = "PACK requires a local table-backed cursor";
+                return false;
+            }
+            if (!ensure_exclusive_table_maintenance(cursor, "PACK"))
+            {
                 return false;
             }
 
@@ -879,6 +894,10 @@
             if (cursor.source_path.empty())
             {
                 last_error_message = "ZAP requires a local table-backed cursor";
+                return false;
+            }
+            if (!ensure_exclusive_table_maintenance(cursor, "ZAP"))
+            {
                 return false;
             }
 

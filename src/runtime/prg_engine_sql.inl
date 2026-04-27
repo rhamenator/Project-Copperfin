@@ -11,7 +11,8 @@
             int sql_handle,
             const std::string &sql_command,
             std::size_t synthetic_record_count,
-            const std::map<std::string, CursorState::FieldRule> &field_rules = {})
+            const std::map<std::string, CursorState::FieldRule> &field_rules = {},
+            std::optional<bool> exclusive_override = std::nullopt)
         {
             (void)sql_command;
             std::string alias = requested_alias;
@@ -19,6 +20,7 @@
             std::string dbf_identity;
             std::size_t field_count = 0;
             std::size_t record_count = synthetic_record_count;
+            const bool exclusive_open = remote ? false : exclusive_override.value_or(is_set_enabled_or_default("exclusive", true));
 
             if (!remote)
             {
@@ -83,6 +85,7 @@
                 cursor.source_path = resolved_path;
                 cursor.dbf_identity = dbf_identity;
                 cursor.source_kind = "table";
+                cursor.exclusive = exclusive_open;
                 cursor.field_count = field_count;
                 cursor.record_count = record_count;
                 cursor.record_length = record_length;
@@ -141,6 +144,7 @@
             cursor.dbf_identity = dbf_identity;
             cursor.source_kind = remote ? "sql-cursor" : "table";
             cursor.remote = remote;
+            cursor.exclusive = exclusive_open;
             cursor.field_count = field_count;
             cursor.record_count = record_count;
             cursor.recno = record_count == 0U ? 0U : 1U;
@@ -397,4 +401,3 @@
             }
             return &found->second;
         }
-

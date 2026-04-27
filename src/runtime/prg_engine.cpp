@@ -170,6 +170,7 @@ namespace copperfin::runtime
             std::string dbf_identity;
             std::string source_kind;
             bool remote = false;
+            bool exclusive = false;
             std::size_t field_count = 0;
             std::size_t record_count = 0;
             std::size_t record_length = 0;
@@ -657,6 +658,10 @@ namespace copperfin::runtime
                         return std::string("24");
                     }
                     if (normalized_name == "seconds")
+                    {
+                        return std::string("ON");
+                    }
+                    if (normalized_name == "exclusive")
                     {
                         return std::string("ON");
                     }

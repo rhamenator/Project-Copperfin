@@ -546,6 +546,11 @@ Program parse_program(const std::string& path) {
                 statement.identifier = take_keyword_value(body, "ALIAS");
                 statement.secondary_expression = take_keyword_value(body, "IN");
                 statement.tertiary_expression = has_keyword(body, "AGAIN") ? "again" : std::string{};
+                if (has_keyword(body, "EXCLUSIVE")) {
+                    statement.quaternary_expression = "exclusive";
+                } else if (has_keyword(body, "SHARED")) {
+                    statement.quaternary_expression = "shared";
+                }
             }
         } else if (starts_with_insensitive(line, "SET DATASESSION TO ")) {
             statement.kind = StatementKind::set_datasession;

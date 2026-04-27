@@ -302,6 +302,92 @@ void test_zap_truncates_local_table_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_exclusive_controls_table_maintenance_guards() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_exclusive_maintenance";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path shared_path = temp_root / "shared_people.dbf";
+    write_people_dbf(shared_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path shared_prg = temp_root / "shared_pack.prg";
+    write_text(
+        shared_prg,
+        "cDefaultExclusive = SET('EXCLUSIVE')\n"
+        "SET EXCLUSIVE OFF\n"
+        "cOffExclusive = SET('EXCLUSIVE')\n"
+        "USE '" + shared_path.string() + "' ALIAS People SHARED IN 0\n"
+        "DELETE FOR NAME = 'BRAVO'\n"
+        "PACK\n"
+        "xAfterPack = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession shared_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = shared_prg.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto shared_state = shared_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(shared_state.reason == copperfin::runtime::DebugPauseReason::error, "PACK on a shared local cursor should pause with an error");
+    expect(shared_state.message.find("exclusive use") != std::string::npos, "PACK shared-cursor failure should mention exclusive use");
+    expect(shared_state.globals.find("xafterpack") == shared_state.globals.end(), "PACK shared-cursor failure should stop before later statements");
+
+    const auto default_exclusive = shared_state.globals.find("cdefaultexclusive");
+    const auto off_exclusive = shared_state.globals.find("coffexclusive");
+    expect(default_exclusive != shared_state.globals.end(), "SET('EXCLUSIVE') default should be captured");
+    expect(off_exclusive != shared_state.globals.end(), "SET('EXCLUSIVE') after OFF should be captured");
+    if (default_exclusive != shared_state.globals.end()) {
+        expect(copperfin::runtime::format_value(default_exclusive->second) == "ON", "SET('EXCLUSIVE') should default to ON");
+    }
+    if (off_exclusive != shared_state.globals.end()) {
+        expect(copperfin::runtime::format_value(off_exclusive->second) == "OFF", "SET EXCLUSIVE OFF should update SET('EXCLUSIVE')");
+    }
+
+    const auto shared_parse = copperfin::vfp::parse_dbf_table_from_file(shared_path.string(), 5U);
+    expect(shared_parse.ok, "shared PACK failure should leave the DBF readable");
+    expect(shared_parse.table.records.size() == 3U, "shared PACK failure should not compact the DBF");
+
+    const fs::path exclusive_path = temp_root / "exclusive_people.dbf";
+    write_people_dbf(exclusive_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path exclusive_prg = temp_root / "exclusive_pack.prg";
+    write_text(
+        exclusive_prg,
+        "SET EXCLUSIVE OFF\n"
+        "USE '" + exclusive_path.string() + "' ALIAS People EXCLUSIVE IN 0\n"
+        "DELETE FOR NAME = 'BRAVO'\n"
+        "PACK\n"
+        "SET EXCLUSIVE ON\n"
+        "cOnExclusive = SET('EXCLUSIVE')\n"
+        "nAfterPack = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession exclusive_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = exclusive_prg.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto exclusive_state = exclusive_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(exclusive_state.completed, "USE ... EXCLUSIVE should allow local PACK even when SET EXCLUSIVE is OFF");
+
+    const auto on_exclusive = exclusive_state.globals.find("conexclusive");
+    const auto after_pack = exclusive_state.globals.find("nafterpack");
+    expect(on_exclusive != exclusive_state.globals.end(), "SET('EXCLUSIVE') after ON should be captured");
+    expect(after_pack != exclusive_state.globals.end(), "exclusive PACK should expose updated RECCOUNT()");
+    if (on_exclusive != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(on_exclusive->second) == "ON", "SET EXCLUSIVE ON should update SET('EXCLUSIVE')");
+    }
+    if (after_pack != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_pack->second) == "2", "exclusive PACK should compact deleted local rows");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_and_delete_from_local_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
@@ -623,6 +709,7 @@ int main() {
     test_replace_for_updates_all_matching_records();
     test_pack_compacts_deleted_local_records();
     test_zap_truncates_local_table_records();
+    test_set_exclusive_controls_table_maintenance_guards();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();

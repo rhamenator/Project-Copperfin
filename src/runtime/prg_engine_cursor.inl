@@ -527,6 +527,25 @@
                          normalized_value != ".f." && normalized_value != "no" && normalized_value != "n";
         }
 
+        bool is_set_enabled_or_default(const std::string &option_name, bool default_value) const
+        {
+            const auto session_found = set_state_by_session.find(current_data_session);
+            if (session_found == set_state_by_session.end())
+            {
+                return default_value;
+            }
+
+            const auto found = session_found->second.find(normalize_identifier(option_name));
+            if (found == session_found->second.end())
+            {
+                return default_value;
+            }
+
+            const std::string normalized_value = normalize_identifier(found->second);
+            return normalized_value != "off" && normalized_value != "false" && normalized_value != "0" &&
+                   normalized_value != ".f." && normalized_value != "no" && normalized_value != "n";
+        }
+
         std::map<std::string, std::string> &current_set_state()
         {
             auto [iterator, _] = set_state_by_session.try_emplace(current_data_session);
@@ -795,4 +814,3 @@
                 .active_order_key_domain_hint = cursor.active_order_key_domain_hint,
                 .active_order_descending = cursor.active_order_descending};
         }
-

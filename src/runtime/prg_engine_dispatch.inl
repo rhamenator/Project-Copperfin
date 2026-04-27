@@ -1069,6 +1069,12 @@
                                           .location = statement.location});
                         return {};
                     }
+                    if (!ensure_exclusive_table_maintenance(*cursor, "PACK MEMO"))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     const auto pack_result = vfp::pack_dbf_memo_file(cursor->source_path);
                     if (!pack_result.ok)
                     {
@@ -1268,12 +1274,22 @@
                     alias = unquote_string(statement.identifier);
                 }
                 const bool allow_again = normalize_identifier(statement.tertiary_expression) == "again";
+                std::optional<bool> exclusive_override;
+                const std::string open_mode = normalize_identifier(statement.quaternary_expression);
+                if (open_mode == "exclusive")
+                {
+                    exclusive_override = true;
+                }
+                else if (open_mode == "shared")
+                {
+                    exclusive_override = false;
+                }
                 std::string in_target = statement.secondary_expression;
                 if (allow_again && trim_copy(in_target).empty())
                 {
                     in_target = "0";
                 }
-                if (!open_table_cursor(target, alias, in_target, allow_again, false, 0, {}, 0U))
+                if (!open_table_cursor(target, alias, in_target, allow_again, false, 0, {}, 0U, {}, exclusive_override))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -1385,7 +1401,7 @@
                     if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
-                        normalized_name == "century" || normalized_name == "seconds")
+                        normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
                     }
