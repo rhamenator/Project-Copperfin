@@ -415,7 +415,13 @@ Program parse_program(const std::string& path) {
             } else if (starts_with_insensitive(line, "CALL ")) {
                 statement.kind = StatementKind::call_command;
                 const std::string body = trim_copy(line.substr(5U));
-                statement.identifier = body;
+                const std::size_t with_position = find_keyword_top_level(body, "WITH");
+                if (with_position == std::string::npos) {
+                    statement.identifier = body;
+                } else {
+                    statement.identifier = trim_copy(body.substr(0U, with_position));
+                    statement.expression = trim_copy(body.substr(with_position + 4U));
+                }
         } else if (upper == "READ EVENTS") {
             statement.kind = StatementKind::read_events;
         } else if (upper == "CLEAR EVENTS") {

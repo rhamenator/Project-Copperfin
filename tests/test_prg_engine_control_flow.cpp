@@ -1432,6 +1432,82 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_call_with_parameters_binds_arguments_in_called_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_with_parameters";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "call_with_parameters.prg";
+    write_text(
+        main_path,
+        "CALL addvals WITH 7, 8\n"
+        "RETURN\n"
+        "PROCEDURE addvals\n"
+        "LPARAMETERS a, b\n"
+        "sum_result = a + b\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CALL WITH LPARAMETERS script should complete");
+
+    const auto sum_result = state.globals.find("sum_result");
+    expect(sum_result != state.globals.end(), "CALL routine should assign sum_result");
+    if (sum_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum_result->second) == "15", "CALL WITH arguments should bind to LPARAMETERS");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_call_external_target_with_by_reference_updates_caller_variable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_external_byref";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path helper_path = temp_root / "helper.prg";
+    write_text(
+        helper_path,
+        "LPARAMETERS pcount\n"
+        "pcount = pcount + 5\n"
+        "RETURN\n");
+
+    const fs::path main_path = temp_root / "call_external_byref.prg";
+    write_text(
+        main_path,
+        "counter = 3\n"
+        "CALL helper WITH @counter\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CALL external WITH @var script should complete");
+
+    const auto counter = state.globals.find("counter");
+    expect(counter != state.globals.end(), "caller variable should exist after CALL external BYREF");
+    if (counter != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(counter->second) == "8",
+            "CALL external target should resolve .prg path and write BYREF updates back to caller");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_on_error_do_handler_dispatches_routine() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_on_error_do";
@@ -2870,6 +2946,8 @@ int main() {
     test_config_fpw_overrides_temp_directory_default();
     test_elseif_control_flow_executes_matching_branch();
     test_do_with_parameters_binds_arguments_in_called_routine();
+    test_call_with_parameters_binds_arguments_in_called_routine();
+    test_call_external_target_with_by_reference_updates_caller_variable();
     test_on_error_do_handler_dispatches_routine();
     test_on_error_do_with_handler_receives_error_metadata();
     test_aerror_populates_structured_runtime_error_array();

@@ -273,6 +273,32 @@
                             std::move(call_argument_references));
                         return {};
                     }
+
+                    std::filesystem::path target_path(target);
+                    if (target_path.extension().empty())
+                    {
+                        target_path += ".prg";
+                    }
+                    if (target_path.is_relative())
+                    {
+                        target_path = std::filesystem::path(current_default_directory()) / target_path;
+                    }
+                    if (std::filesystem::exists(target_path))
+                    {
+                        if (!can_push_frame())
+                        {
+                            last_error_message = call_depth_limit_message();
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        push_main_frame(
+                            target_path.string(),
+                            std::move(call_arguments),
+                            std::move(call_argument_references));
+                        return {};
+                    }
+
                     last_error_message = "Unable to resolve CALL target: " + target;
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;

@@ -15,6 +15,55 @@ namespace
 
     using namespace copperfin::test_support;
 
+    void test_macro_expression_indirection()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_macro_expression_indirection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "macro_expression_indirection.prg";
+        write_text(
+            main_path,
+            "x = 5\n"
+            "cExpr = 'x + 1'\n"
+            "cMacroName = 'cExpr'\n"
+            "cSelfRef = 'cSelfRef'\n"
+            "cFallbackExpr = 'plain text value'\n"
+            "nDirect = &cExpr\n"
+            "nIndirect = &cMacroName\n"
+            "cSelfResult = &cSelfRef\n"
+            "cFallback = &cFallbackExpr\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
+                                                                                                       .working_directory = temp_root.string(),
+                                                                                                       .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "macro expression indirection script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ndirect", "6");
+        check("nindirect", "6");
+        check("cselfresult", "cSelfRef");
+        check("cfallback", "plain text value");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_type_and_null_expression_functions()
     {
         namespace fs = std::filesystem;
@@ -98,12 +147,66 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_type_and_transform_expression_depth()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_type_transform_depth";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "type_transform_depth.prg";
+        write_text(
+            main_path,
+            "nValue = 42\n"
+            "DIMENSION aValues[2]\n"
+            "aValues[1] = 7\n"
+            "aValues[2] = ' spaced text ' \n"
+            "cTypeArray = TYPE('aValues')\n"
+            "cTypeArrayElement = TYPE('aValues[1]')\n"
+            "cTypeArrayElementParen = TYPE('(aValues[1])')\n"
+            "cTypeParenthesized = TYPE('(nValue + 1)')\n"
+            "cTransformBlankZero = TRANSFORM(0, '@Z 999.99')\n"
+            "cTransformLeftTrim = TRANSFORM('  padded text  ', '@B')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
+                                                                                                       .working_directory = temp_root.string(),
+                                                                                                       .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "type/transform depth script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ctypearray", "A");
+        check("ctypearrayelement", "N");
+        check("ctypearrayelementparen", "N");
+        check("ctypeparenthesized", "N");
+        check("ctransformblankzero", "");
+        check("ctransformlefttrim", "padded text");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 
 } // namespace
 
 int main()
 {
+    test_macro_expression_indirection();
     test_type_and_null_expression_functions();
+    test_type_and_transform_expression_depth();
 
     if (test_failures() != 0)
     {

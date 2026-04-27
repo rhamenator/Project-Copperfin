@@ -314,6 +314,34 @@ std::string apply_numeric_picture_symbols(
     return currency_picture ? currency + formatted : formatted;
 }
 
+bool picture_has_flag(const std::string& picture, const std::string& flag) {
+    return picture.find(flag) != std::string::npos;
+}
+
+bool is_zeroish_transform_value(const PrgValue& value) {
+    switch (value.kind) {
+        case PrgValueKind::number:
+            return std::abs(value.number_value) < 0.000001;
+        case PrgValueKind::int64:
+            return value.int64_value == 0;
+        case PrgValueKind::uint64:
+            return value.uint64_value == 0U;
+        default:
+            return false;
+    }
+}
+
+std::string left_justified_trim(std::string value) {
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    }));
+    value.erase(std::find_if(value.rbegin(), value.rend(), [](unsigned char ch) {
+                    return std::isspace(ch) == 0;
+                }).base(),
+                value.end());
+    return value;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_string_function(
@@ -742,35 +770,46 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "transform" && !arguments.empty()) {
         const std::string picture = arguments.size() >= 2U ? uppercase_copy(value_as_string(arguments[1])) : std::string{};
+        if (picture_has_flag(picture, "@Z") && is_zeroish_transform_value(arguments[0])) {
+            return make_string_value("");
+        }
+
+        std::string transformed;
         if (!picture.empty()) {
-            if (picture.find("@!") != std::string::npos) {
-                return make_string_value(uppercase_copy(value_as_string(arguments[0])));
-            }
-            if (picture.find("@L") != std::string::npos) {
-                std::string value = value_as_string(arguments[0]);
-                std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+            if (picture_has_flag(picture, "@!")) {
+                transformed = uppercase_copy(value_as_string(arguments[0]));
+            } else if (picture_has_flag(picture, "@L")) {
+                transformed = value_as_string(arguments[0]);
+                std::transform(transformed.begin(), transformed.end(), transformed.begin(), [](unsigned char ch) {
                     return static_cast<char>(std::tolower(ch));
                 });
-                return make_string_value(std::move(value));
-            }
-            const std::size_t decimal_pos = picture.find('.');
-            if (decimal_pos != std::string::npos) {
-                std::size_t decimals = 0U;
-                for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
-                    if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
-                        ++decimals;
+            } else {
+                const std::size_t decimal_pos = picture.find('.');
+                if (decimal_pos != std::string::npos) {
+                    std::size_t decimals = 0U;
+                    for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
+                        if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
+                            ++decimals;
+                        }
                     }
+                    std::ostringstream stream;
+                    stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
+                    transformed = apply_numeric_picture_symbols(
+                        stream.str(),
+                        picture.find(',') != std::string::npos,
+                        picture.find('$') != std::string::npos,
+                        set_callback);
                 }
-                std::ostringstream stream;
-                stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
-                return make_string_value(apply_numeric_picture_symbols(
-                    stream.str(),
-                    picture.find(',') != std::string::npos,
-                    picture.find('$') != std::string::npos,
-                    set_callback));
             }
         }
-        return make_string_value(value_as_string(arguments[0]));
+
+        if (transformed.empty() && !(picture_has_flag(picture, "@Z") && is_zeroish_transform_value(arguments[0]))) {
+            transformed = value_as_string(arguments[0]);
+        }
+        if (picture_has_flag(picture, "@B")) {
+            transformed = left_justified_trim(std::move(transformed));
+        }
+        return make_string_value(std::move(transformed));
     }
     if (function == "strextract" && arguments.size() >= 3U) {
         const std::string src = value_as_string(arguments[0]);

@@ -9,6 +9,47 @@ namespace copperfin::runtime {
 
 namespace {
 
+bool has_wrapping_parentheses_local(const std::string& text) {
+    const std::string trimmed = trim_copy(text);
+    if (trimmed.size() < 2U || trimmed.front() != '(' || trimmed.back() != ')') {
+        return false;
+    }
+
+    int nesting = 0;
+    char quote_delimiter = '\0';
+    for (std::size_t index = 0; index < trimmed.size(); ++index) {
+        const char ch = trimmed[index];
+        if ((ch == '\'' || ch == '"') && (quote_delimiter == '\0' || quote_delimiter == ch)) {
+            quote_delimiter = quote_delimiter == '\0' ? ch : '\0';
+            continue;
+        }
+        if (quote_delimiter != '\0') {
+            continue;
+        }
+
+        if (ch == '(') {
+            ++nesting;
+            continue;
+        }
+        if (ch == ')') {
+            --nesting;
+            if (nesting == 0 && index + 1U < trimmed.size()) {
+                return false;
+            }
+        }
+    }
+
+    return nesting == 0;
+}
+
+std::string normalize_type_expression(std::string expression_text) {
+    expression_text = trim_copy(std::move(expression_text));
+    while (has_wrapping_parentheses_local(expression_text)) {
+        expression_text = trim_copy(expression_text.substr(1U, expression_text.size() - 2U));
+    }
+    return expression_text;
+}
+
 std::string vartype_code(const PrgValue& value) {
     if (value.kind == PrgValueKind::empty) {
         return "U";
@@ -71,7 +112,7 @@ std::optional<PrgValue> evaluate_type_function(
         return make_string_value(vartype_code(arguments[0]));
     }
     if (function == "type" && !arguments.empty()) {
-        const std::string expr = trim_copy(value_as_string(arguments[0]));
+        const std::string expr = normalize_type_expression(value_as_string(arguments[0]));
         if (is_bare_identifier_text(expr) && array_exists_callback(expr)) {
             return make_string_value("A");
         }

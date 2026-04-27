@@ -1006,14 +1006,61 @@
                 {
                     return make_empty_value();
                 }
-                // Always treat macro expansion as an expression, not just a string
-                const PrgValue expanded_value = eval_expression_callback_(expanded);
+
+                std::string resolved_expression = expanded;
+                std::vector<std::string> visited_macros;
+                visited_macros.reserve(8U);
+                constexpr std::size_t max_macro_expansion_depth = 16U;
+                for (std::size_t depth = 0U; depth < max_macro_expansion_depth; ++depth)
+                {
+                    const std::string trimmed_expression = trim_copy(resolved_expression);
+                    if (!is_bare_identifier_text(trimmed_expression))
+                    {
+                        resolved_expression = trimmed_expression;
+                        break;
+                    }
+
+                    const std::string normalized_expression = normalize_memory_variable_identifier(trimmed_expression);
+                    bool already_visited = false;
+                    for (const std::string &visited_macro : visited_macros)
+                    {
+                        if (visited_macro == normalized_expression)
+                        {
+                            already_visited = true;
+                            break;
+                        }
+                    }
+                    if (already_visited)
+                    {
+                        resolved_expression = trimmed_expression;
+                        break;
+                    }
+
+                    visited_macros.push_back(normalized_expression);
+                    const PrgValue indirect_value = resolve_identifier(trimmed_expression);
+                    if (indirect_value.kind == PrgValueKind::empty)
+                    {
+                        resolved_expression = trimmed_expression;
+                        break;
+                    }
+
+                    const std::string indirect_expression = trim_copy(value_as_string(indirect_value));
+                    if (indirect_expression.empty())
+                    {
+                        return make_empty_value();
+                    }
+
+                    resolved_expression = indirect_expression;
+                }
+
+                // Always treat macro expansion as an expression when possible.
+                const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
                 if (expanded_value.kind != PrgValueKind::empty)
                 {
                     return expanded_value;
                 }
-                // If not an expression, return as string
-                return make_string_value(expanded);
+                // If not an expression, return the expanded string value.
+                return make_string_value(resolved_expression);
             }
 
             std::string parse_string()
