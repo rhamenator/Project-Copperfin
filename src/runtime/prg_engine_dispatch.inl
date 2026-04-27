@@ -3553,7 +3553,7 @@
                             });
                         if (it != cursor->remote_records[cursor->recno - 1U].values.end())
                         {
-                            it->display_value = value_as_string(val);
+                            it->display_value = serialize_prg_value_for_record_field(*it, val);
                         }
                     }
                     else
@@ -3562,7 +3562,7 @@
                             cursor->source_path,
                             cursor->recno - 1U,
                             field.field_name,
-                            value_as_string(val));
+                            serialize_prg_value_for_record_field(field, val));
                         if (!rep_result.ok)
                         {
                             last_error_message = rep_result.error;
@@ -3587,6 +3587,10 @@
                 }
                 handling_error = false;
                 error_handler_return_depth.reset();
+                if (!error_metadata_stack.empty())
+                {
+                    error_metadata_stack.pop_back();
+                }
                 fault_pc_valid = false;
                 // Unwind to the fault frame
                 while (!stack.empty())
@@ -3611,6 +3615,10 @@
                 }
                 handling_error = false;
                 error_handler_return_depth.reset();
+                if (!error_metadata_stack.empty())
+                {
+                    error_metadata_stack.pop_back();
+                }
                 fault_pc_valid = false;
                 const std::size_t resume_pc = fault_statement_index + 1U;
                 while (!stack.empty())

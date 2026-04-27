@@ -207,23 +207,7 @@
                 {
                     return make_string_value(*field_value);
                 }
-
-                switch (raw_field->field_type)
-                {
-                case 'L':
-                    return make_boolean_value(normalize_index_value(*field_value) == "true");
-                case 'N':
-                case 'F':
-                case 'I':
-                case 'Y':
-                    if (trim_copy(*field_value).empty())
-                    {
-                        return make_number_value(0.0);
-                    }
-                    return make_number_value(std::stod(trim_copy(*field_value)));
-                default:
-                    return make_string_value(*field_value);
-                }
+                return record_value_to_prg_value(*raw_field);
             };
 
             const auto separator = identifier.find('.');

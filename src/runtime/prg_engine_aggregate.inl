@@ -700,12 +700,6 @@
 
             if (function == "count")
             {
-                const std::string normalized_expression = normalize_identifier(expression_text);
-                if (!expression_text.empty() && normalized_expression != "all")
-                {
-                    error_message = "COUNT only supports the first-pass ALL/FOR/TO forms right now";
-                    return false;
-                }
                 if (targets.size() > 1U)
                 {
                     error_message = "COUNT TO only accepts a single variable target";

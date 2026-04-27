@@ -309,6 +309,17 @@ namespace copperfin::runtime
             bool has_ole_native_code = false;
         };
 
+        struct FaultMetadataSnapshot
+        {
+            std::string message;
+            SourceLocation location{};
+            std::string statement;
+            int code = 0;
+            int work_area = 0;
+            std::string procedure;
+            AErrorCompatibilitySnapshot compatibility;
+        };
+
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
         std::vector<Frame> stack;
@@ -325,6 +336,7 @@ namespace copperfin::runtime
         int last_error_work_area = 0;
         std::string last_error_procedure;
         AErrorCompatibilitySnapshot last_error_compatibility;
+        std::vector<FaultMetadataSnapshot> error_metadata_stack;
         std::string error_handler;
         std::string shutdown_handler;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
@@ -405,10 +417,10 @@ namespace copperfin::runtime
             frame,
             globals,
             current_default_directory(),
-            last_error_message,
-            last_error_code,
-            last_error_procedure,
-            last_fault_location.line,
+            current_error_message(),
+            current_error_code(),
+            current_error_procedure(),
+            current_fault_location().line,
             error_handler,
             shutdown_handler,
             is_set_enabled("exact"),
@@ -1140,6 +1152,7 @@ namespace copperfin::runtime
             }
 
             handling_error = true;
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             // Save fault position for RETRY / RESUME
             fault_frame_file_path = error_frame.file_path;
             fault_frame_routine_name = error_frame.routine_name;
@@ -1198,6 +1211,10 @@ namespace copperfin::runtime
                 {
                     error_handler_return_depth.reset();
                     handling_error = false;
+                    if (!error_metadata_stack.empty())
+                    {
+                        error_metadata_stack.pop_back();
+                    }
                 }
                 if (shutdown_handler_return_depth.has_value() && stack.size() <= *shutdown_handler_return_depth)
                 {

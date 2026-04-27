@@ -175,6 +175,7 @@ namespace
             "COUNT REST TO ARRAY aCountRest\n"
             "COUNT NEXT 2 TO ARRAY aCountNext\n"
             "COUNT RECORD 3 TO ARRAY aCountRecord\n"
+            "COUNT WHILE AGE < 50 TO ARRAY aCountWhile\n"
             "SUM AGE FOR AGE >= 40 TO ARRAY aSumFor\n"
             "AVERAGE AGE FOR AGE >= 40 TO ARRAY aAvgFor\n"
             "USE '" + table_path.string() + "' AGAIN ALIAS p2\n"
@@ -185,6 +186,7 @@ namespace
             "nCountRest = aCountRest[1]\n"
             "nCountNext = aCountNext[1]\n"
             "nCountRecord = aCountRecord[1]\n"
+            "nCountWhile = aCountWhile[1]\n"
             "nSumFor = aSumFor[1]\n"
             "nAvgFor = aAvgFor[1]\n"
             "nSumIn = aSumIn[1]\n"
@@ -217,6 +219,7 @@ namespace
         check("ncountrest", "3");
         check("ncountnext", "2");
         check("ncountrecord", "1");
+        check("ncountwhile", "2");
         check("nsumfor", "92");
         check("navgfor", "46");
         check("nsumin", "147");

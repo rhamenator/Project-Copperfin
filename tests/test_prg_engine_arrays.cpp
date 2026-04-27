@@ -417,6 +417,133 @@ void test_array_metadata_and_text_functions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_macro_expanded_array_helpers_and_access() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_macro_helpers";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "array_macro_helpers.prg";
+    write_text(
+        main_path,
+        "cArrayName = 'cResolvedArray'\n"
+        "cResolvedArray = 'aGrid'\n"
+        "cLinesName = 'aLines'\n"
+        "cCopyName = 'aCopy'\n"
+        "DIMENSION aGrid[2,2]\n"
+        "aGrid[1,1] = 'A'\n"
+        "aGrid[1,2] = 'B'\n"
+        "aGrid[2,1] = 'C'\n"
+        "aGrid[2,2] = 42\n"
+        "nLineCount = ALINES(&cLinesName, 'north' + CHR(13) + CHR(10) + 'south')\n"
+        "nGridSize = ALEN(&cArrayName)\n"
+        "nGridRows = ALEN(&cArrayName, 1)\n"
+        "nGridCols = ALEN(&cArrayName, 2)\n"
+        "cMacroBracket = &cArrayName[2,1]\n"
+        "cMacroParen = &cArrayName(1,2)\n"
+        "nMacroElement = AELEMENT(&cArrayName, 2, 2)\n"
+        "nCopied = ACOPY(&cArrayName, &cCopyName, 2, 2, 1)\n"
+        "nCopySize = ALEN(&cCopyName)\n"
+        "cCopiedOne = &cCopyName[1]\n"
+        "cCopiedTwo = &cCopyName[2]\n"
+        "cLineOne = &cLinesName[1]\n"
+        "cLineTwo = &cLinesName[2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro-expanded array helper script should complete");
+
+    const auto line_count = state.globals.find("nlinecount");
+    const auto grid_size = state.globals.find("ngridsize");
+    const auto grid_rows = state.globals.find("ngridrows");
+    const auto grid_cols = state.globals.find("ngridcols");
+    const auto macro_bracket = state.globals.find("cmacrobracket");
+    const auto macro_paren = state.globals.find("cmacroparen");
+    const auto macro_element = state.globals.find("nmacroelement");
+    const auto copied = state.globals.find("ncopied");
+    const auto copy_size = state.globals.find("ncopysize");
+    const auto copied_one = state.globals.find("ccopiedone");
+    const auto copied_two = state.globals.find("ccopiedtwo");
+    const auto line_one = state.globals.find("clineone");
+    const auto line_two = state.globals.find("clinetwo");
+
+    expect(line_count != state.globals.end(), "ALINES should accept a macro-expanded target array name");
+    expect(grid_size != state.globals.end(), "ALEN should accept a macro-expanded array identifier");
+    expect(grid_rows != state.globals.end(), "ALEN(...,1) should accept a macro-expanded array identifier");
+    expect(grid_cols != state.globals.end(), "ALEN(...,2) should accept a macro-expanded array identifier");
+    expect(macro_bracket != state.globals.end(), "macro-expanded bracket array access should resolve");
+    expect(macro_paren != state.globals.end(), "macro-expanded paren array access should resolve");
+    expect(macro_element != state.globals.end(), "AELEMENT should accept a macro-expanded array identifier");
+    expect(copied != state.globals.end(), "ACOPY should accept macro-expanded source and target array names");
+    expect(copy_size != state.globals.end(), "macro-expanded ACOPY target should be readable through ALEN");
+    expect(copied_one != state.globals.end(), "macro-expanded ACOPY target first element should be readable");
+    expect(copied_two != state.globals.end(), "macro-expanded ACOPY target second element should be readable");
+    expect(line_one != state.globals.end(), "macro-expanded ALINES target first line should be readable");
+    expect(line_two != state.globals.end(), "macro-expanded ALINES target second line should be readable");
+
+    if (line_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_count->second) == "2",
+            "ALINES should populate a macro-expanded target array name");
+    }
+    if (grid_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_size->second) == "4",
+            "ALEN should report total elements for a macro-expanded array identifier");
+    }
+    if (grid_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_rows->second) == "2",
+            "ALEN(..., 1) should report rows for a macro-expanded array identifier");
+    }
+    if (grid_cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_cols->second) == "2",
+            "ALEN(..., 2) should report columns for a macro-expanded array identifier");
+    }
+    if (macro_bracket != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_bracket->second) == "C",
+            "&macro[ row, col ] should resolve through the expanded array identifier");
+    }
+    if (macro_paren != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_paren->second) == "B",
+            "&macro(row, col) should resolve through the expanded array identifier");
+    }
+    if (macro_element != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_element->second) == "4",
+            "AELEMENT should use the expanded array identifier and preserve mixed-type cells");
+    }
+    if (copied != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied->second) == "2",
+            "ACOPY should copy from a macro-expanded source into a macro-expanded target array");
+    }
+    if (copy_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_size->second) == "2",
+            "macro-expanded ACOPY target should have two copied elements");
+    }
+    if (copied_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied_one->second) == "B",
+            "ACOPY should preserve the first copied value through a macro-expanded target name");
+    }
+    if (copied_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied_two->second) == "C",
+            "ACOPY should preserve adjacent mixed-type-compatible copied values through a macro-expanded target name");
+    }
+    if (line_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_one->second) == "north",
+            "ALINES should preserve the first line in a macro-expanded target array");
+    }
+    if (line_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_two->second) == "south",
+            "ALINES should preserve the second line in a macro-expanded target array");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -424,6 +551,7 @@ int main() {
     test_acopy_two_dimensional_row_and_column_workflows();
     test_array_dimension_and_element_assignment();
     test_array_metadata_and_text_functions();
+    test_macro_expanded_array_helpers_and_access();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

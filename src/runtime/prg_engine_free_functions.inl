@@ -458,6 +458,202 @@
             return rules;
         }
 
+        bool parse_datetime_storage_contract(const std::string &raw, int &julian_day, int &millis)
+        {
+            const std::string text = trim_copy(raw);
+            if (text.empty())
+            {
+                julian_day = 0;
+                millis = 0;
+                return true;
+            }
+
+            const std::string lowered = lowercase_copy(text);
+            constexpr const char *julian_prefix = "julian:";
+            constexpr const char *millis_prefix = "millis:";
+            if (lowered.rfind(julian_prefix, 0U) != 0U)
+            {
+                return false;
+            }
+
+            const std::size_t millis_pos = lowered.find(millis_prefix);
+            if (millis_pos == std::string::npos || millis_pos <= 7U)
+            {
+                return false;
+            }
+
+            const std::string julian_text = trim_copy(text.substr(7U, millis_pos - 7U));
+            const std::string millis_text = trim_copy(text.substr(millis_pos + 7U));
+            if (julian_text.empty() || millis_text.empty())
+            {
+                return false;
+            }
+
+            try
+            {
+                std::size_t consumed = 0U;
+                julian_day = std::stoi(julian_text, &consumed, 10);
+                if (consumed != julian_text.size())
+                {
+                    return false;
+                }
+
+                millis = std::stoi(millis_text, &consumed, 10);
+                if (consumed != millis_text.size())
+                {
+                    return false;
+                }
+            }
+            catch (const std::exception &)
+            {
+                return false;
+            }
+
+            return julian_day >= 0 && millis >= 0;
+        }
+
+        bool parse_runtime_or_storage_date_string(const std::string &raw, int &year, int &month, int &day)
+        {
+            if (parse_runtime_date_string(raw, year, month, day))
+            {
+                return true;
+            }
+
+            const std::string text = trim_copy(raw);
+            if (text.size() != 10U || text[4U] != '-' || text[7U] != '-')
+            {
+                return false;
+            }
+            for (std::size_t index = 0U; index < text.size(); ++index)
+            {
+                if (index == 4U || index == 7U)
+                {
+                    continue;
+                }
+                if (std::isdigit(static_cast<unsigned char>(text[index])) == 0)
+                {
+                    return false;
+                }
+            }
+
+            try
+            {
+                year = std::stoi(text.substr(0U, 4U));
+                month = std::stoi(text.substr(5U, 2U));
+                day = std::stoi(text.substr(8U, 2U));
+            }
+            catch (const std::exception &)
+            {
+                return false;
+            }
+
+            return year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= days_in_month(year, month);
+        }
+
+        bool parse_runtime_or_storage_datetime_string(
+            const std::string &raw,
+            int &year,
+            int &month,
+            int &day,
+            int &hour,
+            int &minute,
+            int &second)
+        {
+            if (parse_runtime_datetime_string(raw, year, month, day, hour, minute, second))
+            {
+                return true;
+            }
+
+            const std::string text = trim_copy(raw);
+            if (text.empty())
+            {
+                return false;
+            }
+
+            const auto separator = text.find_first_of(" T");
+            const std::string date_part = separator == std::string::npos ? text : text.substr(0U, separator);
+            const std::string time_part = separator == std::string::npos ? std::string{} : trim_copy(text.substr(separator + 1U));
+            if (!parse_runtime_or_storage_date_string(date_part, year, month, day))
+            {
+                return false;
+            }
+
+            hour = 0;
+            minute = 0;
+            second = 0;
+            return time_part.empty() || parse_runtime_time_string(time_part, hour, minute, second);
+        }
+
+        std::string format_runtime_date_storage_string(int year, int month, int day)
+        {
+            std::ostringstream stream;
+            stream << std::setfill('0')
+                   << std::setw(4) << year
+                   << std::setw(2) << month
+                   << std::setw(2) << day;
+            return stream.str();
+        }
+
+        std::string format_runtime_datetime_storage_string(int year, int month, int day, int hour, int minute, int second)
+        {
+            const int julian_day = date_to_julian(year, month, day);
+            const int millis = (((hour * 60) + minute) * 60 + second) * 1000;
+            return "julian:" + std::to_string(julian_day) + " millis:" + std::to_string(millis);
+        }
+
+        std::string serialize_prg_value_for_record_field(const vfp::DbfRecordValue &field, const PrgValue &value)
+        {
+            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+            const std::string text = value_as_string(value);
+            const std::string trimmed = trim_copy(text);
+            if (field_type == 'D')
+            {
+                if (trimmed.empty())
+                {
+                    return {};
+                }
+
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                if (parse_runtime_or_storage_date_string(trimmed, year, month, day))
+                {
+                    return format_runtime_date_storage_string(year, month, day);
+                }
+            }
+            else if (field_type == 'T')
+            {
+                if (trimmed.empty())
+                {
+                    return {};
+                }
+
+                int julian_day = 0;
+                int millis = 0;
+                if (parse_datetime_storage_contract(trimmed, julian_day, millis))
+                {
+                    return "julian:" + std::to_string(julian_day) + " millis:" + std::to_string(millis);
+                }
+
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                int hour = 0;
+                int minute = 0;
+                int second = 0;
+                if (parse_runtime_or_storage_datetime_string(trimmed, year, month, day, hour, minute, second))
+                {
+                    return format_runtime_datetime_storage_string(year, month, day, hour, minute, second);
+                }
+                if (parse_runtime_or_storage_date_string(trimmed, year, month, day))
+                {
+                    return format_runtime_datetime_storage_string(year, month, day, 0, 0, 0);
+                }
+            }
+
+            return text;
+        }
+
         PrgValue record_value_to_prg_value(const vfp::DbfRecordValue &field)
         {
             const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
@@ -487,6 +683,64 @@
                     return make_string_value(field.display_value);
                 }
             }
+            if (field_type == 'D')
+            {
+                if (text.empty())
+                {
+                    return make_string_value("");
+                }
+
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                if (parse_runtime_or_storage_date_string(field.display_value, year, month, day))
+                {
+                    return make_string_value(format_runtime_date_string(year, month, day));
+                }
+            }
+            if (field_type == 'T')
+            {
+                if (text.empty())
+                {
+                    return make_string_value("");
+                }
+
+                int julian_day = 0;
+                int millis = 0;
+                if (parse_datetime_storage_contract(field.display_value, julian_day, millis))
+                {
+                    if (julian_day == 0 && millis == 0)
+                    {
+                        return make_string_value("");
+                    }
+
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (julian_to_runtime_date(julian_day, year, month, day))
+                    {
+                        const int total_seconds = millis / 1000;
+                        const int hour = total_seconds / 3600;
+                        const int minute = (total_seconds / 60) % 60;
+                        const int second = total_seconds % 60;
+                        if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
+                        {
+                            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                        }
+                    }
+                }
+
+                int year = 0;
+                int month = 0;
+                int day = 0;
+                int hour = 0;
+                int minute = 0;
+                int second = 0;
+                if (parse_runtime_or_storage_datetime_string(field.display_value, year, month, day, hour, minute, second))
+                {
+                    return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                }
+            }
             return make_string_value(field.display_value);
         }
 
@@ -501,6 +755,10 @@
                 field_type == 'B' || field_type == 'Y')
             {
                 return make_number_value(0.0);
+            }
+            if (field_type == 'D' || field_type == 'T')
+            {
+                return make_string_value("");
             }
             return make_empty_value();
         }

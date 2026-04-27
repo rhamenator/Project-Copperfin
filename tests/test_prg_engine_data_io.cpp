@@ -258,6 +258,235 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_dates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "BIRTHDAY", .type = 'D', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "20260418", "julian:2460447 millis:49556000"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "date/datetime scatter-gather memvar fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_memvar_dates.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER MEMVAR\n"
+        "cBirth = m.BIRTHDAY\n"
+        "cStamp = m.STAMP\n"
+        "m.BIRTHDAY = '04/19/2026'\n"
+        "m.STAMP = '04/19/2026 01:02:03'\n"
+        "GATHER MEMVAR FIELDS BIRTHDAY, STAMP\n"
+        "cAfterBirth = DTOC(BIRTHDAY, 1)\n"
+        "cAfterStamp = TTOC(STAMP, 1)\n"
+        "SCATTER MEMVAR BLANK\n"
+        "cBlankBirthType = VARTYPE(m.BIRTHDAY)\n"
+        "cBlankStampType = VARTYPE(m.STAMP)\n"
+        "m.BIRTHDAY = m.BIRTHDAY\n"
+        "m.STAMP = m.STAMP\n"
+        "GATHER MEMVAR FIELDS BIRTHDAY, STAMP\n"
+        "SCATTER MEMVAR\n"
+        "cAfterBlankBirth = m.BIRTHDAY\n"
+        "cAfterBlankStamp = m.STAMP\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "date/datetime SCATTER/GATHER MEMVAR script should complete");
+
+    const auto birth = state.globals.find("cbirth");
+    const auto stamp = state.globals.find("cstamp");
+    const auto after_birth = state.globals.find("cafterbirth");
+    const auto after_stamp = state.globals.find("cafterstamp");
+    const auto blank_birth_type = state.globals.find("cblankbirthtype");
+    const auto blank_stamp_type = state.globals.find("cblankstamptype");
+    const auto after_blank_birth = state.globals.find("cafterblankbirth");
+    const auto after_blank_stamp = state.globals.find("cafterblankstamp");
+
+    expect(birth != state.globals.end(), "SCATTER MEMVAR should populate date fields");
+    expect(stamp != state.globals.end(), "SCATTER MEMVAR should populate datetime fields");
+    expect(after_birth != state.globals.end(), "GATHER MEMVAR should restore updated date fields");
+    expect(after_stamp != state.globals.end(), "GATHER MEMVAR should restore updated datetime fields");
+    expect(blank_birth_type != state.globals.end(), "SCATTER MEMVAR BLANK should still define date memvars");
+    expect(blank_stamp_type != state.globals.end(), "SCATTER MEMVAR BLANK should still define datetime memvars");
+    expect(after_blank_birth != state.globals.end(), "blank GATHER should leave a readable blank date field");
+    expect(after_blank_stamp != state.globals.end(), "blank GATHER should leave a readable blank datetime field");
+
+    if (birth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(birth->second) == "04/18/2026",
+            "SCATTER MEMVAR should expose dates in runtime date format");
+    }
+    if (stamp != state.globals.end()) {
+        expect(copperfin::runtime::format_value(stamp->second) == "04/18/2026 13:45:56",
+            "SCATTER MEMVAR should expose datetimes in runtime datetime format");
+    }
+    if (after_birth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_birth->second) == "20260419",
+            "GATHER MEMVAR should serialize runtime date strings back into the date field");
+    }
+    if (after_stamp != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_stamp->second) == "20260419010203",
+            "GATHER MEMVAR should serialize runtime datetime strings back into the datetime field");
+    }
+    if (blank_birth_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_birth_type->second) == "C",
+            "SCATTER MEMVAR BLANK should keep date fields as blank string values, not undefined values");
+    }
+    if (blank_stamp_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_stamp_type->second) == "C",
+            "SCATTER MEMVAR BLANK should keep datetime fields as blank string values, not undefined values");
+    }
+    if (after_blank_birth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_blank_birth->second).empty(),
+            "blank GATHER should round-trip to an empty runtime date value");
+    }
+    if (after_blank_stamp != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_blank_stamp->second).empty(),
+            "blank GATHER should round-trip to an empty runtime datetime value");
+    }
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok, "date/datetime GATHER MEMVAR destination table should remain readable");
+    if (persisted.ok && !persisted.table.records.empty() && persisted.table.records[0U].values.size() >= 3U) {
+        expect(persisted.table.records[0U].values[1U].display_value.empty(),
+            "blank GATHER should persist a blank D field");
+        expect(persisted.table.records[0U].values[2U].display_value == "julian:0 millis:0",
+            "blank GATHER should persist zero datetime storage for T fields");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_array_preserves_date_and_datetime_like_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array_dates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BIRTHDAY", .type = 'D', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"20260418", "julian:2460447 millis:49556000"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "date/datetime scatter-gather array fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_array_dates.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS BIRTHDAY, STAMP TO aRow\n"
+        "cArrayBirth = aRow[1]\n"
+        "cArrayStamp = aRow[2]\n"
+        "aRow[1] = '04/20/2026'\n"
+        "aRow[2] = '04/20/2026 07:08:09'\n"
+        "GATHER FROM aRow FIELDS BIRTHDAY, STAMP\n"
+        "cAfterArrayBirth = DTOC(BIRTHDAY, 1)\n"
+        "cAfterArrayStamp = TTOC(STAMP, 1)\n"
+        "SCATTER FIELDS BIRTHDAY, STAMP TO aBlank BLANK\n"
+        "cBlankArrayBirthType = VARTYPE(aBlank[1])\n"
+        "cBlankArrayStampType = VARTYPE(aBlank[2])\n"
+        "GATHER FROM aBlank FIELDS BIRTHDAY, STAMP\n"
+        "SCATTER FIELDS BIRTHDAY, STAMP TO aAfterBlank\n"
+        "cAfterBlankArrayBirth = aAfterBlank[1]\n"
+        "cAfterBlankArrayStamp = aAfterBlank[2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "date/datetime SCATTER/GATHER array script should complete");
+
+    const auto array_birth = state.globals.find("carraybirth");
+    const auto array_stamp = state.globals.find("carraystamp");
+    const auto after_array_birth = state.globals.find("cafterarraybirth");
+    const auto after_array_stamp = state.globals.find("cafterarraystamp");
+    const auto blank_array_birth_type = state.globals.find("cblankarraybirthtype");
+    const auto blank_array_stamp_type = state.globals.find("cblankarraystamptype");
+    const auto after_blank_array_birth = state.globals.find("cafterblankarraybirth");
+    const auto after_blank_array_stamp = state.globals.find("cafterblankarraystamp");
+
+    expect(array_birth != state.globals.end(), "SCATTER TO array should expose date fields");
+    expect(array_stamp != state.globals.end(), "SCATTER TO array should expose datetime fields");
+    expect(after_array_birth != state.globals.end(), "GATHER FROM array should restore updated date fields");
+    expect(after_array_stamp != state.globals.end(), "GATHER FROM array should restore updated datetime fields");
+    expect(blank_array_birth_type != state.globals.end(), "SCATTER TO array BLANK should still define blank date elements");
+    expect(blank_array_stamp_type != state.globals.end(), "SCATTER TO array BLANK should still define blank datetime elements");
+    expect(after_blank_array_birth != state.globals.end(), "blank array GATHER should leave a readable blank date field");
+    expect(after_blank_array_stamp != state.globals.end(), "blank array GATHER should leave a readable blank datetime field");
+
+    if (array_birth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_birth->second) == "04/18/2026",
+            "SCATTER TO array should expose dates in runtime date format");
+    }
+    if (array_stamp != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_stamp->second) == "04/18/2026 13:45:56",
+            "SCATTER TO array should expose datetimes in runtime datetime format");
+    }
+    if (after_array_birth != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(after_array_birth->second);
+        expect(actual == "20260420",
+            "GATHER FROM array should serialize runtime date strings back into the date field (got '" + actual + "')");
+    }
+    if (after_array_stamp != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(after_array_stamp->second);
+        expect(actual == "20260420070809",
+            "GATHER FROM array should serialize runtime datetime strings back into the datetime field (got '" + actual + "')");
+    }
+    if (blank_array_birth_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_array_birth_type->second) == "C",
+            "SCATTER TO array BLANK should keep date values as blank strings");
+    }
+    if (blank_array_stamp_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(blank_array_stamp_type->second) == "C",
+            "SCATTER TO array BLANK should keep datetime values as blank strings");
+    }
+    if (after_blank_array_birth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_blank_array_birth->second).empty(),
+            "blank array GATHER should round-trip to an empty runtime date value");
+    }
+    if (after_blank_array_stamp != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_blank_array_stamp->second).empty(),
+            "blank array GATHER should round-trip to an empty runtime datetime value");
+    }
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok, "date/datetime GATHER FROM array destination table should remain readable");
+    if (persisted.ok && !persisted.table.records.empty() && persisted.table.records[0U].values.size() >= 2U) {
+        expect(persisted.table.records[0U].values[0U].display_value.empty(),
+            "blank array GATHER should persist a blank D field");
+        expect(persisted.table.records[0U].values[1U].display_value == "julian:0 millis:0",
+            "blank array GATHER should persist zero datetime storage for T fields");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_array_mutator_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_mutators";
@@ -2474,6 +2703,8 @@ int main() {
     test_scatter_memvar_from_current_record();
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
+    test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
+    test_scatter_gather_array_preserves_date_and_datetime_like_values();
     test_runtime_array_mutator_functions();
     test_save_to_writes_variables_to_file();
     test_restore_from_loads_variables_from_file();

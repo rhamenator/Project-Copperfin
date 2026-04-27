@@ -762,6 +762,7 @@ void test_command_level_aggregate_scope_and_while_semantics() {
         "COUNT REST TO nCountRest\n"
         "COUNT NEXT 2 TO nCountNextTwo\n"
         "COUNT RECORD 4 TO nCountRecordFour\n"
+        "COUNT WHILE AGE < 40 TO nCountWhile\n"
         "SUM AGE REST TO nSumRest\n"
         "SUM AGE, AGE * 2 NEXT 3 TO nSumNextThree, nSumDoubleNextThree\n"
         "AVERAGE AGE WHILE AGE < 40 TO nAvgWhile\n"
@@ -780,6 +781,7 @@ void test_command_level_aggregate_scope_and_while_semantics() {
     const auto count_rest = state.globals.find("ncountrest");
     const auto count_next_two = state.globals.find("ncountnexttwo");
     const auto count_record_four = state.globals.find("ncountrecordfour");
+    const auto count_while = state.globals.find("ncountwhile");
     const auto sum_rest = state.globals.find("nsumrest");
     const auto sum_next_three = state.globals.find("nsumnextthree");
     const auto sum_double_next_three = state.globals.find("nsumdoublenextthree");
@@ -789,6 +791,7 @@ void test_command_level_aggregate_scope_and_while_semantics() {
     expect(count_rest != state.globals.end(), "COUNT REST should assign into a variable");
     expect(count_next_two != state.globals.end(), "COUNT NEXT should assign into a variable");
     expect(count_record_four != state.globals.end(), "COUNT RECORD should assign into a variable");
+    expect(count_while != state.globals.end(), "COUNT WHILE should assign into a variable");
     expect(sum_rest != state.globals.end(), "SUM REST should assign into a variable");
     expect(sum_next_three != state.globals.end(), "SUM NEXT should assign into a variable");
     expect(sum_double_next_three != state.globals.end(), "SUM NEXT should support multiple expressions");
@@ -803,6 +806,9 @@ void test_command_level_aggregate_scope_and_while_semantics() {
     }
     if (count_record_four != state.globals.end()) {
         expect(copperfin::runtime::format_value(count_record_four->second) == "0", "COUNT RECORD should still respect deleted/filter visibility");
+    }
+    if (count_while != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_while->second) == "2", "COUNT WHILE should stop when the WHILE condition becomes false after applying visibility");
     }
     if (sum_rest != state.globals.end()) {
         expect(copperfin::runtime::format_value(sum_rest->second) == "50", "SUM REST should total visible rows from the current record forward");
@@ -1900,6 +1906,111 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner_faults() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aerror_nested_faults";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aerror_nested_faults.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "DO missing_outer\n"
+        "after_error = 'continued'\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "cInitialMessage = MESSAGE()\n"
+        "cInitialProgram = PROGRAM()\n"
+        "nInitialLine = LINENO()\n"
+        "TRY\n"
+        "    DO missing_inner\n"
+        "CATCH\n"
+        "    cCaughtMessage = MESSAGE()\n"
+        "ENDTRY\n"
+        "nErrorRows = AERROR(aErr)\n"
+        "cFinalMessage = MESSAGE()\n"
+        "cFinalProgram = PROGRAM()\n"
+        "nFinalLine = LINENO()\n"
+        "cFinalParam = aErr[1,3]\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ON ERROR handler nested-fault script should complete");
+
+    const auto initial_message = state.globals.find("cinitialmessage");
+    const auto initial_program = state.globals.find("cinitialprogram");
+    const auto initial_line = state.globals.find("ninitialline");
+    const auto final_message = state.globals.find("cfinalmessage");
+    const auto final_program = state.globals.find("cfinalprogram");
+    const auto final_line = state.globals.find("nfinalline");
+    const auto final_param = state.globals.find("cfinalparam");
+    const auto rows = state.globals.find("nerrorrows");
+    const auto after_error = state.globals.find("after_error");
+
+    expect(initial_message != state.globals.end(), "handler should capture initial MESSAGE()");
+    expect(initial_program != state.globals.end(), "handler should capture initial PROGRAM()");
+    expect(initial_line != state.globals.end(), "handler should capture initial LINENO()");
+    expect(final_message != state.globals.end(), "handler should preserve final MESSAGE() after caught inner fault");
+    expect(final_program != state.globals.end(), "handler should preserve final PROGRAM() after caught inner fault");
+    expect(final_line != state.globals.end(), "handler should preserve final LINENO() after caught inner fault");
+    expect(final_param != state.globals.end(), "AERROR() should preserve the original error parameter after a caught inner fault");
+    expect(rows != state.globals.end(), "AERROR() should still return a row count after a caught inner fault");
+    expect(after_error != state.globals.end(), "execution should continue after the handler returns");
+
+    if (initial_message != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(initial_message->second).find("missing_outer") != std::string::npos,
+            "initial MESSAGE() should describe the original outer fault");
+    }
+    if (initial_program != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(initial_program->second) == "main",
+            "initial PROGRAM() should report the original faulting routine");
+    }
+    if (initial_line != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(initial_line->second) == "2",
+            "initial LINENO() should report the original faulting line");
+    }
+    if (final_message != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(final_message->second).find("missing_outer") != std::string::npos,
+            "MESSAGE() should revert to the original ON ERROR fault after a caught inner fault");
+    }
+    if (final_program != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(final_program->second) == "main",
+            "PROGRAM() should remain bound to the original ON ERROR fault");
+    }
+    if (final_line != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(final_line->second) == "2",
+            "LINENO() should remain bound to the original ON ERROR fault");
+    }
+    if (final_param != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(final_param->second) == "missing_outer",
+            "AERROR() should preserve the original error parameter instead of the caught inner fault");
+    }
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "1", "AERROR() should still expose one row");
+    }
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "continued", "post-handler execution should resume normally");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_with_endwith_resolves_leading_dot_member_access() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";
@@ -2952,6 +3063,7 @@ int main() {
     test_on_error_do_with_handler_receives_error_metadata();
     test_aerror_populates_structured_runtime_error_array();
     test_aerror_exposes_sql_and_ole_specific_rows();
+    test_on_error_handler_preserves_original_fault_metadata_across_caught_inner_faults();
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_try_finally_runs_without_catch_on_success();

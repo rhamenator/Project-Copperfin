@@ -386,7 +386,23 @@
                 }
                 if (match("&"))
                 {
-                    return parse_macro_reference();
+                    PrgValue macro_value = parse_macro_reference();
+                    if (macro_value.kind == PrgValueKind::string)
+                    {
+                        const std::string array_name = resolve_array_argument_name({}, &macro_value);
+                        if (!array_name.empty() && array_exists_callback_(array_name))
+                        {
+                            if (skip_whitespace(), match("["))
+                            {
+                                return parse_array_element_access(array_name, ']');
+                            }
+                            if (skip_whitespace(), match("("))
+                            {
+                                return parse_array_element_access(array_name, ')');
+                            }
+                        }
+                    }
+                    return macro_value;
                 }
                 if (peek() == '\'')
                 {
@@ -421,15 +437,7 @@
                 skip_whitespace();
                 if (match("["))
                 {
-                    const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
-                    std::size_t column = 1U;
-                    skip_whitespace();
-                    if (match(","))
-                    {
-                        column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
-                    }
-                    match("]");
-                    return array_value_callback_(identifier, row, column);
+                    return parse_array_element_access(identifier, ']');
                 }
 
                 if (match("("))
@@ -802,7 +810,9 @@
                 // --- Array / variable helpers ---
                 if (function == "alen" && !arguments.empty())
                 {
-                    const std::string array_name = raw_arguments.empty() ? std::string{} : raw_arguments[0];
+                    const std::string array_name = resolve_array_argument_name(
+                        raw_arguments.empty() ? std::string{} : raw_arguments[0],
+                        &arguments[0]);
                     const int dimension = arguments.size() >= 2U ? static_cast<int>(value_as_number(arguments[1])) : 0;
                     return make_number_value(static_cast<double>(array_length_callback_(array_name, dimension)));
                 }
@@ -879,6 +889,39 @@
                     // If result is empty the callback may mean "not found", fall through.
                 }
                 return make_string_value(function);
+            }
+
+            PrgValue parse_array_element_access(const std::string &array_name, char close_delimiter)
+            {
+                const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+                std::size_t column = 1U;
+                skip_whitespace();
+                if (match(","))
+                {
+                    column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+                }
+                match(std::string(1U, close_delimiter));
+                return array_value_callback_(array_name, row, column);
+            }
+
+            std::string resolve_array_argument_name(
+                const std::string &raw_argument,
+                const PrgValue *evaluated_argument) const
+            {
+                const std::string trimmed_raw = trim_copy(raw_argument);
+                if (is_bare_identifier_text(trimmed_raw))
+                {
+                    return trimmed_raw;
+                }
+                if (evaluated_argument != nullptr && evaluated_argument->kind == PrgValueKind::string)
+                {
+                    const std::string evaluated_name = trim_copy(value_as_string(*evaluated_argument));
+                    if (is_bare_identifier_text(evaluated_name))
+                    {
+                        return evaluated_name;
+                    }
+                }
+                return trimmed_raw;
             }
 
             PrgValue resolve_identifier(const std::string &identifier) const

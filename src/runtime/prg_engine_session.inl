@@ -71,6 +71,71 @@
             }
         }
 
+        [[nodiscard]] FaultMetadataSnapshot snapshot_current_error_metadata() const
+        {
+            FaultMetadataSnapshot snapshot;
+            snapshot.message = last_error_message;
+            snapshot.location = last_fault_location;
+            snapshot.statement = last_fault_statement;
+            snapshot.code = last_error_code;
+            snapshot.work_area = last_error_work_area;
+            snapshot.procedure = last_error_procedure;
+            snapshot.compatibility = last_error_compatibility;
+            return snapshot;
+        }
+
+        [[nodiscard]] const FaultMetadataSnapshot *active_error_metadata() const
+        {
+            if (error_metadata_stack.empty())
+            {
+                return nullptr;
+            }
+
+            return &error_metadata_stack.back();
+        }
+
+        [[nodiscard]] const std::string &current_error_message() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_error_message : snapshot->message;
+        }
+
+        [[nodiscard]] int current_error_code() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_error_code : snapshot->code;
+        }
+
+        [[nodiscard]] int current_error_work_area() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_error_work_area : snapshot->work_area;
+        }
+
+        [[nodiscard]] const std::string &current_error_procedure() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_error_procedure : snapshot->procedure;
+        }
+
+        [[nodiscard]] const SourceLocation &current_fault_location() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_fault_location : snapshot->location;
+        }
+
+        [[nodiscard]] const std::string &current_fault_statement() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_fault_statement : snapshot->statement;
+        }
+
+        [[nodiscard]] const AErrorCompatibilitySnapshot &current_error_compatibility() const
+        {
+            const FaultMetadataSnapshot *snapshot = active_error_metadata();
+            return snapshot == nullptr ? last_error_compatibility : snapshot->compatibility;
+        }
+
         void record_sql_aerror_context(const std::string &detail,
                                        const std::string &state,
                                        int native_code,
@@ -693,6 +758,7 @@
             event_dispatch_return_depth.reset();
             handling_error = false;
             error_handler_return_depth.reset();
+            error_metadata_stack.clear();
             handling_shutdown = false;
             shutdown_handler_return_depth.reset();
             quit_pending_after_shutdown = false;

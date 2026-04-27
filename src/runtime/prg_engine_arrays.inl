@@ -11,7 +11,24 @@
             {
                 return make_number_value(0.0);
             }
-            const std::string array_name = raw_arguments[0];
+            const auto resolve_array_argument_name = [&](std::size_t index)
+            {
+                const std::string raw_argument = index < raw_arguments.size() ? trim_copy(raw_arguments[index]) : std::string{};
+                if (is_bare_identifier_text(raw_argument))
+                {
+                    return raw_argument;
+                }
+                if (index < arguments.size() && arguments[index].kind == PrgValueKind::string)
+                {
+                    const std::string evaluated_name = trim_copy(value_as_string(arguments[index]));
+                    if (is_bare_identifier_text(evaluated_name))
+                    {
+                        return evaluated_name;
+                    }
+                }
+                return raw_argument;
+            };
+            const std::string array_name = resolve_array_argument_name(0U);
             const std::string normalized_function = normalize_identifier(function);
             RuntimeArray *array = find_array(array_name);
 
@@ -57,6 +74,7 @@
 
             if (normalized_function == "acopy" && raw_arguments.size() >= 2U)
             {
+                const std::string target_array_name = resolve_array_argument_name(1U);
                 const std::size_t source_start = arguments.size() >= 3U
                                                      ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
                                                      : 1U;
@@ -66,7 +84,7 @@
                 const std::size_t target_start = arguments.size() >= 5U
                                                      ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[4])))
                                                      : 1U;
-                return copy_array_values(array_name, raw_arguments[1], source_start, count, target_start);
+                return copy_array_values(array_name, target_array_name, source_start, count, target_start);
             }
 
             if (array == nullptr)
@@ -498,56 +516,59 @@
             {
                 return 0;
             }
-            const int effective_error_code = last_error_code == 0
-                                                 ? classify_runtime_error_code(last_error_message)
-                                                 : last_error_code;
-            const std::string error_parameter = runtime_error_parameter(last_error_message);
+            const std::string &effective_error_message = current_error_message();
+            const AErrorCompatibilitySnapshot &compatibility = current_error_compatibility();
+            const int current_code = current_error_code();
+            const int effective_error_code = current_code == 0
+                                                 ? classify_runtime_error_code(effective_error_message)
+                                                 : current_code;
+            const std::string error_parameter = runtime_error_parameter(effective_error_message);
             if (effective_error_code == 1526)
             {
-                const std::string sql_detail = last_error_compatibility.sql_detail.empty()
+                const std::string sql_detail = compatibility.sql_detail.empty()
                                                    ? error_parameter
-                                                   : last_error_compatibility.sql_detail;
-                const std::string sql_state = last_error_compatibility.sql_state.empty()
+                                                   : compatibility.sql_detail;
+                const std::string sql_state = compatibility.sql_state.empty()
                                                   ? std::string("HY000")
-                                                  : last_error_compatibility.sql_state;
+                                                  : compatibility.sql_state;
                 std::vector<PrgValue> values{
                     make_number_value(1526.0),
-                    make_string_value(last_error_message),
+                    make_string_value(effective_error_message),
                     make_string_value(sql_detail),
                     make_string_value(sql_state),
-                    make_number_value(static_cast<double>(last_error_compatibility.has_sql_native_code ? last_error_compatibility.sql_native_code : -1)),
-                    last_error_compatibility.sql_context.empty() ? make_empty_value() : make_string_value(last_error_compatibility.sql_context),
-                    last_error_compatibility.sql_payload.empty() ? make_empty_value() : make_string_value(last_error_compatibility.sql_payload)};
+                    make_number_value(static_cast<double>(compatibility.has_sql_native_code ? compatibility.sql_native_code : -1)),
+                    compatibility.sql_context.empty() ? make_empty_value() : make_string_value(compatibility.sql_context),
+                    compatibility.sql_payload.empty() ? make_empty_value() : make_string_value(compatibility.sql_payload)};
                 assign_array(name, std::move(values), 7U);
                 return 1;
             }
             if (effective_error_code == 1429)
             {
-                const std::string ole_detail = last_error_compatibility.ole_detail.empty()
+                const std::string ole_detail = compatibility.ole_detail.empty()
                                                    ? error_parameter
-                                                   : last_error_compatibility.ole_detail;
-                const std::string ole_app = last_error_compatibility.ole_app.empty()
+                                                   : compatibility.ole_detail;
+                const std::string ole_app = compatibility.ole_app.empty()
                                                 ? std::string("Copperfin OLE")
-                                                : last_error_compatibility.ole_app;
+                                                : compatibility.ole_app;
                 std::vector<PrgValue> values{
                     make_number_value(1429.0),
-                    make_string_value(last_error_message),
+                    make_string_value(effective_error_message),
                     make_string_value(ole_detail),
                     make_string_value(ole_app),
-                    last_error_compatibility.ole_source.empty() ? make_empty_value() : make_string_value(last_error_compatibility.ole_source),
-                    last_error_compatibility.ole_action.empty() ? make_empty_value() : make_string_value(last_error_compatibility.ole_action),
-                    make_number_value(static_cast<double>(last_error_compatibility.has_ole_native_code ? last_error_compatibility.ole_native_code : 1429))};
+                    compatibility.ole_source.empty() ? make_empty_value() : make_string_value(compatibility.ole_source),
+                    compatibility.ole_action.empty() ? make_empty_value() : make_string_value(compatibility.ole_action),
+                    make_number_value(static_cast<double>(compatibility.has_ole_native_code ? compatibility.ole_native_code : 1429))};
                 assign_array(name, std::move(values), 7U);
                 return 1;
             }
             std::vector<PrgValue> values{
                 make_number_value(static_cast<double>(effective_error_code)),
-                make_string_value(last_error_message),
-                make_string_value(error_parameter == last_error_message ? std::string{} : error_parameter),
-                make_number_value(static_cast<double>(last_error_work_area == 0 ? current_selected_work_area() : last_error_work_area)),
-                make_number_value(static_cast<double>(last_fault_location.line)),
-                make_string_value(last_error_procedure),
-                make_string_value(last_fault_statement)};
+                make_string_value(effective_error_message),
+                make_string_value(error_parameter == effective_error_message ? std::string{} : error_parameter),
+                make_number_value(static_cast<double>(current_error_work_area() == 0 ? current_selected_work_area() : current_error_work_area())),
+                make_number_value(static_cast<double>(current_fault_location().line)),
+                make_string_value(current_error_procedure()),
+                make_string_value(current_fault_statement())};
             assign_array(name, std::move(values), 7U);
             return 1;
         }
