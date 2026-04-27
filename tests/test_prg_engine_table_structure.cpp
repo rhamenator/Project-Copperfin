@@ -169,6 +169,128 @@ void test_create_table_defaults_and_not_null_constraints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_create_cursor_uses_temp_backed_local_table_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_create_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "create_cursor.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR WorkItems (NAME C(12) NOT NULL DEFAULT 'NEW', AGE N(3,0), ACTIVE L DEFAULT .T.)\n"
+        "nFields = FCOUNT('WorkItems')\n"
+        "nNameSize = FSIZE('NAME', 'WorkItems')\n"
+        "nAFieldCount = AFIELDS(aFields, 'WorkItems')\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'ALPHA', AGE WITH 5\n"
+        "INSERT INTO WorkItems (AGE) VALUES (7)\n"
+        "nCount = RECCOUNT('WorkItems')\n"
+        "cField1 = FIELD(1, 'WorkItems')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CREATE CURSOR local-table script should complete");
+
+    const auto field_count = state.globals.find("nfields");
+    const auto name_size = state.globals.find("nnamesize");
+    const auto afield_count = state.globals.find("nafieldcount");
+    const auto count = state.globals.find("ncount");
+    const auto field1 = state.globals.find("cfield1");
+    expect(field_count != state.globals.end(), "CREATE CURSOR should expose FCOUNT() for the temp-backed cursor");
+    expect(name_size != state.globals.end(), "CREATE CURSOR should expose FSIZE() for the temp-backed cursor");
+    expect(afield_count != state.globals.end(), "CREATE CURSOR should expose AFIELDS() for the temp-backed cursor");
+    expect(count != state.globals.end(), "CREATE CURSOR should expose RECCOUNT() after local mutations");
+    expect(field1 != state.globals.end(), "CREATE CURSOR should expose FIELD() metadata for the temp-backed cursor");
+    if (field_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_count->second) == "3", "CREATE CURSOR should preserve the declared field count");
+    }
+    if (name_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name_size->second) == "12", "CREATE CURSOR should preserve the declared field width");
+    }
+    if (afield_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(afield_count->second) == "3", "AFIELDS() should report the temp-backed cursor schema");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2", "APPEND BLANK and INSERT INTO should mutate the temp-backed cursor");
+    }
+    if (field1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field1->second) == "NAME", "FIELD() should resolve temp-backed cursor schema names");
+    }
+
+    const auto runtime_cursor = std::find_if(state.cursors.begin(), state.cursors.end(), [](const auto& cursor) {
+        return uppercase_ascii(cursor.alias) == "WORKITEMS";
+    });
+    expect(runtime_cursor != state.cursors.end(), "CREATE CURSOR should leave the temp-backed cursor visible in runtime state");
+    if (runtime_cursor != state.cursors.end()) {
+        expect(runtime_cursor->source_kind == "table", "CREATE CURSOR should open as a normal local table cursor");
+        expect(!runtime_cursor->source_path.empty(), "CREATE CURSOR should record a backing DBF path");
+        expect(fs::exists(runtime_cursor->source_path), "CREATE CURSOR backing DBF should exist on disk");
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(runtime_cursor->source_path, 10U);
+        expect(parse_result.ok, "CREATE CURSOR backing DBF should remain readable");
+        expect(parse_result.table.records.size() == 2U, "CREATE CURSOR backing DBF should persist appended records");
+        if (parse_result.table.records.size() == 2U) {
+            expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "REPLACE should persist to the temp-backed cursor DBF");
+            expect(parse_result.table.records[0].values[1].display_value == "5", "REPLACE should persist numeric writes to the temp-backed cursor DBF");
+            expect(parse_result.table.records[1].values[0].display_value == "NEW", "INSERT INTO should apply CREATE CURSOR defaults through field rules");
+            expect(parse_result.table.records[1].values[1].display_value == "7", "INSERT INTO should persist explicit numeric values on the temp-backed cursor");
+            expect(parse_result.table.records[1].values[2].display_value == "true", "INSERT INTO should apply logical defaults on the temp-backed cursor");
+        }
+    }
+
+    expect(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.create_cursor";
+    }) == 1, "CREATE CURSOR should emit one runtime.create_cursor event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_create_cursor_not_null_insert_failure_rolls_back() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_create_cursor_not_null";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "create_cursor_not_null.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR StrictCursor (NAME C(10) NOT NULL, AGE N(3,0))\n"
+        "INSERT INTO StrictCursor (AGE) VALUES (4)\n"
+        "nAfter = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "CREATE CURSOR NOT NULL violation should pause the runtime with an error");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "CREATE CURSOR NOT NULL violation should report an error pause");
+
+    const auto runtime_cursor = std::find_if(state.cursors.begin(), state.cursors.end(), [](const auto& cursor) {
+        return uppercase_ascii(cursor.alias) == "STRICTCURSOR";
+    });
+    expect(runtime_cursor != state.cursors.end(), "failing CREATE CURSOR insert should still expose the opened cursor");
+    if (runtime_cursor != state.cursors.end()) {
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(runtime_cursor->source_path, 10U);
+        expect(parse_result.ok, "failed CREATE CURSOR insert should leave the temp-backed DBF readable");
+        expect(parse_result.table.records.empty(), "failed CREATE CURSOR NOT NULL insert should roll back the appended row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_not_null_insert_failure_rolls_back() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_not_null";
@@ -264,6 +386,8 @@ void test_pack_memo_rewrites_memo_sidecar() {
 int main() {
     test_alter_table_drop_and_alter_column_rewrite();
     test_create_table_defaults_and_not_null_constraints();
+    test_create_cursor_uses_temp_backed_local_table_flow();
+    test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();
     test_pack_memo_rewrites_memo_sidecar();
 

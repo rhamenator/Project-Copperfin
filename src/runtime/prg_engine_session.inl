@@ -60,15 +60,10 @@
 
         void capture_last_error_context(const Frame &frame, const Statement &statement)
         {
-            if (last_fault_location.file_path.empty())
-            {
-                last_fault_location = statement.location;
-            }
-            if (last_fault_statement.empty())
-            {
-                last_fault_statement = statement.text;
-            }
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
             last_error_code = classify_runtime_error_code(last_error_message);
+            last_error_work_area = current_selected_work_area();
             last_error_procedure = frame.routine_name;
         }
 

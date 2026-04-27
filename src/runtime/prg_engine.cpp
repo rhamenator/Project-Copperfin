@@ -302,6 +302,7 @@ namespace copperfin::runtime
         SourceLocation last_fault_location{};
         std::string last_fault_statement;
         int last_error_code = 0;
+        int last_error_work_area = 0;
         std::string last_error_procedure;
         std::string error_handler;
         std::string shutdown_handler;

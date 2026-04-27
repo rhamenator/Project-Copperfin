@@ -532,10 +532,10 @@
                 make_number_value(static_cast<double>(effective_error_code)),
                 make_string_value(last_error_message),
                 make_string_value(error_parameter == last_error_message ? std::string{} : error_parameter),
-                make_number_value(static_cast<double>(current_selected_work_area())),
-                make_empty_value(),
-                make_empty_value(),
-                make_empty_value()};
+                make_number_value(static_cast<double>(last_error_work_area == 0 ? current_selected_work_area() : last_error_work_area)),
+                make_number_value(static_cast<double>(last_fault_location.line)),
+                make_string_value(last_error_procedure),
+                make_string_value(last_fault_statement)};
             assign_array(name, std::move(values), 7U);
             return 1;
         }

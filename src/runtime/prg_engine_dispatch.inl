@@ -1989,10 +1989,9 @@
             }
             case StatementKind::create_cursor_command:
             {
-                // CREATE CURSOR <alias> (<field_list>) — stub: open as an empty in-memory cursor
-                const std::string alias = statement.identifier.empty()
-                                              ? "CURSOR1"
-                                              : normalize_identifier(value_as_string(evaluate_expression(statement.identifier, frame)));
+                std::string alias = statement.identifier.empty()
+                                        ? "CURSOR1"
+                                        : normalize_identifier(unquote_identifier(trim_copy(statement.identifier)));
                 if (alias.empty())
                 {
                     last_error_message = "CREATE CURSOR requires a non-empty alias";
@@ -2000,14 +1999,53 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!open_table_cursor({}, alias, {}, true, true, 0, {}, 0U))
+
+                const auto declarations = parse_table_field_declarations(statement.expression);
+                const std::vector<vfp::DbfFieldDescriptor> fields = table_field_descriptors(declarations);
+                if (fields.empty())
                 {
+                    last_error_message = "CREATE CURSOR requires at least one supported field declaration";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::error_code ignored;
+                const std::filesystem::path cursor_root = runtime_temp_directory / "cursors";
+                std::filesystem::create_directories(cursor_root, ignored);
+
+                std::filesystem::path table_path;
+                for (std::size_t attempt = 0U;; ++attempt)
+                {
+                    const std::string suffix = attempt == 0U ? std::string{} : "_" + std::to_string(attempt + 1U);
+                    table_path = cursor_root /
+                                 (alias + "_ds" + std::to_string(current_data_session) + suffix + ".dbf");
+                    if (!std::filesystem::exists(table_path, ignored))
+                    {
+                        break;
+                    }
+                }
+
+                const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
+                if (!create_result.ok)
+                {
+                    last_error_message = create_result.error;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const auto field_rules = field_rules_from_declarations(declarations);
+                if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules))
+                {
+                    std::filesystem::remove(table_path, ignored);
+                    std::filesystem::remove(table_path.replace_extension(".fpt"), ignored);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.create_cursor",
-                                  .detail = alias,
+                                  .detail = alias + " -> " + table_path.string(),
                                   .location = statement.location});
                 return {};
             }

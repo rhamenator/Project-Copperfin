@@ -1459,23 +1459,29 @@ void test_aerror_populates_structured_runtime_error_array() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 21}, {"BRAVO", 28}});
+
     const fs::path main_path = temp_root / "aerror.prg";
     write_text(
         main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT People\n"
         "ON ERROR DO handleerr\n"
         "DO missing_target\n"
         "after_error = 'continued'\n"
         "RETURN\n"
         "PROCEDURE handleerr\n"
+        "SELECT 0\n"
         "nErrorRows = AERROR(aErr)\n"
         "nErrorCols = ALEN(aErr, 2)\n"
         "nErrorCode = aErr[1,1]\n"
         "cErrorMessage = aErr[1,2]\n"
         "cErrorParam = aErr[1,3]\n"
         "nErrorWorkArea = aErr[1,4]\n"
-        "cTriggerInfo = VARTYPE(aErr[1,5])\n"
-        "cReservedOne = VARTYPE(aErr[1,6])\n"
-        "cReservedTwo = VARTYPE(aErr[1,7])\n"
+        "nErrorArrayLine = aErr[1,5]\n"
+        "cErrorArrayProgram = aErr[1,6]\n"
+        "cErrorArrayStatement = aErr[1,7]\n"
         "cSys2018 = SYS(2018)\n"
         "cErrorProgram = PROGRAM()\n"
         "nErrorLine = LINENO()\n"
@@ -1498,9 +1504,9 @@ void test_aerror_populates_structured_runtime_error_array() {
     const auto message = state.globals.find("cerrormessage");
     const auto parameter = state.globals.find("cerrorparam");
     const auto work_area = state.globals.find("nerrorworkarea");
-    const auto trigger_info = state.globals.find("ctriggerinfo");
-    const auto reserved_one = state.globals.find("creservedone");
-    const auto reserved_two = state.globals.find("creservedtwo");
+    const auto array_line = state.globals.find("nerrorarrayline");
+    const auto array_program = state.globals.find("cerrorarrayprogram");
+    const auto array_statement = state.globals.find("cerrorarraystatement");
     const auto sys2018 = state.globals.find("csys2018");
     const auto line = state.globals.find("nerrorline");
     const auto program = state.globals.find("cerrorprogram");
@@ -1513,9 +1519,9 @@ void test_aerror_populates_structured_runtime_error_array() {
     expect(message != state.globals.end(), "AERROR() should populate the message column");
     expect(parameter != state.globals.end(), "AERROR() should populate the error parameter column");
     expect(work_area != state.globals.end(), "AERROR() should populate the work-area column");
-    expect(trigger_info != state.globals.end(), "AERROR() should expose an empty trigger-info column for normal runtime errors");
-    expect(reserved_one != state.globals.end(), "AERROR() should expose an empty reserved column");
-    expect(reserved_two != state.globals.end(), "AERROR() should expose a second empty reserved column");
+    expect(array_line != state.globals.end(), "AERROR() should populate the source-line column for normal runtime errors");
+    expect(array_program != state.globals.end(), "AERROR() should populate the procedure column for normal runtime errors");
+    expect(array_statement != state.globals.end(), "AERROR() should populate the faulting-statement column for normal runtime errors");
     expect(sys2018 != state.globals.end(), "SYS(2018) should expose the uppercase error parameter");
     expect(line != state.globals.end(), "AERROR() should populate the failing line column");
     expect(program != state.globals.end(), "AERROR() should populate the procedure column");
@@ -1541,26 +1547,26 @@ void test_aerror_populates_structured_runtime_error_array() {
     }
     if (work_area != state.globals.end()) {
         expect(copperfin::runtime::format_value(work_area->second) == "1",
-            "AERROR() work-area column should capture the selected work area");
+            "AERROR() work-area column should capture the faulting work area even if the handler changes selection");
     }
-    if (trigger_info != state.globals.end()) {
-        expect(copperfin::runtime::format_value(trigger_info->second) == "U",
-            "AERROR() trigger-info column should be empty for non-trigger runtime errors");
+    if (array_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_line->second) == "4",
+            "AERROR() line column should capture the faulting source line");
     }
-    if (reserved_one != state.globals.end()) {
-        expect(copperfin::runtime::format_value(reserved_one->second) == "U",
-            "AERROR() first reserved column should be empty for normal runtime errors");
+    if (array_program != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_program->second) == "main",
+            "AERROR() procedure column should capture the faulting routine");
     }
-    if (reserved_two != state.globals.end()) {
-        expect(copperfin::runtime::format_value(reserved_two->second) == "U",
-            "AERROR() second reserved column should be empty for normal runtime errors");
+    if (array_statement != state.globals.end()) {
+        expect(copperfin::runtime::format_value(array_statement->second) == "DO missing_target",
+            "AERROR() statement column should capture the failing source text");
     }
     if (sys2018 != state.globals.end()) {
         expect(copperfin::runtime::format_value(sys2018->second) == "MISSING_TARGET",
             "SYS(2018) should expose the uppercase runtime error parameter");
     }
     if (line != state.globals.end()) {
-        expect(copperfin::runtime::format_value(line->second) == "2",
+        expect(copperfin::runtime::format_value(line->second) == "4",
             "AERROR() line column should report the failing source line");
     }
     if (program != state.globals.end()) {
