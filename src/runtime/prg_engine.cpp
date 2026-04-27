@@ -629,6 +629,17 @@ namespace copperfin::runtime
                     const std::size_t memo_width = found_memowidth != memowidth_by_session.end() ? found_memowidth->second : 50U;
                     return std::to_string(memo_width);
                 }
+                if (normalized_name == "fields")
+                {
+                    if (!is_set_enabled("fields_enabled"))
+                    {
+                        return std::string("OFF");
+                    }
+                    const auto found_fields = current_set_state().find("fields");
+                    return found_fields == current_set_state().end() || trim_copy(found_fields->second).empty()
+                               ? std::string("ON")
+                               : found_fields->second;
+                }
 
                 const auto found = current_set_state().find(normalized_name);
                 if (found == current_set_state().end())

@@ -134,9 +134,55 @@
 
         std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor) const
         {
+            const auto field_is_visible = [this](const std::string &field_name) -> bool
+            {
+                if (collapse_identifier(field_name) == "DELETED")
+                {
+                    return true;
+                }
+
+                const auto &set_state = current_set_state();
+                const auto enabled = set_state.find("fields_enabled");
+                if (enabled == set_state.end() || !is_set_enabled("fields_enabled"))
+                {
+                    return true;
+                }
+
+                const auto field_list = set_state.find("fields");
+                if (field_list == set_state.end() || trim_copy(field_list->second).empty())
+                {
+                    return true;
+                }
+
+                const std::string requested = collapse_identifier(field_name);
+                std::string current;
+                for (char ch : field_list->second)
+                {
+                    if (ch == ',')
+                    {
+                        const std::string normalized = collapse_identifier(current);
+                        if (normalized == "ALL" || normalized == requested)
+                        {
+                            return true;
+                        }
+                        current.clear();
+                    }
+                    else
+                    {
+                        current.push_back(ch);
+                    }
+                }
+                const std::string normalized = collapse_identifier(current);
+                return normalized == "ALL" || normalized == requested;
+            };
+
             const auto value_from_record = [&](const CursorState *cursor, const std::string &field_name) -> std::optional<PrgValue>
             {
                 if (cursor == nullptr)
+                {
+                    return std::nullopt;
+                }
+                if (!field_is_visible(field_name))
                 {
                     return std::nullopt;
                 }

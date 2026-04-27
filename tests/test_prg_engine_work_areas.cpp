@@ -1188,6 +1188,75 @@ void test_local_selected_empty_area_reuses_after_datasession_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_fields_limits_field_lookup() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_set_fields";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 11}, {"BRAVO", 22}});
+
+    const fs::path main_path = temp_root / "set_fields.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cFieldsDefault = SET('FIELDS')\n"
+        "cNameBefore = NAME\n"
+        "nAgeBefore = AGE\n"
+        "SET FIELDS TO NAME\n"
+        "cFieldsLimited = SET('FIELDS')\n"
+        "cNameLimited = NAME\n"
+        "xAgeLimited = AGE\n"
+        "xAliasAgeLimited = People.AGE\n"
+        "SET FIELDS OFF\n"
+        "cFieldsOff = SET('FIELDS')\n"
+        "nAgeOff = AGE\n"
+        "SET FIELDS ON\n"
+        "cFieldsOn = SET('FIELDS')\n"
+        "xAgeOn = AGE\n"
+        "SET FIELDS TO ALL\n"
+        "cFieldsAll = SET('FIELDS')\n"
+        "nAgeAll = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET FIELDS field-lookup script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cfieldsdefault", "OFF");
+    check("cnamebefore", "ALPHA");
+    check("nagebefore", "11");
+    check("cfieldslimited", "NAME");
+    check("cnamelimited", "ALPHA");
+    check("xagelimited", "");
+    check("xaliasagelimited", "");
+    check("cfieldsoff", "OFF");
+    check("nageoff", "11");
+    check("cfieldson", "NAME");
+    check("xageon", "");
+    check("cfieldsall", "ALL");
+    check("nageall", "11");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1206,6 +1275,7 @@ int main() {
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
+    test_set_fields_limits_field_lookup();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-26: Work-area field visibility gained first-pass `SET FIELDS` support. `SET('FIELDS')` defaults to `OFF`; `SET FIELDS TO <field-list>` enables a session-scoped visible-field list for field lookup, `SET FIELDS OFF` disables the restriction, `SET FIELDS ON` restores the prior list, and `SET FIELDS TO ALL` restores unrestricted lookup while preserving readback. Focused `test_prg_engine_work_areas` coverage validates bare and alias-qualified field lookup hiding/restoration over a local DBF cursor.
+
 - 2026-04-26: Numeric picture formatting gained first-pass `SET POINT TO`, `SET SEPARATOR TO`, and `SET CURRENCY TO` state. `SET('POINT')` now defaults to `.`, `SET('SEPARATOR')` defaults to `,`, `SET('CURRENCY')` defaults to `$`, explicit symbols round-trip through `SET()`, and `TRANSFORM(<number>, <picture>)` applies the configured decimal point, grouped thousands separator, and currency symbol when the picture includes numeric decimal/group/currency markers. Focused `test_prg_engine_string_math_functions` coverage passes.
 
 - 2026-04-26: Week-number runtime state gained first-pass `SET FDOW TO` and `SET FWEEK TO` support. `SET('FDOW')` and `SET('FWEEK')` default to `1`, validate configured ranges, and now provide the default first-day and first-week modes for `WEEK(date)` when callers omit explicit arguments; explicit `WEEK(date, firstDay[, firstWeekMode])` arguments still override session state. Focused `test_prg_engine_date_time_functions` coverage passes.

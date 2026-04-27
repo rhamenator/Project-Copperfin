@@ -1454,6 +1454,28 @@
                                                                   ? (normalized_name == "point" ? std::string{"."} : (normalized_name == "separator" ? std::string{","} : std::string{"$"}))
                                                                   : symbol_value;
                     }
+                    else if (normalized_name == "fields")
+                    {
+                        std::string fields_value = trim_copy(option_value);
+                        if (starts_with_insensitive(fields_value, "TO "))
+                        {
+                            fields_value = trim_copy(fields_value.substr(3U));
+                        }
+                        const std::string normalized_fields_value = normalize_identifier(fields_value);
+                        if (normalized_fields_value == "off")
+                        {
+                            current_set_state()["fields_enabled"] = "off";
+                        }
+                        else if (normalized_fields_value == "on")
+                        {
+                            current_set_state()["fields_enabled"] = "on";
+                        }
+                        else
+                        {
+                            current_set_state()["fields"] = uppercase_copy(fields_value.empty() ? std::string{"ALL"} : fields_value);
+                            current_set_state()["fields_enabled"] = "on";
+                        }
+                    }
                     else
                     {
                         current_set_state()[normalized_name] = option_value.empty() ? "on" : option_value;

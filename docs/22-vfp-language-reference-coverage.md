@@ -82,6 +82,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `INSERT INTO`
 - `PACK`, `ZAP`
 - `SET FILTER TO/OFF`
+- `SET FIELDS TO/ON/OFF` — first-pass session-scoped field visibility for runtime field lookup, including list readback through `SET('FIELDS')`
 - `SET ORDER TO TAG`
 - `SEEK`
 - `GO` / `GOTO`
