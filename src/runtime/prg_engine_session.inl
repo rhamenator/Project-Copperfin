@@ -170,6 +170,8 @@
             {
                 session.cursors.clear();
                 session.aliases.clear();
+                session.table_locks.clear();
+                session.record_locks.clear();
                 session.selected_work_area = 1;
                 session.next_work_area = 1;
             }
@@ -467,4 +469,3 @@
         {
             return "Runtime guardrail: maximum loop iterations (" + std::to_string(max_loop_iterations) + ") exceeded.";
         }
-

@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-26: Locking semantics gained a first-pass in-process runtime foundation. `SET REPROCESS` and `SET MULTILOCKS` now round-trip through `SET()`, open cursor state can be record-locked or table-locked through `RLOCK()`, `FLOCK()` / `LOCK()`, queried through `ISRLOCKED()` / `ISFLOCKED()`, and released through `UNLOCK` or `UNLOCK ALL`. Focused `test_prg_engine_table_mutation` coverage validates state readback, current/named cursor locks, and multi-cursor unlock behavior. This deliberately stops short of cross-process OS locking and transaction journaling.
+
 - 2026-04-26: Table-maintenance safety gained first-pass `SET EXCLUSIVE` and `USE ... SHARED|EXCLUSIVE` support. `SET('EXCLUSIVE')` defaults to `ON`, local `USE` cursors inherit the session default unless an explicit open mode is provided, and local `PACK`/`PACK MEMO`/`ZAP` now require an exclusive cursor while synthetic remote/result cursors keep their existing in-memory behavior. Focused `test_prg_engine_table_mutation` coverage validates shared-cursor guard failures plus explicit exclusive override success.
 
 - 2026-04-26: Work-area field visibility gained first-pass `SET FIELDS` support. `SET('FIELDS')` defaults to `OFF`; `SET FIELDS TO <field-list>` enables a session-scoped visible-field list for field lookup, `SET FIELDS OFF` disables the restriction, `SET FIELDS ON` restores the prior list, and `SET FIELDS TO ALL` restores unrestricted lookup while preserving readback. Focused `test_prg_engine_work_areas` coverage validates bare and alias-qualified field lookup hiding/restoration over a local DBF cursor.

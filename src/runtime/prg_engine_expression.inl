@@ -74,6 +74,7 @@
                 std::function<bool(const std::string &)> found_callback,
                 std::function<bool(const std::string &)> eof_callback,
                 std::function<bool(const std::string &)> bof_callback,
+                std::function<PrgValue(const std::string &, const std::vector<std::string> &, const std::vector<PrgValue> &)> lock_function_callback,
                 std::function<std::optional<PrgValue>(const std::string &)> field_lookup_callback,
                 std::function<bool(const std::string &)> array_exists_callback,
                 std::function<std::size_t(const std::string &, int)> array_length_callback,
@@ -119,6 +120,7 @@
                   found_callback_(std::move(found_callback)),
                   eof_callback_(std::move(eof_callback)),
                   bof_callback_(std::move(bof_callback)),
+                  lock_function_callback_(std::move(lock_function_callback)),
                   field_lookup_callback_(std::move(field_lookup_callback)),
                   array_exists_callback_(std::move(array_exists_callback)),
                   array_length_callback_(std::move(array_length_callback)),
@@ -618,6 +620,11 @@
                     const std::string designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
                     return make_boolean_value(bof_callback_(designator));
                 }
+                if (function == "rlock" || function == "flock" || function == "lock" ||
+                    function == "isrlocked" || function == "isflocked")
+                {
+                    return lock_function_callback_(function, raw_arguments, arguments);
+                }
                 if (function == "deleted")
                 {
                     const auto deleted_value = field_lookup_callback_(arguments.empty() ? std::string{"deleted"} : value_as_string(arguments[0]) + ".deleted");
@@ -1074,6 +1081,7 @@
             std::function<bool(const std::string &)> found_callback_;
             std::function<bool(const std::string &)> eof_callback_;
             std::function<bool(const std::string &)> bof_callback_;
+            std::function<PrgValue(const std::string &, const std::vector<std::string> &, const std::vector<PrgValue> &)> lock_function_callback_;
             std::function<std::optional<PrgValue>(const std::string &)> field_lookup_callback_;
             std::function<bool(const std::string &)> array_exists_callback_;
             std::function<std::size_t(const std::string &, int)> array_length_callback_;

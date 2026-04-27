@@ -388,6 +388,91 @@ void test_set_exclusive_controls_table_maintenance_guards() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_lock_functions_and_unlock_command_track_session_locks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lock_functions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    const fs::path other_path = temp_root / "other.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_people_dbf(other_path, {{"OTHER", 1}});
+
+    const fs::path main_path = temp_root / "locks.prg";
+    write_text(
+        main_path,
+        "cDefaultReprocess = SET('REPROCESS')\n"
+        "cDefaultMultilocks = SET('MULTILOCKS')\n"
+        "SET REPROCESS TO 3\n"
+        "SET MULTILOCKS ON\n"
+        "cReprocess = SET('REPROCESS')\n"
+        "cMultilocks = SET('MULTILOCKS')\n"
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "lRecordLock = RLOCK()\n"
+        "lRecordLocked = ISRLOCKED()\n"
+        "lFileLock = FLOCK()\n"
+        "lFileLocked = ISFLOCKED()\n"
+        "UNLOCK\n"
+        "lRecordAfterUnlock = ISRLOCKED()\n"
+        "lFileAfterUnlock = ISFLOCKED()\n"
+        "lNamedRecordLock = RLOCK('People')\n"
+        "USE '" + other_path.string() + "' ALIAS Other IN 0\n"
+        "lOtherFileLock = FLOCK()\n"
+        "SELECT People\n"
+        "lPeopleRecordLocked = ISRLOCKED()\n"
+        "UNLOCK ALL\n"
+        "lPeopleAfterUnlockAll = ISRLOCKED()\n"
+        "SELECT Other\n"
+        "lOtherAfterUnlockAll = ISFLOCKED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "lock function script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+            name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cdefaultreprocess", "0");
+    check("cdefaultmultilocks", "OFF");
+    check("creprocess", "3");
+    check("cmultilocks", "ON");
+    check("lrecordlock", "true");
+    check("lrecordlocked", "true");
+    check("lfilelock", "true");
+    check("lfilelocked", "true");
+    check("lrecordafterunlock", "false");
+    check("lfileafterunlock", "false");
+    check("lnamedrecordlock", "true");
+    check("lotherfilelock", "true");
+    check("lpeoplerecordlocked", "true");
+    check("lpeopleafterunlockall", "false");
+    check("lotherafterunlockall", "false");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock";
+    }), "lock functions should emit runtime.lock events");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.unlock" && event.detail == "ALL";
+    }), "UNLOCK ALL should emit a runtime.unlock event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_and_delete_from_local_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
@@ -710,6 +795,7 @@ int main() {
     test_pack_compacts_deleted_local_records();
     test_zap_truncates_local_table_records();
     test_set_exclusive_controls_table_maintenance_guards();
+    test_lock_functions_and_unlock_command_track_session_locks();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();

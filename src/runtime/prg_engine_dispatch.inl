@@ -1123,6 +1123,33 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::unlock_command:
+            {
+                const std::string unlock_scope = normalize_identifier(statement.expression);
+                if (unlock_scope == "all")
+                {
+                    unlock_cursor_locks(nullptr, true);
+                    events.push_back({.category = "runtime.unlock",
+                                      .detail = "ALL",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                if (cursor == nullptr)
+                {
+                    last_error_message = "UNLOCK target work area not found";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                unlock_cursor_locks(cursor, false);
+                events.push_back({.category = "runtime.unlock",
+                                  .detail = cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias,
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::go_command:
             {
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
@@ -1401,9 +1428,19 @@
                     if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
-                        normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive")
+                        normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive" ||
+                        normalized_name == "multilocks")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
+                    }
+                    else if (normalized_name == "reprocess")
+                    {
+                        std::string reprocess_value = trim_copy(option_value);
+                        if (starts_with_insensitive(reprocess_value, "TO "))
+                        {
+                            reprocess_value = trim_copy(reprocess_value.substr(3U));
+                        }
+                        current_set_state()[normalized_name] = uppercase_copy(reprocess_value.empty() ? std::string{"0"} : reprocess_value);
                     }
                     else if (normalized_name == "hours")
                     {
@@ -3084,6 +3121,8 @@
                     {
                         session.cursors.clear();
                         session.aliases.clear();
+                        session.table_locks.clear();
+                        session.record_locks.clear();
                     }
                 }
                 events.push_back({.category = "runtime.clear_memory",

@@ -516,6 +516,14 @@ Program parse_program(const std::string& path) {
             if (statement.secondary_expression.empty() && starts_with_insensitive(body, "IN ")) {
                 statement.secondary_expression = trim_copy(body.substr(3U));
             }
+        } else if (upper == "UNLOCK" || starts_with_insensitive(line, "UNLOCK ")) {
+            statement.kind = StatementKind::unlock_command;
+            const std::string body = upper == "UNLOCK" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "IN");
+            if (statement.secondary_expression.empty() && starts_with_insensitive(body, "IN ")) {
+                statement.secondary_expression = trim_copy(body.substr(3U));
+            }
         } else if (starts_with_insensitive(line, "GOTO ") || starts_with_insensitive(line, "GO ")) {
             statement.kind = StatementKind::go_command;
             const std::string body = starts_with_insensitive(line, "GOTO ")

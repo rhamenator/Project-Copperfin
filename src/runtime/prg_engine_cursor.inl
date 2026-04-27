@@ -145,6 +145,8 @@
                 session.selected_work_area = cursor->work_area;
             }
             session.aliases.erase(cursor->work_area);
+            session.table_locks.erase(cursor->work_area);
+            session.record_locks.erase(cursor->work_area);
             session.cursors.erase(cursor->work_area);
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }

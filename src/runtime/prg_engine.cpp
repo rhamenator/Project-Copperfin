@@ -247,6 +247,8 @@ namespace copperfin::runtime
             int next_work_area = 1;
             std::map<int, std::string> aliases;
             std::map<int, CursorState> cursors;
+            std::set<int> table_locks;
+            std::map<int, std::set<std::size_t>> record_locks;
         };
 
         struct RuntimeArray
@@ -441,6 +443,10 @@ namespace copperfin::runtime
             {
                 const CursorState *cursor = resolve_cursor_target(designator);
                 return cursor == nullptr ? true : cursor->bof;
+            },
+            [this](const std::string &function, const std::vector<std::string> &raw_arguments, const std::vector<PrgValue> &arguments)
+            {
+                return runtime_lock_function(function, raw_arguments, arguments);
             },
             [this, preferred_cursor](const std::string &identifier)
             {
@@ -668,6 +674,10 @@ namespace copperfin::runtime
                     if (normalized_name == "fdow" || normalized_name == "fweek")
                     {
                         return std::string("1");
+                    }
+                    if (normalized_name == "reprocess")
+                    {
+                        return std::string("0");
                     }
                     if (normalized_name == "point")
                     {

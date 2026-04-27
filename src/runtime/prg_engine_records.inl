@@ -914,6 +914,99 @@
             return true;
         }
 
+        PrgValue runtime_lock_function(
+            const std::string &function,
+            const std::vector<std::string> &raw_arguments,
+            const std::vector<PrgValue> &arguments)
+        {
+            const auto resolve_lock_cursor = [&]() -> CursorState *
+            {
+                if (arguments.empty())
+                {
+                    return resolve_cursor_target({});
+                }
+                if (arguments.front().kind == PrgValueKind::string)
+                {
+                    return resolve_cursor_target(value_as_string(arguments.front()));
+                }
+                if (!raw_arguments.empty())
+                {
+                    const std::string raw = trim_copy(raw_arguments.front());
+                    if (!raw.empty() && !std::all_of(raw.begin(), raw.end(), [](unsigned char ch)
+                                                     { return std::isdigit(ch) != 0; }))
+                    {
+                        if (CursorState *cursor = resolve_cursor_target(raw))
+                        {
+                            return cursor;
+                        }
+                    }
+                }
+                return resolve_cursor_target({});
+            };
+
+            CursorState *cursor = resolve_lock_cursor();
+            if (cursor == nullptr)
+            {
+                return make_boolean_value(false);
+            }
+
+            DataSessionState &session = current_session_state();
+            const int area = cursor->work_area;
+            const std::string normalized_function = normalize_identifier(function);
+            if (normalized_function == "flock" || normalized_function == "lock")
+            {
+                session.table_locks.insert(area);
+                events.push_back({.category = "runtime.lock",
+                                  .detail = cursor->alias.empty() ? std::to_string(area) : cursor->alias + " FLOCK",
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return make_boolean_value(true);
+            }
+            if (normalized_function == "isflocked")
+            {
+                return make_boolean_value(session.table_locks.contains(area));
+            }
+
+            std::size_t recno = cursor->recno;
+            if (!arguments.empty() && arguments.front().kind != PrgValueKind::string)
+            {
+                recno = static_cast<std::size_t>(std::max<double>(0.0, std::llround(value_as_number(arguments.front()))));
+            }
+            if (recno == 0U || recno > cursor->record_count)
+            {
+                return make_boolean_value(false);
+            }
+
+            if (normalized_function == "rlock")
+            {
+                session.record_locks[area].insert(recno);
+                events.push_back({.category = "runtime.lock",
+                                  .detail = (cursor->alias.empty() ? std::to_string(area) : cursor->alias) + " RLOCK " + std::to_string(recno),
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return make_boolean_value(true);
+            }
+            if (normalized_function == "isrlocked")
+            {
+                const auto found = session.record_locks.find(area);
+                return make_boolean_value(found != session.record_locks.end() && found->second.contains(recno));
+            }
+
+            return make_empty_value();
+        }
+
+        void unlock_cursor_locks(CursorState *cursor, bool all_locks)
+        {
+            DataSessionState &session = current_session_state();
+            if (all_locks || cursor == nullptr)
+            {
+                session.table_locks.clear();
+                session.record_locks.clear();
+                return;
+            }
+
+            session.table_locks.erase(cursor->work_area);
+            session.record_locks.erase(cursor->work_area);
+        }
+
         std::string evaluate_cursor_designator_expression(const std::string &expression, const Frame &frame)
         {
             const std::string trimmed_expression = trim_copy(expression);
