@@ -80,8 +80,28 @@ namespace
             "cOnErrorDefault = ON('ERROR')\n"
             "cOnShutdownDefault = ON('SHUTDOWN')\n"
             "nMessageBox = MESSAGEBOX('hi')\n"
+            "cDefaultPath = SET('PATH')\n"
+            "cDefaultDecimals = SET('DECIMALS')\n"
+            "cDefaultCollate = SET('COLLATE')\n"
+            "cPathTarget = '/tmp/copperfin'\n"
+            "cMarkTarget = '-'\n"
+            "nDecimalsTarget = 4\n"
+            "cCollateTarget = 'machine'\n"
+            "lNullTarget = .T.\n"
             "SET PATH TO '/tmp/copperfin'\n"
             "cPathValue = SET('PATH')\n"
+            "SET PATH TO cPathTarget\n"
+            "cPathFromVariable = SET('PATH')\n"
+            "SET MARK TO cMarkTarget\n"
+            "cMarkFromVariable = SET('MARK')\n"
+            "SET DECIMALS TO nDecimalsTarget\n"
+            "cDecimalsFromVariable = SET('DECIMALS')\n"
+            "SET COLLATE TO cCollateTarget\n"
+            "cCollateFromVariable = SET('COLLATE')\n"
+            "SET NULL TO lNullTarget\n"
+            "cNullFromVariable = SET('NULL')\n"
+            "SET ANSI ON\n"
+            "cAnsiOn = SET('ANSI')\n"
             "ON ERROR DO somehandler\n"
             "cOnErrorHandler = ON('ERROR')\n"
             "ON SHUTDOWN CLOSE DATABASES ALL\n"
@@ -152,7 +172,16 @@ namespace
         check("conerrordefault", "");
         check("conshutdowndefault", "");
         check("nmessagebox", "1");
-        check("cpathvalue", "TO '/tmp/copperfin'");
+        check("cdefaultpath", "");
+        check("cdefaultdecimals", "2");
+        check("cdefaultcollate", "MACHINE");
+        check("cpathvalue", "/tmp/copperfin");
+        check("cpathfromvariable", "/tmp/copperfin");
+        check("cmarkfromvariable", "-");
+        check("cdecimalsfromvariable", "4");
+        check("ccollatefromvariable", "MACHINE");
+        check("cnullfromvariable", "ON");
+        check("cansion", "ON");
         check("conerrorhandler", "DO somehandler");
         check("conshutdownhandler", "CLOSE DATABASES ALL");
 

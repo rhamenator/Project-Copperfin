@@ -418,6 +418,15 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
         "lRecordAfterUnlock = ISRLOCKED()\n"
         "lFileAfterUnlock = ISFLOCKED()\n"
         "lNamedRecordLock = RLOCK('People')\n"
+        "lFileRelock = FLOCK()\n"
+        "GO 2\n"
+        "lSecondRecordLock = RLOCK()\n"
+        "UNLOCK RECORD 1 IN People\n"
+        "GO 1\n"
+        "lRecordOneAfterSpecificUnlock = ISRLOCKED()\n"
+        "lFileAfterSpecificUnlock = ISFLOCKED()\n"
+        "GO 2\n"
+        "lRecordTwoAfterSpecificUnlock = ISRLOCKED()\n"
         "USE '" + other_path.string() + "' ALIAS Other IN 0\n"
         "lOtherFileLock = FLOCK()\n"
         "SELECT People\n"
@@ -458,6 +467,11 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     check("lrecordafterunlock", "false");
     check("lfileafterunlock", "false");
     check("lnamedrecordlock", "true");
+    check("lfilerelock", "true");
+    check("lsecondrecordlock", "true");
+    check("lrecordoneafterspecificunlock", "false");
+    check("lfileafterspecificunlock", "true");
+    check("lrecordtwoafterspecificunlock", "true");
     check("lotherfilelock", "true");
     check("lpeoplerecordlocked", "true");
     check("lpeopleafterunlockall", "false");
@@ -469,6 +483,9 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.unlock" && event.detail == "ALL";
     }), "UNLOCK ALL should emit a runtime.unlock event");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.unlock" && event.detail == "People RECORD 1";
+    }), "UNLOCK RECORD should emit a record-specific runtime.unlock event");
 
     fs::remove_all(temp_root, ignored);
 }

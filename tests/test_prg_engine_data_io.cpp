@@ -199,6 +199,14 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
         "GATHER FROM aRow FIELDS NAME, AGE\n"
         "cAfterName = NAME\n"
         "nAfterAge = AGE\n"
+        "cMacroRowName = 'aMacroRow'\n"
+        "SCATTER FIELDS NAME, AGE TO &cMacroRowName\n"
+        "nMacroArrayLen = ALEN(&cMacroRowName)\n"
+        "cMacroFirst = &cMacroRowName[1]\n"
+        "REPLACE NAME WITH 'MacroChg', AGE WITH 8\n"
+        "GATHER FROM &cMacroRowName FIELDS NAME, AGE\n"
+        "cMacroAfterName = NAME\n"
+        "nMacroAfterAge = AGE\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -208,7 +216,7 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     });
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "SCATTER TO array / GATHER FROM array script should complete");
+    expect(state.completed, "SCATTER TO array / GATHER FROM array script should complete: " + state.message);
 
     const auto array_len = state.globals.find("narraylen");
     const auto rows = state.globals.find("nrows");
@@ -217,6 +225,10 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     const auto second_plus = state.globals.find("nsecondplus");
     const auto after_name = state.globals.find("caftername");
     const auto after_age = state.globals.find("nafterage");
+    const auto macro_array_len = state.globals.find("nmacroarraylen");
+    const auto macro_first = state.globals.find("cmacrofirst");
+    const auto macro_after_name = state.globals.find("cmacroaftername");
+    const auto macro_after_age = state.globals.find("nmacroafterage");
 
     expect(array_len != state.globals.end(), "ALEN(aRow) should expose array element count");
     expect(rows != state.globals.end(), "ALEN(aRow, 1) should expose first dimension");
@@ -225,6 +237,10 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     expect(second_plus != state.globals.end(), "aRow(2) should read the second scattered value");
     expect(after_name != state.globals.end(), "GATHER FROM array should restore NAME");
     expect(after_age != state.globals.end(), "GATHER FROM array should restore AGE");
+    expect(macro_array_len != state.globals.end(), "SCATTER TO macro-expanded array should expose array element count");
+    expect(macro_first != state.globals.end(), "SCATTER TO macro-expanded array should be readable through macro access");
+    expect(macro_after_name != state.globals.end(), "GATHER FROM macro-expanded array should restore NAME");
+    expect(macro_after_age != state.globals.end(), "GATHER FROM macro-expanded array should restore AGE");
 
     if (array_len != state.globals.end()) {
         expect(copperfin::runtime::format_value(array_len->second) == "2",
@@ -253,6 +269,22 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     if (after_age != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_age->second) == "42",
             "GATHER FROM array should write AGE from the array");
+    }
+    if (macro_array_len != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_array_len->second) == "2",
+            "SCATTER TO macro-expanded array should create two array elements");
+    }
+    if (macro_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_first->second) == "Alice",
+            "macro-expanded SCATTER array access should read the first scattered value");
+    }
+    if (macro_after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_after_name->second) == "Alice",
+            "GATHER FROM macro-expanded array should write NAME from the array");
+    }
+    if (macro_after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_after_age->second) == "42",
+            "GATHER FROM macro-expanded array should write AGE from the array");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1751,12 +1783,16 @@ void test_copy_to_array_fills_2d_runtime_array() {
         main_path,
         "USE '" + (temp_root / "people.dbf").string() + "'\n"
         "COPY TO ARRAY myarr\n"
+        "cMacroArray = 'macroarr'\n"
+        "COPY TO ARRAY &cMacroArray\n"
         "row1_name = myarr[1, 1]\n"
         "row1_age = myarr[1, 2]\n"
         "row2_name = myarr[2, 1]\n"
         "row2_age = myarr[2, 2]\n"
         "arr_rows = ALEN(myarr, 1)\n"
         "arr_cols = ALEN(myarr, 2)\n"
+        "macro_row1_name = &cMacroArray[1, 1]\n"
+        "macro_rows = ALEN(&cMacroArray, 1)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -1782,6 +1818,8 @@ void test_copy_to_array_fills_2d_runtime_array() {
     chk("row1_age",  "30",    "COPY TO ARRAY row 1 col 2 should be AGE");
     chk("row2_name", "Bob",   "COPY TO ARRAY row 2 col 1 should be NAME");
     chk("row2_age",  "25",    "COPY TO ARRAY row 2 col 2 should be AGE");
+    chk("macro_row1_name", "Alice", "COPY TO ARRAY macro-expanded target row 1 col 1 should be NAME");
+    chk("macro_rows", "2", "COPY TO ARRAY macro-expanded target should give 2 rows");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1801,9 +1839,10 @@ void test_append_from_array_writes_records_from_2d_array() {
     write_text(
         main_path,
         "USE '" + (temp_root / "source.dbf").string() + "'\n"
-        "COPY TO ARRAY tmparr\n"
+        "cTempArray = 'tmparr'\n"
+        "COPY TO ARRAY &cTempArray\n"
         "USE '" + (temp_root / "dest.dbf").string() + "'\n"
-        "APPEND FROM ARRAY tmparr\n"
+        "APPEND FROM ARRAY &cTempArray\n"
         "GO 1\n"
         "dest_name1 = NAME\n"
         "dest_age1 = AGE\n"

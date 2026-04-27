@@ -117,6 +117,29 @@
                 }
                 return {};
             };
+            auto resolve_command_array_name = [&](const std::string &raw_name, const std::string &command_name) -> std::optional<std::string>
+            {
+                const std::string candidate = trim_copy(raw_name);
+                if (candidate.empty())
+                {
+                    last_error_message = command_name + ": array name required";
+                    return std::nullopt;
+                }
+                if (is_bare_identifier_text(candidate))
+                {
+                    return candidate;
+                }
+
+                const PrgValue evaluated = evaluate_expression(candidate, frame);
+                const std::string evaluated_name = trim_copy(value_as_string(evaluated));
+                if (is_bare_identifier_text(evaluated_name))
+                {
+                    return evaluated_name;
+                }
+
+                last_error_message = command_name + ": invalid array name";
+                return std::nullopt;
+            };
 
             switch (statement.kind)
             {
@@ -1379,6 +1402,26 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                if (!trim_copy(statement.identifier).empty())
+                {
+                    const std::size_t recno = static_cast<std::size_t>(
+                        std::max<double>(0.0, std::llround(value_as_number(evaluate_expression(statement.identifier, frame)))));
+                    if (recno == 0U || recno > cursor->record_count)
+                    {
+                        last_error_message = "UNLOCK RECORD target record not found";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    unlock_cursor_record_lock(*cursor, recno);
+                    events.push_back({.category = "runtime.unlock",
+                                      .detail = (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) +
+                                                " RECORD " + std::to_string(recno),
+                                      .location = statement.location});
+                    return {};
+                }
+
                 unlock_cursor_locks(cursor, false);
                 events.push_back({.category = "runtime.unlock",
                                   .detail = cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias,
@@ -1609,6 +1652,70 @@
             {
                 const auto [option_name, option_value] = split_first_word(statement.expression);
                 const std::string normalized_name = normalize_identifier(option_name);
+                const auto strip_set_to_value = [](const std::string &raw_value) -> std::string
+                {
+                    std::string candidate = trim_copy(raw_value);
+                    if (starts_with_insensitive(candidate, "TO "))
+                    {
+                        candidate = trim_copy(candidate.substr(3U));
+                    }
+                    return candidate;
+                };
+                const auto should_evaluate_set_value = [&](const std::string &candidate) -> bool
+                {
+                    if (candidate.empty())
+                    {
+                        return false;
+                    }
+                    if (candidate.front() == '&')
+                    {
+                        return true;
+                    }
+                    if (candidate.size() >= 2U &&
+                        ((candidate.front() == '\'' && candidate.back() == '\'') ||
+                         (candidate.front() == '"' && candidate.back() == '"')))
+                    {
+                        return true;
+                    }
+                    if (is_bare_identifier_text(candidate))
+                    {
+                        return lookup_variable(frame, candidate).kind != PrgValueKind::empty;
+                    }
+                    return false;
+                };
+                const auto evaluate_set_string_value = [&](const std::string &raw_value, const std::string &default_value) -> std::string
+                {
+                    const std::string candidate = strip_set_to_value(raw_value);
+                    if (candidate.empty())
+                    {
+                        return default_value;
+                    }
+                    if (should_evaluate_set_value(candidate))
+                    {
+                        return value_as_string(evaluate_expression(candidate, frame));
+                    }
+                    return unquote_string(candidate);
+                };
+                const auto evaluate_set_integer_value = [&](const std::string &raw_value, int default_value, int min_value, int max_value) -> int
+                {
+                    const std::string candidate = strip_set_to_value(raw_value);
+                    if (candidate.empty())
+                    {
+                        return default_value;
+                    }
+                    int parsed_value = default_value;
+                    try
+                    {
+                        parsed_value = static_cast<int>(std::llround(value_as_number(
+                            should_evaluate_set_value(candidate) ? evaluate_expression(candidate, frame)
+                                                                 : make_string_value(unquote_string(candidate)))));
+                    }
+                    catch (...)
+                    {
+                        parsed_value = default_value;
+                    }
+                    return std::clamp(parsed_value, min_value, max_value);
+                };
                 const auto normalize_boolean_set_value = [&](const std::string &raw_value) -> std::string
                 {
                     auto map_boolean_token = [](const std::string &raw_token) -> std::optional<std::string>
@@ -1707,91 +1814,56 @@
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
                         normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive" ||
-                        normalized_name == "multilocks")
+                        normalized_name == "multilocks" || normalized_name == "null" || normalized_name == "ansi")
                     {
                         current_set_state()[normalized_name] = normalize_boolean_set_value(option_value.empty() ? "on" : option_value);
                     }
                     else if (normalized_name == "reprocess")
                     {
-                        std::string reprocess_value = trim_copy(option_value);
-                        if (starts_with_insensitive(reprocess_value, "TO "))
-                        {
-                            reprocess_value = trim_copy(reprocess_value.substr(3U));
-                        }
+                        std::string reprocess_value = evaluate_set_string_value(option_value, "0");
                         current_set_state()[normalized_name] = uppercase_copy(reprocess_value.empty() ? std::string{"0"} : reprocess_value);
                     }
                     else if (normalized_name == "hours")
                     {
-                        std::string hours_value = trim_copy(option_value);
-                        if (starts_with_insensitive(hours_value, "TO "))
-                        {
-                            hours_value = trim_copy(hours_value.substr(3U));
-                        }
-                        hours_value = unquote_string(hours_value);
+                        std::string hours_value = evaluate_set_string_value(option_value, "24");
                         current_set_state()[normalized_name] = normalize_identifier(hours_value) == "12" ? std::string{"12"} : std::string{"24"};
                     }
                     else if (normalized_name == "fdow" || normalized_name == "fweek")
                     {
-                        std::string numeric_value = trim_copy(option_value);
-                        if (starts_with_insensitive(numeric_value, "TO "))
-                        {
-                            numeric_value = trim_copy(numeric_value.substr(3U));
-                        }
-                        numeric_value = unquote_string(numeric_value);
-                        int parsed_value = 1;
-                        try
-                        {
-                            parsed_value = static_cast<int>(std::llround(value_as_number(evaluate_expression(numeric_value, frame))));
-                        }
-                        catch (...)
-                        {
-                            parsed_value = 1;
-                        }
                         const int max_value = normalized_name == "fdow" ? 7 : 3;
-                        if (parsed_value < 1 || parsed_value > max_value)
-                        {
-                            parsed_value = 1;
-                        }
+                        const int parsed_value = evaluate_set_integer_value(option_value, 1, 1, max_value);
                         current_set_state()[normalized_name] = std::to_string(parsed_value);
+                    }
+                    else if (normalized_name == "decimals")
+                    {
+                        current_set_state()[normalized_name] = std::to_string(evaluate_set_integer_value(option_value, 2, 0, 18));
                     }
                     else if (normalized_name == "date")
                     {
-                        std::string date_value = trim_copy(option_value);
-                        if (starts_with_insensitive(date_value, "TO "))
-                        {
-                            date_value = trim_copy(date_value.substr(3U));
-                        }
+                        const std::string date_value = evaluate_set_string_value(option_value, "MDY");
                         current_set_state()[normalized_name] = uppercase_copy(date_value.empty() ? std::string{"MDY"} : date_value);
                     }
                     else if (normalized_name == "mark")
                     {
-                        std::string mark_value = trim_copy(option_value);
-                        if (starts_with_insensitive(mark_value, "TO "))
-                        {
-                            mark_value = trim_copy(mark_value.substr(3U));
-                        }
-                        mark_value = unquote_string(mark_value);
+                        std::string mark_value = evaluate_set_string_value(option_value, "/");
                         current_set_state()[normalized_name] = mark_value.empty() ? std::string{"/"} : mark_value;
                     }
                     else if (normalized_name == "point" || normalized_name == "separator" || normalized_name == "currency")
                     {
-                        std::string symbol_value = trim_copy(option_value);
-                        if (starts_with_insensitive(symbol_value, "TO "))
-                        {
-                            symbol_value = trim_copy(symbol_value.substr(3U));
-                        }
-                        symbol_value = unquote_string(symbol_value);
+                        const std::string fallback = normalized_name == "point" ? std::string{"."} : (normalized_name == "separator" ? std::string{","} : std::string{"$"});
+                        std::string symbol_value = evaluate_set_string_value(option_value, fallback);
                         current_set_state()[normalized_name] = symbol_value.empty()
-                                                                  ? (normalized_name == "point" ? std::string{"."} : (normalized_name == "separator" ? std::string{","} : std::string{"$"}))
+                                                                  ? fallback
                                                                   : symbol_value;
+                    }
+                    else if (normalized_name == "path" || normalized_name == "collate")
+                    {
+                        std::string string_value = evaluate_set_string_value(option_value, normalized_name == "collate" ? "MACHINE" : "");
+                        current_set_state()[normalized_name] = normalized_name == "collate" ? uppercase_copy(string_value) : string_value;
                     }
                     else if (normalized_name == "fields")
                     {
-                        std::string fields_value = trim_copy(option_value);
-                        if (starts_with_insensitive(fields_value, "TO "))
-                        {
-                            fields_value = trim_copy(fields_value.substr(3U));
-                        }
+                        std::string fields_value = strip_set_to_value(option_value);
                         const std::string normalized_fields_value = normalize_identifier(fields_value);
                         if (normalized_fields_value == "off")
                         {
@@ -2784,14 +2856,14 @@
                 // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]
                 if (statement.identifier == "array")
                 {
-                    const std::string array_name = trim_copy(statement.expression);
-                    if (array_name.empty())
+                    const auto resolved_array_name = resolve_command_array_name(statement.expression, "COPY TO ARRAY");
+                    if (!resolved_array_name.has_value())
                     {
-                        last_error_message = "COPY TO ARRAY: array name required";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    const std::string array_name = *resolved_array_name;
                     CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                     if (cursor == nullptr)
                     {
@@ -3091,14 +3163,14 @@
                 // APPEND FROM ARRAY <array> [FIELDS <list>]
                 if (statement.identifier == "array")
                 {
-                    const std::string array_name = trim_copy(statement.expression);
-                    if (array_name.empty())
+                    const auto resolved_array_name = resolve_command_array_name(statement.expression, "APPEND FROM ARRAY");
+                    if (!resolved_array_name.has_value())
                     {
-                        last_error_message = "APPEND FROM ARRAY: array name required";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    const std::string array_name = *resolved_array_name;
                     CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                     if (cursor == nullptr || cursor->source_path.empty())
                     {
@@ -3512,6 +3584,7 @@
                 }
 
                 std::vector<PrgValue> scattered_values;
+                std::string array_name;
                 for (const auto &field : rec->values)
                 {
                     if (!field_matches_filter(field.field_name, field_filter))
@@ -3531,20 +3604,20 @@
 
                 if (!use_memvar)
                 {
-                    const std::string array_name = trim_copy(statement.expression);
-                    if (array_name.empty())
+                    const auto resolved_array_name = resolve_command_array_name(statement.expression, "SCATTER TO");
+                    if (!resolved_array_name.has_value())
                     {
-                        last_error_message = "SCATTER TO requires an array name when MEMVAR is not used";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    array_name = *resolved_array_name;
                     assign_array(array_name, std::move(scattered_values));
                 }
 
                 if (!field_filter.empty())
                 {
-                    const std::size_t selected_count = use_memvar ? 0U : array_length(statement.expression, 0);
+                    const std::size_t selected_count = use_memvar ? 0U : array_length(array_name, 0);
                     if (!use_memvar && selected_count == 0U)
                     {
                         last_error_message = "SCATTER: no fields match the FIELDS clause";
@@ -3558,7 +3631,7 @@
                     (void)field_filter;
                 }
                 events.push_back({.category = "runtime.scatter",
-                                  .detail = use_memvar ? "memvar" : statement.expression,
+                                  .detail = use_memvar ? "memvar" : array_name,
                                   .location = statement.location});
                 return {};
             }
@@ -3585,8 +3658,14 @@
                 if (!trim_copy(statement.quaternary_expression).empty() &&
                     !value_as_bool(evaluate_expression(statement.quaternary_expression, frame, cursor)))
                 {
+                    std::string detail = "memvar skipped";
+                    if (!use_memvar)
+                    {
+                        const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
+                        detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
+                    }
                     events.push_back({.category = "runtime.gather",
-                                      .detail = use_memvar ? "memvar skipped" : statement.expression + " skipped",
+                                      .detail = detail,
                                       .location = statement.location});
                     return {};
                 }
@@ -3598,6 +3677,18 @@
                 }
 
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
+                std::string array_name;
+                if (!use_memvar)
+                {
+                    const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
+                    if (!resolved_array_name.has_value())
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    array_name = *resolved_array_name;
+                }
                 std::size_t array_index = 1U;
                 for (const auto &field : rec->values)
                 {
@@ -3607,7 +3698,7 @@
                     }
                     const PrgValue val = use_memvar
                                              ? lookup_variable(frame, "m." + field.field_name)
-                                             : array_value(statement.expression, array_index++);
+                                             : array_value(array_name, array_index++);
                     if (cursor->remote)
                     {
                         auto it = std::find_if(
@@ -3640,7 +3731,7 @@
                     }
                 }
                 events.push_back({.category = "runtime.gather",
-                                  .detail = use_memvar ? "memvar" : statement.expression,
+                                  .detail = use_memvar ? "memvar" : array_name,
                                   .location = statement.location});
                 return {};
             }

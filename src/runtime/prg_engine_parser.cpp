@@ -637,6 +637,7 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::unlock_command;
             const std::string body = upper == "UNLOCK" ? std::string{} : trim_copy(line.substr(7U));
             statement.expression = body;
+            statement.identifier = extract_command_clause(body, "RECORD", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
             if (statement.secondary_expression.empty() && starts_with_insensitive(body, "IN ")) {
                 statement.secondary_expression = trim_copy(body.substr(3U));

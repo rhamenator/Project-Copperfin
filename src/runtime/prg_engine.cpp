@@ -734,6 +734,18 @@ namespace copperfin::runtime
                     {
                         return std::string("0");
                     }
+                    if (normalized_name == "path")
+                    {
+                        return std::string{};
+                    }
+                    if (normalized_name == "decimals")
+                    {
+                        return std::string("2");
+                    }
+                    if (normalized_name == "collate")
+                    {
+                        return std::string("MACHINE");
+                    }
                     if (normalized_name == "point")
                     {
                         return std::string(".");

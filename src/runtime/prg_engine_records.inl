@@ -1073,6 +1073,22 @@
             session.record_locks.erase(cursor->work_area);
         }
 
+        void unlock_cursor_record_lock(CursorState &cursor, std::size_t recno)
+        {
+            DataSessionState &session = current_session_state();
+            auto found = session.record_locks.find(cursor.work_area);
+            if (found == session.record_locks.end())
+            {
+                return;
+            }
+
+            found->second.erase(recno);
+            if (found->second.empty())
+            {
+                session.record_locks.erase(found);
+            }
+        }
+
         std::string evaluate_cursor_designator_expression(const std::string &expression, const Frame &frame)
         {
             const std::string trimmed_expression = trim_copy(expression);
