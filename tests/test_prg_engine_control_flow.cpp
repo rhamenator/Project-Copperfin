@@ -1,5 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "../src/runtime/prg_engine_command_helpers.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
 #include <cerrno>
@@ -27,6 +28,35 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void test_command_keyword_scanner_ignores_nested_text() {
+    using copperfin::runtime::extract_command_clause;
+    using copperfin::runtime::find_keyword_top_level;
+    using copperfin::runtime::split_csv_like;
+
+    const std::string quoted_to = "VALUE \"not the TO keyword\" TO cTarget";
+    const std::size_t quoted_to_position = find_keyword_top_level(quoted_to, "TO");
+    expect(quoted_to_position == quoted_to.rfind("TO"),
+           "top-level keyword scanner should ignore double-quoted keyword text");
+
+    const std::string bracketed_in = "FOR aValues[ASCAN(aWords, 'IN')] IN People";
+    const std::size_t bracketed_in_position = find_keyword_top_level(bracketed_in, "IN");
+    expect(bracketed_in_position == bracketed_in.rfind("IN"),
+           "top-level keyword scanner should ignore bracketed keyword text");
+
+    const std::string braced_to = "VALUE {|x| x = TO} TO cBlock";
+    const std::size_t braced_to_position = find_keyword_top_level(braced_to, "TO");
+    expect(braced_to_position == braced_to.rfind("TO"),
+           "top-level keyword scanner should ignore braced keyword text");
+
+    const std::string clause_text = "TO \"literal IN value\" IN WorkArea";
+    expect(extract_command_clause(clause_text, "TO", {"IN"}) == "\"literal IN value\"",
+           "clause extraction should ignore stop keywords inside double-quoted strings");
+
+    const std::vector<std::string> parts = split_csv_like("first, {|x| x, y}, second[1,2]");
+    expect(parts.size() == 3U,
+           "CSV-like splitter should keep commas inside braced blocks and bracketed expressions together");
+}
 
 void test_do_while_and_loop_control_flow() {
     namespace fs = std::filesystem;
@@ -2471,6 +2501,53 @@ void test_release_all_except_pattern() {
     fs::remove_all(tmp, ign);
 }
 
+void test_release_all_preserves_public_bindings() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_public";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "PUBLIC pub_keep, pub_arr\n"
+        "pub_keep = 7\n"
+        "DIMENSION pub_arr[1]\n"
+        "pub_arr[1] = 'A'\n"
+        "drop_me = 1\n"
+        "RELEASE ALL EXCEPT keep_*\n"
+        "pub_after = pub_keep\n"
+        "arr_after = pub_arr[1]\n"
+        "drop_type = TYPE('drop_me')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL should preserve PUBLIC bindings");
+
+    const auto pub_after = state.globals.find("pub_after");
+    const auto arr_after = state.globals.find("arr_after");
+    const auto drop_type = state.globals.find("drop_type");
+    expect(pub_after != state.globals.end(), "PUBLIC scalar should be readable after RELEASE ALL EXCEPT");
+    expect(arr_after != state.globals.end(), "PUBLIC array should be readable after RELEASE ALL EXCEPT");
+    expect(drop_type != state.globals.end(), "released non-public variable type should be captured");
+    if (pub_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pub_after->second) == "7",
+               "RELEASE ALL EXCEPT should not erase a PUBLIC scalar that fails the EXCEPT pattern");
+    }
+    if (arr_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(arr_after->second) == "A",
+               "RELEASE ALL EXCEPT should not erase a PUBLIC array that fails the EXCEPT pattern");
+    }
+    if (drop_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(drop_type->second) == "U",
+               "RELEASE ALL EXCEPT should still erase matching non-public variables");
+    }
+
+    fs::remove_all(tmp, ign);
+}
+
 void test_clear_memory_erases_all_globals() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_clear_memory";
@@ -3036,6 +3113,7 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
 }  // namespace
 
 int main() {
+    test_command_keyword_scanner_ignores_nested_text();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
     test_push_pop_key_menu_popup_stack_commands();
@@ -3078,6 +3156,7 @@ int main() {
     test_release_all_clears_all_globals();
     test_release_all_like_pattern();
     test_release_all_except_pattern();
+    test_release_all_preserves_public_bindings();
     test_clear_memory_erases_all_globals();
     test_cancel_halts_execution();
     test_quit_emits_event();

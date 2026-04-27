@@ -209,6 +209,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### Progress Notes
 
+- 2026-04-27: Issue #7 parser and PUBLIC-release parity advanced. The shared top-level command keyword scanner now ignores keywords inside double-quoted strings, bracketed expressions, and braced blocks, and the CSV-like command splitter now keeps braced block commas together. `PUBLIC` declarations now track public identity, so `RELEASE ALL`, `RELEASE ALL LIKE`, and `RELEASE ALL EXCEPT` preserve public-pinned scalar variables and arrays while still releasing matching non-public bindings. Focused `test_prg_engine_control_flow` coverage validates the helper and runtime behavior.
+
 - 2026-04-27: Issue #7/#8 runtime-state and command-surface chunk advanced. `UNLOCK RECORD <n> [IN <alias>]` now releases only the requested record lock while preserving file/table locks and other record locks. Common `SET` options now normalize/evaluate more VFP-like RHS values for literals, variables, and macro-expanded expressions across `PATH`, `MARK`, `DECIMALS`, `COLLATE`, `NULL`, `ANSI`, and related date/numeric/string state. Macro-expanded array names now work across `SCATTER TO`, `GATHER FROM`, `COPY TO ARRAY`, and `APPEND FROM ARRAY` instead of creating or reading arrays literally named `&cName`. Focused `test_prg_engine_table_mutation`, `test_prg_engine_runtime_surface_functions`, and `test_prg_engine_data_io` coverage validates the slice.
 
 - 2026-04-27: Copilot follow-up audit found and fixed two runtime correctness gaps. Durable DBF transaction journaling now covers additional direct mutation paths (`PACK MEMO`, `CREATE TABLE`, `ALTER TABLE`, `APPEND FROM ARRAY`, `APPEND FROM` DBF/SDF/CSV/delimited, and `GATHER`) instead of only the core helper paths, and rollback refresh now closes local cursors whose backing table was removed by replay. `STORE` now reuses the ordinary assignment-target path, so scalar, direct array-element, macro-expanded array-element, `m.` namespace, and OLE property targets stay consistent with normal assignment. Focused `test_prg_engine_table_mutation` and `test_prg_engine_arrays` coverage validates the fixes.
@@ -554,7 +556,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - Expand the native execution engine from `PRG-first` into a broader FoxPro/VFP command surface.
 - Keep closing gaps in command semantics, expression evaluation, macro/eval behavior, and runtime state changes.
-- For issue #7, prioritize parser/command-surface hardening around top-level keyword scanning in double-quoted strings, bracketed expressions, and braced blocks, plus PUBLIC variable identity through `RELEASE ALL` / `LIKE` / `EXCEPT`.
+- For issue #7, keep closing remaining command-surface gaps after the shipped parser scanner and PUBLIC-release identity work.
 - For issue #8, prioritize macro suffix/terminator behavior such as `&stem.suffix` and the remaining runtime-state/macro edge cases after the shipped macro-expanded array command-name and common `SET` RHS work.
 - Build a compatibility corpus from the installed VFP tree, `E:\VFPSource`, your legacy projects, and regression samples.
 

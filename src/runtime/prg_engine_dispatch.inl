@@ -2086,7 +2086,13 @@
             case StatementKind::public_declaration:
                 for (const auto &name : statement.names)
                 {
-                    globals.try_emplace(normalize_memory_variable_identifier(name), make_empty_value());
+                    const std::string normalized = normalize_memory_variable_identifier(name);
+                    if (normalized.empty())
+                    {
+                        continue;
+                    }
+                    public_names.insert(normalized);
+                    globals.try_emplace(normalized, make_empty_value());
                 }
                 return {};
             case StatementKind::local_declaration:
@@ -4118,15 +4124,39 @@
                     const std::string pattern = statement.secondary_expression;
                     if (mode.empty())
                     {
-                        // RELEASE ALL — erase all globals that are not PUBLIC-pinned arrays
-                        globals.clear();
-                        arrays.clear();
+                        for (auto iterator = globals.begin(); iterator != globals.end();)
+                        {
+                            if (public_names.contains(iterator->first))
+                            {
+                                ++iterator;
+                            }
+                            else
+                            {
+                                iterator = globals.erase(iterator);
+                            }
+                        }
+                        for (auto iterator = arrays.begin(); iterator != arrays.end();)
+                        {
+                            if (public_names.contains(iterator->first))
+                            {
+                                ++iterator;
+                            }
+                            else
+                            {
+                                iterator = arrays.erase(iterator);
+                            }
+                        }
                     }
                     else
                     {
                         std::vector<std::string> to_erase;
                         for (const auto &[name, val] : globals)
                         {
+                            (void)val;
+                            if (public_names.contains(name))
+                            {
+                                continue;
+                            }
                             const bool matches = wildcard_match_insensitive(pattern, name);
                             if ((mode == "like" && matches) || (mode == "except" && !matches))
                             {
@@ -4148,6 +4178,7 @@
                         const std::string name = normalize_memory_variable_identifier(trim_copy(raw));
                         globals.erase(name);
                         arrays.erase(name);
+                        public_names.erase(name);
                         // Also remove from current frame locals if declared LOCAL
                         frame.locals.erase(name);
                         frame.local_names.erase(name);
@@ -4164,6 +4195,7 @@
                 // CLEAR ALL — same plus closes all tables and releases procedures
                 globals.clear();
                 arrays.clear();
+                public_names.clear();
                 if (statement.identifier == "all")
                 {
                     // Also close all open work areas

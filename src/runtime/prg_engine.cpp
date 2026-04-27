@@ -325,6 +325,7 @@ namespace copperfin::runtime
         std::vector<Frame> stack;
         std::map<std::string, PrgValue> globals;
         std::map<std::string, RuntimeArray> arrays;
+        std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;
         std::vector<RuntimeEvent> events;
         RuntimePauseState last_state{};

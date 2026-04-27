@@ -11,6 +11,51 @@
 
 namespace copperfin::runtime {
 
+namespace {
+
+std::size_t find_keyword_top_level_impl(
+    const std::string& text,
+    const std::string& keyword,
+    std::size_t start_index) {
+    const std::string upper = uppercase_copy(text);
+    const std::string target = uppercase_copy(keyword);
+
+    char string_delimiter = '\0';
+    int nesting = 0;
+    for (std::size_t index = start_index; index < upper.size(); ++index) {
+        const char ch = upper[index];
+        if ((ch == '\'' || ch == '"') && (string_delimiter == '\0' || string_delimiter == ch)) {
+            string_delimiter = string_delimiter == '\0' ? ch : '\0';
+            continue;
+        }
+        if (string_delimiter != '\0') {
+            continue;
+        }
+        if (ch == '(' || ch == '[' || ch == '{') {
+            ++nesting;
+            continue;
+        }
+        if ((ch == ')' || ch == ']' || ch == '}') && nesting > 0) {
+            --nesting;
+            continue;
+        }
+        if (nesting != 0) {
+            continue;
+        }
+        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
+            upper.compare(index, target.size(), target) == 0) {
+            const std::size_t tail = index + target.size();
+            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
+                return index;
+            }
+        }
+    }
+
+    return std::string::npos;
+}
+
+}  // namespace
+
 std::vector<std::string> split_csv_like(const std::string& text) {
     std::vector<std::string> parts;
     std::string current;
@@ -24,9 +69,9 @@ std::vector<std::string> split_csv_like(const std::string& text) {
             continue;
         }
         if (string_delimiter == '\0') {
-            if (ch == '(' || ch == '[') {
+            if (ch == '(' || ch == '[' || ch == '{') {
                 ++nesting;
-            } else if ((ch == ')' || ch == ']') && nesting > 0) {
+            } else if ((ch == ')' || ch == ']' || ch == '}') && nesting > 0) {
                 --nesting;
             } else if (ch == ',' && nesting == 0) {
                 parts.push_back(trim_copy(current));
@@ -44,41 +89,7 @@ std::vector<std::string> split_csv_like(const std::string& text) {
 }
 
 std::size_t find_keyword_top_level(const std::string& text, const std::string& keyword) {
-    const std::string upper = uppercase_copy(text);
-    const std::string target = uppercase_copy(keyword);
-    int nesting = 0;
-    bool in_string = false;
-
-    for (std::size_t index = 0; index < upper.size(); ++index) {
-        const char ch = upper[index];
-        if (ch == '\'') {
-            in_string = !in_string;
-            continue;
-        }
-        if (in_string) {
-            continue;
-        }
-        if (ch == '(') {
-            ++nesting;
-            continue;
-        }
-        if (ch == ')' && nesting > 0) {
-            --nesting;
-            continue;
-        }
-        if (nesting != 0) {
-            continue;
-        }
-        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
-            upper.compare(index, target.size(), target) == 0) {
-            const std::size_t tail = index + target.size();
-            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
-                return index;
-            }
-        }
-    }
-
-    return std::string::npos;
+    return find_keyword_top_level_impl(text, keyword, 0U);
 }
 
 std::string trim_command_keyword(const std::string& text, const std::string& keyword) {
@@ -93,41 +104,7 @@ std::size_t find_keyword_top_level_from(
     const std::string& text,
     const std::string& keyword,
     std::size_t start_index) {
-    const std::string upper = uppercase_copy(text);
-    const std::string target = uppercase_copy(keyword);
-
-    bool in_string = false;
-    int nesting = 0;
-    for (std::size_t index = start_index; index < upper.size(); ++index) {
-        const char ch = upper[index];
-        if (ch == '\'' && (index == 0U || upper[index - 1U] != '\\')) {
-            in_string = !in_string;
-            continue;
-        }
-        if (in_string) {
-            continue;
-        }
-        if (ch == '(') {
-            ++nesting;
-            continue;
-        }
-        if (ch == ')' && nesting > 0) {
-            --nesting;
-            continue;
-        }
-        if (nesting != 0) {
-            continue;
-        }
-        if ((index == 0U || std::isspace(static_cast<unsigned char>(upper[index - 1U])) != 0) &&
-            upper.compare(index, target.size(), target) == 0) {
-            const std::size_t tail = index + target.size();
-            if (tail >= upper.size() || std::isspace(static_cast<unsigned char>(upper[tail])) != 0) {
-                return index;
-            }
-        }
-    }
-
-    return std::string::npos;
+    return find_keyword_top_level_impl(text, keyword, start_index);
 }
 
 std::size_t find_first_keyword_top_level(

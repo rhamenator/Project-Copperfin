@@ -94,6 +94,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `GETFILE`, `PUTFILE`, `GETDIR`, `INPUTBOX` — first-pass headless dialog-helper command lane; parser now captures both common clause-keyword forms and parenthesized/positional argument forms for prompt/title/default/filter/target metadata, and dispatcher emits `runtime.getfile`, `runtime.putfile`, `runtime.getdir`, and `runtime.inputbox` events while assigning deterministic empty-string first-pass results to `TO <target>` variables in headless mode
 - `PUSH KEY` / `POP KEY`, `PUSH MENU` / `POP MENU`, `PUSH POPUP` / `POP POPUP` — first-pass session-scoped key/menu/popup stack semantics with deterministic push/pop depth behavior and runtime events (`runtime.push_*` / `runtime.pop_*`) including empty-pop signaling
 - `SAVE TO`, `RESTORE FROM` — first-pass memvar persistence lane with `.mem` auto-extension behavior, `LIKE`/`EXCEPT` filtering, `ADDITIVE` merge support, robust escaped text serialization, and explicit empty-value markers for stable round-trip restore behavior
+- `RELEASE` — first-pass public/global release semantics now preserve public-pinned scalar variables and arrays across `RELEASE ALL`, `RELEASE ALL LIKE`, and `RELEASE ALL EXCEPT`, while named and non-public release paths continue to remove ordinary bindings
 - `SELECT`
 - `USE`, `USE IN`, `USE AGAIN`
 - `SET DATASESSION TO`
@@ -102,7 +103,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover both open work-area cursors and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
 - `ON ERROR`
 - `ON SHUTDOWN` — first-pass shutdown-handler semantics for `ON SHUTDOWN DO <routine> [WITH ...]` plus common inline compatibility forms including `ON SHUTDOWN CLEAR EVENTS` and close-style cleanup commands such as `ON SHUTDOWN CLOSE DATABASES ALL`; shutdown routines run before final `QUIT` completion and nested `QUIT` inside the shutdown routine is treated as the terminal quit rather than recursing indefinitely
-- `PUBLIC`
+- `PUBLIC` — first-pass public identity declaration for memory variables and arrays
 - `LOCAL`
 - `PRIVATE`
 - `DIMENSION` / array-form `DECLARE` — first-pass runtime arrays with one- and two-dimensional sizing
