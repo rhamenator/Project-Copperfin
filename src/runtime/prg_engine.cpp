@@ -289,6 +289,22 @@ namespace copperfin::runtime
             runtime_temp_directory = choose_runtime_temp_directory(options);
         }
 
+        struct AErrorCompatibilitySnapshot
+        {
+            std::string sql_detail;
+            std::string sql_state;
+            int sql_native_code = 0;
+            bool has_sql_native_code = false;
+            std::string sql_context;
+            std::string sql_payload;
+            std::string ole_detail;
+            std::string ole_app;
+            std::string ole_source;
+            std::string ole_action;
+            int ole_native_code = 0;
+            bool has_ole_native_code = false;
+        };
+
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
         std::vector<Frame> stack;
@@ -304,6 +320,7 @@ namespace copperfin::runtime
         int last_error_code = 0;
         int last_error_work_area = 0;
         std::string last_error_procedure;
+        AErrorCompatibilitySnapshot last_error_compatibility;
         std::string error_handler;
         std::string shutdown_handler;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;

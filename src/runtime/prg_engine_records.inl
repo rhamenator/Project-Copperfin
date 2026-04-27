@@ -420,6 +420,68 @@
             return names;
         }
 
+        std::vector<std::string> effective_visible_field_names(
+            const CursorState &cursor,
+            const std::string &override_field_list_text)
+        {
+            std::vector<std::string> all_fields = cursor_field_names(cursor);
+            if (all_fields.empty())
+            {
+                return all_fields;
+            }
+
+            std::string field_list_text = trim_copy(override_field_list_text);
+            if (field_list_text.empty())
+            {
+                const auto &set_state = current_set_state();
+                const auto enabled = set_state.find("fields_enabled");
+                if (enabled == set_state.end() || !is_set_enabled("fields_enabled"))
+                {
+                    return all_fields;
+                }
+
+                const auto fields = set_state.find("fields");
+                if (fields == set_state.end())
+                {
+                    return all_fields;
+                }
+
+                field_list_text = trim_copy(fields->second);
+            }
+
+            if (field_list_text.empty())
+            {
+                return all_fields;
+            }
+
+            std::vector<std::string> visible_fields;
+            for (std::string requested_field : split_csv_like(field_list_text))
+            {
+                requested_field = trim_copy(std::move(requested_field));
+                if (requested_field.empty())
+                {
+                    continue;
+                }
+
+                const std::string normalized_request = collapse_identifier(requested_field);
+                if (normalized_request == "ALL")
+                {
+                    return all_fields;
+                }
+
+                const auto match = std::find_if(all_fields.begin(), all_fields.end(), [&](const std::string &candidate)
+                {
+                    return collapse_identifier(candidate) == normalized_request;
+                });
+                if (match != all_fields.end())
+                {
+                    visible_fields.push_back(*match);
+                }
+            }
+
+            return visible_fields.empty() ? all_fields : visible_fields;
+        }
+
         std::vector<vfp::DbfFieldDescriptor> cursor_field_descriptors(const CursorState &cursor)
         {
             std::vector<vfp::DbfFieldDescriptor> fields;

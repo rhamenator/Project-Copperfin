@@ -220,6 +220,7 @@
             {
                 last_error_message = "SQL handle not found: " + std::to_string(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLPREPARE", trim_copy(command));
                 return -1;
             }
             found->second.prepared_command = command;
@@ -280,6 +281,7 @@
             {
                 last_error_message = "SQL handle not found: " + std::to_string(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLSETPROP", trim_copy(property_name));
                 return -1;
             }
 
@@ -307,6 +309,7 @@
             {
                 last_error_message = "SQL handle not found: " + std::to_string(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLEXEC", trim_copy(command));
                 return -1;
             }
 
@@ -319,6 +322,11 @@
             {
                 last_error_message = "SQLEXEC requires a command or a prepared SQL statement";
                 last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle),
+                                          "HY000",
+                                          -1,
+                                          connection.provider.empty() ? std::string("SQLEXEC") : connection.provider,
+                                          connection.target);
                 return -1;
             }
 

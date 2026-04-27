@@ -61,6 +61,11 @@
                     if (!object.has_value())
                     {
                         last_error_message = "OLE object not found for property assignment: " + assignment_identifier;
+                        record_ole_aerror_context(assignment_identifier,
+                                                  "Copperfin OLE",
+                                                  object_part,
+                                                  statement.text,
+                                                  1429);
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -1272,6 +1277,49 @@
                 }
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::browse_command:
+            {
+                CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                if (cursor == nullptr)
+                {
+                    last_error_message = "BROWSE target work area not found";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const std::vector<std::string> visible_fields = effective_visible_field_names(*cursor, statement.tertiary_expression);
+                std::string field_detail;
+                for (std::size_t index = 0U; index < visible_fields.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        field_detail += ",";
+                    }
+                    field_detail += visible_fields[index];
+                }
+
+                std::string detail = cursor->alias.empty()
+                    ? ("workarea=" + std::to_string(cursor->work_area))
+                    : (cursor->alias + "@" + std::to_string(cursor->work_area));
+                detail += " recno=" + std::to_string(cursor->recno);
+                detail += " records=" + std::to_string(cursor->record_count);
+                detail += " fields=" + (field_detail.empty() ? std::string{"ALL"} : field_detail);
+                detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
+                if (!statement.quaternary_expression.empty())
+                {
+                    detail += " for=" + trim_copy(statement.quaternary_expression);
+                }
+                if (!statement.expression.empty())
+                {
+                    detail += " clause=" + trim_copy(statement.expression);
+                }
+
+                events.push_back({.category = "runtime.browse",
+                                  .detail = detail,
                                   .location = statement.location});
                 return {};
             }

@@ -87,6 +87,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `SEEK`
 - `GO` / `GOTO`
 - `SKIP`
+- `BROWSE` — first-pass headless/runtime browse event lane over local/runtime cursors; honors selected or `IN`-targeted cursor context, reuses session `SET FILTER` / `SET FIELDS` state by default, accepts inline `FIELDS` and `FOR` clause capture, and emits `runtime.browse` metadata for later host/UI wiring
 - `SELECT`
 - `USE`, `USE IN`, `USE AGAIN`
 - `SET DATASESSION TO`
@@ -131,7 +132,7 @@ The expression/function layer currently has first-pass support for these VFP-fac
 
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
 - first-pass `ALEN()` for runtime arrays created by `SCATTER TO <array>`, `AERROR(<array>)`, `DIMENSION` / array-form `DECLARE`, and `ASIZE()`, including total element count and dimension queries
-- deeper first-pass `AERROR(<array>)` with VFP-aligned seven-column rows for normal runtime errors: code, message, mixed-case error parameter, faulting work area, fault line, fault procedure, and failing statement text; SQL/ODBC-like `1526` and OLE/automation-like `1429` row shapes still carry provider-specific detail placeholders where Copperfin does not yet have live provider payloads
+- deeper first-pass `AERROR(<array>)` with VFP-aligned seven-column rows for normal runtime errors: code, message, mixed-case error parameter, faulting work area, fault line, fault procedure, and failing statement text; SQL/ODBC-like `1526` rows now preserve captured handle/detail plus provider-or-operation context and command/target payload when the runtime has them, and OLE/automation-like `1429` rows now preserve captured member-path detail, source object identifiers, and failing action text instead of leaving trailing columns as placeholders when Copperfin already knows that payload
 - first-pass runtime array helpers over Copperfin runtime arrays: `ACOPY()`, `ADIR()`, `AELEMENT()`, `AFIELDS()` over local and synthetic SQL cursor schemas, `ALINES()`, `ASIZE()`, `ASCAN()`, `ADEL()`, `AINS()`, `ASORT()`, `ASUBSCRIPT()`, and `AUSED()`; the focused array regression target now exercises predicate-style `ASCAN()` searches, including unquoted block-style predicate arguments, common two-dimensional `ACOPY()` row/column workflows, and declared-array/metadata helper coverage separately from the legacy catch-all PRG-engine test
 - `EVAL()` and first-pass `&macro` substitution in expression paths
 - `SQLCONNECT()`, `SQLSTRINGCONNECT()`, `SQLEXEC()`, `SQLDISCONNECT()`
@@ -178,9 +179,9 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Local Table Mutation And Query Flow
 
-- add the table-editing and table-browse commands needed for real legacy business applications
+- continue beyond the new first-pass headless `BROWSE` lane toward the remaining interactive table-editing commands needed for real legacy business applications
 - the shared DBF/FPT mutation path now covers shipped local-table write families used by current runtime flows: memo-backed pointer fields (`M`/`G`/`P`), fixed-width numeric/date families (`B`/`I`/`Y`/`T`), first-pass var-length families (`V`/`Q`), constrained `NULL` token mutation semantics, staged write safety for DBF/memo updates (including staged-artifact cleanup), physical `PACK` compaction, first-pass `PACK MEMO` sidecar rewrite/compaction, `ZAP` truncation, SQL-style insert rollback, first-pass `CREATE TABLE`, first-pass structural `ALTER TABLE`, and indexed-table plus unsupported-layout fail-fast guards until real structural/indexed storage fidelity exists
-- extend the shipped filtering, locating, scanning, replacing, appending, SQL-style inserting/deleting, recalling, packing, zapping, first-pass structural `CREATE TABLE` / `ALTER TABLE`, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN` plus first-pass `TO ARRAY`, first-pass `TOTAL` with `IN` targeting and local `N/F/I/Y` support, and `CALCULATE` families toward broader xBase parity
+- extend the shipped filtering, browsing, locating, scanning, replacing, appending, SQL-style inserting/deleting, recalling, packing, zapping, first-pass structural `CREATE TABLE` / `ALTER TABLE`, aggregate-built-in, command-level `COUNT`/`SUM`/`AVERAGE` with first-pass scope/`WHILE`/`IN` plus first-pass `TO ARRAY`, first-pass `TOTAL` with `IN` targeting and local `N/F/I/Y` support, and `CALCULATE` families toward broader xBase parity
 - deepen table-maintenance parity beyond the first-pass `PACK`/`ZAP`/`PACK MEMO` slice with real cross-process locking behavior, index rebuild/invalidated-order handling, and stronger diagnostics for unsafe structural layouts
 - keep runtime semantics ahead of shell/designer work so the same engine can power both Visual Studio and the standalone IDE
 

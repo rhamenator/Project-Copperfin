@@ -65,6 +65,40 @@
             last_error_code = classify_runtime_error_code(last_error_message);
             last_error_work_area = current_selected_work_area();
             last_error_procedure = frame.routine_name;
+            if (last_error_code != 1526 && last_error_code != 1429)
+            {
+                last_error_compatibility = {};
+            }
+        }
+
+        void record_sql_aerror_context(const std::string &detail,
+                                       const std::string &state,
+                                       int native_code,
+                                       const std::string &context,
+                                       const std::string &payload)
+        {
+            last_error_compatibility = {};
+            last_error_compatibility.sql_detail = detail;
+            last_error_compatibility.sql_state = state;
+            last_error_compatibility.sql_native_code = native_code;
+            last_error_compatibility.has_sql_native_code = true;
+            last_error_compatibility.sql_context = context;
+            last_error_compatibility.sql_payload = payload;
+        }
+
+        void record_ole_aerror_context(const std::string &detail,
+                                       const std::string &app,
+                                       const std::string &source,
+                                       const std::string &action,
+                                       int native_code)
+        {
+            last_error_compatibility = {};
+            last_error_compatibility.ole_detail = detail;
+            last_error_compatibility.ole_app = app;
+            last_error_compatibility.ole_source = source;
+            last_error_compatibility.ole_action = action;
+            last_error_compatibility.ole_native_code = native_code;
+            last_error_compatibility.has_ole_native_code = true;
         }
 
         DataSessionState &current_session_state()

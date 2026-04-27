@@ -1271,6 +1271,64 @@ void test_m_dot_namespace_shares_bare_memory_variable_binding() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_browse_emits_effective_cursor_view_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_browse";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}, {"Bob", 25}});
+    write_people_dbf(temp_root / "other.dbf", {{"Carol", 55}});
+
+    const fs::path main_path = temp_root / "browse.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "USE '" + (temp_root / "other.dbf").string() + "' ALIAS other AGAIN IN 0\n"
+        "SELECT people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO NAME\n"
+        "BROWSE\n"
+        "BROWSE IN other FIELDS AGE FOR AGE > 40\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "BROWSE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> browse_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.browse") {
+            browse_events.push_back(event);
+        }
+    }
+
+    expect(browse_events.size() == 2U, "BROWSE commands should emit two runtime.browse events");
+    if (browse_events.size() >= 2U) {
+        expect(browse_events[0].detail.find("people@") != std::string::npos,
+            "default BROWSE should target the selected cursor");
+        expect(browse_events[0].detail.find("fields=NAME") != std::string::npos,
+            "default BROWSE should honor SET FIELDS state");
+        expect(browse_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "default BROWSE should surface the current cursor filter");
+
+        expect(browse_events[1].detail.find("other@") != std::string::npos,
+            "targeted BROWSE IN should surface the requested cursor");
+        expect(browse_events[1].detail.find("fields=AGE") != std::string::npos,
+            "BROWSE FIELDS should override SET FIELDS for the event payload");
+        expect(browse_events[1].detail.find("for=AGE > 40") != std::string::npos,
+            "BROWSE FOR should surface the inline filter expression");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1290,6 +1348,7 @@ int main() {
     test_append_from_array_writes_records_from_2d_array();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
+    test_browse_emits_effective_cursor_view_metadata();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

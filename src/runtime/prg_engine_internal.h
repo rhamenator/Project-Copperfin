@@ -57,6 +57,7 @@ enum class StatementKind {
     insert_into_command,
     go_command,
     skip_command,
+    browse_command,
     select_command,
     use_command,
     set_order,

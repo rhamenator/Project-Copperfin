@@ -547,6 +547,13 @@ Program parse_program(const std::string& path) {
                 statement.expression = body.empty() ? "1" : take_first_token(body);
                 statement.secondary_expression = take_keyword_value(body, "IN");
             }
+        } else if (upper == "BROWSE" || starts_with_insensitive(line, "BROWSE ")) {
+            statement.kind = StatementKind::browse_command;
+            const std::string body = upper == "BROWSE" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
+            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "IN"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;
             statement.expression = trim_copy(line.substr(7U));

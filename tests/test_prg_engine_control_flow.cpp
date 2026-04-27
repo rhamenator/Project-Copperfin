@@ -1590,13 +1590,16 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     const fs::path main_path = temp_root / "aerror_specific.prg";
     write_text(
         main_path,
-        "nSqlResult = SQLEXEC(999, 'select * from missing')\n"
+        "nConn = SQLCONNECT('Driver=ODBC Driver 18 for SQL Server;Server=Northwind')\n"
+        "nSqlResult = SQLEXEC(nConn)\n"
         "nSqlRows = AERROR(aSqlErr)\n"
         "nSqlCode = aSqlErr[1,1]\n"
         "cSqlMessage = aSqlErr[1,2]\n"
         "cSqlDetail = aSqlErr[1,3]\n"
         "cSqlState = aSqlErr[1,4]\n"
         "nSqlNative = aSqlErr[1,5]\n"
+        "cSqlContext = aSqlErr[1,6]\n"
+        "cSqlPayload = aSqlErr[1,7]\n"
         "ON ERROR DO oleerr\n"
         "missingOle.SomeProperty = 42\n"
         "RETURN\n"
@@ -1606,6 +1609,8 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
         "cOleMessage = aOleErr[1,2]\n"
         "cOleDetail = aOleErr[1,3]\n"
         "cOleApp = aOleErr[1,4]\n"
+        "cOleSource = aOleErr[1,5]\n"
+        "cOleAction = aOleErr[1,6]\n"
         "nOleNative = aOleErr[1,7]\n"
         "RETURN\n"
         "ENDPROC\n");
@@ -1625,11 +1630,15 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     const auto sql_detail = state.globals.find("csqldetail");
     const auto sql_state = state.globals.find("csqlstate");
     const auto sql_native = state.globals.find("nsqlnative");
+    const auto sql_context = state.globals.find("csqlcontext");
+    const auto sql_payload = state.globals.find("csqlpayload");
     const auto ole_rows = state.globals.find("nolerows");
     const auto ole_code = state.globals.find("nolecode");
     const auto ole_message = state.globals.find("colemessage");
     const auto ole_detail = state.globals.find("coledetail");
     const auto ole_app = state.globals.find("coleapp");
+    const auto ole_source = state.globals.find("colesource");
+    const auto ole_action = state.globals.find("coleaction");
     const auto ole_native = state.globals.find("nolenative");
 
     expect(sql_rows != state.globals.end(), "SQL AERROR should return a row count");
@@ -1638,11 +1647,15 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     expect(sql_detail != state.globals.end(), "SQL AERROR should populate detail");
     expect(sql_state != state.globals.end(), "SQL AERROR should populate SQL state");
     expect(sql_native != state.globals.end(), "SQL AERROR should populate native code");
+    expect(sql_context != state.globals.end(), "SQL AERROR should populate captured context");
+    expect(sql_payload != state.globals.end(), "SQL AERROR should populate captured payload");
     expect(ole_rows != state.globals.end(), "OLE AERROR should return a row count");
     expect(ole_code != state.globals.end(), "OLE AERROR should populate code");
     expect(ole_message != state.globals.end(), "OLE AERROR should populate message");
     expect(ole_detail != state.globals.end(), "OLE AERROR should populate detail");
     expect(ole_app != state.globals.end(), "OLE AERROR should populate app name");
+    expect(ole_source != state.globals.end(), "OLE AERROR should populate the captured source object");
+    expect(ole_action != state.globals.end(), "OLE AERROR should populate the captured action text");
     expect(ole_native != state.globals.end(), "OLE AERROR should populate native code");
 
     if (sql_rows != state.globals.end()) {
@@ -1652,11 +1665,11 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
         expect(copperfin::runtime::format_value(sql_code->second) == "1526", "SQL failures should use the VFP ODBC error code");
     }
     if (sql_message != state.globals.end()) {
-        expect(copperfin::runtime::format_value(sql_message->second).find("SQL handle not found") != std::string::npos,
+        expect(copperfin::runtime::format_value(sql_message->second).find("SQLEXEC requires a command") != std::string::npos,
             "SQL AERROR message should preserve SQL failure text");
     }
     if (sql_detail != state.globals.end()) {
-        expect(copperfin::runtime::format_value(sql_detail->second) == "999",
+        expect(copperfin::runtime::format_value(sql_detail->second) == "1",
             "SQL AERROR detail should preserve the failing handle parameter");
     }
     if (sql_state != state.globals.end()) {
@@ -1664,6 +1677,14 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     }
     if (sql_native != state.globals.end()) {
         expect(copperfin::runtime::format_value(sql_native->second) == "-1", "SQL AERROR should expose a native failure code");
+    }
+    if (sql_context != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_context->second) == "odbc",
+            "SQL AERROR should preserve the captured provider context when a connection exists");
+    }
+    if (sql_payload != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sql_payload->second).find("Northwind") != std::string::npos,
+            "SQL AERROR should preserve the captured connection payload instead of leaving the column empty");
     }
     if (ole_rows != state.globals.end()) {
         expect(copperfin::runtime::format_value(ole_rows->second) == "1", "OLE AERROR should expose one row");
@@ -1682,6 +1703,14 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
     if (ole_app != state.globals.end()) {
         expect(copperfin::runtime::format_value(ole_app->second) == "Copperfin OLE",
             "OLE AERROR app column should identify the runtime automation bridge");
+    }
+    if (ole_source != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_source->second) == "missingOle",
+            "OLE AERROR should preserve the captured source object identifier instead of leaving the column empty");
+    }
+    if (ole_action != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ole_action->second).find("missingOle.SomeProperty = 42") != std::string::npos,
+            "OLE AERROR should preserve the captured action text instead of leaving the column empty");
     }
     if (ole_native != state.globals.end()) {
         expect(copperfin::runtime::format_value(ole_native->second) == "1429",

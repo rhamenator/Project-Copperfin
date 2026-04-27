@@ -504,27 +504,39 @@
             const std::string error_parameter = runtime_error_parameter(last_error_message);
             if (effective_error_code == 1526)
             {
+                const std::string sql_detail = last_error_compatibility.sql_detail.empty()
+                                                   ? error_parameter
+                                                   : last_error_compatibility.sql_detail;
+                const std::string sql_state = last_error_compatibility.sql_state.empty()
+                                                  ? std::string("HY000")
+                                                  : last_error_compatibility.sql_state;
                 std::vector<PrgValue> values{
                     make_number_value(1526.0),
                     make_string_value(last_error_message),
-                    make_string_value(error_parameter),
-                    make_string_value("HY000"),
-                    make_number_value(-1.0),
-                    make_number_value(0.0),
-                    make_empty_value()};
+                    make_string_value(sql_detail),
+                    make_string_value(sql_state),
+                    make_number_value(static_cast<double>(last_error_compatibility.has_sql_native_code ? last_error_compatibility.sql_native_code : -1)),
+                    last_error_compatibility.sql_context.empty() ? make_empty_value() : make_string_value(last_error_compatibility.sql_context),
+                    last_error_compatibility.sql_payload.empty() ? make_empty_value() : make_string_value(last_error_compatibility.sql_payload)};
                 assign_array(name, std::move(values), 7U);
                 return 1;
             }
             if (effective_error_code == 1429)
             {
+                const std::string ole_detail = last_error_compatibility.ole_detail.empty()
+                                                   ? error_parameter
+                                                   : last_error_compatibility.ole_detail;
+                const std::string ole_app = last_error_compatibility.ole_app.empty()
+                                                ? std::string("Copperfin OLE")
+                                                : last_error_compatibility.ole_app;
                 std::vector<PrgValue> values{
                     make_number_value(1429.0),
                     make_string_value(last_error_message),
-                    make_string_value(error_parameter),
-                    make_string_value("Copperfin OLE"),
-                    make_empty_value(),
-                    make_empty_value(),
-                    make_number_value(1429.0)};
+                    make_string_value(ole_detail),
+                    make_string_value(ole_app),
+                    last_error_compatibility.ole_source.empty() ? make_empty_value() : make_string_value(last_error_compatibility.ole_source),
+                    last_error_compatibility.ole_action.empty() ? make_empty_value() : make_string_value(last_error_compatibility.ole_action),
+                    make_number_value(static_cast<double>(last_error_compatibility.has_ole_native_code ? last_error_compatibility.ole_native_code : 1429))};
                 assign_array(name, std::move(values), 7U);
                 return 1;
             }
