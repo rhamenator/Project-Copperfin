@@ -238,6 +238,110 @@ void test_do_case_control_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_push_pop_key_menu_popup_stack_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_push_pop_stack_commands";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "push_pop_stack_commands.prg";
+    write_text(
+        main_path,
+        "PUSH KEY CTRL+F\n"
+        "PUSH KEY ALT+G\n"
+        "POP KEY\n"
+        "POP KEY\n"
+        "POP KEY\n"
+        "PUSH MENU _MSYSMENU\n"
+        "PUSH MENU _MFILE PAD 1\n"
+        "POP MENU\n"
+        "POP MENU\n"
+        "POP MENU\n"
+        "PUSH POPUP ShortcutMenu\n"
+        "PUSH POPUP ContextMenu\n"
+        "POP POPUP\n"
+        "POP POPUP\n"
+        "POP POPUP\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PUSH/POP stack command script should complete");
+
+    const auto push_key_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_key";
+    }));
+    const auto pop_key_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_key";
+    }));
+    const auto push_menu_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_menu";
+    }));
+    const auto pop_menu_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_menu";
+    }));
+    const auto push_popup_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_popup";
+    }));
+    const auto pop_popup_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_popup";
+    }));
+
+    expect(push_key_count == 2, "PUSH KEY should emit runtime.push_key per command");
+    expect(pop_key_count == 3, "POP KEY should emit runtime.pop_key per command");
+    expect(push_menu_count == 2, "PUSH MENU should emit runtime.push_menu per command");
+    expect(pop_menu_count == 3, "POP MENU should emit runtime.pop_menu per command");
+    expect(push_popup_count == 2, "PUSH POPUP should emit runtime.push_popup per command");
+    expect(pop_popup_count == 3, "POP POPUP should emit runtime.pop_popup per command");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_key" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=ALT+G") != std::string::npos;
+        }),
+        "PUSH KEY should increment stack depth and include the pushed key marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_key" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP KEY on an empty stack should be a safe no-op and report empty stack detail");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_menu" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=_MFILE PAD 1") != std::string::npos;
+        }),
+        "PUSH MENU should increment stack depth and include the pushed menu marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_menu" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP MENU on an empty stack should be a safe no-op and report empty stack detail");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_popup" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=ContextMenu") != std::string::npos;
+        }),
+        "PUSH POPUP should increment stack depth and include the pushed popup marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_popup" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP POPUP on an empty stack should be a safe no-op and report empty stack detail");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_text_endtext_literal_blocks() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_text_blocks";
@@ -2747,6 +2851,7 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
 int main() {
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
+    test_push_pop_key_menu_popup_stack_commands();
     test_text_endtext_literal_blocks();
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();

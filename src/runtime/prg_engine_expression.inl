@@ -40,6 +40,8 @@
         const std::function<int(const std::string&)>& aerror_callback,
         const std::function<PrgValue(const std::string&)>& eval_expression_callback,
         const std::function<std::string(const std::string&)>& set_callback,
+        const std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string&)>& snapshot_cursor_callback,
+        const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
         const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
         const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
         const std::function<void(const std::string&, const std::string&)>& record_event_callback);
@@ -105,6 +107,8 @@
                 std::function<PrgValue(const std::string &)> ole_property_callback,
                 std::function<PrgValue(const std::string &)> eval_expression_callback,
                 std::function<std::string(const std::string &)> set_callback,
+                std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback,
+                std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
@@ -153,6 +157,8 @@
                   ole_property_callback_(std::move(ole_property_callback)),
                   eval_expression_callback_(std::move(eval_expression_callback)),
                   set_callback_(std::move(set_callback)),
+                  snapshot_cursor_callback_(std::move(snapshot_cursor_callback)),
+                  load_cursor_snapshot_callback_(std::move(load_cursor_snapshot_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
@@ -854,6 +860,8 @@
                                                           aerror_callback_,
                                                           eval_expression_callback_,
                                                           set_callback_,
+                                                          snapshot_cursor_callback_,
+                                                          load_cursor_snapshot_callback_,
                                                           resolve_object_callback_,
                                                           assign_array_callback_,
                                                           record_event_callback_))
@@ -1141,6 +1149,8 @@
             std::function<PrgValue(const std::string &)> ole_property_callback_;
             std::function<PrgValue(const std::string &)> eval_expression_callback_;
             std::function<std::string(const std::string &)> set_callback_;
+            std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback_;
+            std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;

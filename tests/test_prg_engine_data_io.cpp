@@ -1940,6 +1940,186 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_getfile_command_emits_runtime_getfile_event_with_clause_details() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_getfile_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "getfile_test.prg";
+    write_text(
+        main_path,
+        "GETFILE PROMPT \"Pick a file\" TITLE \"Open\" DEFAULT \"./data\" FILTER \"*.dbf\" TO lcPath\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GETFILE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> dialog_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.getfile") {
+            dialog_events.push_back(event);
+        }
+    }
+
+    expect(dialog_events.size() == 1U, "GETFILE command should emit one runtime.getfile event");
+    if (dialog_events.size() >= 1U) {
+        expect(dialog_events[0].detail.find("prompt=") != std::string::npos,
+            "GETFILE event should include prompt detail");
+        expect(dialog_events[0].detail.find("title=") != std::string::npos,
+            "GETFILE event should include title detail");
+        expect(dialog_events[0].detail.find("default=") != std::string::npos,
+            "GETFILE event should include default detail");
+        expect(dialog_events[0].detail.find("filter=") != std::string::npos,
+            "GETFILE event should include filter detail");
+        expect(dialog_events[0].detail.find("target=lcPath") != std::string::npos,
+            "GETFILE event should include target detail");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_putfile_command_emits_runtime_putfile_event_with_clause_details() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_putfile_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "putfile_test.prg";
+    write_text(
+        main_path,
+        "PUTFILE PROMPT \"Save as\" TITLE \"Save\" DEFAULT \"./output\" FILTER \"*.txt\" TO lcSavePath\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PUTFILE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> dialog_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.putfile") {
+            dialog_events.push_back(event);
+        }
+    }
+
+    expect(dialog_events.size() == 1U, "PUTFILE command should emit one runtime.putfile event");
+    if (dialog_events.size() >= 1U) {
+        expect(dialog_events[0].detail.find("prompt=") != std::string::npos,
+            "PUTFILE event should include prompt detail");
+        expect(dialog_events[0].detail.find("title=") != std::string::npos,
+            "PUTFILE event should include title detail");
+        expect(dialog_events[0].detail.find("default=") != std::string::npos,
+            "PUTFILE event should include default detail");
+        expect(dialog_events[0].detail.find("filter=") != std::string::npos,
+            "PUTFILE event should include filter detail");
+        expect(dialog_events[0].detail.find("target=lcSavePath") != std::string::npos,
+            "PUTFILE event should include target detail");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_getdir_command_emits_runtime_getdir_event_with_clause_details() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_getdir_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "getdir_test.prg";
+    write_text(
+        main_path,
+        "GETDIR PROMPT \"Choose folder\" TITLE \"Browse\" DEFAULT \"./workspace\" TO lcDir\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GETDIR script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> dialog_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.getdir") {
+            dialog_events.push_back(event);
+        }
+    }
+
+    expect(dialog_events.size() == 1U, "GETDIR command should emit one runtime.getdir event");
+    if (dialog_events.size() >= 1U) {
+        expect(dialog_events[0].detail.find("prompt=") != std::string::npos,
+            "GETDIR event should include prompt detail");
+        expect(dialog_events[0].detail.find("title=") != std::string::npos,
+            "GETDIR event should include title detail");
+        expect(dialog_events[0].detail.find("default=") != std::string::npos,
+            "GETDIR event should include default detail");
+        expect(dialog_events[0].detail.find("target=lcDir") != std::string::npos,
+            "GETDIR event should include target detail");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_inputbox_command_emits_runtime_inputbox_event_with_clause_details() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_inputbox_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "inputbox_test.prg";
+    write_text(
+        main_path,
+        "INPUTBOX PROMPT \"Enter value\" TITLE \"Question\" DEFAULT \"42\" TO lcAnswer\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "INPUTBOX script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> dialog_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.inputbox") {
+            dialog_events.push_back(event);
+        }
+    }
+
+    expect(dialog_events.size() == 1U, "INPUTBOX command should emit one runtime.inputbox event");
+    if (dialog_events.size() >= 1U) {
+        expect(dialog_events[0].detail.find("prompt=") != std::string::npos,
+            "INPUTBOX event should include prompt detail");
+        expect(dialog_events[0].detail.find("title=") != std::string::npos,
+            "INPUTBOX event should include title detail");
+        expect(dialog_events[0].detail.find("default=") != std::string::npos,
+            "INPUTBOX event should include default detail");
+        expect(dialog_events[0].detail.find("target=lcAnswer") != std::string::npos,
+            "INPUTBOX event should include target detail");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_wait_window_command_emits_runtime_wait_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_wait_cmd";
@@ -2166,6 +2346,10 @@ int main() {
     test_change_command_emits_runtime_change_event();
     test_input_command_emits_runtime_input_event_with_prompt();
     test_accept_command_emits_runtime_accept_event_with_prompt();
+    test_getfile_command_emits_runtime_getfile_event_with_clause_details();
+    test_putfile_command_emits_runtime_putfile_event_with_clause_details();
+    test_getdir_command_emits_runtime_getdir_event_with_clause_details();
+    test_inputbox_command_emits_runtime_inputbox_event_with_clause_details();
     test_wait_window_command_emits_runtime_wait_event();
     test_wait_clear_command_emits_runtime_wait_clear_event();
     test_keyboard_command_emits_runtime_keyboard_event();

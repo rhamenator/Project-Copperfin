@@ -4,6 +4,7 @@
 #include "prg_engine_internal.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_runtime_config.h"
+#include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
@@ -249,6 +250,9 @@ namespace copperfin::runtime
             std::map<int, CursorState> cursors;
             std::set<int> table_locks;
             std::map<int, std::set<std::size_t>> record_locks;
+            std::vector<std::string> key_stack;
+            std::vector<std::string> menu_stack;
+            std::vector<std::string> popup_stack;
         };
 
         struct RuntimeArray
@@ -745,6 +749,219 @@ namespace copperfin::runtime
                     return std::string("OFF");
                 }
                 return found->second;
+            },
+            [this](const std::string &designator) -> std::optional<RuntimeSurfaceCursorSnapshot>
+            {
+                CursorState *cursor = resolve_cursor_target(designator);
+                if (cursor == nullptr)
+                {
+                    return std::nullopt;
+                }
+
+                RuntimeSurfaceCursorSnapshot snapshot;
+                snapshot.alias = cursor->alias;
+
+                const std::vector<vfp::DbfFieldDescriptor> descriptors = cursor_field_descriptors(*cursor);
+                snapshot.fields.reserve(descriptors.size());
+                for (const auto &descriptor : descriptors)
+                {
+                    snapshot.fields.push_back(RuntimeSurfaceCursorField{
+                        .name = descriptor.name,
+                        .type = descriptor.type,
+                        .width = static_cast<std::size_t>(descriptor.length),
+                        .decimals = static_cast<std::size_t>(descriptor.decimal_count)});
+                }
+
+                if (cursor->remote)
+                {
+                    snapshot.rows.reserve(cursor->remote_records.size());
+                    for (const auto &record : cursor->remote_records)
+                    {
+                        RuntimeSurfaceCursorRow row;
+                        row.values.reserve(snapshot.fields.size());
+                        for (const auto &field : snapshot.fields)
+                        {
+                            row.values.push_back(record_field_value(record, field.name).value_or(std::string{}));
+                        }
+                        snapshot.rows.push_back(std::move(row));
+                    }
+                    return snapshot;
+                }
+
+                if (cursor->source_path.empty())
+                {
+                    return std::nullopt;
+                }
+
+                const auto parse_result =
+                    vfp::parse_dbf_table_from_file(cursor->source_path, std::max<std::size_t>(cursor->record_count, 1U));
+                if (!parse_result.ok)
+                {
+                    return std::nullopt;
+                }
+
+                snapshot.rows.reserve(parse_result.table.records.size());
+                for (const auto &record : parse_result.table.records)
+                {
+                    RuntimeSurfaceCursorRow row;
+                    row.values.reserve(snapshot.fields.size());
+                    for (const auto &field : snapshot.fields)
+                    {
+                        row.values.push_back(record_field_value(record, field.name).value_or(std::string{}));
+                    }
+                    snapshot.rows.push_back(std::move(row));
+                }
+                return snapshot;
+            },
+            [this](const RuntimeSurfaceCursorSnapshot &snapshot, const std::string &destination_alias) -> std::optional<std::size_t>
+            {
+                std::string alias = normalize_identifier(trim_copy(destination_alias));
+                if (alias.empty())
+                {
+                    return std::nullopt;
+                }
+
+                CursorState *existing = resolve_cursor_target(alias);
+                if (existing != nullptr)
+                {
+                    if (existing->remote || existing->source_path.empty())
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::vector<vfp::DbfFieldDescriptor> existing_fields = cursor_field_descriptors(*existing);
+                    if (existing_fields.size() != snapshot.fields.size())
+                    {
+                        return std::nullopt;
+                    }
+                    for (std::size_t index = 0U; index < existing_fields.size(); ++index)
+                    {
+                        if (collapse_identifier(existing_fields[index].name) != collapse_identifier(snapshot.fields[index].name))
+                        {
+                            return std::nullopt;
+                        }
+                    }
+
+                    if (!ensure_transaction_backup_for_table(existing->source_path))
+                    {
+                        return std::nullopt;
+                    }
+                    const auto truncate_result = vfp::truncate_dbf_table_file(existing->source_path, 0U);
+                    if (!truncate_result.ok)
+                    {
+                        return std::nullopt;
+                    }
+
+                    existing->record_count = 0U;
+                    move_cursor_to(*existing, 0);
+                    existing->found = false;
+
+                    for (const auto &row : snapshot.rows)
+                    {
+                        const auto append_result = vfp::append_blank_record_to_file(existing->source_path);
+                        if (!append_result.ok)
+                        {
+                            return std::nullopt;
+                        }
+                        existing->record_count = append_result.record_count;
+                        move_cursor_to(*existing, static_cast<long long>(append_result.record_count));
+
+                        for (std::size_t index = 0U; index < snapshot.fields.size() && index < row.values.size(); ++index)
+                        {
+                            const auto replace_result = vfp::replace_record_field_value(
+                                existing->source_path,
+                                append_result.record_count - 1U,
+                                snapshot.fields[index].name,
+                                row.values[index]);
+                            if (!replace_result.ok)
+                            {
+                                return std::nullopt;
+                            }
+                            existing->record_count = replace_result.record_count;
+                        }
+                    }
+
+                    if (existing->record_count == 0U)
+                    {
+                        move_cursor_to(*existing, 0);
+                    }
+                    else
+                    {
+                        move_cursor_to(*existing, 1);
+                    }
+                    return snapshot.rows.size();
+                }
+
+                std::vector<vfp::DbfFieldDescriptor> descriptors;
+                descriptors.reserve(snapshot.fields.size());
+                for (std::size_t index = 0U; index < snapshot.fields.size(); ++index)
+                {
+                    const RuntimeSurfaceCursorField &field = snapshot.fields[index];
+                    const std::string fallback_name = "F" + std::to_string(index + 1U);
+                    std::string field_name = trim_copy(field.name);
+                    if (field_name.empty())
+                    {
+                        field_name = fallback_name;
+                    }
+                    char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.type)));
+                    if (field_type != 'N' && field_type != 'L' && field_type != 'D' && field_type != 'C')
+                    {
+                        field_type = 'C';
+                    }
+                    const std::size_t default_width = field_type == 'N' ? 18U : (field_type == 'L' ? 1U : 64U);
+                    const std::size_t bounded_width = std::max<std::size_t>(1U, std::min<std::size_t>(field.width, 254U));
+                    const std::size_t width = field.width == 0U ? default_width : bounded_width;
+                    const std::size_t decimals = field_type == 'N'
+                                                     ? std::min<std::size_t>(std::min<std::size_t>(field.decimals, 15U), width > 0U ? width - 1U : 0U)
+                                                     : 0U;
+                    descriptors.push_back(vfp::DbfFieldDescriptor{
+                        .name = field_name,
+                        .type = field_type,
+                        .length = static_cast<std::uint8_t>(width),
+                        .decimal_count = static_cast<std::uint8_t>(decimals)});
+                }
+                if (descriptors.empty())
+                {
+                    return std::nullopt;
+                }
+
+                std::vector<std::vector<std::string>> rows;
+                rows.reserve(snapshot.rows.size());
+                for (const auto &row : snapshot.rows)
+                {
+                    std::vector<std::string> values(descriptors.size(), std::string{});
+                    for (std::size_t index = 0U; index < descriptors.size() && index < row.values.size(); ++index)
+                    {
+                        values[index] = row.values[index];
+                    }
+                    rows.push_back(std::move(values));
+                }
+
+                std::error_code ignored;
+                const std::filesystem::path cursor_root = runtime_temp_directory / "cursors";
+                std::filesystem::create_directories(cursor_root, ignored);
+                std::filesystem::path table_path;
+                for (std::size_t attempt = 0U;; ++attempt)
+                {
+                    const std::string suffix = attempt == 0U ? std::string{} : "_" + std::to_string(attempt + 1U);
+                    table_path = cursor_root / (alias + "_xml_ds" + std::to_string(current_data_session) + suffix + ".dbf");
+                    if (!std::filesystem::exists(table_path, ignored))
+                    {
+                        break;
+                    }
+                }
+
+                const auto create_result = vfp::create_dbf_table_file(table_path.string(), descriptors, rows);
+                if (!create_result.ok)
+                {
+                    return std::nullopt;
+                }
+
+                if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U))
+                {
+                    return std::nullopt;
+                }
+                return snapshot.rows.size();
             },
             [this](const std::string &category, const std::string &detail)
             {

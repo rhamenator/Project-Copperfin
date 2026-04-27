@@ -27,6 +27,21 @@
 
         try
         {
+            auto format_stack_event_detail = [](std::size_t depth, const std::string &target, bool empty_pop)
+            {
+                std::string detail = "depth=" + std::to_string(depth);
+                const std::string trimmed_target = trim_copy(target);
+                if (!trimmed_target.empty())
+                {
+                    detail += "; target=" + trimmed_target;
+                }
+                if (empty_pop)
+                {
+                    detail += "; empty=true";
+                }
+                return detail;
+            };
+
             switch (statement.kind)
             {
             case StatementKind::assignment:
@@ -396,6 +411,96 @@
                                   .detail = statement.expression,
                                   .location = statement.location});
                 return {};
+            case StatementKind::push_key_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                std::string marker = trim_copy(statement.expression);
+                if (marker.empty())
+                {
+                    marker = trim_copy(statement.identifier);
+                }
+                session_state.key_stack.push_back(marker);
+                events.push_back({.category = "runtime.push_key",
+                                  .detail = format_stack_event_detail(session_state.key_stack.size(), marker, false),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::pop_key_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                const std::string requested_marker = trim_copy(statement.expression);
+                std::string marker = requested_marker;
+                const bool empty = session_state.key_stack.empty();
+                if (!empty)
+                {
+                    marker = session_state.key_stack.back();
+                    session_state.key_stack.pop_back();
+                }
+                events.push_back({.category = "runtime.pop_key",
+                                  .detail = format_stack_event_detail(session_state.key_stack.size(), marker, empty),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::push_menu_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                std::string marker = trim_copy(statement.expression);
+                if (marker.empty())
+                {
+                    marker = trim_copy(statement.identifier);
+                }
+                session_state.menu_stack.push_back(marker);
+                events.push_back({.category = "runtime.push_menu",
+                                  .detail = format_stack_event_detail(session_state.menu_stack.size(), marker, false),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::pop_menu_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                const std::string requested_marker = trim_copy(statement.expression);
+                std::string marker = requested_marker;
+                const bool empty = session_state.menu_stack.empty();
+                if (!empty)
+                {
+                    marker = session_state.menu_stack.back();
+                    session_state.menu_stack.pop_back();
+                }
+                events.push_back({.category = "runtime.pop_menu",
+                                  .detail = format_stack_event_detail(session_state.menu_stack.size(), marker, empty),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::push_popup_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                std::string marker = trim_copy(statement.expression);
+                if (marker.empty())
+                {
+                    marker = trim_copy(statement.identifier);
+                }
+                session_state.popup_stack.push_back(marker);
+                events.push_back({.category = "runtime.push_popup",
+                                  .detail = format_stack_event_detail(session_state.popup_stack.size(), marker, false),
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::pop_popup_command:
+            {
+                DataSessionState &session_state = current_session_state();
+                const std::string requested_marker = trim_copy(statement.expression);
+                std::string marker = requested_marker;
+                const bool empty = session_state.popup_stack.empty();
+                if (!empty)
+                {
+                    marker = session_state.popup_stack.back();
+                    session_state.popup_stack.pop_back();
+                }
+                events.push_back({.category = "runtime.pop_popup",
+                                  .detail = format_stack_event_detail(session_state.popup_stack.size(), marker, empty),
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::return_statement:
                 pop_frame();
                 return {.ok = true, .waiting_for_events = false, .frame_returned = true, .message = {}};
@@ -3529,6 +3634,144 @@
                     detail += "target=" + statement.identifier;
                 }
                 events.push_back({.category = "runtime.accept",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::getfile_command:
+            {
+                std::string detail;
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += "prompt=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "title=" + statement.tertiary_expression;
+                }
+                if (!statement.quaternary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "default=" + statement.quaternary_expression;
+                }
+                if (!statement.identifier.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "filter=" + statement.identifier;
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.names.front();
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.getfile",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::putfile_command:
+            {
+                std::string detail;
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += "prompt=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "title=" + statement.tertiary_expression;
+                }
+                if (!statement.quaternary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "default=" + statement.quaternary_expression;
+                }
+                if (!statement.identifier.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "filter=" + statement.identifier;
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.names.front();
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.putfile",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::getdir_command:
+            {
+                std::string detail;
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += "prompt=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "title=" + statement.tertiary_expression;
+                }
+                if (!statement.quaternary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "default=" + statement.quaternary_expression;
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.names.front();
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.getdir",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::inputbox_command:
+            {
+                std::string detail;
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += "prompt=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "title=" + statement.tertiary_expression;
+                }
+                if (!statement.quaternary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "default=" + statement.quaternary_expression;
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.names.front();
+                }
+                if (!statement.expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "clause=" + statement.expression;
+                }
+                events.push_back({.category = "runtime.inputbox",
                                   .detail = detail,
                                   .location = statement.location});
                 return {};

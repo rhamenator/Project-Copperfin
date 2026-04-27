@@ -2,6 +2,7 @@
 #include "prg_engine_test_support.h"
 #include "copperfin/vfp/dbf_table.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -467,6 +468,136 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_cursor_xml_round_trip_runtime_surface_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_round_trip";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "cursor_xml_round_trip.prg";
+        write_text(
+            main_path,
+            "CREATE CURSOR SourceXml (ID N(4,0), NAME C(20))\n"
+            "INSERT INTO SourceXml (ID, NAME) VALUES (1, 'ALPHA')\n"
+            "INSERT INTO SourceXml (ID, NAME) VALUES (2, 'BETA')\n"
+            "INSERT INTO SourceXml (ID, NAME) VALUES (3, 'GAMMA')\n"
+            "cXml = CURSORTOXML('SourceXml')\n"
+            "lWriteOk = CURSORTOXML('SourceXml', 'round_trip.xml')\n"
+            "nLoaded = XMLTOCURSOR(cXml, 'DestXml')\n"
+            "SELECT DestXml\n"
+            "nDestCount = RECCOUNT()\n"
+            "GO TOP\n"
+            "nFirstId = ID\n"
+            "cFirstName = NAME\n"
+            "GO BOTTOM\n"
+            "nLastId = ID\n"
+            "cLastName = NAME\n"
+            "nLoadedFromFile = XMLTOCURSOR('round_trip.xml', 'DestFile')\n"
+            "SELECT DestFile\n"
+            "nFileCount = RECCOUNT()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("CURSORTOXML/XMLTOCURSOR round-trip script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line) +
+                   " stmt='" + state.statement_text + "'");
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        const auto xml_text = state.globals.find("cxml");
+        expect(xml_text != state.globals.end() &&
+                   copperfin::runtime::format_value(xml_text->second).find("<CopperfinCursor") != std::string::npos,
+               "CURSORTOXML() should return Copperfin XML text when output target is omitted");
+        check("lwriteok", "true");
+        check("nloaded", "3");
+        check("nloadedfromfile", "3");
+        check("ndestcount", "3");
+        check("nfilecount", "3");
+        check("nfirstid", "1");
+        check("cfirstname", "ALPHA");
+        check("nlastid", "3");
+        check("clastname", "GAMMA");
+
+        expect(std::count_if(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "runtime.cursortoxml" && event.detail.find("rows=3") != std::string::npos;
+        }) >= 2,
+               "CURSORTOXML() should emit runtime.cursortoxml events with row counts");
+        expect(std::count_if(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "runtime.xmltocursor" && event.detail.find("rows=3") != std::string::npos;
+        }) >= 2,
+               "XMLTOCURSOR() should emit runtime.xmltocursor events with row counts");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_cursor_xml_invalid_input_runtime_surface_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_invalid";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "cursor_xml_invalid.prg";
+        write_text(
+            main_path,
+            "nBadLoad = XMLTOCURSOR('<NotCopperfin />', 'BadDest')\n"
+            "lBadExport = CURSORTOXML('MissingAlias', 'missing_output.xml')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "invalid CURSORTOXML/XMLTOCURSOR script should complete safely");
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbadload", "0");
+        check("lbadexport", "false");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "runtime.warning";
+        }),
+               "invalid XML helper input should emit runtime.warning event(s)");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -476,6 +607,8 @@ int main()
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
     test_object_reflection_runtime_surface_functions();
+    test_cursor_xml_round_trip_runtime_surface_functions();
+    test_cursor_xml_invalid_input_runtime_surface_functions();
 
     if (test_failures() != 0)
     {

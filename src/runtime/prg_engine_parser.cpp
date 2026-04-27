@@ -272,6 +272,36 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::release_surface;
             statement.identifier = "menu";
             statement.expression = trim_copy(line.substr(13U));
+        } else if (upper == "PUSH KEY" || starts_with_insensitive(line, "PUSH KEY ")) {
+            statement.kind = StatementKind::push_key_command;
+            const std::string body = upper == "PUSH KEY" ? std::string{} : trim_copy(line.substr(8U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
+        } else if (upper == "POP KEY" || starts_with_insensitive(line, "POP KEY ")) {
+            statement.kind = StatementKind::pop_key_command;
+            const std::string body = upper == "POP KEY" ? std::string{} : trim_copy(line.substr(7U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
+        } else if (upper == "PUSH MENU" || starts_with_insensitive(line, "PUSH MENU ")) {
+            statement.kind = StatementKind::push_menu_command;
+            const std::string body = upper == "PUSH MENU" ? std::string{} : trim_copy(line.substr(9U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
+        } else if (upper == "POP MENU" || starts_with_insensitive(line, "POP MENU ")) {
+            statement.kind = StatementKind::pop_menu_command;
+            const std::string body = upper == "POP MENU" ? std::string{} : trim_copy(line.substr(8U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
+        } else if (upper == "PUSH POPUP" || starts_with_insensitive(line, "PUSH POPUP ")) {
+            statement.kind = StatementKind::push_popup_command;
+            const std::string body = upper == "PUSH POPUP" ? std::string{} : trim_copy(line.substr(10U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
+        } else if (upper == "POP POPUP" || starts_with_insensitive(line, "POP POPUP ")) {
+            statement.kind = StatementKind::pop_popup_command;
+            const std::string body = upper == "POP POPUP" ? std::string{} : trim_copy(line.substr(9U));
+            statement.expression = body;
+            statement.identifier = take_first_token(body);
         } else if (upper == "RELEASE ALL" || starts_with_insensitive(line, "RELEASE ALL ")) {
             // RELEASE ALL [LIKE <pattern> | EXCEPT <pattern>]
             statement.kind = StatementKind::release_command;
@@ -587,6 +617,92 @@ Program parse_program(const std::string& path) {
                 statement.identifier = var_part;
             } else {
                 statement.identifier = trim_copy(body);
+            }
+        } else if (upper == "GETFILE" || starts_with_insensitive(line, "GETFILE ") || starts_with_insensitive(line, "GETFILE(")) {
+            statement.kind = StatementKind::getfile_command;
+            std::string body;
+            if (upper == "GETFILE") {
+                body = {};
+            } else if (starts_with_insensitive(line, "GETFILE(")) {
+                body = trim_copy(line.substr(7U));
+            } else {
+                body = trim_copy(line.substr(8U));
+            }
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER", "TO"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER", "TO"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER", "TO"});
+            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT", "TO"});
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
+                if (!target_part.empty()) {
+                    statement.names.push_back(target_part);
+                }
+            }
+        } else if (upper == "PUTFILE" || starts_with_insensitive(line, "PUTFILE ") || starts_with_insensitive(line, "PUTFILE(")) {
+            statement.kind = StatementKind::putfile_command;
+            std::string body;
+            if (upper == "PUTFILE") {
+                body = {};
+            } else if (starts_with_insensitive(line, "PUTFILE(")) {
+                body = trim_copy(line.substr(7U));
+            } else {
+                body = trim_copy(line.substr(8U));
+            }
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "FILTER", "TO"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "FILTER", "TO"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "FILTER", "TO"});
+            statement.identifier = extract_command_clause(body, "FILTER", {"PROMPT", "TITLE", "DEFAULT", "TO"});
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
+                if (!target_part.empty()) {
+                    statement.names.push_back(target_part);
+                }
+            }
+        } else if (upper == "GETDIR" || starts_with_insensitive(line, "GETDIR ") || starts_with_insensitive(line, "GETDIR(")) {
+            statement.kind = StatementKind::getdir_command;
+            std::string body;
+            if (upper == "GETDIR") {
+                body = {};
+            } else if (starts_with_insensitive(line, "GETDIR(")) {
+                body = trim_copy(line.substr(6U));
+            } else {
+                body = trim_copy(line.substr(7U));
+            }
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "TO"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "TO"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "TO"});
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
+                if (!target_part.empty()) {
+                    statement.names.push_back(target_part);
+                }
+            }
+        } else if (upper == "INPUTBOX" || starts_with_insensitive(line, "INPUTBOX ") || starts_with_insensitive(line, "INPUTBOX(")) {
+            statement.kind = StatementKind::inputbox_command;
+            std::string body;
+            if (upper == "INPUTBOX") {
+                body = {};
+            } else if (starts_with_insensitive(line, "INPUTBOX(")) {
+                body = trim_copy(line.substr(8U));
+            } else {
+                body = trim_copy(line.substr(9U));
+            }
+            statement.expression = body;
+            statement.secondary_expression = extract_command_clause(body, "PROMPT", {"TITLE", "DEFAULT", "TO"});
+            statement.tertiary_expression = extract_command_clause(body, "TITLE", {"PROMPT", "DEFAULT", "TO"});
+            statement.quaternary_expression = extract_command_clause(body, "DEFAULT", {"PROMPT", "TITLE", "TO"});
+            const std::size_t to_pos = find_keyword_top_level(body, "TO");
+            if (to_pos != std::string::npos) {
+                const std::string target_part = trim_copy(body.substr(to_pos + 2U));
+                if (!target_part.empty()) {
+                    statement.names.push_back(target_part);
+                }
             }
         } else if (upper == "WAIT" || starts_with_insensitive(line, "WAIT ")) {
             statement.kind = StatementKind::wait_command;
