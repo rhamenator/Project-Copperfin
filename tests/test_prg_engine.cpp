@@ -703,7 +703,7 @@ void test_eval_macro_and_runtime_state_semantics() {
         expect(copperfin::runtime::format_value(deleted_after_to_zero->second) == "OFF", "SET('DELETED') should report OFF after SET DELETED TO 0");
     }
     if (path_before != state.globals.end()) {
-        expect(copperfin::runtime::format_value(path_before->second) == "OFF", "SET('PATH') should report OFF before it is configured");
+        expect(copperfin::runtime::format_value(path_before->second).empty(), "SET('PATH') should report empty string before it is configured");
     }
     if (path_after != state.globals.end()) {
         const std::string normalized_path_after = lowercase_copy(copperfin::runtime::format_value(path_after->second));
@@ -753,8 +753,8 @@ void test_eval_macro_and_runtime_state_semantics() {
         expect(copperfin::runtime::format_value(deleted_session2->second) == "OFF", "SET('DELETED') should stay isolated in a fresh data session");
     }
     if (path_session2 != state.globals.end()) {
-        expect(copperfin::runtime::format_value(path_session2->second) == "OFF",
-               "SET('PATH') should stay isolated in a fresh data session");
+         expect(copperfin::runtime::format_value(path_session2->second).empty(),
+             "SET('PATH') should be empty in a fresh data session (no path inheritance)");
     }
     if (default_session2 != state.globals.end()) {
         expect(
