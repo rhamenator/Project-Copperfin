@@ -21,6 +21,19 @@
             std::vector<SyntheticSqlCatalogColumn> columns;
         };
 
+        struct SyntheticSqlDatabase
+        {
+            std::string name;
+            std::string remarks;
+        };
+
+        std::vector<SyntheticSqlDatabase> synthetic_sql_databases() const
+        {
+            return {
+                SyntheticSqlDatabase{.name = "NORTHWIND", .remarks = "Synthetic primary catalog"},
+                SyntheticSqlDatabase{.name = "ARCHIVE", .remarks = "Synthetic archive catalog"}};
+        }
+
         std::vector<SyntheticSqlCatalogTable> synthetic_sql_catalog() const
         {
             return {
@@ -130,6 +143,23 @@
                         vfp::DbfRecordValue{.field_name = "TABLE_NAME", .field_type = 'C', .display_value = table.name},
                         vfp::DbfRecordValue{.field_name = "TABLE_TYPE", .field_type = 'C', .display_value = table.table_type},
                         vfp::DbfRecordValue{.field_name = "REMARKS", .field_type = 'C', .display_value = table.remarks}}});
+                ++recno;
+            }
+            return records;
+        }
+
+        std::vector<vfp::DbfRecord> make_sqldatabases_records() const
+        {
+            std::vector<vfp::DbfRecord> records;
+            std::size_t recno = 1U;
+            for (const auto &database : synthetic_sql_databases())
+            {
+                records.push_back(vfp::DbfRecord{
+                    .record_index = recno - 1U,
+                    .deleted = false,
+                    .values = {
+                        vfp::DbfRecordValue{.field_name = "DATABASE_NAME", .field_type = 'C', .display_value = database.name},
+                        vfp::DbfRecordValue{.field_name = "REMARKS", .field_type = 'C', .display_value = database.remarks}}});
                 ++recno;
             }
             return records;
@@ -261,6 +291,13 @@
                 vfp::DbfFieldDescriptor{.name = "TABLE_SCHEM", .type = 'C', .length = 32U, .decimal_count = 0U},
                 vfp::DbfFieldDescriptor{.name = "TABLE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
                 vfp::DbfFieldDescriptor{.name = "TABLE_TYPE", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "REMARKS", .type = 'C', .length = 64U, .decimal_count = 0U}};
+        }
+
+        std::vector<vfp::DbfFieldDescriptor> sqldatabases_field_descriptors() const
+        {
+            return {
+                vfp::DbfFieldDescriptor{.name = "DATABASE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
                 vfp::DbfFieldDescriptor{.name = "REMARKS", .type = 'C', .length = 64U, .decimal_count = 0U}};
         }
 
@@ -807,6 +844,44 @@
             connection.properties["cancelrequested"] = "false";
             events.push_back({.category = "sql.tables",
                               .detail = "handle " + std::to_string(handle) + ": " + trim_copy(table_types),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            events.push_back({.category = "sql.cursor",
+                              .detail = connection.last_cursor_alias + " (" + std::to_string(connection.last_result_count) + " rows)",
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return 1;
+        }
+
+        int sql_databases(int handle, const std::string &cursor_alias)
+        {
+            auto &connections = current_sql_connections();
+            const auto found = connections.find(handle);
+            if (found == connections.end())
+            {
+                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLDATABASES", std::string{});
+                return -1;
+            }
+
+            RuntimeSqlConnectionState &connection = found->second;
+            connection.cancel_requested = false;
+            std::vector<vfp::DbfRecord> records = make_sqldatabases_records();
+            if (!open_remote_cursor(
+                    cursor_alias,
+                    resolve_sql_cursor_auto_target(),
+                    handle,
+                    "sql-databases-cursor",
+                    std::move(records),
+                    sqldatabases_field_descriptors()))
+            {
+                return -1;
+            }
+
+            connection.last_sql_action = "databases";
+            connection.properties["lastsqlaction"] = "databases";
+            connection.properties["cancelrequested"] = "false";
+            events.push_back({.category = "sql.databases",
+                              .detail = "handle " + std::to_string(handle),
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             events.push_back({.category = "sql.cursor",
                               .detail = connection.last_cursor_alias + " (" + std::to_string(connection.last_result_count) + " rows)",

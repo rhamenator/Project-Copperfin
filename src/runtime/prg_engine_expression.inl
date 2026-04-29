@@ -103,6 +103,7 @@
                 std::function<int(int)> sql_cancel_callback,
                 std::function<int(int)> sql_commit_callback,
                 std::function<int(int)> sql_rollback_callback,
+                std::function<int(int, const std::string &)> sql_databases_callback,
                 std::function<int(int, const std::string &, const std::string &)> sql_tables_callback,
                 std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback,
                 std::function<PrgValue(int, const std::string &)> sql_get_prop_callback,
@@ -158,6 +159,7 @@
                   sql_cancel_callback_(std::move(sql_cancel_callback)),
                   sql_commit_callback_(std::move(sql_commit_callback)),
                   sql_rollback_callback_(std::move(sql_rollback_callback)),
+                  sql_databases_callback_(std::move(sql_databases_callback)),
                   sql_tables_callback_(std::move(sql_tables_callback)),
                   sql_columns_callback_(std::move(sql_columns_callback)),
                   sql_get_prop_callback_(std::move(sql_get_prop_callback)),
@@ -814,6 +816,12 @@
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
                     return make_number_value(static_cast<double>(sql_rollback_callback_(handle)));
                 }
+                if (function == "sqldatabases" && !arguments.empty())
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    const std::string cursor_alias = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    return make_number_value(static_cast<double>(sql_databases_callback_(handle, cursor_alias)));
+                }
                 if (function == "sqltables" && !arguments.empty())
                 {
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
@@ -1392,6 +1400,7 @@
             std::function<int(int)> sql_cancel_callback_;
             std::function<int(int)> sql_commit_callback_;
             std::function<int(int)> sql_rollback_callback_;
+            std::function<int(int, const std::string &)> sql_databases_callback_;
             std::function<int(int, const std::string &, const std::string &)> sql_tables_callback_;
             std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback_;
             std::function<PrgValue(int, const std::string &)> sql_get_prop_callback_;

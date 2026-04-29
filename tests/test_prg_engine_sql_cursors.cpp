@@ -12,6 +12,82 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_sqldatabases_metadata_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_databases";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_databases.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nDatabases = SQLDATABASES(nConn, 'sqldbs')\n"
+        "nDbRows = RECCOUNT('sqldbs')\n"
+        "nDbFields = FCOUNT('sqldbs')\n"
+        "cDbField1 = FIELD(1, 'sqldbs')\n"
+        "cDbField2 = FIELD(2, 'sqldbs')\n"
+        "cActionAfterDatabases = SQLGETPROP(nConn, 'LastSqlAction')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL databases metadata script should complete");
+
+    const auto databases = state.globals.find("ndatabases");
+    const auto db_rows = state.globals.find("ndbrows");
+    const auto db_fields = state.globals.find("ndbfields");
+    const auto db_field1 = state.globals.find("cdbfield1");
+    const auto db_field2 = state.globals.find("cdbfield2");
+    const auto action_after_databases = state.globals.find("cactionafterdatabases");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(databases != state.globals.end(), "SQLDATABASES result should be captured");
+    expect(db_rows != state.globals.end(), "SQLDATABASES row count should be captured");
+    expect(db_fields != state.globals.end(), "SQLDATABASES field count should be captured");
+    expect(db_field1 != state.globals.end(), "FIELD(index, alias) should be captured for SQLDATABASES metadata cursors");
+    expect(db_field2 != state.globals.end(), "FIELD(index, alias) should be captured for SQLDATABASES metadata cursors");
+    expect(action_after_databases != state.globals.end(), "last SQL action should be captured after SQLDATABASES");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after SQLDATABASES checks");
+
+    if (databases != state.globals.end()) {
+        expect(copperfin::runtime::format_value(databases->second) == "1", "SQLDATABASES should succeed for a valid SQL handle");
+    }
+    if (db_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(db_rows->second) == "2", "SQLDATABASES should materialize the synthetic catalog list");
+    }
+    if (db_fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(db_fields->second) == "2", "SQLDATABASES should expose the expected metadata schema");
+    }
+    if (db_field1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(db_field1->second) == "DATABASE_NAME", "SQLDATABASES metadata cursor should expose the database-name column");
+    }
+    if (db_field2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(db_field2->second) == "REMARKS", "SQLDATABASES metadata cursor should expose the remarks column");
+    }
+    if (action_after_databases != state.globals.end()) {
+        expect(copperfin::runtime::format_value(action_after_databases->second) == "databases", "SQLDATABASES should update the connection last-action metadata");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQLDATABASES checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "sql.databases" && event.detail.rfind("handle 1", 0) == 0;
+        }),
+        "SQLDATABASES should emit a sql.databases event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sqltables_and_sqlcolumns_metadata_cursors() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_metadata";
@@ -2272,6 +2348,7 @@ void test_sql_result_cursor_filter_in_target_parity() {
 }  // namespace
 
 int main() {
+    test_sqldatabases_metadata_cursor();
     test_sqltables_and_sqlcolumns_metadata_cursors();
     test_sql_connection_transaction_and_cancel_helpers();
     test_cursor_identity_functions_for_sql_result_cursors();
