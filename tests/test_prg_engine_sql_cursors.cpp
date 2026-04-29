@@ -395,6 +395,150 @@ void test_sql_connection_transaction_and_cancel_helpers() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_connection_property_breadth() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_property_breadth";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_property_breadth.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "lConnectedBefore = SQLGETPROP(nConn, 'Connected')\n"
+        "nHandleProp = SQLGETPROP(nConn, 'ConnectHandle')\n"
+        "cConnectString = SQLGETPROP(nConn, 'ConnectString')\n"
+        "cCatalogBefore = SQLGETPROP(nConn, 'CurrentCatalog')\n"
+        "nSetAsync = SQLSETPROP(nConn, 'Asynchronous', .T.)\n"
+        "nSetBatch = SQLSETPROP(nConn, 'BatchMode', 2)\n"
+        "nSetWarnings = SQLSETPROP(nConn, 'DispWarnings', .F.)\n"
+        "nSetCatalog = SQLSETPROP(nConn, 'CurrentCatalog', 'archive')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlpropcur')\n"
+        "cLastCursorAlias = SQLGETPROP(nConn, 'LastCursorAlias')\n"
+        "nLastResultCount = SQLGETPROP(nConn, 'LastResultCount')\n"
+        "lAsync = SQLGETPROP(nConn, 'Asynchronous')\n"
+        "nBatch = SQLGETPROP(nConn, 'BatchMode')\n"
+        "lWarnings = SQLGETPROP(nConn, 'DispWarnings')\n"
+        "cCatalogAfter = SQLGETPROP(nConn, 'CurrentCatalog')\n"
+        "cActionAfterExec = SQLGETPROP(nConn, 'LastSqlAction')\n"
+        "SET DATASESSION TO 2\n"
+        "nCrossSessionConnected = SQLGETPROP(nConn, 'Connected')\n"
+        "SET DATASESSION TO 1\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL connection property breadth script should complete");
+
+    const auto connected_before = state.globals.find("lconnectedbefore");
+    const auto handle_prop = state.globals.find("nhandleprop");
+    const auto connect_string = state.globals.find("cconnectstring");
+    const auto catalog_before = state.globals.find("ccatalogbefore");
+    const auto set_async = state.globals.find("nsetasync");
+    const auto set_batch = state.globals.find("nsetbatch");
+    const auto set_warnings = state.globals.find("nsetwarnings");
+    const auto set_catalog = state.globals.find("nsetcatalog");
+    const auto exec = state.globals.find("nexec");
+    const auto last_cursor_alias = state.globals.find("clastcursoralias");
+    const auto last_result_count = state.globals.find("nlastresultcount");
+    const auto async = state.globals.find("lasync");
+    const auto batch = state.globals.find("nbatch");
+    const auto warnings = state.globals.find("lwarnings");
+    const auto catalog_after = state.globals.find("ccatalogafter");
+    const auto action_after_exec = state.globals.find("cactionafterexec");
+    const auto cross_session_connected = state.globals.find("ncrosssessionconnected");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(connected_before != state.globals.end(), "Connected property should be captured");
+    expect(handle_prop != state.globals.end(), "ConnectHandle property should be captured");
+    expect(connect_string != state.globals.end(), "ConnectString property should be captured");
+    expect(catalog_before != state.globals.end(), "CurrentCatalog should be captured before updates");
+    expect(set_async != state.globals.end(), "Asynchronous SQLSETPROP result should be captured");
+    expect(set_batch != state.globals.end(), "BatchMode SQLSETPROP result should be captured");
+    expect(set_warnings != state.globals.end(), "DispWarnings SQLSETPROP result should be captured");
+    expect(set_catalog != state.globals.end(), "CurrentCatalog SQLSETPROP result should be captured");
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for property breadth flow");
+    expect(last_cursor_alias != state.globals.end(), "LastCursorAlias property should be captured");
+    expect(last_result_count != state.globals.end(), "LastResultCount property should be captured");
+    expect(async != state.globals.end(), "Asynchronous property should round-trip");
+    expect(batch != state.globals.end(), "BatchMode property should round-trip");
+    expect(warnings != state.globals.end(), "DispWarnings property should round-trip");
+    expect(catalog_after != state.globals.end(), "CurrentCatalog should be captured after updates");
+    expect(action_after_exec != state.globals.end(), "LastSqlAction should be captured after SQLEXEC");
+    expect(cross_session_connected != state.globals.end(), "cross-session SQLGETPROP result should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after property breadth checks");
+
+    if (connected_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(connected_before->second) == "true", "Connected should report true for a live session-local handle");
+    }
+    if (handle_prop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(handle_prop->second) == "1", "ConnectHandle should expose the SQL handle number");
+    }
+    if (connect_string != state.globals.end()) {
+        expect(copperfin::runtime::format_value(connect_string->second) == "dsn=Northwind", "ConnectString should preserve the original target");
+    }
+    if (catalog_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catalog_before->second) == "NORTHWIND", "CurrentCatalog should infer the synthetic primary catalog from the connect string");
+    }
+    if (set_async != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_async->second) == "1", "SQLSETPROP should accept Asynchronous updates");
+    }
+    if (set_batch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_batch->second) == "1", "SQLSETPROP should accept BatchMode updates");
+    }
+    if (set_warnings != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_warnings->second) == "1", "SQLSETPROP should accept DispWarnings updates");
+    }
+    if (set_catalog != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_catalog->second) == "1", "SQLSETPROP should accept CurrentCatalog updates");
+    }
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should still succeed after property updates");
+    }
+    if (last_cursor_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_cursor_alias->second) == "sqlpropcur", "LastCursorAlias should track the most recently materialized SQL cursor");
+    }
+    if (last_result_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_result_count->second) == "3", "LastResultCount should expose the most recent SQLEXEC row count");
+    }
+    if (async != state.globals.end()) {
+        expect(copperfin::runtime::format_value(async->second) == "true", "Asynchronous should round-trip as a boolean property");
+    }
+    if (batch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(batch->second) == "2", "BatchMode should round-trip as a numeric property");
+    }
+    if (warnings != state.globals.end()) {
+        expect(copperfin::runtime::format_value(warnings->second) == "false", "DispWarnings should round-trip as a boolean property");
+    }
+    if (catalog_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catalog_after->second) == "ARCHIVE", "CurrentCatalog should normalize to uppercase on update");
+    }
+    if (action_after_exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(action_after_exec->second) == "exec", "LastSqlAction should still reflect SQLEXEC after property updates");
+    }
+    if (cross_session_connected != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cross_session_connected->second) == "-1", "SQLGETPROP should reject SQL handles from another data session");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after property breadth checks");
+    }
+
+    expect(
+        has_runtime_event(state.events, "sql.setprop", "handle 1: asynchronous=true") &&
+        has_runtime_event(state.events, "sql.setprop", "handle 1: batchmode=2") &&
+        has_runtime_event(state.events, "sql.setprop", "handle 1: currentcatalog=ARCHIVE"),
+        "SQL property breadth flow should emit sql.setprop events for the new connection properties");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cursor_identity_functions_for_sql_result_cursors() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_sql";
@@ -2351,6 +2495,7 @@ int main() {
     test_sqldatabases_metadata_cursor();
     test_sqltables_and_sqlcolumns_metadata_cursors();
     test_sql_connection_transaction_and_cancel_helpers();
+    test_sql_connection_property_breadth();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursor_mutation_commands();
     test_sql_result_cursors_are_isolated_by_data_session();

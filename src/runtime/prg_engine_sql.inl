@@ -34,6 +34,21 @@
                 SyntheticSqlDatabase{.name = "ARCHIVE", .remarks = "Synthetic archive catalog"}};
         }
 
+        std::string infer_sql_current_catalog(const std::string &target) const
+        {
+            const std::string normalized_target = uppercase_copy(target);
+            for (const auto &database : synthetic_sql_databases())
+            {
+                if (normalized_target.find(database.name) != std::string::npos)
+                {
+                    return database.name;
+                }
+            }
+
+            const auto databases = synthetic_sql_databases();
+            return databases.empty() ? std::string{} : databases.front().name;
+        }
+
         std::vector<SyntheticSqlCatalogTable> synthetic_sql_catalog() const
         {
             return {
@@ -279,6 +294,7 @@
                 {
                     found->second.last_cursor_alias = alias;
                     found->second.last_result_count = session.cursors[target_area].record_count;
+                    found->second.properties["lastcursoralias"] = alias;
                 }
             }
             return true;
@@ -502,6 +518,7 @@
 
             int &next_handle = current_sql_handle_counter();
             const int handle = next_handle++;
+            const std::string current_catalog = infer_sql_current_catalog(target);
             current_sql_connections().emplace(handle, RuntimeSqlConnectionState{
                                                           .handle = handle,
                                                           .target = target,
@@ -515,6 +532,14 @@
                                                           .properties = {
                                                               {"provider", provider_hint},
                                                               {"target", target},
+                                                              {"connecthandle", std::to_string(handle)},
+                                                              {"connected", "true"},
+                                                              {"connectbusy", "false"},
+                                                              {"asynchronous", "false"},
+                                                              {"batchmode", "0"},
+                                                              {"dispwarnings", "true"},
+                                                              {"lastcursoralias", ""},
+                                                              {"currentcatalog", current_catalog},
                                                               {"querytimeout", "0"},
                                                               {"connecttimeout", "0"},
                                                               {"lastsqlaction", "connect"},
@@ -646,9 +671,27 @@
             {
                 return make_string_value(found->second.provider);
             }
+            if (normalized_name == "connected")
+            {
+                const auto property = found->second.properties.find("connected");
+                return make_boolean_value(property == found->second.properties.end() || lowercase_copy(property->second) == "true");
+            }
+            if (normalized_name == "connectbusy")
+            {
+                const auto property = found->second.properties.find("connectbusy");
+                return make_boolean_value(property != found->second.properties.end() && lowercase_copy(property->second) == "true");
+            }
+            if (normalized_name == "connecthandle" || normalized_name == "hdbc" || normalized_name == "odbchdbc")
+            {
+                return make_number_value(static_cast<double>(found->second.handle));
+            }
             if (normalized_name == "target" || normalized_name == "connectstring")
             {
                 return make_string_value(found->second.target);
+            }
+            if (normalized_name == "lastcursoralias")
+            {
+                return make_string_value(found->second.last_cursor_alias);
             }
             if (normalized_name == "preparedcommand")
             {
@@ -669,6 +712,21 @@
             if (normalized_name == "cancelrequested")
             {
                 return make_boolean_value(found->second.cancel_requested);
+            }
+            if (normalized_name == "currentcatalog")
+            {
+                const auto property = found->second.properties.find("currentcatalog");
+                return property == found->second.properties.end() ? make_string_value("") : make_string_value(property->second);
+            }
+            if (normalized_name == "asynchronous" || normalized_name == "dispwarnings")
+            {
+                const auto property = found->second.properties.find(normalized_name);
+                return make_boolean_value(property != found->second.properties.end() && lowercase_copy(property->second) == "true");
+            }
+            if (normalized_name == "batchmode")
+            {
+                const auto property = found->second.properties.find(normalized_name);
+                return property == found->second.properties.end() ? make_number_value(0.0) : make_number_value(std::stod(property->second));
             }
 
             const auto property = found->second.properties.find(normalized_name);
@@ -707,6 +765,11 @@
             {
                 found->second.prepared_command = property_value;
             }
+            else if (normalized_name == "connectstring" || normalized_name == "target")
+            {
+                found->second.target = property_value;
+                found->second.properties["target"] = property_value;
+            }
             else if (normalized_name == "transactiondirty")
             {
                 found->second.transaction_dirty = value_as_bool(value);
@@ -718,6 +781,34 @@
             else if (normalized_name == "lastsqlaction")
             {
                 found->second.last_sql_action = property_value;
+            }
+            else if (normalized_name == "lastcursoralias")
+            {
+                found->second.last_cursor_alias = property_value;
+            }
+            else if (normalized_name == "currentcatalog")
+            {
+                found->second.properties["currentcatalog"] = uppercase_copy(trim_copy(property_value));
+                events.push_back({.category = "sql.setprop",
+                                  .detail = "handle " + std::to_string(handle) + ": " + normalized_name + "=" + found->second.properties["currentcatalog"],
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return 1;
+            }
+            else if (normalized_name == "asynchronous" || normalized_name == "dispwarnings" || normalized_name == "connected" || normalized_name == "connectbusy")
+            {
+                found->second.properties[normalized_name] = value_as_bool(value) ? "true" : "false";
+                events.push_back({.category = "sql.setprop",
+                                  .detail = "handle " + std::to_string(handle) + ": " + normalized_name + "=" + found->second.properties[normalized_name],
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return 1;
+            }
+            else if (normalized_name == "batchmode" || normalized_name == "querytimeout" || normalized_name == "connecttimeout")
+            {
+                found->second.properties[normalized_name] = std::to_string(static_cast<long long>(std::llround(value_as_number(value))));
+                events.push_back({.category = "sql.setprop",
+                                  .detail = "handle " + std::to_string(handle) + ": " + normalized_name + "=" + found->second.properties[normalized_name],
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return 1;
             }
             found->second.properties[normalized_name] = property_value;
             events.push_back({.category = "sql.setprop",
