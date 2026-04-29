@@ -27,6 +27,7 @@ flowchart LR
         subgraph RuntimePlane[Execution Plane]
             direction TB
             PRG[PRG Execution Engine]
+            EXP[Expression Runtime Helpers]
             SEC[Security Policy Enforcement]
         end
     end
@@ -62,6 +63,7 @@ flowchart LR
     IDX --> LQ
     DBC --> WS
     SQ --> PRG
+    EXP --> PRG
     PRG --> FORMS
     PRG --> RPT
     PRG --> MENU
@@ -79,20 +81,27 @@ flowchart LR
 
     class CORE hub;
 
-    class DBF,DBC done;
+    class DBF,IDX,DBC done;
 
     class WS done;
 
     class LQ,SQ done;
 
-    class IDX,PRG,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET partial;
-
-    class FED missing;
+    class PRG,EXP,SEC,DES,FORMS,RPT,MENU,VS,IDE,LS,BLD,DBG,PKG,DOTNET,FED partial;
 
     class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```
 
 Status legend: green = implemented, amber = partial, red = missing.
+
+## Current Status Snapshot
+
+This diagram is intentionally coarse-grained. As of the current repo state:
+
+- `DBF/FPT`, `CDX/DCX/MDX`, `DBC`, work areas/data sessions, local query/mutation commands, and SQL pass-through / remote cursor behavior all have implemented first-pass slices with focused regression coverage.
+- The execution plane is still partial because the parser/runtime core is broader than the currently shipped command surface, macro semantics, host behavior, and compatibility edge cases.
+- Expression/runtime-surface coverage is now large enough to deserve its own node, but it remains partial because the VFP built-in surface is still expanding in reference-derived batches.
+- Database federation is no longer "missing": deterministic translation/planning slices exist, but live backend execution and broader connector behavior remain incomplete.
 
 ## Top-Level Product Map
 

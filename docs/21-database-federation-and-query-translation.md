@@ -26,6 +26,16 @@ Examples:
 
 That normalized intent should then flow into deterministic connector translators where possible.
 
+## Current Implementation Snapshot
+
+This area is no longer purely future-looking:
+
+- the platform already has a deterministic Fox SQL translation lane for relational backends
+- the runtime host already has a deterministic federation execution-planning lane that materializes backend/target/sql plans
+- SQL pass-through and remote-cursor behavior are implemented inside the runtime for the current local/synthetic cursor model
+
+What is still missing is the live end-to-end connector layer: actual backend execution integration, broader provider/session behavior, and deeper non-relational connector slices.
+
 ## Translation Tiers
 
 ### Relational
@@ -42,6 +52,7 @@ Strategy:
 - parse FoxPro-style SQL into a Copperfin query AST
 - lower that AST into target-dialect SQL
 - keep behavior explainable and auditable
+- keep the current shipped planner/translator path deterministic even as live connector execution is added
 
 AI is not required for this path.
 
@@ -91,3 +102,11 @@ This is how Copperfin goes beyond VFP 9 while staying credible:
 - legacy apps keep an xBase-native home
 - modern apps can use relational, document, and vector data
 - AI becomes an optional accelerator, not a hidden runtime dependency
+
+## Near-Term Completion Criteria
+
+This document should be considered "meaningfully complete" only when Copperfin has:
+
+- live relational connector execution behind the current translator/planner surface
+- clearer capability/behavior contracts for provider-backed sessions and cursors
+- deeper documentation for how local xBase intent maps onto relational and non-relational targets

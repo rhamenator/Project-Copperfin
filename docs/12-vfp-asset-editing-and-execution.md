@@ -75,6 +75,17 @@ Copperfin should support these modes:
 - bind project/forms/reports/menus into a compatibility host
 - mix legacy assets with modern connectors and .NET integrations
 
+## Current Implementation Snapshot
+
+The current repo state is no longer only aspirational in this area:
+
+- asset inspection is implemented for `DBF`/`FPT`, `CDX`/`DCX`/`IDX`/`NDX`/`MDX`, and first-pass `DBC` companion discovery/validation
+- local-table mutation coverage exists for the shipped runtime flow, including memo-backed writes, structural mutations, compaction/truncation paths, and indexed-table guardrails
+- the runtime can execute a substantial first-pass PRG surface, including work areas, local queries/mutations, SQL pass-through / remote cursor behavior, and a growing expression/runtime-helper layer
+- xAsset-backed runtime bootstraps now exist for forms/classes, reports/labels, and menus, but these remain first-pass compatibility lanes rather than full VFP parity
+
+This document stays focused on the execution/editing model. The detailed moving implementation ledger lives in `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md`.
+
 ## Editing Strategy
 
 ### Binary Asset Rule
@@ -108,6 +119,7 @@ Support:
 - command/eval logic
 - work area and query operations
 - report invocation hooks
+- first-pass expression/runtime-helper compatibility used by shipped PRG flows
 
 ### Stage 2: Project And Asset Binding
 
@@ -117,6 +129,7 @@ Support:
 - form/class/report/menu registration
 - dependency resolution
 - asset identity and lookup
+- index and metadata sidecar discovery where legacy assets depend on companion files
 
 ### Stage 3: Compatibility Host
 
