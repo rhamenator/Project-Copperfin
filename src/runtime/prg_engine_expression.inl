@@ -100,6 +100,11 @@
                 std::function<bool(int)> sql_disconnect_callback,
                 std::function<int(int)> sql_row_count_callback,
                 std::function<int(int, const std::string &)> sql_prepare_callback,
+                std::function<int(int)> sql_cancel_callback,
+                std::function<int(int)> sql_commit_callback,
+                std::function<int(int)> sql_rollback_callback,
+                std::function<int(int, const std::string &, const std::string &)> sql_tables_callback,
+                std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback,
                 std::function<PrgValue(int, const std::string &)> sql_get_prop_callback,
                 std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback,
                 std::function<int(const std::string &, const std::string &)> register_ole_callback,
@@ -150,6 +155,11 @@
                   sql_disconnect_callback_(std::move(sql_disconnect_callback)),
                   sql_row_count_callback_(std::move(sql_row_count_callback)),
                   sql_prepare_callback_(std::move(sql_prepare_callback)),
+                  sql_cancel_callback_(std::move(sql_cancel_callback)),
+                  sql_commit_callback_(std::move(sql_commit_callback)),
+                  sql_rollback_callback_(std::move(sql_rollback_callback)),
+                  sql_tables_callback_(std::move(sql_tables_callback)),
+                  sql_columns_callback_(std::move(sql_columns_callback)),
                   sql_get_prop_callback_(std::move(sql_get_prop_callback)),
                   sql_set_prop_callback_(std::move(sql_set_prop_callback)),
                   register_ole_callback_(std::move(register_ole_callback)),
@@ -404,7 +414,7 @@
                     }
                     return macro_value;
                 }
-                if (peek() == '\'')
+                if (peek() == '\'' || peek() == '"')
                 {
                     return make_string_value(parse_string());
                 }
@@ -789,6 +799,36 @@
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
                     return make_number_value(static_cast<double>(sql_prepare_callback_(handle, value_as_string(arguments[1]))));
                 }
+                if (function == "sqlcancel" && !arguments.empty())
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    return make_number_value(static_cast<double>(sql_cancel_callback_(handle)));
+                }
+                if (function == "sqlcommit" && !arguments.empty())
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    return make_number_value(static_cast<double>(sql_commit_callback_(handle)));
+                }
+                if (function == "sqlrollback" && !arguments.empty())
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    return make_number_value(static_cast<double>(sql_rollback_callback_(handle)));
+                }
+                if (function == "sqltables" && !arguments.empty())
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    const std::string table_types = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    const std::string cursor_alias = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+                    return make_number_value(static_cast<double>(sql_tables_callback_(handle, table_types, cursor_alias)));
+                }
+                if (function == "sqlcolumns" && arguments.size() >= 2U)
+                {
+                    const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+                    const std::string table_name = value_as_string(arguments[1]);
+                    const std::string format = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
+                    const std::string cursor_alias = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
+                    return make_number_value(static_cast<double>(sql_columns_callback_(handle, table_name, format, cursor_alias)));
+                }
                 if (function == "sqlgetprop" && arguments.size() >= 2U)
                 {
                     const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
@@ -1064,13 +1104,19 @@
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_++];
-                    if (ch == '\'')
+                    if (ch == '\'' || ch == '"')
                     {
+                        const char delimiter = ch;
                         while (position_ < text_.size())
                         {
                             const char string_ch = text_[position_++];
-                            if (string_ch == '\'')
+                            if (string_ch == delimiter)
                             {
+                                if (position_ < text_.size() && text_[position_] == delimiter)
+                                {
+                                    ++position_;
+                                    continue;
+                                }
                                 break;
                             }
                         }
@@ -1207,15 +1253,28 @@
             std::string parse_string()
             {
                 std::string result;
-                if (!match("'"))
+                skip_whitespace();
+                if (position_ >= text_.size())
                 {
                     return result;
                 }
+                const char delimiter = text_[position_];
+                if (delimiter != '\'' && delimiter != '"')
+                {
+                    return result;
+                }
+                ++position_;
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_++];
-                    if (ch == '\'')
+                    if (ch == delimiter)
                     {
+                        if (position_ < text_.size() && text_[position_] == delimiter)
+                        {
+                            result.push_back(delimiter);
+                            ++position_;
+                            continue;
+                        }
                         break;
                     }
                     result.push_back(ch);
@@ -1330,6 +1389,11 @@
             std::function<bool(int)> sql_disconnect_callback_;
             std::function<int(int)> sql_row_count_callback_;
             std::function<int(int, const std::string &)> sql_prepare_callback_;
+            std::function<int(int)> sql_cancel_callback_;
+            std::function<int(int)> sql_commit_callback_;
+            std::function<int(int)> sql_rollback_callback_;
+            std::function<int(int, const std::string &, const std::string &)> sql_tables_callback_;
+            std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback_;
             std::function<PrgValue(int, const std::string &)> sql_get_prop_callback_;
             std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback_;
             std::function<int(const std::string &, const std::string &)> register_ole_callback_;

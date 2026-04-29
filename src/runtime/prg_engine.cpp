@@ -190,6 +190,7 @@ namespace copperfin::runtime
             bool active_order_descending = false;
             std::string filter_expression;
             std::vector<vfp::DbfRecord> remote_records;
+            std::vector<vfp::DbfFieldDescriptor> remote_fields;
             std::map<std::string, FieldRule> field_rules;
         };
 
@@ -608,6 +609,26 @@ namespace copperfin::runtime
             [this](int handle, const std::string &command)
             {
                 return sql_prepare(handle, command);
+            },
+            [this](int handle)
+            {
+                return sql_cancel(handle);
+            },
+            [this](int handle)
+            {
+                return sql_commit(handle);
+            },
+            [this](int handle)
+            {
+                return sql_rollback(handle);
+            },
+            [this](int handle, const std::string &table_types, const std::string &cursor_alias)
+            {
+                return sql_tables(handle, table_types, cursor_alias);
+            },
+            [this](int handle, const std::string &table_name, const std::string &format, const std::string &cursor_alias)
+            {
+                return sql_columns(handle, table_name, format, cursor_alias);
             },
             [this](int handle, const std::string &property_name)
             {

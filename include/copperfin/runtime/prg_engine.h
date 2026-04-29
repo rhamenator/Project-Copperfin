@@ -108,6 +108,9 @@ struct RuntimeSqlConnectionState {
     std::string last_cursor_alias;
     std::size_t last_result_count = 0;
     std::string prepared_command;
+    std::string last_sql_action;
+    bool transaction_dirty = false;
+    bool cancel_requested = false;
     std::map<std::string, std::string> properties;
 };
 

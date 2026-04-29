@@ -471,14 +471,10 @@
             std::vector<vfp::DbfFieldDescriptor> fields;
             if (cursor.remote)
             {
-                const auto add_remote_field = [&](const std::string &name, char type)
+                if (!cursor.remote_fields.empty())
                 {
-                    fields.push_back(vfp::DbfFieldDescriptor{
-                        .name = name,
-                        .type = type,
-                        .length = static_cast<std::uint8_t>(type == 'N' || type == 'F' ? 18U : 32U),
-                        .decimal_count = 0U});
-                };
+                    return cursor.remote_fields;
+                }
 
                 if (!cursor.remote_records.empty())
                 {
@@ -486,13 +482,17 @@
                     for (const auto &value : cursor.remote_records.front().values)
                     {
                         const char type = value.field_type == '\0' ? 'C' : value.field_type;
-                        add_remote_field(value.field_name, type);
+                        fields.push_back(vfp::DbfFieldDescriptor{
+                            .name = value.field_name,
+                            .type = type,
+                            .length = static_cast<std::uint8_t>(type == 'N' || type == 'F' ? 18U : 32U),
+                            .decimal_count = 0U});
                     }
                     return fields;
                 }
-                add_remote_field("ID", 'N');
-                add_remote_field("NAME", 'C');
-                add_remote_field("AMOUNT", 'N');
+                fields.push_back(vfp::DbfFieldDescriptor{.name = "ID", .type = 'N', .length = 18U, .decimal_count = 0U});
+                fields.push_back(vfp::DbfFieldDescriptor{.name = "NAME", .type = 'C', .length = 32U, .decimal_count = 0U});
+                fields.push_back(vfp::DbfFieldDescriptor{.name = "AMOUNT", .type = 'N', .length = 18U, .decimal_count = 0U});
                 return fields;
             }
 
