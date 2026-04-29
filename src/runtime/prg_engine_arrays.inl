@@ -61,6 +61,31 @@
                 return populate_used_aliases_array(array_name);
             }
 
+            if (normalized_function == "asessions")
+            {
+                return populate_sessions_array(array_name);
+            }
+
+            if (normalized_function == "afont")
+            {
+                const std::string font_filter = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                const int size_filter = arguments.size() >= 3U
+                                            ? static_cast<int>(std::llround(value_as_number(arguments[2])))
+                                            : 0;
+                return populate_font_array(array_name, font_filter, size_filter);
+            }
+
+            if (normalized_function == "aprinters")
+            {
+                return populate_printers_array(array_name);
+            }
+
+            if (normalized_function == "agetfileversion" && arguments.size() >= 2U)
+            {
+                const std::string filepath = value_as_string(arguments[1]);
+                return populate_file_version_array(array_name, filepath);
+            }
+
             if (normalized_function == "asize")
             {
                 const std::size_t rows = arguments.size() >= 2U

@@ -200,6 +200,65 @@ namespace
     }
 
 
+    void test_macro_dot_suffix_form()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_macro_dot_suffix";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "macro_dot_suffix.prg";
+        write_text(
+            main_path,
+            // Basic &stem.suffix: cType="First", FirstName="John" => &cType.Name = "FirstName" variable
+            "cType = 'First'\n"
+            "FirstName = 'John'\n"
+            "cResult1 = &cType.Name\n"
+            // Trailing dot (no suffix): dot is terminator, expands cleanly
+            "cField = 'FirstName'\n"
+            "cResult2 = &cField.\n"
+            // m&cType.ID embedded macro form: mCustomerID = 99, cType="Customer"
+            "cType2 = 'Customer'\n"
+            "mCustomerID = 99\n"
+            "nResult3 = m&cType2.ID\n"
+            // &stem.suffix where result is used as a string (stem resolves to non-var)
+            "cStem = 'Hello'\n"
+            "cResult4 = &cStem.World\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(),
+             .working_directory = temp_root.string(),
+             .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "macro dot-suffix script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        // &cType.Name → "FirstName" → value of FirstName = "John"
+        check("cresult1", "John");
+        // &cField. → "FirstName" (trailing dot, no suffix) → value of FirstName = "John"
+        check("cresult2", "John");
+        // m&cType2.ID → "mCustomerID" → value of mCustomerID = 99
+        check("nresult3", "99");
+        // &cStem.World → "Hello" + "World" = "HelloWorld" (no such variable, returns expanded string)
+        check("cresult4", "HelloWorld");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -207,6 +266,7 @@ int main()
     test_macro_expression_indirection();
     test_type_and_null_expression_functions();
     test_type_and_transform_expression_depth();
+    test_macro_dot_suffix_form();
 
     if (test_failures() != 0)
     {

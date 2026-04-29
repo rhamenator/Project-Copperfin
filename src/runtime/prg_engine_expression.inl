@@ -740,6 +740,14 @@
                     record_event_callback_("ole.createobject", prog_id);
                     return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
                 }
+                if (function == "newobject" && !arguments.empty())
+                {
+                    const std::string class_name = value_as_string(arguments[0]);
+                    const std::string library = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    const int handle = register_ole_callback_(class_name, library.empty() ? "newobject" : library);
+                    record_event_callback_("ole.newobject", class_name + (library.empty() ? std::string{} : ":" + library));
+                    return make_string_value("object:" + class_name + "#" + std::to_string(handle));
+                }
                 if (function == "getobject" && !arguments.empty())
                 {
                     const std::string source = value_as_string(arguments[0]);
@@ -817,8 +825,10 @@
                     return make_number_value(static_cast<double>(array_length_callback_(array_name, dimension)));
                 }
                 if ((function == "acopy" || function == "adel" || function == "adir" || function == "aelement" ||
-                     function == "afields" || function == "ains" || function == "alines" || function == "asort" ||
-                     function == "ascan" || function == "asize" || function == "asubscript" || function == "aused") &&
+                     function == "afields" || function == "afont" || function == "agetfileversion" ||
+                     function == "ains" || function == "alines" || function == "aprinters" ||
+                     function == "ascan" || function == "asessions" || function == "asize" ||
+                     function == "asort" || function == "asubscript" || function == "aused") &&
                     !arguments.empty())
                 {
                     return array_function_callback_(function, raw_arguments, arguments);
@@ -959,18 +969,87 @@
             std::string parse_identifier()
             {
                 skip_whitespace();
-                const std::size_t start = position_;
+                // Check whether an embedded `&macro.` substitution is present
+                // anywhere within the upcoming identifier token (e.g. `m&cType.ID`).
+                // If so we must build the result dynamically; otherwise use the
+                // fast direct-substring path.
+                bool has_embedded_macro = false;
+                {
+                    std::size_t scan = position_;
+                    while (scan < text_.size())
+                    {
+                        const char ch = text_[scan];
+                        if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_' || ch == '.')
+                        {
+                            ++scan;
+                            continue;
+                        }
+                        if (ch == '&')
+                        {
+                            has_embedded_macro = true;
+                        }
+                        break;
+                    }
+                }
+
+                if (!has_embedded_macro)
+                {
+                    // Fast path: no embedded macro.
+                    const std::size_t start = position_;
+                    while (position_ < text_.size())
+                    {
+                        const char ch = text_[position_];
+                        if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_' || ch == '.')
+                        {
+                            ++position_;
+                            continue;
+                        }
+                        break;
+                    }
+                    return text_.substr(start, position_ - start);
+                }
+
+                // Slow path: build identifier with embedded macro expansion.
+                // Example: `m&cType.ID` with cType="Customer" → "mCustomerID".
+                std::string result;
                 while (position_ < text_.size())
                 {
                     const char ch = text_[position_];
                     if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_' || ch == '.')
                     {
+                        result += ch;
                         ++position_;
+                        continue;
+                    }
+                    if (ch == '&')
+                    {
+                        ++position_; // consume '&'
+                        const std::size_t macro_start = position_;
+                        while (position_ < text_.size())
+                        {
+                            const char mc = text_[position_];
+                            if (std::isalnum(static_cast<unsigned char>(mc)) != 0 || mc == '_')
+                            {
+                                ++position_;
+                                continue;
+                            }
+                            break;
+                        }
+                        const std::string emb_macro_name = text_.substr(macro_start, position_ - macro_start);
+                        if (!emb_macro_name.empty())
+                        {
+                            // Consume the dot terminator after the embedded macro name.
+                            if (position_ < text_.size() && text_[position_] == '.')
+                            {
+                                ++position_;
+                            }
+                            result += trim_copy(value_as_string(resolve_identifier(emb_macro_name)));
+                        }
                         continue;
                     }
                     break;
                 }
-                return text_.substr(start, position_ - start);
+                return result;
             }
 
             std::string parse_braced_literal()
@@ -1039,9 +1118,27 @@
                     return make_empty_value();
                 }
 
+                // Consume the dot terminator in the `&stem.suffix` form.  The dot
+                // separates the macro variable name from the literal continuation of
+                // the identifier.  Any alphanumeric / underscore characters that
+                // immediately follow the dot are the suffix; they are appended
+                // verbatim to the expanded stem value before further evaluation.
+                std::string dot_suffix;
                 if (peek() == '.')
                 {
-                    ++position_;
+                    ++position_; // consume the dot terminator
+                    const std::size_t suffix_start = position_;
+                    while (position_ < text_.size())
+                    {
+                        const char sch = text_[position_];
+                        if (std::isalnum(static_cast<unsigned char>(sch)) != 0 || sch == '_')
+                        {
+                            ++position_;
+                            continue;
+                        }
+                        break;
+                    }
+                    dot_suffix = text_.substr(suffix_start, position_ - suffix_start);
                 }
 
                 const std::string expanded = trim_copy(value_as_string(resolve_identifier(macro_name)));
@@ -1050,7 +1147,8 @@
                     return make_empty_value();
                 }
 
-                std::string resolved_expression = expanded;
+                // Concatenate the literal suffix onto the expanded stem.
+                std::string resolved_expression = expanded + dot_suffix;
                 std::vector<std::string> visited_macros;
                 visited_macros.reserve(8U);
                 constexpr std::size_t max_macro_expansion_depth = 16U;

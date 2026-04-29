@@ -463,3 +463,178 @@
             assign_array(target_name, std::move(values), 2U);
             return make_number_value(static_cast<double>(rows));
         }
+
+        // ASESSIONS(aName) — populate a 1-column array with active data session IDs.
+        // VFP always returns at least 1 (the default session).
+        PrgValue populate_sessions_array(const std::string &target_name)
+        {
+            if (trim_copy(target_name).empty())
+            {
+                return make_number_value(0.0);
+            }
+            std::vector<PrgValue> values;
+            // Always include session 1 (default).  Add any private sessions that
+            // have been created (keys > 1 in data_sessions map).
+            std::set<int> seen;
+            seen.insert(1);
+            for (const auto &[session_id, _] : data_sessions)
+            {
+                seen.insert(session_id);
+            }
+            for (const int sid : seen)
+            {
+                values.push_back(make_number_value(static_cast<double>(sid)));
+            }
+            assign_array(target_name, std::move(values), 1U);
+            return make_number_value(static_cast<double>(seen.size()));
+        }
+
+        // AFONT(aName [, cFontName [, nSize]]) — populate with available font names.
+        // In a headless runtime we return a fixed stub set.  VFP returns a 1- or
+        // 2-column array depending on whether cFontName is supplied.
+        PrgValue populate_font_array(const std::string &target_name,
+                                     const std::string &font_name_filter,
+                                     int size_filter)
+        {
+            if (trim_copy(target_name).empty())
+            {
+                return make_number_value(0.0);
+            }
+            static const std::vector<std::string> stub_fonts = {
+                "Arial", "Courier New", "Times New Roman",
+                "Helvetica", "Lucida Console"};
+
+            if (font_name_filter.empty())
+            {
+                // No filter — return all font names in a 1-column array.
+                std::vector<PrgValue> values;
+                values.reserve(stub_fonts.size());
+                for (const auto &name : stub_fonts)
+                {
+                    values.push_back(make_string_value(name));
+                }
+                assign_array(target_name, std::move(values), 1U);
+                return make_number_value(static_cast<double>(stub_fonts.size()));
+            }
+
+            // Font name supplied — return available sizes (stub: common point sizes).
+            // If size_filter > 0 VFP returns .T./.F. for a single size; we model
+            // the size-list variant (size_filter == 0).
+            const std::string upper_filter = uppercase_copy(font_name_filter);
+            bool font_found = false;
+            for (const auto &name : stub_fonts)
+            {
+                if (uppercase_copy(name) == upper_filter)
+                {
+                    font_found = true;
+                    break;
+                }
+            }
+            if (!font_found)
+            {
+                assign_array(target_name, {}, 1U);
+                return make_number_value(0.0);
+            }
+            static const std::vector<int> common_sizes = {8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 36, 48, 72};
+            if (size_filter > 0)
+            {
+                // Return 1 if the size is in our stub list, 0 otherwise.
+                for (int sz : common_sizes)
+                {
+                    if (sz == size_filter)
+                    {
+                        return make_number_value(1.0);
+                    }
+                }
+                return make_number_value(0.0);
+            }
+            std::vector<PrgValue> values;
+            values.reserve(common_sizes.size());
+            for (int sz : common_sizes)
+            {
+                values.push_back(make_number_value(static_cast<double>(sz)));
+            }
+            assign_array(target_name, std::move(values), 1U);
+            return make_number_value(static_cast<double>(common_sizes.size()));
+        }
+
+        // APRINTERS(aName) — populate with available printer names.
+        // Headless runtime: return a single "(none)" entry so PRG code can always
+        // inspect the array without crashing.
+        PrgValue populate_printers_array(const std::string &target_name)
+        {
+            if (trim_copy(target_name).empty())
+            {
+                return make_number_value(0.0);
+            }
+            std::vector<PrgValue> values;
+#if defined(__linux__)
+            // Attempt a lightweight enumeration via /dev/lp* and cups if available;
+            // fall back to the stub entry on any failure.
+            std::error_code ignored;
+            namespace fs = std::filesystem;
+            bool found_any = false;
+            if (fs::exists("/dev", ignored))
+            {
+                for (const auto &entry : fs::directory_iterator("/dev", ignored))
+                {
+                    const std::string filename = entry.path().filename().string();
+                    if (filename.rfind("lp", 0U) == 0U)
+                    {
+                        values.push_back(make_string_value(entry.path().string()));
+                        found_any = true;
+                    }
+                }
+            }
+            if (!found_any)
+            {
+                values.push_back(make_string_value("(none)"));
+            }
+#else
+            values.push_back(make_string_value("(none)"));
+#endif
+            const std::size_t printer_count = values.size();
+            assign_array(target_name, std::move(values), 1U);
+            return make_number_value(static_cast<double>(printer_count));
+        }
+
+        // AGETFILEVERSION(aName, cFilename) — fill aName with file-version info.
+        // Returns the number of elements filled (7) or 0 on failure.
+        // VFP fills 7 rows; for non-PE / non-Windows files we return stub metadata
+        // if the file exists, or 0 if it does not.
+        PrgValue populate_file_version_array(const std::string &target_name,
+                                             const std::string &filepath)
+        {
+            if (trim_copy(target_name).empty() || trim_copy(filepath).empty())
+            {
+                return make_number_value(0.0);
+            }
+            namespace fs = std::filesystem;
+            std::error_code ignored;
+            const fs::path path = fs::path(filepath);
+            if (!fs::exists(path, ignored))
+            {
+                return make_number_value(0.0);
+            }
+            // Stub version row-shape compatible with VFP AGETFILEVERSION():
+            //   [1] Full version string   "0.0.0.0"
+            //   [2] File description      (filename stem)
+            //   [3] Company name          ""
+            //   [4] File version          "0.0.0.0"
+            //   [5] Product name          ""
+            //   [6] Product version       "0.0.0.0"
+            //   [7] Trademark/copyright   ""
+            const std::string stem = path.filename().string();
+            static const std::size_t version_row_count = 7U;
+            std::vector<PrgValue> values;
+            values.reserve(version_row_count);
+            values.push_back(make_string_value("0.0.0.0"));
+            values.push_back(make_string_value(stem));
+            values.push_back(make_string_value(""));
+            values.push_back(make_string_value("0.0.0.0"));
+            values.push_back(make_string_value(""));
+            values.push_back(make_string_value("0.0.0.0"));
+            values.push_back(make_string_value(""));
+            assign_array(target_name, std::move(values), 1U);
+            return make_number_value(static_cast<double>(version_row_count));
+        }

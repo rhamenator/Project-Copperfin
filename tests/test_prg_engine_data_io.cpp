@@ -519,6 +519,340 @@ void test_scatter_gather_array_preserves_date_and_datetime_like_values() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_name_object_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_object";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME, AGE NAME oRow\n"
+        "cObjName = GETPEM(oRow, 'NAME')\n"
+        "nObjAgePlus = GETPEM(oRow, 'AGE') + 1\n"
+        "=SETPem(oRow, 'NAME', 'FromObject')\n"
+        "=SETPem(oRow, 'AGE', 77)\n"
+        "GATHER NAME oRow FIELDS NAME, AGE\n"
+        "cAfterName = NAME\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto obj_name = state.globals.find("cobjname");
+    const auto obj_age_plus = state.globals.find("nobjageplus");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+
+    expect(obj_name != state.globals.end(), "SCATTER NAME should populate NAME as an object property");
+    expect(obj_age_plus != state.globals.end(), "SCATTER NAME should preserve numeric properties");
+    expect(after_name != state.globals.end(), "GATHER NAME should restore NAME from object properties");
+    expect(after_age != state.globals.end(), "GATHER NAME should restore AGE from object properties");
+
+    if (obj_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(obj_name->second) == "Alice",
+            "SCATTER NAME should expose NAME via GETPEM");
+    }
+    if (obj_age_plus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(obj_age_plus->second) == "43",
+            "SCATTER NAME should preserve numeric values for arithmetic");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "FromObject",
+            "GATHER NAME should write updated NAME back to the record");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "77",
+            "GATHER NAME should write updated AGE back to the record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_predeclared_2d_array_row_one_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_2d_row";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42", "true"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "2D SCATTER/GATHER fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_2d_row.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "DIMENSION aRow[1,3]\n"
+        "SCATTER FIELDS NAME, AGE, ACTIVE TO aRow\n"
+        "cRowName = aRow[1,1]\n"
+        "nRowAgePlus = aRow[1,2] + 1\n"
+        "lRowActive = aRow[1,3]\n"
+        "aRow[1,1] = 'TwoD'\n"
+        "aRow[1,2] = 99\n"
+        "aRow[1,3] = .F.\n"
+        "GATHER FROM aRow FIELDS NAME, AGE, ACTIVE\n"
+        "cAfterName = NAME\n"
+        "nAfterAge = AGE\n"
+        "lAfterActive = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "2D row-1 SCATTER/GATHER script should complete: " + state.message);
+
+    const auto row_name = state.globals.find("crowname");
+    const auto row_age_plus = state.globals.find("nrowageplus");
+    const auto row_active = state.globals.find("lrowactive");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+    const auto after_active = state.globals.find("lafteractive");
+
+    expect(row_name != state.globals.end(), "SCATTER TO predeclared 2D array should populate row 1 col 1");
+    expect(row_age_plus != state.globals.end(), "SCATTER TO predeclared 2D array should keep numeric values");
+    expect(row_active != state.globals.end(), "SCATTER TO predeclared 2D array should populate logical values");
+    expect(after_name != state.globals.end(), "GATHER FROM predeclared 2D array should restore NAME");
+    expect(after_age != state.globals.end(), "GATHER FROM predeclared 2D array should restore AGE");
+    expect(after_active != state.globals.end(), "GATHER FROM predeclared 2D array should restore ACTIVE");
+
+    if (row_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(row_name->second) == "Alice",
+            "2D SCATTER should write field values to row 1 columns");
+    }
+    if (row_age_plus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(row_age_plus->second) == "43",
+            "2D SCATTER should preserve numeric values");
+    }
+    if (row_active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(row_active->second) == "true",
+            "2D SCATTER should preserve logical values");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "TwoD",
+            "2D GATHER should write NAME from row 1 col 1");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "99",
+            "2D GATHER should write AGE from row 1 col 2");
+    }
+    if (after_active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_active->second) == "false",
+            "2D GATHER should write ACTIVE from row 1 col 3");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_two_column_name_value_array_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_value_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42", "true"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "name/value SCATTER/GATHER fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_value_array.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "DIMENSION aPair[3,2]\n"
+        "SCATTER FIELDS NAME, AGE, ACTIVE TO aPair\n"
+        "cPairField1 = aPair[1,1]\n"
+        "cPairValue1 = aPair[1,2]\n"
+        "cPairField2 = aPair[2,1]\n"
+        "nPairValue2 = aPair[2,2]\n"
+        "aPair[1,2] = 'PairName'\n"
+        "aPair[2,2] = 66\n"
+        "aPair[3,2] = .F.\n"
+        "GATHER FROM aPair FIELDS NAME, AGE, ACTIVE\n"
+        "cAfterName = NAME\n"
+        "nAfterAge = AGE\n"
+        "lAfterActive = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "2-column name/value SCATTER/GATHER script should complete: " + state.message);
+
+    const auto pair_field_1 = state.globals.find("cpairfield1");
+    const auto pair_value_1 = state.globals.find("cpairvalue1");
+    const auto pair_field_2 = state.globals.find("cpairfield2");
+    const auto pair_value_2 = state.globals.find("npairvalue2");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+    const auto after_active = state.globals.find("lafteractive");
+
+    expect(pair_field_1 != state.globals.end(), "SCATTER TO [n,2] array should write field names in column 1");
+    expect(pair_value_1 != state.globals.end(), "SCATTER TO [n,2] array should write field values in column 2");
+    expect(pair_field_2 != state.globals.end(), "SCATTER TO [n,2] array should keep field order");
+    expect(pair_value_2 != state.globals.end(), "SCATTER TO [n,2] array should preserve numeric values");
+    expect(after_name != state.globals.end(), "GATHER FROM [n,2] array should restore NAME");
+    expect(after_age != state.globals.end(), "GATHER FROM [n,2] array should restore AGE");
+    expect(after_active != state.globals.end(), "GATHER FROM [n,2] array should restore ACTIVE");
+
+    if (pair_field_1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pair_field_1->second) == "NAME",
+            "name/value SCATTER should store first field name in column 1");
+    }
+    if (pair_value_1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pair_value_1->second) == "Alice",
+            "name/value SCATTER should store first field value in column 2");
+    }
+    if (pair_field_2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pair_field_2->second) == "AGE",
+            "name/value SCATTER should store second field name in column 1");
+    }
+    if (pair_value_2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pair_value_2->second) == "42",
+            "name/value SCATTER should preserve numeric field values in column 2");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "PairName",
+            "name/value GATHER should restore NAME by matching field names");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "66",
+            "name/value GATHER should restore AGE by matching field names");
+    }
+    if (after_active != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_active->second) == "false",
+            "name/value GATHER should restore ACTIVE by matching field names");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_memo_clause_controls_memo_field_inclusion() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_memo_clause";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "notes.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTES", .type = 'M', .length = 10U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Memo payload"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER MEMO fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_memo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER MEMVAR\n"
+        "cNoMemoType = VARTYPE(m.NOTES)\n"
+        "SCATTER MEMVAR MEMO\n"
+        "cWithMemoType = VARTYPE(m.NOTES)\n"
+        "cWithMemoValue = m.NOTES\n"
+        "SCATTER TO aNoMemo\n"
+        "nNoMemoLen = ALEN(aNoMemo)\n"
+        "SCATTER TO aWithMemo MEMO\n"
+        "nWithMemoLen = ALEN(aWithMemo)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER MEMO script should complete: " + state.message);
+
+    const auto no_memo_type = state.globals.find("cnomemotype");
+    const auto with_memo_type = state.globals.find("cwithmemotype");
+    const auto with_memo_value = state.globals.find("cwithmemovalue");
+    const auto no_memo_len = state.globals.find("nnomemolen");
+    const auto with_memo_len = state.globals.find("nwithmemolen");
+
+    expect(no_memo_type != state.globals.end(), "SCATTER MEMVAR without MEMO should leave memo memvar undefined");
+    expect(with_memo_type != state.globals.end(), "SCATTER MEMVAR MEMO should include memo memvar");
+    expect(with_memo_value != state.globals.end(), "SCATTER MEMVAR MEMO should capture memo field value");
+    expect(no_memo_len != state.globals.end(), "SCATTER TO array without MEMO should return array length");
+    expect(with_memo_len != state.globals.end(), "SCATTER TO array MEMO should return array length");
+
+    if (no_memo_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(no_memo_type->second) == "U",
+            "SCATTER without MEMO should not include memo fields");
+    }
+    if (with_memo_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(with_memo_type->second) == "C",
+            "SCATTER MEMO should expose memo fields as string values");
+    }
+    if (with_memo_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(with_memo_value->second) == "Memo payload",
+            "SCATTER MEMO should preserve memo field text");
+    }
+    if (no_memo_len != state.globals.end() && with_memo_len != state.globals.end()) {
+        expect(copperfin::runtime::format_value(no_memo_len->second) == "1",
+            "SCATTER TO array without MEMO should include non-memo fields only");
+        expect(copperfin::runtime::format_value(with_memo_len->second) == "2",
+            "SCATTER TO array MEMO should include memo fields");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_array_mutator_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_mutators";
@@ -2744,6 +3078,10 @@ int main() {
     test_scatter_to_array_and_gather_from_array_round_trip();
     test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
     test_scatter_gather_array_preserves_date_and_datetime_like_values();
+    test_scatter_gather_name_object_round_trip();
+    test_scatter_gather_predeclared_2d_array_row_one_semantics();
+    test_scatter_gather_two_column_name_value_array_semantics();
+    test_scatter_memo_clause_controls_memo_field_inclusion();
     test_runtime_array_mutator_functions();
     test_save_to_writes_variables_to_file();
     test_restore_from_loads_variables_from_file();

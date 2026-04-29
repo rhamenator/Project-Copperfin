@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <system_error>
 
@@ -603,6 +604,174 @@ void test_store_uses_assignment_target_semantics() {
 
 }  // namespace
 
+void test_asessions_returns_at_least_default_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_asessions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "asessions.prg";
+    write_text(
+        main_path,
+        "nCount = ASESSIONS(aSess)\n"
+        "nFirst = aSess[1]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ASESSIONS script should complete");
+
+    const auto count = state.globals.find("ncount");
+    const auto first = state.globals.find("nfirst");
+    expect(count != state.globals.end(), "ASESSIONS count variable should be captured");
+    expect(first != state.globals.end(), "ASESSIONS first element should be captured");
+    if (count != state.globals.end()) {
+        const std::string cv = copperfin::runtime::format_value(count->second);
+        expect(cv != "0" && !cv.empty() && cv != "false",
+            "ASESSIONS should return at least 1 (the default session)");
+    }
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "1",
+            "ASESSIONS first element should be session ID 1");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_afont_returns_non_empty_stub_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_afont";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "afont.prg";
+    write_text(
+        main_path,
+        "nAll    = AFONT(aAllFonts)\n"
+        "nArial  = AFONT(aArialSizes, 'Arial')\n"
+        "nBogus  = AFONT(aBogus, 'ZZZNoSuchFont')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "AFONT script should complete");
+
+    const auto all = state.globals.find("nall");
+    const auto arial = state.globals.find("narial");
+    const auto bogus = state.globals.find("nbogus");
+    expect(all   != state.globals.end(), "AFONT all-fonts count should be captured");
+    expect(arial != state.globals.end(), "AFONT Arial sizes count should be captured");
+    expect(bogus != state.globals.end(), "AFONT unknown-font count should be captured");
+    if (all != state.globals.end()) {
+        const std::string av = copperfin::runtime::format_value(all->second);
+        expect(av != "0" && !av.empty() && av != "false",
+            "AFONT with no filter should return at least one font name");
+    }
+    if (arial != state.globals.end()) {
+        const std::string arv = copperfin::runtime::format_value(arial->second);
+        expect(arv != "0" && !arv.empty() && arv != "false",
+            "AFONT('Arial') should return a non-empty size list");
+    }
+    if (bogus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bogus->second) == "0",
+            "AFONT for an unknown font should return 0");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_aprinters_returns_non_empty_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aprinters";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aprinters.prg";
+    write_text(
+        main_path,
+        "nCount = APRINTERS(aPrint)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APRINTERS script should complete");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "APRINTERS count should be captured");
+    if (count != state.globals.end()) {
+        const std::string cv = copperfin::runtime::format_value(count->second);
+        expect(cv != "0" && !cv.empty() && cv != "false",
+            "APRINTERS should return at least one entry");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_agetfileversion_existing_and_missing_files() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_agetfileversion";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Create a dummy file for the "existing file" test.
+    const fs::path dummy = temp_root / "dummy.exe";
+    {
+        std::ofstream out(dummy);
+        out << "stub";
+    }
+
+    const fs::path main_path = temp_root / "agetfileversion.prg";
+    write_text(
+        main_path,
+        "cDummy  = '" + dummy.string() + "'\n"
+        "nExist  = AGETFILEVERSION(aVer,  cDummy)\n"
+        "nMiss   = AGETFILEVERSION(aVer2, 'C:\\nonexistent\\missing.exe')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "AGETFILEVERSION script should complete");
+
+    const auto nexist = state.globals.find("nexist");
+    const auto nmiss  = state.globals.find("nmiss");
+    expect(nexist != state.globals.end(), "AGETFILEVERSION existing-file count should be captured");
+    expect(nmiss  != state.globals.end(), "AGETFILEVERSION missing-file count should be captured");
+    if (nexist != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nexist->second) == "7",
+            "AGETFILEVERSION should return 7 elements for an existing file");
+    }
+    if (nmiss != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nmiss->second) == "0",
+            "AGETFILEVERSION should return 0 for a missing file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 int main() {
     test_ascan_predicate_expression_search();
     test_acopy_two_dimensional_row_and_column_workflows();
@@ -610,6 +779,10 @@ int main() {
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
     test_store_uses_assignment_target_semantics();
+    test_asessions_returns_at_least_default_session();
+    test_afont_returns_non_empty_stub_array();
+    test_aprinters_returns_non_empty_array();
+    test_agetfileversion_existing_and_missing_files();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

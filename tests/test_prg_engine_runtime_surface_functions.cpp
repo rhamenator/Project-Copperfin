@@ -627,6 +627,99 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_newobject_getpem_setpem_compobj_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_getpem_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "newobject_getpem_setpem.prg";
+        write_text(
+            main_path,
+            "oa = NEWOBJECT('Scripting.Dictionary')\n"
+            "ob = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lsamesame = COMPOBJ(oa, oa)\n"
+            "ldiffab = COMPOBJ(oa, ob)\n"
+            "lnullleft = COMPOBJ(.NULL., oa)\n"
+            "lnullright = COMPOBJ(oa, .NULL.)\n"
+            "lbothnull = COMPOBJ(.NULL., .NULL.)\n"
+            "ngetprop = GETPEM(oa, 'comparemode')\n"
+            "lgetmethod = GETPEM(oa, 'add')\n"
+            "xgetmissing = GETPEM(oa, 'nosuchprop')\n"
+            "lsetprop = SETPEM(oa, 'comparemode', 1)\n"
+            "ngetpropafterset = GETPEM(oa, 'comparemode')\n"
+            "lsetreadonly = SETPEM(oa, 'count', 99)\n"
+            "lsetunknown = SETPEM(oa, 'nosuchprop', 42)\n"
+            "lsetmethod = SETPEM(oa, 'add', 'MyAddProc')\n"
+            "cgetmethodafterset = GETPEM(oa, 'add')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+            .startup_path = main_path.string(),
+            .working_directory = temp_root.string(),
+            .stop_on_entry = false
+        });
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("NEWOBJECT/GETPEM/SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        // NEWOBJECT creates valid object refs
+        expect(state.globals.count("oa") && state.globals.at("oa").kind == copperfin::runtime::PrgValueKind::string,
+               "NEWOBJECT('Scripting.Dictionary') should return a string object ref");
+        expect(state.globals.count("ob") && state.globals.at("ob").kind == copperfin::runtime::PrgValueKind::string,
+               "NEWOBJECT('Scripting.Dictionary', 'vbscript.dll') should return a string object ref");
+
+        // NEWOBJECT should have emitted ole.newobject events
+        const bool has_newobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto& ev)
+        {
+            return ev.category == "ole.newobject";
+        });
+        expect(has_newobject_event, "NEWOBJECT() should emit ole.newobject event");
+
+        // COMPOBJ
+        check("lsamesame", "true");
+        check("ldiffab", "false");
+        check("lnullleft", "false");
+        check("lnullright", "false");
+        check("lbothnull", "false");
+
+        // GETPEM — property, method presence, missing member
+        check("ngetprop", "0");        // comparemode default = 0
+        check("lgetmethod", "true");   // 'add' is a method → .T.
+        // missing returns empty (format_value of empty is "")
+        {
+            const auto it = state.globals.find("xgetmissing");
+            expect(it != state.globals.end() && it->second.kind == copperfin::runtime::PrgValueKind::empty,
+                   "GETPEM unknown member should return empty (.NULL.)");
+        }
+
+        // SETPEM
+        check("lsetprop", "true");           // setting comparemode succeeds
+        check("ngetpropafterset", "1");      // comparemode now 1
+        check("lsetreadonly", "false");      // count is read-only → .F.
+        check("lsetunknown", "false");       // unknown property → .F.
+        check("lsetmethod", "true");         // setting method ref succeeds
+        check("cgetmethodafterset", "MyAddProc");  // method ref retrievable as property
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -638,6 +731,7 @@ int main()
     test_object_reflection_runtime_surface_functions();
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_invalid_input_runtime_surface_functions();
+    test_newobject_getpem_setpem_compobj_functions();
 
     if (test_failures() != 0)
     {

@@ -3568,9 +3568,11 @@
             }
             case StatementKind::scatter_command:
             {
-                // SCATTER [FIELDS <list>] TO <var>|MEMVAR [BLANK]
+                // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO]
                 const bool use_memvar = (statement.identifier == "memvar");
+                const bool use_name_object = (statement.identifier == "name");
                 const bool blank = !statement.tertiary_expression.empty();
+                const bool include_memo = !statement.quaternary_expression.empty();
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
@@ -3590,25 +3592,70 @@
                 }
 
                 std::vector<PrgValue> scattered_values;
+                std::vector<std::string> scattered_field_names;
                 std::string array_name;
+                std::size_t matched_field_count = 0U;
                 for (const auto &field : rec->values)
                 {
                     if (!field_matches_filter(field.field_name, field_filter))
                     {
                         continue;
                     }
+                    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+                    const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
+                    if (!include_memo && is_memo_field)
+                    {
+                        continue;
+                    }
+
+                    ++matched_field_count;
                     const PrgValue val = blank ? blank_value_for_field(field) : record_value_to_prg_value(field);
                     if (use_memvar)
                     {
                         assign_variable(frame, "m." + field.field_name, val);
                     }
+                    else if (use_name_object)
+                    {
+                        scattered_field_names.push_back(normalize_identifier(field.field_name));
+                        scattered_values.push_back(val);
+                    }
                     else
                     {
+                        scattered_field_names.push_back(field.field_name);
                         scattered_values.push_back(val);
                     }
                 }
 
-                if (!use_memvar)
+                if (use_name_object)
+                {
+                    const std::string object_variable_name = trim_copy(statement.expression);
+                    if (object_variable_name.empty())
+                    {
+                        last_error_message = "SCATTER NAME: missing object variable";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const int handle = register_ole_object("Empty", "scatter name");
+                    const auto object_it = ole_objects.find(handle);
+                    if (object_it == ole_objects.end())
+                    {
+                        last_error_message = "SCATTER NAME: unable to create object";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    RuntimeOleObjectState &object_state = object_it->second;
+                    for (std::size_t index = 0U; index < scattered_values.size() && index < scattered_field_names.size(); ++index)
+                    {
+                        object_state.properties[normalize_identifier(scattered_field_names[index])] = scattered_values[index];
+                    }
+                    assign_variable(frame,
+                                    object_variable_name,
+                                    make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle)));
+                }
+                else if (!use_memvar)
                 {
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "SCATTER TO");
                     if (!resolved_array_name.has_value())
@@ -3618,13 +3665,54 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     array_name = *resolved_array_name;
-                    assign_array(array_name, std::move(scattered_values));
+                    RuntimeArray *existing_array = find_array(array_name);
+                    if (existing_array != nullptr && existing_array->columns > 1U)
+                    {
+                        if (existing_array->columns == 2U)
+                        {
+                            const std::size_t required_rows = std::max(existing_array->rows, scattered_values.size());
+                            if (required_rows > existing_array->rows)
+                            {
+                                resize_array(array_name, required_rows, 2U);
+                                existing_array = find_array(array_name);
+                            }
+                            if (existing_array != nullptr)
+                            {
+                                for (std::size_t index = 0U; index < scattered_values.size() && index < existing_array->rows; ++index)
+                                {
+                                    existing_array->values[(index * 2U)] = make_string_value(scattered_field_names[index]);
+                                    existing_array->values[(index * 2U) + 1U] = scattered_values[index];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            const std::size_t required_columns = std::max(existing_array->columns, scattered_values.size());
+                            if (existing_array->rows == 0U || required_columns != existing_array->columns)
+                            {
+                                resize_array(array_name,
+                                             std::max<std::size_t>(1U, existing_array->rows),
+                                             required_columns);
+                                existing_array = find_array(array_name);
+                            }
+                            if (existing_array != nullptr)
+                            {
+                                for (std::size_t index = 0U; index < scattered_values.size() && index < existing_array->columns; ++index)
+                                {
+                                    existing_array->values[index] = scattered_values[index];
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        assign_array(array_name, std::move(scattered_values));
+                    }
                 }
 
                 if (!field_filter.empty())
                 {
-                    const std::size_t selected_count = use_memvar ? 0U : array_length(array_name, 0);
-                    if (!use_memvar && selected_count == 0U)
+                    if (matched_field_count == 0U)
                     {
                         last_error_message = "SCATTER: no fields match the FIELDS clause";
                         last_fault_location = statement.location;
@@ -3637,14 +3725,15 @@
                     (void)field_filter;
                 }
                 events.push_back({.category = "runtime.scatter",
-                                  .detail = use_memvar ? "memvar" : array_name,
+                                  .detail = use_memvar ? "memvar" : (use_name_object ? trim_copy(statement.expression) : array_name),
                                   .location = statement.location});
                 return {};
             }
             case StatementKind::gather_command:
             {
-                // GATHER FROM <var>|MEMVAR [FIELDS <list>] [FOR <expr>]
+                // GATHER FROM <array>|MEMVAR|NAME <object> [FIELDS <list>] [FOR <expr>]
                 const bool use_memvar = (statement.identifier == "memvar");
+                const bool use_name_object = (statement.identifier == "name");
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
@@ -3665,7 +3754,11 @@
                     !value_as_bool(evaluate_expression(statement.quaternary_expression, frame, cursor)))
                 {
                     std::string detail = "memvar skipped";
-                    if (!use_memvar)
+                    if (use_name_object)
+                    {
+                        detail = trim_copy(statement.expression) + " skipped";
+                    }
+                    else if (!use_memvar)
                     {
                         const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
                         detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
@@ -3684,7 +3777,30 @@
 
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
                 std::string array_name;
-                if (!use_memvar)
+                RuntimeArray *source_array = nullptr;
+                RuntimeOleObjectState *source_object = nullptr;
+                if (use_name_object)
+                {
+                    const std::string object_variable_name = trim_copy(statement.expression);
+                    if (object_variable_name.empty())
+                    {
+                        last_error_message = "GATHER NAME: missing object variable";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    const PrgValue object_value = lookup_variable(frame, object_variable_name);
+                    const auto resolved_object = resolve_ole_object(object_value);
+                    if (!resolved_object.has_value())
+                    {
+                        last_error_message = "GATHER NAME: object variable not found";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    source_object = *resolved_object;
+                }
+                else if (!use_memvar)
                 {
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
                     if (!resolved_array_name.has_value())
@@ -3694,6 +3810,27 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     array_name = *resolved_array_name;
+                    source_array = find_array(array_name);
+                }
+                std::map<std::string, PrgValue> name_value_pairs;
+                bool use_name_value_pairs = false;
+                if (source_array != nullptr && source_array->columns == 2U)
+                {
+                    for (std::size_t row = 1U; row <= source_array->rows; ++row)
+                    {
+                        const PrgValue field_name_value = array_value(array_name, row, 1U);
+                        if (field_name_value.kind != PrgValueKind::string)
+                        {
+                            continue;
+                        }
+                        const std::string normalized_field_name = normalize_identifier(value_as_string(field_name_value));
+                        if (normalized_field_name.empty())
+                        {
+                            continue;
+                        }
+                        name_value_pairs[normalized_field_name] = array_value(array_name, row, 2U);
+                    }
+                    use_name_value_pairs = !name_value_pairs.empty();
                 }
                 std::size_t array_index = 1U;
                 for (const auto &field : rec->values)
@@ -3702,9 +3839,38 @@
                     {
                         continue;
                     }
-                    const PrgValue val = use_memvar
-                                             ? lookup_variable(frame, "m." + field.field_name)
-                                             : array_value(array_name, array_index++);
+                    PrgValue val = make_empty_value();
+                    if (use_memvar)
+                    {
+                        val = lookup_variable(frame, "m." + field.field_name);
+                    }
+                    else if (use_name_object)
+                    {
+                        const std::string field_name = normalize_identifier(field.field_name);
+                        const auto property = source_object->properties.find(field_name);
+                        if (property == source_object->properties.end())
+                        {
+                            continue;
+                        }
+                        val = property->second;
+                    }
+                    else if (use_name_value_pairs)
+                    {
+                        const auto pair = name_value_pairs.find(normalize_identifier(field.field_name));
+                        if (pair == name_value_pairs.end())
+                        {
+                            continue;
+                        }
+                        val = pair->second;
+                    }
+                    else if (source_array != nullptr && source_array->columns > 1U)
+                    {
+                        val = array_value(array_name, 1U, array_index++);
+                    }
+                    else
+                    {
+                        val = array_value(array_name, array_index++);
+                    }
                     if (cursor->remote)
                     {
                         auto it = std::find_if(
@@ -3737,7 +3903,7 @@
                     }
                 }
                 events.push_back({.category = "runtime.gather",
-                                  .detail = use_memvar ? "memvar" : array_name,
+                                  .detail = use_memvar ? "memvar" : (use_name_object ? trim_copy(statement.expression) : array_name),
                                   .location = statement.location});
                 return {};
             }

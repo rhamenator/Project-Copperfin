@@ -1080,11 +1080,18 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SCATTER ")) {
             statement.kind = StatementKind::scatter_command;
             const std::string body = trim_copy(line.substr(8U));
-            // SCATTER FIELDS <list> TO <var>|MEMVAR [BLANK]
-            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "BLANK"});
-            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "BLANK"});
-            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+            // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO]
+            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO"});
+            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "NAME", "BLANK", "MEMO"});
+            const std::string name_target = extract_command_clause(body, "NAME", {"FIELDS", "TO", "MEMVAR", "BLANK", "MEMO"});
+            if (!name_target.empty()) {
+                statement.identifier = "name";
+                statement.expression = name_target;
+            } else {
+                statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+            }
             statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
+            statement.quaternary_expression = has_keyword(body, "MEMO") ? "memo" : std::string{};
         } else if (upper == "RETRY") {
             statement.kind = StatementKind::retry_statement;
         } else if (upper == "RESUME" || starts_with_insensitive(line, "RESUME ")) {
@@ -1137,13 +1144,20 @@ Program parse_program(const std::string& path) {
                 statement.kind = StatementKind::no_op;
                 statement.expression = body;
             }
-        } else if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR")) {
+        } else if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR") ||
+                   starts_with_insensitive(line, "GATHER NAME ")) {
             statement.kind = StatementKind::gather_command;
             const std::string body = trim_copy(line.substr(7U));
-            statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "FOR"});
-            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"FROM", "MEMVAR", "FOR"});
-            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"FROM", "FIELDS", "MEMVAR"});
+            statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "NAME", "FOR"});
+            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"FROM", "MEMVAR", "NAME", "FOR"});
+            const std::string name_source = extract_command_clause(body, "NAME", {"FROM", "FIELDS", "MEMVAR", "FOR"});
+            if (!name_source.empty()) {
+                statement.identifier = "name";
+                statement.expression = name_source;
+            } else {
+                statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+            }
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"FROM", "FIELDS", "MEMVAR", "NAME"});
         } else {
             const auto equals = line.find('=');
             if (!line.empty() && line[0] == '=') {
