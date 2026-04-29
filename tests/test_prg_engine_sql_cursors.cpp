@@ -12,6 +12,139 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_sqlprimarykeys_and_sqlforeignkeys_metadata_cursors() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_key_metadata";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_key_metadata.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nPrimary = SQLPRIMARYKEYS(nConn, 'ORD*', 'sqlpk')\n"
+        "nPkRows = RECCOUNT('sqlpk')\n"
+        "nPkFields = FCOUNT('sqlpk')\n"
+        "cPkField4 = FIELD(4, 'sqlpk')\n"
+        "nForeign = SQLFOREIGNKEYS(nConn, 'ORD*', 'sqlfk')\n"
+        "nFkRows = RECCOUNT('sqlfk')\n"
+        "nFkFields = FCOUNT('sqlfk')\n"
+        "cFkField8 = FIELD(8, 'sqlfk')\n"
+        "nMissingPk = SQLPRIMARYKEYS(nConn, 'DOES_NOT_EXIST', 'missingpk')\n"
+        "lMissingPkUsed = USED('missingpk')\n"
+        "nMissingPkRows = RECCOUNT('missingpk')\n"
+        "nMissingForeign = SQLFOREIGNKEYS(nConn, 'DOES_NOT_EXIST', 'missingfk')\n"
+        "lMissingFkUsed = USED('missingfk')\n"
+        "nMissingFkRows = RECCOUNT('missingfk')\n"
+        "cActionAfterKeys = SQLGETPROP(nConn, 'LastSqlAction')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL key metadata cursor script should complete");
+
+    const auto primary = state.globals.find("nprimary");
+    const auto pk_rows = state.globals.find("npkrows");
+    const auto pk_fields = state.globals.find("npkfields");
+    const auto pk_field4 = state.globals.find("cpkfield4");
+    const auto foreign = state.globals.find("nforeign");
+    const auto fk_rows = state.globals.find("nfkrows");
+    const auto fk_fields = state.globals.find("nfkfields");
+    const auto fk_field8 = state.globals.find("cfkfield8");
+    const auto missing_pk = state.globals.find("nmissingpk");
+    const auto missing_pk_used = state.globals.find("lmissingpkused");
+    const auto missing_pk_rows = state.globals.find("nmissingpkrows");
+    const auto missing_foreign = state.globals.find("nmissingforeign");
+    const auto missing_fk_used = state.globals.find("lmissingfkused");
+    const auto missing_fk_rows = state.globals.find("nmissingfkrows");
+    const auto action_after_keys = state.globals.find("cactionafterkeys");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(primary != state.globals.end(), "SQLPRIMARYKEYS result should be captured");
+    expect(pk_rows != state.globals.end(), "SQLPRIMARYKEYS row count should be captured");
+    expect(pk_fields != state.globals.end(), "SQLPRIMARYKEYS field count should be captured");
+    expect(pk_field4 != state.globals.end(), "FIELD(index, alias) should be captured for SQLPRIMARYKEYS metadata cursors");
+    expect(foreign != state.globals.end(), "SQLFOREIGNKEYS result should be captured");
+    expect(fk_rows != state.globals.end(), "SQLFOREIGNKEYS row count should be captured");
+    expect(fk_fields != state.globals.end(), "SQLFOREIGNKEYS field count should be captured");
+    expect(fk_field8 != state.globals.end(), "FIELD(index, alias) should be captured for SQLFOREIGNKEYS metadata cursors");
+    expect(missing_pk != state.globals.end(), "missing-table SQLPRIMARYKEYS result should be captured");
+    expect(missing_pk_used != state.globals.end(), "missing-table SQLPRIMARYKEYS cursor visibility should be captured");
+    expect(missing_pk_rows != state.globals.end(), "missing-table SQLPRIMARYKEYS row count should be captured");
+    expect(missing_foreign != state.globals.end(), "missing-table SQLFOREIGNKEYS result should be captured");
+    expect(missing_fk_used != state.globals.end(), "missing-table SQLFOREIGNKEYS cursor visibility should be captured");
+    expect(missing_fk_rows != state.globals.end(), "missing-table SQLFOREIGNKEYS row count should be captured");
+    expect(action_after_keys != state.globals.end(), "last SQL action should be captured after key metadata helpers");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after key metadata helper checks");
+
+    if (primary != state.globals.end()) {
+        expect(copperfin::runtime::format_value(primary->second) == "1", "SQLPRIMARYKEYS should succeed for a valid SQL handle");
+    }
+    if (pk_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pk_rows->second) == "1", "SQLPRIMARYKEYS should expose one synthetic primary-key row for ORDERS");
+    }
+    if (pk_fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pk_fields->second) == "6", "SQLPRIMARYKEYS should expose the expected metadata schema");
+    }
+    if (pk_field4 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pk_field4->second) == "COLUMN_NAME", "SQLPRIMARYKEYS metadata cursor should expose column-name metadata");
+    }
+    if (foreign != state.globals.end()) {
+        expect(copperfin::runtime::format_value(foreign->second) == "1", "SQLFOREIGNKEYS should succeed for a valid SQL handle");
+    }
+    if (fk_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fk_rows->second) == "1", "SQLFOREIGNKEYS should expose one synthetic relationship row for ORDERS");
+    }
+    if (fk_fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fk_fields->second) == "14", "SQLFOREIGNKEYS should expose the expected metadata schema");
+    }
+    if (fk_field8 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fk_field8->second) == "FKCOLUMN_NAME", "SQLFOREIGNKEYS metadata cursor should expose foreign-column metadata");
+    }
+    if (missing_pk != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_pk->second) == "1", "missing-table SQLPRIMARYKEYS should still succeed with an empty metadata cursor");
+    }
+    if (missing_pk_used != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_pk_used->second) == "true", "missing-table SQLPRIMARYKEYS should materialize an empty cursor");
+    }
+    if (missing_pk_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_pk_rows->second) == "0", "missing-table SQLPRIMARYKEYS should produce zero metadata rows");
+    }
+    if (missing_foreign != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_foreign->second) == "1", "missing-table SQLFOREIGNKEYS should still succeed with an empty metadata cursor");
+    }
+    if (missing_fk_used != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_fk_used->second) == "true", "missing-table SQLFOREIGNKEYS should materialize an empty cursor");
+    }
+    if (missing_fk_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing_fk_rows->second) == "0", "missing-table SQLFOREIGNKEYS should produce zero metadata rows");
+    }
+    if (action_after_keys != state.globals.end()) {
+        expect(copperfin::runtime::format_value(action_after_keys->second) == "foreignkeys", "key metadata helper batch should leave the connection last-action metadata on foreignkeys");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after key metadata helper checks");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "sql.primarykeys" && event.detail.rfind("handle 1:", 0) == 0;
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "sql.foreignkeys" && event.detail.rfind("handle 1:", 0) == 0;
+        }),
+        "key metadata helper batch should emit sql.primarykeys and sql.foreignkeys events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sqldatabases_metadata_cursor() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_databases";
@@ -413,6 +546,11 @@ void test_sql_connection_property_breadth() {
         "nSetAsync = SQLSETPROP(nConn, 'Asynchronous', .T.)\n"
         "nSetBatch = SQLSETPROP(nConn, 'BatchMode', 2)\n"
         "nSetWarnings = SQLSETPROP(nConn, 'DispWarnings', .F.)\n"
+        "nSetDispLogin = SQLSETPROP(nConn, 'DispLogin', .T.)\n"
+        "nSetTransactions = SQLSETPROP(nConn, 'Transactions', .F.)\n"
+        "nSetWaitTime = SQLSETPROP(nConn, 'WaitTime', 9)\n"
+        "nSetPacketSize = SQLSETPROP(nConn, 'PacketSize', 8192)\n"
+        "nSetConnectName = SQLSETPROP(nConn, 'ConnectName', 'Northwind Session')\n"
         "nSetCatalog = SQLSETPROP(nConn, 'CurrentCatalog', 'archive')\n"
         "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlpropcur')\n"
         "cLastCursorAlias = SQLGETPROP(nConn, 'LastCursorAlias')\n"
@@ -420,6 +558,11 @@ void test_sql_connection_property_breadth() {
         "lAsync = SQLGETPROP(nConn, 'Asynchronous')\n"
         "nBatch = SQLGETPROP(nConn, 'BatchMode')\n"
         "lWarnings = SQLGETPROP(nConn, 'DispWarnings')\n"
+        "lDispLogin = SQLGETPROP(nConn, 'DispLogin')\n"
+        "lTransactions = SQLGETPROP(nConn, 'Transactions')\n"
+        "nWaitTime = SQLGETPROP(nConn, 'WaitTime')\n"
+        "nPacketSize = SQLGETPROP(nConn, 'PacketSize')\n"
+        "cConnectName = SQLGETPROP(nConn, 'ConnectName')\n"
         "cCatalogAfter = SQLGETPROP(nConn, 'CurrentCatalog')\n"
         "cActionAfterExec = SQLGETPROP(nConn, 'LastSqlAction')\n"
         "SET DATASESSION TO 2\n"
@@ -444,6 +587,11 @@ void test_sql_connection_property_breadth() {
     const auto set_async = state.globals.find("nsetasync");
     const auto set_batch = state.globals.find("nsetbatch");
     const auto set_warnings = state.globals.find("nsetwarnings");
+    const auto set_disp_login = state.globals.find("nsetdisplogin");
+    const auto set_transactions = state.globals.find("nsettransactions");
+    const auto set_wait_time = state.globals.find("nsetwaittime");
+    const auto set_packet_size = state.globals.find("nsetpacketsize");
+    const auto set_connect_name = state.globals.find("nsetconnectname");
     const auto set_catalog = state.globals.find("nsetcatalog");
     const auto exec = state.globals.find("nexec");
     const auto last_cursor_alias = state.globals.find("clastcursoralias");
@@ -451,6 +599,11 @@ void test_sql_connection_property_breadth() {
     const auto async = state.globals.find("lasync");
     const auto batch = state.globals.find("nbatch");
     const auto warnings = state.globals.find("lwarnings");
+    const auto disp_login = state.globals.find("ldisplogin");
+    const auto transactions = state.globals.find("ltransactions");
+    const auto wait_time = state.globals.find("nwaittime");
+    const auto packet_size = state.globals.find("npacketsize");
+    const auto connect_name = state.globals.find("cconnectname");
     const auto catalog_after = state.globals.find("ccatalogafter");
     const auto action_after_exec = state.globals.find("cactionafterexec");
     const auto cross_session_connected = state.globals.find("ncrosssessionconnected");
@@ -463,6 +616,11 @@ void test_sql_connection_property_breadth() {
     expect(set_async != state.globals.end(), "Asynchronous SQLSETPROP result should be captured");
     expect(set_batch != state.globals.end(), "BatchMode SQLSETPROP result should be captured");
     expect(set_warnings != state.globals.end(), "DispWarnings SQLSETPROP result should be captured");
+    expect(set_disp_login != state.globals.end(), "DispLogin SQLSETPROP result should be captured");
+    expect(set_transactions != state.globals.end(), "Transactions SQLSETPROP result should be captured");
+    expect(set_wait_time != state.globals.end(), "WaitTime SQLSETPROP result should be captured");
+    expect(set_packet_size != state.globals.end(), "PacketSize SQLSETPROP result should be captured");
+    expect(set_connect_name != state.globals.end(), "ConnectName SQLSETPROP result should be captured");
     expect(set_catalog != state.globals.end(), "CurrentCatalog SQLSETPROP result should be captured");
     expect(exec != state.globals.end(), "SQLEXEC result should be captured for property breadth flow");
     expect(last_cursor_alias != state.globals.end(), "LastCursorAlias property should be captured");
@@ -470,6 +628,11 @@ void test_sql_connection_property_breadth() {
     expect(async != state.globals.end(), "Asynchronous property should round-trip");
     expect(batch != state.globals.end(), "BatchMode property should round-trip");
     expect(warnings != state.globals.end(), "DispWarnings property should round-trip");
+    expect(disp_login != state.globals.end(), "DispLogin property should round-trip");
+    expect(transactions != state.globals.end(), "Transactions property should round-trip");
+    expect(wait_time != state.globals.end(), "WaitTime property should round-trip");
+    expect(packet_size != state.globals.end(), "PacketSize property should round-trip");
+    expect(connect_name != state.globals.end(), "ConnectName property should round-trip");
     expect(catalog_after != state.globals.end(), "CurrentCatalog should be captured after updates");
     expect(action_after_exec != state.globals.end(), "LastSqlAction should be captured after SQLEXEC");
     expect(cross_session_connected != state.globals.end(), "cross-session SQLGETPROP result should be captured");
@@ -496,6 +659,21 @@ void test_sql_connection_property_breadth() {
     if (set_warnings != state.globals.end()) {
         expect(copperfin::runtime::format_value(set_warnings->second) == "1", "SQLSETPROP should accept DispWarnings updates");
     }
+    if (set_disp_login != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_disp_login->second) == "1", "SQLSETPROP should accept DispLogin updates");
+    }
+    if (set_transactions != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_transactions->second) == "1", "SQLSETPROP should accept Transactions updates");
+    }
+    if (set_wait_time != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_wait_time->second) == "1", "SQLSETPROP should accept WaitTime updates");
+    }
+    if (set_packet_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_packet_size->second) == "1", "SQLSETPROP should accept PacketSize updates");
+    }
+    if (set_connect_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_connect_name->second) == "1", "SQLSETPROP should accept ConnectName updates");
+    }
     if (set_catalog != state.globals.end()) {
         expect(copperfin::runtime::format_value(set_catalog->second) == "1", "SQLSETPROP should accept CurrentCatalog updates");
     }
@@ -517,6 +695,21 @@ void test_sql_connection_property_breadth() {
     if (warnings != state.globals.end()) {
         expect(copperfin::runtime::format_value(warnings->second) == "false", "DispWarnings should round-trip as a boolean property");
     }
+    if (disp_login != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disp_login->second) == "true", "DispLogin should round-trip as a boolean property");
+    }
+    if (transactions != state.globals.end()) {
+        expect(copperfin::runtime::format_value(transactions->second) == "false", "Transactions should round-trip as a boolean property");
+    }
+    if (wait_time != state.globals.end()) {
+        expect(copperfin::runtime::format_value(wait_time->second) == "9", "WaitTime should round-trip as a numeric property");
+    }
+    if (packet_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(packet_size->second) == "8192", "PacketSize should round-trip as a numeric property");
+    }
+    if (connect_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(connect_name->second) == "Northwind Session", "ConnectName should round-trip as a string property");
+    }
     if (catalog_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(catalog_after->second) == "ARCHIVE", "CurrentCatalog should normalize to uppercase on update");
     }
@@ -533,8 +726,116 @@ void test_sql_connection_property_breadth() {
     expect(
         has_runtime_event(state.events, "sql.setprop", "handle 1: asynchronous=true") &&
         has_runtime_event(state.events, "sql.setprop", "handle 1: batchmode=2") &&
+        has_runtime_event(state.events, "sql.setprop", "handle 1: displogin=true") &&
+        has_runtime_event(state.events, "sql.setprop", "handle 1: transactions=false") &&
+        has_runtime_event(state.events, "sql.setprop", "handle 1: packetsize=8192") &&
         has_runtime_event(state.events, "sql.setprop", "handle 1: currentcatalog=ARCHIVE"),
         "SQL property breadth flow should emit sql.setprop events for the new connection properties");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_backward_navigation_in_target_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_backward_navigation_in_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_backward_navigation_in_target.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO('sqlother')\n"
+        "GO BOTTOM IN sqlcust\n"
+        "nCustRecBottom = RECNO('sqlcust')\n"
+        "SKIP -1 IN sqlcust\n"
+        "nCustRecBackOne = RECNO('sqlcust')\n"
+        "GO TOP IN sqlcust\n"
+        "SKIP -1 IN sqlcust\n"
+        "lCustBof = BOF('sqlcust')\n"
+        "nCustRecAtBof = RECNO('sqlcust')\n"
+        "GO BOTTOM IN sqlcust\n"
+        "SKIP 99 IN sqlcust\n"
+        "lCustEof = EOF('sqlcust')\n"
+        "nCustRecAtEof = RECNO('sqlcust')\n"
+        "cAliasAfter = ALIAS()\n"
+        "nOtherRecAfter = RECNO('sqlother')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL backward navigation IN-target parity script should complete");
+    expect(state.sql_connections.empty(), "SQL backward navigation IN-target parity script should disconnect its SQL handle");
+
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_bottom = state.globals.find("ncustrecbottom");
+    const auto cust_rec_back_one = state.globals.find("ncustrecbackone");
+    const auto cust_bof = state.globals.find("lcustbof");
+    const auto cust_rec_at_bof = state.globals.find("ncustrecatbof");
+    const auto cust_eof = state.globals.find("lcusteof");
+    const auto cust_rec_at_eof = state.globals.find("ncustrecateof");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(other_rec_before != state.globals.end(), "selected SQL cursor RECNO() before targeted backward navigation should be captured");
+    expect(cust_rec_bottom != state.globals.end(), "target SQL cursor RECNO() after GO BOTTOM IN should be captured");
+    expect(cust_rec_back_one != state.globals.end(), "target SQL cursor RECNO() after SKIP -1 IN should be captured");
+    expect(cust_bof != state.globals.end(), "target SQL cursor BOF() after targeted backward navigation should be captured");
+    expect(cust_rec_at_bof != state.globals.end(), "target SQL cursor RECNO() at BOF should be captured");
+    expect(cust_eof != state.globals.end(), "target SQL cursor EOF() after targeted forward overflow should be captured");
+    expect(cust_rec_at_eof != state.globals.end(), "target SQL cursor RECNO() at EOF should be captured");
+    expect(alias_after != state.globals.end(), "selected alias after targeted backward navigation should be captured");
+    expect(other_rec_after != state.globals.end(), "selected SQL cursor RECNO() after targeted backward navigation should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after targeted backward navigation checks");
+
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected SQL cursor should start at bottom before targeted backward navigation");
+    }
+    if (cust_rec_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_bottom->second) == "3", "GO BOTTOM IN should move the targeted SQL cursor to its last record");
+    }
+    if (cust_rec_back_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_back_one->second) == "2", "SKIP -1 IN should move the targeted SQL cursor backward by one visible row");
+    }
+    if (cust_bof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_bof->second) == "true", "SKIP -1 IN from the first SQL row should move the targeted SQL cursor to BOF");
+    }
+    if (cust_rec_at_bof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_at_bof->second) == "0", "RECNO() at targeted SQL BOF should be zero");
+    }
+    if (cust_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_eof->second) == "true", "SKIP past the end IN should move the targeted SQL cursor to EOF");
+    }
+    if (cust_rec_at_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_at_eof->second) == "4", "RECNO() at targeted SQL EOF should be record_count + 1");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after->second)) == "SQLOTHER", "targeted SQL backward navigation should preserve the selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "targeted SQL backward navigation should preserve the selected SQL cursor pointer");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted backward navigation checks");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.go", "BOTTOM") &&
+        has_runtime_event(state.events, "runtime.skip", "-1") &&
+        has_runtime_event(state.events, "runtime.skip", "99"),
+        "targeted SQL backward navigation flow should emit runtime.go and runtime.skip events");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -2492,10 +2793,12 @@ void test_sql_result_cursor_filter_in_target_parity() {
 }  // namespace
 
 int main() {
+    test_sqlprimarykeys_and_sqlforeignkeys_metadata_cursors();
     test_sqldatabases_metadata_cursor();
     test_sqltables_and_sqlcolumns_metadata_cursors();
     test_sql_connection_transaction_and_cancel_helpers();
     test_sql_connection_property_breadth();
+    test_sql_result_cursor_backward_navigation_in_target_parity();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursor_mutation_commands();
     test_sql_result_cursors_are_isolated_by_data_session();

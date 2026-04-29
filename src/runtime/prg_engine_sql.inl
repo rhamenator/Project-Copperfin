@@ -27,6 +27,21 @@
             std::string remarks;
         };
 
+        struct SyntheticSqlRelationship
+        {
+            std::string pk_catalog;
+            std::string pk_schema;
+            std::string pk_table;
+            std::string pk_column;
+            std::string fk_catalog;
+            std::string fk_schema;
+            std::string fk_table;
+            std::string fk_column;
+            std::string pk_name;
+            std::string fk_name;
+            int key_seq = 1;
+        };
+
         std::vector<SyntheticSqlDatabase> synthetic_sql_databases() const
         {
             return {
@@ -47,6 +62,23 @@
 
             const auto databases = synthetic_sql_databases();
             return databases.empty() ? std::string{} : databases.front().name;
+        }
+
+        std::vector<SyntheticSqlRelationship> synthetic_sql_relationships() const
+        {
+            return {
+                SyntheticSqlRelationship{
+                    .pk_catalog = "NORTHWIND",
+                    .pk_schema = "dbo",
+                    .pk_table = "CUSTOMERS",
+                    .pk_column = "ID",
+                    .fk_catalog = "NORTHWIND",
+                    .fk_schema = "dbo",
+                    .fk_table = "ORDERS",
+                    .fk_column = "CUSTOMER_ID",
+                    .pk_name = "PK_CUSTOMERS",
+                    .fk_name = "FK_ORDERS_CUSTOMERS",
+                    .key_seq = 1}};
         }
 
         std::vector<SyntheticSqlCatalogTable> synthetic_sql_catalog() const
@@ -177,6 +209,111 @@
                         vfp::DbfRecordValue{.field_name = "REMARKS", .field_type = 'C', .display_value = database.remarks}}});
                 ++recno;
             }
+            return records;
+        }
+
+        std::vector<vfp::DbfRecord> make_sqlprimarykeys_records(
+            const std::string &table_name,
+            bool &matched_any) const
+        {
+            std::vector<vfp::DbfRecord> records;
+            matched_any = false;
+            const std::string effective_pattern = trim_copy(table_name).empty() ? "*" : trim_copy(table_name);
+            std::size_t recno = 1U;
+
+            for (const auto &table : synthetic_sql_catalog())
+            {
+                if (!wildcard_match_insensitive(effective_pattern, table.name))
+                {
+                    continue;
+                }
+
+                bool matched_for_table = false;
+                for (const auto &relationship : synthetic_sql_relationships())
+                {
+                    if (!wildcard_match_insensitive(table.name, relationship.pk_table))
+                    {
+                        continue;
+                    }
+
+                    matched_any = true;
+                    matched_for_table = true;
+                    records.push_back(vfp::DbfRecord{
+                        .record_index = recno - 1U,
+                        .deleted = false,
+                        .values = {
+                            vfp::DbfRecordValue{.field_name = "TABLE_CAT", .field_type = 'C', .display_value = relationship.pk_catalog},
+                            vfp::DbfRecordValue{.field_name = "TABLE_SCHEM", .field_type = 'C', .display_value = relationship.pk_schema},
+                            vfp::DbfRecordValue{.field_name = "TABLE_NAME", .field_type = 'C', .display_value = relationship.pk_table},
+                            vfp::DbfRecordValue{.field_name = "COLUMN_NAME", .field_type = 'C', .display_value = relationship.pk_column},
+                            vfp::DbfRecordValue{.field_name = "KEY_SEQ", .field_type = 'N', .display_value = std::to_string(relationship.key_seq)},
+                            vfp::DbfRecordValue{.field_name = "PK_NAME", .field_type = 'C', .display_value = relationship.pk_name}}});
+                    ++recno;
+                }
+
+                if (matched_for_table)
+                {
+                    continue;
+                }
+
+                if (uppercase_copy(table.name) == "ORDERS")
+                {
+                    matched_any = true;
+                    records.push_back(vfp::DbfRecord{
+                        .record_index = recno - 1U,
+                        .deleted = false,
+                        .values = {
+                            vfp::DbfRecordValue{.field_name = "TABLE_CAT", .field_type = 'C', .display_value = table.catalog},
+                            vfp::DbfRecordValue{.field_name = "TABLE_SCHEM", .field_type = 'C', .display_value = table.schema},
+                            vfp::DbfRecordValue{.field_name = "TABLE_NAME", .field_type = 'C', .display_value = table.name},
+                            vfp::DbfRecordValue{.field_name = "COLUMN_NAME", .field_type = 'C', .display_value = "ORDER_ID"},
+                            vfp::DbfRecordValue{.field_name = "KEY_SEQ", .field_type = 'N', .display_value = "1"},
+                            vfp::DbfRecordValue{.field_name = "PK_NAME", .field_type = 'C', .display_value = "PK_ORDERS"}}});
+                    ++recno;
+                }
+            }
+
+            return records;
+        }
+
+        std::vector<vfp::DbfRecord> make_sqlforeignkeys_records(
+            const std::string &table_name,
+            bool &matched_any) const
+        {
+            std::vector<vfp::DbfRecord> records;
+            matched_any = false;
+            const std::string effective_pattern = trim_copy(table_name).empty() ? "*" : trim_copy(table_name);
+            std::size_t recno = 1U;
+
+            for (const auto &relationship : synthetic_sql_relationships())
+            {
+                if (!wildcard_match_insensitive(effective_pattern, relationship.fk_table))
+                {
+                    continue;
+                }
+
+                matched_any = true;
+                records.push_back(vfp::DbfRecord{
+                    .record_index = recno - 1U,
+                    .deleted = false,
+                    .values = {
+                        vfp::DbfRecordValue{.field_name = "PKTABLE_CAT", .field_type = 'C', .display_value = relationship.pk_catalog},
+                        vfp::DbfRecordValue{.field_name = "PKTABLE_SCHEM", .field_type = 'C', .display_value = relationship.pk_schema},
+                        vfp::DbfRecordValue{.field_name = "PKTABLE_NAME", .field_type = 'C', .display_value = relationship.pk_table},
+                        vfp::DbfRecordValue{.field_name = "PKCOLUMN_NAME", .field_type = 'C', .display_value = relationship.pk_column},
+                        vfp::DbfRecordValue{.field_name = "FKTABLE_CAT", .field_type = 'C', .display_value = relationship.fk_catalog},
+                        vfp::DbfRecordValue{.field_name = "FKTABLE_SCHEM", .field_type = 'C', .display_value = relationship.fk_schema},
+                        vfp::DbfRecordValue{.field_name = "FKTABLE_NAME", .field_type = 'C', .display_value = relationship.fk_table},
+                        vfp::DbfRecordValue{.field_name = "FKCOLUMN_NAME", .field_type = 'C', .display_value = relationship.fk_column},
+                        vfp::DbfRecordValue{.field_name = "KEY_SEQ", .field_type = 'N', .display_value = std::to_string(relationship.key_seq)},
+                        vfp::DbfRecordValue{.field_name = "UPDATE_RULE", .field_type = 'N', .display_value = "3"},
+                        vfp::DbfRecordValue{.field_name = "DELETE_RULE", .field_type = 'N', .display_value = "3"},
+                        vfp::DbfRecordValue{.field_name = "FK_NAME", .field_type = 'C', .display_value = relationship.fk_name},
+                        vfp::DbfRecordValue{.field_name = "PK_NAME", .field_type = 'C', .display_value = relationship.pk_name},
+                        vfp::DbfRecordValue{.field_name = "DEFERRABILITY", .field_type = 'N', .display_value = "7"}}});
+                ++recno;
+            }
+
             return records;
         }
 
@@ -315,6 +452,36 @@
             return {
                 vfp::DbfFieldDescriptor{.name = "DATABASE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
                 vfp::DbfFieldDescriptor{.name = "REMARKS", .type = 'C', .length = 64U, .decimal_count = 0U}};
+        }
+
+        std::vector<vfp::DbfFieldDescriptor> sqlprimarykeys_field_descriptors() const
+        {
+            return {
+                vfp::DbfFieldDescriptor{.name = "TABLE_CAT", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "TABLE_SCHEM", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "TABLE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "COLUMN_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "KEY_SEQ", .type = 'N', .length = 18U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "PK_NAME", .type = 'C', .length = 64U, .decimal_count = 0U}};
+        }
+
+        std::vector<vfp::DbfFieldDescriptor> sqlforeignkeys_field_descriptors() const
+        {
+            return {
+                vfp::DbfFieldDescriptor{.name = "PKTABLE_CAT", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "PKTABLE_SCHEM", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "PKTABLE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "PKCOLUMN_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "FKTABLE_CAT", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "FKTABLE_SCHEM", .type = 'C', .length = 32U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "FKTABLE_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "FKCOLUMN_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "KEY_SEQ", .type = 'N', .length = 18U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "UPDATE_RULE", .type = 'N', .length = 18U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "DELETE_RULE", .type = 'N', .length = 18U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "FK_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "PK_NAME", .type = 'C', .length = 64U, .decimal_count = 0U},
+                vfp::DbfFieldDescriptor{.name = "DEFERRABILITY", .type = 'N', .length = 18U, .decimal_count = 0U}};
         }
 
         std::vector<vfp::DbfFieldDescriptor> sqlcolumns_field_descriptors(bool native_format) const
@@ -535,9 +702,14 @@
                                                               {"connecthandle", std::to_string(handle)},
                                                               {"connected", "true"},
                                                               {"connectbusy", "false"},
+                                                              {"connectname", target},
                                                               {"asynchronous", "false"},
                                                               {"batchmode", "0"},
+                                                              {"displogin", "false"},
                                                               {"dispwarnings", "true"},
+                                                              {"transactions", "true"},
+                                                              {"waittime", "0"},
+                                                              {"packetsize", "4096"},
                                                               {"lastcursoralias", ""},
                                                               {"currentcatalog", current_catalog},
                                                               {"querytimeout", "0"},
@@ -685,6 +857,11 @@
             {
                 return make_number_value(static_cast<double>(found->second.handle));
             }
+            if (normalized_name == "connectname")
+            {
+                const auto property = found->second.properties.find("connectname");
+                return property == found->second.properties.end() ? make_string_value(found->second.target) : make_string_value(property->second);
+            }
             if (normalized_name == "target" || normalized_name == "connectstring")
             {
                 return make_string_value(found->second.target);
@@ -723,7 +900,17 @@
                 const auto property = found->second.properties.find(normalized_name);
                 return make_boolean_value(property != found->second.properties.end() && lowercase_copy(property->second) == "true");
             }
+            if (normalized_name == "displogin" || normalized_name == "transactions")
+            {
+                const auto property = found->second.properties.find(normalized_name);
+                return make_boolean_value(property != found->second.properties.end() && lowercase_copy(property->second) == "true");
+            }
             if (normalized_name == "batchmode")
+            {
+                const auto property = found->second.properties.find(normalized_name);
+                return property == found->second.properties.end() ? make_number_value(0.0) : make_number_value(std::stod(property->second));
+            }
+            if (normalized_name == "waittime" || normalized_name == "packetsize")
             {
                 const auto property = found->second.properties.find(normalized_name);
                 return property == found->second.properties.end() ? make_number_value(0.0) : make_number_value(std::stod(property->second));
@@ -765,6 +952,14 @@
             {
                 found->second.prepared_command = property_value;
             }
+            else if (normalized_name == "connectname")
+            {
+                found->second.properties["connectname"] = property_value;
+                events.push_back({.category = "sql.setprop",
+                                  .detail = "handle " + std::to_string(handle) + ": " + normalized_name + "=" + found->second.properties["connectname"],
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return 1;
+            }
             else if (normalized_name == "connectstring" || normalized_name == "target")
             {
                 found->second.target = property_value;
@@ -794,7 +989,8 @@
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 return 1;
             }
-            else if (normalized_name == "asynchronous" || normalized_name == "dispwarnings" || normalized_name == "connected" || normalized_name == "connectbusy")
+            else if (normalized_name == "asynchronous" || normalized_name == "dispwarnings" || normalized_name == "connected" || normalized_name == "connectbusy" ||
+                     normalized_name == "displogin" || normalized_name == "transactions")
             {
                 found->second.properties[normalized_name] = value_as_bool(value) ? "true" : "false";
                 events.push_back({.category = "sql.setprop",
@@ -802,7 +998,8 @@
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 return 1;
             }
-            else if (normalized_name == "batchmode" || normalized_name == "querytimeout" || normalized_name == "connecttimeout")
+            else if (normalized_name == "batchmode" || normalized_name == "querytimeout" || normalized_name == "connecttimeout" ||
+                     normalized_name == "waittime" || normalized_name == "packetsize")
             {
                 found->second.properties[normalized_name] = std::to_string(static_cast<long long>(std::llround(value_as_number(value))));
                 events.push_back({.category = "sql.setprop",
@@ -973,6 +1170,84 @@
             connection.properties["cancelrequested"] = "false";
             events.push_back({.category = "sql.databases",
                               .detail = "handle " + std::to_string(handle),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            events.push_back({.category = "sql.cursor",
+                              .detail = connection.last_cursor_alias + " (" + std::to_string(connection.last_result_count) + " rows)",
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return 1;
+        }
+
+        int sql_primary_keys(int handle, const std::string &table_name, const std::string &cursor_alias)
+        {
+            auto &connections = current_sql_connections();
+            const auto found = connections.find(handle);
+            if (found == connections.end())
+            {
+                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLPRIMARYKEYS", trim_copy(table_name));
+                return -1;
+            }
+
+            RuntimeSqlConnectionState &connection = found->second;
+            connection.cancel_requested = false;
+            bool matched_any = false;
+            std::vector<vfp::DbfRecord> records = make_sqlprimarykeys_records(table_name, matched_any);
+            if (!open_remote_cursor(
+                    cursor_alias,
+                    resolve_sql_cursor_auto_target(),
+                    handle,
+                    "sql-primary-keys-cursor",
+                    std::move(records),
+                    sqlprimarykeys_field_descriptors()))
+            {
+                return -1;
+            }
+
+            connection.last_sql_action = "primarykeys";
+            connection.properties["lastsqlaction"] = "primarykeys";
+            connection.properties["cancelrequested"] = "false";
+            events.push_back({.category = "sql.primarykeys",
+                              .detail = "handle " + std::to_string(handle) + ": " + trim_copy(table_name),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            events.push_back({.category = "sql.cursor",
+                              .detail = connection.last_cursor_alias + " (" + std::to_string(connection.last_result_count) + " rows)",
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return 1;
+        }
+
+        int sql_foreign_keys(int handle, const std::string &table_name, const std::string &cursor_alias)
+        {
+            auto &connections = current_sql_connections();
+            const auto found = connections.find(handle);
+            if (found == connections.end())
+            {
+                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_code = classify_runtime_error_code(last_error_message);
+                record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLFOREIGNKEYS", trim_copy(table_name));
+                return -1;
+            }
+
+            RuntimeSqlConnectionState &connection = found->second;
+            connection.cancel_requested = false;
+            bool matched_any = false;
+            std::vector<vfp::DbfRecord> records = make_sqlforeignkeys_records(table_name, matched_any);
+            if (!open_remote_cursor(
+                    cursor_alias,
+                    resolve_sql_cursor_auto_target(),
+                    handle,
+                    "sql-foreign-keys-cursor",
+                    std::move(records),
+                    sqlforeignkeys_field_descriptors()))
+            {
+                return -1;
+            }
+
+            connection.last_sql_action = "foreignkeys";
+            connection.properties["lastsqlaction"] = "foreignkeys";
+            connection.properties["cancelrequested"] = "false";
+            events.push_back({.category = "sql.foreignkeys",
+                              .detail = "handle " + std::to_string(handle) + ": " + trim_copy(table_name),
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             events.push_back({.category = "sql.cursor",
                               .detail = connection.last_cursor_alias + " (" + std::to_string(connection.last_result_count) + " rows)",

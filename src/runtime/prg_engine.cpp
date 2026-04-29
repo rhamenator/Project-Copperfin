@@ -626,6 +626,14 @@ namespace copperfin::runtime
             {
                 return sql_databases(handle, cursor_alias);
             },
+            [this](int handle, const std::string &table_name, const std::string &cursor_alias)
+            {
+                return sql_primary_keys(handle, table_name, cursor_alias);
+            },
+            [this](int handle, const std::string &table_name, const std::string &cursor_alias)
+            {
+                return sql_foreign_keys(handle, table_name, cursor_alias);
+            },
             [this](int handle, const std::string &table_types, const std::string &cursor_alias)
             {
                 return sql_tables(handle, table_types, cursor_alias);
