@@ -55,7 +55,8 @@ This grouped list mirrors the active GitHub issue set so this backlog stays alig
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
-  - current A3 child issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
+  - lane issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
+  - active prompt-sized slice issues: #102, #103, #104, #105, #106, #107
 - A4 automation and host containment: #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
 

@@ -15,20 +15,22 @@ Important:
 - Prioritize Phase A runtime/data-engine compatibility over UI, IDE, or designer work.
 - Keep changes minimal and focused.
 - Fix mistakes you encounter in your changed area.
+- Treat the issue tracker at slice granularity: before coding, choose one open prompt-sized slice issue or create one under the active lane issue if none fits.
 - Validate the slice before stopping.
 - Update `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and this file to match shipped behavior.
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
 
 Current priority order:
-1. `#92` residual order/collation/search parity
-2. `#97`, `#98`, `#99` macro/eval/runtime-state and memory/assignment foundations
-3. `#94` structural table-operation residuals
-4. `#100` field-transfer and macro-target parity
-5. `#101` headless interaction macro/eval fidelity
-6. `#93` remote/result-cursor parity
-7. `#95` aggregate/view/helper parity
-8. `#96` DBC/container fidelity
-9. `#10`, `#11`, `#12` automation depth
+1. `#102`, `#103`, `#104` under `#92`
+2. `#105`, `#106`, `#107` under `#98`
+3. `#97`, `#99` macro/eval/runtime-state and memory/assignment foundations
+4. `#94` structural table-operation residuals
+5. `#100` field-transfer and macro-target parity
+6. `#101` headless interaction macro/eval fidelity
+7. `#93` remote/result-cursor parity
+8. `#95` aggregate/view/helper parity
+9. `#96` DBC/container fidelity
+10. `#10`, `#11`, `#12` automation depth
 
 Current shipped highlights worth remembering:
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
@@ -116,8 +118,8 @@ Workflow:
 Default direction if no stronger signal appears from the current files:
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
-  - remaining `#92` order/collation/search residuals still shared by local and remote cursor behavior, especially anything beyond the newly shipped plain-string `SET COLLATE` seek step and first-pass simple `FOR` comparison filters
-  - then `#97` / `#98` macro/eval/runtime-state residuals beyond the newly tightened date/time readback/session lane, before reopening `#99` unless a concrete remaining memory-lifetime or `.mem` parity bug is visible
+  - `#102`, `#103`, then `#104` under `#92`
+  - then `#105`, `#106`, and `#107` under `#98`, before reopening broader `#99` unless a concrete remaining memory-lifetime or `.mem` parity bug is visible
   - then `#94` structural table-operation residuals
 - Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

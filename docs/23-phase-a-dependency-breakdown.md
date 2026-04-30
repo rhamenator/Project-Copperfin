@@ -325,6 +325,22 @@ Current structure under `#8`:
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
 
+Current prompt-sized slice queue under active lane `#92`:
+
+| Parent | Slice Issue | Intended Prompt Slice |
+| --- | --- | --- |
+| `#92` | `#102` | extend SQL/result-cursor `SEEK` parity for `FOR`-filtered temporary orders |
+| `#92` | `#103` | honor `SET COLLATE` on plain-string `SEEK` over SQL/result cursors |
+| `#92` | `#104` | close one more grounded seek-compare metadata consumption residual |
+
+Current prompt-sized slice queue under active lane `#98`:
+
+| Parent | Slice Issue | Intended Prompt Slice |
+| --- | --- | --- |
+| `#98` | `#105` | formatting-state `SET()` isolation/readback (`POINT`, `SEPARATOR`, `CURRENCY`, `MEMOWIDTH`) |
+| `#98` | `#106` | calendar/week-state `SET()` isolation/readback (`FDOW`, `FWEEK`, adjacent date-order state) |
+| `#98` | `#107` | path/default/fields session-state isolation/readback (`DEFAULT`, `PATH`, `FIELDS`) |
+
 Current dependency links:
 
 - `#93` is blocked by `#92`
@@ -332,6 +348,15 @@ Current dependency links:
 - `#100` is blocked by `#97`
 - `#10` is blocked by `#99`
 - `#11` is blocked by `#99`
+
+## Slice-Issue Policy
+
+For the remaining Phase A runtime work, the implementation unit should be a prompt-sized issue rather than a broad umbrella issue.
+
+- Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as planning and closure umbrellas.
+- Before starting code work, pick one open slice issue under the active lane, or create a new slice issue if the intended change does not fit an existing one.
+- One implementation prompt should normally map to one slice issue, one focused validation loop, and one doc/handoff update.
+- Close or retarget the slice issue when the prompt-sized implementation lands; do not hide shipped work only inside the broader lane issue body.
 
 ## Suggested Use
 
