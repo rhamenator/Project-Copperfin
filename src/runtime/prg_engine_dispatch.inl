@@ -5584,27 +5584,18 @@
                     const std::string pattern = statement.secondary_expression;
                     if (mode.empty())
                     {
-                        for (auto iterator = globals.begin(); iterator != globals.end();)
+                        std::vector<std::string> to_release;
+                        for (const auto &[name, _] : globals)
                         {
-                            if (public_names.contains(iterator->first))
+                            if (public_names.contains(name))
                             {
-                                ++iterator;
+                                continue;
                             }
-                            else
-                            {
-                                iterator = globals.erase(iterator);
-                            }
+                            to_release.push_back(name);
                         }
-                        for (auto iterator = arrays.begin(); iterator != arrays.end();)
+                        for (const auto &name : to_release)
                         {
-                            if (public_names.contains(iterator->first))
-                            {
-                                ++iterator;
-                            }
-                            else
-                            {
-                                iterator = arrays.erase(iterator);
-                            }
+                            release_memory_binding(frame, name, false);
                         }
                     }
                     else
@@ -5625,8 +5616,7 @@
                         }
                         for (const auto &name : to_erase)
                         {
-                            globals.erase(name);
-                            arrays.erase(name);
+                            release_memory_binding(frame, name, false);
                         }
                     }
                 }
@@ -5635,13 +5625,7 @@
                     // RELEASE <varlist>
                     for (const auto &raw : statement.names)
                     {
-                        const std::string name = normalize_memory_variable_identifier(trim_copy(raw));
-                        globals.erase(name);
-                        arrays.erase(name);
-                        public_names.erase(name);
-                        // Also remove from current frame locals if declared LOCAL
-                        frame.locals.erase(name);
-                        frame.local_names.erase(name);
+                        release_memory_binding(frame, raw, true);
                     }
                 }
                 events.push_back({.category = "runtime.release",

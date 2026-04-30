@@ -19,6 +19,41 @@
             }
         }
 
+        void release_memory_binding(Frame &frame, const std::string &raw_name, bool clear_public_binding)
+        {
+            const std::string name = normalize_memory_variable_identifier(trim_copy(raw_name));
+            if (name.empty())
+            {
+                return;
+            }
+
+            if (const auto private_saved = frame.private_saved_values.find(name);
+                private_saved != frame.private_saved_values.end())
+            {
+                if (private_saved->second.has_value())
+                {
+                    globals[name] = *private_saved->second;
+                }
+                else
+                {
+                    globals.erase(name);
+                }
+                frame.private_saved_values.erase(private_saved);
+            }
+            else
+            {
+                globals.erase(name);
+                if (clear_public_binding)
+                {
+                    public_names.erase(name);
+                }
+            }
+
+            arrays.erase(name);
+            frame.locals.erase(name);
+            frame.local_names.erase(name);
+        }
+
         void sync_byref_arguments(Frame &frame)
         {
             if (frame.parameter_reference_bindings.empty())
