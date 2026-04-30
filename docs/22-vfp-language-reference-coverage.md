@@ -144,6 +144,8 @@ That local indexed-search slice now also evaluates a broader grounded tag-expres
 
 That same local temporary-order path now also has focused command-path `IN <alias|work area>` parity coverage for ad hoc expressions such as `UPPER(NAME)`, including selected-alias preservation and descending `SET NEAR` behavior on non-selected targeted cursors.
 
+That same local ad hoc-order lane now also has focused helper-path parity for `INDEXSEEK(.F./.T.)` over temporary expressions such as `UPPER(NAME)`, including descending `SET NEAR` miss positioning while preserving the controlling `ORDER()` state.
+
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`

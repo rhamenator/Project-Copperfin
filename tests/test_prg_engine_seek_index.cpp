@@ -1593,6 +1593,84 @@ void test_local_descending_temporary_order_expression_in_target_preserves_select
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_temporary_order_expression_indexseek_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_temp_order_indexseek";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "local_temp_order_indexseek.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO TOP\n"
+        "lIndexNoMove = INDEXSEEK('charlie', .F., 'People', 'UPPER(NAME)')\n"
+        "nAfterNoMove = RECNO('People')\n"
+        "lIndexMove = INDEXSEEK('charlie', .T., 'People', 'UPPER(NAME)')\n"
+        "nAfterMove = RECNO('People')\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "lIndexMoveDesc = INDEXSEEK('beta', .T., 'People', 'UPPER(NAME) DESCENDING')\n"
+        "nAfterMoveDesc = RECNO('People')\n"
+        "cOrderAfter = ORDER('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local temporary-order INDEXSEEK parity script should complete");
+
+    const auto index_no_move = state.globals.find("lindexnomove");
+    const auto after_no_move = state.globals.find("nafternomove");
+    const auto index_move = state.globals.find("lindexmove");
+    const auto after_move = state.globals.find("naftermove");
+    const auto index_move_desc = state.globals.find("lindexmovedesc");
+    const auto after_move_desc = state.globals.find("naftermovedesc");
+    const auto order_after = state.globals.find("corderafter");
+
+    expect(index_no_move != state.globals.end(), "INDEXSEEK(.F.) with UPPER(NAME) should be captured for a local table");
+    expect(after_no_move != state.globals.end(), "RECNO() after local INDEXSEEK(.F.) with UPPER(NAME) should be captured");
+    expect(index_move != state.globals.end(), "INDEXSEEK(.T.) with UPPER(NAME) should be captured for a local table");
+    expect(after_move != state.globals.end(), "RECNO() after local INDEXSEEK(.T.) with UPPER(NAME) should be captured");
+    expect(index_move_desc != state.globals.end(), "descending local INDEXSEEK(.T.) with UPPER(NAME) should be captured");
+    expect(after_move_desc != state.globals.end(), "RECNO() after descending local INDEXSEEK(.T.) with UPPER(NAME) should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after local temporary-order INDEXSEEK probes should be captured");
+
+    if (index_no_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_no_move->second) == "true", "INDEXSEEK(.F.) should report local UPPER(NAME) matches");
+    }
+    if (after_no_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_no_move->second) == "1", "INDEXSEEK(.F.) should not move the local record pointer");
+    }
+    if (index_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_move->second) == "true", "INDEXSEEK(.T.) should report local UPPER(NAME) matches");
+    }
+    if (after_move != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_move->second) == "3", "INDEXSEEK(.T.) should move the local record pointer to the matching row");
+    }
+    if (index_move_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(index_move_desc->second) == "false", "descending local INDEXSEEK(.T.) should still report a miss for an in-between key");
+    }
+    if (after_move_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_move_desc->second) == "1", "descending local INDEXSEEK(.T.) should move to the descending near-match row after case-folding");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(), "one-off local temporary-order INDEXSEEK probes should not permanently change ORDER()");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_respects_grounded_order_for_expression_hints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_expression";
@@ -2548,6 +2626,7 @@ int main() {
     test_order_and_tag_preserve_index_file_identity();
     test_local_command_seek_in_target_with_temporary_order_expression();
     test_local_descending_temporary_order_expression_in_target_preserves_selection();
+    test_local_temporary_order_expression_indexseek_parity();
     test_seek_respects_grounded_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
     test_set_near_is_scoped_by_data_session();
