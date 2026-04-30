@@ -163,6 +163,16 @@ namespace
             "point_after = SET('POINT')\n"
             "separator_after = SET('SEPARATOR')\n"
             "currency_after = SET('CURRENCY')\n"
+            "SET DATASESSION TO 2\n"
+            "memo_width_session2 = SET('MEMOWIDTH')\n"
+            "point_session2 = SET('POINT')\n"
+            "separator_session2 = SET('SEPARATOR')\n"
+            "currency_session2 = SET('CURRENCY')\n"
+            "SET DATASESSION TO 1\n"
+            "memo_width_restored = SET('MEMOWIDTH')\n"
+            "point_restored = SET('POINT')\n"
+            "separator_restored = SET('SEPARATOR')\n"
+            "currency_restored = SET('CURRENCY')\n"
             "transform_group_euro = TRANSFORM(1234.5, '999,999.99')\n"
             "transform_currency_custom = TRANSFORM(1234.5, '$999,999.99')\n"
             "transform_decimal_euro = TRANSFORM(3.14159, '9.9')\n"
@@ -292,6 +302,8 @@ namespace
         check("memo_width_set_default", "50");
         check("memo_width_value", "10");
         check("memo_width_set_after", "10");
+        check("memo_width_session2", "50");
+        check("memo_width_restored", "10");
         check("narrow_count", "3");
         check("narrow_first", "abc def");
         check("narrow_second", "ghi jkl");
@@ -308,11 +320,17 @@ namespace
         check("point_default", ".");
         check("separator_default", ",");
         check("currency_default", "$");
+        check("point_session2", ".");
+        check("separator_session2", ",");
+        check("currency_session2", "$");
         check("transform_group_default", "1,234.50");
         check("transform_currency_default", "$1,234.50");
         check("point_after", ",");
         check("separator_after", ".");
         check("currency_after", "USD ");
+        check("point_restored", ",");
+        check("separator_restored", ".");
+        check("currency_restored", "USD ");
         check("transform_group_euro", "1.234,50");
         check("transform_currency_custom", "USD 1.234,50");
         check("transform_decimal_euro", "3,1");

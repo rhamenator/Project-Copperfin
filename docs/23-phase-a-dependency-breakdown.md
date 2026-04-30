@@ -330,15 +330,12 @@ Current prompt-sized slice queue under active lane `#92`:
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
 | `#92` | `#102` | extend SQL/result-cursor `SEEK` parity for `FOR`-filtered temporary orders |
-| `#92` | `#103` | honor `SET COLLATE` on plain-string `SEEK` over SQL/result cursors |
 | `#92` | `#104` | close one more grounded seek-compare metadata consumption residual |
 
 Current prompt-sized slice queue under active lane `#98`:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#98` | `#105` | formatting-state `SET()` isolation/readback (`POINT`, `SEPARATOR`, `CURRENCY`, `MEMOWIDTH`) |
-| `#98` | `#106` | calendar/week-state `SET()` isolation/readback (`FDOW`, `FWEEK`, adjacent date-order state) |
 | `#98` | `#107` | path/default/fields session-state isolation/readback (`DEFAULT`, `PATH`, `FIELDS`) |
 
 Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:

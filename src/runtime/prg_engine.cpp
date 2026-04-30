@@ -799,6 +799,22 @@ namespace copperfin::runtime
                     return std::string("OFF");
                 }
 
+                if (normalized_name == "path" ||
+                    normalized_name == "date" ||
+                    normalized_name == "mark" ||
+                    normalized_name == "hours" ||
+                    normalized_name == "fdow" ||
+                    normalized_name == "fweek" ||
+                    normalized_name == "reprocess" ||
+                    normalized_name == "decimals" ||
+                    normalized_name == "collate" ||
+                    normalized_name == "point" ||
+                    normalized_name == "separator" ||
+                    normalized_name == "currency")
+                {
+                    return found->second;
+                }
+
                 const std::string normalized_value = normalize_identifier(found->second);
                 if (normalized_value.empty() || normalized_value == "on" || normalized_value == "true" || normalized_value == "1" ||
                     normalized_value == ".t." || normalized_value == "yes" || normalized_value == "y")

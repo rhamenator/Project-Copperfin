@@ -161,12 +161,16 @@ namespace
             "mark_session2 = SET('MARK')\n"
             "hours_session2 = SET('HOURS')\n"
             "seconds_session2 = SET('SECONDS')\n"
+            "fdow_session2 = SET('FDOW')\n"
+            "fweek_session2 = SET('FWEEK')\n"
             "SET DATASESSION TO 1\n"
             "date_restored = SET('DATE')\n"
             "century_restored = SET('CENTURY')\n"
             "mark_restored = SET('MARK')\n"
             "hours_restored = SET('HOURS')\n"
             "seconds_restored = SET('SECONDS')\n"
+            "fdow_restored = SET('FDOW')\n"
+            "fweek_restored = SET('FWEEK')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -305,11 +309,15 @@ namespace
         check("mark_session2", "/");
         check("hours_session2", "24");
         check("seconds_session2", "ON");
+        check("fdow_session2", "1");
+        check("fweek_session2", "1");
         check("date_restored", "MDY");
         check("century_restored", "ON");
         check("mark_restored", "/");
         check("hours_restored", "24");
         check("seconds_restored", "ON");
+        check("fdow_restored", "1");
+        check("fweek_restored", "3");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())

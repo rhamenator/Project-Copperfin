@@ -21,8 +21,8 @@ Important:
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
 
 Current priority order:
-1. `#102`, `#103`, `#104` under `#92`
-2. `#105`, `#106`, `#107` under `#98`
+1. `#102`, `#104` under `#92`
+2. `#107` under `#98`
 3. `#123`, `#124` under `#97`, then `#125`, `#126` under `#99`
 4. `#117`, `#118` under `#94`
 5. `#127`, `#128` under `#100`
@@ -36,6 +36,8 @@ Current shipped highlights worth remembering:
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
 - 2026-04-30: The same `#98` session-state lane now has another six focused readback/isolation slices locked down: `COLLATE`, `NULL`, `ANSI`, `REPROCESS`, `MULTILOCKS`, and `EXCLUSIVE`. Focused `test_prg_engine_runtime_surface_functions` and `test_prg_engine_table_mutation` coverage now verifies their default values plus `SET DATASESSION` restoration behavior, which narrows the remaining runtime-state backlog to smaller semantic gaps instead of broad untested state surface.
 - 2026-04-30: Issue `#92` deepened again in the grounded-order filter path. The local seek runtime no longer treats most loaded `FOR` expressions as metadata-only; in addition to `DELETED()` filters it now honors first-pass top-level string and numeric comparisons such as `NAME = 'BRAVO'` and `AGE >= 20`, including `SET NEAR` behavior against the surviving candidate set. Focused `test_prg_engine_seek_index` coverage passes.
+- 2026-04-30: Slice issue `#103` is now closed. Synthetic SQL/result-cursor plain-string `SEEK` now has focused parity coverage proving that `SET COLLATE TO GENERAL` case-folds temporary `NAME`-style searches on SQL cursors just as it already did on local DBF-backed cursors. Focused `test_prg_engine_sql_cursors` coverage passes.
+- 2026-04-30: Slice issues `#105` and `#106` are now closed. Formatting-state session isolation is now explicitly defended for `MEMOWIDTH`, `POINT`, `SEPARATOR`, and `CURRENCY`, calendar/week-state isolation is now explicitly defended for `FDOW` and `FWEEK`, and the shared `SET()` readback path now preserves numeric/string option values instead of misreporting values like `FDOW=1` as `ON` after session restoration. Focused `test_prg_engine_string_math_functions` and `test_prg_engine_date_time_functions` coverage passes.
 - 2026-04-30: The `#99` memory-file lane deepened again. `SAVE TO` now preserves runtime arrays with dimensions and records `PUBLIC` scope markers instead of only serializing plain scalar globals; `RESTORE FROM` now recreates arrays and `PUBLIC` bindings, additive restore now writes through visible `LOCAL` bindings instead of hiding restored values behind stale locals, and non-additive restore now clears stale arrays plus deferred `PRIVATE` shadow state before rebuilding the saved memory set. Focused `test_prg_engine_data_io` coverage passes.
 - 2026-04-30: Local DBF-backed indexed-search parity now accepts the same first-pass ad hoc order expressions that were already available on synthetic SQL cursors. Local `SET ORDER TO UPPER(NAME)`, `SEEK('bravo', 'People', 'UPPER(NAME)')`, and descending one-off local probes such as `SEEK('beta', 'People', 'UPPER(NAME) DESCENDING')` now derive normalization/collation hints and search through local table rows instead of rejecting non-tag expressions. Focused `test_prg_engine_seek_index` coverage passes.
 - 2026-04-30: The adjacent headless command/event lane deepened substantially toward issue #7/#8 closure. `INPUT` / `ACCEPT` now reuse selected-cursor/view metadata and assign deterministic empty-string headless `TO <target>` results; `WAIT` now captures resolved prompt/timeout/target state plus source expressions for common `WAIT [WINDOW] ... [TIMEOUT ...] [TO <target>] [NOWAIT] [NOCLEAR]` forms; `KEYBOARD` now captures resolved key payloads plus source expressions and common `PLAIN` / `CLEAR` flags; `DISPLAY` / `LIST` `STRUCTURE` and `STATUS` forms now emit selected-cursor schema and current session/view metadata; and `DISPLAY` / `LIST` `MEMORY` now emit visible and shadowed public/private/local/global memory-variable summaries, scoped array detail, and first-pass object previews. Focused `test_prg_engine_data_io` coverage passes.
@@ -118,8 +120,8 @@ Workflow:
 Default direction if no stronger signal appears from the current files:
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
-  - `#102`, `#103`, then `#104` under `#92`
-  - then `#105`, `#106`, and `#107` under `#98`, before reopening broader `#99` unless a concrete remaining memory-lifetime or `.mem` parity bug is visible
+  - `#102`, then `#104` under `#92`
+  - then `#107` under `#98`, before reopening broader `#99` unless a concrete remaining memory-lifetime or `.mem` parity bug is visible
   - then `#117` and `#118` under `#94`
 - Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

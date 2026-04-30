@@ -65,7 +65,7 @@ GitHub milestones now mirror that same tree:
 
 - A3 runtime semantics and command depth: #7, #8
   - lane issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
-  - active prompt-sized slice issues: #102, #103, #104, #105, #106, #107
+  - active prompt-sized slice issues: #102, #104, #107
   - additional native slice queues now exist under #93-#101: #115-#130
 - A4 automation and host containment: #10, #11, #12
   - native prompt-sized slice issues: #131-#136
@@ -356,9 +356,13 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-30: The same `#92` indexed-search lane now consumes a broader first-pass grounded `FOR` expression family instead of only honoring `DELETED()` filters. Local `SEEK` now respects simple string and numeric comparisons such as `NAME = 'BRAVO'` and `AGE >= 20` embedded in loaded order metadata, including `SET NEAR` miss positioning against the surviving filtered candidate set. Focused `test_prg_engine_seek_index` coverage passes.
 
+- 2026-04-30: Slice issue `#103` is now closed. Synthetic SQL/result-cursor plain-string `SEEK` now has focused parity coverage for non-`MACHINE` session collations, proving that `SET COLLATE TO GENERAL` case-folds plain `NAME`-style temporary-order searches on SQL cursors just as it already did on local DBF-backed cursors. Focused `test_prg_engine_sql_cursors` coverage passes.
+
 - 2026-04-30: Issue `#98` runtime-state readback deepened in the adjacent date/time lane. `SET('DATE')` now defaults to `MDY` instead of falling through to `OFF`, and focused `test_prg_engine_date_time_functions` coverage now locks down default/readback plus `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.
 
 - 2026-04-30: The same `#98` runtime-state lane now locks down six more session-scoped `SET()` surfaces that were already implemented but not yet defended with focused regression coverage: `COLLATE`, `NULL`, `ANSI`, `REPROCESS`, `MULTILOCKS`, and `EXCLUSIVE`. Focused `test_prg_engine_runtime_surface_functions` and `test_prg_engine_table_mutation` coverage now validates default/readback plus `SET DATASESSION` isolation/restoration for each of those options.
+
+- 2026-04-30: Slice issues `#105` and `#106` are now closed. Formatting-state session isolation is now explicitly defended for `MEMOWIDTH`, `POINT`, `SEPARATOR`, and `CURRENCY`, and adjacent calendar/week state is now explicitly defended for `FDOW` and `FWEEK` across `SET DATASESSION` switches. The runtime also fixed a shared `SET()` readback bug where numeric/string session options such as `FDOW=1` could be misreported as `ON` after restoration. Focused `test_prg_engine_string_math_functions` and `test_prg_engine_date_time_functions` coverage passes.
 
 - 2026-04-30: The adjacent headless input/wait lane deepened instead of leaving `INPUT`, `ACCEPT`, and `WAIT` behind as event-only stubs. `INPUT` / `ACCEPT` now reuse the same selected-cursor/view metadata surfaced by the richer local-data commands and assign deterministic empty-string headless results through `TO <target>` variables, while `WAIT` now captures common `WINDOW`, prompt, `TIMEOUT`, `NOWAIT`, `NOCLEAR`, and `TO <target>` detail and likewise assigns a deterministic empty-string target result in headless mode. Focused `test_prg_engine_data_io` coverage validates the expanded event payloads and target-assignment behavior.
 

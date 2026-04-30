@@ -148,9 +148,13 @@ The same memory-file lane now also has first-pass array/scope fidelity for `SAVE
 
 The indexed-search lane now also has a first-pass runtime collation step for plain string orders: when an active order does not already carry an explicit case-folding expression hint, non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` now case-fold plain string seek comparisons instead of leaving `SET COLLATE` as metadata-only state.
 
+That plain-string collation step is now explicitly defended on synthetic SQL/result cursors too: focused SQL seek coverage proves the same non-`MACHINE` session collation behavior on temporary `NAME`-style orders instead of leaving remote parity implied by the shared implementation.
+
 The adjacent date/time runtime-state lane now also has stronger `SET()` readback fidelity: `SET('DATE')` defaults to `MDY` instead of falling through to `OFF`, and focused coverage now locks down data-session isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.
 
 The broader runtime-state lane now also has focused session-isolation/readback coverage for `COLLATE`, `NULL`, `ANSI`, `REPROCESS`, `MULTILOCKS`, and `EXCLUSIVE`, locking down their default values plus `SET DATASESSION` restoration behavior alongside the earlier shipped command semantics.
+
+That same session-state lane now also explicitly defends formatting-state isolation/readback for `MEMOWIDTH`, `POINT`, `SEPARATOR`, and `CURRENCY`, plus adjacent calendar/week-state isolation/readback for `FDOW` and `FWEEK`. The shared `SET()` readback path also now preserves numeric/string values for these non-boolean settings instead of collapsing values like `1` to `ON` after session restoration.
 
 Runtime arrays now have first-pass direct element reads and writes through both bracket and parenthesis syntax (`array[1]`, `array[1,2]`, `array(1)`, `array(1,2)`), including declared arrays and arrays resized through `ASIZE()`. Macro-expanded array identifiers now also work across adjacent helper and element-access paths such as `ALEN(&cArrayName)`, `ALINES(&cTargetName, ...)`, `ACOPY(&cSourceName, &cTargetName, ...)`, `&cArrayName[2,1]`, and `&cArrayName(1,2)`. The array helper surface now also covers `ACOPY()` row-major copies over one- and two-dimensional arrays, `AELEMENT()` / `ASUBSCRIPT()` index conversion, `ASCAN()` start/count scans with column, case-insensitive, exactness, row-return, and first-pass predicate-expression search support, `ASORT()` start/count windows plus descending/case-insensitive/numeric-aware ordering and two-dimensional row sorting by the start element's column, and two-dimensional `ADEL()` / `AINS()` row/column shifting.
 
