@@ -12,48 +12,48 @@ flowchart LR
 
     subgraph CoreNative[Native Core Boundary]
         direction TB
-        CORE[copperfin-core]
+        CORE["copperfin-core"]
 
         subgraph DataPlane[Data Plane]
             direction TB
-            DBF[DBF FPT Fidelity]
-            IDX[CDX DCX MDX Index Fidelity]
-            DBC[DBC Container Fidelity]
-            WS[Work Areas Data Sessions]
-            LQ[Local Query Mutation Commands]
-            SQ[SQL Pass-through Remote Cursors]
+            DBF["DBF/FPT Fidelity<br/>92%"]
+            IDX["CDX/DCX/MDX Index Fidelity<br/>~94%"]
+            DBC["DBC Container Fidelity<br/>90%"]
+            WS["Work Areas / Data Sessions<br/>96%"]
+            LQ["Local Query / Mutation Commands<br/>93%"]
+            SQ["SQL Pass-through / Remote Cursors<br/>90%"]
         end
 
         subgraph RuntimePlane[Execution Plane]
             direction TB
-            PRG[PRG Execution Engine]
-            EXP[Expression Runtime Helpers]
-            SEC[Security Policy Enforcement]
+            PRG["PRG Execution Engine<br/>82%"]
+            EXP["Expression / Runtime Helpers<br/>~78%"]
+            SEC["Security / Policy Enforcement<br/>52%"]
         end
     end
 
     subgraph UXHosts[Designer And Host Surfaces]
         direction TB
-        DES[Shared Designers]
-        FORMS[Forms Classes Runtime]
-        RPT[Reports Labels Runtime]
-        MENU[Menus Runtime]
-        VS[Visual Studio Integration]
-        IDE[Standalone Copperfin IDE]
-        LS[Language Service]
+        DES["Shared Designers<br/>43%"]
+        FORMS["Forms / Classes Runtime<br/>38%"]
+        RPT["Reports / Labels Runtime<br/>42%"]
+        MENU["Menus Runtime<br/>36%"]
+        VS["Visual Studio Integration<br/>37%"]
+        IDE["Standalone Copperfin IDE<br/>32%"]
+        LS["Language Service<br/>46%"]
     end
 
     subgraph Toolchain[Build Packaging Debug]
         direction TB
-        BLD[Build Pipeline]
-        DBG[Debug Runtime Host]
-        PKG[Packaging Distribution]
+        BLD["Build Pipeline<br/>48%"]
+        DBG["Debug Runtime Host<br/>~46%"]
+        PKG["Packaging / Distribution<br/>48%"]
     end
 
     subgraph Platform[Interop And Federation]
         direction TB
-        DOTNET[.NET Interoperability]
-        FED[Database Federation]
+        DOTNET[".NET Interoperability<br/>41%"]
+        FED["Database Federation<br/>34%"]
     end
 
     CORE --> DBF
@@ -92,7 +92,7 @@ flowchart LR
     class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```
 
-Status legend: green = implemented, amber = partial, red = missing.
+Status legend: green = 85-100%, amber = 40-84%, red = 0-39%. Percentages are exact where a roadmap row exists and `~` where the diagram is using the nearest mapped planning estimate.
 
 ## Current Status Snapshot
 

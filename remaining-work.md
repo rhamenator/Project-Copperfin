@@ -55,6 +55,7 @@ This grouped list mirrors the active GitHub issue set so this backlog stays alig
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
+  - current A3 child issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
 - A4 automation and host containment: #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
 
@@ -126,31 +127,31 @@ flowchart TD
         A5["DBC/Database Container Fidelity<br/>90%"]
         A6["Work Areas And Data Sessions<br/>96%"]
         A7["Local Query/Mutation Commands<br/>93%"]
-        A8["SQL Pass-Through / Remote Cursor Behavior<br/>90%"]
-        A9["PRG Execution Engine<br/>82%"]
+        A8["SQL Pass-Through / Remote Cursor Behavior<br/>90%<br/>#7"]
+        A9["PRG Execution Engine<br/>82%<br/>#7 / #8"]
     end
 
     subgraph PB[Phase B - Runtime Parity Surfaces]
         direction TB
-        B1["Forms/Classes Runtime Parity<br/>38%"]
-        B2["Reports/Labels Runtime Parity<br/>42%"]
-        B3["Menus Runtime Parity<br/>36%"]
+        B1["Forms/Classes Runtime Parity<br/>38%<br/>#15"]
+        B2["Reports/Labels Runtime Parity<br/>42%<br/>#16"]
+        B3["Menus Runtime Parity<br/>36%<br/>#17"]
     end
 
     subgraph PC[Phase C - Build, Designers, And IDE]
         direction TB
-        C1["Build/Package/Debug Pipeline<br/>48%"]
-        C2["Shared Designers<br/>43%"]
-        C3["Visual Studio Integration<br/>37%"]
-        C4["Standalone Copperfin IDE<br/>32%"]
-        C5["Language Service<br/>46%"]
+        C1["Build/Package/Debug Pipeline<br/>48%<br/>#19-#21,#42,#43"]
+        C2["Shared Designers<br/>43%<br/>#22-#24"]
+        C3["Visual Studio Integration<br/>37%<br/>#25"]
+        C4["Standalone Copperfin IDE<br/>32%<br/>#26"]
+        C5["Language Service<br/>46%<br/>#27-#29"]
     end
 
     subgraph PD[Phase D - Platform And Enterprise]
         direction TB
-        D1[".NET Interoperability<br/>41%"]
-        D2["Database Federation<br/>34%"]
-        D3["Security/Policy Controls<br/>52%"]
+        D1[".NET Interoperability<br/>41%<br/>#32,#57,#91"]
+        D2["Database Federation<br/>34%<br/>#30,#31"]
+        D3["Security/Policy Controls<br/>52%<br/>#33,#34"]
     end
 
     A1 --> A2
@@ -193,69 +194,69 @@ flowchart LR
         direction TB
         SA1["A1 File And Index Fidelity<br/>~93%"]
         SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>~93%"]
-        SA3["A3 Command / Expression Surface<br/>82%"]
-        SA4["A4 Automation / Interop Semantics<br/>~41%"]
+        SA3["A3 Command / Expression Surface<br/>82%<br/>#7,#8,#92-#101"]
+        SA4["A4 Automation / Interop Semantics<br/>~41%<br/>#10,#11,#12"]
     end
 
     subgraph SB[Phase B]
         direction TB
-        SB1["B1 Fault Isolation<br/>~58%"]
-        SB2["B2 Debug Metadata / Diagnostics<br/>~54%"]
+        SB1["B1 Fault Isolation<br/>~58%<br/>#13"]
+        SB2["B2 Debug Metadata / Diagnostics<br/>~54%<br/>#14"]
     end
 
     subgraph SC[Phase C]
         direction TB
-        SC1["C1 Forms / Classes<br/>38%"]
-        SC2["C2 Reports / Labels<br/>42%"]
-        SC3["C3 Menus<br/>36%"]
-        SC4["C4 Projects<br/>~45%"]
+        SC1["C1 Forms / Classes<br/>38%<br/>#15"]
+        SC2["C2 Reports / Labels<br/>42%<br/>#16"]
+        SC3["C3 Menus<br/>36%<br/>#17"]
+        SC4["C4 Projects<br/>~45%<br/>#18"]
     end
 
     subgraph SD[Phase D]
         direction TB
-        SD1["D1 Compiler / Package Model<br/>~50%"]
-        SD2["D2 Debugger Completion<br/>~46%"]
-        SD3["D3 Build / Run / Deploy Workflow<br/>~49%"]
+        SD1["D1 Compiler / Package Model<br/>~50%<br/>#19,#42,#43"]
+        SD2["D2 Debugger Completion<br/>~46%<br/>#20"]
+        SD3["D3 Build / Run / Deploy Workflow<br/>~49%<br/>#21,#38-#41"]
     end
 
     subgraph SE[Phase E]
         direction TB
-        SE1["E1 Shared Design Model<br/>43%"]
-        SE2["E2 Designer Interaction<br/>~39%"]
-        SE3["E3 Report/Label Designer Completion<br/>~40%"]
+        SE1["E1 Shared Design Model<br/>43%<br/>#22"]
+        SE2["E2 Designer Interaction<br/>~39%<br/>#23"]
+        SE3["E3 Report/Label Designer Completion<br/>~40%<br/>#24"]
     end
 
     subgraph SF[Phase F]
         direction TB
-        SF1["F1 Visual Studio Extension<br/>37%"]
-        SF2["F2 Standalone Copperfin IDE<br/>32%"]
+        SF1["F1 Visual Studio Extension<br/>37%<br/>#25"]
+        SF2["F2 Standalone Copperfin IDE<br/>32%<br/>#26"]
     end
 
     subgraph SG[Phase G]
         direction TB
-        SG1["G1 Editor Semantics<br/>~49%"]
-        SG2["G2 Navigation / Refactoring<br/>~43%"]
-        SG3["G3 IntelliSense Inputs<br/>~46%"]
+        SG1["G1 Editor Semantics<br/>~49%<br/>#27"]
+        SG2["G2 Navigation / Refactoring<br/>~43%<br/>#28"]
+        SG3["G3 IntelliSense Inputs<br/>~46%<br/>#29"]
     end
 
     subgraph SH[Phase H]
         direction TB
-        SH1["H1 Relational Backends<br/>34%"]
-        SH2["H2 Document / Vector Backends<br/>~22%"]
-        SH3["H3 Modern Integration Surface<br/>~38%"]
+        SH1["H1 Relational Backends<br/>34%<br/>#30"]
+        SH2["H2 Document / Vector Backends<br/>~22%<br/>#31"]
+        SH3["H3 Modern Integration Surface<br/>~38%<br/>#32,#57,#91"]
     end
 
     subgraph SI[Phase I]
         direction TB
-        SI1["I1 Runtime / Project Security<br/>~56%"]
-        SI2["I2 Extension / Host Security<br/>~48%"]
+        SI1["I1 Runtime / Project Security<br/>~56%<br/>#33"]
+        SI2["I2 Extension / Host Security<br/>~48%<br/>#34"]
     end
 
     subgraph SJ[Phase J]
         direction TB
-        SJ1["J1 Portable Core<br/>~18%"]
-        SJ2["J2 macOS<br/>~6%"]
-        SJ3["J3 Linux<br/>~6%"]
+        SJ1["J1 Portable Core<br/>~18%<br/>#35"]
+        SJ2["J2 macOS<br/>~6%<br/>#36"]
+        SJ3["J3 Linux<br/>~6%<br/>#37"]
     end
 
     SA1 --> SA2 --> SA3 --> SA4
