@@ -3100,12 +3100,51 @@
                         case ':':
                             escaped += "\\:";
                             break;
+                        case ';':
+                            escaped += "\\;";
+                            break;
+                        case '|':
+                            escaped += "\\|";
+                            break;
+                        case ',':
+                            escaped += "\\,";
+                            break;
                         default:
                             escaped.push_back(ch);
                             break;
                         }
                     }
                     return escaped;
+                };
+                const auto serialize_memvar_value = [&](const PrgValue &value) {
+                    std::pair<char, std::string> serialized{'C', std::string{}};
+                    switch (value.kind)
+                    {
+                    case PrgValueKind::boolean:
+                        serialized.first = 'L';
+                        serialized.second = value.boolean_value ? "true" : "false";
+                        break;
+                    case PrgValueKind::number:
+                    case PrgValueKind::int64:
+                    case PrgValueKind::uint64:
+                        serialized.first = 'N';
+                        serialized.second = value_as_string(value);
+                        break;
+                    case PrgValueKind::string:
+                    {
+                        int year = 0;
+                        int month = 0;
+                        int day = 0;
+                        serialized.first = parse_runtime_date_string(value.string_value, year, month, day) ? 'D' : 'C';
+                        serialized.second = value.string_value;
+                        break;
+                    }
+                    case PrgValueKind::empty:
+                        serialized.first = 'E';
+                        serialized.second.clear();
+                        break;
+                    }
+                    return serialized;
                 };
 
                 std::string destination = unquote_string(trim_copy(
@@ -3164,8 +3203,14 @@
                 }
 
                 std::size_t saved_count = 0U;
+                std::set<std::string> saved_names;
                 for (const auto &[name, value] : visible_variables)
                 {
+                    if (arrays.contains(name))
+                    {
+                        continue;
+                    }
+
                     bool include_variable = true;
                     if (!filter_mode.empty())
                     {
@@ -3177,36 +3222,50 @@
                         continue;
                     }
 
-                    char type_code = 'C';
-                    std::string serialized_value;
-                    switch (value.kind)
+                    const auto [type_code, serialized_value] = serialize_memvar_value(value);
+                    std::string raw_type(1U, type_code);
+                    if (public_names.contains(name))
                     {
-                    case PrgValueKind::boolean:
-                        type_code = 'L';
-                        serialized_value = value.boolean_value ? "true" : "false";
-                        break;
-                    case PrgValueKind::number:
-                    case PrgValueKind::int64:
-                    case PrgValueKind::uint64:
-                        type_code = 'N';
-                        serialized_value = value_as_string(value);
-                        break;
-                    case PrgValueKind::string:
-                    {
-                        int year = 0;
-                        int month = 0;
-                        int day = 0;
-                        serialized_value = value.string_value;
-                        type_code = parse_runtime_date_string(serialized_value, year, month, day) ? 'D' : 'C';
-                        break;
-                    }
-                    case PrgValueKind::empty:
-                        type_code = 'E';
-                        serialized_value.clear();
-                        break;
+                        raw_type += ",PUBLIC";
                     }
 
-                    output << name << "=" << type_code << ":" << escape_memvar_value(serialized_value) << "\n";
+                    output << name << "=" << raw_type << ":" << escape_memvar_value(serialized_value) << "\n";
+                    ++saved_count;
+                    saved_names.insert(name);
+                }
+
+                for (const auto &[name, array] : arrays)
+                {
+                    if (saved_names.contains(name))
+                    {
+                        continue;
+                    }
+
+                    bool include_variable = true;
+                    if (!filter_mode.empty())
+                    {
+                        const bool matches = wildcard_match_insensitive(filter_pattern, name);
+                        include_variable = filter_mode == "like" ? matches : !matches;
+                    }
+                    if (!include_variable)
+                    {
+                        continue;
+                    }
+
+                    std::ostringstream array_payload;
+                    array_payload << array.rows << "," << array.columns;
+                    for (const auto &element : array.values)
+                    {
+                        const auto [element_type, element_value] = serialize_memvar_value(element);
+                        array_payload << "|" << element_type << ":" << escape_memvar_value(element_value);
+                    }
+
+                    std::string raw_type = "A";
+                    if (public_names.contains(name))
+                    {
+                        raw_type += ",PUBLIC";
+                    }
+                    output << name << "=" << raw_type << ":" << array_payload.str() << "\n";
                     ++saved_count;
                 }
 
@@ -3266,12 +3325,55 @@
                         case ':':
                             unescaped.push_back(':');
                             break;
+                        case ';':
+                            unescaped.push_back(';');
+                            break;
+                        case '|':
+                            unescaped.push_back('|');
+                            break;
+                        case ',':
+                            unescaped.push_back(',');
+                            break;
                         default:
                             unescaped.push_back(next);
                             break;
                         }
                     }
                     return unescaped;
+                };
+                const auto split_escaped_memvar_list = [](const std::string &encoded, char delimiter) {
+                    std::vector<std::string> parts;
+                    std::string current;
+                    current.reserve(encoded.size());
+                    bool escaped = false;
+                    for (const char ch : encoded)
+                    {
+                        if (escaped)
+                        {
+                            current.push_back('\\');
+                            current.push_back(ch);
+                            escaped = false;
+                            continue;
+                        }
+                        if (ch == '\\')
+                        {
+                            escaped = true;
+                            continue;
+                        }
+                        if (ch == delimiter)
+                        {
+                            parts.push_back(current);
+                            current.clear();
+                            continue;
+                        }
+                        current.push_back(ch);
+                    }
+                    if (escaped)
+                    {
+                        current.push_back('\\');
+                    }
+                    parts.push_back(current);
+                    return parts;
                 };
 
                 std::string source = unquote_string(trim_copy(
@@ -3308,6 +3410,13 @@
                 if (!additive)
                 {
                     globals.clear();
+                    arrays.clear();
+                    public_names.clear();
+                    for (auto &active_frame : stack)
+                    {
+                        active_frame.private_saved_values.clear();
+                        active_frame.locals.clear();
+                    }
                 }
 
                 std::size_t restored_count = 0U;
@@ -3341,46 +3450,101 @@
                     }
 
                     const std::string raw_type = trim_copy(line.substr(equals_position + 1U, colon_position - equals_position - 1U));
-                    const char type_code = raw_type.empty()
+                    const std::vector<std::string> type_tokens = split_csv_like(raw_type);
+                    const std::string type_name = type_tokens.empty() ? std::string{} : trim_copy(type_tokens.front());
+                    const char type_code = type_name.empty()
                                                ? 'C'
-                                               : static_cast<char>(std::toupper(static_cast<unsigned char>(raw_type.front())));
+                                               : static_cast<char>(std::toupper(static_cast<unsigned char>(type_name.front())));
+                    bool restore_public = false;
+                    for (std::size_t token_index = 1U; token_index < type_tokens.size(); ++token_index)
+                    {
+                        if (normalize_identifier(type_tokens[token_index]) == "public")
+                        {
+                            restore_public = true;
+                        }
+                    }
                     const std::string raw_value = unescape_memvar_value(line.substr(colon_position + 1U));
 
-                    PrgValue restored_value;
-                    if (type_code == 'L')
+                    const auto parse_memvar_value = [&](char value_type_code, const std::string &value_text) {
+                        PrgValue restored_value;
+                        if (value_type_code == 'L')
+                        {
+                            const std::string normalized_bool = normalize_identifier(value_text);
+                            const bool bool_value = normalized_bool == "true" ||
+                                                    normalized_bool == ".t." ||
+                                                    normalized_bool == "t" ||
+                                                    normalized_bool == "1" ||
+                                                    normalized_bool == "y" ||
+                                                    normalized_bool == "yes";
+                            restored_value = make_boolean_value(bool_value);
+                        }
+                        else if (value_type_code == 'N')
+                        {
+                            const std::string numeric_text = trim_copy(value_text);
+                            char *number_end = nullptr;
+                            const double parsed = std::strtod(numeric_text.c_str(), &number_end);
+                            restored_value = (number_end != numeric_text.c_str() && number_end != nullptr && *number_end == '\0')
+                                                 ? make_number_value(parsed)
+                                                 : make_number_value(0.0);
+                        }
+                        else if (value_type_code == 'D')
+                        {
+                            restored_value = make_string_value(trim_copy(value_text));
+                        }
+                        else if (value_type_code == 'E')
+                        {
+                            restored_value = make_empty_value();
+                        }
+                        else
+                        {
+                            restored_value = make_string_value(value_text);
+                        }
+                        return restored_value;
+                    };
+
+                    if (type_code == 'A')
                     {
-                        const std::string normalized_bool = normalize_identifier(raw_value);
-                        const bool bool_value = normalized_bool == "true" ||
-                                                normalized_bool == ".t." ||
-                                                normalized_bool == "t" ||
-                                                normalized_bool == "1" ||
-                                                normalized_bool == "y" ||
-                                                normalized_bool == "yes";
-                        restored_value = make_boolean_value(bool_value);
-                    }
-                    else if (type_code == 'N')
-                    {
-                        const std::string numeric_text = trim_copy(raw_value);
-                        char *number_end = nullptr;
-                        const double parsed = std::strtod(numeric_text.c_str(), &number_end);
-                        restored_value = (number_end != numeric_text.c_str() && number_end != nullptr && *number_end == '\0')
-                                             ? make_number_value(parsed)
-                                             : make_number_value(0.0);
-                    }
-                    else if (type_code == 'D')
-                    {
-                        restored_value = make_string_value(trim_copy(raw_value));
-                    }
-                    else if (type_code == 'E')
-                    {
-                        restored_value = make_empty_value();
+                        const std::string encoded_array_value = line.substr(colon_position + 1U);
+                        const std::vector<std::string> array_tokens = split_escaped_memvar_list(encoded_array_value, '|');
+                        if (array_tokens.empty())
+                        {
+                            continue;
+                        }
+                        const std::vector<std::string> size_tokens = split_csv_like(array_tokens.front());
+                        const std::size_t rows = size_tokens.empty() ? 0U : static_cast<std::size_t>(std::max(0, std::stoi(trim_copy(size_tokens[0]))));
+                        const std::size_t columns = size_tokens.size() >= 2U ? static_cast<std::size_t>(std::max(1, std::stoi(trim_copy(size_tokens[1])))) : 1U;
+                        std::vector<PrgValue> values;
+                        values.reserve(array_tokens.size() > 0U ? array_tokens.size() - 1U : 0U);
+                        for (std::size_t element_index = 1U; element_index < array_tokens.size(); ++element_index)
+                        {
+                            const std::string encoded_element = array_tokens[element_index];
+                            const std::size_t element_colon = encoded_element.find(':');
+                            const char element_type = element_colon == std::string::npos || encoded_element.empty()
+                                                          ? 'C'
+                                                          : static_cast<char>(std::toupper(static_cast<unsigned char>(encoded_element.front())));
+                            const std::string element_text = element_colon == std::string::npos ? std::string{} : unescape_memvar_value(encoded_element.substr(element_colon + 1U));
+                            values.push_back(parse_memvar_value(element_type, element_text));
+                        }
+                        values.resize(rows * columns);
+                        arrays[name] = RuntimeArray{.rows = rows, .columns = columns, .values = std::move(values)};
                     }
                     else
                     {
-                        restored_value = make_string_value(raw_value);
+                        const PrgValue restored_value = parse_memvar_value(type_code, raw_value);
+                        if (frame.local_names.contains(name) || frame.locals.contains(name))
+                        {
+                            frame.locals[name] = restored_value;
+                        }
+                        else
+                        {
+                            globals[name] = restored_value;
+                        }
                     }
 
-                    globals[name] = restored_value;
+                    if (restore_public)
+                    {
+                        public_names.insert(name);
+                    }
                     ++restored_count;
                 }
 

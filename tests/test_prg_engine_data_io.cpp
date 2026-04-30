@@ -2206,8 +2206,8 @@ void test_save_restore_round_trips_escaped_string_and_types() {
             "SAVE TO should escape newline and tab control characters");
         expect(contents.find("dstamp=D:01/15/2026") != std::string::npos,
             "SAVE TO should persist recognized date values using type code D");
-        expect(contents.find("eonly=E:") != std::string::npos,
-            "SAVE TO should persist explicit empty values using type code E");
+        expect(contents.find("eonly=E,PUBLIC:") != std::string::npos,
+            "SAVE TO should persist explicit empty PUBLIC values with type code E");
     }
 
     const fs::path restore_path = temp_root / "restore_escaped.prg";
@@ -2353,6 +2353,313 @@ void test_restore_from_without_additive_clears_prior_globals() {
     if (after_stale_type != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_stale_type->second) == "U",
             "non-additive RESTORE should clear globals not present in the .mem file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_honors_current_frame_local_bindings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_locals";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "locals.mem";
+    const fs::path main_path = temp_root / "restore_locals.prg";
+    write_text(
+        main_path,
+        "saved_value = 'outer'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "DO restore_proc\n"
+        "after_proc_type = TYPE('saved_value')\n"
+        "RETURN\n"
+        "PROCEDURE restore_proc\n"
+        "LOCAL saved_value\n"
+        "saved_value = 'stale'\n"
+        "RESTORE FROM '" + mem_path.string() + "' ADDITIVE\n"
+        "restored_local = saved_value\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RESTORE FROM should complete inside a LOCAL frame");
+
+    const auto restored_local = state.globals.find("restored_local");
+    const auto after_proc_type = state.globals.find("after_proc_type");
+    expect(restored_local != state.globals.end(), "restored local value should be captured");
+    expect(after_proc_type != state.globals.end(), "post-procedure TYPE() should be captured");
+    if (restored_local != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_local->second) == "outer",
+            "RESTORE FROM ADDITIVE should populate a current-frame LOCAL binding instead of a hidden global");
+    }
+    if (after_proc_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_proc_type->second) == "C",
+            "restoring into a LOCAL should not destroy the visible outer global binding");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_restore_round_trips_arrays() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_arrays";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "arrays.mem";
+    const fs::path main_path = temp_root / "save_restore_arrays.prg";
+    write_text(
+        main_path,
+        "DIMENSION aValues[2,2]\n"
+        "aValues[1,1] = 'left'\n"
+        "aValues[1,2] = 12.5\n"
+        "aValues[2,1] = .T.\n"
+        "aValues[2,2] = '01/15/2026'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "DIMENSION aValues[1]\n"
+        "aValues[1] = 'stale'\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "restored_type = TYPE('aValues')\n"
+        "restored_rows = ALEN(aValues, 1)\n"
+        "restored_cols = ALEN(aValues, 2)\n"
+        "restored_11 = aValues[1,1]\n"
+        "restored_12 = aValues[1,2]\n"
+        "restored_21 = aValues[2,1]\n"
+        "restored_22 = aValues[2,2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE/RESTORE array roundtrip should complete");
+
+    const auto restored_type = state.globals.find("restored_type");
+    const auto restored_rows = state.globals.find("restored_rows");
+    const auto restored_cols = state.globals.find("restored_cols");
+    const auto restored_11 = state.globals.find("restored_11");
+    const auto restored_12 = state.globals.find("restored_12");
+    const auto restored_21 = state.globals.find("restored_21");
+    const auto restored_22 = state.globals.find("restored_22");
+
+    expect(restored_type != state.globals.end(), "restored array TYPE() should be captured");
+    expect(restored_rows != state.globals.end(), "restored array rows should be captured");
+    expect(restored_cols != state.globals.end(), "restored array columns should be captured");
+    expect(restored_11 != state.globals.end(), "restored array [1,1] should be captured");
+    expect(restored_12 != state.globals.end(), "restored array [1,2] should be captured");
+    expect(restored_21 != state.globals.end(), "restored array [2,1] should be captured");
+    expect(restored_22 != state.globals.end(), "restored array [2,2] should be captured");
+
+    if (restored_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_type->second) == "A",
+            "RESTORE FROM should recreate saved arrays");
+    }
+    if (restored_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_rows->second) == "2",
+            "RESTORE FROM should recreate the saved array row count");
+    }
+    if (restored_cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_cols->second) == "2",
+            "RESTORE FROM should recreate the saved array column count");
+    }
+    if (restored_11 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_11->second) == "left",
+            "RESTORE FROM should preserve string array elements");
+    }
+    if (restored_12 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_12->second) == "12.5",
+            "RESTORE FROM should preserve numeric array elements");
+    }
+    if (restored_21 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_21->second) == "true",
+            "RESTORE FROM should preserve logical array elements");
+    }
+    if (restored_22 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_22->second) == "01/15/2026",
+            "RESTORE FROM should preserve date-like array elements");
+    }
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("avalues=A:2,2|") != std::string::npos,
+            "SAVE TO should serialize arrays with dimensions");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_restore_round_trips_public_scope() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_public_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "public.mem";
+    const fs::path main_path = temp_root / "save_restore_public_scope.prg";
+    write_text(
+        main_path,
+        "PUBLIC cPub, aPub\n"
+        "cPub = 'visible'\n"
+        "DIMENSION aPub[1]\n"
+        "aPub[1] = 'array-visible'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "RELEASE ALL\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "PUBLIC pub_scalar_type, pub_array_type, pub_scalar, pub_array, after_release_scalar, after_release_array\n"
+        "pub_scalar_type = TYPE('cPub')\n"
+        "pub_array_type = TYPE('aPub')\n"
+        "pub_scalar = cPub\n"
+        "pub_array = aPub[1]\n"
+        "RELEASE ALL\n"
+        "after_release_scalar = TYPE('cPub')\n"
+        "after_release_array = TYPE('aPub')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE/RESTORE public scope roundtrip should complete");
+
+    const auto pub_scalar_type = state.globals.find("pub_scalar_type");
+    const auto pub_array_type = state.globals.find("pub_array_type");
+    const auto pub_scalar = state.globals.find("pub_scalar");
+    const auto pub_array = state.globals.find("pub_array");
+    const auto after_release_scalar = state.globals.find("after_release_scalar");
+    const auto after_release_array = state.globals.find("after_release_array");
+
+    expect(pub_scalar_type != state.globals.end(), "restored public scalar TYPE() should be captured");
+    expect(pub_array_type != state.globals.end(), "restored public array TYPE() should be captured");
+    expect(pub_scalar != state.globals.end(), "restored public scalar should be captured");
+    expect(pub_array != state.globals.end(), "restored public array element should be captured");
+    expect(after_release_scalar != state.globals.end(), "post-release public scalar TYPE() should be captured");
+    expect(after_release_array != state.globals.end(), "post-release public array TYPE() should be captured");
+
+    if (pub_scalar_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pub_scalar_type->second) == "C",
+            "RESTORE FROM should recreate saved PUBLIC scalar bindings");
+    }
+    if (pub_array_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pub_array_type->second) == "A",
+            "RESTORE FROM should recreate saved PUBLIC array bindings");
+    }
+    if (pub_scalar != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pub_scalar->second) == "visible",
+            "RESTORE FROM should preserve PUBLIC scalar values");
+    }
+    if (pub_array != state.globals.end()) {
+        expect(copperfin::runtime::format_value(pub_array->second) == "array-visible",
+            "RESTORE FROM should preserve PUBLIC array values");
+    }
+    if (after_release_scalar != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_release_scalar->second) == "C",
+            "restored PUBLIC scalars should remain pinned across RELEASE ALL");
+    }
+    if (after_release_array != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_release_array->second) == "A",
+            "restored PUBLIC arrays should remain pinned across RELEASE ALL");
+    }
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("cpub=C,PUBLIC:visible") != std::string::npos,
+            "SAVE TO should persist PUBLIC scalar scope markers");
+        expect(contents.find("apub=A,PUBLIC:1,1|") != std::string::npos,
+            "SAVE TO should persist PUBLIC array scope markers");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_without_additive_clears_stale_arrays() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_clears_arrays";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "arrays.mem";
+    const fs::path main_path = temp_root / "restore_clears_arrays.prg";
+    write_text(
+        main_path,
+        "from_file = 'saved'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "DIMENSION stale_arr[1]\n"
+        "stale_arr[1] = 'drop-me'\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "after_stale_array_type = TYPE('stale_arr')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "non-additive RESTORE should clear stale arrays");
+
+    const auto after_stale_array_type = state.globals.find("after_stale_array_type");
+    expect(after_stale_array_type != state.globals.end(), "stale array TYPE() after restore should be captured");
+    if (after_stale_array_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_stale_array_type->second) == "U",
+            "non-additive RESTORE should clear arrays not present in the .mem file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_without_additive_clears_private_shadow_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_clears_private";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "private.mem";
+    const fs::path main_path = temp_root / "restore_clears_private.prg";
+    write_text(
+        main_path,
+        "saved_value = 'saved'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "outer = 'outer'\n"
+        "DO restore_proc\n"
+        "after_type = TYPE('outer')\n"
+        "RETURN\n"
+        "PROCEDURE restore_proc\n"
+        "PRIVATE outer\n"
+        "outer = 'shadow'\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "non-additive RESTORE should complete inside PRIVATE shadowing");
+
+    const auto after_type = state.globals.find("after_type");
+    expect(after_type != state.globals.end(), "post-restore TYPE() should be captured");
+    if (after_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_type->second) == "U",
+            "non-additive RESTORE should clear deferred PRIVATE shadow state instead of restoring stale outer bindings");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4919,7 +5226,12 @@ int main() {
     test_save_to_except_pattern_filters_variables();
     test_save_restore_auto_mem_extension_without_explicit_extension();
     test_save_restore_round_trips_escaped_string_and_types();
+    test_restore_from_honors_current_frame_local_bindings();
+    test_save_restore_round_trips_arrays();
+    test_save_restore_round_trips_public_scope();
     test_restore_from_without_additive_clears_prior_globals();
+    test_restore_from_without_additive_clears_stale_arrays();
+    test_restore_from_without_additive_clears_private_shadow_state();
     test_restore_from_rejects_numeric_trailing_garbage();
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
