@@ -1281,6 +1281,97 @@ void test_seek_function_accepts_direction_suffix_in_order_designator() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_table_temporary_order_expression_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_temp_order_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "local_temp_order_parity.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "lSeekFn = SEEK('bravo', 'People', 'UPPER(NAME)')\n"
+        "nSeekFnRec = RECNO('People')\n"
+        "GO TOP IN People\n"
+        "SET ORDER TO UPPER(NAME)\n"
+        "SEEK 'charlie'\n"
+        "lFoundCmd = FOUND('People')\n"
+        "nSeekCmdRec = RECNO('People')\n"
+        "SET NEAR ON\n"
+        "GO TOP IN People\n"
+        "lSeekNearDesc = SEEK('beta', 'People', 'UPPER(NAME) DESCENDING')\n"
+        "nSeekNearDescRec = RECNO('People')\n"
+        "cOrderAfter = ORDER('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local temporary-order normalization parity script should complete");
+
+    const auto seek_fn = state.globals.find("lseekfn");
+    const auto seek_fn_rec = state.globals.find("nseekfnrec");
+    const auto found_cmd = state.globals.find("lfoundcmd");
+    const auto seek_cmd_rec = state.globals.find("nseekcmdrec");
+    const auto seek_near_desc = state.globals.find("lseekneardesc");
+    const auto seek_near_desc_rec = state.globals.find("nseekneardescrec");
+    const auto order_after = state.globals.find("corderafter");
+
+    expect(seek_fn != state.globals.end(), "SEEK() with UPPER(NAME) should be captured for a local table");
+    expect(seek_fn_rec != state.globals.end(), "RECNO() after local SEEK() with UPPER(NAME) should be captured");
+    expect(found_cmd != state.globals.end(), "FOUND() after command SEEK with local UPPER(NAME) order should be captured");
+    expect(seek_cmd_rec != state.globals.end(), "RECNO() after command SEEK with local UPPER(NAME) order should be captured");
+    expect(seek_near_desc != state.globals.end(), "descending local SEEK() with UPPER(NAME) should be captured");
+    expect(seek_near_desc_rec != state.globals.end(), "RECNO() after descending local SEEK() with UPPER(NAME) should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after local temporary-order probes should be captured");
+
+    if (seek_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn->second) == "true", "SEEK() should case-fold search keys for local UPPER(NAME) temporary orders");
+    }
+    if (seek_fn_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_fn_rec->second) == "2", "SEEK() should position the local cursor on the normalized match");
+    }
+    if (found_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_cmd->second) == "true", "command SEEK should case-fold search keys for local UPPER(NAME) orders");
+    }
+    if (seek_cmd_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_cmd_rec->second) == "3", "command SEEK should position the local cursor on the normalized match");
+    }
+    if (seek_near_desc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_near_desc->second) == "false", "descending local SEEK() should still report a miss for an in-between key");
+    }
+    if (seek_near_desc_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_near_desc_rec->second) == "1", "descending local SEEK() should near-position to the next row in descending order after case-folding");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second) == "UPPER(NAME)", "SET ORDER TO UPPER(NAME) should preserve the local temporary order expression as ORDER()");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.order" &&
+                event.detail.find("UPPER(NAME) [norm=upper, coll=case-folded]") != std::string::npos;
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("UPPER(NAME) [norm=upper, coll=case-folded]: charlie -> found") != std::string::npos;
+        }),
+        "local temporary-order normalization should emit runtime.order and runtime.seek metadata");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_order_and_tag_preserve_index_file_identity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_idx_identity";
@@ -2294,6 +2385,7 @@ int main() {
     test_seek_command_accepts_descending_tag_override_without_set_order();
     test_seek_related_index_functions();
     test_seek_function_accepts_direction_suffix_in_order_designator();
+    test_local_table_temporary_order_expression_parity();
     test_order_and_tag_preserve_index_file_identity();
     test_seek_respects_grounded_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();

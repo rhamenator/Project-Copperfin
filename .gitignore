@@ -9,7 +9,7 @@
 *.suo
 *.VC.db
 *.VC.opendb
-# codex-resume-prompt.txt
+# agent-handoff.md
 .codex-driver/
 .codex-venv/
 

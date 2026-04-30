@@ -1,23 +1,37 @@
-Canonical Copperfin resume prompt for automation and handoff.
-This file is the only prompt file that should be kept current. Treat `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md` as the source of truth, and delete or ignore ad hoc continuation prompts once their useful guidance has been merged back into those docs.
+Canonical Copperfin agent handoff brief.
 
-Resume Project-Copperfin from the current repo state and continue with the highest-priority unfinished implementation slice. Do not re-plan the whole project unless the codebase has materially changed.
+This file should keep the repo pointed at the dependency graph instead of wandering into nearby but low-value slices. Treat `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and `docs/23-phase-a-dependency-breakdown.md` as the source of truth for what matters next.
+
+Resume Project-Copperfin from the current repo state and continue with the highest-value unfinished implementation slice on the critical path. Do not re-plan the whole project unless the dependency graph or issue set has materially changed.
 
 Important:
-- Start by re-reading the current contents of:
-  - `E:\Project-Copperfin\remaining-work.md`
-  - `E:\Project-Copperfin\docs\22-vfp-language-reference-coverage.md`
+- Start by re-reading:
+  - `remaining-work.md`
+  - `docs/22-vfp-language-reference-coverage.md`
+  - `docs/23-phase-a-dependency-breakdown.md`
+  - `agents.md`
   - the runtime/data files directly relevant to the slice you choose
-  - the outstanding issues to be resolved, which have overlapping content
 - Stay implementation-first. Do not stop at analysis.
-- Use subagents when helpful for narrow read-only exploration or slice selection.
 - Prioritize Phase A runtime/data-engine compatibility over UI, IDE, or designer work.
 - Keep changes minimal and focused.
 - Fix mistakes you encounter in your changed area.
 - Validate the slice before stopping.
-- Update `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md` to match shipped behavior.
+- Update `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and this file to match shipped behavior.
+- Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
+
+Current priority order:
+1. `#92` residual order/collation/search parity
+2. `#97`, `#98`, `#99` macro/eval/runtime-state and memory/assignment foundations
+3. `#94` structural table-operation residuals
+4. `#100` field-transfer and macro-target parity
+5. `#101` headless interaction macro/eval fidelity
+6. `#93` remote/result-cursor parity
+7. `#95` aggregate/view/helper parity
+8. `#96` DBC/container fidelity
+9. `#10`, `#11`, `#12` automation depth
 
 Current shipped highlights worth remembering:
+- 2026-04-30: Local DBF-backed indexed-search parity now accepts the same first-pass ad hoc order expressions that were already available on synthetic SQL cursors. Local `SET ORDER TO UPPER(NAME)`, `SEEK('bravo', 'People', 'UPPER(NAME)')`, and descending one-off local probes such as `SEEK('beta', 'People', 'UPPER(NAME) DESCENDING')` now derive normalization/collation hints and search through local table rows instead of rejecting non-tag expressions. Focused `test_prg_engine_seek_index` coverage passes.
 - 2026-04-30: The adjacent headless command/event lane deepened substantially toward issue #7/#8 closure. `INPUT` / `ACCEPT` now reuse selected-cursor/view metadata and assign deterministic empty-string headless `TO <target>` results; `WAIT` now captures resolved prompt/timeout/target state plus source expressions for common `WAIT [WINDOW] ... [TIMEOUT ...] [TO <target>] [NOWAIT] [NOCLEAR]` forms; `KEYBOARD` now captures resolved key payloads plus source expressions and common `PLAIN` / `CLEAR` flags; `DISPLAY` / `LIST` `STRUCTURE` and `STATUS` forms now emit selected-cursor schema and current session/view metadata; and `DISPLAY` / `LIST` `MEMORY` now emit visible and shadowed public/private/local/global memory-variable summaries, scoped array detail, and first-pass object previews. Focused `test_prg_engine_data_io` coverage passes.
 - 2026-04-30: Financial/misc expression-function batch shipped. The runtime now supports first-pass `HEX()` (uppercase hex without prefix), `FV()`, `PV()`, and `PAYMENT()` financial helpers in `prg_engine_numeric_functions.cpp`; first-pass `NEWID()` (UUID v4 via `mt19937_64`), `CPCURRENT()` / `CPCONVERT()` / `CPDBF()` code-page stubs, and headless dialog/context stubs `GETPICT()` / `GETCOLOR()` / `GETFONT()` / `VARREAD()` in `prg_engine_runtime_surface_functions.cpp`; and first-pass `TEXTMERGE()` with configurable delimiters and recursive evaluation support, first-pass `EXECSCRIPT()` RETURN-expression pass-through, and first-pass `LOOKUP()` seek-and-evaluate over local alias/tag indexes in `prg_engine_expression.inl`. Focused `test_prg_engine_string_math_functions` and `test_prg_engine_runtime_surface_functions` coverage passes.
 - 2026-04-29: The next deeper `SCATTER/GATHER` and modern interchange slice shipped. `SCATTER NAME` without `ADDITIVE` now replaces an existing target object on nested paths instead of mutating it in place and leaking unrelated stale properties through the old object instance. In parallel, `COPY TO ... TYPE JSON` and `APPEND FROM ... TYPE JSON` now provide a first-pass modern object-array interchange lane with typed numeric/logical emission and import by matching field names through the shared append/replace DBF mutation path. Focused `test_prg_engine_data_io` coverage passes.
@@ -85,30 +99,21 @@ Current shipped highlights worth remembering:
 
 Workflow:
 1. Inspect the current repo state in the relevant files only.
-2. Identify the single best next adjacent runtime/data-engine slice.
+2. Identify the single best critical-path runtime/data-engine slice.
 3. Implement it.
 4. Add or update focused regression tests.
 5. Run narrow validation relevant to the slice.
-  - Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays test_prg_engine_functions test_prg_engine_string_math_functions test_prg_engine_runtime_surface_functions`
-  - Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine test_prg_engine_arrays test_prg_engine_functions test_prg_engine_string_math_functions test_prg_engine_runtime_surface_functions && ninja -C build test`
-   - Asset/index slices: also build and run `test_vfp_assets` when touched
-   - Run the corresponding executables under `E:\Project-Copperfin\build\Release\`
+  - Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays test_prg_engine_functions test_prg_engine_string_math_functions test_prg_engine_runtime_surface_functions test_prg_engine_seek_index`
+  - Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine_seek_index && ./build/test_prg_engine_seek_index`
+  - Asset/index slices: also build and run `test_vfp_assets` when touched
 6. Update docs/backlog.
-7. Summarize what changed, what passed, and the next likely slice.
+7. Summarize what changed, what passed, and the next likely critical-path slice.
 
 Default direction if no stronger signal appears from the current files:
-- Prefer the next adjacent runtime/data-engine slice after the shipped aggregate/query/work-area/index/expression-function work.
-- Strong candidates now are:
-  - remaining VFP expression functions not yet covered (check `docs/22-vfp-language-reference-coverage.md` for gaps)
-  - deeper runtime array semantics where official VFP behavior is still only approximated, especially predicate/code-block fidelity, macro-expanded array expressions, and remaining edge cases around mixed-type helper behavior
-  - keep splitting focused function/array/data-command tests out of `tests/test_prg_engine.cpp` before adding more broad runtime coverage there
-  - next small expression-function candidates should come from the remaining uncovered reference inventory after the newly shipped financial/misc batch, not from already-landed date/time or numeric helper groups
-  - fault isolation and runtime diagnostics depth (#13) beyond the shipped first-pass `AERROR()` array — deeper VFP-compatible row shapes, additional native-like error codes, and richer `ON ERROR` surface
-  - debugger metadata improvements (#14) — variable inspection fidelity, call-stack frame names, source-location accuracy
-  - issue #7 command-surface follow-ups from the latest audit: the headless `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane is now materially deeper, so focus only on remaining command-surface gaps outside that lane
-  - issue #8 runtime-state/macro follow-ups: `&stem.suffix` dot-suffix form and the adjacent audit trio (nested `&&` comment handling in nested text, macro-expanded parameter defaults, macro-expanded SQL-style `FOR` filters) are SHIPPED, and the same command lane now preserves resolved/source-expression detail for `WAIT` / `KEYBOARD`; continue only with broader macro/eval fidelity gaps that remain visible in the current docs/code
-  - deeper `SCATTER`/`GATHER` parity beyond the shipped NAME/MEMO/2D/ADDITIVE object work, especially `FIELDS` interactions with `NAME`, remaining object-merge edge cases, and any uncovered field-shape mismatches still visible in current docs/tests
-  - deepen structural table maintenance beyond first-pass schema rewrites, including DBC-persisted defaults/nullability, exclusive-use/locking behavior, indexed-structure safeguards/rebuilds, and stronger conversion diagnostics
-  - deepen `UPDATE` beyond the shipped first-pass scoped mutation command, including broader SQL grammar variants, joins/from clauses, and stronger remote cursor parity
-  - remaining adjacent local table/query commands beyond the current surface
+- Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
+- Immediate target family:
+  - `#92` order/collation/search residuals still shared by local and remote cursor behavior
+  - then `#97` / `#98` / `#99` macro/eval/runtime-state and memory/assignment foundations
+  - then `#94` structural table-operation residuals
+- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

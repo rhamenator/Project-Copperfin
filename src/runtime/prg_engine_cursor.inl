@@ -652,21 +652,16 @@
                                             { return collapse_identifier(order.name) == normalized_target; });
             if (found == cursor.orders.end())
             {
-                if (cursor.remote)
-                {
-                    const std::string normalization_hint = derive_order_normalization_hint(target_name);
-                    cursor.active_order_name = uppercase_copy(target_name);
-                    cursor.active_order_expression = target_name;
-                    cursor.active_order_for_expression.clear();
-                    cursor.active_order_path.clear();
-                    cursor.active_order_normalization_hint = normalization_hint;
-                    cursor.active_order_collation_hint = derive_order_collation_hint(target_name, normalization_hint);
-                    cursor.active_order_key_domain_hint.clear();
-                    cursor.active_order_descending = descending_override.value_or(false);
-                    return true;
-                }
-                last_error_message = "Requested order/tag was not found";
-                return false;
+                const std::string normalization_hint = derive_order_normalization_hint(target_name);
+                cursor.active_order_name = uppercase_copy(target_name);
+                cursor.active_order_expression = target_name;
+                cursor.active_order_for_expression.clear();
+                cursor.active_order_path.clear();
+                cursor.active_order_normalization_hint = normalization_hint;
+                cursor.active_order_collation_hint = derive_order_collation_hint(target_name, normalization_hint);
+                cursor.active_order_key_domain_hint.clear();
+                cursor.active_order_descending = descending_override.value_or(false);
+                return true;
             }
 
             cursor.active_order_name = found->name;

@@ -18,7 +18,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($PromptFile)) {
-    $PromptFile = Join-Path $RepoRoot "codex-resume-prompt.txt"
+    $PromptFile = Join-Path $RepoRoot "agent-handoff.md"
 }
 
 if ([string]::IsNullOrWhiteSpace($StateDirectory)) {

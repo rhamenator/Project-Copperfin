@@ -1,5 +1,5 @@
 ---
-description: "Use when: continuing VFP/FoxPro runtime parity work on Project-Copperfin, implementing PRG engine commands, data engine compatibility, runtime array functions, DBF file operations, COPY/APPEND/SCATTER/GATHER, expression functions, error diagnostics, or any slice from remaining-work.md. Also use when resuming from codex-resume-prompt.txt or picking the next best implementation slice."
+description: "Use when: continuing VFP/FoxPro runtime parity work on Project-Copperfin, implementing PRG engine commands, data engine compatibility, runtime array functions, DBF file operations, COPY/APPEND/SCATTER/GATHER, expression functions, error diagnostics, or any slice from remaining-work.md. Also use when resuming from agent-handoff.md or picking the next critical-path implementation slice."
 tools: [read, edit, search, execute, todo]
 argument-hint: "Describe the VFP feature or runtime slice to implement, or leave blank to auto-select from remaining-work.md"
 ---
@@ -17,15 +17,15 @@ You are a senior C++ systems engineer specializing in FoxPro/VFP behavioral comp
 
 ## Workflow
 
-1. Re-read `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and `codex-resume-prompt.txt` to find the highest-priority unfinished slice.
+1. Re-read `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, `docs/23-phase-a-dependency-breakdown.md`, `agents.md`, and `agent-handoff.md` to find the highest-priority unfinished critical-path slice.
 2. Inspect the relevant source files directly.
 3. Implement the slice in native C++.
 4. Add or update focused regression tests.
 5. Validate with: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine`
 6. Run `.\build\Release\test_prg_engine.exe` and `.\build\Release\test_dbf_table.exe`.
 7. Update `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md` to reflect shipped behavior.
-8. Update `codex-resume-prompt.txt` shipped highlights section.
-9. Summarize what changed, what passed, and recommend the next adjacent slice.
+8. Update `agent-handoff.md` shipped highlights section when the recommended next slice changes.
+9. Summarize what changed, what passed, and recommend the next critical-path slice.
 
 ## Key Source Files
 
@@ -39,16 +39,17 @@ You are a senior C++ systems engineer specializing in FoxPro/VFP behavioral comp
 | `tests/test_dbf_table.cpp` | DBF data-engine regression suite |
 | `remaining-work.md` | Backlog source of truth |
 | `docs/22-vfp-language-reference-coverage.md` | VFP language coverage gap tracker |
-| `codex-resume-prompt.txt` | Canonical continuation prompt for automation handoffs |
+| `agent-handoff.md` | Canonical continuation brief for automation handoffs |
+| `agents.md` | Dependency-aware agent selection and handoff rules |
 
 ## Slice Priority (current)
 
-1. `COPY TO ARRAY` / `APPEND FROM ARRAY` — runtime arrays now strong enough
-2. `FIELDS LIKE` / `FIELDS EXCEPT` for `COPY`, `APPEND`, `SCATTER`, `GATHER`
-3. Deeper VFP expression function gaps (check coverage doc)
-4. `TYPE XLS/XL5` compatibility scaffolding or spreadsheet intermediate representation
-5. Deeper `ON ERROR` / `AERROR()` VFP row-shape completeness
-6. Remaining adjacent local table/query commands
+1. `#92` order/collation/search residuals
+2. `#97` / `#98` / `#99` macro/eval/runtime-state and memory/assignment foundations
+3. `#94` structural table-operation residuals
+4. `#100` field-transfer and macro-target parity
+5. `#101` headless interaction macro/eval fidelity
+6. `#93` / `#95` / `#96` after their prerequisites are quieter
 
 ## Constraints
 
