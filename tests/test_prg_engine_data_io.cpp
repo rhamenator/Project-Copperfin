@@ -3157,6 +3157,62 @@ void test_copy_to_array_fills_2d_runtime_array() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_array_fields_clause_allows_keyword_named_field() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array_keyword_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Primary", "30"},
+        {"Backup", "25"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "COPY TO ARRAY keyword-field fixture should be created");
+
+    const fs::path main_path = temp_root / "copy_to_array_keyword_field.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "COPY TO ARRAY aTypeOnly FIELDS TYPE\n"
+        "nRows = ALEN(aTypeOnly, 1)\n"
+        "nCols = ALEN(aTypeOnly, 2)\n"
+        "cRow1Type = aTypeOnly[1, 1]\n"
+        "cRow2Type = aTypeOnly[2, 1]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY FIELDS TYPE script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "COPY TO ARRAY FIELDS TYPE should preserve both qualifying records");
+    chk("ncols", "1", "COPY TO ARRAY FIELDS TYPE should preserve only the selected keyword-named field");
+    chk("crow1type", "Primary", "COPY TO ARRAY FIELDS TYPE should copy row 1 TYPE");
+    chk("crow2type", "Backup", "COPY TO ARRAY FIELDS TYPE should copy row 2 TYPE");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_array_writes_records_from_2d_array() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array";
@@ -3207,6 +3263,72 @@ void test_append_from_array_writes_records_from_2d_array() {
     chk2("dest_age1",  "55",    "APPEND FROM ARRAY record 1 AGE should match");
     chk2("dest_name2", "Dave",  "APPEND FROM ARRAY record 2 NAME should match");
     chk2("dest_age2",  "19",    "APPEND FROM ARRAY record 2 AGE should match");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_fields_clause_allows_keyword_named_field() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_keyword_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Primary", "30"},
+        {"Backup", "25"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "APPEND FROM ARRAY keyword-field source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "APPEND FROM ARRAY keyword-field destination fixture should be created");
+
+    const fs::path main_path = temp_root / "append_from_array_keyword_field.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO ARRAY aTypeOnly FIELDS TYPE\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY aTypeOnly FIELDS TYPE\n"
+        "GO 1\n"
+        "cType1 = TYPE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cType2 = TYPE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY FIELDS TYPE script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM ARRAY FIELDS TYPE should append both rows");
+    chk("ctype1", "Primary", "APPEND FROM ARRAY FIELDS TYPE should restore row 1 TYPE");
+    chk("nage1", "0", "APPEND FROM ARRAY FIELDS TYPE should leave omitted AGE at numeric blank");
+    chk("ctype2", "Backup", "APPEND FROM ARRAY FIELDS TYPE should restore row 2 TYPE");
+    chk("nage2", "0", "APPEND FROM ARRAY FIELDS TYPE should leave omitted AGE at numeric blank");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -4112,7 +4234,9 @@ int main() {
     test_copy_to_type_sylk_and_append_from_type_sylk_round_trip();
     test_copy_to_type_json_and_append_from_type_json_round_trip();
     test_copy_to_array_fills_2d_runtime_array();
+    test_copy_to_array_fields_clause_allows_keyword_named_field();
     test_append_from_array_writes_records_from_2d_array();
+    test_append_from_array_fields_clause_allows_keyword_named_field();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();

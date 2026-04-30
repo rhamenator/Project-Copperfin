@@ -728,7 +728,7 @@ Program parse_program(const std::string& path) {
             const std::string body = upper == "BROWSE" ? std::string{} : trim_copy(line.substr(7U));
             statement.expression = body;
             statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
-            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE", "IN"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
         } else if (upper == "EDIT" || starts_with_insensitive(line, "EDIT ")) {
             statement.kind = StatementKind::edit_command;
@@ -1098,7 +1098,7 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(14U));
             const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
         } else if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
             statement.kind = StatementKind::copy_to_command;
@@ -1111,7 +1111,7 @@ Program parse_program(const std::string& path) {
             if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
                 statement.secondary_expression = "DELIMITED";
             }
-            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE", "IN"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE", "IN"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE", "IN"});
             if (!with_clause.empty()) {
@@ -1124,7 +1124,7 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(18U));
             const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"FOR", "WHILE"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
         } else if (starts_with_insensitive(line, "APPEND FROM ")) {
             statement.kind = StatementKind::append_from_command;
@@ -1135,7 +1135,7 @@ Program parse_program(const std::string& path) {
             if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
                 statement.secondary_expression = "DELIMITED";
             }
-            statement.tertiary_expression = extract_command_clause(body, "FIELDS", {"TYPE", "FOR", "WHILE"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE"});
             statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
             const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE"});
             if (!with_clause.empty()) {
