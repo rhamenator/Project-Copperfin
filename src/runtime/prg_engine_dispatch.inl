@@ -140,6 +140,192 @@
                 last_error_message = command_name + ": invalid array name";
                 return std::nullopt;
             };
+            auto parse_command_object_target_path = [&](const std::string &raw_name, const std::string &command_name)
+                -> std::optional<std::vector<std::string>>
+            {
+                std::string candidate = trim_copy(raw_name);
+                if (candidate.empty())
+                {
+                    last_error_message = command_name + ": object target required";
+                    return std::nullopt;
+                }
+                if (!candidate.empty() && candidate.front() == '&')
+                {
+                    std::string macro_expression = trim_copy(candidate.substr(1U));
+                    std::string dot_suffix;
+                    const std::size_t dot = macro_expression.find('.');
+                    if (dot != std::string::npos)
+                    {
+                        dot_suffix = trim_copy(macro_expression.substr(dot + 1U));
+                        macro_expression = trim_copy(macro_expression.substr(0U, dot));
+                    }
+
+                    if (is_bare_identifier_text(macro_expression))
+                    {
+                        const std::string expanded_base = trim_copy(value_as_string(lookup_variable(frame, macro_expression)));
+                        candidate = trim_copy(expanded_base + (dot_suffix.empty() ? std::string{} : "." + dot_suffix));
+                    }
+                    else
+                    {
+                        const PrgValue evaluated = evaluate_expression(candidate, frame);
+                        candidate = trim_copy(value_as_string(evaluated));
+                    }
+                }
+                if (candidate.empty())
+                {
+                    last_error_message = command_name + ": invalid object target";
+                    return std::nullopt;
+                }
+
+                std::vector<std::string> segments;
+                std::size_t start = 0U;
+                while (start <= candidate.size())
+                {
+                    const std::size_t dot = candidate.find('.', start);
+                    const std::string segment = trim_copy(candidate.substr(start, dot == std::string::npos ? std::string::npos : dot - start));
+                    if (!is_bare_identifier_text(segment))
+                    {
+                        last_error_message = command_name + ": invalid object target";
+                        return std::nullopt;
+                    }
+                    segments.push_back(segment);
+                    if (dot == std::string::npos)
+                    {
+                        break;
+                    }
+                    start = dot + 1U;
+                }
+                if (segments.empty())
+                {
+                    last_error_message = command_name + ": invalid object target";
+                    return std::nullopt;
+                }
+                return segments;
+            };
+            auto resolve_existing_object_target = [&](const std::vector<std::string> &segments) -> RuntimeOleObjectState *
+            {
+                if (segments.empty())
+                {
+                    return nullptr;
+                }
+                const PrgValue object_value = lookup_variable(frame, segments.front());
+                const auto resolved_object = resolve_ole_object(object_value);
+                if (!resolved_object.has_value())
+                {
+                    return nullptr;
+                }
+
+                RuntimeOleObjectState *current_object = *resolved_object;
+                for (std::size_t index = 1U; index < segments.size(); ++index)
+                {
+                    const auto property = current_object->properties.find(normalize_identifier(segments[index]));
+                    if (property == current_object->properties.end())
+                    {
+                        return nullptr;
+                    }
+                    const auto nested_object = resolve_ole_object(property->second);
+                    if (!nested_object.has_value())
+                    {
+                        return nullptr;
+                    }
+                    current_object = *nested_object;
+                }
+                return current_object;
+            };
+            auto make_runtime_object_reference = [&](RuntimeOleObjectState *object_state) -> PrgValue
+            {
+                return make_string_value("object:" + object_state->prog_id + "#" + std::to_string(object_state->handle));
+            };
+            auto create_empty_runtime_object = [&](const std::string &source_tag) -> RuntimeOleObjectState *
+            {
+                const int handle = register_ole_object("Empty", source_tag);
+                const auto object_it = ole_objects.find(handle);
+                if (object_it == ole_objects.end())
+                {
+                    return nullptr;
+                }
+                return &object_it->second;
+            };
+            auto ensure_object_parent_path = [&](const std::vector<std::string> &segments, const std::string &source_tag) -> RuntimeOleObjectState *
+            {
+                if (segments.empty())
+                {
+                    last_error_message = "Object target assignment failed";
+                    return nullptr;
+                }
+
+                RuntimeOleObjectState *current_object = nullptr;
+                const PrgValue root_value = lookup_variable(frame, segments.front());
+                const auto resolved_root = resolve_ole_object(root_value);
+                if (resolved_root.has_value())
+                {
+                    current_object = *resolved_root;
+                }
+                else
+                {
+                    current_object = create_empty_runtime_object(source_tag);
+                    if (current_object == nullptr)
+                    {
+                        last_error_message = "SCATTER NAME: unable to create object";
+                        return nullptr;
+                    }
+                    assign_variable(frame, segments.front(), make_runtime_object_reference(current_object));
+                }
+
+                for (std::size_t index = 1U; index < segments.size(); ++index)
+                {
+                    const std::string property_name = normalize_identifier(segments[index]);
+                    RuntimeOleObjectState *next_object = nullptr;
+                    const auto existing_property = current_object->properties.find(property_name);
+                    if (existing_property != current_object->properties.end())
+                    {
+                        const auto resolved_child = resolve_ole_object(existing_property->second);
+                        if (resolved_child.has_value())
+                        {
+                            next_object = *resolved_child;
+                        }
+                    }
+                    if (next_object == nullptr)
+                    {
+                        next_object = create_empty_runtime_object(source_tag + " nested");
+                        if (next_object == nullptr)
+                        {
+                            last_error_message = "SCATTER NAME: unable to create object";
+                            return nullptr;
+                        }
+                        current_object->properties[property_name] = make_runtime_object_reference(next_object);
+                    }
+                    current_object = next_object;
+                }
+
+                return current_object;
+            };
+            auto assign_object_target_reference = [&](const std::vector<std::string> &segments, const PrgValue &object_reference, const std::string &source_tag) -> bool
+            {
+                if (segments.empty())
+                {
+                    last_error_message = "Object target assignment failed";
+                    return false;
+                }
+                if (segments.size() == 1U)
+                {
+                    assign_variable(frame, segments.front(), object_reference);
+                    return true;
+                }
+
+                std::vector<std::string> parent_segments(segments.begin(), segments.end() - 1U);
+                RuntimeOleObjectState *parent_object = ensure_object_parent_path(parent_segments, source_tag);
+                if (parent_object == nullptr)
+                {
+                    return false;
+                }
+                parent_object->properties[normalize_identifier(segments.back())] = object_reference;
+                return true;
+            };
+            auto ensure_object_target = [&](const std::vector<std::string> &segments, const std::string &source_tag) -> RuntimeOleObjectState *
+            {
+                return ensure_object_parent_path(segments, source_tag);
+            };
 
             switch (statement.kind)
             {
@@ -2123,9 +2309,78 @@
             case StatementKind::parameters_declaration:
             case StatementKind::lparameters_declaration:
             {
+                const auto split_parameter_default = [](const std::string &raw_declaration)
+                {
+                    std::string parameter_name = trim_copy(raw_declaration);
+                    std::string default_expression;
+                    char quote_delimiter = '\0';
+                    std::size_t paren_depth = 0U;
+                    std::size_t bracket_depth = 0U;
+                    std::size_t brace_depth = 0U;
+                    for (std::size_t index = 0U; index < raw_declaration.size(); ++index)
+                    {
+                        const char ch = raw_declaration[index];
+                        if (quote_delimiter != '\0')
+                        {
+                            if (ch == quote_delimiter)
+                            {
+                                if ((index + 1U) < raw_declaration.size() && raw_declaration[index + 1U] == quote_delimiter)
+                                {
+                                    ++index;
+                                    continue;
+                                }
+                                quote_delimiter = '\0';
+                            }
+                            continue;
+                        }
+                        if (ch == '\'' || ch == '"')
+                        {
+                            quote_delimiter = ch;
+                            continue;
+                        }
+                        if (ch == '(')
+                        {
+                            ++paren_depth;
+                            continue;
+                        }
+                        if (ch == ')' && paren_depth > 0U)
+                        {
+                            --paren_depth;
+                            continue;
+                        }
+                        if (ch == '[')
+                        {
+                            ++bracket_depth;
+                            continue;
+                        }
+                        if (ch == ']' && bracket_depth > 0U)
+                        {
+                            --bracket_depth;
+                            continue;
+                        }
+                        if (ch == '{')
+                        {
+                            ++brace_depth;
+                            continue;
+                        }
+                        if (ch == '}' && brace_depth > 0U)
+                        {
+                            --brace_depth;
+                            continue;
+                        }
+                        if (ch == '=' && paren_depth == 0U && bracket_depth == 0U && brace_depth == 0U)
+                        {
+                            parameter_name = trim_copy(raw_declaration.substr(0U, index));
+                            default_expression = trim_copy(raw_declaration.substr(index + 1U));
+                            break;
+                        }
+                    }
+                    return std::pair<std::string, std::string>{parameter_name, default_expression};
+                };
                 for (std::size_t index = 0U; index < statement.names.size(); ++index)
                 {
-                    const std::string normalized = normalize_memory_variable_identifier(statement.names[index]);
+                    const auto [parameter_name, default_expression] = split_parameter_default(statement.names[index]);
+                    const std::string normalized = normalize_memory_variable_identifier(parameter_name);
                     if (normalized.empty())
                     {
                         continue;
@@ -2137,7 +2392,9 @@
                     }
                     else
                     {
-                        frame.locals[normalized] = make_empty_value();
+                        frame.locals[normalized] = default_expression.empty()
+                                                       ? make_empty_value()
+                                                       : evaluate_expression(default_expression, frame);
                     }
                     if (index < frame.call_argument_references.size() && frame.call_argument_references[index].has_value())
                     {
@@ -2951,8 +3208,13 @@
                 const std::string dest_raw = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
                 const std::string copy_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
+                const bool copy_as_json = copy_type == "json";
                 const bool copy_as_sdf = copy_type == "sdf";
-                const bool copy_as_delimited = copy_type == "csv" || copy_type == "delimited";
+                const bool copy_as_dif = copy_type == "dif";
+                const bool copy_as_sylk = copy_type == "sylk";
+                const bool copy_as_tab = copy_type == "tab";
+                const bool copy_as_xls = copy_type == "xls";
+                const bool copy_as_delimited = copy_type == "csv" || copy_type == "delimited" || copy_as_tab;
                 const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
 
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
@@ -2969,7 +3231,23 @@
                 fs::path dest_path(dest_raw);
                 if (dest_path.extension().empty())
                 {
-                    if (copy_as_sdf || copy_type == "delimited")
+                    if (copy_as_xls)
+                    {
+                        dest_path += ".xls";
+                    }
+                    else if (copy_as_json)
+                    {
+                        dest_path += ".json";
+                    }
+                    else if (copy_as_sylk)
+                    {
+                        dest_path += ".slk";
+                    }
+                    else if (copy_as_dif)
+                    {
+                        dest_path += ".dif";
+                    }
+                    else if (copy_as_sdf || copy_type == "delimited" || copy_as_tab)
                     {
                         dest_path += ".txt";
                     }
@@ -3082,6 +3360,126 @@
                     if (!output.good())
                     {
                         last_error_message = "COPY TO TYPE SDF: unable to write output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.copy_to",
+                                      .detail = dest_path.string(),
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (copy_as_json)
+                {
+                    if (!dest_path.parent_path().empty())
+                    {
+                        std::error_code ignored;
+                        fs::create_directories(dest_path.parent_path(), ignored);
+                    }
+                    std::ofstream output(dest_path, std::ios::binary);
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE JSON: unable to open output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output << serialize_json_records(out_fields, out_rows);
+                    output.close();
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE JSON: unable to write output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.copy_to",
+                                      .detail = dest_path.string(),
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (copy_as_dif)
+                {
+                    if (!dest_path.parent_path().empty())
+                    {
+                        std::error_code ignored;
+                        fs::create_directories(dest_path.parent_path(), ignored);
+                    }
+                    std::ofstream output(dest_path, std::ios::binary);
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE DIF: unable to open output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output << serialize_dif_table(out_fields, out_rows);
+                    output.close();
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE DIF: unable to write output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.copy_to",
+                                      .detail = dest_path.string(),
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (copy_as_sylk)
+                {
+                    if (!dest_path.parent_path().empty())
+                    {
+                        std::error_code ignored;
+                        fs::create_directories(dest_path.parent_path(), ignored);
+                    }
+                    std::ofstream output(dest_path, std::ios::binary);
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE SYLK: unable to open output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output << serialize_sylk_table(out_fields, out_rows);
+                    output.close();
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE SYLK: unable to write output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.copy_to",
+                                      .detail = dest_path.string(),
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (copy_as_xls)
+                {
+                    if (!dest_path.parent_path().empty())
+                    {
+                        std::error_code ignored;
+                        fs::create_directories(dest_path.parent_path(), ignored);
+                    }
+                    std::ofstream output(dest_path, std::ios::binary);
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE XLS: unable to open output file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    output << serialize_spreadsheetml_workbook(out_fields, out_rows);
+                    output.close();
+                    if (!output.good())
+                    {
+                        last_error_message = "COPY TO TYPE XLS: unable to write output file";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -3262,8 +3660,13 @@
                 const std::string src_raw = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
                 const std::string append_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
+                const bool append_from_json = append_type == "json";
                 const bool append_from_sdf = append_type == "sdf";
-                const bool append_from_delimited = append_type == "csv" || append_type == "delimited";
+                const bool append_from_dif = append_type == "dif";
+                const bool append_from_sylk = append_type == "sylk";
+                const bool append_from_tab = append_type == "tab";
+                const bool append_from_xls = append_type == "xls";
+                const bool append_from_delimited = append_type == "csv" || append_type == "delimited" || append_from_tab;
                 const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
 
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
@@ -3280,7 +3683,23 @@
                 fs::path src_path(src_raw);
                 if (src_path.extension().empty())
                 {
-                    if (append_from_sdf || append_type == "delimited")
+                    if (append_from_xls)
+                    {
+                        src_path += ".xls";
+                    }
+                    else if (append_from_json)
+                    {
+                        src_path += ".json";
+                    }
+                    else if (append_from_sylk)
+                    {
+                        src_path += ".slk";
+                    }
+                    else if (append_from_dif)
+                    {
+                        src_path += ".dif";
+                    }
+                    else if (append_from_sdf || append_type == "delimited" || append_from_tab)
                     {
                         src_path += ".txt";
                     }
@@ -3388,6 +3807,406 @@
 
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE SDF)",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (append_from_json)
+                {
+                    std::ifstream input(src_path, std::ios::binary);
+                    if (!input.good())
+                    {
+                        last_error_message = "APPEND FROM TYPE JSON: unable to open source file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    std::ostringstream buffer;
+                    buffer << input.rdbuf();
+
+                    const auto dest_result = vfp::parse_dbf_table_from_file(
+                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    if (!dest_result.ok)
+                    {
+                        last_error_message = "APPEND FROM TYPE JSON: " + dest_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<vfp::DbfFieldDescriptor> target_fields;
+                    for (const auto &field : dest_result.table.fields)
+                    {
+                        if (field_matches_filter(field.name, field_filter))
+                        {
+                            target_fields.push_back(field);
+                        }
+                    }
+                    if (target_fields.empty())
+                    {
+                        last_error_message = "APPEND FROM TYPE JSON: no fields match the FIELDS clause";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const std::vector<std::map<std::string, std::string>> json_rows = parse_json_record_objects(buffer.str());
+                    std::size_t appended_count = 0U;
+                    for (const auto &row : json_rows)
+                    {
+                        const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        if (!blank_result.ok)
+                        {
+                            last_error_message = "APPEND FROM TYPE JSON: " + blank_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = blank_result.record_count;
+                        cursor->eof = false;
+                        cursor->recno = blank_result.record_count;
+
+                        for (const auto &field : target_fields)
+                        {
+                            const auto found = row.find(collapse_identifier(field.name));
+                            if (found == row.end())
+                            {
+                                continue;
+                            }
+                            const auto rep_result = vfp::replace_record_field_value(
+                                cursor->source_path,
+                                cursor->recno - 1U,
+                                field.name,
+                                found->second);
+                            if (!rep_result.ok)
+                            {
+                                last_error_message = "APPEND FROM TYPE JSON: " + rep_result.error;
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            cursor->record_count = rep_result.record_count;
+                        }
+                        ++appended_count;
+                    }
+
+                    events.push_back({.category = "runtime.append_from",
+                                      .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE JSON)",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (append_from_dif)
+                {
+                    std::ifstream input(src_path, std::ios::binary);
+                    if (!input.good())
+                    {
+                        last_error_message = "APPEND FROM TYPE DIF: unable to open source file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    std::ostringstream buffer;
+                    buffer << input.rdbuf();
+
+                    const auto dest_result = vfp::parse_dbf_table_from_file(
+                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    if (!dest_result.ok)
+                    {
+                        last_error_message = "APPEND FROM TYPE DIF: " + dest_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<vfp::DbfFieldDescriptor> target_fields;
+                    for (const auto &field : dest_result.table.fields)
+                    {
+                        if (field_matches_filter(field.name, field_filter))
+                        {
+                            target_fields.push_back(field);
+                        }
+                    }
+                    if (target_fields.empty())
+                    {
+                        last_error_message = "APPEND FROM TYPE DIF: no fields match the FIELDS clause";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer.str(), target_fields.size());
+                    if (!dif_rows.empty() && dif_rows.front().size() >= target_fields.size())
+                    {
+                        bool matches_header = true;
+                        for (std::size_t index = 0U; index < target_fields.size(); ++index)
+                        {
+                            if (collapse_identifier(dif_rows.front()[index]) != collapse_identifier(target_fields[index].name))
+                            {
+                                matches_header = false;
+                                break;
+                            }
+                        }
+                        if (matches_header)
+                        {
+                            dif_rows.erase(dif_rows.begin());
+                        }
+                    }
+
+                    std::size_t appended_count = 0U;
+                    for (const auto &row : dif_rows)
+                    {
+                        const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        if (!blank_result.ok)
+                        {
+                            last_error_message = "APPEND FROM TYPE DIF: " + blank_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = blank_result.record_count;
+                        cursor->eof = false;
+                        cursor->recno = blank_result.record_count;
+
+                        for (std::size_t index = 0U; index < target_fields.size() && index < row.size(); ++index)
+                        {
+                            const auto rep_result = vfp::replace_record_field_value(
+                                cursor->source_path,
+                                cursor->recno - 1U,
+                                target_fields[index].name,
+                                row[index]);
+                            if (!rep_result.ok)
+                            {
+                                last_error_message = "APPEND FROM TYPE DIF: " + rep_result.error;
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            cursor->record_count = rep_result.record_count;
+                        }
+                        ++appended_count;
+                    }
+
+                    events.push_back({.category = "runtime.append_from",
+                                      .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DIF)",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (append_from_sylk)
+                {
+                    std::ifstream input(src_path, std::ios::binary);
+                    if (!input.good())
+                    {
+                        last_error_message = "APPEND FROM TYPE SYLK: unable to open source file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    std::ostringstream buffer;
+                    buffer << input.rdbuf();
+
+                    const auto dest_result = vfp::parse_dbf_table_from_file(
+                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    if (!dest_result.ok)
+                    {
+                        last_error_message = "APPEND FROM TYPE SYLK: " + dest_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<vfp::DbfFieldDescriptor> target_fields;
+                    for (const auto &field : dest_result.table.fields)
+                    {
+                        if (field_matches_filter(field.name, field_filter))
+                        {
+                            target_fields.push_back(field);
+                        }
+                    }
+                    if (target_fields.empty())
+                    {
+                        last_error_message = "APPEND FROM TYPE SYLK: no fields match the FIELDS clause";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<std::vector<std::string>> sylk_rows = parse_sylk_table(buffer.str(), target_fields.size());
+                    if (!sylk_rows.empty() && sylk_rows.front().size() >= target_fields.size())
+                    {
+                        bool matches_header = true;
+                        for (std::size_t index = 0U; index < target_fields.size(); ++index)
+                        {
+                            if (collapse_identifier(sylk_rows.front()[index]) != collapse_identifier(target_fields[index].name))
+                            {
+                                matches_header = false;
+                                break;
+                            }
+                        }
+                        if (matches_header)
+                        {
+                            sylk_rows.erase(sylk_rows.begin());
+                        }
+                    }
+
+                    std::size_t appended_count = 0U;
+                    for (const auto &row : sylk_rows)
+                    {
+                        const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        if (!blank_result.ok)
+                        {
+                            last_error_message = "APPEND FROM TYPE SYLK: " + blank_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = blank_result.record_count;
+                        cursor->eof = false;
+                        cursor->recno = blank_result.record_count;
+
+                        for (std::size_t index = 0U; index < target_fields.size() && index < row.size(); ++index)
+                        {
+                            const auto rep_result = vfp::replace_record_field_value(
+                                cursor->source_path,
+                                cursor->recno - 1U,
+                                target_fields[index].name,
+                                row[index]);
+                            if (!rep_result.ok)
+                            {
+                                last_error_message = "APPEND FROM TYPE SYLK: " + rep_result.error;
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            cursor->record_count = rep_result.record_count;
+                        }
+                        ++appended_count;
+                    }
+
+                    events.push_back({.category = "runtime.append_from",
+                                      .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE SYLK)",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (append_from_xls)
+                {
+                    std::ifstream input(src_path, std::ios::binary);
+                    if (!input.good())
+                    {
+                        last_error_message = "APPEND FROM TYPE XLS: unable to open source file";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    std::ostringstream buffer;
+                    buffer << input.rdbuf();
+
+                    const auto dest_result = vfp::parse_dbf_table_from_file(
+                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    if (!dest_result.ok)
+                    {
+                        last_error_message = "APPEND FROM TYPE XLS: " + dest_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<vfp::DbfFieldDescriptor> target_fields;
+                    for (const auto &field : dest_result.table.fields)
+                    {
+                        if (field_matches_filter(field.name, field_filter))
+                        {
+                            target_fields.push_back(field);
+                        }
+                    }
+                    if (target_fields.empty())
+                    {
+                        last_error_message = "APPEND FROM TYPE XLS: no fields match the FIELDS clause";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<std::vector<std::string>> workbook_rows = parse_spreadsheetml_workbook(buffer.str());
+                    if (!workbook_rows.empty() && workbook_rows.front().size() >= target_fields.size())
+                    {
+                        bool matches_header = true;
+                        for (std::size_t index = 0U; index < target_fields.size(); ++index)
+                        {
+                            if (collapse_identifier(workbook_rows.front()[index]) != collapse_identifier(target_fields[index].name))
+                            {
+                                matches_header = false;
+                                break;
+                            }
+                        }
+                        if (matches_header)
+                        {
+                            workbook_rows.erase(workbook_rows.begin());
+                        }
+                    }
+
+                    std::size_t appended_count = 0U;
+                    for (const auto &row : workbook_rows)
+                    {
+                        const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                        if (!blank_result.ok)
+                        {
+                            last_error_message = "APPEND FROM TYPE XLS: " + blank_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        cursor->record_count = blank_result.record_count;
+                        cursor->eof = false;
+                        cursor->recno = blank_result.record_count;
+
+                        for (std::size_t index = 0U; index < target_fields.size() && index < row.size(); ++index)
+                        {
+                            const auto rep_result = vfp::replace_record_field_value(
+                                cursor->source_path,
+                                cursor->recno - 1U,
+                                target_fields[index].name,
+                                row[index]);
+                            if (!rep_result.ok)
+                            {
+                                last_error_message = "APPEND FROM TYPE XLS: " + rep_result.error;
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
+                            cursor->record_count = rep_result.record_count;
+                        }
+                        ++appended_count;
+                    }
+
+                    events.push_back({.category = "runtime.append_from",
+                                      .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE XLS)",
                                       .location = statement.location});
                     return {};
                 }
@@ -3568,11 +4387,16 @@
             }
             case StatementKind::scatter_command:
             {
-                // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO]
+                // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO] [ADDITIVE]
                 const bool use_memvar = (statement.identifier == "memvar");
                 const bool use_name_object = (statement.identifier == "name");
                 const bool blank = !statement.tertiary_expression.empty();
                 const bool include_memo = !statement.quaternary_expression.empty();
+                const bool additive = std::any_of(statement.names.begin(), statement.names.end(),
+                                                  [](const std::string &name)
+                                                  {
+                                                      return normalize_identifier(name) == "additive";
+                                                  });
                 const std::vector<std::string> field_filter = parse_field_filter_clause(statement.secondary_expression);
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
@@ -3628,32 +4452,50 @@
 
                 if (use_name_object)
                 {
-                    const std::string object_variable_name = trim_copy(statement.expression);
-                    if (object_variable_name.empty())
+                    const auto object_target_path = parse_command_object_target_path(statement.expression, "SCATTER NAME");
+                    if (!object_target_path.has_value())
                     {
-                        last_error_message = "SCATTER NAME: missing object variable";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const int handle = register_ole_object("Empty", "scatter name");
-                    const auto object_it = ole_objects.find(handle);
-                    if (object_it == ole_objects.end())
+                    RuntimeOleObjectState *target_object = nullptr;
+                    if (additive)
                     {
-                        last_error_message = "SCATTER NAME: unable to create object";
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
+                        target_object = resolve_existing_object_target(*object_target_path);
                     }
-                    RuntimeOleObjectState &object_state = object_it->second;
+                    if (target_object == nullptr)
+                    {
+                        if (additive)
+                        {
+                            target_object = ensure_object_target(
+                                *object_target_path,
+                                "scatter name additive");
+                        }
+                        else
+                        {
+                            target_object = create_empty_runtime_object("scatter name");
+                            if (target_object != nullptr &&
+                                !assign_object_target_reference(
+                                    *object_target_path,
+                                    make_runtime_object_reference(target_object),
+                                    "scatter name"))
+                            {
+                                target_object = nullptr;
+                            }
+                        }
+                        if (target_object == nullptr)
+                        {
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                    }
                     for (std::size_t index = 0U; index < scattered_values.size() && index < scattered_field_names.size(); ++index)
                     {
-                        object_state.properties[normalize_identifier(scattered_field_names[index])] = scattered_values[index];
+                        target_object->properties[normalize_identifier(scattered_field_names[index])] = scattered_values[index];
                     }
-                    assign_variable(frame,
-                                    object_variable_name,
-                                    make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle)));
                 }
                 else if (!use_memvar)
                 {
@@ -3781,24 +4623,21 @@
                 RuntimeOleObjectState *source_object = nullptr;
                 if (use_name_object)
                 {
-                    const std::string object_variable_name = trim_copy(statement.expression);
-                    if (object_variable_name.empty())
+                    const auto object_target_path = parse_command_object_target_path(statement.expression, "GATHER NAME");
+                    if (!object_target_path.has_value())
                     {
-                        last_error_message = "GATHER NAME: missing object variable";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    const PrgValue object_value = lookup_variable(frame, object_variable_name);
-                    const auto resolved_object = resolve_ole_object(object_value);
-                    if (!resolved_object.has_value())
+                    source_object = resolve_existing_object_target(*object_target_path);
+                    if (source_object == nullptr)
                     {
                         last_error_message = "GATHER NAME: object variable not found";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    source_object = *resolved_object;
                 }
                 else if (!use_memvar)
                 {

@@ -295,10 +295,38 @@ bool supports_table_field_storage(char field_type) {
     return supports_direct_field_writes(field_type) || is_memo_pointer_field(field_type);
 }
 
-bool supports_blank_field_initialization(char field_type) {
-    return field_type == 'C' || field_type == 'N' || field_type == 'F' || field_type == 'D' || field_type == 'L' ||
-           field_type == 'B' || field_type == 'I' || field_type == 'Y' || field_type == 'T' || field_type == 'V' || field_type == 'Q' ||
-           is_memo_pointer_field(field_type);
+std::optional<std::vector<std::uint8_t>> parse_opaque_field_bytes(const std::string& value, std::size_t field_length) {
+    const std::string trimmed = trim_both(value);
+    if (trimmed.empty()) {
+        return std::vector<std::uint8_t>(field_length, 0U);
+    }
+
+    if (trimmed.size() >= 2U && trimmed[0U] == '0' && (trimmed[1U] == 'x' || trimmed[1U] == 'X')) {
+        const std::string hex = trimmed.substr(2U);
+        if ((hex.size() % 2U) != 0U || (hex.size() / 2U) > field_length) {
+            return std::nullopt;
+        }
+        std::vector<std::uint8_t> bytes(field_length, 0U);
+        for (std::size_t index = 0U; index < hex.size(); index += 2U) {
+            const auto high = static_cast<unsigned char>(hex[index]);
+            const auto low = static_cast<unsigned char>(hex[index + 1U]);
+            if (std::isxdigit(high) == 0 || std::isxdigit(low) == 0) {
+                return std::nullopt;
+            }
+            bytes[index / 2U] = static_cast<std::uint8_t>(std::stoi(hex.substr(index, 2U), nullptr, 16));
+        }
+        return bytes;
+    }
+
+    if (value.size() > field_length) {
+        return std::nullopt;
+    }
+
+    std::vector<std::uint8_t> bytes(field_length, 0U);
+    for (std::size_t index = 0U; index < value.size(); ++index) {
+        bytes[index] = static_cast<std::uint8_t>(value[index]);
+    }
+    return bytes;
 }
 
 std::vector<std::uint8_t> create_empty_memo_sidecar(std::uint16_t block_size = 512U) {
@@ -681,8 +709,23 @@ DbfWriteResult write_field_bytes(
             write_le_u32(table_bytes, field_offset + 4U, datetime->second);
             break;
         }
-        default:
-            return {.ok = false, .error = "Direct updates are not implemented for this field type yet.", .record_count = header.record_count};
+        default: {
+            if (is_null_token) {
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
+                break;
+            }
+            const auto opaque_bytes = parse_opaque_field_bytes(value, field.length);
+            if (!opaque_bytes.has_value()) {
+                return {.ok = false,
+                        .error = "Opaque/binary fields require either raw text that fits the field width or a 0x-prefixed hex payload.",
+                        .record_count = header.record_count};
+            }
+            std::copy(opaque_bytes->begin(), opaque_bytes->end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            break;
+        }
     }
 
     return {.ok = true, .record_count = header.record_count};
@@ -711,20 +754,26 @@ DbfWriteResult append_blank_record_bytes(
         if ((field_offset + field.length) > table_bytes.size()) {
             return {.ok = false, .error = "Table field layout exceeds the record size.", .record_count = header.record_count};
         }
-        if (!supports_blank_field_initialization(field.type)) {
-            return {.ok = false, .error = "APPEND BLANK is not yet supported for one or more field types in this table.", .record_count = header.record_count};
-        }
 
         switch (field.type) {
+            case 'C':
+            case 'N':
+            case 'F':
+            case 'D':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(' '));
+                break;
             case 'L':
                 table_bytes[field_offset] = static_cast<std::uint8_t>('?');
                 break;
-                case 'B':
-                    std::fill_n(
-                        table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
-                        field.length,
-                        static_cast<std::uint8_t>(0U));
-                    break;
+            case 'B':
+                std::fill_n(
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    field.length,
+                    static_cast<std::uint8_t>(0U));
+                break;
             case 'I':
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
@@ -757,7 +806,7 @@ DbfWriteResult append_blank_record_bytes(
                 std::fill_n(
                     table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
                     field.length,
-                    static_cast<std::uint8_t>(' '));
+                    static_cast<std::uint8_t>(0U));
                 break;
         }
     }

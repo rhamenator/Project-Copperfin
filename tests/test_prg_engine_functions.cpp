@@ -64,6 +64,52 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_double_ampersand_comment_stripping_respects_nested_text()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_double_ampersand";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "double_ampersand.prg";
+        write_text(
+            main_path,
+            "x = 5\n"
+            "cExpr = 'x + 2'\n"
+            "cQuoted = \"A && B\"\n"
+            "cBracket = '[&& inside text]'\n"
+            "cBraced = '{|x| \"&& kept\"}'\n"
+            "nMacro = &cExpr && trailing comment should strip\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
+                                                                                                       .working_directory = temp_root.string(),
+                                                                                                       .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "double-ampersand parsing script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cquoted", "A && B");
+        check("cbracket", "[&& inside text]");
+        check("cbraced", "{|x| \"&& kept\"}");
+        check("nmacro", "7");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_type_and_null_expression_functions()
     {
         namespace fs = std::filesystem;
@@ -259,14 +305,69 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_parameter_default_expressions_support_macros()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_parameter_defaults";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "parameter_defaults.prg";
+        write_text(
+            main_path,
+            "cDefaultExpr = '40 + 2'\n"
+            "DO FillProvided WITH 7\n"
+            "DO FillDefault\n"
+            "RETURN\n"
+            "PROCEDURE FillProvided\n"
+            "LPARAMETERS nValue = &cDefaultExpr, cLabel = 'fallback'\n"
+            "nProvidedSeen = nValue\n"
+            "cProvidedLabel = cLabel\n"
+            "RETURN\n"
+            "PROCEDURE FillDefault\n"
+            "LPARAMETERS nValue = &cDefaultExpr, cLabel = 'fallback'\n"
+            "nDefaultSeen = nValue\n"
+            "cDefaultLabel = cLabel\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
+                                                                                                       .working_directory = temp_root.string(),
+                                                                                                       .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "parameter default macro script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nprovidedseen", "7");
+        check("cprovidedlabel", "fallback");
+        check("ndefaultseen", "42");
+        check("cdefaultlabel", "fallback");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
 {
     test_macro_expression_indirection();
+    test_double_ampersand_comment_stripping_respects_nested_text();
     test_type_and_null_expression_functions();
     test_type_and_transform_expression_depth();
     test_macro_dot_suffix_form();
+    test_parameter_default_expressions_support_macros();
 
     if (test_failures() != 0)
     {

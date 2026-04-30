@@ -571,7 +571,7 @@ void test_double_field_create_replace_and_append_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_append_blank_rejects_unsupported_field_layouts_without_changing_file() {
+void test_append_blank_supports_opaque_field_layouts() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_append_guard_tests_" + std::to_string(_getpid()));
@@ -597,11 +597,56 @@ void test_append_blank_rejects_unsupported_field_layouts_without_changing_file()
         output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
     }
 
-    const auto original_bytes = read_binary_file(table_path);
     const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
-    expect(!append_result.ok, "append_blank_record_to_file should reject unsupported binary field layouts");
-    expect(append_result.error.find("APPEND BLANK is not yet supported") != std::string::npos, "unsupported APPEND BLANK rejection should mention unsupported field types");
-    expect(read_binary_file(table_path) == original_bytes, "unsupported APPEND BLANK rejection should leave the DBF bytes unchanged");
+    expect(append_result.ok, "append_blank_record_to_file should support opaque binary field layouts");
+    expect(append_result.record_count == 2U, "opaque-layout append_blank_record_to_file should grow the record count");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "opaque-layout DBFs should remain readable after APPEND BLANK");
+    expect(parse_result.table.records.size() == 2U, "opaque-layout DBFs should expose the appended row");
+    if (parse_result.ok && parse_result.table.records.size() == 2U && !parse_result.table.records[1U].values.empty()) {
+        expect(parse_result.table.records[1U].values[0U].display_value == "0x0000000000000000",
+            "blank appended opaque fields should initialize to zero bytes");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_replace_opaque_field_round_trips_hex_payloads() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_opaque_replace_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "opaque.dbf";
+    std::vector<std::uint8_t> table_bytes(65U + 9U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 9U);
+    write_field_descriptor(table_bytes, 32U, "VALUE", 'W', 1U, 8U);
+    table_bytes[64U] = 0x0DU;
+    table_bytes[65U] = 0x20U;
+    write_ascii(table_bytes, 66U, "12345678");
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "VALUE", "0x4142434445464748");
+    expect(replace_result.ok, "replace_record_field_value should support opaque field hex payloads");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "opaque field replacement should leave the DBF readable");
+    expect(parse_result.table.records.size() == 1U, "opaque field replacement should preserve record count");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && !parse_result.table.records[0U].values.empty()) {
+        expect(parse_result.table.records[0U].values[0U].display_value == "0x4142434445464748",
+            "opaque field replacement should persist the written hex payload");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -868,7 +913,8 @@ int main() {
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
     test_double_field_create_replace_and_append_round_trip();
-    test_append_blank_rejects_unsupported_field_layouts_without_changing_file();
+    test_append_blank_supports_opaque_field_layouts();
+    test_replace_opaque_field_round_trips_hex_payloads();
     test_parse_dbf_table_rejects_truncated_visual_asset();
     test_visual_asset_memo_sidecar_repair_round_trip();
     test_memo_replace_recovers_directory_sidecar_path();

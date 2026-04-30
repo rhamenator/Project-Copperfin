@@ -591,6 +591,369 @@ void test_scatter_gather_name_object_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_name_additive_merges_existing_object_properties() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_name_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER NAME ADDITIVE fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_name_additive.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oRow, 'EXTRA', 'KeepMe')\n"
+        "=ADDPROPERTY(oRow, 'NAME', 'OldName')\n"
+        "cBeforeExtra = GETPEM(oRow, 'EXTRA')\n"
+        "cBeforeName = GETPEM(oRow, 'NAME')\n"
+        "SCATTER FIELDS NAME, AGE NAME oRow ADDITIVE\n"
+        "cAfterExtra = GETPEM(oRow, 'EXTRA')\n"
+        "cAfterName = GETPEM(oRow, 'NAME')\n"
+        "nAfterAge = GETPEM(oRow, 'AGE')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER NAME ADDITIVE script should complete: " + state.message);
+
+    const auto before_extra = state.globals.find("cbeforeextra");
+    const auto before_name = state.globals.find("cbeforename");
+    const auto after_extra = state.globals.find("cafterextra");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+
+    expect(before_extra != state.globals.end(), "existing object property should be readable before SCATTER NAME ADDITIVE");
+    expect(before_name != state.globals.end(), "existing object field property should be readable before SCATTER NAME ADDITIVE");
+    expect(after_extra != state.globals.end(), "SCATTER NAME ADDITIVE should preserve unrelated existing properties");
+    expect(after_name != state.globals.end(), "SCATTER NAME ADDITIVE should refresh matching properties from record fields");
+    expect(after_age != state.globals.end(), "SCATTER NAME ADDITIVE should add missing field properties");
+
+    if (before_extra != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_extra->second) == "KeepMe",
+            "seeded EXTRA property should be present before additive scatter");
+    }
+    if (before_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before_name->second) == "OldName",
+            "seeded NAME property should be present before additive scatter");
+    }
+    if (after_extra != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_extra->second) == "KeepMe",
+            "SCATTER NAME ADDITIVE should preserve unrelated existing properties");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "SCATTER NAME ADDITIVE should overwrite matching properties with current record values");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "42",
+            "SCATTER NAME ADDITIVE should add missing field properties from the current record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_name_supports_macro_object_variable_names() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_macro";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "macro SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_macro.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "cObjectName = 'oRow'\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oRow, 'EXTRA', 'KeepMe')\n"
+        "SCATTER FIELDS NAME, AGE NAME &cObjectName ADDITIVE\n"
+        "cAfterExtra = GETPEM(oRow, 'EXTRA')\n"
+        "cAfterName = GETPEM(oRow, 'NAME')\n"
+        "=SETPem(oRow, 'NAME', 'MacroObj')\n"
+        "=SETPem(oRow, 'AGE', 55)\n"
+        "GATHER NAME &cObjectName FIELDS NAME, AGE\n"
+        "cGatheredName = NAME\n"
+        "nGatheredAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto after_extra = state.globals.find("cafterextra");
+    const auto after_name = state.globals.find("caftername");
+    const auto gathered_name = state.globals.find("cgatheredname");
+    const auto gathered_age = state.globals.find("ngatheredage");
+
+    expect(after_extra != state.globals.end(), "macro SCATTER NAME should preserve existing additive properties");
+    expect(after_name != state.globals.end(), "macro SCATTER NAME should populate matching field properties");
+    expect(gathered_name != state.globals.end(), "macro GATHER NAME should write NAME back to the record");
+    expect(gathered_age != state.globals.end(), "macro GATHER NAME should write AGE back to the record");
+
+    if (after_extra != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_extra->second) == "KeepMe",
+            "macro SCATTER NAME ADDITIVE should preserve unrelated existing properties");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "macro SCATTER NAME should resolve the target object variable before populating field properties");
+    }
+    if (gathered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_name->second) == "MacroObj",
+            "macro GATHER NAME should resolve the source object variable before restoring field values");
+    }
+    if (gathered_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_age->second) == "55",
+            "macro GATHER NAME should preserve numeric object properties");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_name_supports_nested_object_targets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_nested";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "nested SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_nested.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oHolder = CREATEOBJECT('Empty')\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oHolder, 'Row', oRow)\n"
+        "=ADDPROPERTY(oRow, 'EXTRA', 'KeepMe')\n"
+        "SCATTER FIELDS NAME, AGE NAME oHolder.Row ADDITIVE\n"
+        "cAfterExtra = GETPEM(GETPEM(oHolder, 'Row'), 'EXTRA')\n"
+        "cAfterName = GETPEM(GETPEM(oHolder, 'Row'), 'NAME')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'NAME', 'NestedObj')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'AGE', 61)\n"
+        "GATHER NAME oHolder.Row FIELDS NAME, AGE\n"
+        "cGatheredName = NAME\n"
+        "nGatheredAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "nested SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto after_extra = state.globals.find("cafterextra");
+    const auto after_name = state.globals.find("caftername");
+    const auto gathered_name = state.globals.find("cgatheredname");
+    const auto gathered_age = state.globals.find("ngatheredage");
+
+    expect(after_extra != state.globals.end(), "nested SCATTER NAME should preserve additive child-object properties");
+    expect(after_name != state.globals.end(), "nested SCATTER NAME should populate child-object field properties");
+    expect(gathered_name != state.globals.end(), "nested GATHER NAME should write NAME back from the child object");
+    expect(gathered_age != state.globals.end(), "nested GATHER NAME should write AGE back from the child object");
+
+    if (after_extra != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_extra->second) == "KeepMe",
+            "nested SCATTER NAME ADDITIVE should preserve unrelated child-object properties");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "nested SCATTER NAME should resolve object-property targets before populating field properties");
+    }
+    if (gathered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_name->second) == "NestedObj",
+            "nested GATHER NAME should restore field values from the child object target");
+    }
+    if (gathered_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_age->second) == "61",
+            "nested GATHER NAME should preserve numeric child-object properties");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_name_creates_missing_nested_object_targets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_nested_create";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "missing nested SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_nested_create.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oHolder = CREATEOBJECT('Empty')\n"
+        "SCATTER FIELDS NAME, AGE NAME oHolder.Row ADDITIVE\n"
+        "cAfterName = GETPEM(GETPEM(oHolder, 'Row'), 'NAME')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'NAME', 'BuiltChild')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'AGE', 62)\n"
+        "GATHER NAME oHolder.Row FIELDS NAME, AGE\n"
+        "cGatheredName = NAME\n"
+        "nGatheredAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "missing nested SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto after_name = state.globals.find("caftername");
+    const auto gathered_name = state.globals.find("cgatheredname");
+    const auto gathered_age = state.globals.find("ngatheredage");
+
+    expect(after_name != state.globals.end(), "SCATTER NAME should create and populate a missing nested object target");
+    expect(gathered_name != state.globals.end(), "GATHER NAME should write NAME back from a created nested object target");
+    expect(gathered_age != state.globals.end(), "GATHER NAME should write AGE back from a created nested object target");
+
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "SCATTER NAME should populate the newly created nested object target");
+    }
+    if (gathered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_name->second) == "BuiltChild",
+            "GATHER NAME should restore field values from the newly created nested object target");
+    }
+    if (gathered_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_age->second) == "62",
+            "GATHER NAME should preserve numeric values on the newly created nested object target");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_name_without_additive_replaces_existing_nested_target_object() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_name_replace_nested";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "non-additive nested SCATTER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_name_replace_nested.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oHolder = CREATEOBJECT('Empty')\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oHolder, 'Row', oRow)\n"
+        "=ADDPROPERTY(oRow, 'EXTRA', 'KeepMe')\n"
+        "=ADDPROPERTY(oRow, 'NAME', 'OldName')\n"
+        "SCATTER FIELDS NAME, AGE NAME oHolder.Row\n"
+        "cAfterName = GETPEM(GETPEM(oHolder, 'Row'), 'NAME')\n"
+        "nAfterAge = GETPEM(GETPEM(oHolder, 'Row'), 'AGE')\n"
+        "lExtraExists = PEMSTATUS(GETPEM(oHolder, 'Row'), 'EXTRA', 1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "non-additive nested SCATTER NAME script should complete: " + state.message);
+
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+    const auto extra_exists = state.globals.find("lextraexists");
+
+    expect(after_name != state.globals.end(), "non-additive nested SCATTER NAME should populate NAME on the replacement object");
+    expect(after_age != state.globals.end(), "non-additive nested SCATTER NAME should populate AGE on the replacement object");
+    expect(extra_exists != state.globals.end(), "non-additive nested SCATTER NAME should expose whether stale properties survived replacement");
+
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "non-additive nested SCATTER NAME should overwrite NAME with current record data");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "42",
+            "non-additive nested SCATTER NAME should populate AGE on the replacement object");
+    }
+    if (extra_exists != state.globals.end()) {
+        expect(copperfin::runtime::format_value(extra_exists->second) == "false",
+            "non-additive nested SCATTER NAME should replace the target object instead of preserving unrelated stale properties");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_predeclared_2d_array_row_one_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_2d_row";
@@ -2103,6 +2466,493 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_type_tab_and_append_from_type_tab_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tab_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7"},
+        {"Ben", "42"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE TAB source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE TAB destination fixture should be created");
+
+    const std::string tab_path = (temp_root / "people.txt").string();
+    const fs::path main_path = temp_root / "tab_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + tab_path + "' TYPE TAB FIELDS NAME, AGE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + tab_path + "' TYPE TAB FIELDS NAME, AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE TAB script should complete: " + state.message);
+    expect(fs::exists(tab_path), "COPY TO TYPE TAB should create the text file");
+
+    if (fs::exists(tab_path)) {
+        const std::string contents = read_text(tab_path);
+        expect(contents == "\"Ava\"\t7\r\n\"Ben\"\t42\r\n",
+            "COPY TO TYPE TAB should emit tab-delimited rows");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE TAB round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("cname2", "Ben");
+    check("nage2", "42");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE TAB destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE TAB should append both tab-delimited rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE TAB row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE TAB row 1 should preserve AGE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE TAB row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE TAB row 2 should preserve AGE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_xls_and_append_from_type_xls_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_xls_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE XLS source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE XLS destination fixture should be created");
+
+    const std::string xls_path = (temp_root / "people.xls").string();
+    const fs::path main_path = temp_root / "xls_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + xls_path + "' TYPE XLS FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + xls_path + "' TYPE XLS FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE XLS script should complete: " + state.message);
+    expect(fs::exists(xls_path), "COPY TO TYPE XLS should create the workbook file");
+
+    if (fs::exists(xls_path)) {
+        const std::string xml_text = read_text(xls_path);
+        expect(xml_text.find("<Workbook") != std::string::npos && xml_text.find("<Worksheet") != std::string::npos,
+            "COPY TO TYPE XLS should emit SpreadsheetML workbook content");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE XLS round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE XLS destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE XLS should append both workbook rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE XLS row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE XLS row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE XLS row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE XLS row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE XLS row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE XLS row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE DIF source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE DIF destination fixture should be created");
+
+    const std::string dif_path = (temp_root / "people.dif").string();
+    const fs::path main_path = temp_root / "dif_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + dif_path + "' TYPE DIF FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + dif_path + "' TYPE DIF FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE DIF script should complete: " + state.message);
+    expect(fs::exists(dif_path), "COPY TO TYPE DIF should create the interchange file");
+
+    if (fs::exists(dif_path)) {
+        const std::string dif_text = read_text(dif_path);
+        expect(dif_text.find("TABLE") != std::string::npos &&
+               dif_text.find("DATA") != std::string::npos &&
+               dif_text.find("EOD") != std::string::npos,
+            "COPY TO TYPE DIF should emit DIF-style table markers");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE DIF round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE DIF destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE DIF should append both interchange rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE DIF row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE DIF row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE DIF row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE DIF row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE DIF row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE DIF row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sylk_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE SYLK source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE SYLK destination fixture should be created");
+
+    const std::string sylk_path = (temp_root / "people.slk").string();
+    const fs::path main_path = temp_root / "sylk_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + sylk_path + "' TYPE SYLK FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + sylk_path + "' TYPE SYLK FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE SYLK script should complete: " + state.message);
+    expect(fs::exists(sylk_path), "COPY TO TYPE SYLK should create the interchange file");
+
+    if (fs::exists(sylk_path)) {
+        const std::string sylk_text = read_text(sylk_path);
+        expect(sylk_text.find("ID;P") != std::string::npos &&
+               sylk_text.find("B;Y") != std::string::npos &&
+               sylk_text.find("\nE\n") != std::string::npos,
+            "COPY TO TYPE SYLK should emit SYLK-style table markers");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE SYLK round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE SYLK destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE SYLK should append both interchange rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE SYLK row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE SYLK row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE SYLK row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE SYLK row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE SYLK row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE SYLK row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_json_and_append_from_type_json_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_json_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE JSON source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE JSON destination fixture should be created");
+
+    const std::string json_path = (temp_root / "people.json").string();
+    const fs::path main_path = temp_root / "json_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + json_path + "' TYPE JSON FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + json_path + "' TYPE JSON FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE JSON script should complete: " + state.message);
+    expect(fs::exists(json_path), "COPY TO TYPE JSON should create the interchange file");
+
+    if (fs::exists(json_path)) {
+        const std::string contents = read_text(json_path);
+        expect(contents.find("[") != std::string::npos &&
+               contents.find("\"NAME\": \"Ava\"") != std::string::npos &&
+               contents.find("\"ACTIVE\": true") != std::string::npos,
+            "COPY TO TYPE JSON should emit object-array JSON with typed logical values");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE JSON round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE JSON destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE JSON should append both JSON rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE JSON row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE JSON row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE JSON row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE JSON row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE JSON row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE JSON row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_array_fills_2d_runtime_array() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array";
@@ -3079,6 +3929,11 @@ int main() {
     test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
     test_scatter_gather_array_preserves_date_and_datetime_like_values();
     test_scatter_gather_name_object_round_trip();
+    test_scatter_name_additive_merges_existing_object_properties();
+    test_scatter_gather_name_supports_macro_object_variable_names();
+    test_scatter_gather_name_supports_nested_object_targets();
+    test_scatter_gather_name_creates_missing_nested_object_targets();
+    test_scatter_name_without_additive_replaces_existing_nested_target_object();
     test_scatter_gather_predeclared_2d_array_row_one_semantics();
     test_scatter_gather_two_column_name_value_array_semantics();
     test_scatter_memo_clause_controls_memo_field_inclusion();
@@ -3100,6 +3955,11 @@ int main() {
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
+    test_copy_to_type_tab_and_append_from_type_tab_round_trip();
+    test_copy_to_type_xls_and_append_from_type_xls_round_trip();
+    test_copy_to_type_dif_and_append_from_type_dif_round_trip();
+    test_copy_to_type_sylk_and_append_from_type_sylk_round_trip();
+    test_copy_to_type_json_and_append_from_type_json_round_trip();
     test_copy_to_array_fills_2d_runtime_array();
     test_append_from_array_writes_records_from_2d_array();
     test_gather_memvar_round_trips_field_values();

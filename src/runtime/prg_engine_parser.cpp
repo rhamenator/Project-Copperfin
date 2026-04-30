@@ -18,14 +18,43 @@ struct LogicalLine {
 };
 
 std::string strip_inline_comment(const std::string& line) {
-    bool in_string = false;
+    char quote_delimiter = '\0';
+    std::size_t bracket_depth = 0U;
+    std::size_t brace_depth = 0U;
     for (std::size_t index = 0; index < line.size(); ++index) {
         const char ch = line[index];
-        if (ch == '\'') {
-            in_string = !in_string;
+        if (quote_delimiter != '\0') {
+            if (ch == quote_delimiter) {
+                if ((index + 1U) < line.size() && line[index + 1U] == quote_delimiter) {
+                    ++index;
+                    continue;
+                }
+                quote_delimiter = '\0';
+            }
             continue;
         }
-        if (!in_string && ch == '&' && (index + 1U) < line.size() && line[index + 1U] == '&') {
+        if (ch == '\'' || ch == '"') {
+            quote_delimiter = ch;
+            continue;
+        }
+        if (ch == '[') {
+            ++bracket_depth;
+            continue;
+        }
+        if (ch == ']' && bracket_depth > 0U) {
+            --bracket_depth;
+            continue;
+        }
+        if (ch == '{') {
+            ++brace_depth;
+            continue;
+        }
+        if (ch == '}' && brace_depth > 0U) {
+            --brace_depth;
+            continue;
+        }
+        if (bracket_depth == 0U && brace_depth == 0U &&
+            ch == '&' && (index + 1U) < line.size() && line[index + 1U] == '&') {
             return line.substr(0U, index);
         }
     }
@@ -1080,10 +1109,10 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SCATTER ")) {
             statement.kind = StatementKind::scatter_command;
             const std::string body = trim_copy(line.substr(8U));
-            // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO]
-            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO"});
-            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "NAME", "BLANK", "MEMO"});
-            const std::string name_target = extract_command_clause(body, "NAME", {"FIELDS", "TO", "MEMVAR", "BLANK", "MEMO"});
+            // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO] [ADDITIVE]
+            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
+            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
+            const std::string name_target = extract_command_clause(body, "NAME", {"FIELDS", "TO", "MEMVAR", "BLANK", "MEMO", "ADDITIVE"});
             if (!name_target.empty()) {
                 statement.identifier = "name";
                 statement.expression = name_target;
@@ -1092,6 +1121,9 @@ Program parse_program(const std::string& path) {
             }
             statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
             statement.quaternary_expression = has_keyword(body, "MEMO") ? "memo" : std::string{};
+            if (has_keyword(body, "ADDITIVE")) {
+                statement.names.push_back("additive");
+            }
         } else if (upper == "RETRY") {
             statement.kind = StatementKind::retry_statement;
         } else if (upper == "RESUME" || starts_with_insensitive(line, "RESUME ")) {

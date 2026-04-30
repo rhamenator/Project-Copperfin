@@ -669,7 +669,7 @@ void test_indexed_table_mutation_succeeds_for_structural_indexes() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_append_blank_for_unsupported_field_layout_surfaces_runtime_error() {
+void test_append_blank_supports_opaque_field_layouts_at_runtime() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_blank_unsupported_layout";
     std::error_code ignored;
@@ -700,14 +700,17 @@ void test_append_blank_for_unsupported_field_layout_surfaces_runtime_error() {
         output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
     }
 
-    const auto original_size = std::filesystem::file_size(table_path);
-
-    const fs::path main_path = temp_root / "append_blank_unsupported.prg";
+    const fs::path main_path = temp_root / "append_blank_opaque.prg";
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS Weird IN 0\n"
+        "REPLACE VALUE WITH '0x4142434445464748'\n"
+        "GO 1\n"
+        "cUpdatedOpaque = VALUE\n"
         "APPEND BLANK\n"
-        "xAfterError = 17\n"
+        "GO 2\n"
+        "cOpaqueValue = VALUE\n"
+        "nCount = RECCOUNT()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -716,22 +719,38 @@ void test_append_blank_for_unsupported_field_layout_surfaces_runtime_error() {
         .stop_on_entry = false
     });
 
-    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "unsupported-layout APPEND BLANK should pause with an error");
-    expect(state.location.line == 2U, "unsupported-layout APPEND BLANK should highlight the mutation statement");
-    expect(
-        state.message.find("APPEND BLANK is not yet supported") != std::string::npos,
-        "unsupported-layout APPEND BLANK should explain the unsupported field layout");
-
-    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "continuing after unsupported-layout APPEND BLANK failure should keep the session alive");
-    const auto after_error = state.globals.find("xaftererror");
-    expect(after_error != state.globals.end(), "post-error statements should still execute after unsupported-layout APPEND BLANK failure");
-    if (after_error != state.globals.end()) {
-        expect(copperfin::runtime::format_value(after_error->second) == "17", "post-error execution should preserve later statements after unsupported-layout APPEND BLANK failure");
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "opaque-layout APPEND BLANK script should complete: " + state.message);
+    const auto updated_opaque = state.globals.find("cupdatedopaque");
+    const auto opaque_value = state.globals.find("copaquevalue");
+    const auto count = state.globals.find("ncount");
+    expect(updated_opaque != state.globals.end(), "opaque-layout REPLACE should expose the updated opaque field");
+    expect(opaque_value != state.globals.end(), "opaque-layout APPEND BLANK should expose the appended opaque field");
+    expect(count != state.globals.end(), "opaque-layout APPEND BLANK should expose the grown record count");
+    if (updated_opaque != state.globals.end()) {
+        expect(copperfin::runtime::format_value(updated_opaque->second) == "0x4142434445464748",
+            "runtime REPLACE should support opaque field hex payloads");
+    }
+    if (opaque_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(opaque_value->second) == "0x0000000000000000",
+            "runtime APPEND BLANK should initialize opaque fields to zero bytes");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "runtime APPEND BLANK should grow the table record count");
     }
 
-    expect(std::filesystem::file_size(table_path) == original_size, "unsupported-layout APPEND BLANK should not change the DBF size");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "opaque-layout APPEND BLANK should leave the DBF readable");
+    expect(parse_result.table.records.size() == 2U, "opaque-layout APPEND BLANK should append a row");
+    if (parse_result.ok && parse_result.table.records.size() == 2U && !parse_result.table.records[0U].values.empty()) {
+        expect(parse_result.table.records[0U].values[0U].display_value == "0x4142434445464748",
+            "opaque-layout REPLACE should persist zero-free opaque bytes");
+    }
+    if (parse_result.ok && parse_result.table.records.size() == 2U && !parse_result.table.records[1U].values.empty()) {
+        expect(parse_result.table.records[1U].values[0U].display_value == "0x0000000000000000",
+            "opaque-layout APPEND BLANK should persist zero-filled opaque bytes");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -799,6 +818,79 @@ void test_update_command_sets_scoped_records() {
     if (third_age != state.globals.end()) {
         expect(copperfin::runtime::format_value(third_age->second) == "62",
             "UPDATE alias and UPDATE IN should both update later matching records");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_style_for_clauses_accept_macro_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_style_for_macro";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alpha", "10"},
+        {"Bravo", "20"},
+        {"Charlie", "30"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SQL-style FOR macro DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "sql_style_for_macro.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People\n"
+        "cDeleteExpr = \"AGE = 20\"\n"
+        "cUpdateExpr = \"AGE = 30\"\n"
+        "DELETE FROM People FOR &cDeleteExpr\n"
+        "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExpr\n"
+        "GO 2\n"
+        "lDeleted = DELETED()\n"
+        "GO 3\n"
+        "cThirdName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL-style FOR macro script should complete: " + state.message);
+
+    const auto deleted = state.globals.find("ldeleted");
+    const auto third_name = state.globals.find("cthirdname");
+    expect(deleted != state.globals.end(), "DELETE FROM ... FOR &expr should expose DELETED() result");
+    expect(third_name != state.globals.end(), "UPDATE ... FOR &expr should expose updated NAME");
+    if (deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted->second) == "true",
+            "DELETE FROM ... FOR &expr should evaluate the macro-expanded filter expression");
+    }
+    if (third_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(third_name->second) == "Thirty",
+            "UPDATE ... FOR &expr should evaluate the macro-expanded filter expression");
+    }
+
+    expect(has_runtime_event(state.events, "runtime.delete_from", "People WHERE &cDeleteExpr"),
+        "DELETE FROM with macro FOR should emit a runtime.delete_from event");
+    expect(has_runtime_event(state.events, "runtime.update", "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExpr"),
+        "UPDATE with macro FOR should emit a runtime.update event");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "SQL-style FOR macro commands should leave the DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 3U) {
+        expect(parse_result.table.records[1].deleted,
+            "DELETE FROM ... FOR &expr should tombstone the matching record");
+        expect(parse_result.table.records[2].values[0U].display_value == "Thirty",
+            "UPDATE ... FOR &expr should persist the updated record value");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1050,8 +1142,9 @@ int main() {
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
-    test_append_blank_for_unsupported_field_layout_surfaces_runtime_error();
+    test_append_blank_supports_opaque_field_layouts_at_runtime();
     test_update_command_sets_scoped_records();
+    test_sql_style_for_clauses_accept_macro_expressions();
     test_rollback_transaction_replays_local_dbf_changes();
     test_rollback_transaction_replays_append_from_array();
     test_rollback_transaction_removes_created_table_cursor();
