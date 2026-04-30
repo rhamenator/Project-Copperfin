@@ -356,7 +356,13 @@ void test_set_exclusive_controls_table_maintenance_guards() {
     const fs::path exclusive_prg = temp_root / "exclusive_pack.prg";
     write_text(
         exclusive_prg,
+        "cDefaultExclusive = SET('EXCLUSIVE')\n"
         "SET EXCLUSIVE OFF\n"
+        "cOffExclusive = SET('EXCLUSIVE')\n"
+        "SET DATASESSION TO 2\n"
+        "cSession2Exclusive = SET('EXCLUSIVE')\n"
+        "SET DATASESSION TO 1\n"
+        "cRestoredExclusive = SET('EXCLUSIVE')\n"
         "USE '" + exclusive_path.string() + "' ALIAS People EXCLUSIVE IN 0\n"
         "DELETE FOR NAME = 'BRAVO'\n"
         "PACK\n"
@@ -374,10 +380,30 @@ void test_set_exclusive_controls_table_maintenance_guards() {
     const auto exclusive_state = exclusive_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(exclusive_state.completed, "USE ... EXCLUSIVE should allow local PACK even when SET EXCLUSIVE is OFF");
 
+    const auto default_exclusive_2 = exclusive_state.globals.find("cdefaultexclusive");
+    const auto off_exclusive_2 = exclusive_state.globals.find("coffexclusive");
+    const auto session2_exclusive = exclusive_state.globals.find("csession2exclusive");
+    const auto restored_exclusive = exclusive_state.globals.find("crestoredexclusive");
     const auto on_exclusive = exclusive_state.globals.find("conexclusive");
     const auto after_pack = exclusive_state.globals.find("nafterpack");
+    expect(default_exclusive_2 != exclusive_state.globals.end(), "SET('EXCLUSIVE') default should be captured in the exclusive-open script");
+    expect(off_exclusive_2 != exclusive_state.globals.end(), "SET('EXCLUSIVE') after OFF should be captured in the exclusive-open script");
+    expect(session2_exclusive != exclusive_state.globals.end(), "SET('EXCLUSIVE') in session 2 should be captured");
+    expect(restored_exclusive != exclusive_state.globals.end(), "SET('EXCLUSIVE') after restoring session 1 should be captured");
     expect(on_exclusive != exclusive_state.globals.end(), "SET('EXCLUSIVE') after ON should be captured");
     expect(after_pack != exclusive_state.globals.end(), "exclusive PACK should expose updated RECCOUNT()");
+    if (default_exclusive_2 != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(default_exclusive_2->second) == "ON", "SET('EXCLUSIVE') should default to ON in a fresh session");
+    }
+    if (off_exclusive_2 != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(off_exclusive_2->second) == "OFF", "SET EXCLUSIVE OFF should update SET('EXCLUSIVE') before switching sessions");
+    }
+    if (session2_exclusive != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(session2_exclusive->second) == "ON", "a fresh second session should keep the default SET('EXCLUSIVE') state");
+    }
+    if (restored_exclusive != exclusive_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_exclusive->second) == "OFF", "restoring session 1 should restore its prior SET('EXCLUSIVE') value");
+    }
     if (on_exclusive != exclusive_state.globals.end()) {
         expect(copperfin::runtime::format_value(on_exclusive->second) == "ON", "SET EXCLUSIVE ON should update SET('EXCLUSIVE')");
     }
@@ -409,6 +435,12 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
         "SET MULTILOCKS ON\n"
         "cReprocess = SET('REPROCESS')\n"
         "cMultilocks = SET('MULTILOCKS')\n"
+        "SET DATASESSION TO 2\n"
+        "cReprocessSession2 = SET('REPROCESS')\n"
+        "cMultilocksSession2 = SET('MULTILOCKS')\n"
+        "SET DATASESSION TO 1\n"
+        "cReprocessRestored = SET('REPROCESS')\n"
+        "cMultilocksRestored = SET('MULTILOCKS')\n"
         "USE '" + people_path.string() + "' ALIAS People IN 0\n"
         "lRecordLock = RLOCK()\n"
         "lRecordLocked = ISRLOCKED()\n"
@@ -460,6 +492,10 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     check("cdefaultmultilocks", "OFF");
     check("creprocess", "3");
     check("cmultilocks", "ON");
+    check("creprocesssession2", "0");
+    check("cmultilockssession2", "OFF");
+    check("creprocessrestored", "3");
+    check("cmultilocksrestored", "ON");
     check("lrecordlock", "true");
     check("lrecordlocked", "true");
     check("lfilelock", "true");

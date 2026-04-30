@@ -102,6 +102,14 @@ namespace
             "cNullFromVariable = SET('NULL')\n"
             "SET ANSI ON\n"
             "cAnsiOn = SET('ANSI')\n"
+            "SET DATASESSION TO 2\n"
+            "cCollateSession2 = SET('COLLATE')\n"
+            "cNullSession2 = SET('NULL')\n"
+            "cAnsiSession2 = SET('ANSI')\n"
+            "SET DATASESSION TO 1\n"
+            "cCollateRestored = SET('COLLATE')\n"
+            "cNullRestored = SET('NULL')\n"
+            "cAnsiRestored = SET('ANSI')\n"
             "ON ERROR DO somehandler\n"
             "cOnErrorHandler = ON('ERROR')\n"
             "ON SHUTDOWN CLOSE DATABASES ALL\n"
@@ -182,6 +190,12 @@ namespace
         check("ccollatefromvariable", "MACHINE");
         check("cnullfromvariable", "ON");
         check("cansion", "ON");
+        check("ccollatesession2", "MACHINE");
+        check("cnullsession2", "OFF");
+        check("cansisession2", "OFF");
+        check("ccollaterestored", "MACHINE");
+        check("cnullrestored", "ON");
+        check("cansirestored", "ON");
         check("conerrorhandler", "DO somehandler");
         check("conshutdownhandler", "CLOSE DATABASES ALL");
 
