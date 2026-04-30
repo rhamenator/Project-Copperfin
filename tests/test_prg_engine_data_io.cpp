@@ -166,6 +166,80 @@ void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_memvar_single_name_field_filter_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_name_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "single NAME-field SCATTER/GATHER MEMVAR fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_memvar_name_field.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "m.AGE = 900\n"
+        "SCATTER FIELDS NAME MEMVAR\n"
+        "cScatteredName = m.NAME\n"
+        "nAgeAfterScatter = m.AGE\n"
+        "m.NAME = 'NameOnly'\n"
+        "m.AGE = 901\n"
+        "GATHER MEMVAR FIELDS NAME\n"
+        "cAfterGatherName = NAME\n"
+        "SCATTER FIELDS AGE MEMVAR\n"
+        "nAfterGatherAge = m.AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "single NAME-field SCATTER/GATHER MEMVAR script should complete: " + state.message);
+
+    const auto scattered_name = state.globals.find("cscatteredname");
+    const auto age_after_scatter = state.globals.find("nageafterscatter");
+    const auto after_gather_name = state.globals.find("caftergathername");
+    const auto after_gather_age = state.globals.find("naftergatherage");
+
+    expect(scattered_name != state.globals.end(), "SCATTER FIELDS NAME MEMVAR should populate m.NAME");
+    expect(age_after_scatter != state.globals.end(), "SCATTER FIELDS NAME MEMVAR should preserve an unrelated preseeded m.AGE value");
+    expect(after_gather_name != state.globals.end(), "GATHER MEMVAR FIELDS NAME should update NAME");
+    expect(after_gather_age != state.globals.end(), "GATHER MEMVAR FIELDS NAME should leave AGE readable");
+
+    if (scattered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scattered_name->second) == "Alice",
+            "SCATTER FIELDS NAME MEMVAR should read the NAME field even when it matches a command keyword");
+    }
+    if (age_after_scatter != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age_after_scatter->second) == "900",
+            "SCATTER FIELDS NAME MEMVAR should not overwrite unrelated memvars");
+    }
+    if (after_gather_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_gather_name->second) == "NameOnly",
+            "GATHER MEMVAR FIELDS NAME should write back only the NAME field");
+    }
+    if (after_gather_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_gather_age->second) == "42",
+            "GATHER MEMVAR FIELDS NAME should leave AGE unchanged");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_to_array_and_gather_from_array_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array";
@@ -665,6 +739,81 @@ void test_scatter_name_additive_merges_existing_object_properties() {
     if (after_age != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_age->second) == "42",
             "SCATTER NAME ADDITIVE should add missing field properties from the current record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scatter_gather_name_single_name_field_filter_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "single NAME-field SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_field.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oRow, 'AGE', 900)\n"
+        "SCATTER FIELDS NAME NAME oRow ADDITIVE\n"
+        "cScatteredName = GETPEM(oRow, 'NAME')\n"
+        "nScatteredAge = GETPEM(oRow, 'AGE')\n"
+        "=SETPem(oRow, 'NAME', 'NameOnly')\n"
+        "=SETPem(oRow, 'AGE', 901)\n"
+        "GATHER NAME oRow FIELDS NAME\n"
+        "cAfterGatherName = NAME\n"
+        "SCATTER FIELDS AGE MEMVAR\n"
+        "nAfterGatherAge = m.AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "single NAME-field SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto scattered_name = state.globals.find("cscatteredname");
+    const auto scattered_age = state.globals.find("nscatteredage");
+    const auto after_gather_name = state.globals.find("caftergathername");
+    const auto after_gather_age = state.globals.find("naftergatherage");
+
+    expect(scattered_name != state.globals.end(), "SCATTER FIELDS NAME NAME oRow should populate the NAME property");
+    expect(scattered_age != state.globals.end(), "SCATTER FIELDS NAME NAME oRow ADDITIVE should preserve preexisting AGE");
+    expect(after_gather_name != state.globals.end(), "GATHER NAME oRow FIELDS NAME should update NAME");
+    expect(after_gather_age != state.globals.end(), "GATHER NAME oRow FIELDS NAME should leave AGE readable");
+
+    if (scattered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scattered_name->second) == "Alice",
+            "SCATTER FIELDS NAME NAME oRow should treat NAME as a selected field, not as the clause boundary");
+    }
+    if (scattered_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scattered_age->second) == "900",
+            "SCATTER FIELDS NAME NAME oRow ADDITIVE should preserve non-selected object properties");
+    }
+    if (after_gather_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_gather_name->second) == "NameOnly",
+            "GATHER NAME oRow FIELDS NAME should write back only the NAME property");
+    }
+    if (after_gather_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_gather_age->second) == "42",
+            "GATHER NAME oRow FIELDS NAME should leave AGE unchanged");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -3925,11 +4074,13 @@ void test_list_status_emits_runtime_list_event() {
 int main() {
     test_scatter_memvar_from_current_record();
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
+    test_scatter_gather_memvar_single_name_field_filter_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
     test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
     test_scatter_gather_array_preserves_date_and_datetime_like_values();
     test_scatter_gather_name_object_round_trip();
     test_scatter_name_additive_merges_existing_object_properties();
+    test_scatter_gather_name_single_name_field_filter_semantics();
     test_scatter_gather_name_supports_macro_object_variable_names();
     test_scatter_gather_name_supports_nested_object_targets();
     test_scatter_gather_name_creates_missing_nested_object_targets();

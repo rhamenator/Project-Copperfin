@@ -157,6 +157,81 @@ std::string extract_command_clause(
     return trim_copy(text.substr(value_start, value_end - value_start));
 }
 
+std::string extract_fields_command_clause(
+    const std::string& text,
+    std::initializer_list<std::string> stop_keywords) {
+    const std::size_t position = find_keyword_top_level(text, "FIELDS");
+    if (position == std::string::npos) {
+        return {};
+    }
+
+    const std::size_t value_start = position + 6U;
+    char string_delimiter = '\0';
+    int nesting = 0;
+    for (std::size_t index = value_start; index < text.size(); ++index) {
+        const char ch = text[index];
+        if ((ch == '\'' || ch == '"') && (string_delimiter == '\0' || string_delimiter == ch)) {
+            string_delimiter = string_delimiter == '\0' ? ch : '\0';
+            continue;
+        }
+        if (string_delimiter != '\0') {
+            continue;
+        }
+        if (ch == '(' || ch == '[' || ch == '{') {
+            ++nesting;
+            continue;
+        }
+        if ((ch == ')' || ch == ']' || ch == '}') && nesting > 0) {
+            --nesting;
+            continue;
+        }
+        if (nesting != 0) {
+            continue;
+        }
+
+        for (const std::string& keyword : stop_keywords) {
+            const std::string upper_keyword = uppercase_copy(keyword);
+            if (uppercase_copy(text.substr(index, upper_keyword.size())) != upper_keyword) {
+                continue;
+            }
+            if (index > 0U &&
+                std::isspace(static_cast<unsigned char>(text[index - 1U])) == 0) {
+                continue;
+            }
+            const std::size_t tail = index + upper_keyword.size();
+            if (tail < text.size() &&
+                std::isspace(static_cast<unsigned char>(text[tail])) == 0) {
+                continue;
+            }
+
+            const std::string clause_before_keyword = trim_copy(text.substr(value_start, index - value_start));
+            if (clause_before_keyword.empty()) {
+                continue;
+            }
+
+            char previous_significant = '\0';
+            for (char prior : clause_before_keyword) {
+                if (std::isspace(static_cast<unsigned char>(prior)) != 0) {
+                    continue;
+                }
+                previous_significant = prior;
+            }
+            if (previous_significant == ',') {
+                continue;
+            }
+
+            const std::string normalized_before_keyword = uppercase_copy(clause_before_keyword);
+            if (normalized_before_keyword == "LIKE" || normalized_before_keyword == "EXCEPT") {
+                continue;
+            }
+
+            return trim_copy(text.substr(value_start, index - value_start));
+        }
+    }
+
+    return trim_copy(text.substr(value_start));
+}
+
 std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text) {
     std::vector<ReplaceAssignment> assignments;
     for (const std::string& part : split_csv_like(text)) {

@@ -58,6 +58,9 @@ std::string extract_command_clause(
     const std::string& text,
     const std::string& keyword,
     std::initializer_list<std::string> stop_keywords = {});
+std::string extract_fields_command_clause(
+    const std::string& text,
+    std::initializer_list<std::string> stop_keywords = {});
 std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text);
 std::vector<CalculateAssignment> parse_calculate_assignments(const std::string& text);
 AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::string& expression_text);

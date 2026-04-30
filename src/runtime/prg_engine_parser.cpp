@@ -74,6 +74,41 @@ bool looks_like_array_declaration_body(const std::string& body) {
     return false;
 }
 
+std::string extract_scatter_name_target_clause(const std::string& body) {
+    std::size_t search_index = 0U;
+    while (search_index < body.size()) {
+        const std::size_t position = find_keyword_top_level_from(body, "NAME", search_index);
+        if (position == std::string::npos) {
+            break;
+        }
+
+        const std::size_t value_start = position + 4U;
+        const std::size_t value_end = find_first_keyword_top_level(
+            body,
+            {"FIELDS", "TO", "MEMVAR", "BLANK", "MEMO", "ADDITIVE"},
+            value_start);
+        const std::string candidate = trim_copy(
+            value_end == std::string::npos
+                ? body.substr(value_start)
+                : body.substr(value_start, value_end - value_start));
+        const std::string first_word = normalize_identifier(split_first_word(candidate).first);
+        if (!candidate.empty() &&
+            first_word != "name" &&
+            first_word != "memvar" &&
+            first_word != "to" &&
+            first_word != "fields" &&
+            first_word != "blank" &&
+            first_word != "memo" &&
+            first_word != "additive") {
+            return candidate;
+        }
+
+        search_index = position + 1U;
+    }
+
+    return {};
+}
+
 std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     std::vector<LogicalLine> lines;
@@ -1111,8 +1146,8 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(8U));
             // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO] [ADDITIVE]
             statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
-            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"TO", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
-            const std::string name_target = extract_command_clause(body, "NAME", {"FIELDS", "TO", "MEMVAR", "BLANK", "MEMO", "ADDITIVE"});
+            statement.secondary_expression = extract_fields_command_clause(body, {"TO", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
+            const std::string name_target = extract_scatter_name_target_clause(body);
             if (!name_target.empty()) {
                 statement.identifier = "name";
                 statement.expression = name_target;
@@ -1181,7 +1216,7 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::gather_command;
             const std::string body = trim_copy(line.substr(7U));
             statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "NAME", "FOR"});
-            statement.secondary_expression = extract_command_clause(body, "FIELDS", {"FROM", "MEMVAR", "NAME", "FOR"});
+            statement.secondary_expression = extract_fields_command_clause(body, {"FROM", "MEMVAR", "NAME", "FOR"});
             const std::string name_source = extract_command_clause(body, "NAME", {"FROM", "FIELDS", "MEMVAR", "FOR"});
             if (!name_source.empty()) {
                 statement.identifier = "name";
