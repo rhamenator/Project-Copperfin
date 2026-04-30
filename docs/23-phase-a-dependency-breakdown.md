@@ -325,18 +325,14 @@ Current structure under `#8`:
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
 
-Current prompt-sized slice queue under active lane `#92`:
+Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#92` | `#102` | extend SQL/result-cursor `SEEK` parity for `FOR`-filtered temporary orders |
-| `#92` | `#104` | close one more grounded seek-compare metadata consumption residual |
-
-Current prompt-sized slice queue under active lane `#98`:
-
-| Parent | Slice Issue | Intended Prompt Slice |
-| --- | --- | --- |
-| `#98` | `#107` | path/default/fields session-state isolation/readback (`DEFAULT`, `PATH`, `FIELDS`) |
+| `#97` | `#123` | tighten macro suffix/terminator semantics |
+| `#97` | `#124` | close one more nested macro/eval expansion residual |
+| `#99` | `#125` | close one more memory-lifetime/release residual |
+| `#99` | `#126` | close one more `.mem` save/restore residual |
 
 Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
 

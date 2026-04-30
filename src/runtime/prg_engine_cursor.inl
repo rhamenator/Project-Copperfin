@@ -634,6 +634,87 @@
             return {};
         }
 
+        struct TemporaryOrderExpressionState
+        {
+            std::string expression;
+            std::string for_expression;
+        };
+
+        TemporaryOrderExpressionState parse_temporary_order_expression_state(const std::string &raw_expression) const
+        {
+            TemporaryOrderExpressionState parsed{
+                .expression = trim_copy(raw_expression),
+                .for_expression = {}};
+            if (parsed.expression.empty())
+            {
+                return parsed;
+            }
+
+            const std::size_t for_position = find_keyword_top_level(parsed.expression, "FOR");
+            if (for_position == std::string::npos)
+            {
+                return parsed;
+            }
+
+            const std::string order_expression = trim_copy(parsed.expression.substr(0U, for_position));
+            const std::string for_expression = trim_copy(parsed.expression.substr(for_position + 3U));
+            if (order_expression.empty() || for_expression.empty())
+            {
+                return parsed;
+            }
+
+            parsed.expression = order_expression;
+            parsed.for_expression = for_expression;
+            return parsed;
+        }
+
+        std::string derive_order_key_domain_hint(const CursorState &cursor, const std::string &expression) const
+        {
+            const std::string normalized_expression = collapse_identifier(unquote_identifier(trim_copy(expression)));
+            if (normalized_expression.empty())
+            {
+                return {};
+            }
+
+            std::vector<vfp::DbfFieldDescriptor> descriptors;
+            if (cursor.remote)
+            {
+                descriptors = cursor.remote_fields;
+            }
+            else if (!cursor.source_path.empty())
+            {
+                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                if (table_result.ok)
+                {
+                    descriptors = table_result.table.fields;
+                }
+            }
+
+            for (const auto &descriptor : descriptors)
+            {
+                if (collapse_identifier(descriptor.name) != normalized_expression)
+                {
+                    continue;
+                }
+
+                switch (std::toupper(static_cast<unsigned char>(descriptor.type)))
+                {
+                case 'N':
+                case 'F':
+                case 'B':
+                case 'I':
+                case 'Y':
+                case 'D':
+                case 'T':
+                    return "numeric_or_date";
+                default:
+                    return {};
+                }
+            }
+
+            return {};
+        }
+
         bool can_open_table_cursor(
             const std::string &resolved_path,
             const std::string &alias,
@@ -847,14 +928,15 @@
                                             { return collapse_identifier(order.name) == normalized_target; });
             if (found == cursor.orders.end())
             {
-                const std::string normalization_hint = derive_order_normalization_hint(target_name);
-                cursor.active_order_name = uppercase_copy(target_name);
-                cursor.active_order_expression = target_name;
-                cursor.active_order_for_expression.clear();
+                const TemporaryOrderExpressionState parsed = parse_temporary_order_expression_state(target_name);
+                const std::string normalization_hint = derive_order_normalization_hint(parsed.expression);
+                cursor.active_order_name = uppercase_copy(parsed.expression);
+                cursor.active_order_expression = parsed.expression;
+                cursor.active_order_for_expression = parsed.for_expression;
                 cursor.active_order_path.clear();
                 cursor.active_order_normalization_hint = normalization_hint;
-                cursor.active_order_collation_hint = derive_order_collation_hint(target_name, normalization_hint);
-                cursor.active_order_key_domain_hint.clear();
+                cursor.active_order_collation_hint = derive_order_collation_hint(parsed.expression, normalization_hint);
+                cursor.active_order_key_domain_hint = derive_order_key_domain_hint(cursor, parsed.expression);
                 cursor.active_order_descending = descending_override.value_or(false);
                 return true;
             }

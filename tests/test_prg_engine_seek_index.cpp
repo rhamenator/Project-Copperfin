@@ -2034,6 +2034,58 @@ void test_ndx_numeric_domain_guides_seek_near_ordering() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_numeric_temporary_order_domain_guides_seek_near_ordering() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_numeric_temporary_order_domain";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 2}, {"BRAVO", 10}, {"CHARLIE", 20}});
+
+    const fs::path main_path = temp_root / "local_numeric_temporary_order_domain.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO AGE\n"
+        "SET NEAR ON\n"
+        "SEEK '9'\n"
+        "lFound = FOUND()\n"
+        "nRec = RECNO()\n"
+        "nAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local numeric temporary-order key-domain seek script should complete");
+
+    const auto found = state.globals.find("lfound");
+    const auto rec = state.globals.find("nrec");
+    const auto age = state.globals.find("nage");
+
+    expect(found != state.globals.end(), "local numeric temporary-order seek should expose FOUND()");
+    expect(rec != state.globals.end(), "local numeric temporary-order seek should expose RECNO()");
+    expect(age != state.globals.end(), "local numeric temporary-order seek should expose AGE");
+
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "false", "local numeric temporary-order SEEK() should still report a miss for a non-existent key");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "2", "local numeric temporary-order SET NEAR should move to the next numeric row instead of lexicographic EOF");
+    }
+    if (age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age->second) == "10", "local numeric temporary-order key-domain hints should treat AGE numerically");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_near_is_scoped_by_data_session() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_near_datasession";
@@ -2858,6 +2910,7 @@ int main() {
     test_seek_respects_numeric_order_for_expression_hints();
     test_seek_respects_string_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
+    test_local_numeric_temporary_order_domain_guides_seek_near_ordering();
     test_set_near_is_scoped_by_data_session();
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();

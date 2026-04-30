@@ -1668,6 +1668,152 @@ void test_sql_result_cursor_plain_string_collate_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_temporary_order_for_expression_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_for_expression_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_for_expression_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "lSeekFilteredOut = SEEK('ALPHA', 'sqlcust', \"UPPER(NAME) FOR NAME = 'BRAVO'\")\n"
+        "nSeekFilteredRec = RECNO()\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "SET ORDER TO UPPER(NAME) FOR NAME = 'BRAVO'\n"
+        "SEEK 'ALPHA'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "SEEK 'BRAVO'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL temporary-order FOR-expression parity script should complete");
+    expect(state.sql_connections.empty(), "SQL temporary-order FOR-expression parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_filtered_out = state.globals.find("lseekfilteredout");
+    const auto seek_filtered_rec = state.globals.find("nseekfilteredrec");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto visible_found = state.globals.find("lvisiblefound");
+    const auto visible_rec = state.globals.find("nvisiblerec");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL temporary-order FOR-expression parity");
+    expect(seek_filtered_out != state.globals.end(), "SEEK() over a FOR-filtered SQL temporary order should be captured");
+    expect(seek_filtered_rec != state.globals.end(), "RECNO() after a filtered-out SQL SEEK() should be captured");
+    expect(near_found != state.globals.end(), "FOUND() after SQL SET NEAR plus FOR-filtered SEEK() should be captured");
+    expect(near_rec != state.globals.end(), "RECNO() after SQL SET NEAR plus FOR-filtered SEEK() should be captured");
+    expect(visible_found != state.globals.end(), "FOUND() after a visible SQL FOR-filtered SEEK() should be captured");
+    expect(visible_rec != state.globals.end(), "RECNO() after a visible SQL FOR-filtered SEEK() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL temporary-order FOR-expression parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL temporary-order FOR-expression checks");
+    }
+    if (seek_filtered_out != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_filtered_out->second) == "false", "SQL temporary-order FOR expressions should filter ALPHA out of the candidate set");
+    }
+    if (seek_filtered_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_filtered_rec->second) == "4", "filtered-out SQL temporary-order SEEK() without SET NEAR should still land at EOF");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "SET NEAR should still report a miss for a filtered-out SQL temporary-order key");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "2", "SET NEAR should move a SQL temporary-order seek to the surviving FOR-filtered row");
+    }
+    if (visible_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_found->second) == "true", "SQL temporary-order FOR expressions should still allow visible keys");
+    }
+    if (visible_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_rec->second) == "2", "SQL temporary-order FOR expressions should still position on the surviving visible row");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should still succeed after SQL temporary-order FOR-expression checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_numeric_temporary_order_domain_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_numeric_domain_parity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_numeric_domain_parity.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET ORDER TO AMOUNT\n"
+        "SET NEAR ON\n"
+        "SEEK '9'\n"
+        "lFound = FOUND()\n"
+        "nRec = RECNO()\n"
+        "nAmount = AMOUNT\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL numeric temporary-order key-domain parity script should complete");
+    expect(state.sql_connections.empty(), "SQL numeric temporary-order key-domain parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto found = state.globals.find("lfound");
+    const auto rec = state.globals.find("nrec");
+    const auto amount = state.globals.find("namount");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL numeric temporary-order parity");
+    expect(found != state.globals.end(), "FOUND() after numeric SQL temporary-order SEEK() should be captured");
+    expect(rec != state.globals.end(), "RECNO() after numeric SQL temporary-order SEEK() should be captured");
+    expect(amount != state.globals.end(), "field value after numeric SQL temporary-order SEEK() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL numeric temporary-order parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before numeric SQL temporary-order checks");
+    }
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "false", "numeric SQL temporary-order SEEK() should still report a miss for a non-existent key");
+    }
+    if (rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec->second) == "1", "numeric SQL temporary-order SET NEAR should move to the first numeric row instead of lexicographic EOF");
+    }
+    if (amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(amount->second) == "10", "numeric SQL temporary-order key-domain hints should treat AMOUNT numerically");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should still succeed after numeric SQL temporary-order checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_temporary_order_direction_suffix_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_direction_suffix_parity";
@@ -2876,6 +3022,8 @@ int main() {
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
     test_sql_result_cursor_plain_string_collate_parity();
+    test_sql_result_cursor_temporary_order_for_expression_parity();
+    test_sql_result_cursor_numeric_temporary_order_domain_parity();
     test_sql_result_cursor_temporary_order_normalization_parity();
     test_sql_result_cursor_temporary_order_direction_suffix_parity();
     test_sql_result_cursor_command_seek_parity();

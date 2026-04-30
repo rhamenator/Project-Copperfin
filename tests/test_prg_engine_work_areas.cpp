@@ -1323,6 +1323,66 @@ void test_set_fields_like_and_except_limit_field_lookup() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_fields_is_scoped_by_data_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_set_fields_datasession";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 11}, {"BRAVO", 22}});
+
+    const fs::path main_path = temp_root / "set_fields_datasession.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FIELDS TO NAME\n"
+        "cFieldsSession1 = SET('FIELDS')\n"
+        "xAgeSession1 = AGE\n"
+        "SET DATASESSION TO 2\n"
+        "USE '" + table_path.string() + "' ALIAS PeopleTwo IN 0\n"
+        "cFieldsSession2 = SET('FIELDS')\n"
+        "nAgeSession2 = AGE\n"
+        "SET FIELDS TO AGE\n"
+        "cFieldsSession2After = SET('FIELDS')\n"
+        "xNameSession2After = NAME\n"
+        "SET DATASESSION TO 1\n"
+        "cFieldsSession1Restored = SET('FIELDS')\n"
+        "xAgeSession1Restored = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET FIELDS data-session isolation script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cfieldssession1", "NAME");
+    check("xagesession1", "");
+    check("cfieldssession2", "OFF");
+    check("nagesession2", "11");
+    check("cfieldssession2after", "AGE");
+    check("xnamesession2after", "");
+    check("cfieldssession1restored", "NAME");
+    check("xagesession1restored", "");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1343,6 +1403,7 @@ int main() {
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
     test_set_fields_limits_field_lookup();
     test_set_fields_like_and_except_limit_field_lookup();
+    test_set_fields_is_scoped_by_data_session();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
