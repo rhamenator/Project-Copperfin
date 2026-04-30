@@ -54,6 +54,13 @@ This grouped list mirrors the active GitHub issue set so this backlog stays alig
 
 Native root umbrella issues now exist for the repo-wide backlog forest: `#108` runtime compatibility/command surface, `#109` runtime parity surfaces, `#110` build/compiler/debug pipeline, `#111` shared design model/designer fidelity, `#112` IDE/editor parity, `#113` modernization/outputs/interop/security, and `#114` portability/core-boundary work.
 
+GitHub milestones now mirror that same tree:
+
+- `Root/#...` milestones for the repo-level umbrella issues
+- phase/lane milestones such as `A3/#92 ...` or `A4/#10 ...` for active execution lanes
+- family milestones such as `C1/#15 ...` or `D2/#20 ...` for the non-sliced branches
+- prompt-sized slice issues inherit their parent lane milestone instead of each getting a standalone milestone
+
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8

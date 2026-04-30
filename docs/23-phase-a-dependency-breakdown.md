@@ -369,6 +369,7 @@ For the remaining Phase A runtime work, the implementation unit should be a prom
 
 - Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as planning and closure umbrellas.
 - Keep the repo-root umbrella issues `#108`-`#114` as navigation/grouping roots rather than execution units.
+- Keep milestones aligned to the same tree: `Root/#...` for repo umbrellas, `A3/#...` / `A4/#...` for active runtime lanes, and slice issues inheriting the milestone of their parent lane.
 - Before starting code work, pick one open slice issue under the active lane, or create a new slice issue if the intended change does not fit an existing one.
 - One implementation prompt should normally map to one slice issue, one focused validation loop, and one doc/handoff update.
 - Close or retarget the slice issue when the prompt-sized implementation lands; do not hide shipped work only inside the broader lane issue body.
