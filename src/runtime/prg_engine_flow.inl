@@ -51,7 +51,6 @@
 
             arrays.erase(name);
             frame.locals.erase(name);
-            frame.local_names.erase(name);
         }
 
         void sync_byref_arguments(Frame &frame)

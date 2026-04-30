@@ -2514,6 +2514,51 @@ void test_release_all_clears_all_globals() {
     fs::remove_all(tmp, ign);
 }
 
+void test_release_all_clears_current_frame_locals_without_global_leak() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_all_locals";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "DO subproc\n"
+        "outer_type = TYPE('x')\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "LOCAL x\n"
+        "x = 5\n"
+        "RELEASE ALL\n"
+        "after_release_type = TYPE('x')\n"
+        "x = 7\n"
+        "after_reassign = x\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL should clear current-frame locals");
+    const auto after_release_type = state.globals.find("after_release_type");
+    const auto after_reassign = state.globals.find("after_reassign");
+    const auto outer_type = state.globals.find("outer_type");
+    expect(after_release_type != state.globals.end(), "released local TYPE() should be captured");
+    expect(after_reassign != state.globals.end(), "reassigned local value should be captured");
+    expect(outer_type != state.globals.end(), "post-return local TYPE() should be captured");
+    if (after_release_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_release_type->second) == "U",
+               "RELEASE ALL should clear the current frame's local variable binding");
+    }
+    if (after_reassign != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_reassign->second) == "7",
+               "reassigning after RELEASE ALL should still work inside the local scope");
+    }
+    if (outer_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_type->second) == "U",
+               "reassigning a released LOCAL should not leak a new global after the routine returns");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_release_all_like_pattern() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_release_like";
@@ -3307,6 +3352,7 @@ int main() {
     test_for_each_single_element_expression();
     test_release_vars_erases_named_globals();
     test_release_all_clears_all_globals();
+    test_release_all_clears_current_frame_locals_without_global_leak();
     test_release_all_like_pattern();
     test_release_all_like_pattern_reaches_arrays();
     test_release_all_except_pattern();

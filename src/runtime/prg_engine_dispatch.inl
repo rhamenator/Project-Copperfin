@@ -5583,12 +5583,26 @@
                     const std::string mode = statement.expression; // "like", "except", or ""
                     const std::string pattern = statement.secondary_expression;
                     std::vector<std::string> candidate_names;
-                    candidate_names.reserve(globals.size() + arrays.size());
+                    candidate_names.reserve(globals.size() + arrays.size() + frame.locals.size() + frame.local_names.size());
                     for (const auto &[name, _] : globals)
                     {
                         candidate_names.push_back(name);
                     }
                     for (const auto &[name, _] : arrays)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
+                    for (const auto &[name, _] : frame.locals)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
+                    for (const auto &name : frame.local_names)
                     {
                         if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
                         {
