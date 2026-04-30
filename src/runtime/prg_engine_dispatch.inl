@@ -5582,10 +5582,23 @@
                     // RELEASE ALL [LIKE <pattern> | EXCEPT <pattern>]
                     const std::string mode = statement.expression; // "like", "except", or ""
                     const std::string pattern = statement.secondary_expression;
+                    std::vector<std::string> candidate_names;
+                    candidate_names.reserve(globals.size() + arrays.size());
+                    for (const auto &[name, _] : globals)
+                    {
+                        candidate_names.push_back(name);
+                    }
+                    for (const auto &[name, _] : arrays)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
                     if (mode.empty())
                     {
                         std::vector<std::string> to_release;
-                        for (const auto &[name, _] : globals)
+                        for (const auto &name : candidate_names)
                         {
                             if (public_names.contains(name))
                             {
@@ -5601,9 +5614,8 @@
                     else
                     {
                         std::vector<std::string> to_erase;
-                        for (const auto &[name, val] : globals)
+                        for (const auto &name : candidate_names)
                         {
-                            (void)val;
                             if (public_names.contains(name))
                             {
                                 continue;

@@ -2532,6 +2532,39 @@ void test_release_all_like_pattern() {
     fs::remove_all(tmp, ign);
 }
 
+void test_release_all_like_pattern_reaches_arrays() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_like_arrays";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "DIMENSION tmp_arr[1], keep_arr[1]\n"
+        "tmp_arr[1] = 'gone'\n"
+        "keep_arr[1] = 'stay'\n"
+        "RELEASE ALL LIKE tmp_*\n"
+        "tmp_type = TYPE('tmp_arr')\n"
+        "keep_val = keep_arr[1]\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL LIKE should reach arrays");
+    const auto tmp_type = state.globals.find("tmp_type");
+    const auto keep_val = state.globals.find("keep_val");
+    expect(tmp_type != state.globals.end(), "released array TYPE() should be captured");
+    expect(keep_val != state.globals.end(), "surviving array value should be captured");
+    if (tmp_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(tmp_type->second) == "U", "RELEASE ALL LIKE tmp_* should release matching arrays");
+    }
+    if (keep_val != state.globals.end()) {
+        expect(copperfin::runtime::format_value(keep_val->second) == "stay", "RELEASE ALL LIKE tmp_* should preserve non-matching arrays");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_release_all_except_pattern() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_release_except";
@@ -2546,6 +2579,39 @@ void test_release_all_except_pattern() {
     expect(state.completed, "RELEASE ALL EXCEPT should complete");
     expect(state.globals.find("keep_x") != state.globals.end(), "keep_x should survive EXCEPT keep_*");
     expect(state.globals.find("gone_y") == state.globals.end(), "gone_y should be released");
+    fs::remove_all(tmp, ign);
+}
+
+void test_release_all_except_pattern_reaches_arrays() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_except_arrays";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "DIMENSION keep_arr[1], gone_arr[1]\n"
+        "keep_arr[1] = 'stay'\n"
+        "gone_arr[1] = 'gone'\n"
+        "RELEASE ALL EXCEPT keep_*\n"
+        "keep_val = keep_arr[1]\n"
+        "gone_type = TYPE('gone_arr')\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL EXCEPT should reach arrays");
+    const auto keep_val = state.globals.find("keep_val");
+    const auto gone_type = state.globals.find("gone_type");
+    expect(keep_val != state.globals.end(), "surviving EXCEPT array value should be captured");
+    expect(gone_type != state.globals.end(), "released EXCEPT array TYPE() should be captured");
+    if (keep_val != state.globals.end()) {
+        expect(copperfin::runtime::format_value(keep_val->second) == "stay", "RELEASE ALL EXCEPT keep_* should preserve matching arrays");
+    }
+    if (gone_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gone_type->second) == "U", "RELEASE ALL EXCEPT keep_* should release non-matching arrays");
+    }
     fs::remove_all(tmp, ign);
 }
 
@@ -3204,7 +3270,9 @@ int main() {
     test_release_vars_erases_named_globals();
     test_release_all_clears_all_globals();
     test_release_all_like_pattern();
+    test_release_all_like_pattern_reaches_arrays();
     test_release_all_except_pattern();
+    test_release_all_except_pattern_reaches_arrays();
     test_release_all_preserves_public_bindings();
     test_clear_memory_erases_all_globals();
     test_cancel_halts_execution();
