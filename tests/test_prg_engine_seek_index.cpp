@@ -1434,6 +1434,165 @@ void test_order_and_tag_preserve_index_file_identity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_command_seek_in_target_with_temporary_order_expression() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_command_seek_in_target_temp_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path people_cdx_path = temp_root / "people.cdx";
+    const fs::path other_cdx_path = temp_root / "other.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(people_cdx_path, "NAME", "NAME");
+    write_synthetic_cdx(other_cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "local_command_seek_in_target_temp_order.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO UPPER(NAME) IN People\n"
+        "cPeopleOrder = ORDER('People')\n"
+        "cOtherOrder = ORDER('Other')\n"
+        "SEEK 'CHARLIE' IN People\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "nPeopleRecAfterSeek = RECNO('People')\n"
+        "SELECT People\n"
+        "cPeopleNameAfterSeek = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local command-path SEEK IN target temporary-order script should complete");
+
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto people_order = state.globals.find("cpeopleorder");
+    const auto other_order = state.globals.find("cotherorder");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto people_rec_after_seek = state.globals.find("npeoplerecafterseek");
+    const auto people_name_after_seek = state.globals.find("cpeoplenameafterseek");
+
+    expect(other_rec_before != state.globals.end(), "RECNO() before targeted local SEEK should be captured");
+    expect(people_order != state.globals.end(), "ORDER('People') after targeted local SET ORDER should be captured");
+    expect(other_order != state.globals.end(), "ORDER('Other') after targeted local SET ORDER should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted local SEEK should be captured");
+    expect(other_rec_after != state.globals.end(), "RECNO() on selected local cursor after targeted SEEK should be captured");
+    expect(people_rec_after_seek != state.globals.end(), "RECNO() on targeted local cursor after targeted SEEK should be captured");
+    expect(people_name_after_seek != state.globals.end(), "NAME on targeted local cursor after targeted SEEK should be captured");
+
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "1", "selected local cursor should begin at first record");
+    }
+    if (people_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_order->second) == "UPPER(NAME)", "SET ORDER TO UPPER(NAME) IN People should affect the targeted local cursor");
+    }
+    if (other_order != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_order->second).empty(), "SET ORDER TO ... IN People should not alter the selected non-target local cursor");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "OTHER", "SEEK ... IN People should preserve the current selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "1", "SEEK ... IN People should not move the selected non-target local cursor pointer");
+    }
+    if (people_rec_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec_after_seek->second) == "3", "SEEK ... IN People should move the targeted local cursor pointer to the match");
+    }
+    if (people_name_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_name_after_seek->second) == "CHARLIE", "SEEK ... IN People should expose the targeted local row values");
+    }
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.order" &&
+                event.detail.find("UPPER(NAME) [norm=upper, coll=case-folded]") != std::string::npos;
+        }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.seek" &&
+                event.detail.find("UPPER(NAME) [norm=upper, coll=case-folded]: CHARLIE -> found") != std::string::npos;
+        }),
+        "local command-path SET ORDER ... IN and SEEK ... IN should emit runtime.order and runtime.seek events for targeted local cursors");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_local_descending_temporary_order_expression_in_target_preserves_selection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_desc_temp_order_in_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path people_cdx_path = temp_root / "people.cdx";
+    const fs::path other_cdx_path = temp_root / "other.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "CHARLIE", "ECHO"});
+    write_synthetic_cdx(people_cdx_path, "NAME", "NAME");
+    write_synthetic_cdx(other_cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "local_desc_temp_order_in_target.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO UPPER(NAME) IN People DESCENDING\n"
+        "SET NEAR ON\n"
+        "SEEK 'BETA' IN People\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "nPeopleRecAfterSeek = RECNO('People')\n"
+        "SET NEAR OFF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local descending temporary-order IN-target script should complete");
+
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto people_rec_after_seek = state.globals.find("npeoplerecafterseek");
+
+    expect(other_rec_before != state.globals.end(), "selected local cursor RECNO() before targeted descending seek should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted descending local seek should be captured");
+    expect(other_rec_after != state.globals.end(), "selected local cursor RECNO() after targeted descending seek should be captured");
+    expect(people_rec_after_seek != state.globals.end(), "target local cursor RECNO() after targeted descending seek should be captured");
+
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected local cursor should start at bottom before targeted descending seek");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "OTHER", "SEEK ... IN should preserve the selected local alias with descending order");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "SEEK ... IN should preserve selected local cursor pointer with descending order");
+    }
+    if (people_rec_after_seek != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec_after_seek->second) == "1", "descending SET ORDER ... IN plus SET NEAR should position targeted local cursor on descending near-match record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_respects_grounded_order_for_expression_hints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_expression";
@@ -2387,6 +2546,8 @@ int main() {
     test_seek_function_accepts_direction_suffix_in_order_designator();
     test_local_table_temporary_order_expression_parity();
     test_order_and_tag_preserve_index_file_identity();
+    test_local_command_seek_in_target_with_temporary_order_expression();
+    test_local_descending_temporary_order_expression_in_target_preserves_selection();
     test_seek_respects_grounded_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
     test_set_near_is_scoped_by_data_session();

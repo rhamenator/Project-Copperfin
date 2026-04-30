@@ -142,6 +142,8 @@ The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDIN
 
 That local indexed-search slice now also evaluates a broader grounded tag-expression family on the shipped `SEEK` path, including `LEFT(...)`, `RIGHT(...)`, `SUBSTR(...)`, `PADL(...)`, `PADR(...)`, and a constrained first-pass `STR(<numeric>[, <width>[, <decimals>]])` path captured from loaded tag metadata, including first-pass default-space `PADL/PADR` behavior. The seek path now also preserves significant search-key whitespace so padded tag expressions can match without trimming away meaningful leading/trailing spaces.
 
+That same local temporary-order path now also has focused command-path `IN <alias|work area>` parity coverage for ad hoc expressions such as `UPPER(NAME)`, including selected-alias preservation and descending `SET NEAR` behavior on non-selected targeted cursors.
+
 The expression/function layer currently has first-pass support for these VFP-facing built-ins:
 
 - `COUNT()`, `SUM()`, `AVG()/AVERAGE()`, `MIN()`, `MAX()`
