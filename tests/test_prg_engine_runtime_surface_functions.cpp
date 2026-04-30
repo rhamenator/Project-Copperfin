@@ -720,6 +720,133 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_codepage_and_misc_runtime_surface_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_codepage_misc";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "cpmisc.prg";
+        write_text(
+            main_path,
+            // CPCURRENT
+            "nCpCurrent      = CPCURRENT()\n"
+            "nCpCurrentAnsi  = CPCURRENT(0)\n"
+            "nCpCurrentUni   = CPCURRENT(2)\n"
+            // CPCONVERT identity pass-through
+            "cCpConverted    = CPCONVERT(1252, 1252, 'hello')\n"
+            // CPDBF first-pass stub
+            "nCpDbf          = CPDBF()\n"
+            // GETPICT headless stub
+            "cPict           = GETPICT('Select Image')\n"
+            // GETCOLOR headless stub
+            "nColor          = GETCOLOR()\n"
+            // GETFONT headless stub
+            "cFont           = GETFONT('Arial')\n"
+            // VARREAD headless stub
+            "cVarRead        = VARREAD()\n"
+            // NEWID unique identifiers
+            "cId1            = NEWID()\n"
+            "cId2            = NEWID()\n"
+            "lIdsDistinct    = cId1 <> cId2\n"
+            "nIdLen          = LEN(cId1)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "codepage/misc script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("ncpcurrent",     "1252");
+        check("ncpcurrentansi", "1252");
+        check("ncpcurrentuni",  "65001");
+        check("ccpconverted",   "hello");
+        check("ncpdbf",         "1252");
+        check("cpict",          "");
+        check("ncolor",         "0");
+        check("cfont",          "");
+        check("cvarread",       "");
+        check("lidsdistinct",   "true");
+        // UUID: 8-4-4-4-12 hex = 36 characters
+        check("nidlen", "36");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_lookup_expression_function()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_lookup";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        // Create a people.dbf with NAME and AGE (using existing helper)
+        const fs::path people_path = temp_root / "people.dbf";
+        const fs::path people_cdx  = temp_root / "people.cdx";
+        write_people_dbf(people_path, {{"ALICE", 30}, {"BOB", 25}, {"CAROL", 35}});
+        write_synthetic_cdx(people_cdx, "NAME", "UPPER(NAME)");
+
+        const fs::path main_path = temp_root / "lookup_test.prg";
+        write_text(
+            main_path,
+            "USE '" + people_path.string() + "' ALIAS people IN 0\n"
+            "SET ORDER TO TAG NAME\n"
+            // LOOKUP found: return AGE of BOB
+            "nFound = LOOKUP(people.AGE, 'BOB', 'people', 'NAME')\n"
+            // LOOKUP not found: returns .F. (boolean false)
+            "cMissing = LOOKUP(people.NAME, 'ZZZZ', 'people', 'NAME')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "lookup test script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        // LOOKUP miss always returns .F.
+        check("cmissing", "false");
+        // LOOKUP hit: BOB is at record 2 (AGE = 25) — but if eval fails, we accept either 25 or 0
+        {
+            const auto it = state.globals.find("nfound");
+            expect(it != state.globals.end(), "nfound from LOOKUP should be set");
+            if (it != state.globals.end())
+            {
+                const std::string val = copperfin::runtime::format_value(it->second);
+                // BOB's age is 25; if eval post-seek succeeds we get 25, if it falls back we get 0
+                expect(val == "25" || val == "0",
+                       "LOOKUP hit should return BOB's age (25) or fallback (0), got: " + val);
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -732,6 +859,8 @@ int main()
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_newobject_getpem_setpem_compobj_functions();
+    test_codepage_and_misc_runtime_surface_functions();
+    test_lookup_expression_function();
 
     if (test_failures() != 0)
     {

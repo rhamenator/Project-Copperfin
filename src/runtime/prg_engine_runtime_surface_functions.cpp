@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
+#include <random>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -989,6 +991,71 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     }
     if (function == "cursorsetprop" || function == "cursorgetprop") {
         return make_number_value(0.0);
+    }
+    // NEWID([cDatabase]) — generate a unique identifier string (UUID v4-style, no braces)
+    if (function == "newid") {
+        static thread_local std::mt19937_64 uuid_gen{std::random_device{}()};
+        std::uniform_int_distribution<std::uint64_t> dist(0, std::numeric_limits<std::uint64_t>::max());
+        const std::uint64_t hi = dist(uuid_gen);
+        const std::uint64_t lo = dist(uuid_gen);
+        // Set UUID v4 bits
+        const std::uint64_t hi4 = (hi & 0xFFFFFFFFFFFF0FFFULL) | 0x0000000000004000ULL;
+        const std::uint64_t lo4 = (lo & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
+        std::ostringstream oss;
+        oss << std::uppercase << std::hex << std::setfill('0')
+            << std::setw(8) << ((hi4 >> 32) & 0xFFFFFFFFU) << '-'
+            << std::setw(4) << ((hi4 >> 16) & 0xFFFFU) << '-'
+            << std::setw(4) << (hi4 & 0xFFFFU) << '-'
+            << std::setw(4) << ((lo4 >> 48) & 0xFFFFU) << '-'
+            << std::setw(12) << (lo4 & 0x0000FFFFFFFFFFFFULL);
+        return make_string_value(oss.str());
+    }
+    // CPCURRENT([nType]) — return current active code page number
+    // nType omitted or 0 → ANSI code page; nType 2 → OEM/Unicode mode indicator
+    if (function == "cpcurrent") {
+        const int type_flag = arguments.empty() ? 0 : static_cast<int>(std::llround(value_as_number(arguments[0])));
+        // On Linux/cross-platform first pass: return 1252 (Windows Latin-1) for ANSI,
+        // 65001 for Unicode flag.
+        return make_number_value(type_flag == 2 ? 65001.0 : 1252.0);
+    }
+    // CPCONVERT(nSourceCP, nTargetCP, cString [, nFlags]) — convert string between code pages
+    // First-pass: identity conversion (return string unchanged).
+    if (function == "cpconvert" && arguments.size() >= 3U) {
+        return make_string_value(value_as_string(arguments[2]));
+    }
+    // CPDBF([cAlias]) — return code page stored in DBF header of the cursor
+    // First-pass: return 1252 for all cursors (Windows Latin-1 default).
+    if (function == "cpdbf") {
+        return make_number_value(1252.0);
+    }
+    // GETPICT([cTitle [, cFileName]]) — headless stub: record event and return ""
+    if (function == "getpict") {
+        const std::string title = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+        if (record_event_callback) {
+            record_event_callback("runtime.getpict", title);
+        }
+        return make_string_value({});
+    }
+    // GETCOLOR([nDefaultColor [, cTitle]]) — headless stub: record event and return 0
+    if (function == "getcolor") {
+        const std::string title = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+        if (record_event_callback) {
+            record_event_callback("runtime.getcolor", title);
+        }
+        return make_number_value(0.0);
+    }
+    // GETFONT(cFontName [, nFontSize [, cFontStyle]]) — headless stub: record event and return ""
+    if (function == "getfont" && !arguments.empty()) {
+        const std::string font_name = value_as_string(arguments[0]);
+        if (record_event_callback) {
+            record_event_callback("runtime.getfont", font_name);
+        }
+        return make_string_value({});
+    }
+    // VARREAD() — name of variable currently being read/edited (interactive mode only)
+    // Returns "" in headless runtime.
+    if (function == "varread") {
+        return make_string_value({});
     }
 
     return std::nullopt;

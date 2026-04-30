@@ -869,6 +869,133 @@
                 {
                     return *string_result;
                 }
+                // TEXTMERGE(cExpression [, lRecursive [, cLeftDelimiter, cRightDelimiter]])
+                // Evaluate <<expr>> (or custom delimiters) interpolation within a string.
+                if (function == "textmerge" && !arguments.empty())
+                {
+                    const std::string text = value_as_string(arguments[0]);
+                    const bool recursive = arguments.size() >= 2U && value_as_bool(arguments[1]);
+                    const std::string left_delim  = arguments.size() >= 4U ? value_as_string(arguments[2]) : "<<";
+                    const std::string right_delim = arguments.size() >= 4U ? value_as_string(arguments[3]) : ">>";
+                    if (left_delim.empty() || right_delim.empty())
+                    {
+                        return make_string_value(text);
+                    }
+                    auto apply_merge = [&](const std::string &src) -> std::string
+                    {
+                        std::string result;
+                        std::size_t pos = 0U;
+                        while (pos < src.size())
+                        {
+                            const auto left_pos = src.find(left_delim, pos);
+                            if (left_pos == std::string::npos)
+                            {
+                                result += src.substr(pos);
+                                break;
+                            }
+                            result += src.substr(pos, left_pos - pos);
+                            const auto right_pos = src.find(right_delim, left_pos + left_delim.size());
+                            if (right_pos == std::string::npos)
+                            {
+                                result += src.substr(left_pos);
+                                break;
+                            }
+                            const std::string expr = src.substr(
+                                left_pos + left_delim.size(),
+                                right_pos - left_pos - left_delim.size());
+                            try
+                            {
+                                result += value_as_string(eval_expression_callback_(expr));
+                            }
+                            catch (...)
+                            {
+                                result += left_delim + expr + right_delim;
+                            }
+                            pos = right_pos + right_delim.size();
+                        }
+                        return result;
+                    };
+                    std::string merged = apply_merge(text);
+                    if (recursive)
+                    {
+                        merged = apply_merge(merged);
+                    }
+                    return make_string_value(merged);
+                }
+                // EXECSCRIPT(cScript [, eParam1, ...])
+                // Execute a string as a PRG script and return its return value.
+                // First-pass: extracts RETURN <expr> pattern and evaluates the expression.
+                // Multi-statement scripts without a detectable RETURN emit a runtime event.
+                if (function == "execscript" && !arguments.empty())
+                {
+                    std::string script = value_as_string(arguments[0]);
+                    // Trim leading/trailing whitespace and normalise line endings
+                    auto lstrip = [](std::string s) -> std::string
+                    {
+                        const auto it = std::find_if(s.begin(), s.end(),
+                            [](unsigned char c) { return std::isspace(c) == 0; });
+                        return std::string(it, s.end());
+                    };
+                    auto rstrip = [](std::string s) -> std::string
+                    {
+                        const auto it = std::find_if(s.rbegin(), s.rend(),
+                            [](unsigned char c) { return std::isspace(c) == 0; });
+                        return std::string(s.begin(), it.base());
+                    };
+                    const std::string trimmed = rstrip(lstrip(script));
+                    // Detect single RETURN <expr> (case-insensitive)
+                    const std::string lower7 = trimmed.size() >= 7U
+                        ? std::string{
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[0]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[1]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[2]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[3]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[4]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[5]))),
+                              static_cast<char>(std::tolower(static_cast<unsigned char>(trimmed[6])))
+                          }
+                        : std::string{};
+                    if (lower7 == "return " && trimmed.find('\n') == std::string::npos)
+                    {
+                        const std::string return_expr = lstrip(trimmed.substr(7U));
+                        try
+                        {
+                            return eval_expression_callback_(return_expr);
+                        }
+                        catch (...) {}
+                    }
+                    record_event_callback_(
+                        "runtime.execscript",
+                        trimmed.size() > 256U ? trimmed.substr(0U, 256U) + "..." : trimmed);
+                    return make_empty_value();
+                }
+                // LOOKUP(eReturnExpr, eSearchExpr, cTableAlias [, cTagName])
+                // Seek eSearchExpr in cTableAlias (optionally on cTagName index) then
+                // evaluate eReturnExpr in the context of the found record.
+                // The record pointer in the target cursor is permanently moved.
+                if (function == "lookup" && arguments.size() >= 3U && !raw_arguments.empty())
+                {
+                    const std::string return_expr_raw = raw_arguments[0];
+                    const std::string search_key  = value_as_string(arguments[1]);
+                    const std::string table_alias = value_as_string(arguments[2]);
+                    const std::string tag_name    = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
+                    if (seek_callback_(search_key, /*move_pointer=*/true, table_alias, tag_name))
+                    {
+                        try
+                        {
+                            return eval_expression_callback_(return_expr_raw);
+                        }
+                        catch (...)
+                        {
+                            return arguments[0]; // fallback to pre-seek value
+                        }
+                    }
+                    // Not found — return typed default based on pre-evaluated return expr kind
+                    const PrgValue &pre = arguments[0];
+                    if (pre.kind == PrgValueKind::number) return make_number_value(0.0);
+                    if (pre.kind == PrgValueKind::boolean) return make_boolean_value(false);
+                    return make_boolean_value(false);
+                }
                 if (const auto type_result = evaluate_type_function(function, arguments, array_exists_callback_, eval_expression_callback_))
                 {
                     return *type_result;

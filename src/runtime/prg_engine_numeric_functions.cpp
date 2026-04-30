@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -128,6 +130,63 @@ std::optional<PrgValue> evaluate_numeric_function(
             }
         }
         return make_number_value(std::generate_canonical<double, 53>(generator));
+    }
+    // HEX(nNumber) — return uppercase hexadecimal representation of a non-negative integer
+    if (function == "hex" && !arguments.empty()) {
+        const auto n = static_cast<std::uint64_t>(
+            static_cast<std::int64_t>(std::max(0.0, std::trunc(value_as_number(arguments[0])))));
+        if (n == 0U) {
+            return make_string_value("0");
+        }
+        std::ostringstream oss;
+        oss << std::uppercase << std::hex << n;
+        return make_string_value(oss.str());
+    }
+    // FV(nRate, nPeriods, nPayment [, nPV [, nType]])
+    // Future value of an annuity.  nType 0 = end-of-period (default), 1 = beginning.
+    if (function == "fv" && arguments.size() >= 3U) {
+        const double rate    = value_as_number(arguments[0]);
+        const double nper    = value_as_number(arguments[1]);
+        const double payment = value_as_number(arguments[2]);
+        const double pv      = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
+        const int    type    = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+        double fv = 0.0;
+        if (std::abs(rate) < 1e-15) {
+            fv = -(pv + payment * nper);
+        } else {
+            const double factor = std::pow(1.0 + rate, nper);
+            fv = -(pv * factor + payment * (type == 1 ? (1.0 + rate) : 1.0) * (factor - 1.0) / rate);
+        }
+        return make_number_value(fv);
+    }
+    // PV(nRate, nPeriods, nPayment [, nFV [, nType]])
+    // Present value of an annuity.  nType 0 = end-of-period (default), 1 = beginning.
+    if (function == "pv" && arguments.size() >= 3U) {
+        const double rate    = value_as_number(arguments[0]);
+        const double nper    = value_as_number(arguments[1]);
+        const double payment = value_as_number(arguments[2]);
+        const double fv      = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
+        const int    type    = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
+        double pv = 0.0;
+        if (std::abs(rate) < 1e-15) {
+            pv = -(fv + payment * nper);
+        } else {
+            const double factor = std::pow(1.0 + rate, nper);
+            pv = -(fv / factor + payment * (type == 1 ? (1.0 + rate) : 1.0) * (1.0 - 1.0 / factor) / rate);
+        }
+        return make_number_value(pv);
+    }
+    // PAYMENT(nPrincipal, nRate, nPeriods)
+    // Periodic payment for a loan (principal > 0, rate per period, nPeriods > 0).
+    if (function == "payment" && arguments.size() >= 3U) {
+        const double principal = value_as_number(arguments[0]);
+        const double rate      = value_as_number(arguments[1]);
+        const double nper      = value_as_number(arguments[2]);
+        if (std::abs(rate) < 1e-15 || nper < 1.0) {
+            return make_number_value(nper >= 1.0 ? principal / nper : 0.0);
+        }
+        const double factor = std::pow(1.0 + rate, nper);
+        return make_number_value(principal * rate * factor / (factor - 1.0));
     }
 
     return std::nullopt;

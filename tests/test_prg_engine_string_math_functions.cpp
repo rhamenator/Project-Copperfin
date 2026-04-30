@@ -342,12 +342,84 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_financial_and_misc_expression_functions()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_financial_misc";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "fin.prg";
+        write_text(
+            main_path,
+            // HEX
+            "cHexZero    = HEX(0)\n"
+            "cHex10      = HEX(10)\n"
+            "cHex255     = HEX(255)\n"
+            "cHex65536   = HEX(65536)\n"
+            // Financial: PAYMENT
+            "nPayment = ROUND(PAYMENT(1000, 0.01, 12), 4)\n"
+            // Financial: FV (save for 10 periods at 5% with $100 payment, PV=0)
+            "nFV = ROUND(FV(0.05, 10, -100), 4)\n"
+            // Financial: PV (present value of 12 payments of $100 at 1% per period)
+            "nPV = ROUND(PV(0.01, 12, -100), 4)\n"
+            // FV zero-rate edge case
+            "nFVZeroRate = FV(0, 5, -200)\n"
+            // TEXTMERGE basic
+            "cName = 'World'\n"
+            "cMerged = TEXTMERGE('Hello <<cName>>!')\n"
+            // TEXTMERGE custom delimiters
+            "cMergedCustom = TEXTMERGE('Value={|1+1|}', .F., '{|', '|}')\n"
+            // TEXTMERGE no delimiters found
+            "cMergedPlain = TEXTMERGE('no markers here')\n"
+            // EXECSCRIPT simple RETURN
+            "nExecResult = EXECSCRIPT('RETURN 7 + 3')\n"
+            // EXECSCRIPT RETURN string
+            "cExecStr = EXECSCRIPT('RETURN LEFT(\"hello\", 3)')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "financial/misc function script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("chexzero",  "0");
+        check("chex10",    "A");
+        check("chex255",   "FF");
+        check("chex65536", "10000");
+        check("npayment",  "88.8488");
+        check("nfv",       "1257.79");
+        check("npv",       "1125.51");
+        check("nfvzerorate", "1000");
+        check("cmerged",       "Hello World!");
+        check("cmergedcustom", "Value=2");
+        check("cmergedplain",  "no markers here");
+        check("nexecresult",   "10");
+        check("cexecstr",      "hel");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 
 } // namespace
 
 int main()
 {
     test_string_and_math_expression_functions();
+    test_financial_and_misc_expression_functions();
 
     if (test_failures() != 0)
     {
