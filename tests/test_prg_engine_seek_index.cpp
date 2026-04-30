@@ -1817,6 +1817,168 @@ void test_seek_respects_grounded_order_for_expression_hints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_respects_numeric_order_for_expression_hints() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_numeric_expression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_idx_with_for(idx_path, "UPPER(NAME)", "AGE >= 20");
+
+    const fs::path main_path = temp_root / "order_for_numeric_expression.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "SEEK 'ALPHA'\n"
+        "lFilteredFound = FOUND()\n"
+        "lFilteredEof = EOF()\n"
+        "nFilteredRec = RECNO()\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "SEEK 'ALPHA'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "SEEK 'CHARLIE'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "numeric FOR-filtered order SEEK script should complete");
+
+    const auto filtered_found = state.globals.find("lfilteredfound");
+    const auto filtered_eof = state.globals.find("lfilteredeof");
+    const auto filtered_rec = state.globals.find("nfilteredrec");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto visible_found = state.globals.find("lvisiblefound");
+    const auto visible_rec = state.globals.find("nvisiblerec");
+
+    expect(filtered_found != state.globals.end(), "SEEK on a numerically filtered-out key should expose FOUND()");
+    expect(filtered_eof != state.globals.end(), "SEEK on a numerically filtered-out key should expose EOF()");
+    expect(filtered_rec != state.globals.end(), "SEEK on a numerically filtered-out key should expose RECNO()");
+    expect(near_found != state.globals.end(), "SET NEAR SEEK on a numerically filtered-out key should expose FOUND()");
+    expect(near_rec != state.globals.end(), "SET NEAR SEEK on a numerically filtered-out key should expose RECNO()");
+    expect(visible_found != state.globals.end(), "SEEK on a numerically visible key should expose FOUND()");
+    expect(visible_rec != state.globals.end(), "SEEK on a numerically visible key should expose RECNO()");
+
+    if (filtered_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_found->second) == "false", "numeric FOR expressions should filter ALPHA out of the indexed candidate set");
+    }
+    if (filtered_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_eof->second) == "true", "a numerically filtered-out seek without SET NEAR should still land at EOF");
+    }
+    if (filtered_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_rec->second) == "4", "a numerically filtered-out seek without SET NEAR should position after the visible rows");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "SET NEAR should still report a miss for a numerically filtered-out key");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "2", "SET NEAR should move to the first row that survives the numeric FOR expression");
+    }
+    if (visible_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_found->second) == "true", "numeric FOR expressions should still allow visible indexed keys");
+    }
+    if (visible_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_rec->second) == "3", "numeric FOR expressions should still position on the matching visible row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_seek_respects_string_order_for_expression_hints() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_string_expression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path idx_path = temp_root / "people.idx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_idx_with_for(idx_path, "UPPER(NAME)", "NAME = 'BRAVO'");
+
+    const fs::path main_path = temp_root / "order_for_string_expression.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "SEEK 'ALPHA'\n"
+        "lFilteredFound = FOUND()\n"
+        "lFilteredEof = EOF()\n"
+        "nFilteredRec = RECNO()\n"
+        "SET NEAR ON\n"
+        "GO TOP\n"
+        "SEEK 'ALPHA'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "SEEK 'BRAVO'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "string FOR-filtered order SEEK script should complete");
+
+    const auto filtered_found = state.globals.find("lfilteredfound");
+    const auto filtered_eof = state.globals.find("lfilteredeof");
+    const auto filtered_rec = state.globals.find("nfilteredrec");
+    const auto near_found = state.globals.find("lnearfound");
+    const auto near_rec = state.globals.find("nnearrec");
+    const auto visible_found = state.globals.find("lvisiblefound");
+    const auto visible_rec = state.globals.find("nvisiblerec");
+
+    expect(filtered_found != state.globals.end(), "SEEK on a string-filtered-out key should expose FOUND()");
+    expect(filtered_eof != state.globals.end(), "SEEK on a string-filtered-out key should expose EOF()");
+    expect(filtered_rec != state.globals.end(), "SEEK on a string-filtered-out key should expose RECNO()");
+    expect(near_found != state.globals.end(), "SET NEAR SEEK on a string-filtered-out key should expose FOUND()");
+    expect(near_rec != state.globals.end(), "SET NEAR SEEK on a string-filtered-out key should expose RECNO()");
+    expect(visible_found != state.globals.end(), "SEEK on a string-visible key should expose FOUND()");
+    expect(visible_rec != state.globals.end(), "SEEK on a string-visible key should expose RECNO()");
+
+    if (filtered_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_found->second) == "false", "string FOR expressions should filter ALPHA out of the indexed candidate set");
+    }
+    if (filtered_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_eof->second) == "true", "a string-filtered seek without SET NEAR should still land at EOF");
+    }
+    if (filtered_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_rec->second) == "4", "a string-filtered seek without SET NEAR should position after the visible rows");
+    }
+    if (near_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_found->second) == "false", "SET NEAR should still report a miss for a string-filtered-out key");
+    }
+    if (near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near_rec->second) == "2", "SET NEAR should move to the surviving string-filtered row");
+    }
+    if (visible_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_found->second) == "true", "string FOR expressions should still allow visible indexed keys");
+    }
+    if (visible_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(visible_rec->second) == "2", "string FOR expressions should still position on the matching visible row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 void test_ndx_numeric_domain_guides_seek_near_ordering() {
     namespace fs = std::filesystem;
@@ -2693,6 +2855,8 @@ int main() {
     test_local_descending_temporary_order_expression_in_target_preserves_selection();
     test_local_temporary_order_expression_indexseek_parity();
     test_seek_respects_grounded_order_for_expression_hints();
+    test_seek_respects_numeric_order_for_expression_hints();
+    test_seek_respects_string_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
     test_set_near_is_scoped_by_data_session();
     test_foxtools_registration_and_call_bridge();

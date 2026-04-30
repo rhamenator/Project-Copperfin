@@ -319,7 +319,8 @@
 
         bool order_for_expression_matches_record(const std::string &for_expression, const vfp::DbfRecord &record) const
         {
-            std::string canonical = uppercase_copy(trim_copy(for_expression));
+            const std::string trimmed = trim_copy(for_expression);
+            std::string canonical = uppercase_copy(trim_copy(trimmed));
             canonical.erase(
                 std::remove_if(canonical.begin(), canonical.end(), [](unsigned char ch)
                                { return std::isspace(ch) != 0; }),
@@ -335,6 +336,173 @@
             if (canonical == "DELETED()=.T.")
             {
                 return record.deleted;
+            }
+
+            const auto split_top_level_comparison = [](const std::string &expression)
+                -> std::optional<std::tuple<std::string, std::string, std::string>>
+            {
+                static constexpr std::array<const char *, 8U> operators = {
+                    "==",
+                    "<>",
+                    "!=",
+                    ">=",
+                    "<=",
+                    "=",
+                    ">",
+                    "<"};
+                int depth = 0;
+                char quote = '\0';
+                for (std::size_t index = 0; index < expression.size(); ++index)
+                {
+                    const char ch = expression[index];
+                    if (quote != '\0')
+                    {
+                        if (ch == quote)
+                        {
+                            quote = '\0';
+                        }
+                        continue;
+                    }
+                    if (ch == '\'' || ch == '"')
+                    {
+                        quote = ch;
+                        continue;
+                    }
+                    if (ch == '(')
+                    {
+                        ++depth;
+                        continue;
+                    }
+                    if (ch == ')' && depth > 0)
+                    {
+                        --depth;
+                        continue;
+                    }
+                    if (depth != 0)
+                    {
+                        continue;
+                    }
+
+                    for (const char *operator_text : operators)
+                    {
+                        const std::size_t length = std::char_traits<char>::length(operator_text);
+                        if (index + length > expression.size())
+                        {
+                            continue;
+                        }
+                        if (expression.compare(index, length, operator_text) == 0)
+                        {
+                            return std::make_tuple(
+                                trim_copy(expression.substr(0U, index)),
+                                std::string(operator_text),
+                                trim_copy(expression.substr(index + length)));
+                        }
+                    }
+                }
+                return std::nullopt;
+            };
+
+            const auto parse_boolean_literal = [](const std::string &expression) -> std::optional<bool>
+            {
+                const std::string upper = uppercase_copy(trim_copy(expression));
+                if (upper == ".T." || upper == ".TRUE.")
+                {
+                    return true;
+                }
+                if (upper == ".F." || upper == ".FALSE.")
+                {
+                    return false;
+                }
+                return std::nullopt;
+            };
+
+            const auto evaluate_filter_operand = [&](const std::string &expression)
+            {
+                struct EvaluatedOperand
+                {
+                    std::string text;
+                    std::optional<double> numeric;
+                    std::optional<bool> boolean;
+                };
+
+                EvaluatedOperand operand{};
+                const std::string upper = uppercase_copy(trim_copy(expression));
+                if (upper == "DELETED()")
+                {
+                    operand.boolean = record.deleted;
+                    operand.text = record.deleted ? ".T." : ".F.";
+                    return operand;
+                }
+
+                operand.text = evaluate_index_expression(expression, record);
+                operand.numeric = try_parse_numeric_index_value(operand.text);
+                operand.boolean = parse_boolean_literal(expression);
+                if (!operand.boolean.has_value())
+                {
+                    operand.boolean = parse_boolean_literal(operand.text);
+                }
+                return operand;
+            };
+
+            const auto comparison = split_top_level_comparison(trimmed);
+            if (!comparison.has_value())
+            {
+                return true;
+            }
+
+            const auto &[left_expression, operator_text, right_expression] = *comparison;
+            if (left_expression.empty() || right_expression.empty())
+            {
+                return true;
+            }
+
+            const auto left = evaluate_filter_operand(left_expression);
+            const auto right = evaluate_filter_operand(right_expression);
+
+            int relation = 0;
+            if (left.boolean.has_value() && right.boolean.has_value())
+            {
+                relation = left.boolean == right.boolean ? 0 : (*left.boolean ? 1 : -1);
+            }
+            else if (left.numeric.has_value() && right.numeric.has_value())
+            {
+                if (*left.numeric < *right.numeric)
+                {
+                    relation = -1;
+                }
+                else if (*left.numeric > *right.numeric)
+                {
+                    relation = 1;
+                }
+            }
+            else
+            {
+                relation = compare_index_keys(left.text, right.text, "");
+            }
+
+            if (operator_text == "=" || operator_text == "==")
+            {
+                return relation == 0;
+            }
+            if (operator_text == "<>" || operator_text == "!=")
+            {
+                return relation != 0;
+            }
+            if (operator_text == ">")
+            {
+                return relation > 0;
+            }
+            if (operator_text == ">=")
+            {
+                return relation >= 0;
+            }
+            if (operator_text == "<")
+            {
+                return relation < 0;
+            }
+            if (operator_text == "<=")
+            {
+                return relation <= 0;
             }
             return true;
         }

@@ -160,6 +160,8 @@ The current indexed-search slice covers `SET ORDER TO TAG`, first-pass `ASCENDIN
 
 That local indexed-search slice now also evaluates a broader grounded tag-expression family on the shipped `SEEK` path, including `LEFT(...)`, `RIGHT(...)`, `SUBSTR(...)`, `PADL(...)`, `PADR(...)`, and a constrained first-pass `STR(<numeric>[, <width>[, <decimals>]])` path captured from loaded tag metadata, including first-pass default-space `PADL/PADR` behavior. The seek path now also preserves significant search-key whitespace so padded tag expressions can match without trimming away meaningful leading/trailing spaces.
 
+Grounded order `FOR` metadata is now consumed a little deeper on the same seek path instead of staying mostly descriptive. In addition to the earlier `DELETED()` filter support, local indexed seeks now honor first-pass top-level string and numeric comparison filters such as `NAME = 'BRAVO'` and `AGE >= 20`, including correct `SET NEAR` miss positioning against the surviving candidate set.
+
 That same local temporary-order path now also has focused command-path `IN <alias|work area>` parity coverage for ad hoc expressions such as `UPPER(NAME)`, including selected-alias preservation and descending `SET NEAR` behavior on non-selected targeted cursors.
 
 That same local ad hoc-order lane now also has focused helper-path parity for `INDEXSEEK(.F./.T.)` over temporary expressions such as `UPPER(NAME)`, including descending `SET NEAR` miss positioning while preserving the controlling `ORDER()` state.
