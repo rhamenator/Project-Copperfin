@@ -94,6 +94,250 @@
                 detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
             };
 
+            auto append_cursor_structure_metadata = [&](CursorState *cursor, std::string &detail)
+            {
+                if (cursor == nullptr)
+                {
+                    return;
+                }
+
+                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+                std::string field_detail;
+                for (std::size_t index = 0U; index < fields.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        field_detail += ",";
+                    }
+                    field_detail += fields[index].name;
+                }
+
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += cursor->alias.empty()
+                    ? ("workarea=" + std::to_string(cursor->work_area))
+                    : (cursor->alias + "@" + std::to_string(cursor->work_area));
+                detail += " field_count=" + std::to_string(fields.size());
+                detail += " schema_fields=" + (field_detail.empty() ? std::string{"<none>"} : field_detail);
+                if (!cursor->source_path.empty())
+                {
+                    detail += " source=" + cursor->source_path;
+                }
+            };
+
+            auto append_session_status_metadata = [&](Frame &current_frame, std::string &detail)
+            {
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += "datasession=" + std::to_string(current_data_session);
+                detail += " open_cursors=" + std::to_string(current_session_state().cursors.size());
+                detail += " globals=" + std::to_string(globals.size());
+                detail += " locals=" + std::to_string(current_frame.locals.size());
+                detail += " selected_workarea=" + std::to_string(current_selected_work_area());
+                append_cursor_view_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), {}, detail);
+            };
+
+            auto resolve_runtime_expression_text = [&](const std::string &raw_expression, Frame &current_frame) -> std::string
+            {
+                const std::string trimmed = trim_copy(raw_expression);
+                if (trimmed.empty())
+                {
+                    return {};
+                }
+
+                const PrgValue evaluated = evaluate_expression(trimmed, current_frame);
+                if (evaluated.kind != PrgValueKind::empty)
+                {
+                    return value_as_string(evaluated);
+                }
+
+                return unquote_string(trimmed);
+            };
+
+            auto memory_value_type_code = [&](const std::string &name, const PrgValue &value) -> std::string
+            {
+                if (find_array(name) != nullptr)
+                {
+                    return "A";
+                }
+                if (resolve_ole_object(value).has_value())
+                {
+                    return "O";
+                }
+                switch (value.kind)
+                {
+                case PrgValueKind::boolean:
+                    return "L";
+                case PrgValueKind::number:
+                case PrgValueKind::int64:
+                case PrgValueKind::uint64:
+                    return "N";
+                case PrgValueKind::string:
+                    return "C";
+                case PrgValueKind::empty:
+                    return "U";
+                }
+                return "U";
+            };
+
+            auto memory_value_preview = [&](const std::string &name, const PrgValue &value) -> std::string
+            {
+                if (const RuntimeArray *array = find_array(name); array != nullptr)
+                {
+                    return std::to_string(array->rows) + "x" + std::to_string(array->columns);
+                }
+                if (const auto object = resolve_ole_object(value); object.has_value())
+                {
+                    return "<object:" + (*object)->prog_id + " props=" + std::to_string((*object)->properties.size()) + ">";
+                }
+                return format_value(value);
+            };
+
+            auto memory_scope_for_name = [&](const std::string &name, const Frame &current_frame) -> std::string
+            {
+                if (current_frame.local_names.contains(name) || current_frame.locals.contains(name))
+                {
+                    return "local";
+                }
+                if (current_frame.private_saved_values.contains(name))
+                {
+                    return "private";
+                }
+                if (public_names.contains(name))
+                {
+                    return "public";
+                }
+                return "global";
+            };
+
+            auto append_memory_metadata = [&](Frame &current_frame, std::string &detail)
+            {
+                struct MemoryEntry
+                {
+                    std::string name;
+                    std::string scope;
+                    std::string type;
+                    std::string preview;
+                };
+
+                std::vector<MemoryEntry> entries;
+                std::vector<MemoryEntry> shadowed_entries;
+                entries.reserve(globals.size() + current_frame.locals.size());
+
+                for (const auto &[name, value] : globals)
+                {
+                    const MemoryEntry global_entry{
+                        .name = name,
+                        .scope = current_frame.private_saved_values.contains(name) ? "private" : (public_names.contains(name) ? "public" : "global"),
+                        .type = memory_value_type_code(name, value),
+                        .preview = memory_value_preview(name, value)};
+                    if (current_frame.local_names.contains(name) || current_frame.locals.contains(name))
+                    {
+                        shadowed_entries.push_back(global_entry);
+                    }
+                    else
+                    {
+                        entries.push_back(global_entry);
+                    }
+                }
+
+                for (const auto &[name, value] : current_frame.locals)
+                {
+                    entries.push_back({.name = name,
+                                       .scope = "local",
+                                       .type = memory_value_type_code(name, value),
+                                       .preview = memory_value_preview(name, value)});
+                }
+
+                std::sort(entries.begin(), entries.end(), [](const MemoryEntry &left, const MemoryEntry &right) {
+                    return left.name < right.name;
+                });
+                std::sort(shadowed_entries.begin(), shadowed_entries.end(), [](const MemoryEntry &left, const MemoryEntry &right) {
+                    return left.name < right.name;
+                });
+
+                std::size_t public_count = 0U;
+                std::size_t private_count = 0U;
+                std::size_t local_count = 0U;
+                std::size_t global_count = 0U;
+                std::string memvar_detail;
+                for (std::size_t index = 0U; index < entries.size(); ++index)
+                {
+                    const auto &entry = entries[index];
+                    if (entry.scope == "public")
+                    {
+                        ++public_count;
+                    }
+                    else if (entry.scope == "private")
+                    {
+                        ++private_count;
+                    }
+                    else if (entry.scope == "local")
+                    {
+                        ++local_count;
+                    }
+                    else
+                    {
+                        ++global_count;
+                    }
+
+                    if (index > 0U)
+                    {
+                        memvar_detail += ",";
+                    }
+                    memvar_detail += entry.name + "{" + entry.scope + ":" + entry.type + "=" + entry.preview + "}";
+                }
+
+                std::string shadowed_detail;
+                for (std::size_t index = 0U; index < shadowed_entries.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        shadowed_detail += ",";
+                    }
+                    const auto &entry = shadowed_entries[index];
+                    shadowed_detail += entry.name + "{" + entry.scope + ":" + entry.type + "=" + entry.preview + "}";
+                }
+
+                std::vector<std::string> array_entries;
+                array_entries.reserve(arrays.size());
+                for (const auto &[name, array] : arrays)
+                {
+                    array_entries.push_back(name + "{" + memory_scope_for_name(name, current_frame) + ":A=" +
+                                            std::to_string(array.rows) + "x" + std::to_string(array.columns) + "}");
+                }
+                std::sort(array_entries.begin(), array_entries.end());
+
+                std::string array_detail;
+                for (std::size_t index = 0U; index < array_entries.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        array_detail += ",";
+                    }
+                    array_detail += array_entries[index];
+                }
+
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += "datasession=" + std::to_string(current_data_session);
+                detail += " memvar_count=" + std::to_string(entries.size());
+                detail += " public_count=" + std::to_string(public_count);
+                detail += " private_count=" + std::to_string(private_count);
+                detail += " local_count=" + std::to_string(local_count);
+                detail += " global_count=" + std::to_string(global_count);
+                detail += " array_count=" + std::to_string(array_entries.size());
+                detail += " memvars=" + (memvar_detail.empty() ? std::string{"<none>"} : memvar_detail);
+                detail += " shadowed=" + (shadowed_detail.empty() ? std::string{"<none>"} : shadowed_detail);
+                detail += " arrays=" + (array_detail.empty() ? std::string{"<none>"} : array_detail);
+            };
+
             auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
             {
                 std::string assignment_identifier = apply_with_context(raw_identifier, frame);
@@ -5067,12 +5311,22 @@
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    detail += "prompt=" + statement.expression;
+                    const std::string resolved_prompt = resolve_runtime_expression_text(statement.expression, frame);
+                    detail += "prompt=" + resolved_prompt;
+                    if (trim_copy(statement.expression) != resolved_prompt)
+                    {
+                        detail += " prompt_expr=" + trim_copy(statement.expression);
+                    }
                 }
                 if (!statement.secondary_expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    detail += "timeout=" + statement.secondary_expression;
+                    const std::string resolved_timeout = resolve_runtime_expression_text(statement.secondary_expression, frame);
+                    detail += "timeout=" + resolved_timeout;
+                    if (trim_copy(statement.secondary_expression) != resolved_timeout)
+                    {
+                        detail += " timeout_expr=" + trim_copy(statement.secondary_expression);
+                    }
                 }
                 if (!statement.tertiary_expression.empty())
                 {
@@ -5088,6 +5342,20 @@
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.names.front();
+                    std::string resolved_target = apply_with_context(statement.names.front(), frame);
+                    if (!resolved_target.empty() && resolved_target.front() == '&')
+                    {
+                        const PrgValue expanded_identifier = evaluate_expression(resolved_target, frame);
+                        const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
+                        if (!expanded_text.empty())
+                        {
+                            resolved_target = expanded_text;
+                        }
+                    }
+                    if (resolved_target != statement.names.front())
+                    {
+                        detail += " target_resolved=" + resolved_target;
+                    }
                     ExecutionOutcome outcome = assign_runtime_target_value(statement.names.front(), make_string_value(""));
                     if (!outcome.ok)
                     {
@@ -5105,7 +5373,22 @@
                 std::string detail;
                 if (!statement.expression.empty())
                 {
-                    detail += "keys=" + statement.expression;
+                    const std::string resolved_keys = resolve_runtime_expression_text(statement.expression, frame);
+                    detail += "keys=" + resolved_keys;
+                    if (trim_copy(statement.expression) != resolved_keys)
+                    {
+                        detail += " keys_expr=" + trim_copy(statement.expression);
+                    }
+                }
+                if (!statement.secondary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "flag=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "flag=" + statement.tertiary_expression;
                 }
                 events.push_back({.category = "runtime.keyboard",
                                   .detail = detail,
@@ -5152,6 +5435,18 @@
                             detail += " for=" + trim_copy(statement.quaternary_expression);
                         }
                     }
+                }
+                else if (normalize_identifier(statement.identifier) == "structure")
+                {
+                    append_cursor_structure_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), detail);
+                }
+                else if (normalize_identifier(statement.identifier) == "status")
+                {
+                    append_session_status_metadata(frame, detail);
+                }
+                else if (normalize_identifier(statement.identifier) == "memory")
+                {
+                    append_memory_metadata(frame, detail);
                 }
                 if (!statement.expression.empty())
                 {
@@ -5203,6 +5498,18 @@
                             detail += " for=" + trim_copy(statement.quaternary_expression);
                         }
                     }
+                }
+                else if (normalize_identifier(statement.identifier) == "structure")
+                {
+                    append_cursor_structure_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), detail);
+                }
+                else if (normalize_identifier(statement.identifier) == "status")
+                {
+                    append_session_status_metadata(frame, detail);
+                }
+                else if (normalize_identifier(statement.identifier) == "memory")
+                {
+                    append_memory_metadata(frame, detail);
                 }
                 if (!statement.expression.empty())
                 {

@@ -4282,8 +4282,11 @@ void test_wait_window_command_emits_runtime_wait_event() {
     const fs::path main_path = temp_root / "wait_test.prg";
     write_text(
         main_path,
-        "WAIT WINDOW \"Please wait...\" TIMEOUT 5 TO wResult NOWAIT NOCLEAR\n"
-        "cAfterWait = wResult\n"
+        "cPrompt = \"Please wait...\"\n"
+        "nDelay = 5\n"
+        "cWaitTarget = \"m.wResult\"\n"
+        "WAIT WINDOW cPrompt TIMEOUT nDelay TO &cWaitTarget NOWAIT NOCLEAR\n"
+        "cAfterWait = m.wResult\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -4307,16 +4310,22 @@ void test_wait_window_command_emits_runtime_wait_event() {
     if (wait_events.size() >= 1U) {
         expect(wait_events[0].detail.find("mode=WINDOW") != std::string::npos,
             "WAIT WINDOW event should report mode=WINDOW");
-        expect(wait_events[0].detail.find("prompt=\"Please wait...\"") != std::string::npos,
-            "WAIT WINDOW event should surface the prompt text");
+        expect(wait_events[0].detail.find("prompt=Please wait...") != std::string::npos,
+            "WAIT WINDOW event should surface the resolved prompt text");
+        expect(wait_events[0].detail.find("prompt_expr=cPrompt") != std::string::npos,
+            "WAIT WINDOW event should preserve the source prompt expression");
         expect(wait_events[0].detail.find("timeout=5") != std::string::npos,
-            "WAIT WINDOW event should surface the timeout expression");
+            "WAIT WINDOW event should surface the resolved timeout expression");
+        expect(wait_events[0].detail.find("timeout_expr=nDelay") != std::string::npos,
+            "WAIT WINDOW event should preserve the source timeout expression");
         expect(wait_events[0].detail.find("flag=NOWAIT") != std::string::npos,
             "WAIT WINDOW event should surface the NOWAIT flag");
         expect(wait_events[0].detail.find("flag=NOCLEAR") != std::string::npos,
             "WAIT WINDOW event should surface the NOCLEAR flag");
-        expect(wait_events[0].detail.find("target=wResult") != std::string::npos,
-            "WAIT WINDOW event should include the TO target");
+        expect(wait_events[0].detail.find("target=&cWaitTarget") != std::string::npos,
+            "WAIT WINDOW event should include the raw TO target expression");
+        expect(wait_events[0].detail.find("target_resolved=m.wResult") != std::string::npos,
+            "WAIT WINDOW event should include the resolved TO target");
         expect(wait_events[0].detail.find("result=''") != std::string::npos,
             "WAIT WINDOW event should surface the deterministic headless result");
     }
@@ -4377,7 +4386,8 @@ void test_keyboard_command_emits_runtime_keyboard_event() {
     const fs::path main_path = temp_root / "keyboard_test.prg";
     write_text(
         main_path,
-        "KEYBOARD \"ABC\"\n"
+        "cKeys = \"ABC\"\n"
+        "KEYBOARD cKeys PLAIN CLEAR\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -4399,7 +4409,13 @@ void test_keyboard_command_emits_runtime_keyboard_event() {
     expect(kb_events.size() == 1U, "KEYBOARD command should emit one runtime.keyboard event");
     if (kb_events.size() >= 1U) {
         expect(kb_events[0].detail.find("keys=ABC") != std::string::npos,
-            "KEYBOARD event should include the keys payload");
+            "KEYBOARD event should include the resolved keys payload");
+        expect(kb_events[0].detail.find("keys_expr=cKeys") != std::string::npos,
+            "KEYBOARD event should preserve the source key expression");
+        expect(kb_events[0].detail.find("flag=PLAIN") != std::string::npos,
+            "KEYBOARD event should include the PLAIN flag");
+        expect(kb_events[0].detail.find("flag=CLEAR") != std::string::npos,
+            "KEYBOARD event should include the CLEAR flag");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4441,6 +4457,141 @@ void test_display_structure_emits_runtime_display_event() {
     if (display_events.size() >= 1U) {
         expect(display_events[0].detail.find("mode=STRUCTURE") != std::string::npos,
             "DISPLAY STRUCTURE event should report mode=STRUCTURE");
+        expect(display_events[0].detail.find("people@") != std::string::npos,
+            "DISPLAY STRUCTURE should surface the selected cursor");
+        expect(display_events[0].detail.find("field_count=2") != std::string::npos,
+            "DISPLAY STRUCTURE should surface the schema field count");
+        expect(display_events[0].detail.find("schema_fields=NAME,AGE") != std::string::npos,
+            "DISPLAY STRUCTURE should surface schema field names");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_display_status_surfaces_session_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_status";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "display_status_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO NAME\n"
+        "DISPLAY STATUS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY STATUS script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_events.push_back(event);
+        }
+    }
+
+    expect(display_events.size() == 1U, "DISPLAY STATUS should emit one runtime.display event");
+    if (display_events.size() >= 1U) {
+        expect(display_events[0].detail.find("mode=STATUS") != std::string::npos,
+            "DISPLAY STATUS event should report mode=STATUS");
+        expect(display_events[0].detail.find("datasession=1") != std::string::npos,
+            "DISPLAY STATUS should report the current data session");
+        expect(display_events[0].detail.find("open_cursors=1") != std::string::npos,
+            "DISPLAY STATUS should report open cursor count");
+        expect(display_events[0].detail.find("people@") != std::string::npos,
+            "DISPLAY STATUS should surface the selected cursor");
+        expect(display_events[0].detail.find("fields=NAME") != std::string::npos,
+            "DISPLAY STATUS should honor current visible-field metadata");
+        expect(display_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "DISPLAY STATUS should surface the current filter");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_display_memory_surfaces_visible_variable_and_array_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_memory";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "display_memory_test.prg";
+    write_text(
+        main_path,
+        "PUBLIC cPublic\n"
+        "cPublic = \"pub\"\n"
+        "cGlobal = \"glob\"\n"
+        "PRIVATE cPrivate\n"
+        "cPrivate = \"priv\"\n"
+        "LOCAL nLocal\n"
+        "nLocal = 42\n"
+        "LOCAL cPublic\n"
+        "cPublic = \"localpub\"\n"
+        "DIMENSION aMemory(2,2)\n"
+        "aMemory[1,1] = \"x\"\n"
+        "oThing = CREATEOBJECT('Empty')\n"
+        "DISPLAY MEMORY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY MEMORY script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_events.push_back(event);
+        }
+    }
+
+    expect(display_events.size() == 1U, "DISPLAY MEMORY should emit one runtime.display event");
+    if (display_events.size() >= 1U) {
+        expect(display_events[0].detail.find("mode=MEMORY") != std::string::npos,
+            "DISPLAY MEMORY event should report mode=MEMORY");
+        expect(display_events[0].detail.find("memvar_count=5") != std::string::npos,
+            "DISPLAY MEMORY should report visible memory-variable count");
+        expect(display_events[0].detail.find("public_count=0") != std::string::npos,
+            "DISPLAY MEMORY should report public variable count");
+        expect(display_events[0].detail.find("private_count=1") != std::string::npos,
+            "DISPLAY MEMORY should report private variable count");
+        expect(display_events[0].detail.find("local_count=2") != std::string::npos,
+            "DISPLAY MEMORY should report local variable count");
+        expect(display_events[0].detail.find("global_count=2") != std::string::npos,
+            "DISPLAY MEMORY should report ordinary global variable count");
+        expect(display_events[0].detail.find("array_count=1") != std::string::npos,
+            "DISPLAY MEMORY should report visible runtime array count");
+        expect(display_events[0].detail.find("cpublic{local:C=localpub}") != std::string::npos,
+            "DISPLAY MEMORY should include the visible shadowing local value");
+        expect(display_events[0].detail.find("cprivate{private:C=priv}") != std::string::npos,
+            "DISPLAY MEMORY should include private variable scope/type/value detail");
+        expect(display_events[0].detail.find("nlocal{local:N=42}") != std::string::npos,
+            "DISPLAY MEMORY should include local variable scope/type/value detail");
+        expect(display_events[0].detail.find("cglobal{global:C=glob}") != std::string::npos,
+            "DISPLAY MEMORY should include global variable scope/type/value detail");
+        expect(display_events[0].detail.find("othing{global:O=<object:Empty props=0>}") != std::string::npos,
+            "DISPLAY MEMORY should include object scope/type/detail");
+        expect(display_events[0].detail.find("shadowed=cpublic{public:C=pub}") != std::string::npos,
+            "DISPLAY MEMORY should include shadowed public bindings");
+        expect(display_events[0].detail.find("amemory{global:A=2x2}") != std::string::npos,
+            "DISPLAY MEMORY should include runtime array scope and dimensions");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4513,9 +4664,14 @@ void test_list_status_emits_runtime_list_event() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
     const fs::path main_path = temp_root / "list_test.prg";
     write_text(
         main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO NAME\n"
         "LIST STATUS\n"
         "RETURN\n");
 
@@ -4539,6 +4695,139 @@ void test_list_status_emits_runtime_list_event() {
     if (list_events.size() >= 1U) {
         expect(list_events[0].detail.find("mode=STATUS") != std::string::npos,
             "LIST STATUS event should report mode=STATUS");
+        expect(list_events[0].detail.find("datasession=1") != std::string::npos,
+            "LIST STATUS should report the current data session");
+        expect(list_events[0].detail.find("open_cursors=1") != std::string::npos,
+            "LIST STATUS should report open cursor count");
+        expect(list_events[0].detail.find("people@") != std::string::npos,
+            "LIST STATUS should surface the selected cursor");
+        expect(list_events[0].detail.find("fields=NAME") != std::string::npos,
+            "LIST STATUS should honor current visible-field metadata");
+        expect(list_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "LIST STATUS should surface the current filter");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_list_memory_surfaces_visible_variable_and_array_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_memory";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "list_memory_test.prg";
+    write_text(
+        main_path,
+        "PUBLIC cPublic\n"
+        "cPublic = \"pub\"\n"
+        "cGlobal = \"glob\"\n"
+        "PRIVATE cPrivate\n"
+        "cPrivate = \"priv\"\n"
+        "LOCAL nLocal\n"
+        "nLocal = 42\n"
+        "LOCAL cPublic\n"
+        "cPublic = \"localpub\"\n"
+        "DIMENSION aMemory(2,2)\n"
+        "aMemory[1,1] = \"x\"\n"
+        "oThing = CREATEOBJECT('Empty')\n"
+        "LIST MEMORY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LIST MEMORY script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.list") {
+            list_events.push_back(event);
+        }
+    }
+
+    expect(list_events.size() == 1U, "LIST MEMORY should emit one runtime.list event");
+    if (list_events.size() >= 1U) {
+        expect(list_events[0].detail.find("mode=MEMORY") != std::string::npos,
+            "LIST MEMORY event should report mode=MEMORY");
+        expect(list_events[0].detail.find("memvar_count=5") != std::string::npos,
+            "LIST MEMORY should report visible memory-variable count");
+        expect(list_events[0].detail.find("public_count=0") != std::string::npos,
+            "LIST MEMORY should report public variable count");
+        expect(list_events[0].detail.find("private_count=1") != std::string::npos,
+            "LIST MEMORY should report private variable count");
+        expect(list_events[0].detail.find("local_count=2") != std::string::npos,
+            "LIST MEMORY should report local variable count");
+        expect(list_events[0].detail.find("global_count=2") != std::string::npos,
+            "LIST MEMORY should report ordinary global variable count");
+        expect(list_events[0].detail.find("array_count=1") != std::string::npos,
+            "LIST MEMORY should report visible runtime array count");
+        expect(list_events[0].detail.find("cpublic{local:C=localpub}") != std::string::npos,
+            "LIST MEMORY should include the visible shadowing local value");
+        expect(list_events[0].detail.find("cprivate{private:C=priv}") != std::string::npos,
+            "LIST MEMORY should include private variable scope/type/value detail");
+        expect(list_events[0].detail.find("nlocal{local:N=42}") != std::string::npos,
+            "LIST MEMORY should include local variable scope/type/value detail");
+        expect(list_events[0].detail.find("cglobal{global:C=glob}") != std::string::npos,
+            "LIST MEMORY should include global variable scope/type/value detail");
+        expect(list_events[0].detail.find("othing{global:O=<object:Empty props=0>}") != std::string::npos,
+            "LIST MEMORY should include object scope/type/detail");
+        expect(list_events[0].detail.find("shadowed=cpublic{public:C=pub}") != std::string::npos,
+            "LIST MEMORY should include shadowed public bindings");
+        expect(list_events[0].detail.find("amemory{global:A=2x2}") != std::string::npos,
+            "LIST MEMORY should include runtime array scope and dimensions");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_list_structure_surfaces_selected_cursor_schema() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_structure";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "list_structure_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "LIST STRUCTURE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LIST STRUCTURE script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.list") {
+            list_events.push_back(event);
+        }
+    }
+
+    expect(list_events.size() == 1U, "LIST STRUCTURE should emit one runtime.list event");
+    if (list_events.size() >= 1U) {
+        expect(list_events[0].detail.find("mode=STRUCTURE") != std::string::npos,
+            "LIST STRUCTURE event should report mode=STRUCTURE");
+        expect(list_events[0].detail.find("people@") != std::string::npos,
+            "LIST STRUCTURE should surface the selected cursor");
+        expect(list_events[0].detail.find("field_count=2") != std::string::npos,
+            "LIST STRUCTURE should surface the schema field count");
+        expect(list_events[0].detail.find("schema_fields=NAME,AGE") != std::string::npos,
+            "LIST STRUCTURE should surface schema field names");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4667,8 +4956,12 @@ int main() {
     test_wait_clear_command_emits_runtime_wait_clear_event();
     test_keyboard_command_emits_runtime_keyboard_event();
     test_display_structure_emits_runtime_display_event();
+    test_display_status_surfaces_session_metadata();
+    test_display_memory_surfaces_visible_variable_and_array_metadata();
     test_display_records_surfaces_effective_cursor_view_metadata();
     test_list_status_emits_runtime_list_event();
+    test_list_memory_surfaces_visible_variable_and_array_metadata();
+    test_list_structure_surfaces_selected_cursor_schema();
     test_list_records_surfaces_effective_cursor_view_metadata();
 
     if (copperfin::test_support::test_failures() != 0) {

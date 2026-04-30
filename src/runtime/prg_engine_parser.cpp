@@ -892,12 +892,15 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "KEYBOARD ") || upper == "KEYBOARD") {
             statement.kind = StatementKind::keyboard_command;
             const std::string body = upper == "KEYBOARD" ? std::string{} : trim_copy(line.substr(9U));
-            // Strip surrounding quotes if present
-            if (body.size() >= 2U && (body.front() == '"' || body.front() == '\'') && body.back() == body.front()) {
-                statement.expression = body.substr(1U, body.size() - 2U);
-            } else {
-                statement.expression = body;
-            }
+            const std::size_t clause_pos = find_first_keyword_top_level(body, {"PLAIN", "CLEAR"});
+            const std::string keys_part = clause_pos == std::string::npos ? body : trim_copy(body.substr(0U, clause_pos));
+            statement.expression = keys_part;
+            statement.secondary_expression = find_first_keyword_top_level(body, {"PLAIN"}) != std::string::npos
+                ? "PLAIN"
+                : std::string{};
+            statement.tertiary_expression = find_first_keyword_top_level(body, {"CLEAR"}) != std::string::npos
+                ? "CLEAR"
+                : std::string{};
         } else if (starts_with_insensitive(line, "DISPLAY ") || upper == "DISPLAY") {
             statement.kind = StatementKind::display_command;
             const std::string body = upper == "DISPLAY" ? std::string{} : trim_copy(line.substr(8U));
