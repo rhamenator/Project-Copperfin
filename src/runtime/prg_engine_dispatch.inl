@@ -5652,6 +5652,10 @@
                 globals.clear();
                 arrays.clear();
                 public_names.clear();
+                for (auto &active_frame : stack)
+                {
+                    active_frame.private_saved_values.clear();
+                }
                 if (statement.identifier == "all")
                 {
                     // Also close all open work areas

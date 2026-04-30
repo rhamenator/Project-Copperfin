@@ -2679,6 +2679,44 @@ void test_clear_memory_erases_all_globals() {
     fs::remove_all(tmp, ign);
 }
 
+void test_clear_memory_prevents_private_bindings_from_restoring() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_clear_memory_private_restore";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "x = 42\n"
+        "DO subproc\n"
+        "caller_type = TYPE('x')\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "PRIVATE x\n"
+        "x = 99\n"
+        "CLEAR MEMORY\n"
+        "sub_type = TYPE('x')\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLEAR MEMORY with PRIVATE shadowing should complete");
+    const auto sub_type = state.globals.find("sub_type");
+    const auto caller_type = state.globals.find("caller_type");
+    expect(sub_type != state.globals.end(), "sub_type should be captured after CLEAR MEMORY");
+    expect(caller_type != state.globals.end(), "caller_type should be captured after PRIVATE frame returns");
+    if (sub_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_type->second) == "U",
+               "CLEAR MEMORY should remove the PRIVATE binding inside the current frame");
+    }
+    if (caller_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_type->second) == "U",
+               "CLEAR MEMORY should prevent saved outer PRIVATE bindings from being restored later");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_cancel_halts_execution() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_cancel";
@@ -3275,6 +3313,7 @@ int main() {
     test_release_all_except_pattern_reaches_arrays();
     test_release_all_preserves_public_bindings();
     test_clear_memory_erases_all_globals();
+    test_clear_memory_prevents_private_bindings_from_restoring();
     test_cancel_halts_execution();
     test_quit_emits_event();
     test_quit_cancelled_by_callback();
