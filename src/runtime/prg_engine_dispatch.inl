@@ -5669,6 +5669,7 @@
                 for (auto &active_frame : stack)
                 {
                     active_frame.private_saved_values.clear();
+                    active_frame.locals.clear();
                 }
                 if (statement.identifier == "all")
                 {

@@ -2762,6 +2762,51 @@ void test_clear_memory_prevents_private_bindings_from_restoring() {
     fs::remove_all(tmp, ign);
 }
 
+void test_clear_memory_clears_current_frame_locals_without_global_leak() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_clear_memory_locals";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "DO subproc\n"
+        "outer_type = TYPE('x')\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "LOCAL x\n"
+        "x = 5\n"
+        "CLEAR MEMORY\n"
+        "after_clear_type = TYPE('x')\n"
+        "x = 7\n"
+        "after_reassign = x\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CLEAR MEMORY should clear current-frame locals");
+    const auto after_clear_type = state.globals.find("after_clear_type");
+    const auto after_reassign = state.globals.find("after_reassign");
+    const auto outer_type = state.globals.find("outer_type");
+    expect(after_clear_type != state.globals.end(), "cleared local TYPE() should be captured");
+    expect(after_reassign != state.globals.end(), "reassigned local after CLEAR MEMORY should be captured");
+    expect(outer_type != state.globals.end(), "post-return local TYPE() after CLEAR MEMORY should be captured");
+    if (after_clear_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_clear_type->second) == "U",
+               "CLEAR MEMORY should clear the current frame's local variable binding");
+    }
+    if (after_reassign != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_reassign->second) == "7",
+               "reassigning after CLEAR MEMORY should still work inside the local scope");
+    }
+    if (outer_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_type->second) == "U",
+               "reassigning a cleared LOCAL should not leak a new global after the routine returns");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_cancel_halts_execution() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_cancel";
@@ -3360,6 +3405,7 @@ int main() {
     test_release_all_preserves_public_bindings();
     test_clear_memory_erases_all_globals();
     test_clear_memory_prevents_private_bindings_from_restoring();
+    test_clear_memory_clears_current_frame_locals_without_global_leak();
     test_cancel_halts_execution();
     test_quit_emits_event();
     test_quit_cancelled_by_callback();
