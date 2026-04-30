@@ -70,4 +70,11 @@ DbfWriteResult pack_dbf_table_file(const std::string& path);
 DbfWriteResult pack_dbf_memo_file(const std::string& path);
 DbfWriteResult zap_dbf_table_file(const std::string& path);
 
+// Returns the raw bytes of a memo block from a .fpt or .dct sidecar file.
+// block_number is the 4-byte LE integer stored in an 'M'-type DBF field.
+// Returns an empty vector if the sidecar cannot be opened or the block is out of range.
+[[nodiscard]] std::vector<std::uint8_t> read_memo_block_raw(
+    const std::string& sidecar_path,
+    std::uint32_t block_number);
+
 }  // namespace copperfin::vfp

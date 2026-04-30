@@ -1037,6 +1037,163 @@ void test_inspect_asset_reports_dbf_descriptor_validation_findings() {
     fs::remove_all(temp_dir, ignored);
 }
 
+// ---- export_database_as_json tests ----
+
+void test_export_database_as_json_produces_catalog_json() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "northwind.dbc";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "northwind", "", ""},
+        {"TABLE", "Customers", "northwind", ""},
+        {"TABLE", "Orders", "northwind", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "export_database_as_json: DBC fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
+    expect(result.ok, "export_database_as_json should succeed on a minimal DBC fixture");
+    if (result.ok) {
+        expect(result.json.find("\"northwind\"") != std::string::npos,
+               "export JSON should include the database name");
+        expect(result.json.find("\"catalog\"") != std::string::npos,
+               "export JSON should include the catalog array");
+        expect(result.json.find("\"database\"") != std::string::npos,
+               "export JSON should include the database block");
+        expect(result.json.find("\"tables\"") != std::string::npos,
+               "export JSON should include the tables block");
+        expect(result.json.find("\"Customers\"") != std::string::npos,
+               "export JSON catalog should contain the Customers table entry");
+        expect(result.json.find("\"Orders\"") != std::string::npos,
+               "export JSON catalog should contain the Orders table entry");
+        // No .dbf files exist for those tables, so tables block should be empty
+        expect(result.json.find("\"tables\": {\n  }") == std::string::npos ||
+               result.json.find("\"records\"") == std::string::npos,
+               "export JSON tables block should be empty when no table DBFs are present");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_json_decodes_properties_blob() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_props_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "sample.dbc";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+
+    // Create the DBC with two records; start PROPERTIES empty
+    const std::vector<std::vector<std::string>> records{
+        {"DATABASE", "sample", "", ""},
+        {"TABLE", "Customers", "sample", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    expect(create_result.ok, "properties-decode test: DBC fixture should be created");
+
+    // Build a binary PROPERTIES blob for the TABLE record (record index 1, 0-based):
+    //   Caption = "Customers"  (type 0x01, name "Caption", value "Customers")
+    //   Comment = "Test table" (type 0x01, name "Comment", value "Test table")
+    //   end marker 0x00
+    std::string props_blob;
+    // Caption
+    props_blob += '\x01';                      // type: C
+    props_blob += '\x07'; props_blob += '\x00'; // name_len = 7
+    props_blob += "Caption";
+    props_blob += '\x09'; props_blob += '\x00'; // value_len = 9
+    props_blob += "Customers";
+    // Comment
+    props_blob += '\x01';                      // type: C
+    props_blob += '\x07'; props_blob += '\x00'; // name_len = 7
+    props_blob += "Comment";
+    props_blob += '\x0A'; props_blob += '\x00'; // value_len = 10
+    props_blob += "Test table";
+    // End marker
+    props_blob += '\x00';
+
+    // Write the properties blob into the PROPERTIES memo for record 1 (TABLE, 0-based)
+    const auto write_result = copperfin::vfp::replace_record_field_value(
+        dbc_path.string(), 1U, "PROPERTIES", props_blob);
+    expect(write_result.ok, "properties-decode test: PROPERTIES memo should be writable");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
+    expect(result.ok, "export_database_as_json should succeed when PROPERTIES blob is present");
+    if (result.ok) {
+        expect(result.json.find("\"Caption\"") != std::string::npos,
+               "export JSON should contain decoded Caption property name");
+        expect(result.json.find("\"Customers\"") != std::string::npos,
+               "export JSON should contain decoded Caption value");
+        expect(result.json.find("\"Comment\"") != std::string::npos,
+               "export JSON should contain decoded Comment property name");
+        expect(result.json.find("\"Test table\"") != std::string::npos,
+               "export JSON should contain decoded Comment value");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_read_memo_block_raw_returns_correct_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_memo_raw_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbf_path = temp_dir / "rawtest.dbf";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID",   .type = 'N', .offset = 1U, .length = 5U, .decimal_count = 0U},
+        {.name = "NOTES",.type = 'M', .offset = 6U, .length = 4U, .decimal_count = 0U}
+    };
+
+    // Write a record with a known NOTES value (ASCII — raw bytes preserved)
+    const std::vector<std::vector<std::string>> records{{"1", ""}};
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbf_path.string(), fields, records);
+    expect(create_result.ok, "read_memo_block_raw: fixture DBF should be created");
+
+    const std::string memo_content = "Hello memo block";
+    const auto write_result = copperfin::vfp::replace_record_field_value(
+        dbf_path.string(), 0U, "NOTES", memo_content);
+    expect(write_result.ok, "read_memo_block_raw: memo write should succeed");
+
+    // The memo sidecar for .dbf is .fpt (inferred by dbf_table)
+    const fs::path fpt_path = fs::path(dbf_path).replace_extension(".fpt");
+    if (fs::exists(fpt_path)) {
+        const std::vector<std::uint8_t> raw =
+            copperfin::vfp::read_memo_block_raw(fpt_path.string(), 1U);
+        expect(!raw.empty(), "read_memo_block_raw should return non-empty bytes for block 1");
+        if (!raw.empty()) {
+            const std::string as_string(raw.begin(), raw.end());
+            expect(as_string == memo_content,
+                   "read_memo_block_raw should return the exact bytes written to the memo block");
+        }
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1063,6 +1220,9 @@ int main() {
     test_inspect_asset_reports_missing_companions_and_unparseable_indexes();
     test_inspect_asset_reports_malformed_memo_sidecar_findings();
     test_inspect_asset_reports_dbf_descriptor_validation_findings();
+    test_export_database_as_json_produces_catalog_json();
+    test_export_database_as_json_decodes_properties_blob();
+    test_read_memo_block_raw_returns_correct_bytes();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

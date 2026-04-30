@@ -3,9 +3,13 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <limits>
+#include <map>
 #include <set>
+#include <sstream>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -932,6 +936,515 @@ AssetInspectionResult inspect_asset(const std::string& path) {
     }
 
     return result;
+}
+
+// ---- DBC properties binary decoder ----
+//
+// The VFP DBC PROPERTIES memo stores a binary property bag. Each entry:
+//   Byte 0:      type code
+//                  0x00 = end / padding — skip and continue
+//                  0x01 = Character string  ('C')
+//                  0x02 = Numeric           ('N')  — 8-byte IEEE 754 double LE
+//                  0x03 = Logical           ('L')  — 1 byte (0=false, else true)
+//                  0x04 = Date              ('D')  — 8 ASCII bytes YYYYMMDD
+//                  0x05 = DateTime          ('T')  — 8 bytes (VFP internal)
+//                  0x06 = Integer           ('I')  — 4-byte LE int32
+//   Bytes 1–2:   2-byte LE name length
+//   Bytes 3…:    name (ASCII, no null terminator)
+//   Value (immediately after name):
+//     0x01 (C): 2-byte LE value_length, then value_length ASCII bytes
+//     0x02 (N): 8-byte IEEE 754 double LE
+//     0x03 (L): 1 byte
+//     0x04 (D): 8 ASCII bytes YYYYMMDD
+//     0x05 (T): 8 bytes stored verbatim as hex for now
+//     0x06 (I): 4-byte LE int32
+//
+// This format is reverse-engineered from community analysis of real .DBC files.
+// Unknown type codes are preserved as hex strings so nothing is silently dropped.
+
+namespace {
+
+char vfp_type_for_code(std::uint8_t code) noexcept {
+    switch (code) {
+        case 0x01U: return 'C';
+        case 0x02U: return 'N';
+        case 0x03U: return 'L';
+        case 0x04U: return 'D';
+        case 0x05U: return 'T';
+        case 0x06U: return 'I';
+        default:    return '?';
+    }
+}
+
+std::string hex_bytes(const std::vector<std::uint8_t>& blob, std::size_t offset, std::size_t length) {
+    static constexpr std::array<char, 16U> kHex{
+        '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    std::string out;
+    out.reserve(2U * length);
+    for (std::size_t i = 0U; i < length && (offset + i) < blob.size(); ++i) {
+        const auto b = static_cast<std::uint8_t>(blob[offset + i]);
+        out.push_back(kHex[(b >> 4U) & 0x0FU]);
+        out.push_back(kHex[b & 0x0FU]);
+    }
+    return out;
+}
+
+std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8_t>& blob) {
+    std::vector<DbcProperty> props;
+    std::size_t pos = 0U;
+
+    while (pos < blob.size()) {
+        const auto type_code = static_cast<std::uint8_t>(blob[pos]);
+
+        if (type_code == 0x00U) {
+            // Padding / end marker — skip this byte and keep scanning so we
+            // don't prematurely stop at interior padding.
+            ++pos;
+            continue;
+        }
+
+        // Need type byte + 2-byte name length
+        if (pos + 3U > blob.size()) {
+            break;
+        }
+
+        const auto name_len = static_cast<std::uint16_t>(
+            static_cast<std::uint16_t>(blob[pos + 1U]) |
+            (static_cast<std::uint16_t>(blob[pos + 2U]) << 8U));
+        pos += 3U;
+
+        if (name_len == 0U || pos + name_len > blob.size()) {
+            break;
+        }
+
+        std::string name(reinterpret_cast<const char*>(blob.data() + pos), name_len);
+        pos += name_len;
+
+        DbcProperty prop;
+        prop.name       = std::move(name);
+        prop.type_hint  = vfp_type_for_code(type_code);
+
+        switch (type_code) {
+            case 0x01U: {  // Character — 2-byte LE length prefix
+                if (pos + 2U > blob.size()) { goto done; }
+                const auto val_len = static_cast<std::uint16_t>(
+                    static_cast<std::uint16_t>(blob[pos]) |
+                    (static_cast<std::uint16_t>(blob[pos + 1U]) << 8U));
+                pos += 2U;
+                if (pos + val_len > blob.size()) { goto done; }
+                prop.value = std::string(reinterpret_cast<const char*>(blob.data() + pos), val_len);
+                pos += val_len;
+                break;
+            }
+            case 0x02U: {  // Numeric — 8-byte IEEE 754 double LE
+                if (pos + 8U > blob.size()) { goto done; }
+                double d = 0.0;
+                std::memcpy(&d, blob.data() + pos, 8U);
+                pos += 8U;
+                std::ostringstream ss;
+                ss.precision(15);
+                ss << d;
+                prop.value = ss.str();
+                break;
+            }
+            case 0x03U: {  // Logical — 1 byte
+                if (pos + 1U > blob.size()) { goto done; }
+                prop.value = (blob[pos] != 0U) ? "true" : "false";
+                ++pos;
+                break;
+            }
+            case 0x04U: {  // Date — 8 ASCII bytes YYYYMMDD
+                if (pos + 8U > blob.size()) { goto done; }
+                const std::string raw(reinterpret_cast<const char*>(blob.data() + pos), 8U);
+                pos += 8U;
+                // Format as YYYY-MM-DD if it looks like digits
+                if (raw.size() == 8U &&
+                    std::all_of(raw.begin(), raw.end(), [](unsigned char c) {
+                        return std::isdigit(c) != 0;
+                    })) {
+                    prop.value = raw.substr(0U, 4U) + "-" + raw.substr(4U, 2U) + "-" + raw.substr(6U, 2U);
+                } else {
+                    prop.value = raw;
+                }
+                break;
+            }
+            case 0x05U: {  // DateTime — 8 bytes, emit as hex pending full decode
+                if (pos + 8U > blob.size()) { goto done; }
+                prop.value = hex_bytes(blob, pos, 8U);
+                pos += 8U;
+                break;
+            }
+            case 0x06U: {  // Integer — 4-byte LE int32
+                if (pos + 4U > blob.size()) { goto done; }
+                std::int32_t val = 0;
+                std::memcpy(&val, blob.data() + pos, 4U);
+                pos += 4U;
+                prop.value = std::to_string(val);
+                break;
+            }
+            default: {
+                // Unknown type: store one byte as hex and advance past it so we
+                // do not spin on the same byte forever.
+                prop.value = "<type:0x" + hex_bytes(blob, pos > 0U ? pos - 1U : 0U, 1U) + ">";
+                ++pos;
+                break;
+            }
+        }
+
+        props.push_back(std::move(prop));
+    }
+
+done:
+    return props;
+}
+
+// Resolve and collect the raw PROPERTIES bytes for every record in a DBC.
+// We read the DBF header/field layout ourselves so we can get the raw 4-byte
+// memo block pointer from the PROPERTIES 'M' field without going through the
+// text-mode decode path (which would strip binary content).
+struct RawDbcRow {
+    std::size_t record_index = 0;
+    bool deleted = false;
+    std::string object_type;
+    std::string object_name;
+    std::string parent_name;
+    std::uint32_t properties_block = 0U;  // memo block number, 0 if absent
+};
+
+std::vector<RawDbcRow> read_raw_dbc_rows(
+    const std::vector<std::uint8_t>& file_bytes,
+    const DbfHeader& header) {
+
+    std::vector<RawDbcRow> rows;
+    if (file_bytes.size() < header.header_length) {
+        return rows;
+    }
+
+    // Read field descriptors from the raw bytes
+    std::vector<RawFieldDescriptor> raw_fields = read_raw_field_descriptors(file_bytes);
+
+    // Find relevant field offsets
+    const RawFieldDescriptor* f_type    = nullptr;
+    const RawFieldDescriptor* f_name    = nullptr;
+    const RawFieldDescriptor* f_parent  = nullptr;
+    const RawFieldDescriptor* f_props   = nullptr;
+
+    for (const auto& f : raw_fields) {
+        const std::string upper_name = uppercase_copy(f.name);
+        if (upper_name == "OBJECTTYPE" || upper_name == "OBJTYPE" || upper_name == "TYPE") {
+            f_type = &f;
+        } else if (upper_name == "OBJECTNAME" || upper_name == "OBJNAME" || upper_name == "NAME" || upper_name == "OBJECT") {
+            f_name = &f;
+        } else if (upper_name == "PARENTNAME" || upper_name == "PARENT" || upper_name == "PARENTID") {
+            f_parent = &f;
+        } else if (upper_name == "PROPERTIES" || upper_name == "PROPS") {
+            f_props = &f;
+        }
+    }
+
+    const std::size_t record_size = header.record_length;
+    if (record_size == 0U) {
+        return rows;
+    }
+
+    for (std::uint32_t rec_idx = 0U; rec_idx < header.record_count; ++rec_idx) {
+        const std::size_t rec_offset =
+            static_cast<std::size_t>(header.header_length) +
+            static_cast<std::size_t>(rec_idx) * record_size;
+
+        if (rec_offset + record_size > file_bytes.size()) {
+            break;
+        }
+
+        const bool deleted = (file_bytes[rec_offset] == '*');
+
+        auto read_char_field = [&](const RawFieldDescriptor* fd) -> std::string {
+            if (fd == nullptr || fd->offset == 0U) {
+                return {};
+            }
+            const std::size_t abs = rec_offset + fd->offset;
+            if (abs + fd->length > file_bytes.size()) {
+                return {};
+            }
+            std::string val(reinterpret_cast<const char*>(file_bytes.data() + abs), fd->length);
+            // Trim trailing spaces and nulls
+            while (!val.empty() &&
+                   (val.back() == ' ' || val.back() == '\0')) {
+                val.pop_back();
+            }
+            return val;
+        };
+
+        RawDbcRow row;
+        row.record_index  = static_cast<std::size_t>(rec_idx) + 1U;
+        row.deleted        = deleted;
+        row.object_type    = canonical_dbc_object_type(read_char_field(f_type));
+        row.object_name    = read_char_field(f_name);
+        row.parent_name    = read_char_field(f_parent);
+
+        // Extract PROPERTIES memo block number (4-byte LE in the 'M' field)
+        if (f_props != nullptr && f_props->type == 'M' && f_props->length >= 4U) {
+            const std::size_t abs = rec_offset + f_props->offset;
+            if (abs + 4U <= file_bytes.size()) {
+                row.properties_block = read_le_u32(file_bytes, abs);
+            }
+        }
+
+        rows.push_back(std::move(row));
+    }
+
+    return rows;
+}
+
+std::string json_escape_str(const std::string& s) {
+    std::string out;
+    out.reserve(s.size() + 4U);
+    for (const char ch : s) {
+        switch (ch) {
+            case '\\': out += "\\\\"; break;
+            case '"':  out += "\\\""; break;
+            case '\n': out += "\\n";  break;
+            case '\r': out += "\\r";  break;
+            case '\t': out += "\\t";  break;
+            default:
+                if (static_cast<unsigned char>(ch) < 0x20U) {
+                    // Control character — encode as \uXXXX
+                    std::ostringstream esc;
+                    esc << "\\u00"
+                        << "0123456789ABCDEF"[(static_cast<unsigned char>(ch) >> 4U) & 0xFU]
+                        << "0123456789ABCDEF"[static_cast<unsigned char>(ch) & 0xFU];
+                    out += esc.str();
+                } else {
+                    out.push_back(ch);
+                }
+        }
+    }
+    return out;
+}
+
+}  // namespace (extended)
+
+DatabaseExportResult export_database_as_json(
+    const std::string& dbc_path,
+    std::size_t max_rows_per_table) {
+
+    namespace fs = std::filesystem;
+
+    if (!fs::exists(dbc_path)) {
+        return {.ok = false, .error = "DBC path does not exist: " + dbc_path};
+    }
+
+    // Load the raw DBC bytes for direct field-pointer extraction
+    const std::vector<std::uint8_t> dbc_bytes = read_binary_file(dbc_path);
+    if (dbc_bytes.empty()) {
+        return {.ok = false, .error = "Unable to read DBC file: " + dbc_path};
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(dbc_bytes);
+    if (!header_result.ok) {
+        return {.ok = false, .error = "DBC header parse failed: " + header_result.error};
+    }
+
+    // Determine the .DCT memo sidecar path
+    const fs::path dbc_fs_path(dbc_path);
+    const fs::path dct_path = fs::path(dbc_path).replace_extension(".dct");
+    const bool has_dct = fs::exists(dct_path);
+
+    // Read all catalog rows with raw memo block numbers
+    const std::vector<RawDbcRow> raw_rows = read_raw_dbc_rows(dbc_bytes, header_result.header);
+
+    // Decode properties for each row and build DbcCatalogObject list
+    std::vector<DbcCatalogObject> catalog;
+    catalog.reserve(raw_rows.size());
+
+    for (const auto& raw : raw_rows) {
+        DbcCatalogObject obj;
+        obj.record_index = raw.record_index;
+        obj.deleted       = raw.deleted;
+        obj.object_type   = raw.object_type;
+        obj.object_name   = raw.object_name;
+        obj.parent_name   = raw.parent_name;
+
+        if (raw.properties_block != 0U && has_dct) {
+            const std::vector<std::uint8_t> prop_bytes =
+                read_memo_block_raw(dct_path.string(), raw.properties_block);
+            if (!prop_bytes.empty()) {
+                obj.properties = decode_dbc_properties_blob(prop_bytes);
+            }
+        }
+
+        catalog.push_back(std::move(obj));
+    }
+
+    // Build JSON ----------------------------------------------------------
+    std::ostringstream json;
+    json << "{\n";
+
+    // -- database metadata block
+    const std::string db_name = dbc_fs_path.stem().string();
+    json << "  \"database\": {\n";
+    json << "    \"path\": \"" << json_escape_str(dbc_path) << "\",\n";
+    json << "    \"name\": \"" << json_escape_str(db_name) << "\"\n";
+    json << "  },\n";
+
+    // -- catalog array
+    json << "  \"catalog\": [\n";
+    std::size_t visible_count = 0U;
+    for (const auto& obj : catalog) {
+        if (obj.deleted) {
+            continue;
+        }
+        ++visible_count;
+    }
+
+    std::size_t emitted = 0U;
+    for (const auto& obj : catalog) {
+        if (obj.deleted) {
+            continue;
+        }
+        ++emitted;
+        const bool last_obj = (emitted == visible_count);
+
+        json << "    {\n";
+        json << "      \"record_index\": " << obj.record_index << ",\n";
+        json << "      \"object_type\": \"" << json_escape_str(obj.object_type) << "\",\n";
+        json << "      \"object_name\": \"" << json_escape_str(obj.object_name) << "\",\n";
+        json << "      \"parent_name\": \"" << json_escape_str(obj.parent_name) << "\",\n";
+        json << "      \"properties\": {";
+
+        if (!obj.properties.empty()) {
+            json << "\n";
+            for (std::size_t pi = 0U; pi < obj.properties.size(); ++pi) {
+                const auto& prop = obj.properties[pi];
+                const bool last_prop = (pi + 1U == obj.properties.size());
+                json << "        \""
+                     << json_escape_str(prop.name)
+                     << "\": \""
+                     << json_escape_str(prop.value)
+                     << "\""
+                     << (last_prop ? "\n" : ",\n");
+            }
+            json << "      }";
+        } else {
+            json << "}";
+        }
+
+        json << "\n    }" << (last_obj ? "\n" : ",\n");
+    }
+    json << "  ],\n";
+
+    // -- tables block: row data for each TABLE catalog object
+    json << "  \"tables\": {\n";
+
+    // Build a list of (display_name, resolved_path) for tables whose .dbf exists
+    const fs::path dbc_dir = dbc_fs_path.parent_path();
+    struct ResolvedTable { std::string name; fs::path path; };
+    std::vector<ResolvedTable> resolved_tables;
+
+    for (const auto& obj : catalog) {
+        if (obj.deleted || obj.object_type != "table" || obj.object_name.empty()) {
+            continue;
+        }
+        const std::string& tname = obj.object_name;
+        fs::path candidate = dbc_dir / (tname + ".dbf");
+        if (!fs::exists(candidate)) {
+            // Try lower-case (Linux is case-sensitive)
+            std::string lower = tname;
+            std::transform(lower.begin(), lower.end(), lower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            fs::path lower_candidate = dbc_dir / (lower + ".dbf");
+            if (!fs::exists(lower_candidate)) {
+                continue;
+            }
+            candidate = std::move(lower_candidate);
+        }
+        resolved_tables.push_back({tname, candidate});
+    }
+
+    for (std::size_t ti = 0U; ti < resolved_tables.size(); ++ti) {
+        const auto& rt = resolved_tables[ti];
+        const bool last_table = (ti + 1U == resolved_tables.size());
+
+        const std::size_t row_limit = (max_rows_per_table == 0U)
+                                          ? std::numeric_limits<std::size_t>::max()
+                                          : max_rows_per_table;
+        const DbfTableParseResult tbl = parse_dbf_table_from_file(rt.path.string(), row_limit);
+        if (!tbl.ok) {
+            // Emit an empty entry rather than skipping to preserve comma correctness
+            json << "    \"" << json_escape_str(rt.name) << "\": {\"fields\":[], \"records\":[]}"
+                 << (last_table ? "\n" : ",\n");
+            continue;
+        }
+
+        json << "    \"" << json_escape_str(rt.name) << "\": {\n";
+
+        // fields array
+        json << "      \"fields\": [\n";
+        for (std::size_t fi = 0U; fi < tbl.table.fields.size(); ++fi) {
+            const auto& fld = tbl.table.fields[fi];
+            const bool last_field = (fi + 1U == tbl.table.fields.size());
+            json << "        {\"name\": \""    << json_escape_str(fld.name)   << "\""
+                 << ", \"type\": \""           << fld.type                     << "\""
+                 << ", \"length\": "           << static_cast<int>(fld.length)
+                 << ", \"decimals\": "         << static_cast<int>(fld.decimal_count)
+                 << "}" << (last_field ? "\n" : ",\n");
+        }
+        json << "      ],\n";
+
+        // Count non-deleted rows
+        std::size_t visible_rows = 0U;
+        for (const auto& rec : tbl.table.records) {
+            if (!rec.deleted) { ++visible_rows; }
+        }
+
+        // records array
+        json << "      \"records\": [\n";
+        std::size_t row_emit = 0U;
+        for (const auto& rec : tbl.table.records) {
+            if (rec.deleted) { continue; }
+            ++row_emit;
+            const bool last_rec = (row_emit == visible_rows);
+
+            json << "        {";
+            for (std::size_t vi = 0U; vi < rec.values.size(); ++vi) {
+                if (vi != 0U) { json << ", "; }
+                const auto& rv = rec.values[vi];
+                json << "\"" << json_escape_str(rv.field_name) << "\": ";
+                bool is_numeric = false;
+                bool is_logical = false;
+                for (const auto& fd : tbl.table.fields) {
+                    if (fd.name == rv.field_name) {
+                        const char ft = static_cast<char>(
+                            std::toupper(static_cast<unsigned char>(fd.type)));
+                        is_numeric = (ft == 'N' || ft == 'F' || ft == 'I' || ft == 'B' || ft == 'Y');
+                        is_logical = (ft == 'L');
+                        break;
+                    }
+                }
+                if (rv.is_null) {
+                    json << "null";
+                } else if (is_logical) {
+                    const std::string& lv = rv.display_value;
+                    json << ((lv == "true" || lv == "T" || lv == "t" ||
+                              lv == "Y"    || lv == "y")
+                             ? "true" : "false");
+                } else if (is_numeric && !rv.display_value.empty()) {
+                    json << rv.display_value;
+                } else {
+                    json << "\"" << json_escape_str(rv.display_value) << "\"";
+                }
+            }
+            json << "}" << (last_rec ? "\n" : ",\n");
+        }
+        json << "      ]\n";
+
+        json << "    }" << (last_table ? "\n" : ",\n");
+    }
+
+    json << "  }\n";
+    json << "}\n";
+
+    return {.ok = true, .json = json.str()};
 }
 
 }  // namespace copperfin::vfp

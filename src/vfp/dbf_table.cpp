@@ -1023,6 +1023,46 @@ std::string decode_value(
 
 }  // namespace
 
+std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, std::uint32_t block_number) {
+    if (sidecar_path.empty() || block_number == 0U) {
+        return {};
+    }
+
+    std::ifstream input(sidecar_path, std::ios::binary);
+    if (!input) {
+        return {};
+    }
+
+    const std::vector<std::uint8_t> bytes = {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+
+    if (bytes.size() < 512U) {
+        return {};
+    }
+
+    const std::uint16_t block_size = read_be_u16(bytes, 6U);
+    if (block_size == 0U) {
+        return {};
+    }
+
+    const std::uint64_t offset = static_cast<std::uint64_t>(block_number) * block_size;
+    if ((offset + 8U) > bytes.size()) {
+        return {};
+    }
+
+    const std::uint32_t length = read_be_u32(bytes, static_cast<std::size_t>(offset + 4U));
+    const std::uint64_t payload_offset = offset + 8U;
+    const std::uint64_t payload_end = payload_offset + length;
+    if (payload_end > bytes.size()) {
+        return {};
+    }
+
+    return {bytes.begin() + static_cast<std::ptrdiff_t>(payload_offset),
+            bytes.begin() + static_cast<std::ptrdiff_t>(payload_end)};
+}
+
 DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size_t max_records) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
