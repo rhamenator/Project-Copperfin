@@ -744,6 +744,10 @@ namespace copperfin::runtime
                     {
                         return std::string("ON");
                     }
+                    if (normalized_name == "date")
+                    {
+                        return std::string("MDY");
+                    }
                     if (normalized_name == "mark")
                     {
                         return std::string("/");

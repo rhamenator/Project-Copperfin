@@ -376,6 +376,33 @@
             return value;
         }
 
+        std::string normalize_seek_key_for_collation(
+            std::string value,
+            const std::string &collation_hint,
+            const std::string &key_domain_hint) const
+        {
+            if (key_domain_hint == "numeric_or_date")
+            {
+                return value;
+            }
+
+            const std::string normalized_collation_hint = lowercase_copy(trim_copy(collation_hint));
+            if (normalized_collation_hint == "case-folded")
+            {
+                return uppercase_copy(std::move(value));
+            }
+
+            const auto found_collate = current_set_state().find("collate");
+            const std::string session_collate = uppercase_copy(trim_copy(
+                found_collate == current_set_state().end() ? std::string{"MACHINE"} : found_collate->second));
+            if (!session_collate.empty() && session_collate != "MACHINE")
+            {
+                return uppercase_copy(std::move(value));
+            }
+
+            return value;
+        }
+
         std::string derive_order_normalization_hint(const std::string &expression) const
         {
             const std::string upper = uppercase_copy(trim_copy(expression));
@@ -704,9 +731,10 @@
                 }
             }
 
-            const std::string normalized_target = normalize_seek_key_for_order(
-                search_key,
-                cursor.active_order_normalization_hint);
+            const std::string normalized_target = normalize_seek_key_for_collation(
+                normalize_seek_key_for_order(search_key, cursor.active_order_normalization_hint),
+                cursor.active_order_collation_hint,
+                cursor.active_order_key_domain_hint);
             std::vector<IndexedCandidate> candidates;
             if (cursor.remote)
             {
@@ -717,7 +745,12 @@
                     {
                         continue;
                     }
-                    candidates.push_back({.key = evaluate_index_expression(cursor.active_order_expression, record),
+                    candidates.push_back({.key = normalize_seek_key_for_collation(
+                                               normalize_seek_key_for_order(
+                                                   evaluate_index_expression(cursor.active_order_expression, record),
+                                                   cursor.active_order_normalization_hint),
+                                               cursor.active_order_collation_hint,
+                                               cursor.active_order_key_domain_hint),
                                           .recno = record.record_index + 1U});
                 }
             }
@@ -737,7 +770,12 @@
                     {
                         continue;
                     }
-                    candidates.push_back({.key = evaluate_index_expression(cursor.active_order_expression, record),
+                    candidates.push_back({.key = normalize_seek_key_for_collation(
+                                               normalize_seek_key_for_order(
+                                                   evaluate_index_expression(cursor.active_order_expression, record),
+                                                   cursor.active_order_normalization_hint),
+                                               cursor.active_order_collation_hint,
+                                               cursor.active_order_key_domain_hint),
                                           .recno = record.record_index + 1U});
                 }
             }

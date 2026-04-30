@@ -32,6 +32,8 @@ namespace
             "datetime_ctor = DATETIME(2026, 4, 18, 13, 45, 56)\n"
             "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
             "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
+            "date_default = SET('DATE')\n"
+            "century_default = SET('CENTURY')\n"
             "mark_default = SET('MARK')\n"
             "hours_default = SET('HOURS')\n"
             "seconds_set_default = SET('SECONDS')\n"
@@ -153,6 +155,18 @@ namespace
             "SET SECONDS ON\n"
             "seconds_on = SET('SECONDS')\n"
             "ttoc_hours_24_seconds_on = TTOC('04/18/2026 13:45:56')\n"
+            "SET DATASESSION TO 2\n"
+            "date_session2 = SET('DATE')\n"
+            "century_session2 = SET('CENTURY')\n"
+            "mark_session2 = SET('MARK')\n"
+            "hours_session2 = SET('HOURS')\n"
+            "seconds_session2 = SET('SECONDS')\n"
+            "SET DATASESSION TO 1\n"
+            "date_restored = SET('DATE')\n"
+            "century_restored = SET('CENTURY')\n"
+            "mark_restored = SET('MARK')\n"
+            "hours_restored = SET('HOURS')\n"
+            "seconds_restored = SET('SECONDS')\n"
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
@@ -180,6 +194,8 @@ namespace
         check("datetime_ctor", "04/18/2026 13:45:56");
         check("datetime_ctor_partial", "04/18/2026 00:00:00");
         check("datetime_ctor_invalid", "");
+        check("date_default", "MDY");
+        check("century_default", "ON");
         check("mark_default", "/");
         check("hours_default", "24");
         check("seconds_set_default", "ON");
@@ -284,6 +300,16 @@ namespace
         check("ttoc_hours_24_seconds_off", "04/18/2026 13:45");
         check("seconds_on", "ON");
         check("ttoc_hours_24_seconds_on", "04/18/2026 13:45:56");
+        check("date_session2", "MDY");
+        check("century_session2", "ON");
+        check("mark_session2", "/");
+        check("hours_session2", "24");
+        check("seconds_session2", "ON");
+        check("date_restored", "MDY");
+        check("century_restored", "ON");
+        check("mark_restored", "/");
+        check("hours_restored", "24");
+        check("seconds_restored", "ON");
 
         const auto seconds_it = state.globals.find("seconds_now");
         if (seconds_it == state.globals.end())

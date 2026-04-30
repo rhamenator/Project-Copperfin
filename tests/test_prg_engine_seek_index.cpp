@@ -105,6 +105,70 @@ void test_set_order_and_seek_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_collate_guides_plain_string_seek_comparisons() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_collate";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "seek_collate.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "lMachineMiss = SEEK('bravo')\n"
+        "nMachineRec = RECNO()\n"
+        "SET COLLATE TO GENERAL\n"
+        "GO TOP\n"
+        "lGeneralHit = SEEK('bravo')\n"
+        "nGeneralRec = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "collation-guided seek script should complete");
+
+    const auto machine_miss = state.globals.find("lmachinemiss");
+    const auto machine_rec = state.globals.find("nmachinerec");
+    const auto general_hit = state.globals.find("lgeneralhit");
+    const auto general_rec = state.globals.find("ngeneralrec");
+
+    expect(machine_miss != state.globals.end(), "default-collate SEEK result should be captured");
+    expect(machine_rec != state.globals.end(), "default-collate SEEK RECNO() should be captured");
+    expect(general_hit != state.globals.end(), "SET COLLATE-guided SEEK result should be captured");
+    expect(general_rec != state.globals.end(), "SET COLLATE-guided SEEK RECNO() should be captured");
+
+    if (machine_miss != state.globals.end()) {
+        expect(copperfin::runtime::format_value(machine_miss->second) == "false",
+            "default MACHINE collation should keep plain NAME seeks case-sensitive");
+    }
+    if (machine_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(machine_rec->second) == "4",
+            "default MACHINE collation failed seek should still land at EOF");
+    }
+    if (general_hit != state.globals.end()) {
+        expect(copperfin::runtime::format_value(general_hit->second) == "true",
+            "SET COLLATE TO GENERAL should case-fold plain string seeks");
+    }
+    if (general_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(general_rec->second) == "2",
+            "SET COLLATE TO GENERAL should land on the case-folded plain-string match");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_uses_grounded_order_normalization_hints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_normalization";
@@ -2604,6 +2668,7 @@ void test_set_filter_in_targets_nonselected_alias() {
 
 int main() {
     test_set_order_and_seek_for_local_tables();
+    test_set_collate_guides_plain_string_seek_comparisons();
     test_seek_uses_grounded_order_normalization_hints();
     test_seek_supports_composite_tag_expressions();
     test_seek_supports_left_function_tag_expressions();
