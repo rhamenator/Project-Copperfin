@@ -104,77 +104,183 @@ This grouped list mirrors the active GitHub issue set so this backlog stays alig
 - macOS standalone/core port: #36
 - Linux standalone/core port: #37
 
-## Priority Architecture Diagram
+## Dependency Diagrams
+
+### Area Dependency Diagram (Exact Progress)
+
+This diagram uses the exact percentages from the gap matrix.
 
 ```mermaid
 flowchart TD
-    classDef done fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b;
-    classDef partial fill:#fef3c7,stroke:#92400e,stroke-width:2px,color:#78350f;
-    classDef missing fill:#fee2e2,stroke:#991b1b,stroke-width:2px,color:#7f1d1d;
+    classDef green fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b;
+    classDef amber fill:#fef3c7,stroke:#92400e,stroke-width:2px,color:#78350f;
+    classDef red fill:#fee2e2,stroke:#991b1b,stroke-width:2px,color:#7f1d1d;
     classDef lane fill:#eef2ff,stroke:#4338ca,stroke-width:1px,color:#1e1b4b;
 
-    subgraph P1[Phase A - Data Fidelity And Execution Engine]
+    subgraph PA[Phase A - Core Data And Compatibility]
         direction TB
-        A1[DBF/FPT Basic Read Fidelity]
-        A2[DBF Local-Table Mutation Core]
-        A3[CDX/DCX Inspection]
-        A4[MDX Inspection]
-        A5[DBC Container Fidelity]
-        B1[Work Areas And Data Sessions]
-        B2[Local Query And Mutation Commands]
-        B3[SQL Pass-Through And Remote Cursor Behavior]
-        B4[PRG Execution Engine]
+        A1["DBF/FPT Basic Read Fidelity<br/>92%"]
+        A2["DBF Local-Table Mutation Core<br/>94%"]
+        A3["CDX/DCX Inspection<br/>95%"]
+        A4["MDX Inspection<br/>93%"]
+        A5["DBC/Database Container Fidelity<br/>90%"]
+        A6["Work Areas And Data Sessions<br/>96%"]
+        A7["Local Query/Mutation Commands<br/>93%"]
+        A8["SQL Pass-Through / Remote Cursor Behavior<br/>90%"]
+        A9["PRG Execution Engine<br/>82%"]
     end
 
-    subgraph P2[Phase B - Runtime Parity Surfaces]
+    subgraph PB[Phase B - Runtime Parity Surfaces]
         direction TB
-        C1[Forms And Classes Runtime Parity]
-        C2[Reports And Labels Runtime Parity]
-        C3[Menus Runtime Parity]
+        B1["Forms/Classes Runtime Parity<br/>38%"]
+        B2["Reports/Labels Runtime Parity<br/>42%"]
+        B3["Menus Runtime Parity<br/>36%"]
     end
 
-    subgraph P3[Phase C - Build, Designers, IDE]
+    subgraph PC[Phase C - Build, Designers, And IDE]
         direction TB
-        D1[Build Package Debug Pipeline]
-        D2[Shared Designers]
-        D3[Visual Studio Integration]
-        D4[Standalone Copperfin IDE]
-        D5[Language Service]
+        C1["Build/Package/Debug Pipeline<br/>48%"]
+        C2["Shared Designers<br/>43%"]
+        C3["Visual Studio Integration<br/>37%"]
+        C4["Standalone Copperfin IDE<br/>32%"]
+        C5["Language Service<br/>46%"]
     end
 
-    subgraph P4[Phase D - Platform And Enterprise]
+    subgraph PD[Phase D - Platform And Enterprise]
         direction TB
-        E1[.NET Interoperability]
-        E2[Database Federation]
-        E3[Security Policy Controls]
+        D1[".NET Interoperability<br/>41%"]
+        D2["Database Federation<br/>34%"]
+        D3["Security/Policy Controls<br/>52%"]
     end
 
-    A1 --> A2 --> A3 --> A4 --> A5
-    A2 --> B2
-    A3 --> B1
-    B1 --> B2 --> B3 --> B4
+    A1 --> A2
+    A1 --> A3 --> A4 --> A5
+    A2 --> A7
+    A3 --> A6
+    A4 --> A8
+    A5 --> A8
+    A6 --> A7 --> A8 --> A9
 
-    B4 --> C1 --> C2 --> C3
-    B4 --> D1 --> D2 --> D3 --> D4
-    D3 --> D5
-    B4 --> E1 --> E2 --> E3
+    A9 --> B1 --> B2 --> B3
+    A9 --> C1 --> C2
+    C2 --> C3 --> C4
+    A9 --> C5
+    C3 --> C5
 
-    class A1,A2,A3,A4,A5 done;
+    A9 --> D1 --> D2
+    A9 --> D3
+    C1 --> D1
+    C3 --> D3
 
-    class B1,B2,B3 done;
-
-    class B4 partial;
-
-    class C1,C2,C3 partial;
-
-    class D1,D2,D3,D4,D5 partial;
-
-    class E1,E2,E3 partial;
-
-    class P1,P2,P3,P4 lane;
+    class A1,A2,A3,A4,A5,A6,A7,A8 green;
+    class A9,B2,C1,C2,C5,D1,D3 amber;
+    class B1,B3,C3,C4,D2 red;
+    class PA,PB,PC,PD lane;
 ```
 
-Status legend: green = 85-100%, amber = 40-84%, red = 0-39%. Progress is shown as explicit completion percentages rather than qualitative labels.
+### Sub-Area Dependency Diagram (Inferred Progress)
+
+This diagram adds the phase sub-areas from the lower roadmap. Percentages with `~` are inferred from the exact gap-matrix areas plus the current backlog text, so they should be treated as planning estimates rather than hard status numbers.
+
+```mermaid
+flowchart LR
+    classDef green fill:#d1fae5,stroke:#065f46,stroke-width:2px,color:#064e3b;
+    classDef amber fill:#fef3c7,stroke:#92400e,stroke-width:2px,color:#78350f;
+    classDef red fill:#fee2e2,stroke:#991b1b,stroke-width:2px,color:#7f1d1d;
+    classDef lane fill:#eef2ff,stroke:#4338ca,stroke-width:1px,color:#1e1b4b;
+
+    subgraph SA[Phase A]
+        direction TB
+        SA1["A1 File And Index Fidelity<br/>~93%"]
+        SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>~93%"]
+        SA3["A3 Command / Expression Surface<br/>82%"]
+        SA4["A4 Automation / Interop Semantics<br/>~41%"]
+    end
+
+    subgraph SB[Phase B]
+        direction TB
+        SB1["B1 Fault Isolation<br/>~58%"]
+        SB2["B2 Debug Metadata / Diagnostics<br/>~54%"]
+    end
+
+    subgraph SC[Phase C]
+        direction TB
+        SC1["C1 Forms / Classes<br/>38%"]
+        SC2["C2 Reports / Labels<br/>42%"]
+        SC3["C3 Menus<br/>36%"]
+        SC4["C4 Projects<br/>~45%"]
+    end
+
+    subgraph SD[Phase D]
+        direction TB
+        SD1["D1 Compiler / Package Model<br/>~50%"]
+        SD2["D2 Debugger Completion<br/>~46%"]
+        SD3["D3 Build / Run / Deploy Workflow<br/>~49%"]
+    end
+
+    subgraph SE[Phase E]
+        direction TB
+        SE1["E1 Shared Design Model<br/>43%"]
+        SE2["E2 Designer Interaction<br/>~39%"]
+        SE3["E3 Report/Label Designer Completion<br/>~40%"]
+    end
+
+    subgraph SF[Phase F]
+        direction TB
+        SF1["F1 Visual Studio Extension<br/>37%"]
+        SF2["F2 Standalone Copperfin IDE<br/>32%"]
+    end
+
+    subgraph SG[Phase G]
+        direction TB
+        SG1["G1 Editor Semantics<br/>~49%"]
+        SG2["G2 Navigation / Refactoring<br/>~43%"]
+        SG3["G3 IntelliSense Inputs<br/>~46%"]
+    end
+
+    subgraph SH[Phase H]
+        direction TB
+        SH1["H1 Relational Backends<br/>34%"]
+        SH2["H2 Document / Vector Backends<br/>~22%"]
+        SH3["H3 Modern Integration Surface<br/>~38%"]
+    end
+
+    subgraph SI[Phase I]
+        direction TB
+        SI1["I1 Runtime / Project Security<br/>~56%"]
+        SI2["I2 Extension / Host Security<br/>~48%"]
+    end
+
+    subgraph SJ[Phase J]
+        direction TB
+        SJ1["J1 Portable Core<br/>~18%"]
+        SJ2["J2 macOS<br/>~6%"]
+        SJ3["J3 Linux<br/>~6%"]
+    end
+
+    SA1 --> SA2 --> SA3 --> SA4
+    SA3 --> SB1 --> SB2
+    SA3 --> SC1 --> SC2 --> SC3
+    SA3 --> SC4
+    SA3 --> SD1 --> SD2 --> SD3
+    SC1 --> SE1 --> SE2 --> SE3
+    SE1 --> SF1 --> SF2
+    SA3 --> SG1 --> SG2 --> SG3
+    SD1 --> SH1 --> SH2 --> SH3
+    SA4 --> SH3
+    SB1 --> SI1 --> SI2
+    SD3 --> SI2
+    SA1 --> SJ1 --> SJ2
+    SJ1 --> SJ3
+    SF2 --> SJ1
+
+    class SA1,SA2 green;
+    class SA3,SA4,SB1,SB2,SC2,SC4,SD1,SD2,SD3,SE1,SG1,SG2,SG3,SH3,SI1,SI2 amber;
+    class SC1,SC3,SE2,SE3,SF1,SF2,SH1,SH2,SJ1,SJ2,SJ3 red;
+    class SA,SB,SC,SD,SE,SF,SG,SH,SI,SJ lane;
+```
+
+Status legend: green = 85-100%, amber = 40-84%, red = 0-39%. Exact percentages come from the gap matrix; `~` values are planning estimates for sub-areas that do not yet have their own explicit matrix row.
 
 ## Gap Matrix
 
