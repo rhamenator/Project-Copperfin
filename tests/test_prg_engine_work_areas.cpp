@@ -1257,6 +1257,72 @@ void test_set_fields_limits_field_lookup() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_fields_like_and_except_limit_field_lookup() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_set_fields_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"ALPHA", "Memo", "11"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SET FIELDS LIKE/EXCEPT fixture should be created");
+
+    const fs::path main_path = temp_root / "set_fields_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FIELDS TO LIKE N*\n"
+        "cFieldsLike = SET('FIELDS')\n"
+        "cNameLike = NAME\n"
+        "cNoteLike = NOTE\n"
+        "xAgeLike = AGE\n"
+        "SET FIELDS TO EXCEPT NOTE\n"
+        "cFieldsExcept = SET('FIELDS')\n"
+        "cNameExcept = NAME\n"
+        "xNoteExcept = NOTE\n"
+        "nAgeExcept = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET FIELDS LIKE/EXCEPT field-lookup script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cfieldslike", "LIKE N*");
+    check("cnamelike", "ALPHA");
+    check("cnotelike", "Memo");
+    check("xagelike", "");
+    check("cfieldsexcept", "EXCEPT NOTE");
+    check("cnameexcept", "ALPHA");
+    check("xnoteexcept", "");
+    check("nageexcept", "11");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1276,6 +1342,7 @@ int main() {
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
     test_set_fields_limits_field_lookup();
+    test_set_fields_like_and_except_limit_field_lookup();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

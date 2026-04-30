@@ -92,7 +92,7 @@
             if (starts_with_insensitive(trimmed, "LIKE "))
             {
                 // FIELDS LIKE <pattern>  (single wildcard pattern)
-                const std::string pattern = collapse_identifier(trim_copy(trimmed.substr(5U)));
+                const std::string pattern = trim_copy(trimmed.substr(5U));
                 std::vector<std::string> result;
                 result.push_back("__LIKE__");
                 result.push_back(pattern);
@@ -108,8 +108,8 @@
                 while (!remaining.empty())
                 {
                     const auto comma = remaining.find(',');
-                    const std::string token = collapse_identifier(trim_copy(
-                        comma == std::string::npos ? remaining : remaining.substr(0U, comma)));
+                    const std::string token = trim_copy(
+                        comma == std::string::npos ? remaining : remaining.substr(0U, comma));
                     if (!token.empty())
                         result.push_back(token);
                     if (comma == std::string::npos)

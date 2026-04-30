@@ -154,26 +154,14 @@
                     return true;
                 }
 
-                const std::string requested = collapse_identifier(field_name);
-                std::string current;
-                for (char ch : field_list->second)
+                const std::string field_filter_text = trim_copy(field_list->second);
+                if (collapse_identifier(field_filter_text) == "ALL")
                 {
-                    if (ch == ',')
-                    {
-                        const std::string normalized = collapse_identifier(current);
-                        if (normalized == "ALL" || normalized == requested)
-                        {
-                            return true;
-                        }
-                        current.clear();
-                    }
-                    else
-                    {
-                        current.push_back(ch);
-                    }
+                    return true;
                 }
-                const std::string normalized = collapse_identifier(current);
-                return normalized == "ALL" || normalized == requested;
+
+                const std::vector<std::string> field_filter = parse_field_filter_clause(field_filter_text);
+                return field_filter.empty() || field_matches_filter(field_name, field_filter);
             };
 
             const auto value_from_record = [&](const CursorState *cursor, const std::string &field_name) -> std::optional<PrgValue>
@@ -436,6 +424,32 @@
             if (field_list_text.empty())
             {
                 return all_fields;
+            }
+
+            if (collapse_identifier(field_list_text) == "ALL")
+            {
+                return all_fields;
+            }
+
+            const std::vector<std::string> field_filter = parse_field_filter_clause(field_list_text);
+            if (field_filter.empty())
+            {
+                return all_fields;
+            }
+
+            const bool pattern_filter = !field_filter.empty() &&
+                (field_filter.front() == "__LIKE__" || field_filter.front() == "__EXCEPT__");
+            if (pattern_filter)
+            {
+                std::vector<std::string> visible_fields;
+                for (const std::string &candidate : all_fields)
+                {
+                    if (field_matches_filter(candidate, field_filter))
+                    {
+                        visible_fields.push_back(candidate);
+                    }
+                }
+                return visible_fields.empty() ? all_fields : visible_fields;
             }
 
             std::vector<std::string> visible_fields;

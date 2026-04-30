@@ -819,6 +819,96 @@ void test_scatter_gather_name_single_name_field_filter_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_name_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Ready", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER/GATHER NAME LIKE/EXCEPT fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oRow, 'AGE', 900)\n"
+        "SCATTER FIELDS LIKE N* NAME oRow ADDITIVE\n"
+        "cLikeName = GETPEM(oRow, 'NAME')\n"
+        "cLikeNote = GETPEM(oRow, 'NOTE')\n"
+        "nLikeAge = GETPEM(oRow, 'AGE')\n"
+        "=SETPem(oRow, 'NAME', 'LikeName')\n"
+        "=SETPem(oRow, 'NOTE', 'LikeNote')\n"
+        "=SETPem(oRow, 'AGE', 901)\n"
+        "GATHER NAME oRow FIELDS EXCEPT AGE\n"
+        "cAfterName = NAME\n"
+        "cAfterNote = NOTE\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER NAME LIKE/EXCEPT script should complete: " + state.message);
+
+    const auto like_name = state.globals.find("clikename");
+    const auto like_note = state.globals.find("clikenote");
+    const auto like_age = state.globals.find("nlikeage");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_note = state.globals.find("cafternote");
+    const auto after_age = state.globals.find("nafterage");
+
+    expect(like_name != state.globals.end(), "SCATTER FIELDS LIKE N* NAME should populate NAME");
+    expect(like_note != state.globals.end(), "SCATTER FIELDS LIKE N* NAME should populate NOTE");
+    expect(like_age != state.globals.end(), "SCATTER FIELDS LIKE N* NAME ADDITIVE should preserve preexisting AGE");
+    expect(after_name != state.globals.end(), "GATHER NAME FIELDS EXCEPT AGE should update NAME");
+    expect(after_note != state.globals.end(), "GATHER NAME FIELDS EXCEPT AGE should update NOTE");
+    expect(after_age != state.globals.end(), "GATHER NAME FIELDS EXCEPT AGE should leave AGE readable");
+
+    if (like_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(like_name->second) == "Alice",
+            "SCATTER FIELDS LIKE N* NAME should include keyword-heavy NAME");
+    }
+    if (like_note != state.globals.end()) {
+        expect(copperfin::runtime::format_value(like_note->second) == "Ready",
+            "SCATTER FIELDS LIKE N* NAME should include adjacent NOTE");
+    }
+    if (like_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(like_age->second) == "900",
+            "SCATTER FIELDS LIKE N* NAME ADDITIVE should preserve excluded properties");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "LikeName",
+            "GATHER NAME FIELDS EXCEPT AGE should write NAME back");
+    }
+    if (after_note != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_note->second) == "LikeNote",
+            "GATHER NAME FIELDS EXCEPT AGE should write NOTE back");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "42",
+            "GATHER NAME FIELDS EXCEPT AGE should leave AGE unchanged");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_name_supports_macro_object_variable_names() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_macro";
@@ -3333,6 +3423,77 @@ void test_append_from_array_fields_clause_allows_keyword_named_field() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_append_array_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_array_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Alpha", "One", "30"},
+        {"Bravo", "Two", "25"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "COPY/APPEND ARRAY LIKE/EXCEPT source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "COPY/APPEND ARRAY LIKE/EXCEPT destination fixture should be created");
+
+    const fs::path main_path = temp_root / "copy_append_array_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO ARRAY aSelected FIELDS LIKE N*\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY aSelected FIELDS EXCEPT AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "cNote1 = NOTE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "cNote2 = NOTE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY FIELDS LIKE / APPEND FROM ARRAY FIELDS EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM ARRAY FIELDS EXCEPT AGE should append both rows");
+    chk("cname1", "Alpha", "COPY TO ARRAY FIELDS LIKE N* should preserve keyword-heavy NAME for row 1");
+    chk("cnote1", "One", "COPY TO ARRAY FIELDS LIKE N* should preserve NOTE for row 1");
+    chk("nage1", "0", "APPEND FROM ARRAY FIELDS EXCEPT AGE should leave AGE blank for row 1");
+    chk("cname2", "Bravo", "COPY TO ARRAY FIELDS LIKE N* should preserve NAME for row 2");
+    chk("cnote2", "Two", "COPY TO ARRAY FIELDS LIKE N* should preserve NOTE for row 2");
+    chk("nage2", "0", "APPEND FROM ARRAY FIELDS EXCEPT AGE should leave AGE blank for row 2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_gather_memvar_round_trips_field_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_rt";
@@ -3499,6 +3660,64 @@ void test_browse_emits_effective_cursor_view_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_browse_like_and_except_field_filters_surface_event_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_browse_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Ready", "30"},
+        {"Bob", "Later", "22"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "BROWSE LIKE/EXCEPT fixture should be created");
+
+    const fs::path main_path = temp_root / "browse_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS people\n"
+        "SET FIELDS TO LIKE N*\n"
+        "BROWSE\n"
+        "BROWSE FIELDS EXCEPT NOTE FOR AGE >= 25\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "BROWSE LIKE/EXCEPT script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> browse_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.browse") {
+            browse_events.push_back(event);
+        }
+    }
+
+    expect(browse_events.size() == 2U, "BROWSE LIKE/EXCEPT commands should emit two runtime.browse events");
+    if (browse_events.size() >= 2U) {
+        expect(browse_events[0].detail.find("fields=NAME,NOTE") != std::string::npos,
+            "SET FIELDS TO LIKE N* should surface NAME and NOTE in browse metadata");
+        expect(browse_events[1].detail.find("fields=NAME,AGE") != std::string::npos,
+            "BROWSE FIELDS EXCEPT NOTE should exclude NOTE in browse metadata");
+        expect(browse_events[1].detail.find("for=AGE >= 25") != std::string::npos,
+            "BROWSE FIELDS EXCEPT NOTE should preserve the FOR clause in metadata");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_edit_command_emits_runtime_edit_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_edit_cmd";
@@ -3512,6 +3731,8 @@ void test_edit_command_emits_runtime_edit_event() {
     write_text(
         main_path,
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO LIKE N*\n"
         "EDIT\n"
         "EDIT MEMO notes\n"
         "RETURN\n");
@@ -3534,6 +3755,12 @@ void test_edit_command_emits_runtime_edit_event() {
 
     expect(edit_events.size() == 2U, "EDIT commands should emit two runtime.edit events");
     if (edit_events.size() >= 2U) {
+        expect(edit_events[0].detail.find("people@") != std::string::npos,
+            "EDIT should surface the selected cursor");
+        expect(edit_events[0].detail.find("fields=NAME") != std::string::npos,
+            "EDIT should honor SET FIELDS metadata");
+        expect(edit_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "EDIT should surface the current filter");
         expect(edit_events[1].detail.find("memo=notes") != std::string::npos,
             "EDIT MEMO should record the memo field name");
     }
@@ -3554,6 +3781,7 @@ void test_change_command_emits_runtime_change_event() {
     write_text(
         main_path,
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
         "CHANGE\n"
         "CHANGE FIELD NAME,AGE\n"
         "RETURN\n");
@@ -3576,6 +3804,12 @@ void test_change_command_emits_runtime_change_event() {
 
     expect(change_events.size() == 2U, "CHANGE commands should emit two runtime.change events");
     if (change_events.size() >= 2U) {
+        expect(change_events[0].detail.find("people@") != std::string::npos,
+            "CHANGE should surface the selected cursor");
+        expect(change_events[0].detail.find("fields=NAME,AGE") != std::string::npos,
+            "CHANGE without an explicit field list should surface the effective visible fields");
+        expect(change_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "CHANGE should surface the current filter");
         expect(change_events[1].detail.find("fields=NAME,AGE") != std::string::npos,
             "CHANGE FIELD should record the field list");
     }
@@ -3590,10 +3824,16 @@ void test_input_command_emits_runtime_input_event_with_prompt() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
     const fs::path main_path = temp_root / "input_test.prg";
     write_text(
         main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO NAME\n"
         "INPUT \"Enter a value: \" TO myvar\n"
+        "cAfterInput = myvar\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -3613,11 +3853,25 @@ void test_input_command_emits_runtime_input_event_with_prompt() {
     }
 
     expect(input_events.size() == 1U, "INPUT command should emit one runtime.input event");
+    const auto after_input = state.globals.find("cafterinput");
     if (input_events.size() >= 1U) {
+        expect(input_events[0].detail.find("people@") != std::string::npos,
+            "INPUT should surface the selected cursor");
+        expect(input_events[0].detail.find("fields=NAME") != std::string::npos,
+            "INPUT should honor SET FIELDS metadata");
+        expect(input_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "INPUT should surface the current filter");
         expect(input_events[0].detail.find("prompt=") != std::string::npos,
             "INPUT event should include the prompt field");
         expect(input_events[0].detail.find("target=myvar") != std::string::npos,
             "INPUT event should include the target variable name");
+        expect(input_events[0].detail.find("result=''") != std::string::npos,
+            "INPUT event should surface the deterministic headless result");
+    }
+    expect(after_input != state.globals.end(), "INPUT should assign a deterministic headless result to the target");
+    if (after_input != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_input->second).empty(),
+            "INPUT should assign an empty-string headless result to the target variable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -3630,10 +3884,16 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
     const fs::path main_path = temp_root / "accept_test.prg";
     write_text(
         main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO NAME\n"
         "ACCEPT \"Enter your name: \" TO username\n"
+        "cAfterAccept = username\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -3653,11 +3913,25 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
     }
 
     expect(accept_events.size() == 1U, "ACCEPT command should emit one runtime.accept event");
+    const auto after_accept = state.globals.find("cafteraccept");
     if (accept_events.size() >= 1U) {
+        expect(accept_events[0].detail.find("people@") != std::string::npos,
+            "ACCEPT should surface the selected cursor");
+        expect(accept_events[0].detail.find("fields=NAME") != std::string::npos,
+            "ACCEPT should honor SET FIELDS metadata");
+        expect(accept_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "ACCEPT should surface the current filter");
         expect(accept_events[0].detail.find("prompt=") != std::string::npos,
             "ACCEPT event should include the prompt field");
         expect(accept_events[0].detail.find("target=username") != std::string::npos,
             "ACCEPT event should include the target variable name");
+        expect(accept_events[0].detail.find("result=''") != std::string::npos,
+            "ACCEPT event should surface the deterministic headless result");
+    }
+    expect(after_accept != state.globals.end(), "ACCEPT should assign a deterministic headless result to the target");
+    if (after_accept != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_accept->second).empty(),
+            "ACCEPT should assign an empty-string headless result to the target variable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4008,7 +4282,8 @@ void test_wait_window_command_emits_runtime_wait_event() {
     const fs::path main_path = temp_root / "wait_test.prg";
     write_text(
         main_path,
-        "WAIT WINDOW \"Please wait...\" TO wResult\n"
+        "WAIT WINDOW \"Please wait...\" TIMEOUT 5 TO wResult NOWAIT NOCLEAR\n"
+        "cAfterWait = wResult\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -4028,9 +4303,27 @@ void test_wait_window_command_emits_runtime_wait_event() {
     }
 
     expect(wait_events.size() == 1U, "WAIT WINDOW command should emit one runtime.wait event");
+    const auto after_wait = state.globals.find("cafterwait");
     if (wait_events.size() >= 1U) {
         expect(wait_events[0].detail.find("mode=WINDOW") != std::string::npos,
             "WAIT WINDOW event should report mode=WINDOW");
+        expect(wait_events[0].detail.find("prompt=\"Please wait...\"") != std::string::npos,
+            "WAIT WINDOW event should surface the prompt text");
+        expect(wait_events[0].detail.find("timeout=5") != std::string::npos,
+            "WAIT WINDOW event should surface the timeout expression");
+        expect(wait_events[0].detail.find("flag=NOWAIT") != std::string::npos,
+            "WAIT WINDOW event should surface the NOWAIT flag");
+        expect(wait_events[0].detail.find("flag=NOCLEAR") != std::string::npos,
+            "WAIT WINDOW event should surface the NOCLEAR flag");
+        expect(wait_events[0].detail.find("target=wResult") != std::string::npos,
+            "WAIT WINDOW event should include the TO target");
+        expect(wait_events[0].detail.find("result=''") != std::string::npos,
+            "WAIT WINDOW event should surface the deterministic headless result");
+    }
+    expect(after_wait != state.globals.end(), "WAIT WINDOW TO target should be assigned");
+    if (after_wait != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_wait->second).empty(),
+            "WAIT WINDOW TO target should default to an empty string when host response is unavailable");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -4153,6 +4446,66 @@ void test_display_structure_emits_runtime_display_event() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_display_records_surfaces_effective_cursor_view_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_records";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Ready", "30"},
+        {"Bob", "Later", "22"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "DISPLAY RECORDS fixture should be created");
+
+    const fs::path main_path = temp_root / "display_records.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS people\n"
+        "SET FILTER TO AGE >= 25\n"
+        "SET FIELDS TO LIKE N*\n"
+        "DISPLAY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY RECORDS script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_events.push_back(event);
+        }
+    }
+
+    expect(display_events.size() == 1U, "DISPLAY RECORDS should emit one runtime.display event");
+    if (display_events.size() >= 1U) {
+        expect(display_events[0].detail.find("mode=RECORDS") != std::string::npos,
+            "DISPLAY RECORDS event should report mode=RECORDS");
+        expect(display_events[0].detail.find("people@") != std::string::npos,
+            "DISPLAY RECORDS event should surface the selected cursor");
+        expect(display_events[0].detail.find("fields=NAME,NOTE") != std::string::npos,
+            "DISPLAY RECORDS should honor SET FIELDS LIKE metadata");
+        expect(display_events[0].detail.find("filter=AGE >= 25") != std::string::npos,
+            "DISPLAY RECORDS should surface the current filter");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_list_status_emits_runtime_list_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_cmd";
@@ -4191,6 +4544,64 @@ void test_list_status_emits_runtime_list_event() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_list_records_surfaces_effective_cursor_view_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_records";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Ready", "30"},
+        {"Bob", "Later", "22"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "LIST RECORDS fixture should be created");
+
+    const fs::path main_path = temp_root / "list_records.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS people\n"
+        "LIST FIELDS EXCEPT NOTE FOR AGE >= 25\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LIST RECORDS script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.list") {
+            list_events.push_back(event);
+        }
+    }
+
+    expect(list_events.size() == 1U, "LIST RECORDS should emit one runtime.list event");
+    if (list_events.size() >= 1U) {
+        expect(list_events[0].detail.find("mode=RECORDS") != std::string::npos,
+            "LIST RECORDS event should report mode=RECORDS");
+        expect(list_events[0].detail.find("people@") != std::string::npos,
+            "LIST RECORDS event should surface the selected cursor");
+        expect(list_events[0].detail.find("fields=NAME,AGE") != std::string::npos,
+            "LIST RECORDS should honor inline FIELDS EXCEPT metadata");
+        expect(list_events[0].detail.find("for=AGE >= 25") != std::string::npos,
+            "LIST RECORDS should surface the FOR clause");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -4203,6 +4614,7 @@ int main() {
     test_scatter_gather_name_object_round_trip();
     test_scatter_name_additive_merges_existing_object_properties();
     test_scatter_gather_name_single_name_field_filter_semantics();
+    test_scatter_gather_name_like_and_except_field_filters();
     test_scatter_gather_name_supports_macro_object_variable_names();
     test_scatter_gather_name_supports_nested_object_targets();
     test_scatter_gather_name_creates_missing_nested_object_targets();
@@ -4237,9 +4649,11 @@ int main() {
     test_copy_to_array_fields_clause_allows_keyword_named_field();
     test_append_from_array_writes_records_from_2d_array();
     test_append_from_array_fields_clause_allows_keyword_named_field();
+    test_copy_append_array_like_and_except_field_filters();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();
+    test_browse_like_and_except_field_filters_surface_event_metadata();
     test_edit_command_emits_runtime_edit_event();
     test_change_command_emits_runtime_change_event();
     test_input_command_emits_runtime_input_event_with_prompt();
@@ -4253,7 +4667,9 @@ int main() {
     test_wait_clear_command_emits_runtime_wait_clear_event();
     test_keyboard_command_emits_runtime_keyboard_event();
     test_display_structure_emits_runtime_display_event();
+    test_display_records_surfaces_effective_cursor_view_metadata();
     test_list_status_emits_runtime_list_event();
+    test_list_records_surfaces_effective_cursor_view_metadata();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

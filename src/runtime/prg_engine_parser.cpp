@@ -862,12 +862,32 @@ Program parse_program(const std::string& path) {
             const std::string body_upper = uppercase_copy(body);
             if (body_upper == "CLEAR" || starts_with_insensitive(body, "CLEAR")) {
                 statement.identifier = "CLEAR";
-            } else if (starts_with_insensitive(body, "WINDOW ") || body_upper == "WINDOW") {
-                statement.identifier = "WINDOW";
-                const std::string window_body = body_upper == "WINDOW" ? std::string{} : trim_copy(body.substr(7U));
-                statement.expression = window_body;
             } else {
-                statement.expression = body;
+                std::string wait_body = body;
+                if (starts_with_insensitive(body, "WINDOW ") || body_upper == "WINDOW") {
+                    statement.identifier = "WINDOW";
+                    wait_body = body_upper == "WINDOW" ? std::string{} : trim_copy(body.substr(7U));
+                }
+
+                const std::size_t clause_pos = find_first_keyword_top_level(wait_body, {"TO", "TIMEOUT", "NOWAIT", "NOCLEAR"});
+                if (clause_pos != std::string::npos) {
+                    statement.expression = trim_copy(wait_body.substr(0U, clause_pos));
+                } else {
+                    statement.expression = trim_copy(wait_body);
+                }
+
+                statement.secondary_expression = extract_command_clause(wait_body, "TIMEOUT", {"TO", "NOWAIT", "NOCLEAR"});
+                statement.tertiary_expression = find_first_keyword_top_level(wait_body, {"NOWAIT"}) != std::string::npos
+                    ? "NOWAIT"
+                    : std::string{};
+                statement.quaternary_expression = find_first_keyword_top_level(wait_body, {"NOCLEAR"}) != std::string::npos
+                    ? "NOCLEAR"
+                    : std::string{};
+
+                const std::string target = extract_command_clause(wait_body, "TO", {"TIMEOUT", "NOWAIT", "NOCLEAR"});
+                if (!target.empty()) {
+                    statement.names.push_back(target);
+                }
             }
         } else if (starts_with_insensitive(line, "KEYBOARD ") || upper == "KEYBOARD") {
             statement.kind = StatementKind::keyboard_command;
@@ -893,6 +913,9 @@ Program parse_program(const std::string& path) {
             } else {
                 statement.identifier = "RECORDS";
                 statement.expression = body;
+                statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
+                statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
+                statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
             }
         } else if (upper == "LIST" || starts_with_insensitive(line, "LIST ")) {
             statement.kind = StatementKind::list_command;
@@ -909,6 +932,9 @@ Program parse_program(const std::string& path) {
             } else {
                 statement.identifier = "RECORDS";
                 statement.expression = body;
+                statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
+                statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
+                statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
             }
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;

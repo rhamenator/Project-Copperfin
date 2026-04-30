@@ -63,6 +63,37 @@
                 detail += "'";
             };
 
+            auto append_cursor_view_metadata = [&](CursorState *cursor, const std::string &override_field_list_text, std::string &detail)
+            {
+                if (cursor == nullptr)
+                {
+                    return;
+                }
+
+                const std::vector<std::string> visible_fields = effective_visible_field_names(*cursor, override_field_list_text);
+                std::string field_detail;
+                for (std::size_t index = 0U; index < visible_fields.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        field_detail += ",";
+                    }
+                    field_detail += visible_fields[index];
+                }
+
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += cursor->alias.empty()
+                    ? ("workarea=" + std::to_string(cursor->work_area))
+                    : (cursor->alias + "@" + std::to_string(cursor->work_area));
+                detail += " recno=" + std::to_string(cursor->recno);
+                detail += " records=" + std::to_string(cursor->record_count);
+                detail += " fields=" + (field_detail.empty() ? std::string{"ALL"} : field_detail);
+                detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
+            };
+
             auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
             {
                 std::string assignment_identifier = apply_with_context(raw_identifier, frame);
@@ -4806,8 +4837,10 @@
             case StatementKind::edit_command:
             {
                 std::string detail;
+                append_cursor_view_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), {}, detail);
                 if (!statement.expression.empty())
                 {
+                    if (!detail.empty()) detail += " ";
                     detail += "memo=" + statement.expression;
                 }
                 events.push_back({.category = "runtime.edit",
@@ -4818,7 +4851,12 @@
             case StatementKind::change_command:
             {
                 std::string detail;
-                if (!statement.expression.empty())
+                CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                if (cursor != nullptr)
+                {
+                    append_cursor_view_metadata(cursor, statement.expression, detail);
+                }
+                else if (!statement.expression.empty())
                 {
                     detail += "fields=" + statement.expression;
                 }
@@ -4830,14 +4868,22 @@
             case StatementKind::input_command:
             {
                 std::string detail;
+                append_cursor_view_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), {}, detail);
                 if (!statement.expression.empty())
                 {
+                    if (!detail.empty()) detail += " ";
                     detail += "prompt=" + statement.expression;
                 }
                 if (!statement.identifier.empty())
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.identifier;
+                    ExecutionOutcome outcome = assign_runtime_target_value(statement.identifier, make_string_value(""));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                    detail += " result=''";
                 }
                 events.push_back({.category = "runtime.input",
                                   .detail = detail,
@@ -4847,14 +4893,22 @@
             case StatementKind::accept_command:
             {
                 std::string detail;
+                append_cursor_view_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), {}, detail);
                 if (!statement.expression.empty())
                 {
+                    if (!detail.empty()) detail += " ";
                     detail += "prompt=" + statement.expression;
                 }
                 if (!statement.identifier.empty())
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.identifier;
+                    ExecutionOutcome outcome = assign_runtime_target_value(statement.identifier, make_string_value(""));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                    detail += " result=''";
                 }
                 events.push_back({.category = "runtime.accept",
                                   .detail = detail,
@@ -5013,7 +5067,33 @@
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    detail += "clause=" + statement.expression;
+                    detail += "prompt=" + statement.expression;
+                }
+                if (!statement.secondary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "timeout=" + statement.secondary_expression;
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "flag=" + statement.tertiary_expression;
+                }
+                if (!statement.quaternary_expression.empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "flag=" + statement.quaternary_expression;
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    if (!detail.empty()) detail += " ";
+                    detail += "target=" + statement.names.front();
+                    ExecutionOutcome outcome = assign_runtime_target_value(statement.names.front(), make_string_value(""));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                    detail += " result=''";
                 }
                 events.push_back({.category = "runtime.wait",
                                   .detail = detail,
@@ -5039,6 +5119,40 @@
                 {
                     detail += "mode=" + statement.identifier;
                 }
+                if (normalize_identifier(statement.identifier) == "records")
+                {
+                    CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                    if (cursor == nullptr)
+                    {
+                        cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    }
+                    if (cursor != nullptr)
+                    {
+                        const std::vector<std::string> visible_fields = effective_visible_field_names(*cursor, statement.tertiary_expression);
+                        std::string field_detail;
+                        for (std::size_t index = 0U; index < visible_fields.size(); ++index)
+                        {
+                            if (index > 0U)
+                            {
+                                field_detail += ",";
+                            }
+                            field_detail += visible_fields[index];
+                        }
+
+                        if (!detail.empty()) detail += " ";
+                        detail += cursor->alias.empty()
+                            ? ("workarea=" + std::to_string(cursor->work_area))
+                            : (cursor->alias + "@" + std::to_string(cursor->work_area));
+                        detail += " recno=" + std::to_string(cursor->recno);
+                        detail += " records=" + std::to_string(cursor->record_count);
+                        detail += " fields=" + (field_detail.empty() ? std::string{"ALL"} : field_detail);
+                        detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
+                        if (!statement.quaternary_expression.empty())
+                        {
+                            detail += " for=" + trim_copy(statement.quaternary_expression);
+                        }
+                    }
+                }
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
@@ -5055,6 +5169,40 @@
                 if (!statement.identifier.empty())
                 {
                     detail += "mode=" + statement.identifier;
+                }
+                if (normalize_identifier(statement.identifier) == "records")
+                {
+                    CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                    if (cursor == nullptr)
+                    {
+                        cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    }
+                    if (cursor != nullptr)
+                    {
+                        const std::vector<std::string> visible_fields = effective_visible_field_names(*cursor, statement.tertiary_expression);
+                        std::string field_detail;
+                        for (std::size_t index = 0U; index < visible_fields.size(); ++index)
+                        {
+                            if (index > 0U)
+                            {
+                                field_detail += ",";
+                            }
+                            field_detail += visible_fields[index];
+                        }
+
+                        if (!detail.empty()) detail += " ";
+                        detail += cursor->alias.empty()
+                            ? ("workarea=" + std::to_string(cursor->work_area))
+                            : (cursor->alias + "@" + std::to_string(cursor->work_area));
+                        detail += " recno=" + std::to_string(cursor->recno);
+                        detail += " records=" + std::to_string(cursor->record_count);
+                        detail += " fields=" + (field_detail.empty() ? std::string{"ALL"} : field_detail);
+                        detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
+                        if (!statement.quaternary_expression.empty())
+                        {
+                            detail += " for=" + trim_copy(statement.quaternary_expression);
+                        }
+                    }
                 }
                 if (!statement.expression.empty())
                 {
