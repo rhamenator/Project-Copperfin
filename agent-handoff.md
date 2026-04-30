@@ -23,14 +23,14 @@ Important:
 Current priority order:
 1. `#102`, `#103`, `#104` under `#92`
 2. `#105`, `#106`, `#107` under `#98`
-3. `#97`, `#99` macro/eval/runtime-state and memory/assignment foundations
-4. `#94` structural table-operation residuals
-5. `#100` field-transfer and macro-target parity
-6. `#101` headless interaction macro/eval fidelity
-7. `#93` remote/result-cursor parity
-8. `#95` aggregate/view/helper parity
-9. `#96` DBC/container fidelity
-10. `#10`, `#11`, `#12` automation depth
+3. `#123`, `#124` under `#97`, then `#125`, `#126` under `#99`
+4. `#117`, `#118` under `#94`
+5. `#127`, `#128` under `#100`
+6. `#129`, `#130` under `#101`
+7. `#115`, `#116` under `#93`
+8. `#119`, `#120` under `#95`
+9. `#121`, `#122` under `#96`
+10. `#131`-`#136` under `#10`-`#12`
 
 Current shipped highlights worth remembering:
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
@@ -120,6 +120,6 @@ Default direction if no stronger signal appears from the current files:
 - Immediate target family:
   - `#102`, `#103`, then `#104` under `#92`
   - then `#105`, `#106`, and `#107` under `#98`, before reopening broader `#99` unless a concrete remaining memory-lifetime or `.mem` parity bug is visible
-  - then `#94` structural table-operation residuals
+  - then `#117` and `#118` under `#94`
 - Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

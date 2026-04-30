@@ -303,7 +303,7 @@ If the goal is "what should be handled first, concretely?", the answer is:
 
 ## Issue Hierarchy
 
-GitHub issue hierarchy is now in use for the remaining Phase A work. `#7` and `#8` remain the umbrella issues, and the durable remaining lanes now exist as real sub-issues.
+GitHub issue hierarchy is now in use for the remaining Phase A work. Repo-wide top-level umbrella issues are now `#108`-`#114`, and within the active runtime tree `#7` and `#8` remain the A3 umbrella issues whose durable lane issues exist as real sub-issues.
 
 Current structure under `#7`:
 
@@ -341,6 +341,20 @@ Current prompt-sized slice queue under active lane `#98`:
 | `#98` | `#106` | calendar/week-state `SET()` isolation/readback (`FDOW`, `FWEEK`, adjacent date-order state) |
 | `#98` | `#107` | path/default/fields session-state isolation/readback (`DEFAULT`, `PATH`, `FIELDS`) |
 
+Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
+
+- `#93`: `#115`, `#116`
+- `#94`: `#117`, `#118`
+- `#95`: `#119`, `#120`
+- `#96`: `#121`, `#122`
+- `#97`: `#123`, `#124`
+- `#99`: `#125`, `#126`
+- `#100`: `#127`, `#128`
+- `#101`: `#129`, `#130`
+- `#10`: `#131`, `#132`
+- `#11`: `#133`, `#134`
+- `#12`: `#135`, `#136`
+
 Current dependency links:
 
 - `#93` is blocked by `#92`
@@ -354,6 +368,7 @@ Current dependency links:
 For the remaining Phase A runtime work, the implementation unit should be a prompt-sized issue rather than a broad umbrella issue.
 
 - Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as planning and closure umbrellas.
+- Keep the repo-root umbrella issues `#108`-`#114` as navigation/grouping roots rather than execution units.
 - Before starting code work, pick one open slice issue under the active lane, or create a new slice issue if the intended change does not fit an existing one.
 - One implementation prompt should normally map to one slice issue, one focused validation loop, and one doc/handoff update.
 - Close or retarget the slice issue when the prompt-sized implementation lands; do not hide shipped work only inside the broader lane issue body.

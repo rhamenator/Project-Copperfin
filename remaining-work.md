@@ -52,12 +52,16 @@ The implementation order should be:
 
 This grouped list mirrors the active GitHub issue set so this backlog stays aligned with real unfinished work.
 
+Native root umbrella issues now exist for the repo-wide backlog forest: `#108` runtime compatibility/command surface, `#109` runtime parity surfaces, `#110` build/compiler/debug pipeline, `#111` shared design model/designer fidelity, `#112` IDE/editor parity, `#113` modernization/outputs/interop/security, and `#114` portability/core-boundary work.
+
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
   - lane issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
   - active prompt-sized slice issues: #102, #103, #104, #105, #106, #107
+  - additional native slice queues now exist under #93-#101: #115-#130
 - A4 automation and host containment: #10, #11, #12
+  - native prompt-sized slice issues: #131-#136
 - Runtime safety and diagnostics: #13, #14
 
 ### Runtime Parity Surfaces
