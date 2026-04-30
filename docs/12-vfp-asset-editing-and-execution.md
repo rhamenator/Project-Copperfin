@@ -80,6 +80,8 @@ Copperfin should support these modes:
 The current repo state is no longer only aspirational in this area:
 
 - asset inspection is implemented for `DBF`/`FPT`, `CDX`/`DCX`/`IDX`/`NDX`/`MDX`, and first-pass `DBC` companion discovery/validation
+- native DBC catalog export now supports whole-database JSON snapshots that include database identity, catalog-object rows, and table data blocks for resolvable local `TABLE` entries
+- DBC `PROPERTIES` memo payloads are now decoded from raw sidecar bytes (no text-mode filtering), enabling first-pass property parity for `DATABASE`/`TABLE`/`VIEW`/`RELATION`/`CONNECTION` metadata extraction
 - local-table mutation coverage exists for the shipped runtime flow, including memo-backed writes, structural mutations, compaction/truncation paths, and indexed-table guardrails
 - the runtime can execute a substantial first-pass PRG surface, including work areas, local queries/mutations, SQL pass-through / remote cursor behavior, and a growing expression/runtime-helper layer
 - xAsset-backed runtime bootstraps now exist for forms/classes, reports/labels, and menus, but these remain first-pass compatibility lanes rather than full VFP parity
@@ -178,6 +180,68 @@ For supported asset types, Copperfin should:
 
 - mixed-mode execution with .NET and SQL connectors
 
+## How To Use: DBC JSON Export
+
+Use the native asset-inspector API to export a database container (`.dbc`) into a single JSON snapshot.
+
+Minimal C++ call:
+
+```cpp
+const auto export_result = copperfin::vfp::export_database_as_json("/path/to/northwind.dbc");
+if (!export_result.ok) {
+		// export_result.error contains the failure reason
+}
+// export_result.json contains the serialized snapshot
+```
+
+Example JSON shape:
+
+```json
+{
+	"database": {
+		"path": "/data/northwind.dbc",
+		"name": "northwind"
+	},
+	"catalog": [
+		{
+			"record_index": 0,
+			"object_type": "database",
+			"object_name": "northwind",
+			"parent_name": "",
+			"properties": {
+				"Caption": "Northwind"
+			}
+		},
+		{
+			"record_index": 1,
+			"object_type": "table",
+			"object_name": "Customers",
+			"parent_name": "northwind",
+			"properties": {
+				"Comment": "Active customers"
+			}
+		}
+	],
+	"tables": {
+		"Customers": {
+			"fields": [
+				{"name": "CUSTID", "type": "N", "length": 8, "decimals": 0},
+				{"name": "COMPANY", "type": "C", "length": 40, "decimals": 0}
+			],
+			"records": [
+				{"CUSTID": 1, "COMPANY": "Acme Corp"}
+			]
+		}
+	}
+}
+```
+
+Notes:
+
+- `catalog` comes from DBC rows, including decoded binary `PROPERTIES` memo payloads.
+- `tables` is populated only for local table files that can be resolved next to the DBC.
+- `max_rows_per_table` can be used to cap exported row counts for large datasets.
+
 ## Key Risks
 
 - binary asset edge cases not documented in public help
@@ -191,3 +255,4 @@ For supported asset types, Copperfin should:
 - binary diff checks after no-op round trip
 - property-level round-trip tests
 - execution traces for imported sample applications
+- DBC JSON export fixtures that assert decoded `PROPERTIES` round-trips for representative catalog object types
