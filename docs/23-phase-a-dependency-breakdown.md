@@ -329,7 +329,6 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#13` | `#150` | preserve session and cursor state after runtime faults |
 | `#13` | `#151` | preserve repeated-continue stability after runtime faults |
 | `#14` | `#152` | tighten pause metadata and stack-frame fidelity |
 | `#14` | `#153` | tighten developer-facing diagnostic normalization |
@@ -340,13 +339,13 @@ Recently closed prompt-sized native slice queues:
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`
 - `#12`: `#135`, `#136`
-- `#13`: `#142`, `#143`
+- `#13`: `#142`, `#143`, `#150`
 - `#14`: `#144`, `#145`
 - `#95`: `#146`, `#147`, `#148`, `#149`
 
 Remaining adjacent prompt-sized native slice queues:
 
-- `#13`: `#150`, `#151`
+- `#13`: `#151`
 - `#14`: `#152`, `#153`
 - broader repo execution leaves are now also pre-split beyond Phase A under `#15`-`#43`, `#57`, and `#91`; this document keeps the active queue focused on the Phase A critical path
 

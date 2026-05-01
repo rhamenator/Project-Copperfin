@@ -25,12 +25,13 @@ Important:
 
 Current priority order:
 
-1. take `#150`, then `#151` under `#13`
+1. take `#151` under `#13`
 2. then take `#152`, then `#153` under `#14`
 3. only then move to a new slice under `#93` or `#94` if it has stronger downstream fan-out than the available `#13` / `#14` work
 
 Current shipped highlights worth remembering:
 
+- 2026-05-01: Slice issue `#150` is now closed. The runtime engine now correctly persists `DataSessionState` onto the `error_metadata_stack` at the moment a fault fires — covering both normal script-level errors and catastrophic C++ exceptions such as `LOG(-1)`. `RETRY` has been enhanced to pop the error metadata stack and restore the snapshotted session state (cursor alias, position, active filter) before re-executing the faulting statement, so recovery loops can depend on seeing a stable pre-fault cursor environment. The command dispatch chain was also refactored to flatten a deeply nested `if` ladder that was hitting the MSVC C1061 compiler limit in Debug builds. Focused `test_prg_engine_control_flow` coverage validates fault persistence, clean session recovery, and `RETRY` loop completion.
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
 - 2026-04-30: The same `#98` session-state lane now has another six focused readback/isolation slices locked down: `COLLATE`, `NULL`, `ANSI`, `REPROCESS`, `MULTILOCKS`, and `EXCLUSIVE`. Focused `test_prg_engine_runtime_surface_functions` and `test_prg_engine_table_mutation` coverage now verifies their default values plus `SET DATASESSION` restoration behavior, which narrows the remaining runtime-state backlog to smaller semantic gaps instead of broad untested state surface.
 - 2026-04-30: Issue `#92` deepened again in the grounded-order filter path. The local seek runtime no longer treats most loaded `FOR` expressions as metadata-only; in addition to `DELETED()` filters it now honors first-pass top-level string and numeric comparisons such as `NAME = 'BRAVO'` and `AGE >= 20`, including `SET NEAR` behavior against the surviving candidate set. Focused `test_prg_engine_seek_index` coverage passes.
@@ -136,9 +137,9 @@ Default direction if no stronger signal appears from the current files:
 
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
-  - `#150`, then `#151` under `#13`
+  - `#151` under `#13`
   - then `#152`, then `#153` under `#14`
-- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane or the now-closed `#95` / `#96` / `#10` / `#11` / `#12` / spent `#13`-`#14` child slices unless a concrete remaining parity bug is visible.
+- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane or the now-closed `#95` / `#96` / `#10` / `#11` / `#12` / `#150` and other spent `#13`-`#14` child slices unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.
 
 Future-enhancement tracking:

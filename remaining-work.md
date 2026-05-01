@@ -70,8 +70,8 @@ GitHub milestones now mirror that same tree:
   - native slice queues under #93-#101 have now been opened as needed: active and historical slices in this lane currently span `#115`-`#130` plus the closed `#146`-`#149` queue under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
-  - recently closed prompt-sized slice issues: #142, #143, #144, #145
-  - active prompt-sized slice issues: #150, #151 under #13 and #152, #153 under #14
+  - recently closed prompt-sized slice issues: #142, #143, #144, #145, #150
+  - active prompt-sized slice issues: #151 under #13 and #152, #153 under #14
 
 ### Runtime Parity Surfaces
 
@@ -341,6 +341,8 @@ Current repo status against the Windows-first product goal:
 This is the deepest layer and should continue to absorb the most effort until it is boringly reliable.
 
 ### Progress Notes
+
+- 2026-05-01: Slice issue `#150` is now closed. The runtime engine now correctly persists `DataSessionState` onto the `error_metadata_stack` at the moment a fault fires — covering both normal script-level errors and catastrophic C++ exceptions such as `LOG(-1)`. `RETRY` has been enhanced to pop the error metadata stack and restore the snapshotted session state (cursor alias, record position, active filter) before re-executing the faulting statement, so recovery loops that use `RETRY` to retry a failing record write or file operation can depend on seeing a stable pre-fault cursor environment instead of whatever state the `ON ERROR` handler may have mutated. The parser dispatch chain was also refactored to flatten a long nested-if command dispatch ladder that was hitting the MSVC C1061 compiler limit in Debug builds. Focused `test_prg_engine_control_flow` coverage validates fault persistence, clean session recovery via `RETRY`, and `RETRY` loop completion.
 
 - 2026-04-30: The nearby `FIELDS` lane deepened again toward completion. Command-level `FIELDS` parsing had already been widened beyond the first `SCATTER` / `GATHER` fix so single-field forms such as `SCATTER FIELDS NAME MEMVAR`, `SCATTER FIELDS NAME NAME oRow`, `GATHER MEMVAR FIELDS NAME`, and `GATHER NAME oRow FIELDS NAME` keep treating `NAME` as the selected field instead of misparsing it as the command's `NAME` clause, and that parser hardening also applies across adjacent `BROWSE`, `COPY TO`, `COPY TO ARRAY`, `APPEND FROM`, and `APPEND FROM ARRAY` families so keyword-named fields such as `TYPE` still survive `FIELDS <name>` extraction. On top of that, runtime field-visibility and browse metadata now honor `LIKE` / `EXCEPT` filters through `SET FIELDS TO LIKE ...`, `SET FIELDS TO EXCEPT ...`, and inline `BROWSE FIELDS ...` forms, while focused `test_prg_engine_data_io` plus `test_prg_engine_work_areas` coverage now locks down deeper `FIELDS LIKE` / `FIELDS EXCEPT` behavior across `SCATTER/GATHER NAME`, browse event payloads, field lookup visibility, and adjacent copy/import array flows.
 
