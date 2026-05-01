@@ -5477,6 +5477,10 @@
                 error_handler_return_depth.reset();
                 if (!error_metadata_stack.empty())
                 {
+                    if (error_metadata_stack.back().session_state_snapshot.has_value())
+                    {
+                        current_session_state() = *error_metadata_stack.back().session_state_snapshot;
+                    }
                     error_metadata_stack.pop_back();
                 }
                 fault_pc_valid = false;

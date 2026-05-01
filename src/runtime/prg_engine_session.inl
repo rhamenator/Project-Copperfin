@@ -81,6 +81,7 @@
             snapshot.work_area = last_error_work_area;
             snapshot.procedure = last_error_procedure;
             snapshot.compatibility = last_error_compatibility;
+            snapshot.session_state_snapshot = current_session_state();
             return snapshot;
         }
 

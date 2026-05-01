@@ -1214,7 +1214,10 @@ Program parse_program(const std::string& path) {
             if (starts_with_insensitive(line, "RESUME ")) {
                 statement.expression = trim_copy(line.substr(7U));
             }
-        } else if (starts_with_insensitive(line, "DECLARE ") &&
+        } 
+        
+        if (statement.kind == StatementKind::no_op) {
+            if (starts_with_insensitive(line, "DECLARE ") &&
                    !looks_like_array_declaration_body(line.substr(8U))) {
             // DECLARE <rettype> <funcname> IN <dll> [AS <alias>] [(<params>)]
             // Fields: identifier=alias(funcname), expression=dll_path,
@@ -1286,6 +1289,7 @@ Program parse_program(const std::string& path) {
                 statement.expression = line;
             }
         }
+        } // End of if (statement.kind == StatementKind::no_op)
 
         current->statements.push_back(std::move(statement));
     }

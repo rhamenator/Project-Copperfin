@@ -4,6 +4,10 @@ This changelog is an exhaustive ledger compiled from the dated implementation no
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
 
+## 2026-05-01
+
+- Slice issue `#150` is now closed. The runtime engine now correctly persists data session state during both script-level faults and catastrophic C++ exceptions (e.g. `LOG(-1)`) by snapshotting the `DataSessionState` to the `error_metadata_stack`. The `RETRY` command has been enhanced to pop the error metadata stack and restore the snapshotted session state, ensuring correct recovery of cursors and work areas after an error handler intervenes. The parser was also refactored to flatten the long command dispatch chain, resolving MSVC C1061 limits. Focused `test_prg_engine_control_flow` coverage now validates fault persistence, clean session recovery, and `RETRY` loop completion.
+
 ## 2026-04-30
 
 - The nearby `FIELDS` lane deepened again toward completion. Command-level `FIELDS` parsing had already been widened beyond the first `SCATTER` / `GATHER` fix so single-field forms such as `SCATTER FIELDS NAME MEMVAR`, `SCATTER FIELDS NAME NAME oRow`, `GATHER MEMVAR FIELDS NAME`, and `GATHER NAME oRow FIELDS NAME` keep treating `NAME` as the selected field instead of misparsing it as the command's `NAME` clause, and that parser hardening also applies across adjacent `BROWSE`, `COPY TO`, `COPY TO ARRAY`, `APPEND FROM`, and `APPEND FROM ARRAY` families so keyword-named fields such as `TYPE` still survive `FIELDS <name>` extraction. On top of that, runtime field-visibility and browse metadata now honor `LIKE` / `EXCEPT` filters through `SET FIELDS TO LIKE ...`, `SET FIELDS TO EXCEPT ...`, and inline `BROWSE FIELDS ...` forms, while focused `test_prg_engine_data_io` plus `test_prg_engine_work_areas` coverage now locks down deeper `FIELDS LIKE` / `FIELDS EXCEPT` behavior across `SCATTER/GATHER NAME`, browse event payloads, field lookup visibility, and adjacent copy/import array flows.

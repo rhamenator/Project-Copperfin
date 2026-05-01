@@ -336,6 +336,7 @@ namespace copperfin::runtime
             int work_area = 0;
             std::string procedure;
             AErrorCompatibilitySnapshot compatibility;
+            std::optional<DataSessionState> session_state_snapshot;
         };
 
         RuntimeSessionOptions options;
@@ -1522,6 +1523,14 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             return build_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::filesystem::filesystem_error &error)
@@ -1532,6 +1541,14 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             return build_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::system_error &error)
@@ -1542,6 +1559,14 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             return build_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::exception &error)
@@ -1552,6 +1577,14 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             return build_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (...)
@@ -1562,6 +1595,14 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
             return build_pause_state(DebugPauseReason::error, last_error_message);
         }
     }

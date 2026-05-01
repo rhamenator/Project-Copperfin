@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "prg_engine_file_io_functions.h"
 
 #include "prg_engine_helpers.h"

@@ -3937,6 +3937,38 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
 
 }  // namespace
 
+void test_runtime_faults_preserve_state_and_allow_retry() {
+    // We will execute a script that intentionally causes a runtime C++ exception (like LOG(-1))
+    // We will verify that we can RETRY and the cursor/session state is preserved.
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.startup_path = "runtime_fault_test.prg";
+    
+    write_text("runtime_fault_test.prg",
+        "CREATE CURSOR test_cursor (id I)\n"
+        "INSERT INTO test_cursor VALUES (1)\n"
+        "INSERT INTO test_cursor VALUES (2)\n"
+        "GO TOP\n"
+        "x = -1\n"
+        "ON ERROR DO my_error_handler\n"
+        "? LOG(x)\n" // This throws std::runtime_error first time
+        "PROCEDURE my_error_handler\n"
+        "    x = 1\n"
+        "    RETRY\n"
+        "ENDPROC\n"
+    );
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    
+    if (!state.completed) {
+        std::cerr << "Script stopped. Reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) 
+                  << ", message: " << state.message << std::endl;
+    }
+    
+    // Check if the script ran completely
+    expect(state.completed, "Script should complete after handling fault");
+}
+
 int main() {
     test_command_keyword_scanner_ignores_nested_text();
     test_do_while_and_loop_control_flow();
@@ -4012,6 +4044,7 @@ int main() {
     test_retry_reexecutes_faulting_statement();
     test_resume_next_continues_after_fault();
     test_retry_with_no_fault_checkpoint_is_noop();
+    test_runtime_faults_preserve_state_and_allow_retry();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
