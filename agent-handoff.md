@@ -1,3 +1,5 @@
+# Agent Handoff
+
 Canonical Copperfin agent handoff brief.
 
 This file should keep the repo pointed at the dependency graph instead of wandering into nearby but low-value slices. Treat `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and `docs/23-phase-a-dependency-breakdown.md` as the source of truth for what matters next.
@@ -5,6 +7,7 @@ This file should keep the repo pointed at the dependency graph instead of wander
 Resume Project-Copperfin from the current repo state and continue with the highest-value unfinished implementation slice on the critical path. Do not re-plan the whole project unless the dependency graph or issue set has materially changed.
 
 Important:
+
 - Start by re-reading:
   - `remaining-work.md`
   - `docs/22-vfp-language-reference-coverage.md`
@@ -21,11 +24,13 @@ Important:
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
 
 Current priority order:
+
 1. take `#150`, then `#151` under `#13`
 2. then take `#152`, then `#153` under `#14`
 3. only then move to a new slice under `#93` or `#94` if it has stronger downstream fan-out than the available `#13` / `#14` work
 
 Current shipped highlights worth remembering:
+
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
 - 2026-04-30: The same `#98` session-state lane now has another six focused readback/isolation slices locked down: `COLLATE`, `NULL`, `ANSI`, `REPROCESS`, `MULTILOCKS`, and `EXCLUSIVE`. Focused `test_prg_engine_runtime_surface_functions` and `test_prg_engine_table_mutation` coverage now verifies their default values plus `SET DATASESSION` restoration behavior, which narrows the remaining runtime-state backlog to smaller semantic gaps instead of broad untested state surface.
 - 2026-04-30: Issue `#92` deepened again in the grounded-order filter path. The local seek runtime no longer treats most loaded `FOR` expressions as metadata-only; in addition to `DELETED()` filters it now honors first-pass top-level string and numeric comparisons such as `NAME = 'BRAVO'` and `AGE >= 20`, including `SET NEAR` behavior against the surviving candidate set. Focused `test_prg_engine_seek_index` coverage passes.
@@ -113,18 +118,22 @@ Current shipped highlights worth remembering:
   - SCATTER/GATHER deepening (NAME, MEMO, 2D arrays): SCATTER NAME / GATHER NAME scatter fields to/from object properties; SCATTER MEMO includes M/G/W memo-type fields; 2D [n,2] arrays as name/value maps; row-1 scatter for wider 2D arrays. Parser extended. Tests in `test_prg_engine_data_io.cpp`. 29/29 CTest passing.
 
 Workflow:
+
 1. Inspect the current repo state in the relevant files only.
 2. Identify the single best critical-path runtime/data-engine slice.
 3. Implement it.
 4. Add or update focused regression tests.
 5. Run narrow validation relevant to the slice.
-  - Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays test_prg_engine_functions test_prg_engine_string_math_functions test_prg_engine_runtime_surface_functions test_prg_engine_seek_index`
-  - Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine_seek_index && ./build/test_prg_engine_seek_index`
-  - Asset/index slices: also build and run `test_vfp_assets` when touched
-6. Update docs/backlog.
-7. Summarize what changed, what passed, and the next likely critical-path slice.
+
+- Runtime/data slices on Windows: `Push-Location "E:\Project-Copperfin"; cmake --build build --config Release --target test_dbf_table test_prg_engine test_prg_engine_arrays test_prg_engine_functions test_prg_engine_string_math_functions test_prg_engine_runtime_surface_functions test_prg_engine_seek_index`
+- Runtime/data slices on Linux/macOS with an existing CMake/Ninja build: `ninja -C build test_prg_engine_seek_index && ./build/test_prg_engine_seek_index`
+- Asset/index slices: also build and run `test_vfp_assets` when touched
+
+1. Update docs/backlog.
+2. Summarize what changed, what passed, and the next likely critical-path slice.
 
 Default direction if no stronger signal appears from the current files:
+
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
   - `#150`, then `#151` under `#13`
@@ -133,4 +142,5 @@ Default direction if no stronger signal appears from the current files:
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.
 
 Future-enhancement tracking:
+
 - Put non-blocking migration/interchange ideas under umbrella issue `#137` instead of mixing them into the parity critical path.
