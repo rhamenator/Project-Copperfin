@@ -21,9 +21,9 @@ Important:
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
 
 Current priority order:
-1. create the next prompt-sized slice under `#95` if a fresh aggregate/view/helper residual is identified
-2. otherwise create the next prompt-sized slice under `#13` or `#14` if a clean runtime-safety/diagnostics residual is visible
-3. only then move to a new slice under `#93` or `#94` if it has stronger downstream fan-out than the available `#95` / `#13` / `#14` work
+1. take `#146`, then `#147`, then `#148`, then `#149` under `#95`
+2. after the open `#95` slice queue is exhausted, open the next prompt-sized slice under `#13` or `#14` if a clean runtime-safety/diagnostics residual is visible
+3. only then move to a new slice under `#93` or `#94` if it has stronger downstream fan-out than the available `#13` / `#14` work
 
 Current shipped highlights worth remembering:
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
@@ -126,7 +126,7 @@ Workflow:
 Default direction if no stronger signal appears from the current files:
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
-  - a newly-opened `#95` slice if another aggregate/view/helper residual is still visible
+  - `#146`, then `#147`, then `#148`, then `#149` under `#95`
   - otherwise a newly-opened `#13` or `#14` slice if another clean runtime-safety/diagnostics residual is visible
 - Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane or the now-closed `#96` / `#10` / `#11` / `#12` / spent `#13`-`#14` child slices unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.

@@ -329,7 +329,10 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| none | create a fresh slice under `#95`, `#13`, or `#14` | continue from the next highest-value unfinished runtime lane |
+| `#95` | `#146` | tighten aggregate command residuals and clause parity |
+| `#95` | `#147` | tighten `LOOKUP()` and helper cursor-state parity |
+| `#95` | `#148` | tighten `DISPLAY/LIST` residual metadata parity |
+| `#95` | `#149` | finish remaining aggregate/view/helper edge cases |
 
 Recently closed prompt-sized native slice queues:
 
@@ -342,7 +345,9 @@ Recently closed prompt-sized native slice queues:
 
 Remaining adjacent prompt-sized native slice queues:
 
-- none currently pre-opened in this document; create the next one under the winning lane before coding
+- `#95`: `#146`, `#147`, `#148`, `#149`
+- `#13`: no currently open slice issues
+- `#14`: no currently open slice issues
 
 Current dependency links:
 

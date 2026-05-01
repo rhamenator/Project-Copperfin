@@ -66,8 +66,8 @@ GitHub milestones now mirror that same tree:
 - A3 runtime semantics and command depth: #7, #8
   - active lane issues: #92, #93, #94, #95, #97, #98, #99, #100, #101
   - recently closed lane issue: #96
-  - active prompt-sized slice issues: none currently open under #92-#101
-  - additional native slice queues now exist under #93-#101: #115-#130
+  - active prompt-sized slice issues: #146, #147, #148, #149 under #95
+  - additional native slice queues now exist under #93-#101: #115-#130, #146-#149
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
   - recently closed prompt-sized slice issues: #142, #143, #144, #145
