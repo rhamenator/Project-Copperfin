@@ -437,6 +437,11 @@
                     }
 
                     RuntimeOleObjectState *runtime_object = *object;
+                    const std::string property_name = normalize_identifier(assignment_identifier.substr(separator + 1U));
+                    if (!property_name.empty())
+                    {
+                        runtime_object->properties[property_name] = assignment_value;
+                    }
                     runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(assignment_value);
                     ++runtime_object->action_count;
                     events.push_back({.category = "ole.set",

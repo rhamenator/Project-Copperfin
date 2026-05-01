@@ -8,6 +8,7 @@
 #include <fstream>
 #include <limits>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <vector>
@@ -42,6 +43,41 @@ std::string lowercase_copy(std::string value) {
         return static_cast<char>(std::tolower(ch));
     });
     return value;
+}
+
+std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
+    std::error_code ignored;
+    if (std::filesystem::exists(candidate, ignored)) {
+        return candidate;
+    }
+
+    const std::filesystem::path directory =
+        candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
+    if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
+        return std::nullopt;
+    }
+
+    const std::string target_name = lowercase_copy(candidate.filename().string());
+    for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
+        if (ignored) {
+            break;
+        }
+        if (lowercase_copy(entry.path().filename().string()) == target_name) {
+            return entry.path();
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> resolve_first_existing_path(
+    const std::vector<std::filesystem::path>& candidates) {
+    for (const auto& candidate : candidates) {
+        if (const auto resolved = resolve_existing_path_casefold(candidate); resolved.has_value()) {
+            return resolved;
+        }
+    }
+    return std::nullopt;
 }
 
 void append_validation_issue(
@@ -367,6 +403,7 @@ std::vector<std::string> companion_index_paths_for(const std::filesystem::path& 
             append_if_missing(candidates, with_extension(".mdx"));
             return candidates;
         case AssetFamily::database_container:
+            append_if_missing(candidates, path.string() + ".dcx");
             append_if_missing(candidates, with_extension(".dcx"));
             return candidates;
         case AssetFamily::project:
@@ -418,8 +455,7 @@ std::vector<std::string> expected_structural_companion_paths_for(const std::file
 
 bool any_existing_path(const std::vector<std::string>& candidates) {
     return std::any_of(candidates.begin(), candidates.end(), [](const std::string& candidate) {
-        std::error_code ignored;
-        return std::filesystem::exists(candidate, ignored);
+        return resolve_existing_path_casefold(candidate).has_value();
     });
 }
 
@@ -646,8 +682,7 @@ void validate_expected_companions(
     if (asset_expects_memo_sidecar(family, header)) {
         const std::string memo_path = memo_sidecar_path_for(file_path, family);
         if (!memo_path.empty()) {
-            std::error_code ignored;
-            if (!std::filesystem::exists(memo_path, ignored)) {
+            if (!resolve_existing_path_casefold(memo_path).has_value()) {
                 append_validation_issue(
                     result,
                     AssetValidationSeverity::error,
@@ -691,18 +726,19 @@ void validate_memo_sidecar(
         return;
     }
 
-    std::error_code ignored;
-    if (!std::filesystem::exists(memo_path, ignored)) {
+    const auto resolved_memo_path = resolve_existing_path_casefold(memo_path);
+    if (!resolved_memo_path.has_value()) {
         return;
     }
 
-    const std::vector<std::uint8_t> memo_bytes = read_binary_file(memo_path);
+    const std::string resolved_memo_path_text = resolved_memo_path->string();
+    const std::vector<std::uint8_t> memo_bytes = read_binary_file(resolved_memo_path_text);
     if (memo_bytes.size() < 8U) {
         append_validation_issue(
             result,
             AssetValidationSeverity::error,
             "memo.sidecar_header_truncated",
-            memo_path,
+            resolved_memo_path_text,
             "The memo sidecar is too short to contain a valid header.");
         return;
     }
@@ -713,7 +749,7 @@ void validate_memo_sidecar(
             result,
             AssetValidationSeverity::error,
             "memo.block_size_invalid",
-            memo_path,
+            resolved_memo_path_text,
             "The memo sidecar declares an invalid zero block size.");
         return;
     }
@@ -723,7 +759,7 @@ void validate_memo_sidecar(
             result,
             AssetValidationSeverity::error,
             "memo.sidecar_shorter_than_block_size",
-            memo_path,
+            resolved_memo_path_text,
             "The memo sidecar is shorter than its declared block size.");
         return;
     }
@@ -767,7 +803,7 @@ void validate_memo_sidecar(
                 result,
                 AssetValidationSeverity::error,
                 "memo.pointer_out_of_range",
-                memo_path,
+                resolved_memo_path_text,
                 "A memo field points to a block outside the available sidecar range.");
             continue;
         }
@@ -779,7 +815,7 @@ void validate_memo_sidecar(
                 result,
                 AssetValidationSeverity::error,
                 "memo.payload_truncated",
-                memo_path,
+                resolved_memo_path_text,
                 "A referenced memo payload extends beyond the available sidecar bytes.");
         }
     }
@@ -918,19 +954,21 @@ AssetInspectionResult inspect_asset(const std::string& path) {
     }
 
     for (const auto& companion_index : companion_index_paths_for(std::filesystem::path(path), result.family)) {
-        if (!std::filesystem::exists(companion_index)) {
+        const auto resolved_companion_index = resolve_existing_path_casefold(companion_index);
+        if (!resolved_companion_index.has_value()) {
             continue;
         }
 
-        const IndexParseResult index_result = parse_index_probe_from_file(companion_index);
+        const std::string resolved_companion_index_text = resolved_companion_index->string();
+        const IndexParseResult index_result = parse_index_probe_from_file(resolved_companion_index_text);
         if (index_result.ok) {
-            result.indexes.push_back({.path = companion_index, .probe = index_result.probe});
-        } else if (!has_validation_issue(result, "index.companion_parse_failed", companion_index)) {
+            result.indexes.push_back({.path = resolved_companion_index_text, .probe = index_result.probe});
+        } else if (!has_validation_issue(result, "index.companion_parse_failed", resolved_companion_index_text)) {
             append_validation_issue(
                 result,
                 AssetValidationSeverity::warning,
                 "index.companion_parse_failed",
-                companion_index,
+                resolved_companion_index_text,
                 "A companion index file exists but could not be parsed: " + index_result.error);
         }
     }
@@ -1247,8 +1285,8 @@ DatabaseExportResult export_database_as_json(
 
     // Determine the .DCT memo sidecar path
     const fs::path dbc_fs_path(dbc_path);
-    const fs::path dct_path = fs::path(dbc_path).replace_extension(".dct");
-    const bool has_dct = fs::exists(dct_path);
+    const std::optional<fs::path> dct_path = resolve_existing_path_casefold(fs::path(dbc_path).replace_extension(".dct"));
+    const bool has_dct = dct_path.has_value();
 
     // Read all catalog rows with raw memo block numbers
     const std::vector<RawDbcRow> raw_rows = read_raw_dbc_rows(dbc_bytes, header_result.header);
@@ -1267,7 +1305,7 @@ DatabaseExportResult export_database_as_json(
 
         if (raw.properties_block != 0U && has_dct) {
             const std::vector<std::uint8_t> prop_bytes =
-                read_memo_block_raw(dct_path.string(), raw.properties_block);
+                read_memo_block_raw(dct_path->string(), raw.properties_block);
             if (!prop_bytes.empty()) {
                 obj.properties = decode_dbc_properties_blob(prop_bytes);
             }
@@ -1281,7 +1319,17 @@ DatabaseExportResult export_database_as_json(
     json << "{\n";
 
     // -- database metadata block
-    const std::string db_name = dbc_fs_path.stem().string();
+    std::string db_name = dbc_fs_path.stem().string();
+    const auto database_object = std::find_if(
+        catalog.begin(),
+        catalog.end(),
+        [](const DbcCatalogObject& object)
+        {
+            return !object.deleted && object.object_type == "database" && !trim_copy(object.object_name).empty();
+        });
+    if (database_object != catalog.end()) {
+        db_name = database_object->object_name;
+    }
     json << "  \"database\": {\n";
     json << "    \"path\": \"" << json_escape_str(dbc_path) << "\",\n";
     json << "    \"name\": \"" << json_escape_str(db_name) << "\"\n";
@@ -1346,19 +1394,18 @@ DatabaseExportResult export_database_as_json(
             continue;
         }
         const std::string& tname = obj.object_name;
-        fs::path candidate = dbc_dir / (tname + ".dbf");
-        if (!fs::exists(candidate)) {
-            // Try lower-case (Linux is case-sensitive)
-            std::string lower = tname;
-            std::transform(lower.begin(), lower.end(), lower.begin(),
-                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-            fs::path lower_candidate = dbc_dir / (lower + ".dbf");
-            if (!fs::exists(lower_candidate)) {
-                continue;
-            }
-            candidate = std::move(lower_candidate);
+        const auto resolved_table_path = resolve_first_existing_path({
+            dbc_dir / (tname + ".dbf"),
+            dbc_dir / (lowercase_copy(tname) + ".dbf"),
+            dbc_dir / (uppercase_copy(tname) + ".dbf")
+        });
+        if (!resolved_table_path.has_value()) {
+            continue;
         }
-        resolved_tables.push_back({tname, candidate});
+        ResolvedTable resolved_table;
+        resolved_table.name = tname;
+        resolved_table.path = *resolved_table_path;
+        resolved_tables.push_back(std::move(resolved_table));
     }
 
     for (std::size_t ti = 0U; ti < resolved_tables.size(); ++ti) {

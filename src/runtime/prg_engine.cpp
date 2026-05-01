@@ -670,7 +670,73 @@ namespace copperfin::runtime
                                   .detail = runtime_object->prog_id + "." + member_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
 
-                const std::string leaf = member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U);
+                const std::string leaf = normalize_identifier(
+                    member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U));
+                if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
+                {
+                    auto update_dictionary_count = [&]()
+                    {
+                        std::size_t entry_count = 0U;
+                        for (const auto &[property_name, property_value] : runtime_object->properties)
+                        {
+                            if (property_name != "count" && property_name != "comparemode")
+                            {
+                                ++entry_count;
+                            }
+                        }
+                        runtime_object->properties["count"] = make_number_value(static_cast<double>(entry_count));
+                    };
+                    const auto key_for_argument = [&](std::size_t index) -> std::string
+                    {
+                        return index < arguments.size()
+                            ? normalize_identifier(trim_copy(value_as_string(arguments[index])))
+                            : std::string{};
+                    };
+
+                    if (leaf == "add" && arguments.size() >= 2U)
+                    {
+                        const std::string key = key_for_argument(0U);
+                        if (!key.empty())
+                        {
+                            runtime_object->properties[key] = arguments[1];
+                            update_dictionary_count();
+                        }
+                        return make_boolean_value(true);
+                    }
+                    if (leaf == "exists" && !arguments.empty())
+                    {
+                        const std::string key = key_for_argument(0U);
+                        return make_boolean_value(!key.empty() && runtime_object->properties.contains(key));
+                    }
+                    if (leaf == "item" && !arguments.empty())
+                    {
+                        const std::string key = key_for_argument(0U);
+                        const auto found = runtime_object->properties.find(key);
+                        return found == runtime_object->properties.end() ? make_empty_value() : found->second;
+                    }
+                    if (leaf == "remove" && !arguments.empty())
+                    {
+                        const std::string key = key_for_argument(0U);
+                        if (!key.empty())
+                        {
+                            runtime_object->properties.erase(key);
+                            update_dictionary_count();
+                        }
+                        return make_boolean_value(true);
+                    }
+                    if (leaf == "removeall")
+                    {
+                        const auto comparemode = runtime_object->properties.find("comparemode");
+                        const PrgValue comparemode_value = comparemode == runtime_object->properties.end()
+                            ? make_number_value(0.0)
+                            : comparemode->second;
+                        runtime_object->properties.clear();
+                        runtime_object->properties["comparemode"] = comparemode_value;
+                        runtime_object->properties["count"] = make_number_value(0.0);
+                        return make_boolean_value(true);
+                    }
+                }
+
                 if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
                 {
                     return make_string_value("object:" + runtime_object->prog_id + "." + member_path + "#" + std::to_string(runtime_object->handle));
@@ -702,6 +768,12 @@ namespace copperfin::runtime
                 events.push_back({.category = "ole.get",
                                   .detail = runtime_object->prog_id + "." + property_path.substr(separator + 1U),
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                const std::string property_name = normalize_identifier(property_path.substr(separator + 1U));
+                const auto property = runtime_object->properties.find(property_name);
+                if (property != runtime_object->properties.end())
+                {
+                    return property->second;
+                }
                 return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
             },
             [this, &frame, preferred_cursor](const std::string &nested_expression)

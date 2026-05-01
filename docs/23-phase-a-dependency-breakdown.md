@@ -22,7 +22,7 @@ It is intentionally narrower than the top-level roadmap:
 | A1. File and index fidelity | 92-95% | repair breadth, edge-case metadata, and runtime consumption gaps |
 | A2. Work areas, sessions, and cursor semantics | 90-96% | richer order/collation/search behavior and remote/result-cursor parity |
 | A3. Command and expression surface | 82% | remaining issue `#7` / `#8` command-surface and macro/eval fidelity |
-| A4. Automation and interop semantics | ~41% | OLE/COM parity depth and host-failure containment under `#10`, `#11`, and `#12` |
+| A4. Automation and interop semantics | ~56% | OLE/COM parity depth and host-failure containment under `#10`, `#11`, and `#12` |
 
 ## Command/Function Group Dependency Table
 
@@ -44,8 +44,8 @@ It is intentionally narrower than the top-level roadmap:
 | G14 | Headless interaction and dialog command surface | `#7`, `#8` | 84% | `WAIT`, `KEYBOARD`, `INPUT`, `ACCEPT`, `GETFILE`, `PUTFILE`, `GETDIR`, `INPUTBOX`, runtime event payloads | G4, G5, G9, G12 | host integration parity, remaining command-surface work | Already much better; remaining work should focus on edge-case clauses and macro fidelity. |
 | G15 | Memory-variable and assignment semantics | `#8`, `#11` | 86% | `PUBLIC`, `PRIVATE`, `RELEASE`, `STORE`, array macro names, `DISPLAY/LIST MEMORY` | G4, G5, G9 | G12, G13, G14, A4 work | This is one of the hidden foundations under command-surface parity. |
 | G16 | Compatibility corpus and regression harness | supports `#7`, `#8`, `#10`, `#11`, `#12` | 55% | VFP-tree corpus, legacy samples, regression fixtures, focused runtime test expansion | G1, G4 | all groups | This is not a runtime feature, but it is one of the best multipliers for finishing the remaining 10-20% safely. |
-| G17 | Automation object activation parity | `#10`, `#11` | 35% | `CREATEOBJECT()`, `GETOBJECT()` | G5, G9, G15 | G18, later interop/runtime parity | This is the visible front door for A4 and still shallow. |
-| G18 | Automation property/method behavior and containment | `#10`, `#12` | 28% | OLE/COM property access, method invocation, automation-failure isolation | G17 | Phase A closure, later host safety work | This is the deepest unfinished Phase A lane and should be sequenced after command/macro foundations are steadier. |
+| G17 | Automation object activation parity | `#10`, `#11` | 68% | `CREATEOBJECT()`, `GETOBJECT()`, `NEWOBJECT()` activation targeting and reuse | G5, G9, G15 | G18, later interop/runtime parity | The front door is materially deeper now; the remaining work is mostly containment and fault behavior. |
+| G18 | Automation property/method behavior and containment | `#10`, `#12` | 43% | OLE/COM property access, method invocation, automation-failure isolation | G17 | Phase A closure, later host safety work | Property/method behavior is no longer a stub-only lane, but fault isolation is still the limiting factor. |
 
 ## Dependency Table By Recommended Work Package
 
@@ -83,7 +83,7 @@ flowchart LR
         direction TB
         G1["G1 DBF/FPT Parse + Repair<br/>90%<br/>supports #7"]
         G2["G2 Index Probe + Metadata<br/>91%<br/>supports #7"]
-        G3["G3 DBC/DCT/DCX Fidelity<br/>88%<br/>supports #7 via #96"]
+        G3["G3 DBC/DCT/DCX Fidelity<br/>96%<br/>supports #7 via #96"]
     end
 
     subgraph A2[Phase A2 - Work Areas / Sessions / Cursor Semantics]
@@ -109,8 +109,8 @@ flowchart LR
 
     subgraph A4[Phase A4 - Automation And Interop Semantics]
         direction TB
-        G17["G17 CREATEOBJECT / GETOBJECT<br/>35%<br/>#10 / #11"]
-        G18["G18 OLE/COM Invoke + Containment<br/>28%<br/>#10 / #12"]
+        G17["G17 CREATEOBJECT / GETOBJECT<br/>68%<br/>#10 / #11"]
+        G18["G18 OLE/COM Invoke + Containment<br/>43%<br/>#10 / #12"]
     end
 
     G16 --> G1
@@ -329,14 +329,17 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#96` | `#121` | close one more DBC/container fidelity residual |
-| `#96` | `#122` | close one more DBC/container fidelity residual |
+| `#12` | `#135` | close one more automation fault-containment residual |
+| `#12` | `#136` | close one more automation diagnostics/host-safety residual |
 
-Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
+Recently closed prompt-sized native slice queues:
 
 - `#96`: `#121`, `#122`
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`
+
+Remaining adjacent prompt-sized native slice queues:
+
 - `#12`: `#135`, `#136`
 
 Current dependency links:

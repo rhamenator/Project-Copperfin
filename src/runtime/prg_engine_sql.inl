@@ -1304,15 +1304,36 @@
 
         int register_ole_object(const std::string &prog_id, const std::string &source)
         {
+            const std::string normalized_prog_id = normalize_identifier(prog_id);
+            const bool getobject_attach = source == "getobject" || source.rfind("getobject:", 0U) == 0U;
+            const std::string attach_source =
+                source.rfind("getobject:", 0U) == 0U ? source.substr(std::string("getobject:").size()) : std::string{};
+            if (getobject_attach)
+            {
+                const std::string normalized_attach_source = normalize_identifier(attach_source);
+                for (const auto &[existing_handle, existing_object] : ole_objects)
+                {
+                    if (normalize_identifier(existing_object.prog_id) != normalized_prog_id)
+                    {
+                        continue;
+                    }
+                    if (!normalized_attach_source.empty() &&
+                        normalize_identifier(existing_object.source) != normalized_attach_source)
+                    {
+                        continue;
+                    }
+                    return existing_handle;
+                }
+            }
+
             const int handle = next_ole_handle++;
             RuntimeOleObjectState object_state{
                 .handle = handle,
                 .prog_id = prog_id,
-                .source = source,
-                .last_action = source,
+                .source = getobject_attach ? (attach_source.empty() ? source : attach_source) : source,
+                .last_action = getobject_attach ? "getobject" : source,
                 .action_count = 1};
 
-            const std::string normalized_prog_id = normalize_identifier(prog_id);
             if (normalized_prog_id == "scripting.dictionary")
             {
                 object_state.methods = {

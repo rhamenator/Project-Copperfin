@@ -928,6 +928,198 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_createobject_property_assignment_round_trips()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_ole_property_roundtrip";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "ole_property_roundtrip.prg";
+        write_text(
+            main_path,
+            "oDict = CREATEOBJECT('Scripting.Dictionary')\n"
+            "oDict.CompareMode = 1\n"
+            "nCompareMode = oDict.CompareMode\n"
+            "oDict.Caption = 'Copperfin'\n"
+            "cCaption = oDict.Caption\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "OLE property round-trip script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ncomparemode", "1");
+        check("ccaption", "Copperfin");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.set"; }),
+               "OLE property round-trip should emit ole.set events");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.get"; }),
+               "OLE property round-trip should emit ole.get events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_scripting_dictionary_collection_methods()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_scripting_dictionary_methods";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "scripting_dictionary_methods.prg";
+        write_text(
+            main_path,
+            "oDict = CREATEOBJECT('Scripting.Dictionary')\n"
+            "oDict.Add('Alpha', 41)\n"
+            "lExistsBefore = oDict.Exists('Alpha')\n"
+            "nItem = oDict.Item('Alpha')\n"
+            "nCountAfterAdd = oDict.Count\n"
+            "oDict.Remove('Alpha')\n"
+            "lExistsAfterRemove = oDict.Exists('Alpha')\n"
+            "oDict.Add('Beta', 5)\n"
+            "oDict.Add('Gamma', 7)\n"
+            "nCountBeforeClear = oDict.Count\n"
+            "oDict.RemoveAll()\n"
+            "nCountAfterClear = oDict.Count\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "Scripting.Dictionary method script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lexistsbefore", "true");
+        check("nitem", "41");
+        check("ncountafteradd", "1");
+        check("lexistsafterremove", "false");
+        check("ncountbeforeclear", "2");
+        check("ncountafterclear", "0");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "ole.invoke"; }),
+               "Scripting.Dictionary methods should emit ole.invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_newobject_preserves_library_and_server_targeting()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_server_targeting";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "newobject_server_targeting.prg";
+        write_text(
+            main_path,
+            "oRemote = NEWOBJECT('Session', 'app.vcx', '', '', .F., 'AppServer01')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "NEWOBJECT server-targeting script should complete");
+        expect(state.ole_objects.size() == 1U, "NEWOBJECT server-targeting script should register one object");
+        if (!state.ole_objects.empty())
+        {
+            expect(state.ole_objects.front().prog_id == "Session",
+                   "NEWOBJECT should preserve the requested class name as the OLE prog_id");
+            expect(state.ole_objects.front().source == "app.vcx@AppServer01",
+                   "NEWOBJECT should preserve library/server targeting metadata in object source");
+        }
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+                   return event.category == "ole.newobject" &&
+                          event.detail == "Session:app.vcx@AppServer01";
+               }),
+               "NEWOBJECT should emit library/server detail in ole.newobject events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_getobject_reuses_existing_class_and_source_targets()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_getobject_reuse";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "getobject_reuse.prg";
+        write_text(
+            main_path,
+            "oWord1 = CREATEOBJECT('Word.Application')\n"
+            "oWord2 = GETOBJECT('', 'Word.Application')\n"
+            "lSameRunning = COMPOBJ(oWord1, oWord2)\n"
+            "oDoc1 = GETOBJECT('sample.doc', 'Word.Application')\n"
+            "oDoc2 = GETOBJECT('sample.doc', 'Word.Application')\n"
+            "lSameDocument = COMPOBJ(oDoc1, oDoc2)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "GETOBJECT reuse script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lsamerunning", "true");
+        check("lsamedocument", "true");
+        expect(state.ole_objects.size() == 2U,
+               "GETOBJECT reuse should attach to existing targets instead of registering duplicate objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "Word.Application",
+                   "GETOBJECT class-target reuse should preserve the requested class");
+            expect(state.ole_objects[1].prog_id == "Word.Application",
+                   "GETOBJECT file/class activation should preserve the requested class");
+            expect(state.ole_objects[1].source == "sample.doc",
+                   "GETOBJECT file/class activation should preserve the requested source file");
+        }
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+                   return event.category == "ole.getobject" &&
+                          event.detail == "sample.doc -> Word.Application";
+               }),
+               "GETOBJECT should emit resolved source/class detail in ole.getobject events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -943,6 +1135,10 @@ int main()
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
+    test_createobject_property_assignment_round_trips();
+    test_scripting_dictionary_collection_methods();
+    test_newobject_preserves_library_and_server_targeting();
+    test_getobject_reuses_existing_class_and_source_targets();
 
     if (test_failures() != 0)
     {

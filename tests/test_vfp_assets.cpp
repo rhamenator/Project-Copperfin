@@ -603,6 +603,38 @@ void test_inspect_database_container_collects_dcx_companion() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_inspect_database_container_collects_casefolded_same_base_companions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_casefold_assets_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "sample.dbc";
+    const fs::path dcx_path = temp_dir / "SAMPLE.DCX";
+
+    {
+        auto bytes = make_vfp_header();
+        std::ofstream output(dbc_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    {
+        const auto bytes = make_synthetic_cdx_family_bytes(false, true);
+        std::ofstream output(dcx_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::inspect_asset(dbc_path.string());
+    expect(result.ok, "inspect_asset should succeed for a DBC with a case-folded DCX companion");
+    expect(result.indexes.size() == 1U, "inspect_asset should collect a case-folded same-base DCX companion");
+    expect(
+        !has_validation_issue(result, "index.structural_sidecar_missing", dbc_path.string()),
+        "inspect_asset should not report a missing structural companion when an uppercase DCX exists");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_inspect_database_container_extracts_first_pass_catalog_metadata() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_catalog_tests";
@@ -1154,6 +1186,73 @@ void test_export_database_as_json_decodes_properties_blob() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_export_database_as_json_prefers_catalog_name_and_casefolded_assets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_casefold_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path dct_path = temp_dir / "container.dct";
+    const fs::path uppercase_dct_path = temp_dir / "CONTAINER.DCT";
+    const fs::path upper_table_path = temp_dir / "CUSTOMERS.DBF";
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> dbc_records{
+        {"DATABASE", "NorthwindRuntime", "", ""},
+        {"TABLE", "Customers", "NorthwindRuntime", ""}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(dbc_path.string(), dbc_fields, dbc_records);
+    expect(dbc_create.ok, "casefold export test: DBC fixture should be created");
+
+    std::string props_blob;
+    props_blob += '\x01';
+    props_blob += '\x07'; props_blob += '\x00';
+    props_blob += "Caption";
+    props_blob += '\x09'; props_blob += '\x00';
+    props_blob += "Customers";
+    props_blob += '\x00';
+    const auto props_write = copperfin::vfp::replace_record_field_value(
+        dbc_path.string(), 1U, "PROPERTIES", props_blob);
+    expect(props_write.ok, "casefold export test: PROPERTIES memo should be writable");
+
+    if (fs::exists(dct_path)) {
+        fs::rename(dct_path, uppercase_dct_path, ignored);
+    }
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "AGE", .type = 'N', .offset = 17U, .length = 6U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> table_records{
+        {"ALICE", "30"},
+        {"BOB", "25"}
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(upper_table_path.string(), table_fields, table_records);
+    expect(table_create.ok, "casefold export test: uppercase table fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
+    expect(result.ok, "export_database_as_json should succeed with case-folded DCT/DBF companions");
+    if (result.ok) {
+        expect(result.json.find("\"name\": \"NorthwindRuntime\"") != std::string::npos,
+               "export JSON should prefer the DATABASE catalog object name over the DBC file stem");
+        expect(result.json.find("\"Caption\"") != std::string::npos,
+               "export JSON should decode PROPERTIES from a case-folded DCT sidecar");
+        expect(result.json.find("\"Customers\"") != std::string::npos,
+               "export JSON should include the catalog table entry");
+        expect(result.json.find("\"ALICE\"") != std::string::npos,
+               "export JSON should resolve and export rows from an uppercase same-base table file");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_read_memo_block_raw_returns_correct_bytes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_memo_raw_tests";
@@ -1211,6 +1310,7 @@ int main() {
     test_parse_index_probe_for_mdx_rejects_implausible_header();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
+    test_inspect_database_container_collects_casefolded_same_base_companions();
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
@@ -1222,6 +1322,7 @@ int main() {
     test_inspect_asset_reports_dbf_descriptor_validation_findings();
     test_export_database_as_json_produces_catalog_json();
     test_export_database_as_json_decodes_properties_blob();
+    test_export_database_as_json_prefers_catalog_name_and_casefolded_assets();
     test_read_memo_block_raw_returns_correct_bytes();
 
     if (failures != 0) {

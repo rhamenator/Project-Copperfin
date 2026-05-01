@@ -21,9 +21,9 @@ Important:
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
 
 Current priority order:
-1. `#121`, `#122` under `#96`
-2. `#131`-`#136` under `#10`-`#12`
-3. next prompt-sized slice under `#95` only if a fresh residual is identified and opened
+1. `#135`, `#136` under `#12`
+2. next prompt-sized slice under `#95` only if a fresh residual is identified and opened
+3. next prompt-sized slice under `#93` or `#94` only if a stronger dependency-path residual appears than the remaining `#12` work
 
 Current shipped highlights worth remembering:
 - 2026-04-30: Two more critical-path slices shipped back-to-back. Issue `#92` now has a first-pass runtime collation step for plain string indexed seeks, so non-`MACHINE` session collations such as `SET COLLATE TO GENERAL` case-fold plain `NAME`-style order comparisons when the order does not already carry an explicit `UPPER/LOWER` expression hint. Issue `#98` also tightened date/time runtime-state readback: `SET('DATE')` now defaults to `MDY`, and focused coverage now locks down `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`. Focused `test_prg_engine_seek_index` and `test_prg_engine_date_time_functions` coverage pass.
@@ -38,6 +38,9 @@ Current shipped highlights worth remembering:
 - 2026-04-30: Slice issues `#127` and `#128` are now closed. `SCATTER NAME` / `GATHER NAME` now expand macro-driven nested object-path segments such as `&cHolder.&cChild`, and `APPEND FROM ARRAY` now serializes typed date/datetime values through the shared DBF field contract instead of treating every array element as an opaque string. Focused `test_prg_engine_data_io` coverage pass.
 - 2026-04-30: Slice issues `#129`, `#130`, `#115`, and `#116` are now closed. `INPUT` / `ACCEPT` now emit resolved prompt and macro-target detail just like the deeper `WAIT` lane, `DISPLAY` / `LIST RECORDS` now preserve raw and resolved `IN` target payload detail, SQL/result cursors now honor macro-expanded `SET FIELDS TO &cSpec` visible-field metadata plus `SET FILTER TO &cExpr IN <alias>` filter flows, and SQL cursor `LOCATE` / `DELETE` / `RECALL FOR &cExpr` paths now evaluate macro-expanded boolean text instead of treating it as a truthy string. Focused `test_prg_engine_data_io` and `test_prg_engine_sql_cursors` coverage pass.
 - 2026-04-30: Slice issues `#119` and `#120` are now closed. Aggregate command events now expose targeted cursor/view metadata, scope, clause, and target-detail readback instead of only raw command text, and focused helper coverage now proves `LOOKUP()` parity over synthetic SQL/result cursors without disturbing a separately selected local work area. Focused `test_prg_engine_control_flow` and `test_prg_engine_runtime_surface_functions` coverage pass.
+- 2026-04-30: Slice issues `#121` and `#122` are now closed. DBC/container fidelity now resolves same-base `DCT`/`DCX` companions and exported `TABLE` `.dbf` assets case-insensitively on case-sensitive filesystems, and `export_database_as_json(...)` now prefers the catalog `DATABASE` object name over the raw `.dbc` stem while preserving decoded `PROPERTIES` memo bags and table-row snapshots. Focused `test_vfp_assets` coverage passes.
+- 2026-04-30: Slice issues `#131` and `#132` are now closed. OLE object property assignment now round-trips through runtime object state instead of collapsing to placeholder `ole:` strings, and the seeded `Scripting.Dictionary` compatibility surface now supports first-pass `Add`, `Exists`, `Item`, `Remove`, `RemoveAll`, and live `Count` updates for deterministic collection-style behavior. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
+- 2026-04-30: Slice issues `#133` and `#134` are now closed. `NEWOBJECT()` now preserves library/server activation detail in runtime object state and `ole.newobject` events, while `GETOBJECT()` now resolves class-vs-source targeting more faithfully and reuses matching existing attachments instead of always registering duplicate handles for the same running class or same file/class pair. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
 - 2026-04-30: The `#99` memory-file lane deepened again. `SAVE TO` now preserves runtime arrays with dimensions and records `PUBLIC` scope markers instead of only serializing plain scalar globals; `RESTORE FROM` now recreates arrays and `PUBLIC` bindings, additive restore now writes through visible `LOCAL` bindings instead of hiding restored values behind stale locals, and non-additive restore now clears stale arrays plus deferred `PRIVATE` shadow state before rebuilding the saved memory set. Focused `test_prg_engine_data_io` coverage passes.
 - 2026-04-30: Local DBF-backed indexed-search parity now accepts the same first-pass ad hoc order expressions that were already available on synthetic SQL cursors. Local `SET ORDER TO UPPER(NAME)`, `SEEK('bravo', 'People', 'UPPER(NAME)')`, and descending one-off local probes such as `SEEK('beta', 'People', 'UPPER(NAME) DESCENDING')` now derive normalization/collation hints and search through local table rows instead of rejecting non-tag expressions. Focused `test_prg_engine_seek_index` coverage passes.
 - 2026-04-30: The adjacent headless command/event lane deepened substantially toward issue #7/#8 closure. `INPUT` / `ACCEPT` now reuse selected-cursor/view metadata and assign deterministic empty-string headless `TO <target>` results; `WAIT` now captures resolved prompt/timeout/target state plus source expressions for common `WAIT [WINDOW] ... [TIMEOUT ...] [TO <target>] [NOWAIT] [NOCLEAR]` forms; `KEYBOARD` now captures resolved key payloads plus source expressions and common `PLAIN` / `CLEAR` flags; `DISPLAY` / `LIST` `STRUCTURE` and `STATUS` forms now emit selected-cursor schema and current session/view metadata; and `DISPLAY` / `LIST` `MEMORY` now emit visible and shadowed public/private/local/global memory-variable summaries, scoped array detail, and first-pass object previews. Focused `test_prg_engine_data_io` coverage passes.
@@ -120,10 +123,9 @@ Workflow:
 Default direction if no stronger signal appears from the current files:
 - Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
 - Immediate target family:
-  - `#121` and `#122` under `#96`
-  - then `#131`-`#136` under `#10`-`#12`
+  - `#135` and `#136` under `#12`
   - then a newly-opened `#95` slice if another aggregate/view/helper residual is still visible
-- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane unless a concrete remaining parity bug is visible.
+- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane or the now-deeper `#96` / `#10` / `#11` activation slices unless a concrete remaining parity bug is visible.
 - Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.
 
 Future-enhancement tracking:

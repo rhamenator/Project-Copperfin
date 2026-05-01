@@ -760,16 +760,36 @@
                 {
                     const std::string class_name = value_as_string(arguments[0]);
                     const std::string library = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
-                    const int handle = register_ole_callback_(class_name, library.empty() ? "newobject" : library);
-                    record_event_callback_("ole.newobject", class_name + (library.empty() ? std::string{} : ":" + library));
+                    const std::string server = arguments.size() >= 6U ? value_as_string(arguments[5]) : std::string{};
+                    std::string source = library.empty() ? "newobject" : library;
+                    if (!trim_copy(server).empty())
+                    {
+                        source += "@" + server;
+                    }
+                    const int handle = register_ole_callback_(class_name, source);
+                    std::string detail = class_name;
+                    if (!library.empty())
+                    {
+                        detail += ":" + library;
+                    }
+                    if (!trim_copy(server).empty())
+                    {
+                        detail += "@" + server;
+                    }
+                    record_event_callback_("ole.newobject", detail);
                     return make_string_value("object:" + class_name + "#" + std::to_string(handle));
                 }
                 if (function == "getobject" && !arguments.empty())
                 {
                     const std::string source = value_as_string(arguments[0]);
-                    const int handle = register_ole_callback_(source, "getobject");
-                    record_event_callback_("ole.getobject", source);
-                    return make_string_value("object:" + source + "#" + std::to_string(handle));
+                    const std::string class_name = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+                    const std::string resolved_prog_id = trim_copy(class_name).empty() ? source : class_name;
+                    const std::string source_tag = trim_copy(source).empty() ? "getobject" : "getobject:" + source;
+                    const int handle = register_ole_callback_(resolved_prog_id, source_tag);
+                    record_event_callback_(
+                        "ole.getobject",
+                        trim_copy(class_name).empty() ? source : source + " -> " + class_name);
+                    return make_string_value("object:" + resolved_prog_id + "#" + std::to_string(handle));
                 }
                 if ((function == "sqlconnect" || function == "sqlstringconnect") && !arguments.empty())
                 {
