@@ -2585,6 +2585,67 @@ void test_save_restore_round_trips_public_scope() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_save_to_shadowed_public_name_does_not_persist_public_scope_marker() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_shadowed_public_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "shadowed.mem";
+    const fs::path main_path = temp_root / "save_shadowed_public_scope.prg";
+    write_text(
+        main_path,
+        "PUBLIC cScope\n"
+        "cScope = 'public'\n"
+        "DO saver\n"
+        "RELEASE ALL\n"
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "PUBLIC restored_scope, after_release_type\n"
+        "restored_scope = cScope\n"
+        "RELEASE ALL\n"
+        "after_release_type = TYPE('cScope')\n"
+        "RETURN\n"
+        "PROCEDURE saver\n"
+        "LOCAL cScope\n"
+        "cScope = 'local'\n"
+        "SAVE TO '" + mem_path.string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SAVE TO shadowed PUBLIC scope script should complete");
+
+    const auto restored_scope = state.globals.find("restored_scope");
+    const auto after_release_type = state.globals.find("after_release_type");
+    expect(restored_scope != state.globals.end(), "restored_scope should be captured");
+    expect(after_release_type != state.globals.end(), "after_release_type should be captured");
+
+    if (restored_scope != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_scope->second) == "local",
+            "RESTORE FROM should restore the visible shadowed binding value");
+    }
+    if (after_release_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_release_type->second) == "U",
+            "shadowed local bindings saved through SAVE TO should not come back as PUBLIC after RELEASE ALL");
+    }
+
+    if (fs::exists(mem_path)) {
+        const std::string contents = read_text(mem_path);
+        expect(contents.find("cscope=C,PUBLIC:local") == std::string::npos,
+            "SAVE TO should not persist a PUBLIC scope marker when the visible binding is a LOCAL shadow");
+        expect(contents.find("cscope=C:local") != std::string::npos,
+            "SAVE TO should still persist the visible shadowed binding value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_without_additive_clears_stale_arrays() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_clears_arrays";
@@ -5229,6 +5290,7 @@ int main() {
     test_restore_from_honors_current_frame_local_bindings();
     test_save_restore_round_trips_arrays();
     test_save_restore_round_trips_public_scope();
+    test_save_to_shadowed_public_name_does_not_persist_public_scope_marker();
     test_restore_from_without_additive_clears_prior_globals();
     test_restore_from_without_additive_clears_stale_arrays();
     test_restore_from_without_additive_clears_private_shadow_state();

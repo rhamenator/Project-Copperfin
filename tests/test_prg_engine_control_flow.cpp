@@ -1195,6 +1195,54 @@ void test_release_private_restores_saved_binding_immediately() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_release_local_restores_visible_outer_global() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_release_local_restore";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "release_local_restore.prg";
+    write_text(
+        main_path,
+        "x = 42\n"
+        "DO subproc\n"
+        "caller_x = x\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "LOCAL x\n"
+        "x = 99\n"
+        "RELEASE x\n"
+        "sub_x_after_release = x\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE of LOCAL binding script should complete");
+
+    const auto sub_x_after_release = state.globals.find("sub_x_after_release");
+    const auto caller_x = state.globals.find("caller_x");
+
+    expect(sub_x_after_release != state.globals.end(), "sub_x_after_release should be captured");
+    expect(caller_x != state.globals.end(), "caller_x should be captured");
+
+    if (sub_x_after_release != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x_after_release->second) == "42",
+               "RELEASE x inside a LOCAL scope should reveal the visible outer global binding");
+    }
+    if (caller_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_x->second) == "42",
+               "the outer global binding should remain intact after the LOCAL scope returns");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_store_command_assigns_multiple_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_store";
@@ -2559,6 +2607,45 @@ void test_release_all_clears_current_frame_locals_without_global_leak() {
     fs::remove_all(tmp, ign);
 }
 
+void test_release_all_local_shadow_preserves_outer_global() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_all_local_shadow";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "x = 42\n"
+        "DO subproc\n"
+        "caller_x = x\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "LOCAL x\n"
+        "x = 99\n"
+        "RELEASE ALL\n"
+        "sub_x_after_release_all = x\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL with LOCAL shadowing should complete");
+
+    const auto sub_x_after_release_all = state.globals.find("sub_x_after_release_all");
+    const auto caller_x = state.globals.find("caller_x");
+    expect(sub_x_after_release_all != state.globals.end(), "sub_x_after_release_all should be captured");
+    expect(caller_x != state.globals.end(), "caller_x should be captured");
+    if (sub_x_after_release_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x_after_release_all->second) == "42",
+               "RELEASE ALL should clear the LOCAL shadow without erasing the outer global binding");
+    }
+    if (caller_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_x->second) == "42",
+               "RELEASE ALL should preserve the outer global after the LOCAL frame returns");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_release_all_like_pattern() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_release_like";
@@ -3370,6 +3457,7 @@ int main() {
     test_private_declaration_masks_caller_variable();
     test_private_variable_visible_to_called_routines();
     test_release_private_restores_saved_binding_immediately();
+    test_release_local_restores_visible_outer_global();
     test_store_command_assigns_multiple_variables();
     test_runtime_guardrail_limits_call_depth_without_crashing_host();
     test_runtime_guardrail_limits_statement_budget_without_crashing_host();
@@ -3398,6 +3486,7 @@ int main() {
     test_release_vars_erases_named_globals();
     test_release_all_clears_all_globals();
     test_release_all_clears_current_frame_locals_without_global_leak();
+    test_release_all_local_shadow_preserves_outer_global();
     test_release_all_like_pattern();
     test_release_all_like_pattern_reaches_arrays();
     test_release_all_except_pattern();

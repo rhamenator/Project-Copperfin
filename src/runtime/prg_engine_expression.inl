@@ -918,7 +918,16 @@
                     std::string merged = apply_merge(text);
                     if (recursive)
                     {
-                        merged = apply_merge(merged);
+                        constexpr std::size_t max_recursive_merges = 16U;
+                        for (std::size_t depth = 0U; depth < max_recursive_merges; ++depth)
+                        {
+                            const std::string next = apply_merge(merged);
+                            if (next == merged)
+                            {
+                                break;
+                            }
+                            merged = next;
+                        }
                     }
                     return make_string_value(merged);
                 }
@@ -1326,18 +1335,37 @@
                 if (peek() == '.')
                 {
                     ++position_; // consume the dot terminator
-                    const std::size_t suffix_start = position_;
-                    while (position_ < text_.size())
+                    if (peek() == '.')
                     {
-                        const char sch = text_[position_];
-                        if (std::isalnum(static_cast<unsigned char>(sch)) != 0 || sch == '_')
+                        dot_suffix.push_back('.');
+                        ++position_;
+                        while (position_ < text_.size())
                         {
-                            ++position_;
-                            continue;
+                            const char sch = text_[position_];
+                            if (std::isalnum(static_cast<unsigned char>(sch)) != 0 || sch == '_' || sch == '.')
+                            {
+                                dot_suffix.push_back(sch);
+                                ++position_;
+                                continue;
+                            }
+                            break;
                         }
-                        break;
                     }
-                    dot_suffix = text_.substr(suffix_start, position_ - suffix_start);
+                    else
+                    {
+                        const std::size_t suffix_start = position_;
+                        while (position_ < text_.size())
+                        {
+                            const char sch = text_[position_];
+                            if (std::isalnum(static_cast<unsigned char>(sch)) != 0 || sch == '_')
+                            {
+                                ++position_;
+                                continue;
+                            }
+                            break;
+                        }
+                        dot_suffix = text_.substr(suffix_start, position_ - suffix_start);
+                    }
                 }
 
                 const std::string expanded = trim_copy(value_as_string(resolve_identifier(macro_name)));

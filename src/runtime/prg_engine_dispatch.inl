@@ -3187,6 +3187,19 @@
                     visible_variables[name] = value;
                 }
 
+                const auto visible_binding_is_public = [&](const std::string &name) -> bool
+                {
+                    if (frame.locals.contains(name) || frame.local_names.contains(name))
+                    {
+                        return false;
+                    }
+                    if (frame.private_saved_values.contains(name))
+                    {
+                        return false;
+                    }
+                    return public_names.contains(name);
+                };
+
                 if (!destination_path.parent_path().empty())
                 {
                     std::error_code ignored;
@@ -3224,7 +3237,7 @@
 
                     const auto [type_code, serialized_value] = serialize_memvar_value(value);
                     std::string raw_type(1U, type_code);
-                    if (public_names.contains(name))
+                    if (visible_binding_is_public(name))
                     {
                         raw_type += ",PUBLIC";
                     }
@@ -3261,7 +3274,7 @@
                     }
 
                     std::string raw_type = "A";
-                    if (public_names.contains(name))
+                    if (visible_binding_is_public(name))
                     {
                         raw_type += ",PUBLIC";
                     }

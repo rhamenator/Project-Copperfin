@@ -40,6 +40,11 @@
                 }
                 frame.private_saved_values.erase(private_saved);
             }
+            else if (frame.local_names.contains(name))
+            {
+                frame.locals.erase(name);
+                return;
+            }
             else
             {
                 globals.erase(name);

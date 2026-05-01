@@ -358,6 +358,52 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_macro_alias_qualified_field_access()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_macro_alias_field_access";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "people.dbf";
+        write_people_dbf(table_path, {{"ALPHA", 11}, {"BRAVO", 22}});
+
+        const fs::path main_path = temp_root / "macro_alias_field_access.prg";
+        write_text(
+            main_path,
+            "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+            "cAlias = 'People'\n"
+            "cNameFromAlias = &cAlias..NAME\n"
+            "nAgeFromAlias = &cAlias..AGE\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(),
+             .working_directory = temp_root.string(),
+             .stop_on_entry = false});
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "macro alias-qualified field-access script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cnamefromalias", "ALPHA");
+        check("nagefromalias", "11");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -368,6 +414,7 @@ int main()
     test_type_and_transform_expression_depth();
     test_macro_dot_suffix_form();
     test_parameter_default_expressions_support_macros();
+    test_macro_alias_qualified_field_access();
 
     if (test_failures() != 0)
     {

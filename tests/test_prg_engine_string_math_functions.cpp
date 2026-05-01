@@ -391,6 +391,11 @@ namespace
             "cMergedCustom = TEXTMERGE('Value={|1+1|}', .F., '{|', '|}')\n"
             // TEXTMERGE no delimiters found
             "cMergedPlain = TEXTMERGE('no markers here')\n"
+            // TEXTMERGE recursive nested placeholders
+            "cStage1 = '<<cStage2>>'\n"
+            "cStage2 = '<<cStage3>>'\n"
+            "cStage3 = 'done'\n"
+            "cMergedRecursive = TEXTMERGE('Value: <<cStage1>>', .T.)\n"
             // EXECSCRIPT simple RETURN
             "nExecResult = EXECSCRIPT('RETURN 7 + 3')\n"
             // EXECSCRIPT RETURN string
@@ -425,6 +430,7 @@ namespace
         check("cmerged",       "Hello World!");
         check("cmergedcustom", "Value=2");
         check("cmergedplain",  "no markers here");
+        check("cmergedrecursive", "Value: done");
         check("nexecresult",   "10");
         check("cexecstr",      "hel");
 
