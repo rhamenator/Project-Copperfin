@@ -845,18 +845,7 @@ namespace
 
         // LOOKUP miss always returns .F.
         check("cmissing", "false");
-        // LOOKUP hit: BOB is at record 2 (AGE = 25) — but if eval fails, we accept either 25 or 0
-        {
-            const auto it = state.globals.find("nfound");
-            expect(it != state.globals.end(), "nfound from LOOKUP should be set");
-            if (it != state.globals.end())
-            {
-                const std::string val = copperfin::runtime::format_value(it->second);
-                // BOB's age is 25; if eval post-seek succeeds we get 25, if it falls back we get 0
-                expect(val == "25" || val == "0",
-                       "LOOKUP hit should return BOB's age (25) or fallback (0), got: " + val);
-            }
-        }
+        check("nfound", "25");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -924,6 +913,59 @@ namespace
                        "SQL LOOKUP should leave the targeted SQL cursor on a found record");
             }
         }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_lookup_supports_macro_alias_and_tag_arguments()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_lookup_target_context";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path people_path = temp_root / "people.dbf";
+        const fs::path people_cdx  = temp_root / "people.cdx";
+        write_people_dbf(people_path, {{"ALICE", 30}, {"BOB", 25}, {"CAROL", 35}});
+        write_synthetic_cdx(people_cdx, "NAME", "UPPER(NAME)");
+
+        const fs::path main_path = temp_root / "lookup_macro_arguments.prg";
+        write_text(
+            main_path,
+            "USE '" + people_path.string() + "' ALIAS people IN 0\n"
+            "USE '" + people_path.string() + "' ALIAS other AGAIN IN 0\n"
+            "SELECT other\n"
+            "SET ORDER TO TAG NAME IN people\n"
+            "cAlias = 'people'\n"
+            "cTag = 'NAME'\n"
+            "cFound = LOOKUP(people.NAME, 'BOB', cAlias, cTag)\n"
+            "nSelectedAfter = SELECT()\n"
+            "cAliasAfter = ALIAS()\n"
+            "nPeopleRec = RECNO('people')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "LOOKUP macro-argument test should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("cfound", "BOB");
+        check("nselectedafter", "2");
+        check("caliasafter", "other");
+        check("npeoplerec", "2");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -1135,6 +1177,7 @@ int main()
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
+    test_lookup_supports_macro_alias_and_tag_arguments();
     test_createobject_property_assignment_round_trips();
     test_scripting_dictionary_collection_methods();
     test_newobject_preserves_library_and_server_targeting();

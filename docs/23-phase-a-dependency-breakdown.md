@@ -329,10 +329,10 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#95` | `#146` | tighten aggregate command residuals and clause parity |
-| `#95` | `#147` | tighten `LOOKUP()` and helper cursor-state parity |
-| `#95` | `#148` | tighten `DISPLAY/LIST` residual metadata parity |
-| `#95` | `#149` | finish remaining aggregate/view/helper edge cases |
+| `#13` | `#150` | preserve session and cursor state after runtime faults |
+| `#13` | `#151` | preserve repeated-continue stability after runtime faults |
+| `#14` | `#152` | tighten pause metadata and stack-frame fidelity |
+| `#14` | `#153` | tighten developer-facing diagnostic normalization |
 
 Recently closed prompt-sized native slice queues:
 
@@ -342,17 +342,16 @@ Recently closed prompt-sized native slice queues:
 - `#12`: `#135`, `#136`
 - `#13`: `#142`, `#143`
 - `#14`: `#144`, `#145`
+- `#95`: `#146`, `#147`, `#148`, `#149`
 
 Remaining adjacent prompt-sized native slice queues:
 
-- `#95`: `#146`, `#147`, `#148`, `#149`
-- `#13`: no currently open slice issues
-- `#14`: no currently open slice issues
+- `#13`: `#150`, `#151`
+- `#14`: `#152`, `#153`
 
 Current dependency links:
 
 - `#93` is blocked by `#92`
-- `#95` is blocked by `#94`
 - `#100` is blocked by `#97`
 - `#10` is blocked by `#99`
 - `#11` is blocked by `#99`

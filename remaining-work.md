@@ -64,14 +64,14 @@ GitHub milestones now mirror that same tree:
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
-  - active lane issues: #92, #93, #94, #95, #97, #98, #99, #100, #101
-  - recently closed lane issue: #96
-  - active prompt-sized slice issues: #146, #147, #148, #149 under #95
+  - active lane issues: #92, #93, #94, #97, #98, #99, #100, #101
+  - recently closed lane issues: #95, #96
+  - active prompt-sized slice issues: none currently open under #92-#101
   - additional native slice queues now exist under #93-#101: #115-#130, #146-#149
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
   - recently closed prompt-sized slice issues: #142, #143, #144, #145
-  - active prompt-sized slice issues: none currently open under #13-#14
+  - active prompt-sized slice issues: #150, #151 under #13 and #152, #153 under #14
 
 ### Runtime Parity Surfaces
 
@@ -79,12 +79,14 @@ GitHub milestones now mirror that same tree:
 - Reports/labels runtime fidelity: #16
 - Menus runtime fidelity: #17
 - Project startup/build behavior: #18
+  - native slice queues now exist under #15-#18: #154-#161
 
 ### Build, Compiler, And Debug Pipeline
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
 - Build/run/deploy workflow tightening: #21
+  - native slice queues now exist under #19-#21: #162-#167
 - AST/IR and transpilation outputs: #42, #43
 - Build artifact breadth and round-trip safety: #38, #39, #40, #41
 
@@ -94,6 +96,7 @@ GitHub milestones now mirror that same tree:
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
+- native slice queues now exist under #22-#26: #168-#177
 
 ### Future Enhancements
 
@@ -104,6 +107,7 @@ GitHub milestones now mirror that same tree:
 - Editor semantics and completions: #27
 - Navigation/refactoring depth: #28
 - IntelliSense metadata inputs: #29
+- native slice queues now exist under #27-#29: #178-#183
 
 ### Federation, Interop, And Modern Platform
 
@@ -111,17 +115,20 @@ GitHub milestones now mirror that same tree:
 - Document/vector translation and AI planning policy: #31
 - .NET outputs and integration hooks: #32
 - Interop/compiler LINQ and runtime bridge contracts: #57, #91
+- native slice queues now exist under #30-#32, #57, #91: #184-#189, #200-#203
 
 ### Security And Policy
 
 - Runtime/project security depth: #33
 - Extension/host/AI policy hardening: #34
+- native slice queues now exist under #33-#34: #190-#193
 
 ### Portability
 
 - Portable core boundary: #35
 - macOS standalone/core port: #36
 - Linux standalone/core port: #37
+- native slice queues now exist under #35-#37: #194-#199
 
 ## Dependency Diagrams
 
@@ -379,6 +386,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-30: Slice issues `#135` and `#136` are now closed, and parent issue `#12` is now closed with them. Missing seeded-automation property reads and method invocations no longer fail silently: unresolved OLE reads/invokes and missing `Scripting.Dictionary` members now route through the normal runtime fault path as `1429` automation errors, so `ON ERROR` / `AERROR()` and `TRY/CATCH/FINALLY` can trap them while preserving object/session usability afterward. Focused `test_prg_engine_control_flow` coverage passes.
 - 2026-04-30: Slice issues `#142` and `#143` are now closed. Thrown expression faults such as `LOG(-1)` and `ACOS(2)` now have explicit pause-state coverage proving that error pauses preserve the actual faulting line, statement text, and message, and that continuing after one or more thrown-expression faults keeps the session alive while refreshing pause metadata on each new failure instead of leaving stale line/statement/message state behind. Focused `test_prg_engine_control_flow` coverage passes.
 - 2026-04-30: Slice issues `#144` and `#145` are now closed. Error-pause debugger metadata now uses the real faulting line for the top stack frame instead of the post-incremented next statement when nested routines fault, and focused regression coverage now locks down nested-routine stack-frame fidelity plus repeated nested-fault metadata refresh across multiple continues. Focused `test_prg_engine_control_flow` coverage passes.
+- 2026-04-30: Slice issues `#146`, `#147`, `#148`, and `#149` are now closed, and parent lane `#95` is now closed with them. Command-level aggregate targets now resolve `TO &macro` identifiers in `COUNT` / `SUM` / `AVERAGE` and `CALCULATE`, `CALCULATE` now preserves `WHILE` clause metadata and execution semantics, `DISPLAY` / `LIST RECORDS` now retain `WHILE` clause payload detail, `DISPLAY` / `LIST STRUCTURE` now honor `IN <alias|work area>` targeting with raw/resolved target detail, `.NULL.` now parses as a real expression literal instead of leaking into OLE-property lookup, and focused helper coverage now locks down variable-driven `LOOKUP(..., cAlias, cTag)` targeting. Focused `test_prg_engine_control_flow`, `test_prg_engine_runtime_surface_functions`, and `test_prg_engine_data_io` coverage passes.
 - 2026-04-30: Slice issues `#102`, `#104`, and `#107` are now closed. Synthetic SQL/result cursors now honor first-pass `FOR` filters on ad hoc temporary orders, so probes such as `SEEK(..., 'sqlcust', "UPPER(NAME) FOR NAME = 'BRAVO'")` and command-path `SET ORDER TO UPPER(NAME) FOR ...` constrain the candidate set and `SET NEAR` positioning the same way the shipped local grounded-order path already did. That same temporary-order lane now also consumes grounded field-type metadata for one-off numeric field orders such as `SET ORDER TO AGE` / `SET ORDER TO AMOUNT`, so local and SQL `SET NEAR` probes no longer fall back to lexicographic ordering on numeric keys. The adjacent runtime-state lane now has explicit `SET('FIELDS')` data-session isolation coverage alongside the already-shipped `PATH` / `DEFAULT` checks, proving that field-visibility readback and lookup restoration stay session-local across `SET DATASESSION` switches. Focused `test_prg_engine_sql_cursors`, `test_prg_engine_seek_index`, and `test_prg_engine_work_areas` coverage pass.
 
 - 2026-04-30: Issue `#98` runtime-state readback deepened in the adjacent date/time lane. `SET('DATE')` now defaults to `MDY` instead of falling through to `OFF`, and focused `test_prg_engine_date_time_functions` coverage now locks down default/readback plus `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.

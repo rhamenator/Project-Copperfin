@@ -5269,8 +5269,8 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
         main_path,
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
         "cAlias = 'people'\n"
-        "DISPLAY IN &cAlias FIELDS NAME FOR AGE >= 25\n"
-        "LIST IN &cAlias FIELDS EXCEPT AGE FOR AGE >= 20\n"
+        "DISPLAY IN &cAlias FIELDS NAME FOR AGE >= 25 WHILE AGE < 40\n"
+        "LIST IN &cAlias FIELDS EXCEPT AGE FOR AGE >= 20 WHILE AGE < 40\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
@@ -5303,6 +5303,8 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
             "DISPLAY RECORDS should preserve inline field metadata with macro IN");
         expect(display_event->detail.find("for=AGE >= 25") != std::string::npos,
             "DISPLAY RECORDS should preserve the FOR clause with macro IN");
+        expect(display_event->detail.find("while=AGE < 40") != std::string::npos,
+            "DISPLAY RECORDS should preserve the WHILE clause with macro IN");
     }
     if (list_event != nullptr) {
         expect(list_event->detail.find("target=&cAlias") != std::string::npos,
@@ -5313,6 +5315,72 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
             "LIST RECORDS should preserve inline field metadata with macro IN");
         expect(list_event->detail.find("for=AGE >= 20") != std::string::npos,
             "LIST RECORDS should preserve the FOR clause with macro IN");
+        expect(list_event->detail.find("while=AGE < 40") != std::string::npos,
+            "LIST RECORDS should preserve the WHILE clause with macro IN");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_display_and_list_structure_surface_target_detail() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_list_structure_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "display_list_structure_target.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people IN 0\n"
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS other AGAIN IN 0\n"
+        "cAlias = 'other'\n"
+        "DISPLAY STRUCTURE IN &cAlias\n"
+        "LIST STRUCTURE IN &cAlias\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY/LIST STRUCTURE target-detail script should complete");
+
+    const copperfin::runtime::RuntimeEvent *display_event = nullptr;
+    const copperfin::runtime::RuntimeEvent *list_event = nullptr;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_event = &event;
+        } else if (event.category == "runtime.list") {
+            list_event = &event;
+        }
+    }
+
+    expect(display_event != nullptr, "DISPLAY STRUCTURE target-detail script should emit runtime.display");
+    expect(list_event != nullptr, "LIST STRUCTURE target-detail script should emit runtime.list");
+    if (display_event != nullptr) {
+        expect(display_event->detail.find("mode=STRUCTURE") != std::string::npos,
+            "DISPLAY STRUCTURE target-detail event should report mode=STRUCTURE");
+        expect(display_event->detail.find("other@") != std::string::npos,
+            "DISPLAY STRUCTURE should surface the targeted cursor");
+        expect(display_event->detail.find("target=&cAlias") != std::string::npos,
+            "DISPLAY STRUCTURE should retain the raw IN target expression");
+        expect(display_event->detail.find("target_resolved=other") != std::string::npos,
+            "DISPLAY STRUCTURE should surface the resolved IN target");
+    }
+    if (list_event != nullptr) {
+        expect(list_event->detail.find("mode=STRUCTURE") != std::string::npos,
+            "LIST STRUCTURE target-detail event should report mode=STRUCTURE");
+        expect(list_event->detail.find("other@") != std::string::npos,
+            "LIST STRUCTURE should surface the targeted cursor");
+        expect(list_event->detail.find("target=&cAlias") != std::string::npos,
+            "LIST STRUCTURE should retain the raw IN target expression");
+        expect(list_event->detail.find("target_resolved=other") != std::string::npos,
+            "LIST STRUCTURE should surface the resolved IN target");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -5630,6 +5698,7 @@ int main() {
     test_display_memory_surfaces_visible_variable_and_array_metadata();
     test_display_records_surfaces_effective_cursor_view_metadata();
     test_display_and_list_records_surface_resolved_in_target_detail();
+    test_display_and_list_structure_surface_target_detail();
     test_list_status_emits_runtime_list_event();
     test_list_memory_surfaces_visible_variable_and_array_metadata();
     test_list_structure_surfaces_selected_cursor_schema();

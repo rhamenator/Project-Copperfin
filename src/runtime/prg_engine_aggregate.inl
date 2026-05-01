@@ -42,6 +42,7 @@
             std::string value_expression;
             std::string condition_expression;
             std::string designator;
+            std::string while_expression;
 
             if (function == "count")
             {
@@ -57,6 +58,14 @@
                 {
                     condition_expression = raw_arguments[0];
                     designator = try_parse_designator_argument(raw_arguments[1], frame);
+                    if (designator.empty())
+                    {
+                        while_expression = raw_arguments[1];
+                    }
+                    else if (raw_arguments.size() >= 3U)
+                    {
+                        while_expression = raw_arguments[2];
+                    }
                 }
             }
             else
@@ -75,8 +84,25 @@
                 }
                 else if (raw_arguments.size() >= 3U)
                 {
-                    condition_expression = raw_arguments[1];
-                    designator = try_parse_designator_argument(raw_arguments[2], frame);
+                    const std::string candidate_designator = try_parse_designator_argument(raw_arguments[1], frame);
+                    if (!candidate_designator.empty())
+                    {
+                        designator = candidate_designator;
+                        while_expression = raw_arguments[2];
+                    }
+                    else
+                    {
+                        condition_expression = raw_arguments[1];
+                        designator = try_parse_designator_argument(raw_arguments[2], frame);
+                        if (raw_arguments.size() >= 4U)
+                        {
+                            while_expression = raw_arguments[3];
+                        }
+                        else if (designator.empty())
+                        {
+                            while_expression = raw_arguments[2];
+                        }
+                    }
                 }
             }
 
@@ -113,6 +139,10 @@
             for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
             {
                 move_cursor_to(*cursor, static_cast<long long>(recno));
+                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, cursor)))
+                {
+                    break;
+                }
                 if (!current_record_matches_visibility(*cursor, frame, condition_expression))
                 {
                     continue;
@@ -579,6 +609,21 @@
             Frame &frame,
             std::string &error_message)
         {
+            const auto resolve_target_identifier = [&](const std::string &raw_identifier) -> std::string
+            {
+                std::string resolved_identifier = apply_with_context(raw_identifier, frame);
+                if (!resolved_identifier.empty() && resolved_identifier.front() == '&')
+                {
+                    const PrgValue expanded_identifier = evaluate_expression(resolved_identifier, frame);
+                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
+                    if (!expanded_text.empty())
+                    {
+                        resolved_identifier = expanded_text;
+                    }
+                }
+                return resolved_identifier;
+            };
+
             const std::vector<CalculateAssignment> assignments = parse_calculate_assignments(statement.expression);
             if (assignments.empty())
             {
@@ -629,8 +674,14 @@
                 {
                     raw_arguments.push_back(statement.tertiary_expression);
                 }
+                if (!statement.quaternary_expression.empty())
+                {
+                    raw_arguments.push_back(statement.quaternary_expression);
+                }
 
-                assign_variable(frame, assignment.variable_name, aggregate_function_value(function, raw_arguments, frame));
+                assign_variable(frame,
+                                resolve_target_identifier(assignment.variable_name),
+                                aggregate_function_value(function, raw_arguments, frame));
             }
 
             return true;
@@ -642,6 +693,21 @@
             const std::string &function,
             std::string &error_message)
         {
+            const auto resolve_target_identifier = [&](const std::string &raw_identifier) -> std::string
+            {
+                std::string resolved_identifier = apply_with_context(raw_identifier, frame);
+                if (!resolved_identifier.empty() && resolved_identifier.front() == '&')
+                {
+                    const PrgValue expanded_identifier = evaluate_expression(resolved_identifier, frame);
+                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
+                    if (!expanded_text.empty())
+                    {
+                        resolved_identifier = expanded_text;
+                    }
+                }
+                return resolved_identifier;
+            };
+
             CursorState *cursor = resolve_cursor_target_expression(statement.quaternary_expression, frame);
             if (cursor == nullptr)
             {
@@ -682,7 +748,7 @@
                     return false;
                 }
 
-                array_name = array_targets.front();
+                array_name = resolve_target_identifier(array_targets.front());
                 to_array = true;
             }
 
@@ -695,7 +761,7 @@
             }
             for (std::string &target : targets)
             {
-                target = trim_copy(std::move(target));
+                target = resolve_target_identifier(trim_copy(std::move(target)));
             }
 
             if (function == "count")

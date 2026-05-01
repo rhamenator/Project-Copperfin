@@ -796,6 +796,78 @@ void test_command_level_aggregate_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_aggregate_commands_support_macro_targets_and_calculate_while() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_macro_targets";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "aggregate_macro_targets.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO TOP\n"
+        "cCount = 'nCountWhile'\n"
+        "cSum = 'nSumWhile'\n"
+        "cCalc = 'nCalcWhile'\n"
+        "COUNT WHILE AGE < 35 TO &cCount\n"
+        "SUM AGE WHILE AGE < 35 TO &cSum\n"
+        "CALCULATE COUNT() TO &cCalc WHILE AGE < 35 IN 'People'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "aggregate macro-target/while script should complete");
+
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), message);
+        if (it != state.globals.end())
+        {
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, message + " expected " + expected + ", got " + actual);
+        }
+    };
+
+    check("ncountwhile", "3", "COUNT WHILE TO &macro should assign the resolved target");
+    check("nsumwhile", "60", "SUM WHILE TO &macro should assign the resolved target");
+    check("ncalcwhile", "3", "CALCULATE WHILE TO &macro should assign the resolved target");
+
+    const auto count_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto &event)
+        {
+            return event.category == "runtime.count" &&
+                   event.detail.find("while=AGE < 35") != std::string::npos &&
+                   event.detail.find("into=&cCount") != std::string::npos;
+        });
+    expect(count_event != state.events.end(), "COUNT should surface WHILE and raw INTO metadata");
+
+    const auto calculate_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto &event)
+        {
+            return event.category == "runtime.calculate" &&
+                   event.detail.find("while=AGE < 35") != std::string::npos &&
+                   event.detail.find("target='People'") != std::string::npos;
+        });
+    expect(calculate_event != state.events.end(), "CALCULATE should surface WHILE and IN-target metadata");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_command_level_aggregate_scope_and_while_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_command_aggregate_scope";
@@ -3874,6 +3946,7 @@ int main() {
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
     test_command_level_aggregate_commands();
+    test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
     test_total_command_supports_currency_and_integer_fields();

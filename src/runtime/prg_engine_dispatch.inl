@@ -938,6 +938,10 @@
                 {
                     detail += " for=" + trim_copy(statement.secondary_expression);
                 }
+                if (!statement.quaternary_expression.empty())
+                {
+                    detail += " while=" + trim_copy(statement.quaternary_expression);
+                }
 
                 events.push_back({.category = "runtime.calculate",
                                   .detail = detail,
@@ -995,6 +999,11 @@
                 if (!statement.identifier.empty())
                 {
                     detail += " into=" + trim_copy(statement.identifier);
+                    const std::string resolved_target = resolve_runtime_target_identifier(statement.identifier, frame);
+                    if (!resolved_target.empty() && resolved_target != trim_copy(statement.identifier))
+                    {
+                        detail += " into_resolved=" + resolved_target;
+                    }
                 }
                 append_runtime_cursor_target_detail(statement.quaternary_expression, frame, detail);
 
@@ -5881,6 +5890,10 @@
                         {
                             detail += " for=" + trim_copy(statement.quaternary_expression);
                         }
+                        if (!statement.names.empty() && !trim_copy(statement.names.front()).empty())
+                        {
+                            detail += " while=" + trim_copy(statement.names.front());
+                        }
                     }
                     const std::string raw_target = trim_copy(statement.secondary_expression);
                     if (!raw_target.empty())
@@ -5896,7 +5909,13 @@
                 }
                 else if (normalize_identifier(statement.identifier) == "structure")
                 {
-                    append_cursor_structure_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), detail);
+                    CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                    if (cursor == nullptr)
+                    {
+                        cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    }
+                    append_cursor_structure_metadata(cursor, detail);
+                    append_runtime_cursor_target_detail(statement.secondary_expression, frame, detail);
                 }
                 else if (normalize_identifier(statement.identifier) == "status")
                 {
@@ -5955,6 +5974,10 @@
                         {
                             detail += " for=" + trim_copy(statement.quaternary_expression);
                         }
+                        if (!statement.names.empty() && !trim_copy(statement.names.front()).empty())
+                        {
+                            detail += " while=" + trim_copy(statement.names.front());
+                        }
                     }
                     const std::string raw_target = trim_copy(statement.secondary_expression);
                     if (!raw_target.empty())
@@ -5970,7 +5993,13 @@
                 }
                 else if (normalize_identifier(statement.identifier) == "structure")
                 {
-                    append_cursor_structure_metadata(resolve_cursor_target(std::to_string(current_selected_work_area())), detail);
+                    CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
+                    if (cursor == nullptr)
+                    {
+                        cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    }
+                    append_cursor_structure_metadata(cursor, detail);
+                    append_runtime_cursor_target_detail(statement.secondary_expression, frame, detail);
                 }
                 else if (normalize_identifier(statement.identifier) == "status")
                 {

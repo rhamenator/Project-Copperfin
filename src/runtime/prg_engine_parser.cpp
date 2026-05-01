@@ -526,18 +526,26 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::calculate_command;
             const std::string body = trim_copy(line.substr(10U));
             const std::size_t for_position = find_keyword_top_level(body, "FOR");
+            const std::size_t while_position = find_keyword_top_level(body, "WHILE");
             const std::size_t in_position = find_keyword_top_level(body, "IN");
             std::size_t tail_start = std::string::npos;
-            if (for_position != std::string::npos && in_position != std::string::npos) {
-                tail_start = std::min(for_position, in_position);
-            } else if (for_position != std::string::npos) {
+            if (for_position != std::string::npos) {
                 tail_start = for_position;
-            } else if (in_position != std::string::npos) {
-                tail_start = in_position;
+            }
+            if (while_position != std::string::npos) {
+                tail_start = tail_start == std::string::npos
+                    ? while_position
+                    : std::min(tail_start, while_position);
+            }
+            if (in_position != std::string::npos) {
+                tail_start = tail_start == std::string::npos
+                    ? in_position
+                    : std::min(tail_start, in_position);
             }
             statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "FOR", {"IN"});
+            statement.secondary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "IN");
+            statement.quaternary_expression = extract_command_clause(body, "WHILE", {"IN"});
         } else if (upper == "COUNT" || starts_with_insensitive(line, "COUNT ")) {
             statement.kind = StatementKind::count_command;
             const std::string body = upper == "COUNT" ? std::string{} : trim_copy(line.substr(6U));
@@ -907,6 +915,7 @@ Program parse_program(const std::string& path) {
             if (starts_with_insensitive(body, "STRUCTURE")) {
                 statement.identifier = "STRUCTURE";
                 statement.expression = body.size() > 9U ? trim_copy(body.substr(9U)) : std::string{};
+                statement.secondary_expression = extract_command_clause(statement.expression, "IN");
             } else if (starts_with_insensitive(body, "STATUS")) {
                 statement.identifier = "STATUS";
                 statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
@@ -919,6 +928,10 @@ Program parse_program(const std::string& path) {
                 statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
                 statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
                 statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
+                const std::string while_clause = extract_command_clause(body, "WHILE", {"FOR", "IN", "FIELDS"});
+                if (!while_clause.empty()) {
+                    statement.names.push_back(while_clause);
+                }
             }
         } else if (upper == "LIST" || starts_with_insensitive(line, "LIST ")) {
             statement.kind = StatementKind::list_command;
@@ -926,6 +939,7 @@ Program parse_program(const std::string& path) {
             if (starts_with_insensitive(body, "STRUCTURE")) {
                 statement.identifier = "STRUCTURE";
                 statement.expression = body.size() > 9U ? trim_copy(body.substr(9U)) : std::string{};
+                statement.secondary_expression = extract_command_clause(statement.expression, "IN");
             } else if (starts_with_insensitive(body, "STATUS")) {
                 statement.identifier = "STATUS";
                 statement.expression = body.size() > 6U ? trim_copy(body.substr(6U)) : std::string{};
@@ -938,6 +952,10 @@ Program parse_program(const std::string& path) {
                 statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
                 statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
                 statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
+                const std::string while_clause = extract_command_clause(body, "WHILE", {"FOR", "IN", "FIELDS"});
+                if (!while_clause.empty()) {
+                    statement.names.push_back(while_clause);
+                }
             }
         } else if (starts_with_insensitive(line, "SELECT ")) {
             statement.kind = StatementKind::select_command;

@@ -438,6 +438,10 @@
                     {
                         return make_boolean_value(false);
                     }
+                    if (match(".NULL.") || match(".null."))
+                    {
+                        return make_empty_value();
+                    }
                 }
                 if (std::isdigit(static_cast<unsigned char>(peek())) != 0)
                 {
@@ -1004,10 +1008,28 @@
                 // The record pointer in the target cursor is permanently moved.
                 if (function == "lookup" && arguments.size() >= 3U && !raw_arguments.empty())
                 {
+                    const auto resolve_lookup_text_argument = [&](std::size_t index) -> std::string
+                    {
+                        std::string resolved = value_as_string(arguments[index]);
+                        if (index < raw_arguments.size())
+                        {
+                            const std::string raw_text = trim_copy(raw_arguments[index]);
+                            if (!raw_text.empty() && raw_text.front() == '&')
+                            {
+                                const PrgValue expanded = eval_expression_callback_(raw_text);
+                                const std::string expanded_text = trim_copy(value_as_string(expanded));
+                                if (!expanded_text.empty())
+                                {
+                                    resolved = expanded_text;
+                                }
+                            }
+                        }
+                        return resolved;
+                    };
                     const std::string return_expr_raw = raw_arguments[0];
                     const std::string search_key  = value_as_string(arguments[1]);
-                    const std::string table_alias = value_as_string(arguments[2]);
-                    const std::string tag_name    = arguments.size() >= 4U ? value_as_string(arguments[3]) : std::string{};
+                    const std::string table_alias = resolve_lookup_text_argument(2U);
+                    const std::string tag_name    = arguments.size() >= 4U ? resolve_lookup_text_argument(3U) : std::string{};
                     if (seek_callback_(search_key, /*move_pointer=*/true, table_alias, tag_name))
                     {
                         try
