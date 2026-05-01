@@ -89,6 +89,7 @@ GitHub milestones now mirror that same tree:
   - native slice queues now exist under #19-#21: #162-#167
 - AST/IR and transpilation outputs: #42, #43
 - Build artifact breadth and round-trip safety: #38, #39, #40, #41
+  - native slice queues now exist under #38-#43: #204-#215
 
 ### Designers And IDE Parity
 
