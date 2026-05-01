@@ -65,7 +65,7 @@ GitHub milestones now mirror that same tree:
 
 - A3 runtime semantics and command depth: #7, #8
   - lane issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
-  - active prompt-sized slice issues: #117, #118, #127, #128
+  - active prompt-sized slice issues: #129, #130, #115, #116
   - additional native slice queues now exist under #93-#101: #115-#130
 - A4 automation and host containment: #10, #11, #12
   - native prompt-sized slice issues: #131-#136
@@ -355,6 +355,10 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-30: Slice issues `#123` and `#124` are now closed. Macro-expanded identifier handling now preserves alias-qualified field continuations such as `&cAlias..NAME` instead of truncating at the dot terminator, and recursive `TEXTMERGE(..., .T.)` expansion now keeps merging until the text stabilizes instead of stopping after a single extra pass. Focused `test_prg_engine_functions` and `test_prg_engine_string_math_functions` coverage passes.
 
 - 2026-04-30: Slice issues `#125` and `#126` are now closed. Releasing a current-frame `LOCAL` that shadows an outer binding now reveals the outer value instead of erasing it, `RELEASE ALL` preserves those shadowed outer globals/publics, and `SAVE TO` no longer writes a `PUBLIC` scope marker when the visible saved binding is actually a shadowing `LOCAL`/`PRIVATE` over an outer public. Focused `test_prg_engine_control_flow` and `test_prg_engine_data_io` coverage passes.
+
+- 2026-04-30: Slice issues `#117` and `#118` are now closed. `ALTER TABLE ... ADD COLUMN ... DEFAULT ...` now backfills existing rows instead of leaving freshly added defaulted fields blank, and transaction rollback now prunes stale `ALTER TABLE`-introduced field rules from live local cursors so post-rollback inserts run against the restored schema instead of trying to write phantom fields. Focused `test_prg_engine_table_structure` and `test_prg_engine_table_mutation` coverage passes.
+
+- 2026-04-30: Slice issues `#127` and `#128` are now closed. `SCATTER NAME` / `GATHER NAME` now expand macro-driven nested object-path segments such as `&cHolder.&cChild`, and `APPEND FROM ARRAY` now serializes typed date/datetime values through the same DBF field contract used by `GATHER` instead of treating every array cell as an opaque string. Focused `test_prg_engine_data_io` coverage passes.
 
 - 2026-04-30: Issue `#92` advanced with a first-pass runtime collation step instead of metadata-only `SET COLLATE` handling. Plain string indexed seeks now case-fold through the current non-`MACHINE` session collation when an active order does not already carry an explicit case-folding expression hint, so `SET COLLATE TO GENERAL` can make `SEEK 'bravo'` find a `NAME` key stored as `BRAVO` without requiring `UPPER(...)` order expressions. Focused `test_prg_engine_seek_index` coverage passes.
 

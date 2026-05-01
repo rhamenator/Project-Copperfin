@@ -457,7 +457,45 @@
                 while (start <= candidate.size())
                 {
                     const std::size_t dot = candidate.find('.', start);
-                    const std::string segment = trim_copy(candidate.substr(start, dot == std::string::npos ? std::string::npos : dot - start));
+                    std::string segment = trim_copy(candidate.substr(start, dot == std::string::npos ? std::string::npos : dot - start));
+                    if (!segment.empty() && segment.front() == '&')
+                    {
+                        const std::string expanded = trim_copy(value_as_string(evaluate_expression(segment, frame)));
+                        if (expanded.empty())
+                        {
+                            last_error_message = command_name + ": invalid object target";
+                            return std::nullopt;
+                        }
+                        if (expanded.find('.') != std::string::npos)
+                        {
+                            std::size_t nested_start = 0U;
+                            while (nested_start <= expanded.size())
+                            {
+                                const std::size_t nested_dot = expanded.find('.', nested_start);
+                                const std::string nested_segment = trim_copy(expanded.substr(
+                                    nested_start,
+                                    nested_dot == std::string::npos ? std::string::npos : nested_dot - nested_start));
+                                if (!is_bare_identifier_text(nested_segment))
+                                {
+                                    last_error_message = command_name + ": invalid object target";
+                                    return std::nullopt;
+                                }
+                                segments.push_back(nested_segment);
+                                if (nested_dot == std::string::npos)
+                                {
+                                    break;
+                                }
+                                nested_start = nested_dot + 1U;
+                            }
+                            if (dot == std::string::npos)
+                            {
+                                break;
+                            }
+                            start = dot + 1U;
+                            continue;
+                        }
+                        segment = expanded;
+                    }
                     if (!is_bare_identifier_text(segment))
                     {
                         last_error_message = command_name + ": invalid object target";
@@ -3032,6 +3070,31 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                if (action == "add" && declaration.has_value() && declaration->has_default)
+                {
+                    const vfp::DbfRecordValue synthetic_field{
+                        .field_name = declaration->descriptor.name,
+                        .field_type = declaration->descriptor.type,
+                        .is_null = false,
+                        .display_value = {}};
+                    for (std::size_t record_index = 0U; record_index < add_result.record_count; ++record_index)
+                    {
+                        const PrgValue default_value = evaluate_expression(declaration->default_expression, frame);
+                        const auto replace_result = vfp::replace_record_field_value(
+                            table_path.string(),
+                            record_index,
+                            declaration->descriptor.name,
+                            serialize_prg_value_for_record_field(synthetic_field, default_value));
+                        if (!replace_result.ok)
+                        {
+                            last_error_message = replace_result.error;
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                    }
+                }
+
                 for (auto &[_, cursor] : current_session_state().cursors)
                 {
                     if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string()))
@@ -4087,11 +4150,16 @@
                         for (std::size_t col = 1U; col <= usable_cols; ++col)
                         {
                             const PrgValue val = array_value(array_name, row, col);
+                            const vfp::DbfRecordValue synthetic_field{
+                                .field_name = target_fields[col - 1U].name,
+                                .field_type = target_fields[col - 1U].type,
+                                .is_null = false,
+                                .display_value = {}};
                             const auto rep_result = vfp::replace_record_field_value(
                                 cursor->source_path,
                                 cursor->recno - 1U,
                                 target_fields[col - 1U].name,
-                                value_as_string(val));
+                                serialize_prg_value_for_record_field(synthetic_field, val));
                             if (!rep_result.ok)
                             {
                                 continue;

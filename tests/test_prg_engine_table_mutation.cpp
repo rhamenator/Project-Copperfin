@@ -1050,6 +1050,73 @@ void test_rollback_transaction_replays_append_from_array() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_rollback_transaction_prunes_stale_alter_table_field_rules() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_alter_rollback_rules";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "rollback_alter_rules.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8) DEFAULT 'NEW'\n"
+        "ROLLBACK\n"
+        "INSERT INTO People (NAME, AGE) VALUES ('BRAVO', 20)\n"
+        "nCount = RECCOUNT()\n"
+        "nFields = FCOUNT('People')\n"
+        "GO 2\n"
+        "cSecond = NAME\n"
+        "nSecondAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ALTER TABLE rollback field-rule pruning script should complete: " + state.message);
+
+    const auto count = state.globals.find("ncount");
+    const auto fields = state.globals.find("nfields");
+    const auto second = state.globals.find("csecond");
+    const auto second_age = state.globals.find("nsecondage");
+    expect(count != state.globals.end(), "ALTER TABLE rollback script should capture record count");
+    expect(fields != state.globals.end(), "ALTER TABLE rollback script should capture field count");
+    expect(second != state.globals.end(), "ALTER TABLE rollback script should capture second row NAME");
+    expect(second_age != state.globals.end(), "ALTER TABLE rollback script should capture second row AGE");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "ROLLBACK should still allow later inserts after pruning stale ALTER TABLE field rules");
+    }
+    if (fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields->second) == "2",
+            "ROLLBACK should restore the original field count after ALTER TABLE replay");
+    }
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "BRAVO",
+            "ROLLBACK should allow inserts to use the restored pre-ALTER schema");
+    }
+    if (second_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_age->second) == "20",
+            "ROLLBACK should preserve inserted numeric values after schema replay");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "ALTER TABLE rollback should leave DBF readable");
+    expect(parse_result.table.fields.size() == 2U, "ALTER TABLE rollback should restore the original schema on disk");
+    expect(parse_result.table.records.size() == 2U, "ALTER TABLE rollback should still allow post-rollback inserts");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_rollback_transaction_removes_created_table_cursor() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_create_table";
@@ -1183,6 +1250,7 @@ int main() {
     test_sql_style_for_clauses_accept_macro_expressions();
     test_rollback_transaction_replays_local_dbf_changes();
     test_rollback_transaction_replays_append_from_array();
+    test_rollback_transaction_prunes_stale_alter_table_field_rules();
     test_rollback_transaction_removes_created_table_cursor();
     test_startup_replays_pending_transaction_journal();
 

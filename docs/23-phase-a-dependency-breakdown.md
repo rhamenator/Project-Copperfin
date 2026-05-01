@@ -38,8 +38,8 @@ It is intentionally narrower than the top-level roadmap:
 | G8 | Remote and result-cursor semantics | `#7` | 88% | remote cursor navigation, filtering, ordering, `APPEND BLANK`, `REPLACE`, `DELETE`, `RECALL`, targeted `IN` behavior on SQL result cursors | G4, G5, G6, G7 | Phase A closure for A2, later federation/runtime parity | This is where local cursor behavior and SQL pass-through meet. |
 | G9 | Macro/eval core and expression compatibility | `#8` | 82% | `EVAL()`, `SET()`, `&macro`, `TEXTMERGE()`, `EXECSCRIPT()`, `TYPE()`, `TRANSFORM()`, macro indirection, macro-expanded identifiers | G4, G5 | G10, G11, G12, G13, G14, G15 | This remains one of the highest leverage remaining lanes for issue `#8`. |
 | G10 | Local record navigation and mutation | `#7`, `#8` | 91% | `GO`, `SKIP`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, `UNLOCK RECORD` | G1, G4, G6, G9 | G11, G12, G13 | Strong already, but still a shared prerequisite for deeper parity slices above it. |
-| G11 | Structural table and import/export operations | `#7`, `#8` | 88% | `CREATE TABLE`, `ALTER TABLE`, `PACK`, `PACK MEMO`, `ZAP`, `APPEND FROM`, `COPY TO`, journaling-backed mutation paths | G1, G4, G9, G10 | corpus confidence, storage parity, data-migration flows | This is the last broad correctness seam in local DBF mutation workflows. |
-| G12 | Field projection and data-transfer surface | `#7`, `#8` | 86% | `SCATTER`, `GATHER`, `SET FIELDS`, `BROWSE`, `EDIT`, `CHANGE`, `COPY TO ARRAY`, `APPEND FROM ARRAY`, `FIELDS LIKE/EXCEPT` | G4, G6, G9, G10 | G13, issue `#7` closure | Recently deepened; remaining work here should be narrow and correctness-driven. |
+| G11 | Structural table and import/export operations | `#7`, `#8` | 90% | `CREATE TABLE`, `ALTER TABLE`, `PACK`, `PACK MEMO`, `ZAP`, `APPEND FROM`, `COPY TO`, journaling-backed mutation paths | G1, G4, G9, G10 | corpus confidence, storage parity, data-migration flows | This is the last broad correctness seam in local DBF mutation workflows. |
+| G12 | Field projection and data-transfer surface | `#7`, `#8` | 89% | `SCATTER`, `GATHER`, `SET FIELDS`, `BROWSE`, `EDIT`, `CHANGE`, `COPY TO ARRAY`, `APPEND FROM ARRAY`, `FIELDS LIKE/EXCEPT` | G4, G6, G9, G10 | G13, issue `#7` closure | Recently deepened; remaining work here should be narrow and correctness-driven. |
 | G13 | Aggregate, lookup, and record-view helpers | `#7` | 90% | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `CALCULATE`, `TOTAL`, `LOOKUP`, `DISPLAY`, `LIST` | G4, G6, G10, G12 | host/report/runtime parity, diagnostics, issue `#7` closure | Mostly close; good candidate for quick closure after upstream blockers are done. |
 | G14 | Headless interaction and dialog command surface | `#7`, `#8` | 84% | `WAIT`, `KEYBOARD`, `INPUT`, `ACCEPT`, `GETFILE`, `PUTFILE`, `GETDIR`, `INPUTBOX`, runtime event payloads | G4, G5, G9, G12 | host integration parity, remaining command-surface work | Already much better; remaining work should focus on edge-case clauses and macro fidelity. |
 | G15 | Memory-variable and assignment semantics | `#8`, `#11` | 86% | `PUBLIC`, `PRIVATE`, `RELEASE`, `STORE`, array macro names, `DISPLAY/LIST MEMORY` | G4, G5, G9 | G12, G13, G14, A4 work | This is one of the hidden foundations under command-surface parity. |
@@ -99,8 +99,8 @@ flowchart LR
         direction TB
         G9["G9 Macro / Eval Core<br/>82%<br/>#97"]
         G10["G10 Local Nav + Mutation<br/>91%<br/>#7 / #8"]
-        G11["G11 Structural Table Ops<br/>88%<br/>#94"]
-        G12["G12 Field Projection / Transfer<br/>86%<br/>#100"]
+        G11["G11 Structural Table Ops<br/>90%<br/>#94"]
+        G12["G12 Field Projection / Transfer<br/>89%<br/>#100"]
         G13["G13 Aggregate / View Helpers<br/>90%<br/>#95"]
         G14["G14 Headless Interaction / Dialogs<br/>84%<br/>#101"]
         G15["G15 Memory / Assignment Semantics<br/>86%<br/>#99"]
@@ -329,18 +329,16 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#94` | `#117` | close one more structural table-operation parity residual |
-| `#94` | `#118` | close one more import/export or schema-rewrite residual |
-| `#100` | `#127` | close one more field-transfer macro-target parity residual |
-| `#100` | `#128` | close one more object/array transfer parity residual |
+| `#101` | `#129` | close one more headless interaction macro/eval fidelity residual |
+| `#101` | `#130` | close one more wait/keyboard/input dialog parity residual |
+| `#93` | `#115` | close one more remote/result-cursor parity residual |
+| `#93` | `#116` | close one more SQL/result-cursor behavioral mismatch |
 
 Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
 
 - `#93`: `#115`, `#116`
-- `#94`: `#117`, `#118`
 - `#95`: `#119`, `#120`
 - `#96`: `#121`, `#122`
-- `#100`: `#127`, `#128`
 - `#101`: `#129`, `#130`
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`

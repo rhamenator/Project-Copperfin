@@ -598,6 +598,22 @@
                 cursor.record_count = table_result.table.header.record_count;
                 cursor.field_count = table_result.table.fields.size();
                 cursor.record_length = table_result.table.header.record_length;
+                std::set<std::string> visible_fields;
+                for (const auto &field : table_result.table.fields)
+                {
+                    visible_fields.insert(collapse_identifier(field.name));
+                }
+                for (auto it = cursor.field_rules.begin(); it != cursor.field_rules.end();)
+                {
+                    if (!visible_fields.contains(it->first))
+                    {
+                        it = cursor.field_rules.erase(it);
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
                 if (cursor.record_count == 0U)
                 {
                     move_cursor_to(cursor, 0);

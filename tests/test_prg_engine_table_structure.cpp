@@ -124,6 +124,71 @@ void test_alter_table_drop_and_alter_column_rewrite() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_alter_table_add_column_backfills_existing_rows_with_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_add_default";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"ALPHA", "10"}, {"BRAVO", "20"}});
+    expect(create_result.ok, "ALTER TABLE ADD COLUMN default fixture should be created");
+
+    const fs::path main_path = temp_root / "alter_add_default.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8) NOT NULL DEFAULT 'NEW'\n"
+        "GO 1\n"
+        "cStatus1 = STATUS\n"
+        "GO 2\n"
+        "cStatus2 = STATUS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ALTER TABLE ADD COLUMN default backfill script should complete");
+
+    const auto status1 = state.globals.find("cstatus1");
+    const auto status2 = state.globals.find("cstatus2");
+    expect(status1 != state.globals.end(), "ALTER TABLE ADD COLUMN should expose STATUS for row 1");
+    expect(status2 != state.globals.end(), "ALTER TABLE ADD COLUMN should expose STATUS for row 2");
+    if (status1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(status1->second) == "NEW",
+            "ALTER TABLE ADD COLUMN DEFAULT should backfill existing row 1");
+    }
+    if (status2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(status2->second) == "NEW",
+            "ALTER TABLE ADD COLUMN DEFAULT should backfill existing row 2");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "ALTER TABLE ADD COLUMN default-backfilled DBF should remain readable");
+    expect(parse_result.table.fields.size() == 3U, "ALTER TABLE ADD COLUMN should append the new field");
+    expect(parse_result.table.records.size() == 2U, "ALTER TABLE ADD COLUMN should preserve existing rows");
+    if (parse_result.table.records.size() == 2U && parse_result.table.fields.size() == 3U) {
+        expect(parse_result.table.records[0].values[2].display_value == "NEW",
+            "ALTER TABLE ADD COLUMN DEFAULT should persist the backfill for row 1");
+        expect(parse_result.table.records[1].values[2].display_value == "NEW",
+            "ALTER TABLE ADD COLUMN DEFAULT should persist the backfill for row 2");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_create_table_defaults_and_not_null_constraints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_defaults";
@@ -385,6 +450,7 @@ void test_pack_memo_rewrites_memo_sidecar() {
 
 int main() {
     test_alter_table_drop_and_alter_column_rewrite();
+    test_alter_table_add_column_backfills_existing_rows_with_default();
     test_create_table_defaults_and_not_null_constraints();
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_not_null_insert_failure_rolls_back();

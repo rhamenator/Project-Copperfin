@@ -1060,6 +1060,84 @@ void test_scatter_gather_name_supports_nested_object_targets() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_name_supports_macro_expanded_nested_property_segments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_macro_nested_segment";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "macro nested-segment SCATTER/GATHER NAME fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_name_macro_nested_segment.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "cHolder = 'oHolder'\n"
+        "cChild = 'Row'\n"
+        "oHolder = CREATEOBJECT('Empty')\n"
+        "oRow = CREATEOBJECT('Empty')\n"
+        "=ADDPROPERTY(oHolder, 'Row', oRow)\n"
+        "=ADDPROPERTY(oRow, 'EXTRA', 'KeepMe')\n"
+        "SCATTER FIELDS NAME, AGE NAME &cHolder.&cChild ADDITIVE\n"
+        "cAfterExtra = GETPEM(GETPEM(oHolder, 'Row'), 'EXTRA')\n"
+        "cAfterName = GETPEM(GETPEM(oHolder, 'Row'), 'NAME')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'NAME', 'MacroNest')\n"
+        "=SETPem(GETPEM(oHolder, 'Row'), 'AGE', 63)\n"
+        "GATHER NAME &cHolder.&cChild FIELDS NAME, AGE\n"
+        "cGatheredName = NAME\n"
+        "nGatheredAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro nested-segment SCATTER/GATHER NAME script should complete: " + state.message);
+
+    const auto after_extra = state.globals.find("cafterextra");
+    const auto after_name = state.globals.find("caftername");
+    const auto gathered_name = state.globals.find("cgatheredname");
+    const auto gathered_age = state.globals.find("ngatheredage");
+
+    expect(after_extra != state.globals.end(), "macro nested-segment SCATTER NAME should preserve additive properties");
+    expect(after_name != state.globals.end(), "macro nested-segment SCATTER NAME should populate field properties");
+    expect(gathered_name != state.globals.end(), "macro nested-segment GATHER NAME should restore NAME");
+    expect(gathered_age != state.globals.end(), "macro nested-segment GATHER NAME should restore AGE");
+
+    if (after_extra != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_extra->second) == "KeepMe",
+            "macro nested-segment SCATTER NAME ADDITIVE should preserve unrelated child-object properties");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "macro nested-segment SCATTER NAME should expand object-path segments before populating fields");
+    }
+    if (gathered_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_name->second) == "MacroNest",
+            "macro nested-segment GATHER NAME should read back from the expanded nested target");
+    }
+    if (gathered_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(gathered_age->second) == "63",
+            "macro nested-segment GATHER NAME should preserve numeric values on the expanded nested target");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_name_creates_missing_nested_object_targets() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_nested_create";
@@ -3862,6 +3940,87 @@ void test_copy_append_array_like_and_except_field_filters() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_date_time";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BIRTHDAY", .type = 'D', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"20240117", "julian:2459625 millis:37230000", "41"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "APPEND FROM ARRAY date/datetime source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "APPEND FROM ARRAY date/datetime destination fixture should be created");
+
+    const fs::path main_path = temp_root / "append_from_array_date_time.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "cArrayName = 'aTemporal'\n"
+        "COPY TO ARRAY &cArrayName FIELDS BIRTHDAY, STAMP\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY &cArrayName FIELDS BIRTHDAY, STAMP\n"
+        "GO 1\n"
+        "cBirthday = DTOC(BIRTHDAY, 1)\n"
+        "cStamp = TTOC(STAMP, 1)\n"
+        "nAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY macro date/datetime script should complete: " + state.message);
+
+    const auto birthday = state.globals.find("cbirthday");
+    const auto stamp = state.globals.find("cstamp");
+    const auto age = state.globals.find("nage");
+    expect(birthday != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture BIRTHDAY");
+    expect(stamp != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture STAMP");
+    expect(age != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture AGE");
+    if (birthday != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(birthday->second);
+        expect(actual == "20240117",
+            "APPEND FROM ARRAY should serialize runtime date strings back into date fields (got '" + actual + "')");
+    }
+    if (stamp != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(stamp->second);
+        expect(actual == "20240117102030",
+            "APPEND FROM ARRAY should serialize runtime datetime strings back into datetime fields (got '" + actual + "')");
+    }
+    if (age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age->second) == "0",
+            "APPEND FROM ARRAY FIELDS BIRTHDAY, STAMP should leave omitted numeric fields blank");
+    }
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(persisted.ok, "APPEND FROM ARRAY date/datetime destination table should remain readable");
+    expect(persisted.table.records.size() == 1U, "APPEND FROM ARRAY date/datetime destination should have one row");
+    if (persisted.ok && persisted.table.records.size() == 1U) {
+        expect(persisted.table.records[0].values[0].display_value == "2024-01-17",
+            "APPEND FROM ARRAY should persist date storage strings through the DBF writer (got '" +
+                persisted.table.records[0].values[0].display_value + "')");
+        expect(persisted.table.records[0].values[1].display_value == "julian:2459625 millis:37230000",
+            "APPEND FROM ARRAY should persist datetime storage strings through the DBF writer");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_gather_memvar_round_trips_field_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_rt";
@@ -5274,6 +5433,7 @@ int main() {
     test_scatter_gather_name_like_and_except_field_filters();
     test_scatter_gather_name_supports_macro_object_variable_names();
     test_scatter_gather_name_supports_nested_object_targets();
+    test_scatter_gather_name_supports_macro_expanded_nested_property_segments();
     test_scatter_gather_name_creates_missing_nested_object_targets();
     test_scatter_name_without_additive_replaces_existing_nested_target_object();
     test_scatter_gather_predeclared_2d_array_row_one_semantics();
@@ -5313,6 +5473,7 @@ int main() {
     test_append_from_array_writes_records_from_2d_array();
     test_append_from_array_fields_clause_allows_keyword_named_field();
     test_copy_append_array_like_and_except_field_filters();
+    test_append_from_array_macro_source_preserves_date_and_datetime_fields();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();
