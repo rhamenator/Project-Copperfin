@@ -40,7 +40,7 @@ It is intentionally narrower than the top-level roadmap:
 | G10 | Local record navigation and mutation | `#7`, `#8` | 91% | `GO`, `SKIP`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, `UNLOCK RECORD` | G1, G4, G6, G9 | G11, G12, G13 | Strong already, but still a shared prerequisite for deeper parity slices above it. |
 | G11 | Structural table and import/export operations | `#7`, `#8` | 90% | `CREATE TABLE`, `ALTER TABLE`, `PACK`, `PACK MEMO`, `ZAP`, `APPEND FROM`, `COPY TO`, journaling-backed mutation paths | G1, G4, G9, G10 | corpus confidence, storage parity, data-migration flows | This is the last broad correctness seam in local DBF mutation workflows. |
 | G12 | Field projection and data-transfer surface | `#7`, `#8` | 89% | `SCATTER`, `GATHER`, `SET FIELDS`, `BROWSE`, `EDIT`, `CHANGE`, `COPY TO ARRAY`, `APPEND FROM ARRAY`, `FIELDS LIKE/EXCEPT` | G4, G6, G9, G10 | G13, issue `#7` closure | Recently deepened; remaining work here should be narrow and correctness-driven. |
-| G13 | Aggregate, lookup, and record-view helpers | `#7` | 90% | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `CALCULATE`, `TOTAL`, `LOOKUP`, `DISPLAY`, `LIST` | G4, G6, G10, G12 | host/report/runtime parity, diagnostics, issue `#7` closure | Mostly close; good candidate for quick closure after upstream blockers are done. |
+| G13 | Aggregate, lookup, and record-view helpers | `#7` | 94% | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `CALCULATE`, `TOTAL`, `LOOKUP`, `DISPLAY`, `LIST` | G4, G6, G10, G12 | host/report/runtime parity, diagnostics, issue `#7` closure | Very close; aggregate event/state readback and SQL `LOOKUP()` parity are now locked down, leaving mainly DBC/container-adjacent closure work around this family. |
 | G14 | Headless interaction and dialog command surface | `#7`, `#8` | 84% | `WAIT`, `KEYBOARD`, `INPUT`, `ACCEPT`, `GETFILE`, `PUTFILE`, `GETDIR`, `INPUTBOX`, runtime event payloads | G4, G5, G9, G12 | host integration parity, remaining command-surface work | Already much better; remaining work should focus on edge-case clauses and macro fidelity. |
 | G15 | Memory-variable and assignment semantics | `#8`, `#11` | 86% | `PUBLIC`, `PRIVATE`, `RELEASE`, `STORE`, array macro names, `DISPLAY/LIST MEMORY` | G4, G5, G9 | G12, G13, G14, A4 work | This is one of the hidden foundations under command-surface parity. |
 | G16 | Compatibility corpus and regression harness | supports `#7`, `#8`, `#10`, `#11`, `#12` | 55% | VFP-tree corpus, legacy samples, regression fixtures, focused runtime test expansion | G1, G4 | all groups | This is not a runtime feature, but it is one of the best multipliers for finishing the remaining 10-20% safely. |
@@ -101,7 +101,7 @@ flowchart LR
         G10["G10 Local Nav + Mutation<br/>91%<br/>#7 / #8"]
         G11["G11 Structural Table Ops<br/>90%<br/>#94"]
         G12["G12 Field Projection / Transfer<br/>89%<br/>#100"]
-        G13["G13 Aggregate / View Helpers<br/>90%<br/>#95"]
+        G13["G13 Aggregate / View Helpers<br/>94%<br/>#95"]
         G14["G14 Headless Interaction / Dialogs<br/>84%<br/>#101"]
         G15["G15 Memory / Assignment Semantics<br/>86%<br/>#99"]
         G16["G16 Corpus + Regression Harness<br/>55%<br/>supports #7-#12"]
@@ -329,14 +329,11 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#95` | `#119` | close one more aggregate/view/helper parity residual |
-| `#95` | `#120` | close one more aggregate/view/helper parity residual |
 | `#96` | `#121` | close one more DBC/container fidelity residual |
 | `#96` | `#122` | close one more DBC/container fidelity residual |
 
 Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
 
-- `#95`: `#119`, `#120`
 - `#96`: `#121`, `#122`
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`

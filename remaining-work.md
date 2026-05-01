@@ -65,7 +65,7 @@ GitHub milestones now mirror that same tree:
 
 - A3 runtime semantics and command depth: #7, #8
   - lane issues: #92, #93, #94, #95, #96, #97, #98, #99, #100, #101
-  - active prompt-sized slice issues: #119, #120, #121, #122
+  - active prompt-sized slice issues: #121, #122
   - additional native slice queues now exist under #93-#101: #115-#130
 - A4 automation and host containment: #10, #11, #12
   - native prompt-sized slice issues: #131-#136
@@ -92,6 +92,10 @@ GitHub milestones now mirror that same tree:
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
+
+### Future Enhancements
+
+- Migration/interchange umbrella: #137
 
 ### Language Service
 
@@ -366,6 +370,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-30: Slice issue `#103` is now closed. Synthetic SQL/result-cursor plain-string `SEEK` now has focused parity coverage for non-`MACHINE` session collations, proving that `SET COLLATE TO GENERAL` case-folds plain `NAME`-style temporary-order searches on SQL cursors just as it already did on local DBF-backed cursors. Focused `test_prg_engine_sql_cursors` coverage passes.
 - 2026-04-30: Slice issues `#129`, `#130`, `#115`, and `#116` are now closed. `INPUT` / `ACCEPT` now mirror `WAIT`-style resolved prompt/target payload fidelity, `DISPLAY` / `LIST RECORDS` now preserve raw and resolved `IN` target detail, SQL/result cursors now honor macro-expanded `SET FIELDS TO &cSpec` visible-field metadata and `SET FILTER TO &cExpr IN <alias>` filter flows, and SQL cursor `LOCATE` / `DELETE` / `RECALL FOR &cExpr` paths now evaluate macro-expanded boolean expressions instead of treating them as truthy strings. Focused `test_prg_engine_data_io` and `test_prg_engine_sql_cursors` coverage passes.
+- 2026-04-30: Slice issues `#119` and `#120` are now closed. The aggregate event lane now emits the same resolved cursor/view state already used by the richer headless command surfaces: `runtime.calculate`, `runtime.count`, `runtime.sum`, `runtime.average`, and `runtime.total` now include targeted cursor/work-area, visible fields, active filter, aggregate scope, `FOR` / `WHILE`, output-variable, and raw/resolved `IN` target detail where applicable. The adjacent helper lane now also has focused `LOOKUP()` parity coverage over synthetic SQL/result cursors, including temporary field-order probes, targeted-cursor movement, and preservation of a separately selected local work area. Focused `test_prg_engine_control_flow` and `test_prg_engine_runtime_surface_functions` coverage pass.
 - 2026-04-30: Slice issues `#102`, `#104`, and `#107` are now closed. Synthetic SQL/result cursors now honor first-pass `FOR` filters on ad hoc temporary orders, so probes such as `SEEK(..., 'sqlcust', "UPPER(NAME) FOR NAME = 'BRAVO'")` and command-path `SET ORDER TO UPPER(NAME) FOR ...` constrain the candidate set and `SET NEAR` positioning the same way the shipped local grounded-order path already did. That same temporary-order lane now also consumes grounded field-type metadata for one-off numeric field orders such as `SET ORDER TO AGE` / `SET ORDER TO AMOUNT`, so local and SQL `SET NEAR` probes no longer fall back to lexicographic ordering on numeric keys. The adjacent runtime-state lane now has explicit `SET('FIELDS')` data-session isolation coverage alongside the already-shipped `PATH` / `DEFAULT` checks, proving that field-visibility readback and lookup restoration stay session-local across `SET DATASESSION` switches. Focused `test_prg_engine_sql_cursors`, `test_prg_engine_seek_index`, and `test_prg_engine_work_areas` coverage pass.
 
 - 2026-04-30: Issue `#98` runtime-state readback deepened in the adjacent date/time lane. `SET('DATE')` now defaults to `MDY` instead of falling through to `OFF`, and focused `test_prg_engine_date_time_functions` coverage now locks down default/readback plus `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.

@@ -94,6 +94,57 @@
                 detail += " filter=" + (cursor->filter_expression.empty() ? std::string{"<none>"} : cursor->filter_expression);
             };
 
+            auto append_runtime_cursor_target_detail = [&](const std::string &raw_target, Frame &current_frame, std::string &detail)
+            {
+                const std::string trimmed_target = trim_copy(raw_target);
+                if (trimmed_target.empty())
+                {
+                    return;
+                }
+
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += "target=" + trimmed_target;
+                const std::string resolved_target = evaluate_cursor_designator_expression(trimmed_target, current_frame);
+                if (!resolved_target.empty() && resolved_target != trimmed_target)
+                {
+                    detail += " target_resolved=" + resolved_target;
+                }
+            };
+
+            auto append_aggregate_scope_metadata = [&](const AggregateScopeClause &scope, std::string &detail)
+            {
+                std::string scope_detail = "ALL";
+                switch (scope.kind)
+                {
+                case AggregateScopeKind::all_records:
+                    scope_detail = "ALL";
+                    break;
+                case AggregateScopeKind::rest_records:
+                    scope_detail = "REST";
+                    break;
+                case AggregateScopeKind::next_records:
+                    scope_detail = "NEXT";
+                    break;
+                case AggregateScopeKind::record:
+                    scope_detail = "RECORD";
+                    break;
+                }
+
+                if (!scope.raw_value.empty())
+                {
+                    scope_detail += " " + trim_copy(scope.raw_value);
+                }
+
+                if (!detail.empty())
+                {
+                    detail += " ";
+                }
+                detail += "scope=" + scope_detail;
+            };
+
             auto append_cursor_structure_metadata = [&](CursorState *cursor, std::string &detail)
             {
                 if (cursor == nullptr)
@@ -869,8 +920,22 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                CursorState *cursor = resolve_cursor_target_expression(statement.tertiary_expression, frame);
+                if (cursor == nullptr)
+                {
+                    cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                }
+
+                std::string detail = "assignments=" + trim_copy(statement.expression);
+                append_cursor_view_metadata(cursor, {}, detail);
+                append_runtime_cursor_target_detail(statement.tertiary_expression, frame, detail);
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += " for=" + trim_copy(statement.secondary_expression);
+                }
+
                 events.push_back({.category = "runtime.calculate",
-                                  .detail = statement.expression,
+                                  .detail = detail,
                                   .location = statement.location});
                 return {};
             }
@@ -899,8 +964,37 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+
+                CursorState *cursor = resolve_cursor_target_expression(statement.quaternary_expression, frame);
+                if (cursor == nullptr)
+                {
+                    cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                }
+                std::string expression_text;
+                const AggregateScopeClause scope = parse_aggregate_scope_clause(statement.expression, expression_text);
+                std::string detail = "function=" + function;
+                append_cursor_view_metadata(cursor, {}, detail);
+                append_aggregate_scope_metadata(scope, detail);
+                if (!expression_text.empty())
+                {
+                    detail += " expr=" + trim_copy(expression_text);
+                }
+                if (!statement.secondary_expression.empty())
+                {
+                    detail += " for=" + trim_copy(statement.secondary_expression);
+                }
+                if (!statement.tertiary_expression.empty())
+                {
+                    detail += " while=" + trim_copy(statement.tertiary_expression);
+                }
+                if (!statement.identifier.empty())
+                {
+                    detail += " into=" + trim_copy(statement.identifier);
+                }
+                append_runtime_cursor_target_detail(statement.quaternary_expression, frame, detail);
+
                 events.push_back({.category = category,
-                                  .detail = statement.text,
+                                  .detail = detail,
                                   .location = statement.location});
                 return {};
             }
@@ -970,8 +1064,47 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+
+                std::string detail = trim_copy(statement.text);
+                std::string ignored_error;
+                if (const auto parsed = parse_total_command_plan(statement.expression, ignored_error))
+                {
+                    CursorState *cursor = resolve_cursor_target_expression(parsed->in_expression, frame);
+                    if (cursor == nullptr)
+                    {
+                        cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    }
+
+                    detail.clear();
+                    detail = "on=" + trim_copy(parsed->on_field_name);
+                    if (!parsed->field_names.empty())
+                    {
+                        detail += " totals=";
+                        for (std::size_t index = 0U; index < parsed->field_names.size(); ++index)
+                        {
+                            if (index > 0U)
+                            {
+                                detail += ",";
+                            }
+                            detail += trim_copy(parsed->field_names[index]);
+                        }
+                    }
+                    detail += " output=" + trim_copy(parsed->target_expression);
+                    append_cursor_view_metadata(cursor, {}, detail);
+                    append_aggregate_scope_metadata(parsed->scope, detail);
+                    if (!parsed->for_expression.empty())
+                    {
+                        detail += " for=" + trim_copy(parsed->for_expression);
+                    }
+                    if (!parsed->while_expression.empty())
+                    {
+                        detail += " while=" + trim_copy(parsed->while_expression);
+                    }
+                    append_runtime_cursor_target_detail(parsed->in_expression, frame, detail);
+                }
+
                 events.push_back({.category = "runtime.total",
-                                  .detail = statement.text,
+                                  .detail = detail,
                                   .location = statement.location});
                 return {};
             }

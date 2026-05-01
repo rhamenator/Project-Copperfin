@@ -861,6 +861,73 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_lookup_expression_function_supports_sql_cursors()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_lookup_sql";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path people_path = temp_root / "people.dbf";
+        write_people_dbf(people_path, {{"ALICE", 30}, {"BOB", 25}});
+
+        const fs::path main_path = temp_root / "lookup_sql_test.prg";
+        write_text(
+            main_path,
+            "USE '" + people_path.string() + "' ALIAS people IN 0\n"
+            "nConn = SQLCONNECT('dsn=Northwind')\n"
+            "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+            "SELECT people\n"
+            "nSelectedBefore = SELECT()\n"
+            "cAliasBefore = ALIAS()\n"
+            "nLookupAmount = LOOKUP(sqlcust.AMOUNT, 'BRAVO', 'sqlcust', 'NAME')\n"
+            "lLookupMissing = LOOKUP(sqlcust.NAME, 'ZZZZ', 'sqlcust', 'NAME')\n"
+            "nSqlRec = RECNO('sqlcust')\n"
+            "nSelectedAfter = SELECT()\n"
+            "cAliasAfter = ALIAS()\n"
+            "lDisc = SQLDISCONNECT(nConn)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "SQL LOOKUP test script should complete");
+        expect(state.sql_connections.empty(), "SQL LOOKUP test should disconnect its SQL handle");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("nselectedbefore", "1");
+        check("caliasbefore", "people");
+        check("nlookupamount", "20");
+        check("llookupmissing", "false");
+        check("nselectedafter", "1");
+        check("caliasafter", "people");
+        check("ldisc", "1");
+        {
+            const auto it = state.globals.find("nsqlrec");
+            expect(it != state.globals.end(), "nsqlrec from SQL LOOKUP should be set");
+            if (it != state.globals.end())
+            {
+                const double recno = std::stod(copperfin::runtime::format_value(it->second));
+                expect(recno > 0.0,
+                       "SQL LOOKUP should leave the targeted SQL cursor on a found record");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -875,6 +942,7 @@ int main()
     test_newobject_getpem_setpem_compobj_functions();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
+    test_lookup_expression_function_supports_sql_cursors();
 
     if (test_failures() != 0)
     {

@@ -643,9 +643,20 @@ void test_calculate_command_aggregates() {
         expect(copperfin::runtime::format_value(sum_alias->second) == "50", "CALCULATE IN alias should sum visible rows from the targeted cursor");
     }
 
-    expect(
-        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.calculate"; }),
-        "CALCULATE should emit runtime.calculate events");
+    const auto calculate_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event)
+        {
+            return event.category == "runtime.calculate" &&
+                   event.detail.find("target='People'") != std::string::npos;
+        });
+    expect(calculate_event != state.events.end(), "CALCULATE should emit a targeted runtime.calculate event");
+    if (calculate_event != state.events.end()) {
+        expect(calculate_event->detail.find("People@") != std::string::npos, "CALCULATE event should include targeted cursor metadata");
+        expect(calculate_event->detail.find("filter=AGE >= 20") != std::string::npos, "CALCULATE event should include active filter readback");
+        expect(calculate_event->detail.find("for=AGE >= 20") != std::string::npos, "CALCULATE event should include FOR clause detail");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -767,6 +778,20 @@ void test_command_level_aggregate_commands() {
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.sum"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.average"; }),
         "command-level aggregate commands should emit runtime aggregate events");
+    const auto count_other_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event)
+        {
+            return event.category == "runtime.count" &&
+                   event.detail.find("target='Other'") != std::string::npos;
+        });
+    expect(count_other_event != state.events.end(), "COUNT IN alias should emit targeted runtime.count metadata");
+    if (count_other_event != state.events.end()) {
+        expect(count_other_event->detail.find("Other@") != std::string::npos, "COUNT event should include targeted cursor metadata");
+        expect(count_other_event->detail.find("filter=AGE >= 30") != std::string::npos, "COUNT event should include targeted filter readback");
+        expect(count_other_event->detail.find("into=nOtherCount") != std::string::npos, "COUNT event should include TO target detail");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -916,9 +941,21 @@ void test_total_command_for_local_tables() {
     if (other_rec != state.globals.end()) {
         expect(copperfin::runtime::format_value(other_rec->second) == "3", "TOTAL IN alias should restore the targeted cursor record");
     }
-    expect(
-        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.total"; }),
-        "TOTAL should emit runtime.total events");
+    const auto total_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event)
+        {
+            return event.category == "runtime.total" &&
+                   event.detail.find("target='Other'") != std::string::npos;
+        });
+    expect(total_event != state.events.end(), "TOTAL should emit a targeted runtime.total event");
+    if (total_event != state.events.end()) {
+        expect(total_event->detail.find("on=REGION") != std::string::npos, "TOTAL event should include the ON field");
+        expect(total_event->detail.find("totals=AMOUNT,QTY") != std::string::npos, "TOTAL event should include requested total fields");
+        expect(total_event->detail.find("scope=REST") != std::string::npos, "TOTAL event should include scope detail");
+        expect(total_event->detail.find("filter=QTY >= 4") != std::string::npos, "TOTAL event should include targeted filter readback");
+    }
 
     const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
     expect(totals_result.ok, "TOTAL should write a readable output DBF");
@@ -1045,9 +1082,20 @@ void test_total_command_for_sql_result_cursors() {
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after TOTAL SQL checks");
     }
-    expect(
-        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.total"; }),
-        "TOTAL for SQL cursors should emit runtime.total events");
+    const auto sql_total_event = std::find_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event)
+        {
+            return event.category == "runtime.total" &&
+                   event.detail.find("target='sqlcust'") != std::string::npos;
+        });
+    expect(sql_total_event != state.events.end(), "TOTAL for SQL cursors should emit targeted runtime.total metadata");
+    if (sql_total_event != state.events.end()) {
+        expect(sql_total_event->detail.find("sqlcust@") != std::string::npos, "SQL TOTAL event should include cursor metadata");
+        expect(sql_total_event->detail.find("on=NAME") != std::string::npos, "SQL TOTAL event should include ON field metadata");
+        expect(sql_total_event->detail.find("for=AMOUNT >= 7") != std::string::npos, "SQL TOTAL event should include FOR clause metadata");
+    }
 
     const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
     expect(totals_result.ok, "TOTAL should write a readable output DBF for SQL cursors");
