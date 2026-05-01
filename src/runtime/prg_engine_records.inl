@@ -18,6 +18,71 @@
             cursor.active_order_descending = snapshot.active_order_descending;
         }
 
+        bool evaluate_visibility_expression(const std::string &expression, const Frame &frame, const CursorState *cursor)
+        {
+            const std::string trimmed_expression = trim_copy(expression);
+            if (trimmed_expression.empty())
+            {
+                return true;
+            }
+
+            auto &set_state = current_set_state();
+            const auto saved_fields_enabled = set_state.find("fields_enabled");
+            const auto saved_fields = set_state.find("fields");
+            const bool had_fields_enabled = saved_fields_enabled != set_state.end();
+            const bool had_fields = saved_fields != set_state.end();
+            const std::string fields_enabled_value = had_fields_enabled ? saved_fields_enabled->second : std::string{};
+            const std::string fields_value = had_fields ? saved_fields->second : std::string{};
+            set_state["fields_enabled"] = "off";
+
+            const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);
+            if (evaluated.kind == PrgValueKind::string && trimmed_expression.front() == '&')
+            {
+                const std::string expanded_expression = trim_copy(value_as_string(evaluated));
+                if (!expanded_expression.empty() && expanded_expression != trimmed_expression)
+                {
+                    const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, cursor));
+                    if (had_fields_enabled)
+                    {
+                        set_state["fields_enabled"] = fields_enabled_value;
+                    }
+                    else
+                    {
+                        set_state.erase("fields_enabled");
+                    }
+                    if (had_fields)
+                    {
+                        set_state["fields"] = fields_value;
+                    }
+                    else
+                    {
+                        set_state.erase("fields");
+                    }
+                    return result;
+                }
+            }
+
+            const bool result = value_as_bool(evaluated);
+            if (had_fields_enabled)
+            {
+                set_state["fields_enabled"] = fields_enabled_value;
+            }
+            else
+            {
+                set_state.erase("fields_enabled");
+            }
+            if (had_fields)
+            {
+                set_state["fields"] = fields_value;
+            }
+            else
+            {
+                set_state.erase("fields");
+            }
+
+            return result;
+        }
+
         bool current_record_matches_visibility(const CursorState &cursor, const Frame &frame, const std::string &extra_expression)
         {
             const auto record = current_record(cursor);
@@ -29,11 +94,11 @@
             {
                 return false;
             }
-            if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame, &cursor)))
+            if (!cursor.filter_expression.empty() && !evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
             {
                 return false;
             }
-            if (!extra_expression.empty() && !value_as_bool(evaluate_expression(extra_expression, frame, &cursor)))
+            if (!extra_expression.empty() && !evaluate_visibility_expression(extra_expression, frame, &cursor))
             {
                 return false;
             }
@@ -56,7 +121,7 @@
                  recno += direction)
             {
                 move_cursor_to(cursor, recno);
-                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor)))
+                if (!while_expression.empty() && !evaluate_visibility_expression(while_expression, frame, &cursor))
                 {
                     break;
                 }

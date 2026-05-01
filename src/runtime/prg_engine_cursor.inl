@@ -680,6 +680,18 @@
             if (cursor.remote)
             {
                 descriptors = cursor.remote_fields;
+                if (descriptors.empty() && !cursor.remote_records.empty())
+                {
+                    descriptors.reserve(cursor.remote_records.front().values.size());
+                    for (const auto &value : cursor.remote_records.front().values)
+                    {
+                        descriptors.push_back(vfp::DbfFieldDescriptor{
+                            .name = value.field_name,
+                            .type = value.field_type,
+                            .length = 0U,
+                            .decimal_count = 0U});
+                    }
+                }
             }
             else if (!cursor.source_path.empty())
             {

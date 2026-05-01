@@ -3005,6 +3005,157 @@ void test_sql_result_cursor_filter_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_macro_fields_and_filter_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_macro_fields_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_macro_fields_filter.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "cFieldsSpec = 'LIKE N*'\n"
+        "SET FIELDS TO &cFieldsSpec\n"
+        "DISPLAY IN 'sqlcust'\n"
+        "SET FIELDS TO OFF\n"
+        "cFilterExpr = 'AMOUNT >= 20'\n"
+        "SET FILTER TO &cFilterExpr IN sqlcust\n"
+        "GO TOP IN sqlcust\n"
+        "nFilteredRec = RECNO('sqlcust')\n"
+        "cFilteredName = sqlcust.NAME\n"
+        "nFilteredAmount = sqlcust.AMOUNT\n"
+        "SET FILTER TO IN sqlcust\n"
+        "SET FIELDS TO OFF\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL macro fields/filter script should complete");
+    expect(state.sql_connections.empty(), "SQL macro fields/filter script should disconnect its SQL handle");
+
+    const auto exec_result = state.globals.find("nexec");
+    const auto filtered_rec = state.globals.find("nfilteredrec");
+    const auto filtered_name = state.globals.find("cfilteredname");
+    const auto filtered_amount = state.globals.find("nfilteredamount");
+    const auto disc = state.globals.find("ldisc");
+    const copperfin::runtime::RuntimeEvent *display_event = nullptr;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_event = &event;
+            break;
+        }
+    }
+
+    expect(exec_result != state.globals.end(), "SQLEXEC result should be captured for SQL macro fields/filter checks");
+    expect(filtered_rec != state.globals.end(), "RECNO(alias) should be captured after SQL macro filter GO TOP");
+    expect(filtered_name != state.globals.end(), "filtered NAME should be captured after SQL macro filter GO TOP");
+    expect(filtered_amount != state.globals.end(), "filtered AMOUNT should be captured after SQL macro filter GO TOP");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL macro fields/filter checks");
+    expect(display_event != nullptr, "DISPLAY IN 'sqlcust' should emit runtime.display for SQL macro fields/filter checks");
+
+    if (exec_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_result->second) == "1", "SQLEXEC should succeed before SQL macro fields/filter checks");
+    }
+    if (display_event != nullptr) {
+        expect(display_event->detail.find("fields=NAME") != std::string::npos, "SET FIELDS TO &cSpec should drive SQL cursor visible-field metadata");
+    }
+    if (filtered_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_rec->second) == "2", "SET FILTER TO &cExpr IN sqlcust should position GO TOP on the first visible SQL row");
+    }
+    if (filtered_name != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(filtered_name->second)) == "BRAVO", "macro-expanded SQL filter should preserve field lookup on the first visible row");
+    }
+    if (filtered_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_amount->second) == "20", "macro-expanded SQL filter should preserve numeric field lookup on the first visible row");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL macro fields/filter checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_macro_for_expression_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_macro_for_expr";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_macro_for_expr.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "cLocateExpr = 'AMOUNT = 30'\n"
+        "cDeleteExpr = 'NAME = ''BRAVO''' \n"
+        "LOCATE FOR &cLocateExpr IN sqlcust\n"
+        "nLocateRec = RECNO('sqlcust')\n"
+        "cLocateName = sqlcust.NAME\n"
+        "DELETE FOR &cDeleteExpr IN sqlcust\n"
+        "LOCATE FOR DELETED() IN sqlcust\n"
+        "cDeletedName = sqlcust.NAME\n"
+        "RECALL FOR &cDeleteExpr IN sqlcust\n"
+        "LOCATE FOR DELETED() IN sqlcust\n"
+        "lDeletedAfterRecall = FOUND()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL macro FOR-expression script should complete");
+    expect(state.sql_connections.empty(), "SQL macro FOR-expression script should disconnect its SQL handle");
+
+    const auto exec_result = state.globals.find("nexec");
+    const auto locate_rec = state.globals.find("nlocaterec");
+    const auto locate_name = state.globals.find("clocatename");
+    const auto deleted_name = state.globals.find("cdeletedname");
+    const auto deleted_after_recall = state.globals.find("ldeletedafterrecall");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_result != state.globals.end(), "SQLEXEC result should be captured for SQL macro FOR-expression checks");
+    expect(locate_rec != state.globals.end(), "RECNO(alias) should be captured after LOCATE FOR &expr IN sqlcust");
+    expect(locate_name != state.globals.end(), "NAME should be captured after LOCATE FOR &expr IN sqlcust");
+    expect(deleted_name != state.globals.end(), "deleted-row NAME should be captured after DELETE FOR &expr IN sqlcust");
+    expect(deleted_after_recall != state.globals.end(), "FOUND() should be captured after RECALL FOR &expr IN sqlcust");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL macro FOR-expression checks");
+
+    if (exec_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_result->second) == "1", "SQLEXEC should succeed before SQL macro FOR-expression checks");
+    }
+    if (locate_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(locate_rec->second) == "3", "LOCATE FOR &cExpr IN sqlcust should position the SQL cursor on the matching row");
+    }
+    if (locate_name != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(locate_name->second)) == "CHARLIE", "LOCATE FOR &cExpr IN sqlcust should expose the matching SQL row");
+    }
+    if (deleted_name != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(deleted_name->second)) == "BRAVO", "DELETE FOR &cExpr IN sqlcust should tombstone the matching SQL row");
+    }
+    if (deleted_after_recall != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted_after_recall->second) == "false", "RECALL FOR &cExpr IN sqlcust should clear the tombstone before the final DELETED() locate");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL macro FOR-expression checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -3035,6 +3186,8 @@ int main() {
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();
     test_sql_result_cursor_filter_in_target_parity();
+    test_sql_result_cursor_macro_fields_and_filter_parity();
+    test_sql_result_cursor_macro_for_expression_parity();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

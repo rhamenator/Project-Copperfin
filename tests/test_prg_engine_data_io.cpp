@@ -4464,6 +4464,77 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_input_accept_macro_detail";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}});
+
+    const fs::path main_path = temp_root / "input_accept_macro_detail.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "cInputPrompt = 'Enter code:'\n"
+        "cInputTarget = 'cInputValue'\n"
+        "cAcceptPrompt = 'Enter name:'\n"
+        "cAcceptTarget = 'cAcceptValue'\n"
+        "INPUT cInputPrompt TO &cInputTarget\n"
+        "ACCEPT cAcceptPrompt TO &cAcceptTarget\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "INPUT/ACCEPT macro detail script should complete");
+
+    const copperfin::runtime::RuntimeEvent *input_event = nullptr;
+    const copperfin::runtime::RuntimeEvent *accept_event = nullptr;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.input") {
+            input_event = &event;
+        } else if (event.category == "runtime.accept") {
+            accept_event = &event;
+        }
+    }
+
+    expect(input_event != nullptr, "INPUT macro detail script should emit runtime.input");
+    expect(accept_event != nullptr, "ACCEPT macro detail script should emit runtime.accept");
+    if (input_event != nullptr) {
+        expect(input_event->detail.find("prompt=Enter code:") != std::string::npos,
+            "INPUT should surface the resolved prompt text");
+        expect(input_event->detail.find("prompt_expr=cInputPrompt") != std::string::npos,
+            "INPUT should preserve the source prompt expression");
+        expect(input_event->detail.find("target=&cInputTarget") != std::string::npos,
+            "INPUT should retain the raw TO target expression");
+        expect(input_event->detail.find("target_resolved=cInputValue") != std::string::npos,
+            "INPUT should surface the resolved TO target name");
+    }
+    if (accept_event != nullptr) {
+        expect(accept_event->detail.find("prompt=Enter name:") != std::string::npos,
+            "ACCEPT should surface the resolved prompt text");
+        expect(accept_event->detail.find("prompt_expr=cAcceptPrompt") != std::string::npos,
+            "ACCEPT should preserve the source prompt expression");
+        expect(accept_event->detail.find("target=&cAcceptTarget") != std::string::npos,
+            "ACCEPT should retain the raw TO target expression");
+        expect(accept_event->detail.find("target_resolved=cAcceptValue") != std::string::npos,
+            "ACCEPT should surface the resolved TO target name");
+    }
+
+    const auto input_value = state.globals.find("cinputvalue");
+    const auto accept_value = state.globals.find("cacceptvalue");
+    expect(input_value != state.globals.end(), "INPUT macro target should be assigned");
+    expect(accept_value != state.globals.end(), "ACCEPT macro target should be assigned");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_getfile_command_emits_runtime_getfile_event_with_clause_details() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_getfile_cmd";
@@ -5184,6 +5255,69 @@ void test_display_records_surfaces_effective_cursor_view_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_display_and_list_records_surface_resolved_in_target_detail() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_list_target_detail";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}, {"Bob", 22}});
+
+    const fs::path main_path = temp_root / "display_list_target_detail.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "cAlias = 'people'\n"
+        "DISPLAY IN &cAlias FIELDS NAME FOR AGE >= 25\n"
+        "LIST IN &cAlias FIELDS EXCEPT AGE FOR AGE >= 20\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY/LIST target detail script should complete");
+
+    const copperfin::runtime::RuntimeEvent *display_event = nullptr;
+    const copperfin::runtime::RuntimeEvent *list_event = nullptr;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_event = &event;
+        } else if (event.category == "runtime.list") {
+            list_event = &event;
+        }
+    }
+
+    expect(display_event != nullptr, "DISPLAY target detail script should emit runtime.display");
+    expect(list_event != nullptr, "LIST target detail script should emit runtime.list");
+    if (display_event != nullptr) {
+        expect(display_event->detail.find("target=&cAlias") != std::string::npos,
+            "DISPLAY RECORDS should retain the raw IN target expression");
+        expect(display_event->detail.find("target_resolved=people") != std::string::npos,
+            "DISPLAY RECORDS should surface the resolved IN target");
+        expect(display_event->detail.find("fields=NAME") != std::string::npos,
+            "DISPLAY RECORDS should preserve inline field metadata with macro IN");
+        expect(display_event->detail.find("for=AGE >= 25") != std::string::npos,
+            "DISPLAY RECORDS should preserve the FOR clause with macro IN");
+    }
+    if (list_event != nullptr) {
+        expect(list_event->detail.find("target=&cAlias") != std::string::npos,
+            "LIST RECORDS should retain the raw IN target expression");
+        expect(list_event->detail.find("target_resolved=people") != std::string::npos,
+            "LIST RECORDS should surface the resolved IN target");
+        expect(list_event->detail.find("fields=NAME") != std::string::npos,
+            "LIST RECORDS should preserve inline field metadata with macro IN");
+        expect(list_event->detail.find("for=AGE >= 20") != std::string::npos,
+            "LIST RECORDS should preserve the FOR clause with macro IN");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_list_status_emits_runtime_list_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_cmd";
@@ -5482,6 +5616,7 @@ int main() {
     test_change_command_emits_runtime_change_event();
     test_input_command_emits_runtime_input_event_with_prompt();
     test_accept_command_emits_runtime_accept_event_with_prompt();
+    test_input_accept_commands_surface_macro_prompt_and_target_detail();
     test_getfile_command_emits_runtime_getfile_event_with_clause_details();
     test_putfile_command_emits_runtime_putfile_event_with_clause_details();
     test_getdir_command_emits_runtime_getdir_event_with_clause_details();
@@ -5494,6 +5629,7 @@ int main() {
     test_display_status_surfaces_session_metadata();
     test_display_memory_surfaces_visible_variable_and_array_metadata();
     test_display_records_surfaces_effective_cursor_view_metadata();
+    test_display_and_list_records_surface_resolved_in_target_detail();
     test_list_status_emits_runtime_list_event();
     test_list_memory_surfaces_visible_variable_and_array_metadata();
     test_list_structure_surfaces_selected_cursor_schema();

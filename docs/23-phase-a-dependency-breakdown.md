@@ -329,17 +329,15 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#101` | `#129` | close one more headless interaction macro/eval fidelity residual |
-| `#101` | `#130` | close one more wait/keyboard/input dialog parity residual |
-| `#93` | `#115` | close one more remote/result-cursor parity residual |
-| `#93` | `#116` | close one more SQL/result-cursor behavioral mismatch |
+| `#95` | `#119` | close one more aggregate/view/helper parity residual |
+| `#95` | `#120` | close one more aggregate/view/helper parity residual |
+| `#96` | `#121` | close one more DBC/container fidelity residual |
+| `#96` | `#122` | close one more DBC/container fidelity residual |
 
 Additional prompt-sized native slice queues now also exist under the adjacent active A3/A4 lanes:
 
-- `#93`: `#115`, `#116`
 - `#95`: `#119`, `#120`
 - `#96`: `#121`, `#122`
-- `#101`: `#129`, `#130`
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`
 - `#12`: `#135`, `#136`

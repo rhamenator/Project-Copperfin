@@ -158,6 +158,21 @@
                 return unquote_string(trimmed);
             };
 
+            auto resolve_runtime_target_identifier = [&](const std::string &raw_identifier, Frame &current_frame) -> std::string
+            {
+                std::string resolved_identifier = apply_with_context(raw_identifier, current_frame);
+                if (!resolved_identifier.empty() && resolved_identifier.front() == '&')
+                {
+                    const PrgValue expanded_identifier = evaluate_expression(resolved_identifier, current_frame);
+                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
+                    if (!expanded_text.empty())
+                    {
+                        resolved_identifier = expanded_text;
+                    }
+                }
+                return resolved_identifier;
+            };
+
             auto memory_value_type_code = [&](const std::string &name, const PrgValue &value) -> std::string
             {
                 if (find_array(name) != nullptr)
@@ -340,16 +355,7 @@
 
             auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
             {
-                std::string assignment_identifier = apply_with_context(raw_identifier, frame);
-                if (!assignment_identifier.empty() && assignment_identifier.front() == '&')
-                {
-                    const PrgValue expanded_identifier = evaluate_expression(assignment_identifier, frame);
-                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
-                    if (!expanded_text.empty())
-                    {
-                        assignment_identifier = expanded_text;
-                    }
-                }
+                std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
                 if (assign_array_element(assignment_identifier, frame, assignment_value))
                 {
                     return {};
@@ -2195,6 +2201,33 @@
                     }
                     return unquote_string(candidate);
                 };
+                const auto expand_set_text_macro = [&](const std::string &raw_value) -> std::optional<std::string>
+                {
+                    std::string candidate = strip_set_to_value(raw_value);
+                    if (candidate.empty() || candidate.front() != '&')
+                    {
+                        return std::nullopt;
+                    }
+
+                    std::string expanded = candidate;
+                    for (int depth = 0; depth < 4 && !expanded.empty() && expanded.front() == '&'; ++depth)
+                    {
+                        const std::string referent = trim_copy(expanded.substr(1U));
+                        if (referent.empty())
+                        {
+                            break;
+                        }
+                        const PrgValue referent_value = evaluate_expression(referent, frame);
+                        const std::string referent_text = trim_copy(value_as_string(referent_value));
+                        if (referent_text.empty() || referent_text == expanded)
+                        {
+                            break;
+                        }
+                        expanded = referent_text;
+                    }
+
+                    return expanded == candidate ? std::optional<std::string>{std::string{}} : std::optional<std::string>{expanded};
+                };
                 const auto evaluate_set_integer_value = [&](const std::string &raw_value, int default_value, int min_value, int max_value) -> int
                 {
                     const std::string candidate = strip_set_to_value(raw_value);
@@ -2294,6 +2327,18 @@
                     {
                         filter_clause.clear();
                     }
+                    else if (const auto expanded_macro = expand_set_text_macro(filter_clause); expanded_macro.has_value())
+                    {
+                        filter_clause = *expanded_macro;
+                    }
+                    else if (should_evaluate_set_value(filter_clause))
+                    {
+                        filter_clause = value_as_string(evaluate_expression(filter_clause, frame));
+                    }
+                    else
+                    {
+                        filter_clause = unquote_string(filter_clause);
+                    }
 
                     cursor->filter_expression = filter_clause;
                     if (!cursor->filter_expression.empty() && cursor->record_count > 0U &&
@@ -2362,7 +2407,15 @@
                     }
                     else if (normalized_name == "fields")
                     {
-                        std::string fields_value = strip_set_to_value(option_value);
+                        std::string fields_value;
+                        if (const auto expanded_macro = expand_set_text_macro(option_value); expanded_macro.has_value() && !expanded_macro->empty())
+                        {
+                            fields_value = *expanded_macro;
+                        }
+                        else
+                        {
+                            fields_value = evaluate_set_string_value(option_value, "ALL");
+                        }
                         const std::string normalized_fields_value = normalize_identifier(fields_value);
                         if (normalized_fields_value == "off")
                         {
@@ -5361,12 +5414,22 @@
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    detail += "prompt=" + statement.expression;
+                    const std::string resolved_prompt = resolve_runtime_expression_text(statement.expression, frame);
+                    detail += "prompt=" + resolved_prompt;
+                    if (trim_copy(statement.expression) != resolved_prompt)
+                    {
+                        detail += " prompt_expr=" + trim_copy(statement.expression);
+                    }
                 }
                 if (!statement.identifier.empty())
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.identifier;
+                    const std::string resolved_target = resolve_runtime_target_identifier(statement.identifier, frame);
+                    if (!resolved_target.empty() && resolved_target != statement.identifier)
+                    {
+                        detail += " target_resolved=" + resolved_target;
+                    }
                     ExecutionOutcome outcome = assign_runtime_target_value(statement.identifier, make_string_value(""));
                     if (!outcome.ok)
                     {
@@ -5386,12 +5449,22 @@
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    detail += "prompt=" + statement.expression;
+                    const std::string resolved_prompt = resolve_runtime_expression_text(statement.expression, frame);
+                    detail += "prompt=" + resolved_prompt;
+                    if (trim_copy(statement.expression) != resolved_prompt)
+                    {
+                        detail += " prompt_expr=" + trim_copy(statement.expression);
+                    }
                 }
                 if (!statement.identifier.empty())
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.identifier;
+                    const std::string resolved_target = resolve_runtime_target_identifier(statement.identifier, frame);
+                    if (!resolved_target.empty() && resolved_target != statement.identifier)
+                    {
+                        detail += " target_resolved=" + resolved_target;
+                    }
                     ExecutionOutcome outcome = assign_runtime_target_value(statement.identifier, make_string_value(""));
                     if (!outcome.ok)
                     {
@@ -5587,16 +5660,7 @@
                 {
                     if (!detail.empty()) detail += " ";
                     detail += "target=" + statement.names.front();
-                    std::string resolved_target = apply_with_context(statement.names.front(), frame);
-                    if (!resolved_target.empty() && resolved_target.front() == '&')
-                    {
-                        const PrgValue expanded_identifier = evaluate_expression(resolved_target, frame);
-                        const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
-                        if (!expanded_text.empty())
-                        {
-                            resolved_target = expanded_text;
-                        }
-                    }
+                    const std::string resolved_target = resolve_runtime_target_identifier(statement.names.front(), frame);
                     if (resolved_target != statement.names.front())
                     {
                         detail += " target_resolved=" + resolved_target;
@@ -5680,6 +5744,17 @@
                             detail += " for=" + trim_copy(statement.quaternary_expression);
                         }
                     }
+                    const std::string raw_target = trim_copy(statement.secondary_expression);
+                    if (!raw_target.empty())
+                    {
+                        if (!detail.empty()) detail += " ";
+                        detail += "target=" + raw_target;
+                        const std::string resolved_target = evaluate_cursor_designator_expression(raw_target, frame);
+                        if (!resolved_target.empty() && resolved_target != raw_target)
+                        {
+                            detail += " target_resolved=" + resolved_target;
+                        }
+                    }
                 }
                 else if (normalize_identifier(statement.identifier) == "structure")
                 {
@@ -5741,6 +5816,17 @@
                         if (!statement.quaternary_expression.empty())
                         {
                             detail += " for=" + trim_copy(statement.quaternary_expression);
+                        }
+                    }
+                    const std::string raw_target = trim_copy(statement.secondary_expression);
+                    if (!raw_target.empty())
+                    {
+                        if (!detail.empty()) detail += " ";
+                        detail += "target=" + raw_target;
+                        const std::string resolved_target = evaluate_cursor_designator_expression(raw_target, frame);
+                        if (!resolved_target.empty() && resolved_target != raw_target)
+                        {
+                            detail += " target_resolved=" + resolved_target;
                         }
                     }
                 }
