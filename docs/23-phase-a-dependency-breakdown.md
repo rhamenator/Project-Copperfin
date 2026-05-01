@@ -348,6 +348,7 @@ Remaining adjacent prompt-sized native slice queues:
 
 - `#13`: `#150`, `#151`
 - `#14`: `#152`, `#153`
+- broader repo execution leaves are now also pre-split beyond Phase A under `#15`-`#37`, `#57`, and `#91`; this document keeps the active queue focused on the Phase A critical path
 
 Current dependency links:
 

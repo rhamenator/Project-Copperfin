@@ -67,7 +67,7 @@ GitHub milestones now mirror that same tree:
   - active lane issues: #92, #93, #94, #97, #98, #99, #100, #101
   - recently closed lane issues: #95, #96
   - active prompt-sized slice issues: none currently open under #92-#101
-  - additional native slice queues now exist under #93-#101: #115-#130, #146-#149
+  - native slice queues under #93-#101 have now been opened as needed: active and historical slices in this lane currently span `#115`-`#130` plus the closed `#146`-`#149` queue under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
   - recently closed prompt-sized slice issues: #142, #143, #144, #145
