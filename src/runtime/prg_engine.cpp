@@ -656,11 +656,28 @@ namespace copperfin::runtime
             },
             [this, &frame](const std::string &base_name, const std::string &member_path, const std::vector<PrgValue> &arguments)
             {
+                const Statement *statement = current_statement();
+                const std::string action_text = statement == nullptr
+                    ? base_name + "." + member_path + "()"
+                    : statement->text;
+                const auto raise_ole_fault = [&](const std::string &detail,
+                                                 const std::string &source,
+                                                 const std::string &message) -> PrgValue
+                {
+                    record_ole_aerror_context(detail,
+                                              "Copperfin OLE",
+                                              source,
+                                              action_text,
+                                              1429);
+                    throw std::runtime_error(message);
+                };
                 const PrgValue object_value = lookup_variable(frame, base_name);
                 auto object = resolve_ole_object(object_value);
                 if (!object.has_value())
                 {
-                    return make_empty_value();
+                    return raise_ole_fault(base_name + "." + member_path + "()",
+                                           base_name,
+                                           "OLE object not found for method invocation: " + base_name + "." + member_path);
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
@@ -735,6 +752,10 @@ namespace copperfin::runtime
                         runtime_object->properties["count"] = make_number_value(0.0);
                         return make_boolean_value(true);
                     }
+
+                    return raise_ole_fault(runtime_object->prog_id + "." + member_path + "()",
+                                           base_name,
+                                           "OLE member not found for method invocation: " + runtime_object->prog_id + "." + member_path);
                 }
 
                 if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
@@ -749,17 +770,33 @@ namespace copperfin::runtime
             },
             [this, &frame](const std::string &property_path)
             {
+                const Statement *statement = current_statement();
+                const std::string action_text = statement == nullptr ? property_path : statement->text;
+                const auto raise_ole_fault = [&](const std::string &detail,
+                                                 const std::string &source,
+                                                 const std::string &message) -> PrgValue
+                {
+                    record_ole_aerror_context(detail,
+                                              "Copperfin OLE",
+                                              source,
+                                              action_text,
+                                              1429);
+                    throw std::runtime_error(message);
+                };
                 const auto separator = property_path.find('.');
                 if (separator == std::string::npos)
                 {
                     return make_empty_value();
                 }
 
-                const PrgValue object_value = lookup_variable(frame, property_path.substr(0U, separator));
+                const std::string object_name = property_path.substr(0U, separator);
+                const PrgValue object_value = lookup_variable(frame, object_name);
                 auto object = resolve_ole_object(object_value);
                 if (!object.has_value())
                 {
-                    return make_empty_value();
+                    return raise_ole_fault(property_path,
+                                           object_name,
+                                           "OLE object not found for property read: " + property_path);
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
@@ -773,6 +810,12 @@ namespace copperfin::runtime
                 if (property != runtime_object->properties.end())
                 {
                     return property->second;
+                }
+                if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
+                {
+                    return raise_ole_fault(runtime_object->prog_id + "." + property_path.substr(separator + 1U),
+                                           object_name,
+                                           "OLE member not found for property read: " + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
                 }
                 return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
             },

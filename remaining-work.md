@@ -68,10 +68,9 @@ GitHub milestones now mirror that same tree:
   - recently closed lane issue: #96
   - active prompt-sized slice issues: none currently open under #92-#101
   - additional native slice queues now exist under #93-#101: #115-#130
-- A4 automation and host containment: #12
-  - recently closed activation lanes: #10, #11
-  - active prompt-sized slice issues: #135, #136
+- A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
+  - active prompt-sized slice issues under #13: #142, #143
 
 ### Runtime Parity Surfaces
 
@@ -213,7 +212,7 @@ flowchart LR
         SA1["A1 File And Index Fidelity<br/>~93%"]
         SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>~93%"]
         SA3["A3 Command / Expression Surface<br/>82%<br/>#7,#8,#92-#101"]
-        SA4["A4 Automation / Interop Semantics<br/>~56%<br/>#10,#11,#12"]
+        SA4["A4 Automation / Interop Semantics<br/>100%<br/>#10,#11,#12"]
     end
 
     subgraph SB[Phase B]
@@ -376,6 +375,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-30: Slice issues `#121` and `#122` are now closed. DBC/container fidelity now resolves same-base `DCT`/`DCX` companions and exported `TABLE` `.dbf` assets case-insensitively on case-sensitive filesystems, and `export_database_as_json(...)` now prefers the catalog `DATABASE` object name over the raw `.dbc` stem while preserving decoded `PROPERTIES` memo bags and table-row snapshots. Focused `test_vfp_assets` coverage passes.
 - 2026-04-30: Slice issues `#131` and `#132` are now closed. OLE object property assignment now round-trips through runtime object state instead of collapsing to placeholder `ole:` strings, and the seeded `Scripting.Dictionary` compatibility surface now supports first-pass `Add`, `Exists`, `Item`, `Remove`, `RemoveAll`, and live `Count` updates for deterministic collection-style behavior. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
 - 2026-04-30: Slice issues `#133` and `#134` are now closed. `NEWOBJECT()` now preserves library/server activation detail in runtime object state and `ole.newobject` events, while `GETOBJECT()` now resolves class-vs-source targeting more faithfully and reuses matching existing attachments instead of always registering duplicate handles for the same running class or same file/class pair. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
+- 2026-04-30: Slice issues `#135` and `#136` are now closed, and parent issue `#12` is now closed with them. Missing seeded-automation property reads and method invocations no longer fail silently: unresolved OLE reads/invokes and missing `Scripting.Dictionary` members now route through the normal runtime fault path as `1429` automation errors, so `ON ERROR` / `AERROR()` and `TRY/CATCH/FINALLY` can trap them while preserving object/session usability afterward. Focused `test_prg_engine_control_flow` coverage passes.
 - 2026-04-30: Slice issues `#102`, `#104`, and `#107` are now closed. Synthetic SQL/result cursors now honor first-pass `FOR` filters on ad hoc temporary orders, so probes such as `SEEK(..., 'sqlcust', "UPPER(NAME) FOR NAME = 'BRAVO'")` and command-path `SET ORDER TO UPPER(NAME) FOR ...` constrain the candidate set and `SET NEAR` positioning the same way the shipped local grounded-order path already did. That same temporary-order lane now also consumes grounded field-type metadata for one-off numeric field orders such as `SET ORDER TO AGE` / `SET ORDER TO AMOUNT`, so local and SQL `SET NEAR` probes no longer fall back to lexicographic ordering on numeric keys. The adjacent runtime-state lane now has explicit `SET('FIELDS')` data-session isolation coverage alongside the already-shipped `PATH` / `DEFAULT` checks, proving that field-visibility readback and lookup restoration stay session-local across `SET DATASESSION` switches. Focused `test_prg_engine_sql_cursors`, `test_prg_engine_seek_index`, and `test_prg_engine_work_areas` coverage pass.
 
 - 2026-04-30: Issue `#98` runtime-state readback deepened in the adjacent date/time lane. `SET('DATE')` now defaults to `MDY` instead of falling through to `OFF`, and focused `test_prg_engine_date_time_functions` coverage now locks down default/readback plus `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.
@@ -780,9 +780,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### A4. Automation And Interop Semantics
 
-- Finish the remaining automation fault-containment lane under `#12` now that `#10` / `#11` activation and object-behavior slices are materially deeper.
-- Deepen OLE/COM behavior beyond current object/property/method handling where host safety depends on it.
-- Preserve host stability when automation calls fail or behave unexpectedly.
+- Treat A4 automation containment as closed for Phase A and drive the next safety/debug residuals through `#13` and `#14` instead.
+- Preserve host stability and post-fault diagnostic quality as the Phase B runtime-safety priority.
 
 ## Phase B: Runtime Safety, Fault Tolerance, And Crash Containment
 

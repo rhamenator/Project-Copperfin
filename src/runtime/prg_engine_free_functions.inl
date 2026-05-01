@@ -1518,6 +1518,7 @@
                 return 1526;
             }
             if (normalized.find("ole object") != std::string::npos ||
+                normalized.find("ole member") != std::string::npos ||
                 normalized.find("automation") != std::string::npos)
             {
                 return 1429;

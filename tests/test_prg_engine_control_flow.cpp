@@ -2185,6 +2185,157 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ole_property_fault_dispatches_on_error_and_preserves_object_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_ole_property_fault";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ole_property_fault.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "oDict = CREATEOBJECT('Scripting.Dictionary')\n"
+        "oDict.Add('Alpha', 41)\n"
+        "xMissing = oDict.NoSuchProperty\n"
+        "lStillExists = oDict.Exists('Alpha')\n"
+        "after_error = 'continued'\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "nOleRows = AERROR(aOleErr)\n"
+        "nOleCode = aOleErr[1,1]\n"
+        "cOleDetail = aOleErr[1,3]\n"
+        "cOleSource = aOleErr[1,5]\n"
+        "cOleAction = aOleErr[1,6]\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "OLE property fault script should complete");
+
+    const auto rows = state.globals.find("nolerows");
+    const auto code = state.globals.find("nolecode");
+    const auto detail = state.globals.find("coledetail");
+    const auto source = state.globals.find("colesource");
+    const auto action = state.globals.find("coleaction");
+    const auto still_exists = state.globals.find("lstillexists");
+    const auto after_error = state.globals.find("after_error");
+
+    expect(rows != state.globals.end(), "OLE property fault should populate AERROR rows");
+    expect(code != state.globals.end(), "OLE property fault should populate AERROR code");
+    expect(detail != state.globals.end(), "OLE property fault should populate AERROR detail");
+    expect(source != state.globals.end(), "OLE property fault should populate AERROR source");
+    expect(action != state.globals.end(), "OLE property fault should populate AERROR action");
+    expect(still_exists != state.globals.end(), "execution should continue after OLE property fault");
+    expect(after_error != state.globals.end(), "post-handler statements should run after OLE property fault");
+
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "1", "OLE property fault should expose one AERROR row");
+    }
+    if (code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(code->second) == "1429", "OLE property fault should use the automation error code");
+    }
+    if (detail != state.globals.end()) {
+        std::string detail_text = copperfin::runtime::format_value(detail->second);
+        std::transform(detail_text.begin(), detail_text.end(), detail_text.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(detail_text.find("nosuchproperty") != std::string::npos,
+               "OLE property fault should preserve the failing member detail");
+    }
+    if (source != state.globals.end()) {
+        std::string source_text = copperfin::runtime::format_value(source->second);
+        std::transform(source_text.begin(), source_text.end(), source_text.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(source_text.find("odict") != std::string::npos,
+               "OLE property fault should preserve the source variable name");
+    }
+    if (action != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(action->second).empty(),
+               "OLE property fault should preserve the failing action text");
+    }
+    if (still_exists != state.globals.end()) {
+        expect(copperfin::runtime::format_value(still_exists->second) == "true",
+               "a trapped OLE property fault should not poison the object state");
+    }
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "continued",
+               "execution should continue after an OLE property fault handler returns");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_ole_method_fault_is_catchable_and_preserves_object_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_ole_method_fault";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ole_method_fault.prg";
+    write_text(
+        main_path,
+        "oDict = CREATEOBJECT('Scripting.Dictionary')\n"
+        "oDict.Add('Alpha', 41)\n"
+        "TRY\n"
+        "  oDict.NoSuchMethod(7)\n"
+        "CATCH TO err_text\n"
+        "  cCaught = err_text\n"
+        "FINALLY\n"
+        "  finally_hit = 1\n"
+        "ENDTRY\n"
+        "lStillExists = oDict.Exists('Alpha')\n"
+        "nCountAfterFault = oDict.Count\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "OLE method fault TRY/CATCH script should complete");
+
+    const auto caught = state.globals.find("ccaught");
+    const auto finally_hit = state.globals.find("finally_hit");
+    const auto still_exists = state.globals.find("lstillexists");
+    const auto count_after_fault = state.globals.find("ncountafterfault");
+
+    expect(caught != state.globals.end(), "CATCH should receive the OLE method fault text");
+    expect(finally_hit != state.globals.end(), "FINALLY should run after trapped OLE method faults");
+    expect(still_exists != state.globals.end(), "object should still be usable after trapped OLE method faults");
+    expect(count_after_fault != state.globals.end(), "object property reads should still work after trapped OLE method faults");
+
+    if (caught != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught->second).find("OLE member not found for method invocation") != std::string::npos,
+               "CATCH should expose the trapped OLE method fault text");
+    }
+    if (finally_hit != state.globals.end()) {
+        expect(copperfin::runtime::format_value(finally_hit->second) == "1",
+               "FINALLY should still execute after trapped OLE method faults");
+    }
+    if (still_exists != state.globals.end()) {
+        expect(copperfin::runtime::format_value(still_exists->second) == "true",
+               "trapped OLE method faults should not poison later method calls");
+    }
+    if (count_after_fault != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_after_fault->second) == "1",
+               "trapped OLE method faults should preserve collection state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_with_endwith_resolves_leading_dot_member_access() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";
@@ -2218,7 +2369,7 @@ void test_with_endwith_resolves_leading_dot_member_access() {
     expect(call_value != state.globals.end(), "WITH should resolve leading-dot method calls");
     if (prop_value != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(prop_value->second) == "ole:Sample.Object.caption",
+            copperfin::runtime::format_value(prop_value->second) == "Hello",
             "WITH property access should bind to the target object");
     }
     if (call_value != state.globals.end()) {
@@ -3521,6 +3672,8 @@ int main() {
     test_aerror_populates_structured_runtime_error_array();
     test_aerror_exposes_sql_and_ole_specific_rows();
     test_on_error_handler_preserves_original_fault_metadata_across_caught_inner_faults();
+    test_ole_property_fault_dispatches_on_error_and_preserves_object_state();
+    test_ole_method_fault_is_catchable_and_preserves_object_state();
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_try_finally_runs_without_catch_on_success();
