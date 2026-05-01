@@ -58,6 +58,23 @@ namespace copperfin::runtime
 
     namespace
     {
+        void ensure_fault_context_defaults(
+            const Statement *statement,
+            SourceLocation &last_fault_location,
+            std::string &last_fault_statement)
+        {
+            if (statement != nullptr)
+            {
+                if (last_fault_location.file_path.empty())
+                {
+                    last_fault_location = statement->location;
+                }
+                if (last_fault_statement.empty())
+                {
+                    last_fault_statement = statement->text;
+                }
+            }
+        }
 
         struct LoopState
         {
@@ -1499,6 +1516,8 @@ namespace copperfin::runtime
         }
         catch (const std::bad_alloc &)
         {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_compatibility = {};
             last_error_message = "Runtime resource fault: out of memory. Execution paused safely.";
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
@@ -1507,6 +1526,8 @@ namespace copperfin::runtime
         }
         catch (const std::filesystem::filesystem_error &error)
         {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_compatibility = {};
             last_error_message = std::string("Runtime resource fault: filesystem failure: ") + error.what();
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
@@ -1515,6 +1536,8 @@ namespace copperfin::runtime
         }
         catch (const std::system_error &error)
         {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_compatibility = {};
             last_error_message = std::string("Runtime resource fault: system error: ") + error.what();
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
@@ -1523,6 +1546,8 @@ namespace copperfin::runtime
         }
         catch (const std::exception &error)
         {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_compatibility = {};
             last_error_message = std::string("Runtime fault: ") + error.what();
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
@@ -1531,6 +1556,8 @@ namespace copperfin::runtime
         }
         catch (...)
         {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_compatibility = {};
             last_error_message = "Runtime fault: unknown exception";
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,

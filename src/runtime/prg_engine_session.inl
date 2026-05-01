@@ -955,12 +955,20 @@
                 state.statement_text = statement->text;
             }
 
+            bool assigned_fault_frame_line = false;
             for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
             {
                 RuntimeStackFrame frame;
                 frame.file_path = iterator->file_path;
                 frame.routine_name = iterator->routine_name;
-                if (iterator->routine != nullptr && iterator->pc < iterator->routine->statements.size())
+                if (reason == DebugPauseReason::error &&
+                    !assigned_fault_frame_line &&
+                    !last_fault_location.file_path.empty())
+                {
+                    frame.line = last_fault_location.line;
+                    assigned_fault_frame_line = true;
+                }
+                else if (iterator->routine != nullptr && iterator->pc < iterator->routine->statements.size())
                 {
                     frame.line = iterator->routine->statements[iterator->pc].location.line;
                 }

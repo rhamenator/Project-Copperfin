@@ -70,7 +70,8 @@ GitHub milestones now mirror that same tree:
   - additional native slice queues now exist under #93-#101: #115-#130
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
-  - active prompt-sized slice issues under #13: #142, #143
+  - recently closed prompt-sized slice issues: #142, #143, #144, #145
+  - active prompt-sized slice issues: none currently open under #13-#14
 
 ### Runtime Parity Surfaces
 
@@ -217,8 +218,8 @@ flowchart LR
 
     subgraph SB[Phase B]
         direction TB
-        SB1["B1 Fault Isolation<br/>~58%<br/>#13"]
-        SB2["B2 Debug Metadata / Diagnostics<br/>~54%<br/>#14"]
+        SB1["B1 Fault Isolation<br/>~72%<br/>#13"]
+        SB2["B2 Debug Metadata / Diagnostics<br/>~66%<br/>#14"]
     end
 
     subgraph SC[Phase C]
@@ -376,6 +377,8 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-04-30: Slice issues `#131` and `#132` are now closed. OLE object property assignment now round-trips through runtime object state instead of collapsing to placeholder `ole:` strings, and the seeded `Scripting.Dictionary` compatibility surface now supports first-pass `Add`, `Exists`, `Item`, `Remove`, `RemoveAll`, and live `Count` updates for deterministic collection-style behavior. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
 - 2026-04-30: Slice issues `#133` and `#134` are now closed. `NEWOBJECT()` now preserves library/server activation detail in runtime object state and `ole.newobject` events, while `GETOBJECT()` now resolves class-vs-source targeting more faithfully and reuses matching existing attachments instead of always registering duplicate handles for the same running class or same file/class pair. Focused `test_prg_engine_runtime_surface_functions` coverage passes.
 - 2026-04-30: Slice issues `#135` and `#136` are now closed, and parent issue `#12` is now closed with them. Missing seeded-automation property reads and method invocations no longer fail silently: unresolved OLE reads/invokes and missing `Scripting.Dictionary` members now route through the normal runtime fault path as `1429` automation errors, so `ON ERROR` / `AERROR()` and `TRY/CATCH/FINALLY` can trap them while preserving object/session usability afterward. Focused `test_prg_engine_control_flow` coverage passes.
+- 2026-04-30: Slice issues `#142` and `#143` are now closed. Thrown expression faults such as `LOG(-1)` and `ACOS(2)` now have explicit pause-state coverage proving that error pauses preserve the actual faulting line, statement text, and message, and that continuing after one or more thrown-expression faults keeps the session alive while refreshing pause metadata on each new failure instead of leaving stale line/statement/message state behind. Focused `test_prg_engine_control_flow` coverage passes.
+- 2026-04-30: Slice issues `#144` and `#145` are now closed. Error-pause debugger metadata now uses the real faulting line for the top stack frame instead of the post-incremented next statement when nested routines fault, and focused regression coverage now locks down nested-routine stack-frame fidelity plus repeated nested-fault metadata refresh across multiple continues. Focused `test_prg_engine_control_flow` coverage passes.
 - 2026-04-30: Slice issues `#102`, `#104`, and `#107` are now closed. Synthetic SQL/result cursors now honor first-pass `FOR` filters on ad hoc temporary orders, so probes such as `SEEK(..., 'sqlcust', "UPPER(NAME) FOR NAME = 'BRAVO'")` and command-path `SET ORDER TO UPPER(NAME) FOR ...` constrain the candidate set and `SET NEAR` positioning the same way the shipped local grounded-order path already did. That same temporary-order lane now also consumes grounded field-type metadata for one-off numeric field orders such as `SET ORDER TO AGE` / `SET ORDER TO AMOUNT`, so local and SQL `SET NEAR` probes no longer fall back to lexicographic ordering on numeric keys. The adjacent runtime-state lane now has explicit `SET('FIELDS')` data-session isolation coverage alongside the already-shipped `PATH` / `DEFAULT` checks, proving that field-visibility readback and lookup restoration stay session-local across `SET DATASESSION` switches. Focused `test_prg_engine_sql_cursors`, `test_prg_engine_seek_index`, and `test_prg_engine_work_areas` coverage pass.
 
 - 2026-04-30: Issue `#98` runtime-state readback deepened in the adjacent date/time lane. `SET('DATE')` now defaults to `MDY` instead of falling through to `OFF`, and focused `test_prg_engine_date_time_functions` coverage now locks down default/readback plus `SET DATASESSION` isolation/restoration for `DATE`, `CENTURY`, `MARK`, `HOURS`, and `SECONDS`.

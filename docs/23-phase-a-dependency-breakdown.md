@@ -329,8 +329,7 @@ Current active prompt-sized slice queue:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#13` | `#142` | close one focused thrown-expression/runtime-fault classification residual |
-| `#13` | `#143` | close one focused post-fault nested-runtime/session-usability residual |
+| none | create a fresh slice under `#95`, `#13`, or `#14` | continue from the next highest-value unfinished runtime lane |
 
 Recently closed prompt-sized native slice queues:
 
@@ -338,10 +337,12 @@ Recently closed prompt-sized native slice queues:
 - `#10`: `#131`, `#132`
 - `#11`: `#133`, `#134`
 - `#12`: `#135`, `#136`
+- `#13`: `#142`, `#143`
+- `#14`: `#144`, `#145`
 
 Remaining adjacent prompt-sized native slice queues:
 
-- `#13`: `#142`, `#143`
+- none currently pre-opened in this document; create the next one under the winning lane before coding
 
 Current dependency links:
 

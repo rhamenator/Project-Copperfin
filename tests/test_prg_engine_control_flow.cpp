@@ -2336,6 +2336,231 @@ void test_ole_method_fault_is_catchable_and_preserves_object_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_thrown_expression_fault_preserves_pause_statement_and_recovery() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_thrown_expression_fault";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "thrown_expression_fault.prg";
+    write_text(
+        main_path,
+        "x = LOG(-1)\n"
+        "after_fault = 7\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "thrown expression faults should pause with an error");
+    expect(state.location.line == 1U,
+           "thrown expression faults should highlight the faulting line");
+    expect(state.statement_text == "x = LOG(-1)",
+           "thrown expression faults should preserve the faulting statement text");
+    expect(state.message.find("LOG() requires a positive argument") != std::string::npos,
+           "thrown expression faults should preserve the thrown message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a thrown expression fault should keep the session alive");
+    const auto after_fault = state.globals.find("after_fault");
+    expect(after_fault != state.globals.end(), "post-fault statements should still execute after thrown expression faults");
+    if (after_fault != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_fault->second) == "7",
+               "post-fault statements should preserve later assignments after thrown expression faults");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_repeated_thrown_faults_refresh_pause_metadata_each_time() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_repeated_thrown_faults";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "repeated_thrown_faults.prg";
+    write_text(
+        main_path,
+        "first_value = LOG(-1)\n"
+        "after_first = 1\n"
+        "second_value = ACOS(2)\n"
+        "after_second = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "the first thrown expression fault should pause with an error");
+    expect(state.location.line == 1U,
+           "the first thrown expression fault should point at line 1");
+    expect(state.statement_text == "first_value = LOG(-1)",
+           "the first thrown expression fault should preserve its own statement text");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "the second thrown expression fault should also pause with an error");
+    expect(state.location.line == 3U,
+           "the second thrown expression fault should update the pause line");
+    expect(state.statement_text == "second_value = ACOS(2)",
+           "the second thrown expression fault should replace stale statement text");
+    expect(state.message.find("ACOS() requires an argument between -1 and 1") != std::string::npos,
+           "the second thrown expression fault should replace the stale message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after repeated thrown faults should keep the session alive");
+    const auto after_first = state.globals.find("after_first");
+    const auto after_second = state.globals.find("after_second");
+    expect(after_first != state.globals.end(), "the first post-fault assignment should survive repeated thrown faults");
+    expect(after_second != state.globals.end(), "the second post-fault assignment should survive repeated thrown faults");
+    if (after_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_first->second) == "1",
+               "the first post-fault assignment should be preserved");
+    }
+    if (after_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_second->second) == "1",
+               "the second post-fault assignment should be preserved");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_nested_routine_faults_report_faulting_stack_frame_line() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_nested_fault_stack";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "nested_fault_stack.prg";
+    write_text(
+        main_path,
+        "DO outerproc\n"
+        "after_call = 1\n"
+        "RETURN\n"
+        "PROCEDURE outerproc\n"
+        "DO innerproc\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE innerproc\n"
+        "fault_value = LOG(-1)\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "nested routine faults should pause with an error");
+    expect(state.location.line == 9U,
+           "nested routine faults should highlight the inner fault line");
+    expect(state.statement_text == "fault_value = LOG(-1)",
+           "nested routine faults should preserve the inner fault statement text");
+    expect(state.call_stack.size() >= 3U,
+           "nested routine faults should expose the nested call stack");
+    if (state.call_stack.size() >= 3U) {
+        expect(state.call_stack[0].routine_name == "innerproc",
+               "the top error stack frame should be the faulting inner routine");
+        expect(state.call_stack[0].line == 9U,
+               "the top error stack frame should use the faulting line instead of the next statement");
+        expect(state.call_stack[1].routine_name == "outerproc",
+               "the second error stack frame should be the caller routine");
+        expect(state.call_stack[2].routine_name == "main",
+               "the third error stack frame should be the entry routine");
+    }
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after a nested routine fault should keep the session alive");
+    const auto after_call = state.globals.find("after_call");
+    expect(after_call != state.globals.end(), "execution should resume after nested routine faults");
+    if (after_call != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_call->second) == "1",
+               "post-call statements should still execute after nested routine faults");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_repeated_nested_faults";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "repeated_nested_faults.prg";
+    write_text(
+        main_path,
+        "DO firstfault\n"
+        "after_first = 1\n"
+        "DO secondfault\n"
+        "after_second = 1\n"
+        "RETURN\n"
+        "PROCEDURE firstfault\n"
+        "first_value = LOG(-1)\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE secondfault\n"
+        "second_value = ACOS(2)\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "the first nested routine fault should pause with an error");
+    if (!state.call_stack.empty()) {
+        expect(state.call_stack[0].routine_name == "firstfault",
+               "the first nested routine fault should report the first routine on top of the stack");
+        expect(state.call_stack[0].line == 7U,
+               "the first nested routine fault should report the first routine fault line");
+    }
+    expect(state.statement_text == "first_value = LOG(-1)",
+           "the first nested routine fault should preserve its own statement text");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "the second nested routine fault should also pause with an error");
+    if (!state.call_stack.empty()) {
+        expect(state.call_stack[0].routine_name == "secondfault",
+               "the second nested routine fault should replace the stale top routine");
+        expect(state.call_stack[0].line == 11U,
+               "the second nested routine fault should replace the stale top line");
+    }
+    expect(state.statement_text == "second_value = ACOS(2)",
+           "the second nested routine fault should replace stale statement text");
+    expect(state.message.find("ACOS() requires an argument between -1 and 1") != std::string::npos,
+           "the second nested routine fault should replace the stale error message");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after repeated nested routine faults should keep the session alive");
+    const auto after_first = state.globals.find("after_first");
+    const auto after_second = state.globals.find("after_second");
+    expect(after_first != state.globals.end(), "the first post-fault assignment should survive repeated nested faults");
+    expect(after_second != state.globals.end(), "the second post-fault assignment should survive repeated nested faults");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_with_endwith_resolves_leading_dot_member_access() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";
@@ -3674,6 +3899,10 @@ int main() {
     test_on_error_handler_preserves_original_fault_metadata_across_caught_inner_faults();
     test_ole_property_fault_dispatches_on_error_and_preserves_object_state();
     test_ole_method_fault_is_catchable_and_preserves_object_state();
+    test_thrown_expression_fault_preserves_pause_statement_and_recovery();
+    test_repeated_thrown_faults_refresh_pause_metadata_each_time();
+    test_nested_routine_faults_report_faulting_stack_frame_line();
+    test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata();
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_try_finally_runs_without_catch_on_success();
