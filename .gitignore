@@ -12,5 +12,5 @@
 # agent-handoff.md
 .codex-driver/
 .codex-venv/
-
+*.code-workspace
 .fake
