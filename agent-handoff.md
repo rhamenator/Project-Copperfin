@@ -13,6 +13,8 @@ Important:
   - `docs/22-vfp-language-reference-coverage.md`
   - `docs/23-phase-a-dependency-breakdown.md`
   - `agents.md`
+  - `docs/safety/triage-rubric.md` (feedback triage rubric)
+  - `docs/safety/test-coverage-gap-analysis.md` (edge case gap analysis; consult when adding tests)
   - the runtime/data files directly relevant to the slice you choose
 - Stay implementation-first. Do not stop at analysis.
 - Prioritize Phase A runtime/data-engine compatibility over UI, IDE, or designer work.
@@ -22,6 +24,7 @@ Important:
 - Validate the slice before stopping.
 - Update `remaining-work.md`, `docs/22-vfp-language-reference-coverage.md`, and this file to match shipped behavior.
 - Do not choose work by local adjacency alone. Prefer blocker slices with the highest downstream fan-out.
+- If release preparation is in scope, run `scripts/validate-safety-traceability.ps1` (or the `Safety Traceability Gate` workflow) against the release issue list before tagging and retain the generated report.
 
 Current priority order:
 

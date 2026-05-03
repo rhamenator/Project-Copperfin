@@ -1,0 +1,89 @@
+name: Data Corruption Report
+description: Report potential data loss, corruption, or integrity violations.
+title: "[data-corruption] <short summary>"
+labels:
+  - bug
+  - data-integrity
+  - safety
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when records, tables, indexes, memo data, or exported data are wrong, missing, or damaged.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Corruption Summary
+      description: What data appears corrupted?
+    validations:
+      required: true
+
+  - type: input
+    id: hazard_link
+    attributes:
+      label: Hazard Linkage
+      description: Usually HZ-data-corruption-01 (or another HZ id from docs/safety/hazard-register.md).
+      placeholder: HZ-data-corruption-01
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Potential Severity
+      options:
+        - low
+        - medium
+        - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Affected Scope
+      description: Which files/tables/records/fields are affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_vs_actual
+    attributes:
+      label: Expected vs Actual Data
+      description: Include specific examples.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps To Reproduce
+      description: Include commands and source artifacts.
+    validations:
+      required: true
+
+  - type: input
+    id: build_info
+    attributes:
+      label: Build / Commit / Version
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Checksums, before/after snapshots, logs, exported rows, minimal sample files.
+    validations:
+      required: true
+
+  - type: textarea
+    id: containment
+    attributes:
+      label: Containment Actions Taken
+      description: Backup restore, rollback, write-blocking, quarantine, etc.
+    validations:
+      required: false

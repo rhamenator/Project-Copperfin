@@ -1,0 +1,80 @@
+name: Documentation Feedback
+description: Report unclear, incorrect, or missing documentation.
+title: "[docs-feedback] <short summary>"
+labels:
+  - documentation
+  - feedback
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for documentation quality feedback.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feedback Summary
+      description: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Affected Documentation
+      description: File path, section, or heading.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue Type
+      options:
+        - incorrect instructions
+        - ambiguous wording
+        - missing procedure
+        - outdated information
+        - typo/formatting
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: safety_relevance
+    attributes:
+      label: Safety Relevance
+      options:
+        - none
+        - low
+        - medium
+        - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: input
+    id: hazard_link
+    attributes:
+      label: Hazard Linkage (if safety-relevant)
+      description: Provide HZ id(s) from docs/safety/hazard-register.md, or N/A.
+      placeholder: HZ-doc-command-01
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_change
+    attributes:
+      label: Suggested Improvement
+      description: Proposed corrected text or procedure steps.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: User Impact
+      description: How does current documentation affect users?
+    validations:
+      required: true

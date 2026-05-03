@@ -8,6 +8,7 @@ Use the dependency model in:
 - `docs/22-vfp-language-reference-coverage.md`
 - `docs/23-phase-a-dependency-breakdown.md`
 - `agent-handoff.md`
+- `docs/safety/hazard-register.md`
 
 ## Operating Rule
 
@@ -38,6 +39,22 @@ For Phase A, the recommended order is:
 - Avoid reopening recently-deepened lanes unless there is a concrete parity bug.
 - Keep implementation narrow, add focused regression coverage, and update the backlog/docs after validation.
 
+## Safety Documentation Traceability Rules
+
+Apply these rules whenever a change touches operator-facing or procedure-defining documentation (including README command guidance, runtime debug steps, and recovery procedures).
+
+1. Treat documentation as safety-relevant when misuse could cause critical operator error.
+2. Use issue-level identifiers for documentation traceability:
+	- `DQ-*` for documentation requirements
+	- `DV-*` for documentation verification
+	- `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
+3. Require a procedural delta map (before/after operator actions) for each safety-relevant documentation change.
+4. Require misuse analysis and severity classification (`none|low|medium|high|catastrophic`).
+5. Require independent verification evidence (a second qualified reviewer).
+6. Require simulation or walkthrough evidence that validates expected operator outcome.
+7. Require rollback and field-notification planning for incorrect documentation.
+8. Do not close a safety-relevant documentation issue without investigation-ready evidence that can be audited by a third party.
+
 ## Tree Rules
 
 - Use umbrella issues only for planning, dependency tracking, and closure.
@@ -51,5 +68,7 @@ For Phase A, the recommended order is:
 - `agent-handoff.md` is the canonical continuation brief.
 - Update it whenever a shipped slice changes the recommended next target.
 - Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
+- For safety-relevant documentation changes, ensure linked `DQ-*`, `DV-*`, and `HZ-*` evidence is present in the closing issue and references `docs/safety/hazard-register.md`.
+- Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` (or the `Safety Traceability Gate` workflow) against the intended release issue set and archive the report artifact.
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into the tracked docs and delete the throwaway note.

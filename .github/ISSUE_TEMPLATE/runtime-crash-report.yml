@@ -1,0 +1,95 @@
+name: Runtime Crash / System Failure
+description: Report a crash, hang, unrecoverable fault, or system-level failure.
+title: "[failure] <component> - <short summary>"
+labels:
+  - bug
+  - failure
+  - safety
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for crashes, hangs, or unrecoverable failures.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Failure Summary
+      description: What failed and where?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: failure_type
+    attributes:
+      label: Failure Type
+      options:
+        - crash
+        - hang/deadlock
+        - startup failure
+        - runtime unrecoverable fault
+        - system-level failure
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Potential Severity
+      options:
+        - low
+        - medium
+        - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: input
+    id: hazard_link
+    attributes:
+      label: Hazard Linkage
+      description: Use HZ-runtime-crash-01, HZ-system-failure-01, or another HZ id from docs/safety/hazard-register.md.
+      placeholder: HZ-runtime-crash-01
+    validations:
+      required: true
+
+  - type: textarea
+    id: operator_effect
+    attributes:
+      label: Observed Operational Effect
+      description: What was the immediate effect on the user/system?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction Steps
+      description: Include exact commands, files, and sequence.
+    validations:
+      required: true
+
+  - type: input
+    id: build_info
+    attributes:
+      label: Build / Commit / Version
+    validations:
+      required: true
+
+  - type: textarea
+    id: fault_data
+    attributes:
+      label: Fault Data
+      description: Stack trace, minidump path, pause metadata, error code, core dump, event logs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: containment
+    attributes:
+      label: Workaround / Containment
+      description: Any known workaround or immediate containment action.
+    validations:
+      required: false

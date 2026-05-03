@@ -1,0 +1,56 @@
+name: General Feedback
+description: Share usability, quality, or project feedback not covered by other forms.
+title: "[feedback] <short summary>"
+labels:
+  - feedback
+  - triage
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: What would you like the team to know?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - usability
+        - reliability
+        - performance
+        - documentation
+        - developer workflow
+        - release process
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Environment and scenario where this feedback applies.
+    validations:
+      required: false
+
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+      description: Optional ideas for improvement.
+    validations:
+      required: false

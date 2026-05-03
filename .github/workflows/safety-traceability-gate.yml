@@ -1,0 +1,52 @@
+name: Safety Traceability Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_numbers:
+        description: Comma-separated issue numbers to validate (example: 2201,2202)
+        required: true
+        type: string
+      require_closed_issues:
+        description: Require all validated issues to be closed
+        required: true
+        default: true
+        type: boolean
+      require_primary_hazards:
+        description: Require at least one primary hazard id per issue (data corruption/system failure/runtime crash)
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  validate-safety-traceability:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Run safety traceability validator
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $reportPath = Join-Path $env:RUNNER_TEMP "safety-traceability-report.json"
+          .\scripts\validate-safety-traceability.ps1 `
+            -Repository "${{ github.repository }}" `
+            -IssueNumbers "${{ inputs.issue_numbers }}" `
+            -RequireClosedIssues:${{ inputs.require_closed_issues }} `
+            -RequirePrimaryHazardCoverage:${{ inputs.require_primary_hazards }} `
+            -ReportPath $reportPath
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: safety-traceability-report
+          path: ${{ runner.temp }}/safety-traceability-report.json

@@ -1,0 +1,126 @@
+name: Traceability Slice (Issue-Only)
+description: Use for prompt-sized implementation slices with requirement/verification evidence.
+title: "[slice] <lane> - <short behavior target>"
+labels:
+  - traceability
+  - slice
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when shipping code via issues without a pull request.
+        Keep requirement and verification IDs stable after publishing.
+
+  - type: input
+    id: parent_lane
+    attributes:
+      label: Parent Lane / Family
+      description: "Examples: #92, #13, #15, #19, #22, #30, #33"
+      placeholder: "#92"
+    validations:
+      required: true
+
+  - type: input
+    id: requirement_ids
+    attributes:
+      label: Requirement IDs (RQ-*)
+      description: "Format: RQ-<lane>-<issue>-<short-name>; separate multiple IDs with commas."
+      placeholder: "RQ-A3-150-retry-restores-session-state"
+    validations:
+      required: true
+
+  - type: input
+    id: verification_ids
+    attributes:
+      label: Verification IDs (VR-*)
+      description: "Format: VR-<lane>-<issue>-<short-name>; one per verification objective."
+      placeholder: "VR-A3-150-retry-restores-work-areas, VR-A3-150-retry-loop-completes"
+    validations:
+      required: true
+
+  - type: input
+    id: documentation_traceability
+    attributes:
+      label: Documentation Traceability (If Docs Changed)
+      description: "Provide DQ-*, DV-*, and HZ-* ids. HZ ids must resolve in docs/safety/hazard-register.md. Use N/A if no docs changed."
+      placeholder: "DQ-runtime-2201-fault-recovery, DV-runtime-2201-walkthrough, HZ-runtime-debug-01"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source_of_truth
+    attributes:
+      label: Source Of Truth
+      multiple: true
+      options:
+        - Behavior observation
+        - Public documentation
+        - Clean-room derivation
+        - Existing Copperfin behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior_statement
+    attributes:
+      label: Requirement Statement
+      description: "State the required behavior in testable terms."
+      placeholder: "When RETRY is executed after a runtime fault, the current data session state is restored before control resumes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_components
+    attributes:
+      label: Affected Components
+      description: "List expected files/modules."
+      placeholder: |
+        src/runtime/prg_engine.cpp
+        src/runtime/prg_engine_helpers.cpp
+        tests/test_prg_engine_control_flow.cpp
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification_plan
+    attributes:
+      label: Verification Plan
+      description: "List focused tests and command lines."
+      placeholder: |
+        - ctest --test-dir build -C Release --output-on-failure
+        - build/Release/test_prg_engine_control_flow.exe
+    validations:
+      required: true
+
+  - type: dropdown
+    id: safety_security_impact
+    attributes:
+      label: Safety/Security Impact
+      options:
+        - none
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence (Fill During/After Implementation)
+      description: "Record commit hashes, workflow run IDs, and artifact paths."
+      placeholder: |
+        commit: <hash>
+        workflow: native-validation run <id>
+        artifact: artifacts/runtime-smoke-validation/<path>
+    validations:
+      required: true
+
+  - type: textarea
+    id: closure_statement
+    attributes:
+      label: Closure Statement
+      description: "Confirm RQ/VR completion and any intentional compatibility deltas."
+      placeholder: "All RQ IDs are covered by VR IDs and focused regression tests. No intentional compatibility delta."
+    validations:
+      required: true

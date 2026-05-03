@@ -61,6 +61,114 @@ GitHub milestones now mirror that same tree:
 - family milestones such as `C1/#15 ...` or `D2/#20 ...` for the non-sliced branches
 - prompt-sized slice issues inherit their parent lane milestone instead of each getting a standalone milestone
 
+## Certification-Ready Traceability (Issue-Only Workflow)
+
+This section adds a lightweight, DO-178C-inspired discipline without requiring avionics certification process overhead.
+
+It is explicitly designed for this repo's current workflow (issues + direct commits, no PR requirement).
+
+### Why This Exists
+
+- keep objective evidence tied to each behavior change
+- preserve bidirectional traceability from issue slice to tests and artifacts
+- make future safety-critical adoption possible without rewriting development history
+
+### Minimal Checklist (Mapped To Active Lanes)
+
+For every prompt-sized child issue, complete all applicable checklist items before closure:
+
+| Lane/Family | Required Evidence |
+| --- | --- |
+| `#92`-`#101` (runtime semantics/commands) | requirement statement, compatibility source reference, focused regression tests in `tests/test_prg_engine_*.cpp`, and pass evidence from native CTest |
+| `#13`, `#14` (runtime safety/diagnostics) | explicit fault model and expected fail-safe behavior, negative tests, and captured fault metadata expectations |
+| `#15`-`#18` (runtime parity surfaces) | executable scenario definition (startup/event/lifecycle), parity boundaries, and runtime-host evidence artifact from smoke/debug runs |
+| `#19`-`#21`, `#38`-`#43` (build/debug/compiler) | deterministic build/run contract, artifact manifest expectations, and workflow pass evidence (`native-validation`, `windows-deep-validation` when relevant) |
+| `#22`-`#26` (designers and IDE parity) | user-visible behavior acceptance criteria, automated smoke validation where available, and explicit unsupported-state notes |
+| `#27`-`#29` (language service) | symbol/analysis behavior requirement, reproducible fixture, and deterministic expected output/assertions |
+| `#30`-`#32`, `#57`, `#91` (federation/interop) | connector/translation contract statement, deterministic fallback behavior, and connector-targeted regression tests |
+| `#33`, `#34` (security/policy) | threat or policy assertion, gate/validation evidence, and secure-default impact statement |
+| `#35`-`#37` (portability) | platform boundary assumption, host/toolchain matrix evidence, and no-regression confirmation on Windows-first baseline |
+
+### Safety-Critical Documentation Profile (Aircraft-Grade)
+
+Documentation changes can be safety-relevant and must be investigated with the same rigor as code changes when misuse could lead to injury or loss of life.
+
+This profile is aligned to aircraft-industry practices:
+
+- DO-178C-style objective evidence and bidirectional traceability (applied here to docs and procedures)
+- ARP4754A/ARP4761-style hazard linkage and safety assessment references
+- S1000D/ATA iSpec 2200-style controlled technical publication revision discipline
+- DO-200B-style data quality and lineage controls for operationally consumed data
+
+Use the following identifiers in addition to `RQ-*` and `VR-*` whenever docs are changed:
+
+1. `DQ-*` (documentation requirement id)
+    - format: `DQ-<area>-<issue>-<short-name>`
+2. `DV-*` (documentation verification id)
+    - format: `DV-<area>-<issue>-<short-name>`
+3. `HZ-*` (hazard linkage id)
+    - format: `HZ-<safety-scope>-<index>`
+
+Required evidence for safety-relevant documentation changes:
+
+1. hazard linkage
+    - each changed procedural statement links to one or more `HZ-*` items or explicitly states `HZ-none` with rationale
+2. procedural delta map
+    - before/after procedure text with explicit operator action differences
+3. independent verification
+    - second qualified reviewer validates procedure correctness against intended runtime/system behavior
+4. misuse analysis
+    - identify likely operator misread/misuse paths and expected severity
+5. simulation or walkthrough evidence
+    - rehearsal, tabletop, or executable walkthrough proving procedure outcomes
+6. rollback and field notification plan
+    - define how incorrect docs are withdrawn, superseded, and communicated
+7. provenance and retention
+    - retain commit hash, issue id, reviewer identity, and evidence artifact references for incident forensics
+
+Investigation readiness rule:
+
+- any closed issue containing safety-relevant documentation changes must provide enough evidence that a third party can reconstruct intent, approval path, and expected operator behavior without relying on private chat history.
+
+### Issue-Only Traceability Schema
+
+Each implementation issue should contain these fields in the issue body (or first maintainer comment if added later):
+
+1. `Requirement IDs`
+    - format: `RQ-<lane>-<issue>-<short-name>`
+    - example: `RQ-A3-150-retry-restores-session-state`
+2. `Verification IDs`
+    - format: `VR-<lane>-<issue>-<short-name>`
+    - one verification id per distinct test objective
+3. `Source Of Truth`
+    - one or more of: behavior observation, public docs, clean-room derivation, existing Copperfin behavior
+4. `Affected Components`
+    - explicit file/module list (`src/...`, `tests/...`, workflow files if touched)
+5. `Verification Plan`
+    - exact test executables or commands (`ctest --test-dir build ...` plus named focused test binaries)
+6. `Evidence`
+    - commit hash(es), workflow run IDs, and artifact paths under `artifacts/` when relevant
+7. `Safety/Security Impact`
+    - `none`, `low`, `medium`, or `high`, with one-line rationale
+8. `Closure Statement`
+    - explicit sentence confirming requirement and verification completion
+
+### Closure Gate (No PR Needed)
+
+If direct commits continue, close a child issue only when:
+
+1. all `RQ-*` entries map to at least one `VR-*`
+2. at least one focused regression test was added or updated for behavior changes
+3. workflow/test evidence is attached in the issue
+4. compatibility deltas (intentional non-parity) are called out in the issue body
+5. `CHANGELOG.md` records the shipped slice outcome
+
+### Naming Guidance
+
+- Keep `RQ-*` and `VR-*` stable once published in an issue.
+- Prefer one requirement per behavior change, not per file.
+- Prefer verification identifiers that match test intent, not test function names, so refactors do not destroy trace continuity.
+
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8

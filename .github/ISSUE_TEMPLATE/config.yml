@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security Vulnerability Report
+    url: https://github.com/rhamenator/Project-Copperfin/security/advisories/new
+    about: Please report security vulnerabilities privately via GitHub Security Advisories.
+  - name: Safety Traceability Process
+    url: https://github.com/rhamenator/Project-Copperfin/blob/main/docs/safety/hazard-register.md
+    about: Review hazard linkage and investigation-traceability expectations before filing safety-related feedback.

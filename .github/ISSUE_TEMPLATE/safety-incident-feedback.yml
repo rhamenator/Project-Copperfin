@@ -1,0 +1,93 @@
+name: Safety-Related Incident Feedback
+description: Report an incident or near miss where software behavior or docs may have safety impact.
+title: "[safety-incident] <short summary>"
+labels:
+  - safety
+  - incident
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for incidents and near misses. Do not include sensitive personal information.
+
+  - type: textarea
+    id: incident_summary
+    attributes:
+      label: Incident Summary
+      description: What happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: incident_type
+    attributes:
+      label: Incident Type
+      options:
+        - near miss
+        - actual incident
+        - post-incident finding
+        - safety concern without event
+    validations:
+      required: true
+
+  - type: input
+    id: hazard_link
+    attributes:
+      label: Hazard Linkage (HZ-*)
+      description: Link one or more hazard ids from docs/safety/hazard-register.md.
+      placeholder: HZ-data-corruption-01
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Potential Severity
+      options:
+        - low
+        - medium
+        - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Incident Timeline
+      description: Include time sequence and key actions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: system_state
+    attributes:
+      label: System State and Environment
+      description: Build/version, OS, mode, workload, and other conditions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_effect
+    attributes:
+      label: Observed Effect
+      description: User/system effect and any safety consequence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: containment
+    attributes:
+      label: Containment and Recovery Actions
+      description: What was done immediately to contain risk?
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs, traces, artifacts, screenshots, commands, and issue links.
+    validations:
+      required: true

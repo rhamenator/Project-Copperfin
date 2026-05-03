@@ -1,0 +1,152 @@
+name: Safety-Critical Documentation Change
+description: Use when documentation updates could influence operational safety decisions.
+title: "[docs-safety] <area> - <short change summary>"
+labels:
+  - documentation
+  - traceability
+  - safety
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when documentation changes could cause operator error or unsafe behavior.
+        This form is investigation-oriented and aligned to objective-evidence expectations.
+
+  - type: input
+    id: parent_lane
+    attributes:
+      label: Parent Lane / Family
+      description: "Examples: #13, #14, #19, #33, #34"
+      placeholder: "#13"
+    validations:
+      required: true
+
+  - type: input
+    id: dq_ids
+    attributes:
+      label: Documentation Requirement IDs (DQ-*)
+      description: "Format: DQ-<area>-<issue>-<short-name>; separate multiple IDs with commas."
+      placeholder: "DQ-runtime-2201-fault-recovery-procedure"
+    validations:
+      required: true
+
+  - type: input
+    id: dv_ids
+    attributes:
+      label: Documentation Verification IDs (DV-*)
+      description: "Format: DV-<area>-<issue>-<short-name>; one per verification objective."
+      placeholder: "DV-runtime-2201-procedure-walkthrough, DV-runtime-2201-independent-review"
+    validations:
+      required: true
+
+  - type: input
+    id: hz_ids
+    attributes:
+      label: Hazard Linkage IDs (HZ-*)
+      description: "Format: HZ-<safety-scope>-<index>; ids must resolve in docs/safety/hazard-register.md. Use HZ-none with rationale when no hazard applies."
+      placeholder: "HZ-runtime-debug-01"
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_docs
+    attributes:
+      label: Affected Documentation
+      description: "List exact documents/sections changed."
+      placeholder: |
+        docs/20-runtime-build-and-debug-pipeline.md (fault recovery section)
+        README.md (debug command guidance)
+    validations:
+      required: true
+
+  - type: textarea
+    id: procedural_delta_map
+    attributes:
+      label: Procedural Delta Map
+      description: "Show before/after operator actions and the intended behavior change."
+      placeholder: |
+        Before: Operator continues after fault without explicit RETRY context step.
+        After: Operator must inspect pause metadata, then execute RETRY with preserved session assumptions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: misuse_analysis
+    attributes:
+      label: Misuse Analysis
+      description: "How could users misunderstand this change, and what could happen?"
+      placeholder: "If RETRY is interpreted as always safe, users may skip validation and resume with stale assumptions."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Potential Severity If Misused
+      options:
+        - none
+        - low
+        - medium
+        - high
+        - catastrophic
+    validations:
+      required: true
+
+  - type: textarea
+    id: independent_review
+    attributes:
+      label: Independent Review Evidence
+      description: "Identify reviewer and what was verified."
+      placeholder: |
+        reviewer: <name>
+        verification: procedure correctness vs runtime behavior
+        result: approved
+    validations:
+      required: true
+
+  - type: textarea
+    id: simulation_evidence
+    attributes:
+      label: Simulation/Walkthrough Evidence
+      description: "Attach or reference rehearsal evidence proving expected outcomes."
+      placeholder: |
+        command run:
+        artifact path:
+        observed outcome:
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback_plan
+    attributes:
+      label: Rollback And Field Notification Plan
+      description: "How will incorrect docs be withdrawn and users informed?"
+      placeholder: |
+        rollback trigger:
+        corrected doc path/version:
+        user notification path:
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence Ledger
+      description: "Record commit hashes, issue links, workflow runs, and artifact paths."
+      placeholder: |
+        commit:
+        related issues:
+        workflow run:
+        artifacts:
+        hazard register refs:
+    validations:
+      required: true
+
+  - type: textarea
+    id: closure_statement
+    attributes:
+      label: Closure Statement
+      description: "Confirm DQ/DV/HZ mapping and investigation readiness."
+      placeholder: "All DQ IDs map to DV IDs and HZ IDs (or HZ-none rationale). Evidence is sufficient for third-party investigation."
+    validations:
+      required: true
