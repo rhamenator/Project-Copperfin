@@ -21,7 +21,7 @@ The current test suite has broad functional coverage of the happy path and sever
 These areas are well-covered and must not be broken by future slices:
 
 | Area | Key Tests |
-|---|---|
+| --- | --- |
 | DBF field type round-trips | `test_create_dbf_table_file_round_trips`, `test_integer_field_*`, `test_currency_and_datetime_*`, `test_double_field_*`, `test_varchar_and_varbinary_*`, `test_memo_field_*` |
 | DBF truncation rejection | `test_parse_dbf_table_rejects_truncated_visual_asset` |
 | Staged write cleanup | `test_staged_write_temp_artifacts_are_cleaned_up` |
@@ -52,7 +52,7 @@ These areas are well-covered and must not be broken by future slices:
 
 **Suggested new tests:**
 
-```
+```text
 test_numeric_field_overflow_is_diagnosed_not_silently_truncated
 test_division_by_zero_dispatches_runtime_error
 test_nan_inf_in_double_field_round_trip_behavior
@@ -77,7 +77,7 @@ test_currency_field_boundary_values
 
 **Suggested new tests:**
 
-```
+```text
 test_dbf_header_record_count_exceeds_file_size_is_rejected
 test_dbf_field_descriptor_count_exceeds_header_size_is_rejected
 test_dbf_record_width_mismatch_field_sum_is_rejected
@@ -103,7 +103,7 @@ test_dbf_field_name_without_null_terminator_is_tolerated
 
 **Suggested new tests:**
 
-```
+```text
 test_replace_write_failure_leaves_original_dbf_intact
 test_memo_sidecar_write_failure_leaves_dbf_header_consistent
 test_staged_write_rollback_removes_temp_and_preserves_original
@@ -128,7 +128,7 @@ test_staged_write_rollback_removes_temp_and_preserves_original
 
 **Suggested new tests:**
 
-```
+```text
 test_scan_on_empty_table_does_not_execute_body
 test_aggregate_commands_on_empty_table_return_zero
 test_locate_on_empty_table_sets_eof
@@ -254,7 +254,7 @@ test_transaction_rollback_leaves_table_unchanged
 ## 4. Gap Priority Summary
 
 | Gap ID | Area | Hazard(s) | Priority | Suggested Tests |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | GAP-01 | Numeric overflow / NaN / zero-divide | HZ-data-corruption-01, HZ-runtime-crash-01 | **High** | 4 |
 | GAP-02 | Malformed DBF header inputs | HZ-data-corruption-01, HZ-runtime-crash-01 | **High** | 5 |
 | GAP-03 | Disk I/O failure injection | HZ-data-corruption-01, HZ-system-failure-01 | **High** | 3 |
@@ -301,6 +301,7 @@ This project is not pursuing formal DO-178C certification. However, the followin
 This gap analysis was produced against commit state as of 2026-05-03. It should be re-run after any significant addition to the test suite or after a hazard register update changes the severity of an active hazard.
 
 Re-run checklist:
+
 - [ ] All GAP-01 through GAP-03 tests implemented
 - [ ] GAP-04 through GAP-06 tests implemented
 - [ ] Coverage measurement baseline established (GCOV or equivalent)

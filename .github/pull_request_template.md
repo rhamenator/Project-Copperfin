@@ -1,3 +1,5 @@
+# Pull Request
+
 ## Summary
 
 - What behavior changed?
@@ -7,11 +9,11 @@
 
 - Parent lane/family issue(s):
 - Child slice issue(s):
-- Requirement IDs (RQ-*):
-- Verification IDs (VR-*):
-- Documentation requirement IDs (DQ-*), if docs changed:
-- Documentation verification IDs (DV-*), if docs changed:
-- Hazard linkage IDs (HZ-*), if docs changed:
+- Requirement IDs (`RQ-*`):
+- Verification IDs (`VR-*`):
+- Documentation requirement IDs (`DQ-*`), if docs changed:
+- Documentation verification IDs (`DV-*`), if docs changed:
+- Hazard linkage IDs (`HZ-*`), if docs changed:
 - Source of truth (behavior/docs/clean-room/current Copperfin behavior):
 
 ## Verification
@@ -55,9 +57,9 @@ Compatibility delta notes (if any):
 
 ## Checklist
 
-- [ ] All RQ-* items map to at least one VR-*
+- [ ] All `RQ-*` items map to at least one `VR-*`
 - [ ] Focused regression coverage added/updated where behavior changed
-- [ ] For documentation changes, all DQ-* items map to DV-* and HZ-* (or explicit HZ-none rationale)
+- [ ] For documentation changes, all `DQ-*` items map to `DV-*` and `HZ-*` (or explicit `HZ-none` rationale)
 - [ ] For documentation changes, independent review and misuse analysis evidence is attached
 - [ ] Changelog updated for shipped, lasting repo changes
 - [ ] Unsupported or partial behavior is explicitly documented

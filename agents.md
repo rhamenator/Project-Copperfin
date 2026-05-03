@@ -45,9 +45,9 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 
 1. Treat documentation as safety-relevant when misuse could cause critical operator error.
 2. Use issue-level identifiers for documentation traceability:
-	- `DQ-*` for documentation requirements
-	- `DV-*` for documentation verification
-	- `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
+  - `DQ-*` for documentation requirements
+  - `DV-*` for documentation verification
+  - `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
 3. Require a procedural delta map (before/after operator actions) for each safety-relevant documentation change.
 4. Require misuse analysis and severity classification (`none|low|medium|high|catastrophic`).
 5. Require independent verification evidence (a second qualified reviewer).

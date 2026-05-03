@@ -16,8 +16,8 @@ This rubric maps each issue template type to an expected initial response time, 
 ## Severity Definitions
 
 | Severity | Meaning |
-|---|---|
-| **S0 – Critical** | Data corruption, loss of operator records, or safety-relevant behavior deviation. Linked to HZ-* hazards rated `catastrophic` or `high`. |
+| --- | --- |
+| **S0 – Critical** | Data corruption, loss of operator records, or safety-relevant behavior deviation. Linked to `HZ-*` hazards rated `catastrophic` or `high`. |
 | **S1 – High** | Runtime crash, hang, or unrecoverable failure that blocks legitimate use. |
 | **S2 – Medium** | Functional defect with a known workaround; parity gap vs. VFP reference behavior. |
 | **S3 – Low** | Cosmetic, documentation gap, performance, or enhancement with no safety implication. |
@@ -29,14 +29,14 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 1. `bug-report.yml` — Standard Bug Report
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S2 – Medium |
 | **Override to S1** | If the "Impact" field is checked as "Data not saved or incorrect" or "Application crash" |
 | **Override to S0** | If the "Impact" field indicates corrupted or permanently lost data |
 | **Initial response target** | 5 business days (S2), 2 business days (S1), 1 business day (S0) |
 | **Triage owner** | Runtime maintainer |
 | **Escalation path** | If S0: immediately open a linked `data-corruption-report.yml` issue and cross-link; notify maintainer lead same day |
-| **Hazard linkage** | None by default; maintainer adds HZ-* if investigation reveals a hazard connection |
+| **Hazard linkage** | None by default; maintainer adds `HZ-*` if investigation reveals a hazard connection |
 | **Required before close** | Reproduction confirmed or waived with rationale; fix or `wont-fix` decision documented |
 
 ---
@@ -44,12 +44,12 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 2. `runtime-crash-report.yml` — Crash / Hang / Failure
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S1 – High |
 | **Override to S0** | If crash results in partial write to a DBF/memo that leaves the file in an inconsistent state |
 | **Initial response target** | 2 business days (S1), 1 business day (S0) |
 | **Triage owner** | Runtime maintainer |
-| **Escalation path** | If crash is reproducible and involves file mutation: escalate to `data-corruption-report.yml` flow; link HZ-runtime-crash-01 and HZ-data-corruption-01 |
+| **Escalation path** | If crash is reproducible and involves file mutation: escalate to `data-corruption-report.yml` flow; link `HZ-runtime-crash-01` and `HZ-data-corruption-01` |
 | **Hazard linkage** | HZ-runtime-crash-01 (primary); HZ-data-corruption-01 if I/O involved |
 | **Required before close** | Stack trace or reproduction script attached; root cause identified; regression test added or deferred with issue link |
 
@@ -58,7 +58,7 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 3. `data-corruption-report.yml` — Data Integrity Issue
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S0 – Critical |
 | **Initial response target** | 1 business day |
 | **Triage owner** | Maintainer lead (not delegable without explicit sign-off) |
@@ -71,12 +71,12 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 4. `safety-incident-feedback.yml` — Safety Incident or Near-Miss
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S0 – Critical |
 | **Initial response target** | Same business day if received before 14:00 local maintainer time; next business day otherwise |
 | **Triage owner** | Maintainer lead |
-| **Escalation path** | Immediate: assign the maintainer lead; create a private draft investigation note. Within 24 hours: confirm whether a HZ-* entry exists for the reported behavior; if not, draft a new HZ-* entry in hazard-register.md. Within 48 hours: confirm or refute safety relevance. If confirmed safety-relevant: block any pending release tag. |
-| **Hazard linkage** | Determined by initial triage; must reference at least one HZ-* entry before closure |
+| **Escalation path** | Immediate: assign the maintainer lead; create a private draft investigation note. Within 24 hours: confirm whether a `HZ-*` entry exists for the reported behavior; if not, draft a new `HZ-*` entry in hazard-register.md. Within 48 hours: confirm or refute safety relevance. If confirmed safety-relevant: block any pending release tag. |
+| **Hazard linkage** | Determined by initial triage; must reference at least one `HZ-*` entry before closure |
 | **Required before close** | All seven evidence sections must be non-empty (procedural delta map, misuse analysis, severity classification, independent review, simulation walkthrough, rollback plan, field notification plan). Run `scripts/validate-safety-traceability.ps1` against the closing issue JSON and attach the report artifact. |
 | **Release gate** | Any open S0 safety incident blocks all release tags until closed or explicitly deferred with documented rationale. |
 
@@ -85,7 +85,7 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 5. `documentation-feedback.yml` — Documentation Quality
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S3 – Low |
 | **Override to S2** | If the "Safety Relevance" field is "Unclear / possibly safety-relevant" |
 | **Override to S0** | If the "Safety Relevance" field is "Yes – could cause operator error" |
@@ -100,12 +100,12 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 6. `safety-critical-documentation-change.yml` — Safety-Relevant Docs Change
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S0 – Critical |
 | **Initial response target** | 2 business days for initial triage; full closure requires all evidence sections |
 | **Triage owner** | Maintainer lead |
-| **Escalation path** | Before any merge: verify DQ-*, DV-*, and HZ-* identifiers are present; misuse analysis must classify severity; independent reviewer must be named and different from the author |
-| **Hazard linkage** | At least one HZ-* entry required. If the documentation change affects a behavior linked to HZ-data-corruption-01, HZ-runtime-crash-01, or HZ-system-failure-01, the linked hazard entry must be updated to reference this change. |
+| **Escalation path** | Before any merge: verify `DQ-*`, `DV-*`, and `HZ-*` identifiers are present; misuse analysis must classify severity; independent reviewer must be named and different from the author |
+| **Hazard linkage** | At least one `HZ-*` entry required. If the documentation change affects a behavior linked to `HZ-data-corruption-01`, `HZ-runtime-crash-01`, or `HZ-system-failure-01`, the linked hazard entry must be updated to reference this change. |
 | **Required before close** | All seven fields populated; `scripts/validate-safety-traceability.ps1` must pass; independent reviewer must leave a documented sign-off comment on the issue; simulation or walkthrough evidence must be attached or linked. |
 | **Release gate** | Unresolved open safety-critical documentation issues block release tagging. |
 
@@ -114,11 +114,11 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 7. `feature-request.yml` — Enhancement Request
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S3 – Low |
 | **Initial response target** | 15 business days |
 | **Triage owner** | Runtime maintainer |
-| **Escalation path** | If the feature is safety-relevant (e.g., changes audit stream behavior, modifies error recovery semantics, alters data integrity guarantees): escalate to maintainer lead and require DQ-*/HZ-* linkage before any implementation begins |
+| **Escalation path** | If the feature is safety-relevant (e.g., changes audit stream behavior, modifies error recovery semantics, alters data integrity guarantees): escalate to maintainer lead and require `DQ-*`/`HZ-*` linkage before any implementation begins |
 | **Hazard linkage** | None by default; add if implementation would touch a hazard-adjacent subsystem |
 | **Required before close** | Accepted or declined decision documented; if accepted, linked to an implementation slice issue |
 
@@ -127,12 +127,12 @@ This rubric maps each issue template type to an expected initial response time, 
 ### 8. `general-feedback.yml` — General / Catch-all
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | **Default severity** | S3 – Low |
 | **Initial response target** | 15 business days |
 | **Triage owner** | Any maintainer |
 | **Escalation path** | If feedback describes symptoms consistent with a bug, crash, data corruption, or safety incident: close this issue and ask the reporter to resubmit using the appropriate template. Link the new issue from this one. |
-| **Hazard linkage** | None; do not assign HZ-* identifiers to general feedback issues |
+| **Hazard linkage** | None; do not assign `HZ-*` identifiers to general feedback issues |
 | **Required before close** | Brief acknowledgment; re-routed to correct template if applicable |
 
 ---
@@ -140,7 +140,7 @@ This rubric maps each issue template type to an expected initial response time, 
 ## Response Time Summary
 
 | Template | Default Severity | Response Target |
-|---|---|---|
+| --- | --- | --- |
 | bug-report | S2 | 5 business days |
 | runtime-crash-report | S1 | 2 business days |
 | data-corruption-report | S0 | 1 business day |
@@ -154,7 +154,7 @@ This rubric maps each issue template type to an expected initial response time, 
 
 ## Escalation Decision Tree
 
-```
+```text
 Issue received
 │
 ├─ Template: data-corruption-report or safety-incident-feedback?
@@ -188,7 +188,7 @@ Issue received
 ## Hazard Register Cross-Reference
 
 | Hazard ID | Short Name | Templates That May Reference It |
-|---|---|---|
+| --- | --- | --- |
 | HZ-data-corruption-01 | DBF/memo data corruption | data-corruption-report, runtime-crash-report, safety-incident-feedback, safety-critical-documentation-change |
 | HZ-system-failure-01 | Unrecoverable runtime failure | runtime-crash-report, safety-incident-feedback |
 | HZ-runtime-crash-01 | Runtime crash during I/O | runtime-crash-report, bug-report (if S0 override) |

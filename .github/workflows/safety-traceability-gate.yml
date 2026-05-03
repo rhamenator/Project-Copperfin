@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       issue_numbers:
-        description: Comma-separated issue numbers to validate (example: 2201,2202)
+        description: "Comma-separated issue numbers to validate (example: 2201,2202)"
         required: true
         type: string
       require_closed_issues:
@@ -13,7 +13,7 @@ on:
         default: true
         type: boolean
       require_primary_hazards:
-        description: Require at least one primary hazard id per issue (data corruption/system failure/runtime crash)
+        description: "Require at least one primary hazard id per issue (data corruption/system failure/runtime crash)"
         required: true
         default: true
         type: boolean

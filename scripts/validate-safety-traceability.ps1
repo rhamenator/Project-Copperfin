@@ -4,8 +4,8 @@ param(
     [string]$IssueJsonPath,
     [string]$HazardRegisterPath,
     [string]$ReportPath,
-    [switch]$RequirePrimaryHazardCoverage = $true,
-    [switch]$RequireClosedIssues = $true
+    [bool]$RequirePrimaryHazardCoverage = $true,
+    [bool]$RequireClosedIssues = $true
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,9 +28,9 @@ function Get-HazardIdsFromRegister {
     }
 
     $content = Get-Content -Path $Path -Raw
-    $matches = [regex]::Matches($content, '\bHZ-[A-Za-z0-9-]+\b')
+    $hazardMatches = [regex]::Matches($content, '\bHZ-[A-Za-z0-9-]+\b')
     $ids = @{}
-    foreach ($match in $matches) {
+    foreach ($match in $hazardMatches) {
         $ids[$match.Value.ToUpperInvariant()] = $true
     }
 
