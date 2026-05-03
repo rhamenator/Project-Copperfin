@@ -40,8 +40,8 @@ jobs:
           .\scripts\validate-safety-traceability.ps1 `
             -Repository "${{ github.repository }}" `
             -IssueNumbers "${{ inputs.issue_numbers }}" `
-            -RequireClosedIssues:${{ inputs.require_closed_issues }} `
-            -RequirePrimaryHazardCoverage:${{ inputs.require_primary_hazards }} `
+            -RequireClosedIssues "${{ inputs.require_closed_issues }}" `
+            -RequirePrimaryHazardCoverage "${{ inputs.require_primary_hazards }}" `
             -ReportPath $reportPath
 
       - name: Upload validation report

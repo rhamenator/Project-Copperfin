@@ -4,11 +4,23 @@ param(
     [string]$IssueJsonPath,
     [string]$HazardRegisterPath,
     [string]$ReportPath,
-    [bool]$RequirePrimaryHazardCoverage = $true,
-    [bool]$RequireClosedIssues = $true
+    [string]$RequirePrimaryHazardCoverage,
+    [string]$RequireClosedIssues
 )
 
 $ErrorActionPreference = "Stop"
+
+$enforcePrimaryHazardCoverage = if ($PSBoundParameters.ContainsKey('RequirePrimaryHazardCoverage')) {
+    [System.Convert]::ToBoolean($RequirePrimaryHazardCoverage)
+} else {
+    $true
+}
+
+$enforceClosedIssues = if ($PSBoundParameters.ContainsKey('RequireClosedIssues')) {
+    [System.Convert]::ToBoolean($RequireClosedIssues)
+} else {
+    $true
+}
 
 function Write-Fail {
     param([string]$Message)
@@ -28,9 +40,9 @@ function Get-HazardIdsFromRegister {
     }
 
     $content = Get-Content -Path $Path -Raw
-    $hazardMatches = [regex]::Matches($content, '\bHZ-[A-Za-z0-9-]+\b')
+    $hazardIdMatches = [regex]::Matches($content, '\bHZ-[A-Za-z0-9-]+\b')
     $ids = @{}
-    foreach ($match in $hazardMatches) {
+    foreach ($match in $hazardIdMatches) {
         $ids[$match.Value.ToUpperInvariant()] = $true
     }
 
@@ -201,7 +213,7 @@ foreach ($issue in $issues) {
     $issueErrors = @()
     $upperBody = $body.ToUpperInvariant()
 
-    if ($RequireClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
+    if ($enforceClosedIssues -and $state.ToLowerInvariant() -ne "closed") {
         $issueErrors += "Issue is not closed (state=$state)."
     }
 
@@ -228,7 +240,7 @@ foreach ($issue in $issues) {
         }
     }
 
-    if ($RequirePrimaryHazardCoverage) {
+    if ($enforcePrimaryHazardCoverage) {
         $hasPrimary = $false
         foreach ($primaryHazard in $primaryHazardIds) {
             if ($issueHazards.ContainsKey($primaryHazard)) {

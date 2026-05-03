@@ -45,15 +45,17 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 
 1. Treat documentation as safety-relevant when misuse could cause critical operator error.
 2. Use issue-level identifiers for documentation traceability:
-  - `DQ-*` for documentation requirements
-  - `DV-*` for documentation verification
-  - `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
-3. Require a procedural delta map (before/after operator actions) for each safety-relevant documentation change.
-4. Require misuse analysis and severity classification (`none|low|medium|high|catastrophic`).
-5. Require independent verification evidence (a second qualified reviewer).
-6. Require simulation or walkthrough evidence that validates expected operator outcome.
-7. Require rollback and field-notification planning for incorrect documentation.
-8. Do not close a safety-relevant documentation issue without investigation-ready evidence that can be audited by a third party.
+
+- `DQ-*` for documentation requirements
+- `DV-*` for documentation verification
+- `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
+
+1. Require a procedural delta map (before/after operator actions) for each safety-relevant documentation change.
+2. Require misuse analysis and severity classification (`none|low|medium|high|catastrophic`).
+3. Require independent verification evidence (a second qualified reviewer).
+4. Require simulation or walkthrough evidence that validates expected operator outcome.
+5. Require rollback and field-notification planning for incorrect documentation.
+6. Do not close a safety-relevant documentation issue without investigation-ready evidence that can be audited by a third party.
 
 ## Tree Rules
 

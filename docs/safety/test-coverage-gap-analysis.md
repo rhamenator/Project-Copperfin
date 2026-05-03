@@ -153,7 +153,7 @@ test_copy_to_from_empty_table_produces_valid_empty_dbf
 
 **Suggested new tests:**
 
-```
+```text
 test_replace_character_field_truncates_to_field_width
 test_character_field_at_maximum_width_round_trips
 test_memo_field_replace_with_empty_string
@@ -184,7 +184,7 @@ test_memo_field_replace_with_empty_string
 
 **Suggested new tests:**
 
-```
+```text
 test_authorization_unknown_role_returns_false
 test_authorization_empty_permission_returns_false
 test_secret_provider_missing_env_var_returns_not_ok
@@ -208,7 +208,7 @@ test_audit_stream_append_to_readonly_path_fails_gracefully
 
 **Suggested new tests:**
 
-```
+```text
 test_runtime_guardrail_exactly_at_call_depth_limit_succeeds
 test_runtime_guardrail_one_over_call_depth_limit_fails
 test_config_fpw_custom_limit_is_enforced_at_boundary
@@ -230,7 +230,7 @@ test_config_fpw_custom_limit_is_enforced_at_boundary
 
 **Suggested new tests:**
 
-```
+```text
 test_two_work_areas_on_same_table_see_consistent_mutations
 test_transaction_rollback_leaves_table_unchanged
 ```
