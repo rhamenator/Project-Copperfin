@@ -28,12 +28,13 @@ Important:
 
 Current priority order:
 
-1. Resume the open runtime-safety/diagnostics path in strict order: `#152`, `#153`
+1. Resume the open runtime-safety/diagnostics path in strict order: `#153`
 2. After those four slices, return to highest-fan-out open A3 lanes: `#92`, then `#93`, then `#94`
 3. Keep work issue-driven at prompt-slice granularity under active-open queue branches (`#154`-`#203`)
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: H3/#152 stack-frame diagnostics coverage deepened in `test_prg_engine_control_flow`. New focused repeated-fault coverage now proves intermediate caller frames refresh routine + line metadata per pause (resume-PC semantics) instead of leaking stale values from prior faults.
 - 2026-05-12: H3/#151 repeated-continue stability deepened in `test_prg_engine_control_flow`. New focused coverage now exercises two thrown faults inside `SET DATASESSION TO 2` and confirms selected alias plus record position remain stable after each `CONTINUE` pause/resume cycle.
 - 2026-05-12: H3/#150 fault-state containment advanced in `src/runtime/prg_engine.cpp`, `src/runtime/prg_engine_session.inl`, and `src/runtime/prg_engine_dispatch.inl`. Fault snapshots now retain data-session id, and post-fault recovery (`RETRY`, `RESUME`, and normal ON ERROR unwind) now restores captured data-session/cursor state before returning to user code. Focused `test_prg_engine_control_flow` coverage now locks down handler-side `SET DATASESSION` / `SELECT` drift containment.
 

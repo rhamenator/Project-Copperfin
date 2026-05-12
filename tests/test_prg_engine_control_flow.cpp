@@ -4541,6 +4541,75 @@ void test_pause_stack_frame_contains_accurate_intermediate_frame_lines() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_repeated_fault_pauses_refresh_intermediate_stack_frame_lines() {
+    // #152: intermediate caller-frame line metadata should refresh across
+    // repeated nested fault pauses instead of leaking stale frame line values.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_frame_lines_repeat";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "frame_lines_repeat.prg";
+    write_text(
+        main_path,
+        "DO outerfirst\n"
+        "DO outersecond\n"
+        "RETURN\n"
+        "PROCEDURE outerfirst\n"
+        "DO innerfirst\n"
+        "RETURN\n"
+        "PROCEDURE outersecond\n"
+        "DO innersecond\n"
+        "RETURN\n"
+        "PROCEDURE innerfirst\n"
+        "x = LOG(-1)\n"
+        "RETURN\n"
+        "PROCEDURE innersecond\n"
+        "y = ACOS(2)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#152: first nested fault should pause with error");
+    expect(state.location.line == 11U,
+           "#152: first nested fault should highlight the first inner routine line");
+    expect(state.call_stack.size() >= 3U,
+           "#152: first nested fault should expose full call stack");
+    if (state.call_stack.size() >= 2U) {
+        expect(state.call_stack[1].routine_name == "outerfirst",
+               "#152: first pause should report outerfirst as intermediate frame");
+        expect(state.call_stack[1].line == 6U,
+               "#152: first pause intermediate frame line should match the caller resume PC");
+    }
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#152: second nested fault should pause with error");
+    expect(state.location.line == 14U,
+           "#152: second nested fault should highlight the second inner routine line");
+    expect(state.call_stack.size() >= 3U,
+           "#152: second nested fault should expose full call stack");
+    if (state.call_stack.size() >= 2U) {
+        expect(state.call_stack[1].routine_name == "outersecond",
+               "#152: second pause should refresh intermediate frame routine");
+        expect(state.call_stack[1].line == 9U,
+               "#152: second pause intermediate frame line should refresh to the second caller resume PC");
+    }
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#152: session should complete after continuing past both nested faults");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_thrown_expression_fault_aerror_columns_match_error_message_functions() {
     // #153: when a thrown expression fault is caught via ON ERROR, AERROR()
     // columns must agree with ERROR(), MESSAGE(), and LINENO() diagnostic functions
@@ -4992,6 +5061,7 @@ int main() {
     test_fault_continue_cycle_preserves_open_cursor_and_record_position();
     test_fault_continue_cycle_preserves_selected_alias_across_data_session_scope();
     test_pause_stack_frame_contains_accurate_intermediate_frame_lines();
+    test_repeated_fault_pauses_refresh_intermediate_stack_frame_lines();
     test_thrown_expression_fault_aerror_columns_match_error_message_functions();
     test_division_by_zero_dispatches_runtime_error();
     test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
