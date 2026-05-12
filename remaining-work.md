@@ -558,6 +558,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-05-12: H3/#92 local temporary-order collation parity deepened with focused `test_prg_engine_seek_index` coverage. The seek lane now explicitly guards plain targeted temporary orders (`SET ORDER TO NAME IN People`) under session collation changes, proving `SET COLLATE TO GENERAL` case-folded `SEEK(..., 'People', 'NAME')` behavior without disturbing selected non-target alias and pointer state.
 - 2026-05-12: Runtime-safety slice `#150` advanced with fault-state restoration hardening. Fault metadata snapshots now also carry the originating data-session id, and `RETRY`, `RESUME`, plus normal `ON ERROR` handler unwind now restore the captured data-session/cursor snapshot before execution continues. Focused `test_prg_engine_control_flow` coverage now guards handler-side `SET DATASESSION`/`SELECT` drift from leaking into post-fault execution.
+- 2026-05-12: Runtime-safety slice `#151` advanced with deeper repeated-continue coverage. Focused `test_prg_engine_control_flow` now verifies two-fault `CONTINUE` stability inside a non-default data session (`SET DATASESSION TO 2`), proving selected alias and record position remain stable across both pauses and resumes.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
