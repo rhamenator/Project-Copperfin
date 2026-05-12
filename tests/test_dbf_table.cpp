@@ -921,6 +921,269 @@ void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_field_descriptor_count_exceeds_header_size_is_rejected() {
+    // GAP-02 #262: descriptor parsing must honor header_length and not consume
+    // descriptor-shaped bytes beyond the declared header boundary.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_descriptor_header_bounds_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "descriptor_bounds.dbf";
+
+    // Header claims exactly one descriptor slot (32 + 32 + 1 = 65), but file
+    // physically contains two descriptor blocks.
+    std::vector<std::uint8_t> table_bytes(97U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 0U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 14U);
+    write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 10U);
+    write_field_descriptor(table_bytes, 64U, "AGE", 'N', 11U, 3U);
+    table_bytes[96U] = 0x0DU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(result.ok, "GAP-02/#262: parser should safely parse adversarial descriptor/header mismatch input");
+    expect(result.table.fields.size() <= 1U,
+           "GAP-02/#262: parser must not consume descriptor bytes beyond the declared header length");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_dbf_record_width_mismatch_field_sum_is_rejected() {
+    // GAP-02 #263: table mutation paths must reject schemas whose declared
+    // record width is smaller than the field layout requires.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_record_width_mismatch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "record_width_mismatch.dbf";
+
+    std::vector<std::uint8_t> table_bytes(97U + 5U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 5U);  // invalid: too short for NAME C(10) at offset 1
+    write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 10U);
+    write_field_descriptor(table_bytes, 64U, "AGE", 'N', 11U, 3U);
+    table_bytes[96U] = 0x0DU;
+    table_bytes[97U] = 0x20U;
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
+    expect(!append_result.ok,
+           "GAP-02/#263: append should reject mismatched record-width/field-layout tables");
+    expect(append_result.error == "Table field layout exceeds the record size.",
+           "GAP-02/#263: mismatch rejection should report the expected layout error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_memo_sidecar_version_mismatch_is_diagnosed() {
+    // GAP-02 #264: malformed memo sidecar headers must not crash parsing.
+    // If payload decoding fails, the reader should surface a stable placeholder.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_memo_version_mismatch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "memo_mismatch.scx";
+    const fs::path memo_path = temp_dir / "memo_mismatch.sct";
+
+    std::vector<std::uint8_t> table_bytes(97U + 5U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 5U);
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "OBJTYPE", 'C', 5U, 1U);
+    table_bytes[96U] = 0x0DU;
+    table_bytes[97U] = 0x20U;
+    write_le_u32(table_bytes, 98U, 1U);
+    table_bytes[102U] = static_cast<std::uint8_t>('X');
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    // Create a deliberately malformed sidecar: valid size but unusable block metadata.
+    std::vector<std::uint8_t> memo_bytes(512U, 0U);
+    write_be_u16(memo_bytes, 6U, 1U);  // pathological block size
+    write_be_u32(memo_bytes, 5U, 0x00FFFFFFU);  // exaggerated payload length for block 1
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()),
+                     static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok,
+           "GAP-02/#264: malformed memo sidecar metadata should not crash DBF parsing");
+    if (parse_result.ok && !parse_result.table.records.empty() && !parse_result.table.records[0].values.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value.find("<memo block 1>") != std::string::npos,
+               "GAP-02/#264: unreadable memo payload should surface a stable placeholder diagnostic");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_dbf_field_name_without_null_terminator_is_tolerated() {
+    // GAP-02 #265: DBF descriptors with full 11-byte field names and no null
+    // terminator should parse without crashing or truncating record access.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_field_name_11byte_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "field_name_11.dbf";
+
+    std::vector<std::uint8_t> table_bytes(65U + 12U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 65U);
+    write_le_u16(table_bytes, 10U, 12U);
+    write_field_descriptor(table_bytes, 32U, "ELEVENCHARS", 'C', 1U, 10U);
+    table_bytes[64U] = 0x0DU;
+    table_bytes[65U] = 0x20U;
+    write_ascii(table_bytes, 66U, "ALPHA     ");
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok,
+           "GAP-02/#265: full-width field names without null terminator should parse safely");
+    expect(parse_result.table.fields.size() == 1U,
+           "GAP-02/#265: parser should preserve the descriptor when no null terminator exists");
+    if (parse_result.ok && parse_result.table.fields.size() == 1U) {
+        expect(!parse_result.table.fields[0].name.empty(),
+               "GAP-02/#265: parsed field name should remain non-empty");
+    }
+    if (parse_result.ok && parse_result.table.records.size() == 1U && !parse_result.table.records[0].values.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "GAP-02/#265: record values should remain readable with full-width field names");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_currency_field_boundary_values() {
+    // GAP-01 #260: currency fields should accept and round-trip near int64
+    // scaled bounds used by Visual FoxPro storage.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_currency_boundary_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "currency_bounds.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID", .type = 'N', .length = 3U},
+        {.name = "BALANCE", .type = 'Y', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{{"1", "0"}, {"2", "0"}};
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "GAP-01/#260: setup should create a currency-backed table");
+
+    const auto replace_max = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "BALANCE", "922337203685477.5807");
+    expect(replace_max.ok,
+           "GAP-01/#260: max positive currency boundary should be accepted");
+
+    const auto replace_min = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 1U, "BALANCE", "-922337203685477.5807");
+    expect(replace_min.ok,
+           "GAP-01/#260: max negative currency boundary should be accepted");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "GAP-01/#260: currency boundary table should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U &&
+        parse_result.table.records[0].values.size() >= 2U &&
+        parse_result.table.records[1].values.size() >= 2U) {
+        expect(parse_result.table.records[0].values[1].display_value == "922337203685477.5807",
+               "GAP-01/#260: positive currency boundary should round-trip exactly");
+        expect(parse_result.table.records[1].values[1].display_value == "-922337203685477.5807",
+               "GAP-01/#260: negative currency boundary should round-trip exactly");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_nan_inf_in_double_field_round_trip_behavior() {
+    // GAP-01 #261: double-field special values should never crash the parser
+    // and should produce deterministic display output after write/read.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_double_nan_inf_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "double_specials.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID", .type = 'N', .length = 3U},
+        {.name = "VALUE", .type = 'B', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{{"1", "0"}, {"2", "0"}, {"3", "0"}};
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "GAP-01/#261: setup should create a double-backed table");
+
+    const auto write_nan = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "VALUE", "nan");
+    const auto write_pos_inf = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VALUE", "inf");
+    const auto write_neg_inf = copperfin::vfp::replace_record_field_value(table_path.string(), 2U, "VALUE", "-inf");
+    expect(write_nan.ok, "GAP-01/#261: writing NaN into a double field should be accepted");
+    expect(write_pos_inf.ok, "GAP-01/#261: writing +INF into a double field should be accepted");
+    expect(write_neg_inf.ok, "GAP-01/#261: writing -INF into a double field should be accepted");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok,
+           "GAP-01/#261: table with NaN/INF double payloads should parse without crashing");
+    if (parse_result.ok && parse_result.table.records.size() == 3U &&
+        parse_result.table.records[0].values.size() >= 2U &&
+        parse_result.table.records[1].values.size() >= 2U &&
+        parse_result.table.records[2].values.size() >= 2U) {
+        expect(!parse_result.table.records[0].values[1].display_value.empty(),
+               "GAP-01/#261: NaN display output should be non-empty");
+        expect(!parse_result.table.records[1].values[1].display_value.empty(),
+               "GAP-01/#261: +INF display output should be non-empty");
+        expect(!parse_result.table.records[2].values[1].display_value.empty(),
+               "GAP-01/#261: -INF display output should be non-empty");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_staged_write_temp_artifacts_are_cleaned_up() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -971,6 +1234,12 @@ int main() {
     test_replace_field_value_accepts_null_token_for_supported_types();
     test_varchar_and_varbinary_field_round_trip();
     test_dbf_header_record_count_exceeds_file_size_is_rejected();
+    test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();
+    test_dbf_record_width_mismatch_field_sum_is_rejected();
+    test_memo_sidecar_version_mismatch_is_diagnosed();
+    test_dbf_field_name_without_null_terminator_is_tolerated();
+    test_currency_field_boundary_values();
+    test_nan_inf_in_double_field_round_trip_behavior();
     test_staged_write_temp_artifacts_are_cleaned_up();
 
     if (failures != 0) {

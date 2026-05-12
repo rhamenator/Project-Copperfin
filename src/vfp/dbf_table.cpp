@@ -1087,7 +1087,10 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     }
 
     std::size_t field_offset = 32U;
-    while ((field_offset + 32U) <= bytes.size() && bytes[field_offset] != 0x0DU) {
+    const std::size_t header_limit = table.header.header_length;
+    while ((field_offset + 32U) <= bytes.size() &&
+           (field_offset + 32U) <= header_limit &&
+           bytes[field_offset] != 0x0DU) {
         DbfFieldDescriptor field;
         field.name = read_ascii_name(bytes, field_offset, 11U);
         field.type = static_cast<char>(bytes[field_offset + 11U]);

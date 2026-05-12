@@ -4,6 +4,11 @@ This changelog is an exhaustive ledger compiled from the dated implementation no
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
 
+## 2026-05-12
+
+- Gap-driven DBF robustness coverage advanced across slice issues `#260`, `#261`, `#262`, `#263`, `#264`, and `#265` in `test_dbf_table`. New focused tests now lock down: currency max/min boundary round-trip for `Y` fields (`#260`), NaN/+INF/-INF write/read survivability for `B` fields (`#261`), descriptor parsing bounded by declared `header_length` (`#262`), rejection of record-width/field-layout mismatches during mutation (`#263`), stable placeholder diagnostics for malformed memo sidecar metadata (`#264`), and tolerance of full 11-byte non-null-terminated field names (`#265`).
+- Runtime DBF parsing was hardened in `src/vfp/dbf_table.cpp` so descriptor scanning stops at the declared header boundary, preventing descriptor-shaped bytes beyond `header_length` from being interpreted as schema.
+
 ## 2026-05-11
 
 - Gap-06 security-control edge coverage advanced across slice issues `#247`, `#255`, `#245`, `#248`, and `#252`. `test_security_controls` now verifies that `role_has_permission` returns `false` for an unknown role and for an empty-string role, returns `false` for an empty permission string and for a nonexistent permission, that `resolve_secret_reference` returns a non-ok result when the named environment variable is absent, that corrupting the hash field of the last audit log entry causes the next appended entry to record a different chain hash (tamper detectability), and that `append_immutable_audit_event` returns a non-ok result when the parent directory cannot be created. All focused assertions pass.

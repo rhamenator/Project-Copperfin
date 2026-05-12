@@ -28,11 +28,13 @@ Important:
 
 Current priority order:
 
-1. `#151`, `#152`, and `#153` are now **closed** (shipped in this session)
-2. Move to the highest-fan-out open slice under `#93` or `#94`; if no child issue exists for the next PRG-engine or data-engine parity gap, create one from `docs/safety/test-coverage-gap-analysis.md` before coding
-3. Continue exhausting the `test-coverage-gap-analysis.md` GAP-01 and GAP-02 queues alongside critical-path `#93`/`#94` work
+1. `#151`, `#152`, `#153`, and `#257`-`#265` are now **closed** (recently shipped in focused batches)
+2. Continue with the highest-fan-out open child slice under `#93` or `#94`
+3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
 
 Current shipped highlights worth remembering:
+
+- 2026-05-12: Gap-driven DBF robustness coverage advanced across slice issues `#260`, `#261`, `#262`, `#263`, `#264`, and `#265`. `test_dbf_table` now covers currency boundary round-trips, NaN/INF double survivability, descriptor parsing bounded by header length, record-width/field-layout mismatch rejection during mutation, malformed memo sidecar placeholder diagnostics, and full 11-byte non-null-terminated field-name tolerance. Runtime parsing was hardened in `src/vfp/dbf_table.cpp` so descriptor scanning stops at declared `header_length`.
 
 - 2026-05-11: Critical-path Phase A runtime diagnostics advanced across slice issues `#151`, `#152`, `#153`, `#257`, `#258`, and `#259`. Cursor record position is preserved across a multi-fault CONTINUE cycle (#151). Intermediate call-stack frame line numbers at a fault pause reflect the resume PC, not zero (#152). AERROR() columns are consistent with ERROR()/MESSAGE()/LINENO()/PROGRAM() inside an ON ERROR handler (#153). Division by zero now dispatches a runtime error instead of silently returning +Infinity — guardrail added to `src/runtime/prg_engine_expression.inl` (#257). Numeric field overflow via REPLACE is either diagnosed or safely bounded (#258). DBF files with inflated header record counts are rejected or clamped by the parser (#259, GAP-02).
 
