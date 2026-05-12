@@ -237,7 +237,9 @@
                 }
                 if (!field_is_visible(field_name))
                 {
-                    return std::nullopt;
+                    // VFP-style SET FIELDS hides field access by returning an empty value
+                    // rather than raising an unresolved identifier fault.
+                    return make_string_value("");
                 }
                 const auto record = current_record(*cursor);
                 if (!record.has_value())
@@ -321,6 +323,139 @@
                 return false;
             }
 
+            // Try index seek optimization if we have a FOR clause and available indexes
+            if (!for_expression.empty() && !cursor.orders.empty())
+            {
+                // Check cache first
+                auto cached_pattern = index_pattern_cache.find(for_expression);
+                IndexExpressionPattern pattern;
+                if (cached_pattern != index_pattern_cache.end())
+                {
+                    pattern = cached_pattern->second;
+                }
+                else
+                {
+                    // Analyze the FOR expression for optimization patterns
+                    std::vector<std::string> available_fields;
+                    for (const auto &field : cursor.remote_fields)
+                    {
+                        available_fields.push_back(field.name);
+                    }
+                    
+                    pattern = analyze_filter_expression(for_expression, available_fields);
+                    index_pattern_cache[for_expression] = pattern;
+                }
+                
+                // If pattern is recognized, try to create an optimization plan
+                if (pattern.confidence != OptimizationConfidence::not_applicable)
+                {
+                    // Build list of available orders for matching
+                    std::vector<IndexOrderCandidate> available_orders;
+                    for (const auto &order : cursor.orders)
+                    {
+                        available_orders.push_back(IndexOrderCandidate{
+                            .order_name = order.name,
+                            .order_expression = order.expression,
+                            .order_for_expression = order.for_expression,
+                            .order_path = order.index_path,
+                            .normalization_hint = order.normalization_hint,
+                            .collation_hint = order.collation_hint,
+                            .key_domain_hint = order.key_domain_hint,
+                            .is_descending = order.descending
+                        });
+                    }
+                    
+                    // Create optimization plan
+                    auto plan = create_index_seek_plan(pattern, available_orders, cursor.active_order_name);
+                    
+                    // If we can optimize and have a selected order, try index seek first
+                    if (plan.can_optimize && plan.selected_order)
+                    {
+                        // Try to use SEEK on the selected order
+                        // Extract the search value from the pattern
+                        if (!pattern.operands.empty() && !pattern.operands[1].raw_text.empty())
+                        {
+                            const std::string search_key_text = pattern.operands[1].raw_text;
+                            const auto search_value = evaluate_expression(search_key_text, frame);
+                            const std::string search_key = value_as_string(search_value);
+                            
+                            // Temporarily switch to the optimized order and try SEEK
+                            std::string saved_order_name = cursor.active_order_name;
+                            std::string saved_order_expression = cursor.active_order_expression;
+                            std::string saved_order_for_expression = cursor.active_order_for_expression;
+                            std::string saved_order_path = cursor.active_order_path;
+                            std::string saved_order_normalization_hint = cursor.active_order_normalization_hint;
+                            std::string saved_order_collation_hint = cursor.active_order_collation_hint;
+                            std::string saved_order_key_domain_hint = cursor.active_order_key_domain_hint;
+                            bool saved_order_descending = cursor.active_order_descending;
+                            long long saved_recno = cursor.recno;
+                            bool saved_found = cursor.found;
+                            bool saved_bof = cursor.bof;
+                            bool saved_eof = cursor.eof;
+                            
+                            try
+                            {
+                                // Activate the optimized order
+                                cursor.active_order_name = plan.selected_order->order_name;
+                                cursor.active_order_expression = plan.selected_order->order_expression;
+                                cursor.active_order_for_expression = plan.selected_order->order_for_expression;
+                                cursor.active_order_path = plan.selected_order->order_path;
+                                cursor.active_order_normalization_hint = plan.selected_order->normalization_hint;
+                                cursor.active_order_collation_hint = plan.selected_order->collation_hint;
+                                cursor.active_order_key_domain_hint = plan.selected_order->key_domain_hint;
+                                cursor.active_order_descending = plan.selected_order->is_descending;
+                                cursor.recno = start_recno;
+                                cursor.bof = (start_recno <= 1U);
+                                cursor.eof = (start_recno > cursor.record_count);
+                                cursor.found = false;
+                                
+                                // Try SEEK
+                                if (seek_in_cursor(cursor, search_key))
+                                {
+                                    // SEEK found a match; verify it also matches any WHILE clause
+                                    if (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor))
+                                    {
+                                        cursor.found = true;
+                                        return true;  // Index seek optimization succeeded
+                                    }
+                                }
+                            }
+                            catch (...)
+                            {
+                                // Restore original state if something goes wrong
+                                cursor.active_order_name = saved_order_name;
+                                cursor.active_order_expression = saved_order_expression;
+                                cursor.active_order_for_expression = saved_order_for_expression;
+                                cursor.active_order_path = saved_order_path;
+                                cursor.active_order_normalization_hint = saved_order_normalization_hint;
+                                cursor.active_order_collation_hint = saved_order_collation_hint;
+                                cursor.active_order_key_domain_hint = saved_order_key_domain_hint;
+                                cursor.active_order_descending = saved_order_descending;
+                                cursor.recno = saved_recno;
+                                cursor.found = saved_found;
+                                cursor.bof = saved_bof;
+                                cursor.eof = saved_eof;
+                            }
+                            
+                            // Restore original order state for fallback
+                            cursor.active_order_name = saved_order_name;
+                            cursor.active_order_expression = saved_order_expression;
+                            cursor.active_order_for_expression = saved_order_for_expression;
+                            cursor.active_order_path = saved_order_path;
+                            cursor.active_order_normalization_hint = saved_order_normalization_hint;
+                            cursor.active_order_collation_hint = saved_order_collation_hint;
+                            cursor.active_order_key_domain_hint = saved_order_key_domain_hint;
+                            cursor.active_order_descending = saved_order_descending;
+                            cursor.recno = saved_recno;
+                            cursor.found = saved_found;
+                            cursor.bof = saved_bof;
+                            cursor.eof = saved_eof;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to linear scan (default behavior)
             const bool found = seek_visible_record(
                 cursor,
                 frame,

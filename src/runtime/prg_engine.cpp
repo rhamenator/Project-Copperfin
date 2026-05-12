@@ -1,4 +1,5 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/runtime/index_seek_optimizer.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_internal.h"
@@ -397,9 +398,13 @@ namespace copperfin::runtime
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
 
+        // Index seek optimizer - pattern cache
+        std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
+
 #include "prg_engine_session.inl"
 #include "prg_engine_cursor.inl"
 #include "prg_engine_records.inl"
+#include "prg_engine_index_seek.inl"
 #include "prg_engine_aggregate.inl"
 
 #include "prg_engine_dll.inl"
