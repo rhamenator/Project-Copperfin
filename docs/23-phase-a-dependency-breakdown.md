@@ -364,6 +364,7 @@ Current dependency links:
 - `#93` is blocked by `#92`
 - `#100` is blocked by `#97`
 - historical note: `#10` and `#11` previously depended on `#99` and are now closed
+- 2026-05-12 execution note: `#150` implementation slice advanced in code/test (fault data-session + cursor snapshot restoration across `RETRY`/`RESUME`/ON ERROR unwind); continue strict gate order with `#151` next.
 
 ## Slice-Issue Policy
 

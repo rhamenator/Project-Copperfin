@@ -79,6 +79,7 @@
             snapshot.statement = last_fault_statement;
             snapshot.code = last_error_code;
             snapshot.work_area = last_error_work_area;
+            snapshot.data_session = current_data_session;
             snapshot.procedure = last_error_procedure;
             snapshot.compatibility = last_error_compatibility;
             snapshot.session_state_snapshot = current_session_state();

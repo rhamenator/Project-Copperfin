@@ -4222,6 +4222,79 @@ void test_doevents_in_responsive_loop() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_on_error_resume_restores_fault_session_and_cursor_state() {
+    // #150: RESUME should restore the captured fault-side data session/work area
+    // even when the handler changes its own session and cursor selection.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_resume_fault_state";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path items_path = temp_root / "items.dbf";
+    const fs::path alt_path = temp_root / "alt.dbf";
+    write_people_dbf(items_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_people_dbf(alt_path, {{"DELTA", 40}, {"ECHO", 50}});
+
+    const fs::path main_path = temp_root / "resume_fault_state.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "USE '" + items_path.string() + "' ALIAS Items IN 0\n"
+        "SELECT Items\n"
+        "SKIP\n"
+        "rec_before = RECNO()\n"
+        "fault = LOG(-1)\n"
+        "alias_after = ALIAS()\n"
+        "rec_after = RECNO()\n"
+        "name_after = Items.NAME\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "SET DATASESSION TO 2\n"
+        "USE '" + alt_path.string() + "' ALIAS Alt IN 0\n"
+        "SELECT Alt\n"
+        "RESUME\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#150: ON ERROR RESUME script should complete");
+
+    const auto rec_before = state.globals.find("rec_before");
+    const auto alias_after = state.globals.find("alias_after");
+    const auto rec_after = state.globals.find("rec_after");
+    const auto name_after = state.globals.find("name_after");
+
+    expect(rec_before != state.globals.end(), "#150: rec_before should be captured before the fault");
+    expect(alias_after != state.globals.end(), "#150: post-fault ALIAS() should be captured");
+    expect(rec_after != state.globals.end(), "#150: post-fault RECNO() should be captured");
+    expect(name_after != state.globals.end(), "#150: post-fault field read should succeed");
+
+    if (rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_before->second) == "2",
+               "#150: fault-side cursor should be positioned on record 2 before fault");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after->second) == "Items",
+               "#150: RESUME should restore the fault-side selected alias");
+    }
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "2",
+               "#150: RESUME should preserve fault-side cursor record position");
+    }
+    if (name_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name_after->second) == "BRAVO",
+               "#150: post-fault field reads should remain on the original cursor row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 void test_fault_continue_cycle_preserves_open_cursor_and_record_position() {
     // #151: after each debug-continue across a runtime fault, cursor state and
@@ -4822,6 +4895,7 @@ int main() {
     test_quit_closes_open_database_and_runtime_handles();
     test_doevents_pumps_event_queue();
     test_doevents_in_responsive_loop();
+    test_on_error_resume_restores_fault_session_and_cursor_state();
     test_retry_reexecutes_faulting_statement();
     test_resume_next_continues_after_fault();
     test_retry_with_no_fault_checkpoint_is_noop();

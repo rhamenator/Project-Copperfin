@@ -335,6 +335,7 @@ namespace copperfin::runtime
             std::string statement;
             int code = 0;
             int work_area = 0;
+            int data_session = 1;
             std::string procedure;
             AErrorCompatibilitySnapshot compatibility;
             std::optional<DataSessionState> session_state_snapshot;
@@ -1417,6 +1418,11 @@ namespace copperfin::runtime
                     handling_error = false;
                     if (!error_metadata_stack.empty())
                     {
+                        current_data_session = std::max(1, error_metadata_stack.back().data_session);
+                        if (error_metadata_stack.back().session_state_snapshot.has_value())
+                        {
+                            current_session_state() = *error_metadata_stack.back().session_state_snapshot;
+                        }
                         error_metadata_stack.pop_back();
                     }
                 }
