@@ -3964,13 +3964,12 @@
                 const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
 
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
-                if (cursor == nullptr || cursor->source_path.empty())
+                if (cursor == nullptr)
                 {
-                    // Remote-only or no open table — emit event stub
-                    events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_raw,
-                                      .location = statement.location});
-                    return {};
+                    last_error_message = "COPY TO: no current work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 namespace fs = std::filesystem;
@@ -4012,15 +4011,70 @@
                 }
                 dest_path = dest_path.lexically_normal();
 
-                // Load source table schema + records up to the cursor record count
-                const auto table_result = vfp::parse_dbf_table_from_file(
-                    cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
-                if (!table_result.ok)
+                std::vector<vfp::DbfFieldDescriptor> source_fields;
+                if (!cursor->source_path.empty())
                 {
-                    last_error_message = "COPY TO: " + table_result.error;
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
+                    // Load source table schema + records up to the cursor record count.
+                    const auto table_result = vfp::parse_dbf_table_from_file(
+                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    if (!table_result.ok)
+                    {
+                        last_error_message = "COPY TO: " + table_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    source_fields = table_result.table.fields;
+                }
+                else if (!cursor->remote_fields.empty())
+                {
+                    source_fields = cursor->remote_fields;
+                }
+                else if (!cursor->remote_records.empty())
+                {
+                    const auto &first_row = cursor->remote_records.front().values;
+                    source_fields.reserve(first_row.size());
+
+                    struct RemoteFieldProfile
+                    {
+                        char type = 'C';
+                        std::size_t max_width = 1U;
+                    };
+
+                    std::vector<RemoteFieldProfile> profiles(first_row.size());
+                    for (std::size_t index = 0U; index < first_row.size(); ++index)
+                    {
+                        profiles[index].type = first_row[index].field_type == '\0' ? 'C' : first_row[index].field_type;
+                    }
+
+                    for (const auto &record : cursor->remote_records)
+                    {
+                        for (std::size_t index = 0U; index < record.values.size() && index < profiles.size(); ++index)
+                        {
+                            const auto &value = record.values[index];
+                            profiles[index].max_width = std::max(
+                                profiles[index].max_width,
+                                std::max<std::size_t>(1U, value.display_value.size()));
+                        }
+                    }
+
+                    std::uint32_t offset = 1U;
+                    for (std::size_t index = 0U; index < first_row.size(); ++index)
+                    {
+                        const auto &value = first_row[index];
+                        std::size_t width = profiles[index].max_width;
+                        if (profiles[index].type == 'C')
+                        {
+                            width = std::max<std::size_t>(width, 10U);
+                        }
+                        source_fields.push_back({
+                            .name = value.field_name,
+                            .type = profiles[index].type,
+                            .offset = offset,
+                            .length = static_cast<std::uint8_t>(std::min<std::size_t>(width, 254U)),
+                            .decimal_count = 0U});
+                        offset += source_fields.back().length;
+                    }
                 }
 
                 // Build field filter from FIELDS clause (comma-separated names)
@@ -4029,7 +4083,7 @@
 
                 // Filter descriptors by FIELDS clause
                 std::vector<vfp::DbfFieldDescriptor> out_fields;
-                for (const auto &f : table_result.table.fields)
+                for (const auto &f : source_fields)
                 {
                     if (field_matches_filter(f.name, field_filter))
                     {
@@ -4421,13 +4475,12 @@
                 const std::string with_clause = statement.names.empty() ? std::string{} : statement.names.front();
 
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
-                if (cursor == nullptr || cursor->source_path.empty())
+                if (cursor == nullptr)
                 {
-                    // Remote-only or no open table — emit event stub
-                    events.push_back({.category = "runtime.append_from",
-                                      .detail = src_raw,
-                                      .location = statement.location});
-                    return {};
+                    last_error_message = "APPEND FROM: no current work area";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 namespace fs = std::filesystem;
@@ -4471,6 +4524,110 @@
 
                 const std::string fields_clause = statement.tertiary_expression;
                 const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
+
+                if (cursor->remote && cursor->source_path.empty())
+                {
+                    if (append_from_json || append_from_sdf || append_from_dif || append_from_sylk ||
+                        append_from_tab || append_from_xls || append_from_delimited)
+                    {
+                        last_error_message = "APPEND FROM: selected SQL/result cursor currently supports DBF source only";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const auto source_result = vfp::parse_dbf_table_from_file(src_path.string(), 1000000U);
+                    if (!source_result.ok)
+                    {
+                        last_error_message = "APPEND FROM: " + source_result.error;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
+                    std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
+                    filtered_target_fields.reserve(target_fields.size());
+                    for (const auto &field : target_fields)
+                    {
+                        if (field_matches_filter(field.name, field_filter))
+                        {
+                            filtered_target_fields.push_back(field);
+                        }
+                    }
+                    if (filtered_target_fields.empty())
+                    {
+                        last_error_message = "APPEND FROM: no fields match the FIELDS clause";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::size_t appended_count = 0U;
+                    for (const auto &source_record : source_result.table.records)
+                    {
+                        if (source_record.deleted)
+                        {
+                            continue;
+                        }
+
+                        vfp::DbfRecord appended_record;
+                        appended_record.record_index = cursor->remote_records.size();
+                        appended_record.deleted = false;
+                        appended_record.values.reserve(target_fields.size());
+
+                        for (const auto &target_field : target_fields)
+                        {
+                            vfp::DbfRecordValue value{
+                                .field_name = target_field.name,
+                                .field_type = target_field.type,
+                                .is_null = false,
+                                .display_value = {}};
+
+                            const bool included_by_filter = field_matches_filter(target_field.name, field_filter);
+                            if (included_by_filter)
+                            {
+                                const auto source_value = std::find_if(
+                                    source_record.values.begin(),
+                                    source_record.values.end(),
+                                    [&](const vfp::DbfRecordValue &candidate)
+                                    {
+                                        return collapse_identifier(candidate.field_name) == collapse_identifier(target_field.name);
+                                    });
+                                if (source_value != source_record.values.end())
+                                {
+                                    value.is_null = source_value->is_null;
+                                    value.display_value = source_value->display_value;
+                                }
+                            }
+
+                            appended_record.values.push_back(std::move(value));
+                        }
+
+                        cursor->remote_records.push_back(std::move(appended_record));
+                        ++appended_count;
+                    }
+
+                    if (cursor->remote_fields.empty())
+                    {
+                        cursor->remote_fields = target_fields;
+                    }
+                    cursor->record_count = cursor->remote_records.size();
+                    cursor->eof = cursor->record_count == 0U;
+                    cursor->bof = cursor->record_count == 0U;
+                    cursor->found = false;
+                    if (appended_count > 0U)
+                    {
+                        cursor->recno = cursor->record_count;
+                        cursor->eof = false;
+                        cursor->bof = false;
+                    }
+
+                    events.push_back({.category = "runtime.append_from",
+                                      .detail = src_raw + " (" + std::to_string(appended_count) + " records)",
+                                      .location = statement.location});
+                    return {};
+                }
 
                 if (append_from_sdf)
                 {

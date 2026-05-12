@@ -174,8 +174,8 @@ If direct commits continue, close a child issue only when:
 - A3 runtime semantics and command depth: #7, #8
   - active lane issues: #92, #93, #94, #97, #98, #99, #100, #101
   - recently closed lane issues: #95, #96
-  - active prompt-sized slice issues: none currently open under #92-#101
-    - recently closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262
+    - active prompt-sized slice issues under #92-#101: #265 (under #93)
+        - recently closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262, #263, #264
   - native slice queues under #93-#101 have now been opened as needed: active and historical slices in this lane currently span `#115`-`#130` plus the closed `#146`-`#149` queue under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
