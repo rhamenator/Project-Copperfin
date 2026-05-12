@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.inl": "cpp",
+    "prg_engine_index_seek.inl": "plaintext",
+    "prg_engine_flow.inl": "plaintext"
+  }
+}

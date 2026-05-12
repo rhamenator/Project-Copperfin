@@ -185,7 +185,7 @@ This repo now tracks .NET parity with an explicit allow/deny policy and capabili
 ### Initial Capability Matrix
 
 | capability id | tier | reason tags | rationale | verification reference |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `task-primitives` | adapted | ergonomics, performance | Async/task behavior is surfaced through native-friendly command/function shapes. | `#272` |
 | `json-helpers` | adapted | ergonomics | High-value JSON helpers are allowed with native null/blank semantic preservation. | `#280` |
 | `unsafe-reflection-load` | intentionally_not_supported | security, legacy_hazard | Arbitrary reflection loading crosses trust boundaries and is denied by default. | `#279` |
@@ -216,4 +216,4 @@ This policy gateway is surfaced in runtime packaging diagnostics via manifest ke
 - `dotnet_parity_matrix_entries`
 - `dotnet_gateway_task_primitives`
 - `dotnet_gateway_unsafe_reflection`
-
+<!-- end -->
