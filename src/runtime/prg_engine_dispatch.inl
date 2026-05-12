@@ -4470,13 +4470,237 @@
 
                 if (cursor->remote && cursor->source_path.empty())
                 {
-                    if (append_from_json || append_from_sdf || append_from_dif || append_from_sylk ||
-                        append_from_tab || append_from_xls || append_from_delimited)
+                    if (append_from_sdf || append_from_dif || append_from_sylk ||
+                        append_from_tab || append_from_xls)
                     {
-                        last_error_message = "APPEND FROM: selected SQL/result cursor currently supports DBF source only";
+                        last_error_message = "APPEND FROM: selected SQL/result cursor does not support this source type";
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
+                    }
+
+                    if (append_from_json)
+                    {
+                        std::ifstream json_input(src_path, std::ios::binary);
+                        if (!json_input.good())
+                        {
+                            last_error_message = "APPEND FROM TYPE JSON: unable to open source file";
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        std::ostringstream json_buffer;
+                        json_buffer << json_input.rdbuf();
+
+                        std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
+                        const std::string for_expr = statement.quaternary_expression;
+                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
+                        filtered_target_fields.reserve(target_fields.size());
+                        for (const auto &field : target_fields)
+                        {
+                            if (field_matches_filter(field.name, field_filter))
+                            {
+                                filtered_target_fields.push_back(field);
+                            }
+                        }
+                        if (filtered_target_fields.empty())
+                        {
+                            last_error_message = "APPEND FROM TYPE JSON: no fields match the FIELDS clause";
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+
+                        const std::vector<std::map<std::string, std::string>> json_rows =
+                            parse_json_record_objects(json_buffer.str());
+                        std::size_t appended_count = 0U;
+                        for (const auto &row : json_rows)
+                        {
+                            vfp::DbfRecord appended_record;
+                            appended_record.record_index = cursor->remote_records.size();
+                            appended_record.deleted = false;
+                            appended_record.values.reserve(target_fields.size());
+
+                            for (const auto &target_field : target_fields)
+                            {
+                                vfp::DbfRecordValue value{
+                                    .field_name = target_field.name,
+                                    .field_type = target_field.type,
+                                    .is_null = false,
+                                    .display_value = {}};
+
+                                if (field_matches_filter(target_field.name, field_filter))
+                                {
+                                    const auto found = row.find(collapse_identifier(target_field.name));
+                                    if (found != row.end())
+                                    {
+                                        value.display_value = found->second;
+                                    }
+                                }
+
+                                appended_record.values.push_back(std::move(value));
+                            }
+
+                            cursor->remote_records.push_back(std::move(appended_record));
+                            cursor->record_count = cursor->remote_records.size();
+                            cursor->recno = cursor->record_count;
+                            cursor->eof = false;
+                            cursor->bof = cursor->record_count == 0U;
+
+                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            {
+                                cursor->remote_records.pop_back();
+                                cursor->record_count = cursor->remote_records.size();
+                                continue;
+                            }
+
+                            ++appended_count;
+                        }
+
+                        if (cursor->remote_fields.empty())
+                        {
+                            cursor->remote_fields = target_fields;
+                        }
+                        cursor->record_count = cursor->remote_records.size();
+                        cursor->eof = cursor->record_count == 0U;
+                        cursor->bof = cursor->record_count == 0U;
+                        cursor->found = false;
+                        if (appended_count > 0U)
+                        {
+                            cursor->recno = cursor->record_count;
+                            cursor->eof = false;
+                            cursor->bof = false;
+                        }
+
+                        events.push_back({.category = "runtime.append_from",
+                                          .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE JSON)",
+                                          .location = statement.location});
+                        return {};
+                    }
+
+                    if (append_from_delimited)
+                    {
+                        std::ifstream csv_input(src_path, std::ios::binary);
+                        if (!csv_input.good())
+                        {
+                            last_error_message = "APPEND FROM TYPE DELIMITED: unable to open source file";
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        std::ostringstream csv_buffer;
+                        csv_buffer << csv_input.rdbuf();
+
+                        std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
+                        const std::string for_expr = statement.quaternary_expression;
+                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
+                        filtered_target_fields.reserve(target_fields.size());
+                        for (const auto &field : target_fields)
+                        {
+                            if (field_matches_filter(field.name, field_filter))
+                            {
+                                filtered_target_fields.push_back(field);
+                            }
+                        }
+                        if (filtered_target_fields.empty())
+                        {
+                            last_error_message = "APPEND FROM TYPE DELIMITED: no fields match the FIELDS clause";
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+
+                        const DelimitedTextOptions delimited_options =
+                            parse_delimited_text_options(append_type, with_clause);
+                        std::size_t appended_count = 0U;
+                        bool first_line = true;
+                        for (const std::string &line : split_text_lines(csv_buffer.str()))
+                        {
+                            if (line.empty())
+                            {
+                                continue;
+                            }
+                            const std::vector<std::string> values = parse_delimited_text_line(line, delimited_options);
+                            if (append_type == "csv" && first_line && values.size() >= filtered_target_fields.size())
+                            {
+                                bool matches_header = true;
+                                for (std::size_t idx = 0U; idx < filtered_target_fields.size(); ++idx)
+                                {
+                                    if (collapse_identifier(values[idx]) != collapse_identifier(filtered_target_fields[idx].name))
+                                    {
+                                        matches_header = false;
+                                        break;
+                                    }
+                                }
+                                if (matches_header)
+                                {
+                                    first_line = false;
+                                    continue;
+                                }
+                            }
+                            first_line = false;
+
+                            vfp::DbfRecord appended_record;
+                            appended_record.record_index = cursor->remote_records.size();
+                            appended_record.deleted = false;
+                            appended_record.values.reserve(target_fields.size());
+
+                            std::size_t value_index = 0U;
+                            for (const auto &target_field : target_fields)
+                            {
+                                vfp::DbfRecordValue value{
+                                    .field_name = target_field.name,
+                                    .field_type = target_field.type,
+                                    .is_null = false,
+                                    .display_value = {}};
+
+                                if (field_matches_filter(target_field.name, field_filter))
+                                {
+                                    if (value_index < values.size())
+                                    {
+                                        value.display_value = values[value_index];
+                                    }
+                                    ++value_index;
+                                }
+
+                                appended_record.values.push_back(std::move(value));
+                            }
+
+                            cursor->remote_records.push_back(std::move(appended_record));
+                            cursor->record_count = cursor->remote_records.size();
+                            cursor->recno = cursor->record_count;
+                            cursor->eof = false;
+                            cursor->bof = cursor->record_count == 0U;
+
+                            if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                            {
+                                cursor->remote_records.pop_back();
+                                cursor->record_count = cursor->remote_records.size();
+                                continue;
+                            }
+
+                            ++appended_count;
+                        }
+
+                        if (cursor->remote_fields.empty())
+                        {
+                            cursor->remote_fields = target_fields;
+                        }
+                        cursor->record_count = cursor->remote_records.size();
+                        cursor->eof = cursor->record_count == 0U;
+                        cursor->bof = cursor->record_count == 0U;
+                        cursor->found = false;
+                        if (appended_count > 0U)
+                        {
+                            cursor->recno = cursor->record_count;
+                            cursor->eof = false;
+                            cursor->bof = false;
+                        }
+
+                        events.push_back({.category = "runtime.append_from",
+                                          .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
+                                          .location = statement.location});
+                        return {};
                     }
 
                     const auto source_result = vfp::parse_dbf_table_from_file(src_path.string(), 1000000U);
