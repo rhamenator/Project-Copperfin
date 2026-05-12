@@ -4,6 +4,10 @@ This changelog is an exhaustive ledger compiled from the dated implementation no
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
 
+## 2026-05-11
+
+- Gap-07 call-depth guardrail boundary precision advanced across slice issues `#254`, `#250`, and `#253`. Focused `test_prg_engine_control_flow` coverage now asserts that nested routine chains exactly at the configured `MAX_CALL_DEPTH` succeed, one-over-limit chains fail with the expected guardrail error, and `config.fpw` custom call-depth overrides enforce that same boundary behavior. Runtime guardrail evaluation in [src/runtime/prg_engine_session.inl](src/runtime/prg_engine_session.inl) was corrected for off-by-one behavior so the configured limit is treated as an inclusive boundary.
+
 ## 2026-05-03
 
 - Added a lightweight DO-178C-inspired, issue-only traceability discipline to [remaining-work.md](remaining-work.md), including a mapped checklist by active lane/family (`#92`-`#101`, `#13`/`#14`, `#15`-`#18`, `#19`-`#21`, `#22`-`#26`, `#27`-`#29`, `#30`-`#32`/`#57`/`#91`, `#33`/`#34`, and `#35`-`#37`), a stable `RQ-*`/`VR-*` identifier schema, and closure gates that work without pull requests.

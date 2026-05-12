@@ -1417,6 +1417,26 @@ void test_store_command_assigns_multiple_variables() {
     fs::remove_all(temp_root, ignored);
 }
 
+std::string build_nested_do_chain_script(std::size_t nested_routine_count) {
+    std::ostringstream script;
+    if (nested_routine_count == 0U) {
+        script << "RETURN\n";
+        return script.str();
+    }
+
+    script << "DO p1\n";
+    script << "RETURN\n";
+    for (std::size_t index = 1; index <= nested_routine_count; ++index) {
+        script << "PROCEDURE p" << index << "\n";
+        if (index < nested_routine_count) {
+            script << "DO p" << (index + 1U) << "\n";
+        }
+        script << "RETURN\n";
+    }
+
+    return script.str();
+}
+
 void test_runtime_guardrail_limits_call_depth_without_crashing_host() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_call_depth";
@@ -1453,6 +1473,59 @@ void test_runtime_guardrail_limits_call_depth_without_crashing_host() {
     expect(
         state.message.find("maximum call depth") != std::string::npos,
         "call-depth guardrail should report a call-depth limit message");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_guardrail_exactly_at_call_depth_limit_succeeds() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_call_depth_exact_limit";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr std::size_t limit = 5U;
+    const fs::path main_path = temp_root / "exact_limit.prg";
+    write_text(main_path, build_nested_do_chain_script(limit));
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false,
+        .max_call_depth = limit
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "exactly-at-limit nested call chain should complete");
+    expect(state.reason != copperfin::runtime::DebugPauseReason::error,
+           "exactly-at-limit nested call chain should not dispatch guardrail errors");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_guardrail_one_over_call_depth_limit_fails() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_call_depth_one_over";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr std::size_t limit = 5U;
+    const fs::path main_path = temp_root / "one_over_limit.prg";
+    write_text(main_path, build_nested_do_chain_script(limit + 1U));
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false,
+        .max_call_depth = limit
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "one-over-limit nested call chain should dispatch a guardrail error");
+    expect(state.message.find("maximum call depth") != std::string::npos,
+           "one-over-limit nested call chain should report call-depth limit details");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1571,6 +1644,46 @@ void test_config_fpw_overrides_runtime_limits() {
     expect(
         state.message.find("maximum call depth") != std::string::npos,
         "config.fpw should control max call depth when options use defaults");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_config_fpw_custom_limit_is_enforced_at_boundary() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_config_custom_call_depth_boundary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr std::size_t custom_limit = 10U;
+    write_text(
+        temp_root / "config.fpw",
+        "MAX_CALL_DEPTH = " + std::to_string(custom_limit) + "\n");
+
+    const fs::path at_limit_path = temp_root / "at_custom_limit.prg";
+    const fs::path over_limit_path = temp_root / "over_custom_limit.prg";
+    write_text(at_limit_path, build_nested_do_chain_script(custom_limit));
+    write_text(over_limit_path, build_nested_do_chain_script(custom_limit + 1U));
+
+    copperfin::runtime::PrgRuntimeSession at_limit_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = at_limit_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+    const auto at_limit_state = at_limit_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(at_limit_state.completed,
+           "config.fpw custom max call depth should allow nested chains exactly at the configured limit");
+
+    copperfin::runtime::PrgRuntimeSession over_limit_session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = over_limit_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+    const auto over_limit_state = over_limit_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(over_limit_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "config.fpw custom max call depth should reject nested chains one level over the configured limit");
+    expect(over_limit_state.message.find("maximum call depth") != std::string::npos,
+           "custom-limit guardrail errors should report the call-depth guardrail message");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -3989,9 +4102,12 @@ int main() {
     test_release_local_restores_visible_outer_global();
     test_store_command_assigns_multiple_variables();
     test_runtime_guardrail_limits_call_depth_without_crashing_host();
+    test_runtime_guardrail_exactly_at_call_depth_limit_succeeds();
+    test_runtime_guardrail_one_over_call_depth_limit_fails();
     test_runtime_guardrail_limits_statement_budget_without_crashing_host();
     test_static_diagnostic_flags_likely_infinite_do_while_loop();
     test_config_fpw_overrides_runtime_limits();
+    test_config_fpw_custom_limit_is_enforced_at_boundary();
     test_config_fpw_overrides_temp_directory_default();
     test_elseif_control_flow_executes_matching_branch();
     test_do_with_parameters_binds_arguments_in_called_routine();

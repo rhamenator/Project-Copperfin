@@ -983,7 +983,7 @@
 
         [[nodiscard]] bool can_push_frame() const
         {
-            return stack.size() < max_call_depth;
+            return stack.size() <= max_call_depth;
         }
 
         [[nodiscard]] std::string call_depth_limit_message() const
