@@ -83,6 +83,11 @@ namespace
             "cDefaultPath = SET('PATH')\n"
             "cDefaultDecimals = SET('DECIMALS')\n"
             "cDefaultCollate = SET('COLLATE')\n"
+            "cDefaultFdow = SET('FDOW')\n"
+            "cDefaultFweek = SET('FWEEK')\n"
+            "cDefaultPoint = SET('POINT')\n"
+            "cDefaultSeparator = SET('SEPARATOR')\n"
+            "cDefaultCurrency = SET('CURRENCY')\n"
             "cPathTarget = '/tmp/copperfin'\n"
             "cMarkTarget = '-'\n"
             "nDecimalsTarget = 4\n"
@@ -98,16 +103,36 @@ namespace
             "cDecimalsFromVariable = SET('DECIMALS')\n"
             "SET COLLATE TO cCollateTarget\n"
             "cCollateFromVariable = SET('COLLATE')\n"
+            "SET FDOW TO 7\n"
+            "cFdowFromSet = SET('FDOW')\n"
+            "SET FWEEK TO 4\n"
+            "cFweekFromSet = SET('FWEEK')\n"
+            "SET POINT TO ';'\n"
+            "cPointFromSet = SET('POINT')\n"
+            "SET SEPARATOR TO ':'\n"
+            "cSeparatorFromSet = SET('SEPARATOR')\n"
+            "SET CURRENCY TO 'USD'\n"
+            "cCurrencyFromSet = SET('CURRENCY')\n"
             "SET NULL TO lNullTarget\n"
             "cNullFromVariable = SET('NULL')\n"
             "SET ANSI ON\n"
             "cAnsiOn = SET('ANSI')\n"
             "SET DATASESSION TO 2\n"
             "cCollateSession2 = SET('COLLATE')\n"
+            "cFdowSession2 = SET('FDOW')\n"
+            "cFweekSession2 = SET('FWEEK')\n"
+            "cPointSession2 = SET('POINT')\n"
+            "cSeparatorSession2 = SET('SEPARATOR')\n"
+            "cCurrencySession2 = SET('CURRENCY')\n"
             "cNullSession2 = SET('NULL')\n"
             "cAnsiSession2 = SET('ANSI')\n"
             "SET DATASESSION TO 1\n"
             "cCollateRestored = SET('COLLATE')\n"
+            "cFdowRestored = SET('FDOW')\n"
+            "cFweekRestored = SET('FWEEK')\n"
+            "cPointRestored = SET('POINT')\n"
+            "cSeparatorRestored = SET('SEPARATOR')\n"
+            "cCurrencyRestored = SET('CURRENCY')\n"
             "cNullRestored = SET('NULL')\n"
             "cAnsiRestored = SET('ANSI')\n"
             "ON ERROR DO somehandler\n"
@@ -183,17 +208,37 @@ namespace
         check("cdefaultpath", "");
         check("cdefaultdecimals", "2");
         check("cdefaultcollate", "MACHINE");
+        check("cdefaultfdow", "1");
+        check("cdefaultfweek", "1");
+        check("cdefaultpoint", ".");
+        check("cdefaultseparator", ",");
+        check("cdefaultcurrency", "$");
         check("cpathvalue", "/tmp/copperfin");
         check("cpathfromvariable", "/tmp/copperfin");
         check("cmarkfromvariable", "-");
         check("cdecimalsfromvariable", "4");
         check("ccollatefromvariable", "MACHINE");
+        check("cfdowfromset", "7");
+        check("cfweekfromset", "3");
+        check("cpointfromset", ";");
+        check("cseparatorfromset", ":");
+        check("ccurrencyfromset", "USD");
         check("cnullfromvariable", "ON");
         check("cansion", "ON");
         check("ccollatesession2", "MACHINE");
+        check("cfdowsession2", "1");
+        check("cfweeksession2", "1");
+        check("cpointsession2", ".");
+        check("cseparatorsession2", ",");
+        check("ccurrencysession2", "$");
         check("cnullsession2", "OFF");
         check("cansisession2", "OFF");
         check("ccollaterestored", "MACHINE");
+        check("cfdowrestored", "7");
+        check("cfweekrestored", "3");
+        check("cpointrestored", ";");
+        check("cseparatorrestored", ":");
+        check("ccurrencyrestored", "USD");
         check("cnullrestored", "ON");
         check("cansirestored", "ON");
         check("conerrorhandler", "DO somehandler");
