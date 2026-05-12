@@ -4378,6 +4378,95 @@ void test_fault_continue_cycle_preserves_open_cursor_and_record_position() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fault_continue_cycle_preserves_selected_alias_across_data_session_scope() {
+    // #151: repeated CONTINUE over multiple faults should preserve selected-alias
+    // stability even when faults occur inside a non-default data session.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fault_cursor_ds";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "items_ds.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "fault_cursor_ds.prg";
+    write_text(
+        main_path,
+        "SET DATASESSION TO 2\n"
+        "USE '" + table_path.string() + "' ALIAS Items IN 0\n"
+        "SELECT Items\n"
+        "SKIP\n"
+        "alias_before = ALIAS()\n"
+        "recno_before = RECNO()\n"
+        "x = LOG(-1)\n"
+        "alias_after_first = ALIAS()\n"
+        "recno_after_first = RECNO()\n"
+        "y = ACOS(2)\n"
+        "alias_after_second = ALIAS()\n"
+        "recno_after_second = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#151: first non-default-session fault should pause with error");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#151: second non-default-session fault should pause with error");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#151: session should complete after continuing past both non-default-session faults");
+
+    const auto alias_before = state.globals.find("alias_before");
+    const auto alias_after_first = state.globals.find("alias_after_first");
+    const auto alias_after_second = state.globals.find("alias_after_second");
+    const auto recno_before = state.globals.find("recno_before");
+    const auto recno_after_first = state.globals.find("recno_after_first");
+    const auto recno_after_second = state.globals.find("recno_after_second");
+
+    expect(alias_before != state.globals.end(), "#151: alias_before should be captured");
+    expect(alias_after_first != state.globals.end(), "#151: alias_after_first should be captured");
+    expect(alias_after_second != state.globals.end(), "#151: alias_after_second should be captured");
+    expect(recno_before != state.globals.end(), "#151: recno_before should be captured");
+    expect(recno_after_first != state.globals.end(), "#151: recno_after_first should be captured");
+    expect(recno_after_second != state.globals.end(), "#151: recno_after_second should be captured");
+
+    if (alias_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_before->second) == "Items",
+               "#151: selected alias should be Items before first fault");
+    }
+    if (alias_after_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_first->second) == "Items",
+               "#151: selected alias should survive first fault continue");
+    }
+    if (alias_after_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_after_second->second) == "Items",
+               "#151: selected alias should survive second fault continue");
+    }
+    if (recno_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_before->second) == "2",
+               "#151: pre-fault record position should be 2");
+    }
+    if (recno_after_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_after_first->second) == "2",
+               "#151: record position should survive first fault continue");
+    }
+    if (recno_after_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_after_second->second) == "2",
+               "#151: record position should survive second fault continue");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_pause_stack_frame_contains_accurate_intermediate_frame_lines() {
     // #152: all frames in the call stack at a fault pause should report
     // the line at which each caller invoked the next routine — not zero or stale.
@@ -4901,6 +4990,7 @@ int main() {
     test_retry_with_no_fault_checkpoint_is_noop();
     test_runtime_faults_preserve_state_and_allow_retry();
     test_fault_continue_cycle_preserves_open_cursor_and_record_position();
+    test_fault_continue_cycle_preserves_selected_alias_across_data_session_scope();
     test_pause_stack_frame_contains_accurate_intermediate_frame_lines();
     test_thrown_expression_fault_aerror_columns_match_error_message_functions();
     test_division_by_zero_dispatches_runtime_error();
