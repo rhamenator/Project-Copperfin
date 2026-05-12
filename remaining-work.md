@@ -172,16 +172,15 @@ If direct commits continue, close a child issue only when:
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
-  - active lane issues: #92, #93, #94, #97, #98, #99, #100, #101
-  - recently closed lane issues: #95, #96
-    - active prompt-sized slice issues under #92-#101: none currently open under #93
-        - recently closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262, #263, #264, #265, #266, #267, #268
-  - native slice queues under #93-#101 have now been opened as needed: active and historical slices in this lane currently span `#115`-`#130` plus the closed `#146`-`#149` queue under `#95`
+- A3 active-open lane issues: #92, #93, #94, #97, #98, #99, #100, #101
+- A3 historical-closed lane issues: #95, #96
+- A3 active-open prompt-sized slice issues under #92-#101: none currently open under #93
+- A3 historical-closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262, #263, #264, #265, #266, #267, #268
+- A3 historical native slice ranges in this lane: `#115`-`#130` plus `#146`-`#149` under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
-  - recently closed prompt-sized slice issues: #142, #143, #144, #145
-        - recently closed prompt-sized slice issues also include #150, #151 under #13, plus gap-driven follow-up slices #257-#268
-        - active prompt-sized slice issues: #152, #153, #269, #270, #272 (under #14/#13) and #273 (under #14)
+- Runtime safety active-open prompt-sized slice issues: #150, #151, #152, #153
+- Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145
 
 ### Runtime Parity Surfaces
 
@@ -189,17 +188,15 @@ If direct commits continue, close a child issue only when:
 - Reports/labels runtime fidelity: #16
 - Menus runtime fidelity: #17
 - Project startup/build behavior: #18
-  - native slice queues now exist under #15-#18: #154-#161
+- Runtime parity active-open native slice queues under #15-#18: #154-#161
 
 ### Build, Compiler, And Debug Pipeline
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21
-    - native slice queues now exist under #19-#21: #162-#167, #278
+- Build/run/deploy workflow tightening: #21 (native slice queues: #162-#167)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41
-  - native slice queues now exist under #38-#43: #204-#215
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #162-#167)
 
 ### Designers And IDE Parity
 
@@ -207,7 +204,7 @@ If direct commits continue, close a child issue only when:
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- native slice queues now exist under #22-#26: #168-#177
+- active-open native slice queues under #22-#26: #168-#177
 
 ### Future Enhancements
 
@@ -218,7 +215,7 @@ If direct commits continue, close a child issue only when:
 - Editor semantics and completions: #27
 - Navigation/refactoring depth: #28
 - IntelliSense metadata inputs: #29
-- native slice queues now exist under #27-#29: #178-#183
+- active-open native slice queues under #27-#29: #178-#183
 
 ### Federation, Interop, And Modern Platform
 
@@ -226,22 +223,20 @@ If direct commits continue, close a child issue only when:
 - Document/vector translation and AI planning policy: #31
 - .NET outputs and integration hooks: #32
 - Interop/compiler LINQ and runtime bridge contracts: #57, #91
-- .NET parity umbrella: #274 (under #113)
-- native slice queues now exist under #30-#32, #57, #91: #184-#189, #200-#203, #275-#277, #280
-- recently closed .NET parity slices: #275, #276
+- active-open native slice queues under #30-#32, #57, #91: #184-#189, #200-#203
 
 ### Security And Policy
 
 - Runtime/project security depth: #33
 - Extension/host/AI policy hardening: #34
-- native slice queues now exist under #33-#34: #190-#193, #279
+- active-open native slice queues under #33-#34: #190-#193
 
 ### Portability
 
 - Portable core boundary: #35
 - macOS standalone/core port: #36
 - Linux standalone/core port: #37
-- native slice queues now exist under #35-#37: #194-#199
+- active-open native slice queues under #35-#37: #194-#199
 
 ## Dependency Diagrams
 
