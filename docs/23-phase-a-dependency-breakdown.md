@@ -66,8 +66,8 @@ This is the actionable version of the graph. It groups the above command/functio
 | WP10 | Local structural table-operation closure | `#7`, `#8` | 2 | G10, G11 | WP1, WP4, WP8 | finish the remaining local mutation/import/export correctness seams |
 | WP11 | Query/aggregate and helper closure | `#7` | 2 | G10, G13 | WP5, WP10 | finish aggregate/view/helper behavior on top of stable cursor semantics |
 | WP12 | Headless interaction/display closure | `#7`, `#8` | 1 | G13, G14 | WP8, WP9 | finish host-visible command/event fidelity after macro and field semantics settle |
-| WP13 | Automation activation parity | `#10`, `#11` | 2 | G17 | WP8, WP12 | deepen `CREATEOBJECT()` / `GETOBJECT()` behavior on a steadier runtime base |
-| WP14 | Automation containment and fault behavior | `#10`, `#12` | 1 | G18 | WP13 | finish A4 host-safety semantics around automation failure paths |
+| WP13 | Automation activation parity | `#10`, `#11` | 2 | G17 | WP8, WP12 | completed for Phase A; retained here as historical closure context |
+| WP14 | Automation containment and fault behavior | `#10`, `#12` | 1 | G18 | WP13 | completed for Phase A; retained here as historical closure context |
 
 ## Dependency Graph
 
@@ -174,25 +174,24 @@ The recommended order is not simply "lowest percentage first." It is:
 1. finish the storage and search seams that everything else inherits
 2. close the remaining macro/eval/runtime-state seams before polishing more commands
 3. finish command groups that sit on those two foundations
-4. leave OLE/COM deepening until the runtime/memory/macro base is less noisy
+4. treat automation/OLE rows as historical-complete in Phase A closure ordering
 
 That produces this practical order:
 
-1. `WP0` corpus and regression harness expansion
-2. `WP1` DBF/FPT validation and repair completion
-3. `WP2` index fidelity completion
-4. `WP4` work-area and session residual cleanup
-5. `WP5` order/collation/search residuals
-6. `WP8` macro/eval/runtime-state closure
-7. `WP10` local structural table-operation closure
-8. `WP9` field-projection and data-transfer closure
-9. `WP12` headless interaction/display closure
-10. `WP6` SQL handle/API residuals
-11. `WP7` remote/result-cursor semantic closure
-12. `WP11` query/aggregate and helper closure
-13. `WP3` DBC container completion
-14. `WP13` automation activation parity
-15. `WP14` automation containment and fault behavior
+1. `#150`, `#151`, `#152`, `#153` runtime-safety/diagnostics slices (current active-open safety gate)
+2. `WP0` corpus and regression harness expansion
+3. `WP1` DBF/FPT validation and repair completion
+4. `WP2` index fidelity completion
+5. `WP4` work-area and session residual cleanup
+6. `WP5` order/collation/search residuals (`#92`)
+7. `WP8` macro/eval/runtime-state closure (`#97`, `#98`, `#99`)
+8. `WP10` local structural table-operation closure (`#94`)
+9. `WP9` field-projection and data-transfer closure (`#100`)
+10. `WP12` headless interaction/display closure (`#101`)
+11. `WP6` SQL handle/API residuals
+12. `WP7` remote/result-cursor semantic closure (`#93`, blocked by `#92`)
+13. `WP11` query/aggregate and helper closure (historical-closed lane `#95` context)
+14. `WP3` DBC container completion (historical-closed lane `#96` context)
 
 That sequence is slightly different from the raw dependency graph because it prioritizes:
 
@@ -229,30 +228,34 @@ gantt
     WP11 Query / Aggregate Helper Closure (#95)        :wp11, after wp5, 2w
     WP3 DBC Container Completion (#96)                 :wp3, after wp2, 1w
 
-    section Automation
-    WP13 Automation Activation Parity (#10/#11)        :crit, wp13, after wp12, 2w
-    WP14 Automation Containment (#10/#12)              :crit, wp14, after wp13, 1w
+    section Historical Complete (Not Remaining Critical Path)
+    WP13 Automation Activation Parity (#10/#11, closed)   :done, wp13, 2026-04-30, 2w
+    WP14 Automation Containment (#10/#12, closed)         :done, wp14, 2026-05-01, 1w
 ```
 
 ## CPM Chart
 
 The critical path below is the longest prerequisite chain for Phase A completion under the above work-package model.
 
-Critical path:
+Critical path for remaining Phase A work:
 
-- `WP0 -> WP1 -> WP2 -> WP5 -> WP9 -> WP12 -> WP13 -> WP14`
-- issue path: `(#7/#8/#10/#11/#12 support) -> (#92) -> (#100) -> (#101) -> (#10/#11) -> (#12)`
+- `#150 -> #151 -> #152 -> #153 -> WP0 -> WP1 -> WP2 -> WP5 -> WP9 -> WP12`
+- issue path: `(#13/#14 safety gate) -> (#7/#8 support) -> (#92) -> (#100) -> (#101)`
 
-Total critical-path duration:
+Total remaining critical-path duration:
 
-- `12 weeks`
+- `9 weeks` for WP0-WP12 plus current runtime-safety slice execution (`#150`-`#153`)
 
 ```mermaid
 flowchart LR
     classDef normal fill:#eef2ff,stroke:#4338ca,stroke-width:1px,color:#1e1b4b;
     classDef critical fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d;
 
-    WP0["WP0<br/>#7,#8,#10,#11,#12<br/>1w<br/>ES 0 EF 1"]
+    WP0["WP0<br/>#7,#8 support<br/>1w<br/>ES 0 EF 1"]
+    S150["#150<br/>runtime safety slice<br/>ES 0 EF 0"]
+    S151["#151<br/>runtime safety slice<br/>ES 0 EF 0"]
+    S152["#152<br/>runtime diagnostics slice<br/>ES 0 EF 0"]
+    S153["#153<br/>runtime diagnostics slice<br/>ES 0 EF 0"]
     WP1["WP1<br/>supports #7<br/>2w<br/>ES 1 EF 3"]
     WP2["WP2<br/>#92 support<br/>2w<br/>ES 3 EF 5"]
     WP3["WP3<br/>#96<br/>1w<br/>ES 5 EF 6"]
@@ -265,9 +268,10 @@ flowchart LR
     WP10["WP10<br/>#94<br/>2w<br/>ES 4 EF 6"]
     WP11["WP11<br/>#95<br/>2w<br/>ES 7 EF 9"]
     WP12["WP12<br/>#101<br/>1w<br/>ES 8 EF 9"]
-    WP13["WP13<br/>#10/#11<br/>2w<br/>ES 9 EF 11"]
-    WP14["WP14<br/>#10/#12<br/>1w<br/>ES 11 EF 12"]
+    WP13["WP13<br/>#10/#11 closed<br/>2w<br/>historical"]
+    WP14["WP14<br/>#10/#12 closed<br/>1w<br/>historical"]
 
+    S150 --> S151 --> S152 --> S153 --> WP0
     WP0 --> WP1 --> WP2 --> WP3
     WP0 --> WP4
     WP2 --> WP5
@@ -275,7 +279,7 @@ flowchart LR
     WP4 --> WP6 --> WP7
     WP4 --> WP8
     WP8 --> WP10 --> WP11
-    WP5 --> WP9 --> WP12 --> WP13 --> WP14
+    WP5 --> WP9 --> WP12
     WP8 --> WP9
     WP8 --> WP12
     WP1 --> WP10
@@ -283,8 +287,8 @@ flowchart LR
     WP10 --> WP9
     WP5 --> WP11
 
-    class WP3,WP4,WP6,WP7,WP8,WP10,WP11 normal;
-    class WP0,WP1,WP2,WP5,WP9,WP12,WP13,WP14 critical;
+    class WP3,WP4,WP6,WP7,WP8,WP10,WP11,WP13,WP14 normal;
+    class S150,S151,S152,S153,WP0,WP1,WP2,WP5,WP9,WP12 critical;
 ```
 
 ## First Things To Address
@@ -299,7 +303,7 @@ If the goal is "what should be handled first, concretely?", the answer is:
 | 4 | macro/eval/runtime-state closure | This is the highest-leverage remaining issue `#8` surface and still fans out into many commands. |
 | 5 | local structural table-operation residuals | These still touch correctness, rollback, persistence, and import/export behavior. |
 | 6 | narrow field-projection and headless command residuals | These are close to done, but should be finished after search and macro foundations are steadier. |
-| 7 | automation activation and containment | Important, but lower ROI until the runtime base underneath it is quieter. |
+| 7 | remote/result-cursor and structural closure (`#93`, `#94`) after `#92/#97/#100/#101` chain | These are high-value finishers once critical dependencies are quiet. |
 
 ## Issue Hierarchy
 
@@ -359,8 +363,7 @@ Current dependency links:
 
 - `#93` is blocked by `#92`
 - `#100` is blocked by `#97`
-- `#10` is blocked by `#99`
-- `#11` is blocked by `#99`
+- historical note: `#10` and `#11` previously depended on `#99` and are now closed
 
 ## Slice-Issue Policy
 
