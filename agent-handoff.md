@@ -29,13 +29,15 @@ Important:
 Current priority order:
 
 1. `#151`, `#152`, `#153`, and `#257`-`#271` are now **closed** (recently shipped in focused batches)
-2. Continue with the highest-fan-out open child slice under `#93` or `#94`
+2. Re-read `docs/23-phase-a-dependency-breakdown.md` and continue with the highest-fan-out open child slice under `#93` or `#94`
 3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
-4. New H3 child-issue queue is open for the next fan-out batch: `#257` (`#92`), `#258` (`#97`), `#259` (`#99`), `#260` (`#94`), `#261` (`#100`), and `#262` (`#93`)
+4. Do not reopen the now-shipped H3 child queue `#257`-`#262` unless a concrete remaining parity bug is found
 
 Current shipped highlights worth remembering:
 
 - 2026-05-12: H3/#92 temporary-order collation parity advanced in `test_prg_engine_seek_index`. Focused coverage now proves that a plain targeted local temporary order (`SET ORDER TO NAME IN People`) honors `SET COLLATE TO GENERAL` case-folding for `SEEK(..., 'People', 'NAME')` while preserving selected non-target alias/pointer state.
+
+- 2026-05-12: H3/#97, `#99`, `#94`, `#100`, and `#93` queue issues `#258`-`#262` are now shipped. Macro parsing now supports alias-qualified field indirection with macro suffixes (`&cAlias..&cField`) in expressions and command contexts, macro-expanded assignment targets now preserve `PRIVATE` / `PUBLIC` identity instead of collapsing to current values, structural rollback coverage now explicitly proves `ALTER TABLE` and `PACK MEMO` leave tables readable after rollback, wildcard `FIELDS LIKE` / `FIELDS EXCEPT` transfer coverage now reaches `SCATTER/GATHER MEMVAR` plus DBF `COPY TO` / `APPEND FROM`, and targeted SQL `APPEND BLANK IN <alias>` mutation now has focused selected-alias/pointer-isolation coverage beside the existing targeted `REPLACE/DELETE/RECALL` tests.
 
 - 2026-05-12: Gap-03 failure-injection/rollback coverage advanced across slice issues `#266`, `#267`, and `#268`. `test_dbf_table` now verifies deterministic staged-write rollback for DBF and memo sidecar write paths (original-bytes preservation plus artifact cleanup), and `src/vfp/dbf_table.cpp` now exposes test-only failure checkpoints (`temp-open`, `before-backup`, `before-promote`) gated by environment variables.
 - 2026-05-12: Additional DBF header guardrail coverage advanced across slice issues `#269`, `#270`, and `#271`, locking down rejection of zero record-length headers, undersized header lengths, and header-length claims beyond physical file size.

@@ -214,11 +214,42 @@
                 std::string resolved_identifier = apply_with_context(raw_identifier, current_frame);
                 if (!resolved_identifier.empty() && resolved_identifier.front() == '&')
                 {
-                    const PrgValue expanded_identifier = evaluate_expression(resolved_identifier, current_frame);
-                    const std::string expanded_text = trim_copy(value_as_string(expanded_identifier));
-                    if (!expanded_text.empty())
+                    std::size_t macro_end = 1U;
+                    while (macro_end < resolved_identifier.size())
                     {
-                        resolved_identifier = expanded_text;
+                        const char ch = resolved_identifier[macro_end];
+                        if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_')
+                        {
+                            ++macro_end;
+                            continue;
+                        }
+                        break;
+                    }
+
+                    const std::string macro_name = resolved_identifier.substr(1U, macro_end - 1U);
+                    if (!macro_name.empty())
+                    {
+                        std::string expanded_text = macro_name;
+                        const std::string normalized = normalize_memory_variable_identifier(macro_name);
+                        const auto local = current_frame.locals.find(normalized);
+                        if (local != current_frame.locals.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(local->second));
+                            if (!next.empty())
+                            {
+                                expanded_text = next;
+                            }
+                        }
+                        else if (const auto global = globals.find(normalized); global != globals.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(global->second));
+                            if (!next.empty())
+                            {
+                                expanded_text = next;
+                            }
+                        }
+
+                        resolved_identifier = expanded_text + resolved_identifier.substr(macro_end);
                     }
                 }
                 return resolved_identifier;

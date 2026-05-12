@@ -1352,6 +1352,55 @@
 
             PrgValue parse_macro_reference()
             {
+                const auto expand_memory_macro_identifier = [&](const std::string &macro_identifier)
+                {
+                    std::string resolved = trim_copy(macro_identifier);
+                    if (resolved.empty())
+                    {
+                        return resolved;
+                    }
+
+                    std::vector<std::string> visited_identifiers;
+                    constexpr std::size_t max_macro_identifier_depth = 16U;
+                    for (std::size_t depth = 0U; depth < max_macro_identifier_depth; ++depth)
+                    {
+                        const std::string normalized = normalize_memory_variable_identifier(resolved);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized);
+
+                        const auto local = frame_.locals.find(normalized);
+                        if (local != frame_.locals.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(local->second));
+                            if (next.empty() || next == resolved)
+                            {
+                                break;
+                            }
+                            resolved = next;
+                            continue;
+                        }
+
+                        const auto global = globals_.find(normalized);
+                        if (global != globals_.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(global->second));
+                            if (next.empty() || next == resolved)
+                            {
+                                break;
+                            }
+                            resolved = next;
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    return resolved;
+                };
+
                 skip_whitespace();
                 const std::size_t start = position_;
                 while (position_ < text_.size())
@@ -1387,6 +1436,30 @@
                         while (position_ < text_.size())
                         {
                             const char sch = text_[position_];
+                            if (sch == '&')
+                            {
+                                ++position_;
+                                const std::size_t embedded_macro_start = position_;
+                                while (position_ < text_.size())
+                                {
+                                    const char mch = text_[position_];
+                                    if (std::isalnum(static_cast<unsigned char>(mch)) != 0 || mch == '_')
+                                    {
+                                        ++position_;
+                                        continue;
+                                    }
+                                    break;
+                                }
+
+                                const std::string embedded_macro_name = text_.substr(embedded_macro_start, position_ - embedded_macro_start);
+                                if (embedded_macro_name.empty())
+                                {
+                                    break;
+                                }
+
+                                dot_suffix += expand_memory_macro_identifier(embedded_macro_name);
+                                continue;
+                            }
                             if (std::isalnum(static_cast<unsigned char>(sch)) != 0 || sch == '_' || sch == '.')
                             {
                                 dot_suffix.push_back(sch);

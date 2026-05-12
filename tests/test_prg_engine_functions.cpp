@@ -374,8 +374,16 @@ namespace
             main_path,
             "USE '" + table_path.string() + "' ALIAS People IN 0\n"
             "cAlias = 'People'\n"
+            "cNameField = 'NAME'\n"
+            "cAgeField = 'AGE'\n"
+            "cNestedField = 'cNameField'\n"
             "cNameFromAlias = &cAlias..NAME\n"
             "nAgeFromAlias = &cAlias..AGE\n"
+            "cNameFromDynamicField = &cAlias..&cNameField\n"
+            "nAgeFromDynamicField = &cAlias..&cAgeField\n"
+            "LOCATE FOR &cAlias..&cNestedField = 'BRAVO'\n"
+            "lFoundDynamic = FOUND()\n"
+            "cLocatedName = NAME\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -400,6 +408,10 @@ namespace
 
         check("cnamefromalias", "ALPHA");
         check("nagefromalias", "11");
+        check("cnamefromdynamicfield", "ALPHA");
+        check("nagefromdynamicfield", "11");
+        check("lfounddynamic", "true");
+        check("clocatedname", "BRAVO");
 
         fs::remove_all(temp_root, ignored);
     }

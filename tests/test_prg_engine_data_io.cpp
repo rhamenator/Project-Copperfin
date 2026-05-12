@@ -909,6 +909,81 @@ void test_scatter_gather_name_like_and_except_field_filters() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_memvar_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{{"Alice", "Ready", "42"}};
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER/GATHER MEMVAR LIKE/EXCEPT fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_memvar_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People\n"
+        "GO 1\n"
+        "m.AGE = 900\n"
+        "SCATTER FIELDS LIKE N* MEMVAR\n"
+        "cLikeName = m.NAME\n"
+        "cLikeNote = m.NOTE\n"
+        "nLikeAge = m.AGE\n"
+        "m.NAME = 'LikeName'\n"
+        "m.NOTE = 'LikeNote'\n"
+        "m.AGE = 901\n"
+        "GATHER MEMVAR FIELDS EXCEPT AGE\n"
+        "cAfterName = People.NAME\n"
+        "cAfterNote = People.NOTE\n"
+        "nAfterAge = People.AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER MEMVAR LIKE/EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("clikename", "Alice", "SCATTER FIELDS LIKE N* MEMVAR should include keyword-heavy NAME");
+    chk("clikenote", "Ready", "SCATTER FIELDS LIKE N* MEMVAR should include NOTE");
+    chk("nlikeage", "900", "SCATTER FIELDS LIKE N* MEMVAR should preserve excluded preseeded AGE");
+    chk("caftername", "LikeName", "GATHER MEMVAR FIELDS EXCEPT AGE should write NAME back");
+    chk("cafternote", "LikeNote", "GATHER MEMVAR FIELDS EXCEPT AGE should write NOTE back");
+    chk("nafterage", "42", "GATHER MEMVAR FIELDS EXCEPT AGE should leave AGE unchanged");
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok, "GATHER MEMVAR LIKE/EXCEPT destination table should remain readable");
+    if (persisted.ok && !persisted.table.records.empty()) {
+        expect(persisted.table.records[0U].values[0U].display_value == "LikeName",
+            "GATHER MEMVAR FIELDS EXCEPT AGE should persist NAME updates");
+        expect(persisted.table.records[0U].values[1U].display_value == "LikeNote",
+            "GATHER MEMVAR FIELDS EXCEPT AGE should persist NOTE updates");
+        expect(persisted.table.records[0U].values[2U].display_value == "42",
+            "GATHER MEMVAR FIELDS EXCEPT AGE should leave AGE unchanged on disk");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_name_supports_macro_object_variable_names() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_name_macro";
@@ -3991,6 +4066,75 @@ void test_copy_append_array_like_and_except_field_filters() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_append_dbf_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_dbf_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{{"Alpha", "One", "30"}, {"Bravo", "Two", "25"}};
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "COPY/APPEND DBF LIKE/EXCEPT source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "COPY/APPEND DBF LIKE/EXCEPT destination fixture should be created");
+
+    const fs::path selected_path = temp_root / "selected.dbf";
+    const fs::path main_path = temp_root / "copy_append_dbf_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + selected_path.string() + "' FIELDS LIKE N*\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM '" + selected_path.string() + "' FIELDS EXCEPT AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "cNote1 = NOTE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "cNote2 = NOTE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM DBF FIELDS LIKE/EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM FIELDS EXCEPT AGE should append both rows");
+    chk("cname1", "Alpha", "COPY TO FIELDS LIKE N* should preserve keyword-heavy NAME for row 1");
+    chk("cnote1", "One", "COPY TO FIELDS LIKE N* should preserve NOTE for row 1");
+    chk("nage1", "0", "APPEND FROM FIELDS EXCEPT AGE should leave AGE blank for row 1");
+    chk("cname2", "Bravo", "COPY TO FIELDS LIKE N* should preserve NAME for row 2");
+    chk("cnote2", "Two", "COPY TO FIELDS LIKE N* should preserve NOTE for row 2");
+    chk("nage2", "0", "APPEND FROM FIELDS EXCEPT AGE should leave AGE blank for row 2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_date_time";
@@ -5736,6 +5880,7 @@ int main() {
     test_scatter_name_additive_merges_existing_object_properties();
     test_scatter_gather_name_single_name_field_filter_semantics();
     test_scatter_gather_name_like_and_except_field_filters();
+    test_scatter_gather_memvar_like_and_except_field_filters();
     test_scatter_gather_name_supports_macro_object_variable_names();
     test_scatter_gather_name_supports_nested_object_targets();
     test_scatter_gather_name_supports_macro_expanded_nested_property_segments();
@@ -5779,6 +5924,7 @@ int main() {
     test_append_from_array_writes_records_from_2d_array();
     test_append_from_array_fields_clause_allows_keyword_named_field();
     test_copy_append_array_like_and_except_field_filters();
+    test_copy_append_dbf_like_and_except_field_filters();
     test_append_from_array_macro_source_preserves_date_and_datetime_fields();
     test_gather_memvar_round_trips_field_values();
     test_m_dot_namespace_shares_bare_memory_variable_binding();

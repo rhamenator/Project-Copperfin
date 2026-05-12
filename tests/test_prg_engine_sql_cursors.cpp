@@ -998,6 +998,124 @@ void test_sql_result_cursor_mutation_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutations_in_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_mutations_in_target.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO 2\n"
+        "nOtherRecBefore = RECNO('sqlother')\n"
+        "GO BOTTOM IN sqlcust\n"
+        "nCustRecBefore = RECNO('sqlcust')\n"
+        "APPEND BLANK IN sqlcust\n"
+        "nCustRecAfterAppend = RECNO('sqlcust')\n"
+        "REPLACE NAME WITH 'DELTA', AMOUNT WITH 99 IN sqlcust\n"
+        "DELETE FOR NAME = 'BRAVO' IN sqlcust\n"
+        "RECALL FOR NAME = 'BRAVO' IN sqlcust\n"
+        "cAliasAfter = ALIAS()\n"
+        "nOtherRecAfter = RECNO('sqlother')\n"
+        "nCustCount = RECCOUNT('sqlcust')\n"
+        "SELECT sqlcust\n"
+        "GO 2\n"
+        "lBravoDeleted = DELETED()\n"
+        "GO BOTTOM\n"
+        "cLastName = NAME\n"
+        "nLastAmount = AMOUNT\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "targeted SQL mutation isolation script should complete: " + state.message);
+    expect(state.sql_connections.empty(), "targeted SQL mutation isolation script should disconnect its SQL handle");
+
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto cust_rec_before = state.globals.find("ncustrecbefore");
+    const auto cust_rec_after_append = state.globals.find("ncustrecafterappend");
+    const auto alias_after = state.globals.find("caliasafter");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto cust_count = state.globals.find("ncustcount");
+    const auto bravo_deleted = state.globals.find("lbravodeleted");
+    const auto last_name = state.globals.find("clastname");
+    const auto last_amount = state.globals.find("nlastamount");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(other_rec_before != state.globals.end(), "selected SQL cursor RECNO() before targeted mutation should be captured");
+    expect(cust_rec_before != state.globals.end(), "target SQL cursor RECNO() before targeted append should be captured");
+    expect(cust_rec_after_append != state.globals.end(), "target SQL cursor RECNO() after targeted append should be captured");
+    expect(alias_after != state.globals.end(), "selected alias after targeted SQL mutations should be captured");
+    expect(other_rec_after != state.globals.end(), "selected SQL cursor RECNO() after targeted SQL mutations should be captured");
+    expect(cust_count != state.globals.end(), "target SQL cursor RECCOUNT() after targeted mutations should be captured");
+    expect(bravo_deleted != state.globals.end(), "target SQL cursor DELETED() state after targeted recall should be captured");
+    expect(last_name != state.globals.end(), "target SQL cursor appended NAME after targeted mutations should be captured");
+    expect(last_amount != state.globals.end(), "target SQL cursor appended AMOUNT after targeted mutations should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after targeted SQL mutation checks");
+
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "2",
+            "selected SQL cursor should start on row 2 before targeted SQL mutations");
+    }
+    if (cust_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_before->second) == "3",
+            "GO BOTTOM IN should move the targeted SQL cursor to its last row before targeted append");
+    }
+    if (cust_rec_after_append != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_append->second) == "4",
+            "APPEND BLANK IN should advance only the targeted SQL cursor to the appended row");
+    }
+    if (alias_after != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after->second)) == "SQLOTHER",
+            "targeted SQL mutations should preserve the selected alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "2",
+            "targeted SQL mutations should preserve the selected SQL cursor pointer");
+    }
+    if (cust_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_count->second) == "4",
+            "targeted SQL APPEND BLANK should grow only the targeted SQL cursor record count");
+    }
+    if (bravo_deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bravo_deleted->second) == "false",
+            "targeted SQL RECALL should clear the deletion flag on the targeted result cursor row");
+    }
+    if (last_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_name->second) == "DELTA",
+            "targeted SQL REPLACE should persist appended NAME values on the targeted result cursor");
+    }
+    if (last_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(last_amount->second) == "99",
+            "targeted SQL REPLACE should persist appended AMOUNT values on the targeted result cursor");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+            "SQLDISCONNECT should succeed after targeted SQL mutation checks");
+    }
+
+    expect(
+        has_runtime_event(state.events, "runtime.append_blank", "sqlcust") &&
+        has_runtime_event(state.events, "runtime.replace", "NAME WITH 'DELTA', AMOUNT WITH 99") &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.delete"; }) &&
+        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.recall"; }),
+        "targeted SQL mutation flow should emit append/replace/delete/recall runtime events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursors_are_isolated_by_data_session() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_datasession";
@@ -3167,6 +3285,7 @@ int main() {
     test_sql_result_cursor_backward_navigation_in_target_parity();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_sql_result_cursor_mutation_commands();
+    test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
     test_sql_result_cursors_are_isolated_by_data_session();
     test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
     test_sql_result_cursors_and_ole_actions();

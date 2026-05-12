@@ -446,16 +446,157 @@ void test_pack_memo_rewrites_memo_sidecar() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_alter_table_rollback_restores_schema_and_disk_readability() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_alter_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"ALPHA", "10"}, {"BRAVO", "20"}});
+    expect(create_result.ok, "ALTER TABLE rollback fixture should be created");
+
+    const fs::path main_path = temp_root / "alter_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8) NOT NULL DEFAULT 'NEW'\n"
+        "ROLLBACK\n"
+        "nFields = FCOUNT('People')\n"
+        "cField2 = FIELD(2, 'People')\n"
+        "GO TOP\n"
+        "cNameAfterRollback = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ALTER TABLE rollback script should complete");
+
+    const auto field_count = state.globals.find("nfields");
+    const auto field2 = state.globals.find("cfield2");
+    const auto name_after_rollback = state.globals.find("cnameafterrollback");
+    expect(field_count != state.globals.end(), "ALTER TABLE rollback should expose field count");
+    expect(field2 != state.globals.end(), "ALTER TABLE rollback should expose second field name");
+    expect(name_after_rollback != state.globals.end(), "ALTER TABLE rollback should preserve row readability");
+    if (field_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field_count->second) == "2",
+               "ROLLBACK should restore the pre-ALTER field count for the open cursor");
+    }
+    if (field2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field2->second) == "AGE",
+               "ROLLBACK should restore the original field ordering for the open cursor");
+    }
+    if (name_after_rollback != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name_after_rollback->second) == "ALPHA",
+               "ROLLBACK should keep the restored table readable through the open cursor");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "ALTER TABLE rollback should leave DBF readable on disk");
+    expect(parse_result.table.fields.size() == 2U, "ALTER TABLE rollback should restore the original schema on disk");
+    expect(parse_result.table.records.size() == 2U, "ALTER TABLE rollback should preserve original rows on disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_pack_memo_rollback_restores_original_sidecar_and_readability() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_pack_memo_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "memo.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTES", .type = 'M', .length = 4U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"ALPHA", std::string(900U, 'A')}});
+    expect(create_result.ok, "PACK MEMO rollback fixture should be created");
+    const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NOTES", "short");
+    expect(replace_result.ok, "PACK MEMO rollback fixture should create stale memo blocks");
+
+    const fs::path memo_path = memo_sidecar_path(table_path);
+    const auto before_size = fs::file_size(memo_path, ignored);
+    expect(before_size > 0U, "memo sidecar should exist before PACK MEMO rollback");
+
+    const fs::path main_path = temp_root / "pack_memo_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Memo IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "PACK MEMO\n"
+        "ROLLBACK\n"
+        "nCount = RECCOUNT()\n"
+        "cNotes = NOTES\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PACK MEMO rollback script should complete");
+
+    const auto count = state.globals.find("ncount");
+    const auto notes = state.globals.find("cnotes");
+    expect(count != state.globals.end(), "PACK MEMO rollback should expose RECCOUNT()");
+    expect(notes != state.globals.end(), "PACK MEMO rollback should keep memo field readable");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1",
+               "PACK MEMO rollback should preserve row count");
+    }
+    if (notes != state.globals.end()) {
+        expect(copperfin::runtime::format_value(notes->second) == "short",
+               "PACK MEMO rollback should preserve the current memo value");
+    }
+
+    const auto after_size = fs::file_size(memo_path, ignored);
+    expect(after_size == before_size,
+           "ROLLBACK after PACK MEMO should restore the original memo sidecar bytes");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "PACK MEMO rollback should leave DBF readable on disk");
+    expect(parse_result.table.records.size() == 1U, "PACK MEMO rollback should preserve original rows on disk");
+    if (parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.records[0].values[1].display_value == "short",
+               "PACK MEMO rollback should preserve the memo payload on disk");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_alter_table_drop_and_alter_column_rewrite();
     test_alter_table_add_column_backfills_existing_rows_with_default();
+    test_alter_table_rollback_restores_schema_and_disk_readability();
     test_create_table_defaults_and_not_null_constraints();
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();
     test_pack_memo_rewrites_memo_sidecar();
+    test_pack_memo_rollback_restores_original_sidecar_and_readability();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

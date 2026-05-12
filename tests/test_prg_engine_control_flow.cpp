@@ -1567,6 +1567,100 @@ void test_release_local_restores_visible_outer_global() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_macro_assignment_target_updates_private_binding_and_release_restores_outer_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_macro_assign_private_release";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "macro_assign_private_release.prg";
+    write_text(
+        main_path,
+        "x = 42\n"
+        "cTarget = 'x'\n"
+        "DO subproc\n"
+        "caller_x = x\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "PRIVATE x\n"
+        "&cTarget = 99\n"
+        "sub_x_after_macro_assign = x\n"
+        "RELEASE x\n"
+        "sub_x_after_release = x\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro-expanded PRIVATE assignment target script should complete");
+
+    const auto sub_x_after_macro_assign = state.globals.find("sub_x_after_macro_assign");
+    const auto sub_x_after_release = state.globals.find("sub_x_after_release");
+    const auto caller_x = state.globals.find("caller_x");
+
+    expect(sub_x_after_macro_assign != state.globals.end(), "sub_x_after_macro_assign should be captured");
+    expect(sub_x_after_release != state.globals.end(), "sub_x_after_release should be captured");
+    expect(caller_x != state.globals.end(), "caller_x should be captured");
+
+    if (sub_x_after_macro_assign != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x_after_macro_assign->second) == "99",
+               "&cTarget = value should update the visible PRIVATE binding rather than resolve to the binding's current value");
+    }
+    if (sub_x_after_release != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x_after_release->second) == "42",
+               "RELEASE after a macro-target PRIVATE assignment should restore the saved outer binding");
+    }
+    if (caller_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_x->second) == "42",
+               "the caller binding should remain intact after the PRIVATE scope returns");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_macro_assignment_target_preserves_public_binding_across_release_all() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_macro_assign_public_release_all";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "macro_assign_public_release_all.prg";
+    write_text(
+        main_path,
+        "PUBLIC shared\n"
+        "shared = 7\n"
+        "cTarget = 'shared'\n"
+        "&cTarget = 9\n"
+        "RELEASE ALL\n"
+        "nSharedAfterReleaseAll = shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro-expanded PUBLIC assignment target script should complete");
+
+    const auto shared_after_release_all = state.globals.find("nsharedafterreleaseall");
+    expect(shared_after_release_all != state.globals.end(), "nSharedAfterReleaseAll should be captured");
+
+    if (shared_after_release_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(shared_after_release_all->second) == "9",
+               "macro-expanded assignment should preserve PUBLIC binding identity so RELEASE ALL keeps the updated value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_store_command_assigns_multiple_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_store";
@@ -4669,6 +4763,8 @@ int main() {
     test_private_variable_visible_to_called_routines();
     test_release_private_restores_saved_binding_immediately();
     test_release_local_restores_visible_outer_global();
+    test_macro_assignment_target_updates_private_binding_and_release_restores_outer_value();
+    test_macro_assignment_target_preserves_public_binding_across_release_all();
     test_store_command_assigns_multiple_variables();
     test_runtime_guardrail_limits_call_depth_without_crashing_host();
     test_runtime_guardrail_exactly_at_call_depth_limit_succeeds();
