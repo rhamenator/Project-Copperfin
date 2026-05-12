@@ -2917,6 +2917,57 @@ void test_copy_structure_to_creates_empty_schema() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_from_empty_table_produces_valid_empty_dbf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_copy_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Source is an empty table (zero records, but has a field definition)
+    write_simple_dbf(temp_root / "empty_src.dbf", {});
+
+    const fs::path main_path = temp_root / "copy_empty.prg";
+    const std::string dest_path = (temp_root / "empty_dest.dbf").string();
+    const std::string recv_path = (temp_root / "recv.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "empty_src.dbf").string() + "' ALIAS EmptySrc IN 0\n"
+        "COPY TO '" + dest_path + "'\n"
+        "USE '" + recv_path + "' ALIAS Recv IN 0\n"
+        "APPEND FROM '" + dest_path + "'\n"
+        "nRecvCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    // Pre-create the receiver as an empty table so USE opens it
+    write_simple_dbf(temp_root / "recv.dbf", {});
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/FROM empty table script should complete");
+    expect(fs::exists(dest_path), "COPY TO of empty table should create destination DBF file");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY TO empty source should produce a readable DBF");
+        expect(result.table.records.empty(), "COPY TO empty source should produce zero records");
+    }
+
+    const auto recv_count = state.globals.find("nrecvcount");
+    expect(recv_count != state.globals.end(), "APPEND FROM empty DBF should expose RECCOUNT()");
+    if (recv_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recv_count->second) == "0",
+               "APPEND FROM empty DBF should leave receiver with zero records");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_copies_records_into_current_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from";
@@ -5620,6 +5671,58 @@ void test_list_records_surfaces_effective_cursor_view_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_aerror_content_for_sql_passthrough_fault() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aerror_sql_passthrough";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Trigger a SQL pass-through fault by calling SQLEXEC() without a valid
+    // statement (empty command string), then capture AERROR() columns.
+    const fs::path main_path = temp_root / "aerror_sql.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('Driver=ODBC Driver 18 for SQL Server;Server=BadHost_DoesNotExist_Copperfin')\n"
+        "nSqlResult = SQLEXEC(nConn, '')\n"
+        "nRows = AERROR(aErr)\n"
+        "nErrCode = aErr[1,1]\n"
+        "cErrMsg  = aErr[1,2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "AERROR SQL passthrough fault script should complete without crashing");
+
+    const auto rows     = state.globals.find("nrows");
+    const auto err_code = state.globals.find("nerrcode");
+    const auto err_msg  = state.globals.find("cerrmsg");
+
+    expect(rows     != state.globals.end(), "AERROR after SQL fault should return a row count");
+    expect(err_code != state.globals.end(), "AERROR after SQL fault should populate error code");
+    expect(err_msg  != state.globals.end(), "AERROR after SQL fault should populate error message");
+
+    if (rows != state.globals.end()) {
+        const std::string rows_val = copperfin::runtime::format_value(rows->second);
+        expect(rows_val != "0", "AERROR after SQL fault should return at least one row (got 0)");
+    }
+    if (err_code != state.globals.end()) {
+        const std::string code_val = copperfin::runtime::format_value(err_code->second);
+        expect(code_val != "0", "AERROR error code after SQL fault must be non-zero");
+    }
+    if (err_msg != state.globals.end()) {
+        const std::string msg_val = copperfin::runtime::format_value(err_msg->second);
+        expect(!msg_val.empty(), "AERROR error message after SQL fault must not be empty");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -5660,6 +5763,7 @@ int main() {
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
     test_copy_structure_to_creates_empty_schema();
+    test_copy_to_from_empty_table_produces_valid_empty_dbf();
     test_append_from_copies_records_into_current_table();
     test_copy_to_type_sdf_writes_fixed_width_text_rows();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
@@ -5703,6 +5807,7 @@ int main() {
     test_list_memory_surfaces_visible_variable_and_array_metadata();
     test_list_structure_surfaces_selected_cursor_schema();
     test_list_records_surfaces_effective_cursor_view_metadata();
+    test_aerror_content_for_sql_passthrough_fault();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

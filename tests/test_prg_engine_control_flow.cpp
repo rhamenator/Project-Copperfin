@@ -939,6 +939,67 @@ void test_locate_on_empty_table_sets_eof() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_go_top_bottom_on_empty_table_does_not_crash() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_go_topbottom_empty";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_tbl.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "go_topbottom_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyTbl IN 0\n"
+        "GO TOP\n"
+        "lBofAfterTop = BOF()\n"
+        "lEofAfterTop = EOF()\n"
+        "GO BOTTOM\n"
+        "lBofAfterBottom = BOF()\n"
+        "lEofAfterBottom = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GO TOP/BOTTOM on empty table should not crash");
+
+    const auto bof_after_top    = state.globals.find("lbofaftertop");
+    const auto eof_after_top    = state.globals.find("leofaftertop");
+    const auto bof_after_bottom = state.globals.find("lbofafterbottom");
+    const auto eof_after_bottom = state.globals.find("leofafterbottom");
+
+    expect(bof_after_top    != state.globals.end(), "GO TOP on empty table should expose BOF()");
+    expect(eof_after_top    != state.globals.end(), "GO TOP on empty table should expose EOF()");
+    expect(bof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose BOF()");
+    expect(eof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose EOF()");
+
+    if (bof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
+               "GO TOP on empty table should leave BOF() true");
+    }
+    if (eof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_top->second) == "true",
+               "GO TOP on empty table should leave EOF() true");
+    }
+    if (bof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_bottom->second) == "true",
+               "GO BOTTOM on empty table should leave BOF() true");
+    }
+    if (eof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_bottom->second) == "true",
+               "GO BOTTOM on empty table should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_aggregate_commands_support_macro_targets_and_calculate_while() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_macro_targets";
@@ -4237,6 +4298,7 @@ int main() {
     test_scan_on_empty_table_does_not_execute_body();
     test_aggregate_commands_on_empty_table_return_zero();
     test_locate_on_empty_table_sets_eof();
+    test_go_top_bottom_on_empty_table_does_not_crash();
     test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
