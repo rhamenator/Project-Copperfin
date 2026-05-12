@@ -3553,6 +3553,45 @@ void test_release_all_local_shadow_preserves_outer_global() {
     fs::remove_all(tmp, ign);
 }
 
+void test_release_all_private_shadow_restores_outer_global() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_release_all_private_shadow";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(
+        prg,
+        "x = 42\n"
+        "DO subproc\n"
+        "caller_x = x\n"
+        "RETURN\n"
+        "PROCEDURE subproc\n"
+        "PRIVATE x\n"
+        "x = 99\n"
+        "RELEASE ALL\n"
+        "sub_x_after_release_all = x\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RELEASE ALL with PRIVATE shadowing should complete");
+
+    const auto sub_x_after_release_all = state.globals.find("sub_x_after_release_all");
+    const auto caller_x = state.globals.find("caller_x");
+    expect(sub_x_after_release_all != state.globals.end(), "sub_x_after_release_all should be captured");
+    expect(caller_x != state.globals.end(), "caller_x should be captured");
+    if (sub_x_after_release_all != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sub_x_after_release_all->second) == "42",
+               "RELEASE ALL should clear the PRIVATE shadow without erasing the outer global binding");
+    }
+    if (caller_x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caller_x->second) == "42",
+               "RELEASE ALL should preserve the outer global after the PRIVATE frame returns");
+    }
+    fs::remove_all(tmp, ign);
+}
+
 void test_release_all_like_pattern() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_release_like";
@@ -5155,6 +5194,7 @@ int main() {
     test_release_all_clears_all_globals();
     test_release_all_clears_current_frame_locals_without_global_leak();
     test_release_all_local_shadow_preserves_outer_global();
+    test_release_all_private_shadow_restores_outer_global();
     test_release_all_like_pattern();
     test_release_all_like_pattern_reaches_arrays();
     test_release_all_except_pattern();
