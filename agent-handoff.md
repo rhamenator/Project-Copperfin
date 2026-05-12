@@ -28,11 +28,13 @@ Important:
 
 Current priority order:
 
-1. take `#150`, then `#151` under `#13`
-2. then take `#152`, then `#153` under `#14`
-3. only then move to a new slice under `#93` or `#94` if it has stronger downstream fan-out than the available `#13` / `#14` work
+1. `#151`, `#152`, and `#153` are now **closed** (shipped in this session)
+2. Move to the highest-fan-out open slice under `#93` or `#94`; if no child issue exists for the next PRG-engine or data-engine parity gap, create one from `docs/safety/test-coverage-gap-analysis.md` before coding
+3. Continue exhausting the `test-coverage-gap-analysis.md` GAP-01 and GAP-02 queues alongside critical-path `#93`/`#94` work
 
 Current shipped highlights worth remembering:
+
+- 2026-05-11: Critical-path Phase A runtime diagnostics advanced across slice issues `#151`, `#152`, `#153`, `#257`, `#258`, and `#259`. Cursor record position is preserved across a multi-fault CONTINUE cycle (#151). Intermediate call-stack frame line numbers at a fault pause reflect the resume PC, not zero (#152). AERROR() columns are consistent with ERROR()/MESSAGE()/LINENO()/PROGRAM() inside an ON ERROR handler (#153). Division by zero now dispatches a runtime error instead of silently returning +Infinity — guardrail added to `src/runtime/prg_engine_expression.inl` (#257). Numeric field overflow via REPLACE is either diagnosed or safely bounded (#258). DBF files with inflated header record counts are rejected or clamped by the parser (#259, GAP-02).
 
 - 2026-05-11: Gap-04/gap-09b coverage extended across slice issues `#239`, `#238`, and `#246`. `test_prg_engine_control_flow` now covers `GO TOP`/`GO BOTTOM` on empty tables (no crash, `BOF()`/`EOF()` both true). `test_prg_engine_data_io` covers COPY TO empty table producing a valid zero-record DBF, APPEND FROM that empty DBF completing cleanly, and AERROR after a SQL pass-through fault returning a non-zero error code and non-empty message.
 

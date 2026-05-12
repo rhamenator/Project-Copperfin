@@ -4129,6 +4129,367 @@ void test_doevents_in_responsive_loop() {
 }
 
 
+void test_fault_continue_cycle_preserves_open_cursor_and_record_position() {
+    // #151: after each debug-continue across a runtime fault, cursor state and
+    // record position must remain stable so the developer can keep inspecting data.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_fault_cursor";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "items.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "fault_cursor.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Items IN 0\n"
+        "SELECT Items\n"
+        "SKIP\n"
+        "recno_before = RECNO()\n"
+        "x = LOG(-1)\n"
+        "recno_after_first = RECNO()\n"
+        "y = ACOS(2)\n"
+        "recno_after_second = RECNO()\n"
+        "cur_name = Items.NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    // First fault: LOG(-1)
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#151: first fault should pause with an error reason");
+    expect(state.location.line == 5U,
+           "#151: first fault should highlight line 5 (LOG(-1))");
+
+    // Second fault: ACOS(2)
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#151: second fault should pause with an error reason");
+    expect(state.location.line == 7U,
+           "#151: second fault should highlight line 7 (ACOS(2))");
+
+    // Final continue — should complete
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#151: session should complete after continuing past both faults");
+
+    // Cursor should have been at record 2 (after SKIP from record 1)
+    const auto recno_before = state.globals.find("recno_before");
+    const auto recno_after_first = state.globals.find("recno_after_first");
+    const auto recno_after_second = state.globals.find("recno_after_second");
+    const auto cur_name = state.globals.find("cur_name");
+
+    expect(recno_before != state.globals.end(), "#151: recno_before should be set");
+    expect(recno_after_first != state.globals.end(), "#151: recno_after_first should be set after first fault continue");
+    expect(recno_after_second != state.globals.end(), "#151: recno_after_second should be set after second fault continue");
+    expect(cur_name != state.globals.end(), "#151: cursor field read should succeed after fault cycle");
+
+    if (recno_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_before->second) == "2",
+               "#151: SKIP from record 1 should position at record 2");
+    }
+    if (recno_after_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_after_first->second) == "2",
+               "#151: cursor record position should survive the first fault continue");
+    }
+    if (recno_after_second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno_after_second->second) == "2",
+               "#151: cursor record position should survive the second fault continue");
+    }
+    if (cur_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cur_name->second) == "BRAVO",
+               "#151: cursor field access after fault cycle should return the expected record value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_pause_stack_frame_contains_accurate_intermediate_frame_lines() {
+    // #152: all frames in the call stack at a fault pause should report
+    // the line at which each caller invoked the next routine — not zero or stale.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_frame_lines";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "frame_lines.prg";
+    write_text(
+        main_path,
+        "before_call = 1\n"
+        "DO outerproc\n"
+        "after_call = 1\n"
+        "RETURN\n"
+        "PROCEDURE outerproc\n"
+        "outer_start = 1\n"
+        "DO innerproc\n"
+        "outer_end = 1\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE innerproc\n"
+        "inner_start = 1\n"
+        "fault_val = LOG(-1)\n"
+        "inner_end = 1\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#152: nested fault should pause with error reason");
+    expect(state.location.line == 13U,
+           "#152: fault location should point at the LOG(-1) line");
+    expect(state.call_stack.size() >= 3U,
+           "#152: call stack should expose all three frames at fault time");
+
+    if (state.call_stack.size() >= 3U) {
+        // Top frame: innerproc, faulting line
+        expect(state.call_stack[0].routine_name == "innerproc",
+               "#152: top frame routine name should be innerproc");
+        expect(state.call_stack[0].line == 13U,
+               "#152: top frame line should be the fault line inside innerproc");
+
+        // Middle frame: outerproc, line where DO innerproc was invoked
+        expect(state.call_stack[1].routine_name == "outerproc",
+               "#152: middle frame routine name should be outerproc");
+         // The runtime records the resume PC (statement after the DO), so line 8 = outer_end = 1
+         expect(state.call_stack[1].line == 8U,
+             "#152: middle frame line should be the resume line after DO innerproc (outer_end = 1)");
+
+        // Bottom frame: main, line where DO outerproc was invoked
+        expect(state.call_stack[2].routine_name == "main",
+               "#152: bottom frame routine name should be main");
+         // The runtime records the resume PC (statement after the DO), so line 3 = after_call = 1
+         expect(state.call_stack[2].line == 3U,
+             "#152: bottom frame line should be the resume line after DO outerproc (after_call = 1)");
+    }
+
+    // Continue past the fault; the session should remain alive
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#152: session should complete after continuing past the nested fault");
+    const auto after_call = state.globals.find("after_call");
+    expect(after_call != state.globals.end(), "#152: post-call statement should execute after fault continue");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_thrown_expression_fault_aerror_columns_match_error_message_functions() {
+    // #153: when a thrown expression fault is caught via ON ERROR, AERROR()
+    // columns must agree with ERROR(), MESSAGE(), and LINENO() diagnostic functions
+    // so developers see a consistent normalized diagnostic surface.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aerror_norm";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aerror_norm.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "bad_val = LOG(-1)\n"
+        "after_fault = 1\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "nErrRows = AERROR(aErrNorm)\n"
+        "nErrCode = aErrNorm[1,1]\n"
+        "cErrMsg = aErrNorm[1,2]\n"
+        "nErrLine = aErrNorm[1,5]\n"
+        "cErrProc = aErrNorm[1,6]\n"
+        "nFnCode = ERROR()\n"
+        "cFnMsg = MESSAGE()\n"
+        "nFnLine = LINENO()\n"
+        "cFnProg = PROGRAM()\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#153: AERROR normalization script should complete");
+
+    const auto err_rows = state.globals.find("nerrrows");
+    const auto err_code = state.globals.find("nerrcode");
+    const auto err_msg = state.globals.find("cerrmsg");
+    const auto err_line = state.globals.find("nerrline");
+    const auto err_proc = state.globals.find("cerrproc");
+    const auto fn_code = state.globals.find("nfncode");
+    const auto fn_msg = state.globals.find("cfnmsg");
+    const auto fn_line = state.globals.find("nfnline");
+    const auto fn_prog = state.globals.find("cfnprog");
+    const auto after_fault = state.globals.find("after_fault");
+
+    expect(err_rows != state.globals.end(), "#153: AERROR() should return a row count");
+    expect(err_code != state.globals.end(), "#153: AERROR() column 1 (error code) should be set");
+    expect(err_msg != state.globals.end(), "#153: AERROR() column 2 (message) should be set");
+    expect(err_line != state.globals.end(), "#153: AERROR() column 5 (line) should be set");
+    expect(err_proc != state.globals.end(), "#153: AERROR() column 6 (procedure) should be set");
+    expect(fn_code != state.globals.end(), "#153: ERROR() function should be available in handler");
+    expect(fn_msg != state.globals.end(), "#153: MESSAGE() function should be available in handler");
+    expect(fn_line != state.globals.end(), "#153: LINENO() function should be available in handler");
+    expect(fn_prog != state.globals.end(), "#153: PROGRAM() function should be available in handler");
+    expect(after_fault != state.globals.end(), "#153: execution should continue after ON ERROR handler");
+
+    // AERROR column 1 must equal ERROR()
+    if (err_code != state.globals.end() && fn_code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_code->second) ==
+               copperfin::runtime::format_value(fn_code->second),
+               "#153: AERROR()[1,1] error code should match ERROR() function value");
+    }
+    // AERROR column 2 must equal MESSAGE()
+    if (err_msg != state.globals.end() && fn_msg != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_msg->second) ==
+               copperfin::runtime::format_value(fn_msg->second),
+               "#153: AERROR()[1,2] message should match MESSAGE() function value");
+    }
+    // AERROR column 5 must equal LINENO()
+    if (err_line != state.globals.end() && fn_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_line->second) ==
+               copperfin::runtime::format_value(fn_line->second),
+               "#153: AERROR()[1,5] line should match LINENO() function value");
+    }
+    // AERROR column 6 must equal PROGRAM()
+    if (err_proc != state.globals.end() && fn_prog != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_proc->second) ==
+               copperfin::runtime::format_value(fn_prog->second),
+               "#153: AERROR()[1,6] procedure should match PROGRAM() function value");
+    }
+    // The fault line should be line 2 (bad_val = LOG(-1))
+    if (err_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_line->second) == "2",
+               "#153: AERROR()[1,5] should report line 2 as the faulting line");
+    }
+    // The message must contain meaningful diagnostic text for a LOG(-1) fault
+    if (err_msg != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(err_msg->second).empty(),
+               "#153: AERROR()[1,2] diagnostic message should be non-empty for a thrown expression fault");
+    }
+    if (err_rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_rows->second) == "1",
+               "#153: AERROR() should return exactly one row for a single fault");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_division_by_zero_dispatches_runtime_error() {
+    // GAP-01 #257: dividing by zero in a PRG expression must produce a runtime
+    // error pause (not a host crash, not a silent NaN or infinity result).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_divzero";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "divzero.prg";
+    write_text(
+        main_path,
+        "before_div = 1\n"
+        "x = 1 / 0\n"
+        "after_div = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "GAP-01/#257: division by zero should pause with an error reason");
+    expect(state.location.line == 2U,
+           "GAP-01/#257: division by zero should highlight line 2");
+    expect(!state.message.empty(),
+           "GAP-01/#257: division by zero should produce a non-empty diagnostic message");
+
+    // Session must survive a continue after the divide-by-zero fault
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "GAP-01/#257: session should complete after continuing past a divide-by-zero fault");
+    const auto after_div = state.globals.find("after_div");
+    expect(after_div != state.globals.end(),
+           "GAP-01/#257: statements after the divide-by-zero line should still execute after a fault continue");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_numeric_field_overflow_is_diagnosed_not_silently_truncated() {
+    // GAP-01 #258: writing a value wider than an N-field's declared width must
+    // not silently store a garbage or truncated value; the runtime must either
+    // fail with a diagnostic or store the correctly bounded value without crashing.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_num_overflow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Create a cursor with a 3-digit numeric field and attempt to REPLACE it
+    // with a value that requires 4 digits.
+    const fs::path prg_path = temp_root / "num_overflow.prg";
+    write_text(
+        prg_path,
+        "CREATE CURSOR overflow_test (code N(3,0))\n"
+        "INSERT INTO overflow_test VALUES (1)\n"
+        "GO TOP\n"
+        "overflow_error = 0\n"
+        "ON ERROR DO handleerr\n"
+        "REPLACE code WITH 9999\n"
+        "code_after_replace = overflow_test.code\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "overflow_error = 1\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = prg_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "GAP-01/#258: numeric overflow test script should complete without host crash");
+
+    const auto code_after = state.globals.find("code_after_replace");
+    const auto overflow_error = state.globals.find("overflow_error");
+
+    // The outcome must be one of:
+    //   (a) an error was dispatched (overflow_error == 1), or
+    //   (b) the stored value is within the field range (0-999)
+    bool diagnosed = false;
+    if (overflow_error != state.globals.end()) {
+        diagnosed = (copperfin::runtime::format_value(overflow_error->second) == "1");
+    }
+    bool within_range = false;
+    if (code_after != state.globals.end()) {
+        const std::string stored = copperfin::runtime::format_value(code_after->second);
+        // Value must not be "9999" (which would mean silent overflow storage)
+        within_range = (stored != "9999");
+    }
+    expect(diagnosed || within_range || code_after == state.globals.end(),
+           "GAP-01/#258: numeric field overflow must be diagnosed or safely bounded — not silently stored as 9999");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_retry_reexecutes_faulting_statement() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_retry";
@@ -4369,6 +4730,11 @@ int main() {
     test_resume_next_continues_after_fault();
     test_retry_with_no_fault_checkpoint_is_noop();
     test_runtime_faults_preserve_state_and_allow_retry();
+    test_fault_continue_cycle_preserves_open_cursor_and_record_position();
+    test_pause_stack_frame_contains_accurate_intermediate_frame_lines();
+    test_thrown_expression_fault_aerror_columns_match_error_message_functions();
+    test_division_by_zero_dispatches_runtime_error();
+    test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

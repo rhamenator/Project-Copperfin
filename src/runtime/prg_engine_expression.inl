@@ -362,7 +362,10 @@
                         }
                         else
                         {
-                            left = make_number_value(value_as_number(left) / value_as_number(right));
+                            const double divisor = value_as_number(right);
+                            if (divisor == 0.0)
+                                throw std::runtime_error("Division by zero");
+                            left = make_number_value(value_as_number(left) / divisor);
                         }
                     }
                     else

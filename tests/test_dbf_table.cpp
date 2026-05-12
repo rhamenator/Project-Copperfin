@@ -871,6 +871,56 @@ void test_varchar_and_varbinary_field_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
+    // GAP-02 #259: a DBF file whose header claims more records than the file
+    // can physically contain must be rejected or clamped — not cause an
+    // out-of-bounds read or host crash.
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_header_overflow_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "overflow_header.dbf";
+
+    // Build a valid minimal 2-record DBF and then overwrite the record-count
+    // field (bytes 4-7, LE u32) with 1000 — far beyond what the file can hold.
+    // Header = 97 bytes, each record = 14 bytes, so the file holds at most 2.
+    std::vector<std::uint8_t> table_bytes(97U + (2U * 14U) + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1000U);   // inflated record count
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 14U);
+    write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 10U);
+    write_field_descriptor(table_bytes, 64U, "AGE",  'N', 11U, 3U);
+    table_bytes[96U] = 0x0DU;
+    table_bytes[97U] = 0x20U;
+    write_ascii(table_bytes, 98U,  "ALPHA     ");
+    write_ascii(table_bytes, 108U, " 10");
+    table_bytes[111U] = 0x20U;
+    write_ascii(table_bytes, 112U, "BRAVO     ");
+    write_ascii(table_bytes, 122U, " 20");
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    // Parser must not crash. It may return ok=false (rejection) or ok=true
+    // with the record count clamped to what is physically present (≤2).
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1100U);
+    if (result.ok) {
+        expect(result.table.records.size() <= 2U,
+               "GAP-02/#259: parser must clamp record count to physically available records");
+    }
+    // If !result.ok that is an acceptable safe rejection — the host is still alive.
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_staged_write_temp_artifacts_are_cleaned_up() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -920,6 +970,7 @@ int main() {
     test_memo_replace_recovers_directory_sidecar_path();
     test_replace_field_value_accepts_null_token_for_supported_types();
     test_varchar_and_varbinary_field_round_trip();
+    test_dbf_header_record_count_exceeds_file_size_is_rejected();
     test_staged_write_temp_artifacts_are_cleaned_up();
 
     if (failures != 0) {
