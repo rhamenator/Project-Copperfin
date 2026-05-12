@@ -367,6 +367,7 @@ Current dependency links:
 - 2026-05-12 execution note: `#150` implementation slice advanced in code/test (fault data-session + cursor snapshot restoration across `RETRY`/`RESUME`/ON ERROR unwind); continue strict gate order with `#151` next.
 - 2026-05-12 execution note: `#151` implementation slice advanced in focused tests (non-default data-session repeated-`CONTINUE` stability); continue strict gate order with `#152` next.
 - 2026-05-12 execution note: `#152` implementation slice advanced in focused tests (repeated nested-fault caller-frame metadata refresh); continue strict gate order with `#153` next.
+- 2026-05-12 execution note: `#153` implementation slice advanced in focused tests (repeated-fault diagnostic normalization refresh); continue strict gate order with `#92` next.
 
 ## Slice-Issue Policy
 

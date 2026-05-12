@@ -4713,6 +4713,127 @@ void test_thrown_expression_fault_aerror_columns_match_error_message_functions()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_repeated_on_error_faults_refresh_normalized_diagnostics() {
+    // #153: AERROR()/ERROR()/MESSAGE()/LINENO()/PROGRAM() should refresh for
+    // each new ON ERROR fault, not retain stale values from prior faults.
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_aerror_norm_repeat";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aerror_norm_repeat.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "x = LOG(-1)\n"
+        "y = ACOS(2)\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "IF TYPE('gFaultCount') <> 'N'\n"
+        "    gFaultCount = 0\n"
+        "ENDIF\n"
+        "gFaultCount = gFaultCount + 1\n"
+        "nErrRows = AERROR(aErrNorm)\n"
+        "IF gFaultCount = 1\n"
+        "    nErrCode1 = aErrNorm[1,1]\n"
+        "    cErrMsg1 = aErrNorm[1,2]\n"
+        "    nErrLine1 = aErrNorm[1,5]\n"
+        "    cErrProc1 = aErrNorm[1,6]\n"
+        "    nFnCode1 = ERROR()\n"
+        "    cFnMsg1 = MESSAGE()\n"
+        "    nFnLine1 = LINENO()\n"
+        "    cFnProg1 = PROGRAM()\n"
+        "ELSE\n"
+        "    nErrCode2 = aErrNorm[1,1]\n"
+        "    cErrMsg2 = aErrNorm[1,2]\n"
+        "    nErrLine2 = aErrNorm[1,5]\n"
+        "    cErrProc2 = aErrNorm[1,6]\n"
+        "    nFnCode2 = ERROR()\n"
+        "    cFnMsg2 = MESSAGE()\n"
+        "    nFnLine2 = LINENO()\n"
+        "    cFnProg2 = PROGRAM()\n"
+        "ENDIF\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create({
+                           .startup_path = main_path.string(),
+                           .working_directory = temp_root.string(),
+                           .stop_on_entry = false
+                       })
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "#153: repeated ON ERROR normalization script should complete");
+
+    const auto nerrline1 = state.globals.find("nerrline1");
+    const auto nerrline2 = state.globals.find("nerrline2");
+    const auto cfnmsg1 = state.globals.find("cfnmsg1");
+    const auto cfnmsg2 = state.globals.find("cfnmsg2");
+    const auto nfnline1 = state.globals.find("nfnline1");
+    const auto nfnline2 = state.globals.find("nfnline2");
+    const auto cfnprog1 = state.globals.find("cfnprog1");
+    const auto cfnprog2 = state.globals.find("cfnprog2");
+    const auto nerrcode1 = state.globals.find("nerrcode1");
+    const auto nerrcode2 = state.globals.find("nerrcode2");
+    const auto nfncode1 = state.globals.find("nfncode1");
+    const auto nfncode2 = state.globals.find("nfncode2");
+
+    expect(nerrline1 != state.globals.end(), "#153: first fault AERROR line should be captured");
+    expect(nerrline2 != state.globals.end(), "#153: second fault AERROR line should be captured");
+    expect(cfnmsg1 != state.globals.end(), "#153: first fault MESSAGE() should be captured");
+    expect(cfnmsg2 != state.globals.end(), "#153: second fault MESSAGE() should be captured");
+    expect(nfnline1 != state.globals.end(), "#153: first fault LINENO() should be captured");
+    expect(nfnline2 != state.globals.end(), "#153: second fault LINENO() should be captured");
+    expect(cfnprog1 != state.globals.end(), "#153: first fault PROGRAM() should be captured");
+    expect(cfnprog2 != state.globals.end(), "#153: second fault PROGRAM() should be captured");
+    expect(nerrcode1 != state.globals.end(), "#153: first fault AERROR code should be captured");
+    expect(nerrcode2 != state.globals.end(), "#153: second fault AERROR code should be captured");
+    expect(nfncode1 != state.globals.end(), "#153: first fault ERROR() should be captured");
+    expect(nfncode2 != state.globals.end(), "#153: second fault ERROR() should be captured");
+
+    if (nerrline1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nerrline1->second) == "2",
+               "#153: first fault AERROR line should report line 2");
+    }
+    if (nerrline2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nerrline2->second) == "3",
+               "#153: second fault AERROR line should report line 3");
+    }
+    if (nfnline1 != state.globals.end() && nerrline1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nfnline1->second) ==
+                   copperfin::runtime::format_value(nerrline1->second),
+               "#153: first fault LINENO() should match AERROR line");
+    }
+    if (nfnline2 != state.globals.end() && nerrline2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nfnline2->second) ==
+                   copperfin::runtime::format_value(nerrline2->second),
+               "#153: second fault LINENO() should match AERROR line");
+    }
+    if (cfnmsg1 != state.globals.end() && cfnmsg2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cfnmsg1->second) !=
+                   copperfin::runtime::format_value(cfnmsg2->second),
+               "#153: message text should refresh between LOG and ACOS faults");
+    }
+    if (cfnprog1 != state.globals.end() && cfnprog2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cfnprog1->second) ==
+                   copperfin::runtime::format_value(cfnprog2->second),
+               "#153: both faults should report the same procedure context");
+    }
+    if (nerrcode1 != state.globals.end() && nfncode1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nerrcode1->second) ==
+                   copperfin::runtime::format_value(nfncode1->second),
+               "#153: first fault AERROR code should match ERROR()");
+    }
+    if (nerrcode2 != state.globals.end() && nfncode2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nerrcode2->second) ==
+                   copperfin::runtime::format_value(nfncode2->second),
+               "#153: second fault AERROR code should match ERROR()");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_division_by_zero_dispatches_runtime_error() {
     // GAP-01 #257: dividing by zero in a PRG expression must produce a runtime
     // error pause (not a host crash, not a silent NaN or infinity result).
@@ -5063,6 +5184,7 @@ int main() {
     test_pause_stack_frame_contains_accurate_intermediate_frame_lines();
     test_repeated_fault_pauses_refresh_intermediate_stack_frame_lines();
     test_thrown_expression_fault_aerror_columns_match_error_message_functions();
+    test_repeated_on_error_faults_refresh_normalized_diagnostics();
     test_division_by_zero_dispatches_runtime_error();
     test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
 
