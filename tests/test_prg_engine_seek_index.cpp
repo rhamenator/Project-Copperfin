@@ -1657,6 +1657,91 @@ void test_local_descending_temporary_order_expression_in_target_preserves_select
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_plain_temporary_order_in_target_honors_collate_and_preserves_selection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_plain_temp_order_collate_in_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path people_cdx_path = temp_root / "people.cdx";
+    const fs::path other_cdx_path = temp_root / "other.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(people_cdx_path, "NAME", "NAME");
+    write_synthetic_cdx(other_cdx_path, "NAME", "NAME");
+
+    const fs::path main_path = temp_root / "local_plain_temp_order_collate_in_target.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT Other\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO NAME IN People\n"
+        "lMachineMiss = SEEK('bravo', 'People', 'NAME')\n"
+        "nPeopleRecAfterMachine = RECNO('People')\n"
+        "SET COLLATE TO GENERAL\n"
+        "GO TOP IN People\n"
+        "lGeneralHit = SEEK('bravo', 'People', 'NAME')\n"
+        "SELECT People\n"
+        "cPeopleNameAfterGeneral = NAME\n"
+        "SELECT Other\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "local plain temporary-order IN-target collate script should complete");
+
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto machine_miss = state.globals.find("lmachinemiss");
+    const auto people_rec_after_machine = state.globals.find("npeoplerecaftermachine");
+    const auto general_hit = state.globals.find("lgeneralhit");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto people_name_after_general = state.globals.find("cpeoplenameaftergeneral");
+
+    expect(other_rec_before != state.globals.end(), "selected local cursor RECNO() before targeted seek should be captured");
+    expect(machine_miss != state.globals.end(), "MACHINE-collate targeted SEEK() miss should be captured");
+    expect(people_rec_after_machine != state.globals.end(), "target local cursor RECNO() after MACHINE-collate seek should be captured");
+    expect(general_hit != state.globals.end(), "GENERAL-collate targeted SEEK() hit should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted SEEK() should be captured");
+    expect(other_rec_after != state.globals.end(), "selected local cursor RECNO() after targeted SEEK() should be captured");
+    expect(people_name_after_general != state.globals.end(), "target local cursor NAME after GENERAL-collate seek should be captured");
+
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected non-target local cursor should begin at bottom");
+    }
+    if (machine_miss != state.globals.end()) {
+        expect(copperfin::runtime::format_value(machine_miss->second) == "false", "MACHINE collation should keep plain NAME seek case-sensitive");
+    }
+    if (people_rec_after_machine != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_rec_after_machine->second) == "4", "MACHINE-collate miss should position targeted cursor at EOF");
+    }
+    if (general_hit != state.globals.end()) {
+        expect(copperfin::runtime::format_value(general_hit->second) == "true", "GENERAL collation should case-fold plain NAME seek in targeted local cursor");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "OTHER", "targeted SEEK() should preserve selected local alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "targeted SEEK() should preserve selected non-target local cursor pointer");
+    }
+    if (people_name_after_general != state.globals.end()) {
+        expect(copperfin::runtime::format_value(people_name_after_general->second) == "BRAVO", "GENERAL-collate targeted seek should expose the case-folded match row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_local_temporary_order_expression_indexseek_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_local_temp_order_indexseek";
@@ -2905,6 +2990,7 @@ int main() {
     test_order_and_tag_preserve_index_file_identity();
     test_local_command_seek_in_target_with_temporary_order_expression();
     test_local_descending_temporary_order_expression_in_target_preserves_selection();
+    test_local_plain_temporary_order_in_target_honors_collate_and_preserves_selection();
     test_local_temporary_order_expression_indexseek_parity();
     test_seek_respects_grounded_order_for_expression_hints();
     test_seek_respects_numeric_order_for_expression_hints();

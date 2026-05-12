@@ -31,8 +31,11 @@ Current priority order:
 1. `#151`, `#152`, `#153`, and `#257`-`#271` are now **closed** (recently shipped in focused batches)
 2. Continue with the highest-fan-out open child slice under `#93` or `#94`
 3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
+4. New H3 child-issue queue is open for the next fan-out batch: `#257` (`#92`), `#258` (`#97`), `#259` (`#99`), `#260` (`#94`), `#261` (`#100`), and `#262` (`#93`)
 
 Current shipped highlights worth remembering:
+
+- 2026-05-12: H3/#92 temporary-order collation parity advanced in `test_prg_engine_seek_index`. Focused coverage now proves that a plain targeted local temporary order (`SET ORDER TO NAME IN People`) honors `SET COLLATE TO GENERAL` case-folding for `SEEK(..., 'People', 'NAME')` while preserving selected non-target alias/pointer state.
 
 - 2026-05-12: Gap-03 failure-injection/rollback coverage advanced across slice issues `#266`, `#267`, and `#268`. `test_dbf_table` now verifies deterministic staged-write rollback for DBF and memo sidecar write paths (original-bytes preservation plus artifact cleanup), and `src/vfp/dbf_table.cpp` now exposes test-only failure checkpoints (`temp-open`, `before-backup`, `before-promote`) gated by environment variables.
 - 2026-05-12: Additional DBF header guardrail coverage advanced across slice issues `#269`, `#270`, and `#271`, locking down rejection of zero record-length headers, undersized header lengths, and header-length claims beyond physical file size.

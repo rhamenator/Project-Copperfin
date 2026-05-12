@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- H3/#92 collation/order residual coverage advanced with focused `test_prg_engine_seek_index` parity for plain temporary orders targeted via `IN <alias|work area>`. New regression coverage proves that `SET ORDER TO NAME IN People` with `SEEK(..., 'People', 'NAME')` follows `SET COLLATE TO GENERAL` case-folding expectations while preserving the selected non-target alias and record pointer.
 - Gap-03 staged-write failure-injection and rollback-hardening coverage advanced across slice issues `#266`, `#267`, and `#268` in `test_dbf_table`. New focused tests verify that injected DBF promote failures preserve original table bytes and clean staged artifacts, injected memo sidecar write failures roll back consistently without leaking `.cptmp`/`.cpbak` files, and staged rollback paths preserve on-disk state when promotion fails mid-flow.
 - Additional DBF header guardrail coverage advanced across slice issues `#269`, `#270`, and `#271` in `test_dbf_table`, verifying rejection of zero record-length headers, rejection of header lengths below the DBF minimum, and explicit rejection of header-length claims that exceed physical file size.
 - `src/vfp/dbf_table.cpp` staged-write internals now include deterministic test-only failure-injection checkpoints (`temp-open`, `before-backup`, `before-promote`) gated by `COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS` and `COPPERFIN_TEST_FAIL_WRITE_STAGE`, enabling repeatable rollback validation without host-specific disk-fault harnesses.
