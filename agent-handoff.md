@@ -29,7 +29,7 @@ Important:
 Current priority order:
 
 1. `#151`, `#152`, `#153`, and `#257`-`#271` are now **closed** (recently shipped in focused batches)
-2. Continue with open child slice under `#93`: `#265` (after shipping `#263` and `#264`)
+2. Re-read `docs/23-phase-a-dependency-breakdown.md` and open the next highest-fan-out native child queue under `#93` or `#94` (the `#263`-`#265` queue is now closed)
 3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
 4. Do not reopen the now-shipped H3 child queue `#257`-`#262` unless a concrete remaining parity bug is found
 
@@ -37,6 +37,7 @@ Current shipped highlights worth remembering:
 
 - 2026-05-12: H3/#93 slice issue `#263` is now shipped. `COPY TO` over selected synthetic SQL/result cursors now materializes DBF export output instead of returning a runtime event stub when no local `source_path` exists. Remote cursor schema/field-width inference now scans all remote rows before DBF export, and focused `test_prg_engine_sql_cursors` coverage now asserts selected-alias/pointer preservation plus exported row/value parity.
 - 2026-05-12: H3/#93 slice issue `#264` is now shipped. `APPEND FROM` over selected synthetic SQL/result cursors now performs first-pass DBF-row append into in-memory remote/result rows with destination field-name mapping and `FIELDS` filtering instead of event-only stubbing, and unsupported non-DBF source types now return deterministic diagnostics. Focused `test_prg_engine_sql_cursors` coverage now validates selected-cursor append behavior.
+- 2026-05-12: H3/#93 slice issue `#265` is now shipped. `COPY STRUCTURE TO` over selected SQL/result cursors now resolves schema through the shared cursor descriptor path, so metadata-only remote cursors (zero rows, schema present) export schema-only DBF output instead of failing due to missing local-table context. Focused `test_prg_engine_sql_cursors` coverage now validates this metadata-cursor schema export path.
 
 - 2026-05-12: H3/#92 temporary-order collation parity advanced in `test_prg_engine_seek_index`. Focused coverage now proves that a plain targeted local temporary order (`SET ORDER TO NAME IN People`) honors `SET COLLATE TO GENERAL` case-folding for `SEEK(..., 'People', 'NAME')` while preserving selected non-target alias/pointer state.
 

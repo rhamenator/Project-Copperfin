@@ -4011,70 +4011,13 @@
                 }
                 dest_path = dest_path.lexically_normal();
 
-                std::vector<vfp::DbfFieldDescriptor> source_fields;
-                if (!cursor->source_path.empty())
+                std::vector<vfp::DbfFieldDescriptor> source_fields = cursor_field_descriptors(*cursor);
+                if (source_fields.empty())
                 {
-                    // Load source table schema + records up to the cursor record count.
-                    const auto table_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
-                    if (!table_result.ok)
-                    {
-                        last_error_message = "COPY TO: " + table_result.error;
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    source_fields = table_result.table.fields;
-                }
-                else if (!cursor->remote_fields.empty())
-                {
-                    source_fields = cursor->remote_fields;
-                }
-                else if (!cursor->remote_records.empty())
-                {
-                    const auto &first_row = cursor->remote_records.front().values;
-                    source_fields.reserve(first_row.size());
-
-                    struct RemoteFieldProfile
-                    {
-                        char type = 'C';
-                        std::size_t max_width = 1U;
-                    };
-
-                    std::vector<RemoteFieldProfile> profiles(first_row.size());
-                    for (std::size_t index = 0U; index < first_row.size(); ++index)
-                    {
-                        profiles[index].type = first_row[index].field_type == '\0' ? 'C' : first_row[index].field_type;
-                    }
-
-                    for (const auto &record : cursor->remote_records)
-                    {
-                        for (std::size_t index = 0U; index < record.values.size() && index < profiles.size(); ++index)
-                        {
-                            const auto &value = record.values[index];
-                            profiles[index].max_width = std::max(
-                                profiles[index].max_width,
-                                std::max<std::size_t>(1U, value.display_value.size()));
-                        }
-                    }
-
-                    std::uint32_t offset = 1U;
-                    for (std::size_t index = 0U; index < first_row.size(); ++index)
-                    {
-                        const auto &value = first_row[index];
-                        std::size_t width = profiles[index].max_width;
-                        if (profiles[index].type == 'C')
-                        {
-                            width = std::max<std::size_t>(width, 10U);
-                        }
-                        source_fields.push_back({
-                            .name = value.field_name,
-                            .type = profiles[index].type,
-                            .offset = offset,
-                            .length = static_cast<std::uint8_t>(std::min<std::size_t>(width, 254U)),
-                            .decimal_count = 0U});
-                        offset += source_fields.back().length;
-                    }
+                    last_error_message = "COPY TO: source cursor schema is unavailable";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 // Build field filter from FIELDS clause (comma-separated names)

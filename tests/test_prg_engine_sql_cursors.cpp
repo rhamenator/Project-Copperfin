@@ -1097,6 +1097,84 @@ void test_append_from_dbf_mutates_selected_sql_result_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_copy_structure_metadata";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path export_path = temp_root / "sql_meta_schema.dbf";
+    const fs::path main_path = temp_root / "sql_copy_structure_metadata.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nMissingPk = SQLPRIMARYKEYS(nConn, 'DOES_NOT_EXIST', 'missingpk')\n"
+        "SELECT missingpk\n"
+        "COPY STRUCTURE TO '" + export_path.string() + "'\n"
+        "cAliasAfterCopy = ALIAS()\n"
+        "USE '" + export_path.string() + "' ALIAS local IN 0\n"
+        "nRows = RECCOUNT('local')\n"
+        "nFields = FCOUNT('local')\n"
+        "cField4 = FIELD(4, 'local')\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY STRUCTURE TO SQL metadata cursor script should complete: " + state.message);
+
+    const auto alias_after_copy = state.globals.find("caliasaftercopy");
+    const auto rows = state.globals.find("nrows");
+    const auto fields = state.globals.find("nfields");
+    const auto field4 = state.globals.find("cfield4");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(alias_after_copy != state.globals.end(), "selected alias after SQL metadata COPY STRUCTURE TO should be captured");
+    expect(rows != state.globals.end(), "schema-exported local row count should be captured");
+    expect(fields != state.globals.end(), "schema-exported local field count should be captured");
+    expect(field4 != state.globals.end(), "schema-exported FIELD(4) should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after SQL metadata schema export checks");
+
+    if (alias_after_copy != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_copy->second)) == "MISSINGPK",
+            "COPY STRUCTURE TO should preserve selected SQL metadata alias before opening other cursors");
+    }
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "0",
+            "COPY STRUCTURE TO should export schema-only DBF with zero rows from SQL metadata cursor");
+    }
+    if (fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields->second) == "6",
+            "COPY STRUCTURE TO should export all SQL metadata cursor fields");
+    }
+    if (field4 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field4->second) == "COLUMN_NAME",
+            "COPY STRUCTURE TO should preserve SQL metadata cursor field order/names");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+            "SQLDISCONNECT should succeed after SQL metadata schema export checks");
+    }
+
+    expect(fs::exists(export_path), "COPY STRUCTURE TO should create DBF output for SQL metadata cursors");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(export_path.string(), 10U);
+    expect(parse_result.ok, "SQL metadata COPY STRUCTURE TO output should be readable as DBF");
+    if (parse_result.ok) {
+        expect(parse_result.table.records.empty(),
+            "SQL metadata COPY STRUCTURE TO output should be schema-only");
+        expect(parse_result.table.fields.size() == 6U,
+            "SQL metadata COPY STRUCTURE TO output should keep metadata field count");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutations";
@@ -3460,6 +3538,7 @@ int main() {
     test_cursor_identity_functions_for_sql_result_cursors();
     test_copy_to_exports_selected_sql_result_cursor_rows();
     test_append_from_dbf_mutates_selected_sql_result_cursor();
+    test_copy_structure_to_exports_sql_metadata_cursor_schema();
     test_sql_result_cursor_mutation_commands();
     test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
     test_sql_result_cursors_are_isolated_by_data_session();
