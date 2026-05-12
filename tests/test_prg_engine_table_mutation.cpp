@@ -1270,6 +1270,70 @@ void test_rollback_transaction_removes_created_table_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+// #251 [gap-08b]
+void test_transaction_rollback_leaves_table_unchanged() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_rollback_insert";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "rollback_insert.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nCountBefore = RECCOUNT()\n"
+        "BEGIN TRANSACTION\n"
+        "INSERT INTO People (NAME, AGE) VALUES ('GAMMA', 30)\n"
+        "nCountDuring = RECCOUNT()\n"
+        "ROLLBACK\n"
+        "nCountAfter = RECCOUNT()\n"
+        "GO 1\n"
+        "cFirstAfter = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "INSERT INTO rollback script should complete");
+
+    const auto count_before = state.globals.find("ncountbefore");
+    const auto count_during = state.globals.find("ncountduring");
+    const auto count_after = state.globals.find("ncountafter");
+    const auto first_after = state.globals.find("cfirstafter");
+
+    expect(count_before != state.globals.end(), "RECCOUNT() before transaction should be captured");
+    expect(count_during != state.globals.end(), "RECCOUNT() during transaction should be captured");
+    expect(count_after != state.globals.end(), "RECCOUNT() after ROLLBACK should be captured");
+    expect(first_after != state.globals.end(), "first record after ROLLBACK should be captured");
+
+    if (count_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_before->second) == "2", "table should start with two records");
+    }
+    if (count_during != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_during->second) == "3", "INSERT INTO inside transaction should be visible before ROLLBACK");
+    }
+    if (count_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count_after->second) == "2", "ROLLBACK should remove the INSERT INTO row and restore original count");
+    }
+    if (first_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_after->second) == "ALPHA", "ROLLBACK should leave original first record intact");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "ROLLBACK should keep DBF readable");
+    expect(parse_result.table.records.size() == 2U, "ROLLBACK should remove INSERT INTO row from disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_replays_pending_transaction_journal() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_replay";
@@ -1364,6 +1428,7 @@ int main() {
     test_rollback_transaction_replays_append_from_array();
     test_rollback_transaction_prunes_stale_alter_table_field_rules();
     test_rollback_transaction_removes_created_table_cursor();
+    test_transaction_rollback_leaves_table_unchanged();
     test_startup_replays_pending_transaction_journal();
 
     if (test_failures() != 0) {

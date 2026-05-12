@@ -89,6 +89,123 @@ void test_sha256_helpers() {
     }
 }
 
+// #247 [gap-06a]
+void test_authorization_unknown_role_returns_false() {
+    const auto profile = copperfin::security::default_native_security_profile();
+    expect(
+        !copperfin::security::role_has_permission(profile, "completely-unknown-role", "build.execute"),
+        "unknown role should return false from role_has_permission");
+    expect(
+        !copperfin::security::role_has_permission(profile, "", "build.execute"),
+        "empty role id should return false from role_has_permission");
+}
+
+// #255 [gap-06b]
+void test_authorization_empty_permission_returns_false() {
+    const auto profile = copperfin::security::default_native_security_profile();
+    expect(
+        !copperfin::security::role_has_permission(profile, "build-engineer", ""),
+        "empty permission id should return false even for a known role");
+    expect(
+        !copperfin::security::role_has_permission(profile, "build-engineer", "nonexistent.permission"),
+        "nonexistent permission id should return false for a known role");
+}
+
+// #245 [gap-06c]
+void test_secret_provider_missing_env_var_returns_not_ok() {
+    // Ensure the variable is absent before testing.
+    const std::string missing_var = "COPPERFIN_MISSING_SECRET_XYZ";
+#ifdef _WIN32
+    _putenv_s(missing_var.c_str(), "");
+#else
+    unsetenv(missing_var.c_str());
+#endif
+
+    const auto result = copperfin::security::resolve_secret_reference("env:" + missing_var);
+    expect(!result.ok, "resolve_secret_reference should return not-ok for a missing environment variable");
+    expect(!result.error.empty(), "resolve_secret_reference should provide an error message for a missing variable");
+}
+
+// #248 [gap-06d]
+void test_audit_stream_tamper_detection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_tamper_tests";
+    const fs::path clean_log = temp_root / "clean" / "events.log";
+    const fs::path tampered_log = temp_root / "tampered" / "events.log";
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+
+    // Build a clean two-entry chain and record the second hash.
+    copperfin::security::append_immutable_audit_event(clean_log.string(), "op.one", "clean-detail-one");
+    const auto clean_second = copperfin::security::append_immutable_audit_event(
+        clean_log.string(), "op.two", "clean-detail-two");
+    expect(clean_second.ok, "clean audit chain second append should succeed");
+
+    // Build the same chain in the tampered log.
+    copperfin::security::append_immutable_audit_event(tampered_log.string(), "op.one", "clean-detail-one");
+    copperfin::security::append_immutable_audit_event(tampered_log.string(), "op.two", "clean-detail-two");
+
+    // Corrupt the tampered log: replace one character in the first line.
+    {
+        std::ifstream src(tampered_log, std::ios::binary);
+        std::string contents((std::istreambuf_iterator<char>(src)), std::istreambuf_iterator<char>());
+        if (!contents.empty()) {
+                // Corrupt the LAST line's hash field so that the next append picks up a different prev_hash.
+                // The last line ends with '|<64-hex-chars>\n'; flip the first hex digit of that hash.
+                const auto last_pipe = contents.rfind('|');
+                if (last_pipe != std::string::npos && last_pipe + 1 < contents.size()) {
+                    const std::size_t hash_pos = last_pipe + 1;
+                    contents[hash_pos] = (contents[hash_pos] == 'f') ? '0' : 'f';
+                }
+        }
+        std::ofstream dst(tampered_log, std::ios::trunc | std::ios::binary);
+        dst << contents;
+    }
+
+    // Append a third entry to each log.
+    const auto clean_third = copperfin::security::append_immutable_audit_event(
+        clean_log.string(), "op.three", "detail-three");
+    const auto tampered_third = copperfin::security::append_immutable_audit_event(
+        tampered_log.string(), "op.three", "detail-three");
+
+    expect(clean_third.ok, "clean third append should succeed");
+    expect(tampered_third.ok, "tampered third append should still succeed (append does not verify)");
+
+    // The two third-entry hashes must differ because the chain root was mutated.
+    expect(
+        clean_third.entry_hash != tampered_third.entry_hash,
+        "audit chain hash should differ when an earlier entry was tampered");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+// #252 [gap-06e]
+void test_audit_stream_append_to_readonly_path_fails_gracefully() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_readonly_path_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Place a regular file where the audit log's parent directory must be created.
+    // create_directories will fail because "not_a_dir" is a file, not a directory.
+    const fs::path blocker = temp_root / "not_a_dir";
+    {
+        std::ofstream f(blocker);
+        f << "blocker\n";
+    }
+    const fs::path blocked_log = blocker / "events.log";
+
+    const auto result = copperfin::security::append_immutable_audit_event(
+        blocked_log.string(), "op.blocked", "should-not-appear");
+
+    expect(!result.ok, "append_immutable_audit_event should return not-ok when directory creation fails");
+    expect(!result.error.empty(), "append_immutable_audit_event should report an error for an unwritable path");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -96,6 +213,11 @@ int main() {
     test_secret_provider();
     test_audit_stream_chain();
     test_sha256_helpers();
+    test_authorization_unknown_role_returns_false();
+    test_authorization_empty_permission_returns_false();
+    test_secret_provider_missing_env_var_returns_not_ok();
+    test_audit_stream_tamper_detection();
+    test_audit_stream_append_to_readonly_path_fails_gracefully();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

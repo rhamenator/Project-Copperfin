@@ -1386,6 +1386,8 @@ void test_set_fields_is_scoped_by_data_session() {
 
 }  // namespace
 
+void test_two_work_areas_on_same_table_see_consistent_mutations();  // defined below
+
 int main() {
     test_use_and_data_session_isolation();
     test_report_form_to_file_renders_without_event_loop_pause();
@@ -1404,6 +1406,7 @@ int main() {
     test_set_fields_limits_field_lookup();
     test_set_fields_like_and_except_limit_field_lookup();
     test_set_fields_is_scoped_by_data_session();
+    test_two_work_areas_on_same_table_see_consistent_mutations();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
@@ -1411,4 +1414,65 @@ int main() {
     }
     std::cout << "All tests passed.\n";
     return EXIT_SUCCESS;
+}
+
+void test_two_work_areas_on_same_table_see_consistent_mutations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_two_areas_same_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    copperfin::test_support::write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "two_areas.prg";
+    copperfin::test_support::write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Area1 IN 0\n"
+            "USE '" + table_path.string() + "' ALIAS Area2 AGAIN IN 0\n"
+        "SELECT Area1\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'MUTATED'\n"
+        "SELECT Area2\n"
+        "GO 1\n"
+        "cArea2Name = NAME\n"
+        "nArea2Age = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    copperfin::test_support::expect(state.completed, "two-work-areas same table script should complete");
+
+    const auto area2_name = state.globals.find("carea2name");
+    const auto area2_age = state.globals.find("narea2age");
+
+    copperfin::test_support::expect(area2_name != state.globals.end(), "Area2 NAME after mutation via Area1 should be captured");
+    copperfin::test_support::expect(area2_age != state.globals.end(), "Area2 AGE after mutation via Area1 should be captured");
+
+    if (area2_name != state.globals.end()) {
+        copperfin::test_support::expect(
+            copperfin::runtime::format_value(area2_name->second) == "MUTATED",
+            "mutation via Area1 should be visible when reading the same record via Area2");
+    }
+    if (area2_age != state.globals.end()) {
+        copperfin::test_support::expect(
+            copperfin::runtime::format_value(area2_age->second) == "10",
+            "unreplaced fields should retain their original values when reading via Area2");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    copperfin::test_support::expect(parse_result.ok, "DBF should remain readable after two-work-area mutation");
+    if (parse_result.table.records.size() >= 1U) {
+        copperfin::test_support::expect(
+            parse_result.table.records[0].values[0].display_value == "MUTATED",
+            "mutation via Area1 should be persisted on disk");
+    }
+
+    fs::remove_all(temp_root, ignored);
 }
