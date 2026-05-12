@@ -302,6 +302,115 @@ void test_zap_truncates_local_table_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_replace_character_field_truncates_to_field_width() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_truncate_char";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "truncate_char.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'ABCDEFGHIJKL'\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "character truncation script should complete");
+
+    const auto name = state.globals.find("cname");
+    expect(name != state.globals.end(), "truncation script should expose the updated NAME value");
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ABCDEFGHIJ",
+               "REPLACE should truncate character values to field width");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_character_field_at_maximum_width_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_exact_char_width";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const fs::path main_path = temp_root / "exact_width_char.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'MAXWIDTH10'\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "exact-width character round-trip script should complete");
+
+    const auto name = state.globals.find("cname");
+    expect(name != state.globals.end(), "exact-width round-trip script should expose the updated NAME value");
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "MAXWIDTH10",
+               "REPLACE should preserve values that exactly match field width");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_memo_field_replace_with_empty_string() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_empty_memo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "replace_empty_memo.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + (temp_root / "memo_items.dbf").string() + "' (NOTE M)\n"
+        "INSERT INTO memo_items (NOTE) VALUES ('HELLO')\n"
+        "REPLACE NOTE WITH ''\n"
+        "cNote = NOTE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "memo empty-string replace script should complete");
+
+    const auto note = state.globals.find("cnote");
+    expect(note != state.globals.end(), "memo empty-string replace script should expose NOTE");
+    if (note != state.globals.end()) {
+        expect(copperfin::runtime::format_value(note->second).empty(),
+               "REPLACE memo field with an empty string should round-trip as empty");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_exclusive_controls_table_maintenance_guards() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_exclusive_maintenance";
@@ -1240,6 +1349,9 @@ int main() {
     test_replace_for_updates_all_matching_records();
     test_pack_compacts_deleted_local_records();
     test_zap_truncates_local_table_records();
+    test_replace_character_field_truncates_to_field_width();
+    test_character_field_at_maximum_width_round_trips();
+    test_memo_field_replace_with_empty_string();
     test_set_exclusive_controls_table_maintenance_guards();
     test_lock_functions_and_unlock_command_track_session_locks();
     test_insert_into_and_delete_from_local_table();

@@ -796,6 +796,149 @@ void test_command_level_aggregate_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scan_on_empty_table_does_not_execute_body() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_people.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "scan_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyPeople IN 0\n"
+        "nScanHits = 0\n"
+        "SCAN\n"
+        "    nScanHits = nScanHits + 1\n"
+        "ENDSCAN\n"
+        "lAfterScanEof = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCAN over an empty table should complete");
+
+    const auto scan_hits = state.globals.find("nscanhits");
+    const auto after_scan_eof = state.globals.find("lafterscaneof");
+    expect(scan_hits != state.globals.end(), "empty-table SCAN should still expose the scan counter");
+    expect(after_scan_eof != state.globals.end(), "empty-table SCAN should expose EOF() state after scan");
+
+    if (scan_hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_hits->second) == "0",
+               "SCAN body should not execute for an empty table");
+    }
+    if (after_scan_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan_eof->second) == "true",
+               "EOF() should remain true after scanning an empty table");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_aggregate_commands_on_empty_table_return_zero() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregates_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_people.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "aggregates_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyPeople IN 0\n"
+        "nCount = COUNT()\n"
+        "nSum = SUM(AGE)\n"
+        "nAverage = AVERAGE(AGE)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "aggregate helpers over an empty table should complete");
+
+    const auto count = state.globals.find("ncount");
+    const auto sum = state.globals.find("nsum");
+    const auto average = state.globals.find("naverage");
+    expect(count != state.globals.end(), "COUNT() over an empty table should produce a value");
+    expect(sum != state.globals.end(), "SUM() over an empty table should produce a value");
+    expect(average != state.globals.end(), "AVERAGE() over an empty table should produce a value");
+
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "0",
+               "COUNT() over an empty table should be zero");
+    }
+    if (sum != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sum->second) == "0",
+               "SUM() over an empty table should be zero");
+    }
+    if (average != state.globals.end()) {
+        expect(copperfin::runtime::format_value(average->second) == "0",
+               "AVERAGE() over an empty table should be zero");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_locate_on_empty_table_sets_eof() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_locate_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_people.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "locate_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyPeople IN 0\n"
+        "LOCATE FOR .T.\n"
+        "lFoundAfterLocate = FOUND()\n"
+        "lEofAfterLocate = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LOCATE on an empty table should complete");
+
+    const auto found_after_locate = state.globals.find("lfoundafterlocate");
+    const auto eof_after_locate = state.globals.find("leofafterlocate");
+    expect(found_after_locate != state.globals.end(), "LOCATE on an empty table should expose FOUND()");
+    expect(eof_after_locate != state.globals.end(), "LOCATE on an empty table should expose EOF()");
+
+    if (found_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_after_locate->second) == "false",
+               "LOCATE on an empty table should leave FOUND() false");
+    }
+    if (eof_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_locate->second) == "true",
+               "LOCATE on an empty table should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_aggregate_commands_support_macro_targets_and_calculate_while() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_macro_targets";
@@ -4091,6 +4234,9 @@ int main() {
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
     test_command_level_aggregate_commands();
+    test_scan_on_empty_table_does_not_execute_body();
+    test_aggregate_commands_on_empty_table_return_zero();
+    test_locate_on_empty_table_sets_eof();
     test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();

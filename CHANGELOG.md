@@ -6,6 +6,9 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-11
 
+- Gap-05 field-write edge coverage advanced across slice issues `#242`, `#243`, and `#244`. Focused `test_prg_engine_table_mutation` coverage now verifies that `REPLACE` truncates over-width character values to field width, exact-width character values round-trip without mutation, and memo fields accept `REPLACE ... WITH ''` as an empty-string update.
+- Runtime write semantics were tightened so character overflow truncation is scoped to `REPLACE` command paths only, while `INSERT INTO` retains strict overflow failures and rollback behavior. This preserves existing insert-rollback safety contracts while aligning replacement behavior with the new gap-05 coverage.
+- Gap-04 empty-table runtime behavior gained focused regression coverage across slice issues `#237`, `#241`, and `#240`. `test_prg_engine_control_flow` now verifies that `SCAN` bodies do not execute over empty tables and preserve `EOF()` state, aggregate helpers (`COUNT()`, `SUM()`, `AVERAGE()`) return deterministic zero values on empty tables, and `LOCATE FOR .T.` on empty tables keeps `FOUND()` false with `EOF()` true. Focused control-flow validation passes.
 - Gap-07 call-depth guardrail boundary precision advanced across slice issues `#254`, `#250`, and `#253`. Focused `test_prg_engine_control_flow` coverage now asserts that nested routine chains exactly at the configured `MAX_CALL_DEPTH` succeed, one-over-limit chains fail with the expected guardrail error, and `config.fpw` custom call-depth overrides enforce that same boundary behavior. Runtime guardrail evaluation in [src/runtime/prg_engine_session.inl](src/runtime/prg_engine_session.inl) was corrected for off-by-one behavior so the configured limit is treated as an inclusive boundary.
 
 ## 2026-05-03

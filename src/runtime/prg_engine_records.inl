@@ -336,7 +336,8 @@
         bool replace_current_record_fields(
             CursorState &cursor,
             const std::vector<ReplaceAssignment> &assignments,
-            const Frame &frame)
+            const Frame &frame,
+            bool truncate_character_overflow_for_local_fields = false)
         {
             if (cursor.remote)
             {
@@ -375,11 +376,36 @@
             for (const auto &assignment : assignments)
             {
                 const PrgValue value = evaluate_expression(assignment.expression, frame);
+                std::string serialized_value = value_as_string(value);
+                if (truncate_character_overflow_for_local_fields)
+                {
+                    const std::string normalized_field = collapse_identifier(assignment.field_name);
+                    const auto descriptors = cursor_field_descriptors(cursor);
+                    const auto descriptor = std::find_if(
+                        descriptors.begin(),
+                        descriptors.end(),
+                        [&](const vfp::DbfFieldDescriptor &candidate)
+                        {
+                            return collapse_identifier(candidate.name) == normalized_field;
+                        });
+                    if (descriptor != descriptors.end() && descriptor->type == 'C')
+                    {
+                        const std::string trimmed = trim_copy(serialized_value);
+                        if (trimmed.size() > descriptor->length)
+                        {
+                            serialized_value = trimmed.substr(0U, descriptor->length);
+                        }
+                        else
+                        {
+                            serialized_value = trimmed;
+                        }
+                    }
+                }
                 const auto result = vfp::replace_record_field_value(
                     cursor.source_path,
                     cursor.recno - 1U,
                     assignment.field_name,
-                    value_as_string(value));
+                    serialized_value);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -399,7 +425,7 @@
         {
             if (trim_copy(for_expression).empty() && trim_copy(while_expression).empty())
             {
-                return replace_current_record_fields(cursor, assignments, frame);
+                return replace_current_record_fields(cursor, assignments, frame, true);
             }
 
             const std::size_t original_recno = cursor.recno;
@@ -428,7 +454,7 @@
                     continue;
                 }
 
-                if (!replace_current_record_fields(cursor, assignments, frame))
+                if (!replace_current_record_fields(cursor, assignments, frame, true))
                 {
                     return false;
                 }
@@ -778,8 +804,8 @@
                                                .expression = rule.default_expression});
             }
 
-            const bool defaults_ok = default_assignments.empty() || replace_current_record_fields(cursor, default_assignments, frame);
-            const bool explicit_ok = defaults_ok && replace_current_record_fields(cursor, assignments, frame);
+            const bool defaults_ok = default_assignments.empty() || replace_current_record_fields(cursor, default_assignments, frame, false);
+            const bool explicit_ok = defaults_ok && replace_current_record_fields(cursor, assignments, frame, false);
             if (explicit_ok && validate_not_null_fields(cursor))
             {
                 return true;
