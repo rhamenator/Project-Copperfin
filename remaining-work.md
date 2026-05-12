@@ -180,8 +180,8 @@ If direct commits continue, close a child issue only when:
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
   - recently closed prompt-sized slice issues: #142, #143, #144, #145
-    - recently closed prompt-sized slice issues also include #150, #151 under #13 and #152, #153 under #14, plus gap-driven follow-up slices #257-#271
-    - active prompt-sized slice issues: none currently open under #13/#14
+        - recently closed prompt-sized slice issues also include #150, #151 under #13, plus gap-driven follow-up slices #257-#268
+        - active prompt-sized slice issues: #152, #153, #269, #270, #272 (under #14/#13) and #273 (under #14)
 
 ### Runtime Parity Surfaces
 
@@ -196,7 +196,7 @@ If direct commits continue, close a child issue only when:
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
 - Build/run/deploy workflow tightening: #21
-  - native slice queues now exist under #19-#21: #162-#167
+    - native slice queues now exist under #19-#21: #162-#167, #278
 - AST/IR and transpilation outputs: #42, #43
 - Build artifact breadth and round-trip safety: #38, #39, #40, #41
   - native slice queues now exist under #38-#43: #204-#215
@@ -226,13 +226,15 @@ If direct commits continue, close a child issue only when:
 - Document/vector translation and AI planning policy: #31
 - .NET outputs and integration hooks: #32
 - Interop/compiler LINQ and runtime bridge contracts: #57, #91
-- native slice queues now exist under #30-#32, #57, #91: #184-#189, #200-#203
+- .NET parity umbrella: #274 (under #113)
+- native slice queues now exist under #30-#32, #57, #91: #184-#189, #200-#203, #275-#277, #280
+- recently closed .NET parity slices: #275, #276
 
 ### Security And Policy
 
 - Runtime/project security depth: #33
 - Extension/host/AI policy hardening: #34
-- native slice queues now exist under #33-#34: #190-#193
+- native slice queues now exist under #33-#34: #190-#193, #279
 
 ### Portability
 

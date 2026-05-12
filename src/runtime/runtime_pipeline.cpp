@@ -517,6 +517,30 @@ std::string build_runtime_manifest_text(
     stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
+    stream << "dotnet_policy_allowlist=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
+    stream << "dotnet_policy_denylist=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
+    stream << "dotnet_parity_matrix_entries=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
+
+    const platform::DotNetInteropCallDecision launcher_decision = platform::evaluate_dotnet_interop_call(
+        extensibility_profile,
+        platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U,
+            .requires_reflection = false,
+            .untrusted_input = false,
+            .security_sensitive = false});
+    stream << "dotnet_gateway_task_primitives=" << quote_manifest_value(launcher_decision.execution_path + ":" + launcher_decision.reason) << "\n";
+
+    const platform::DotNetInteropCallDecision denied_decision = platform::evaluate_dotnet_interop_call(
+        extensibility_profile,
+        platform::DotNetInteropCallRequest{
+            .capability_id = "unsafe-reflection-load",
+            .estimated_latency_ms = 2U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true});
+    stream << "dotnet_gateway_unsafe_reflection=" << quote_manifest_value(denied_decision.execution_path + ":" + denied_decision.reason) << "\n";
+
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
 

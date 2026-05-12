@@ -172,3 +172,48 @@ POC 3:
 - how much wrapper generation should be static vs reflection-driven
 - whether AOT-friendly managed wrappers should be a first-class target
 
+## .NET Parity Matrix And Policy Gateway (Issue #275 / #276)
+
+This repo now tracks .NET parity with an explicit allow/deny policy and capability matrix so parity work does not inherit undesirable behavior from either .NET or VFP.
+
+### Compatibility Tiers
+
+- `exact`: behavior can match .NET semantics without measurable risk.
+- `adapted`: behavior is exposed through FP/VFP-friendly facades and native semantics where needed.
+- `intentionally_not_supported`: behavior is denied with explicit rationale.
+
+### Initial Capability Matrix
+
+| capability id | tier | reason tags | rationale | verification reference |
+|---|---|---|---|---|
+| `task-primitives` | adapted | ergonomics, performance | Async/task behavior is surfaced through native-friendly command/function shapes. | `#272` |
+| `json-helpers` | adapted | ergonomics | High-value JSON helpers are allowed with native null/blank semantic preservation. | `#280` |
+| `unsafe-reflection-load` | intentionally_not_supported | security, legacy_hazard | Arbitrary reflection loading crosses trust boundaries and is denied by default. | `#279` |
+| `insecure-binary-deserialization` | intentionally_not_supported | security, legacy_hazard | Legacy insecure serialization patterns are rejected. | `#279` |
+| `legacy-cas-interop` | intentionally_not_supported | performance, legacy_hazard | Retired CAS-era behavior is not reintroduced. | `#275` |
+
+### Policy-Driven Call Gateway
+
+All candidate .NET interop calls are evaluated through a policy gateway before route selection.
+
+Decision outcomes:
+
+- `allow`: execute via .NET-backed path (auditable).
+- `fallback_native`: route to native implementation when policy or budget does not permit managed path.
+- `reject`: deny execution and return deterministic diagnostics.
+
+Current gate checks:
+
+- allowlist/denylist capability matching
+- latency-budget eligibility for in-process managed path
+- reflection restrictions for untrusted or security-sensitive inputs
+- audit-required decision annotation
+
+This policy gateway is surfaced in runtime packaging diagnostics via manifest keys:
+
+- `dotnet_policy_allowlist`
+- `dotnet_policy_denylist`
+- `dotnet_parity_matrix_entries`
+- `dotnet_gateway_task_primitives`
+- `dotnet_gateway_unsafe_reflection`
+

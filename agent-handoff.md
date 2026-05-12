@@ -28,10 +28,11 @@ Important:
 
 Current priority order:
 
-1. `#151`, `#152`, `#153`, and `#257`-`#271` are now **closed** (recently shipped in focused batches); `#267` and `#268` are also now **closed**
-2. The `#93` child queue is now exhausted — pick the highest-fan-out next slice under `#94`, `#97`, `#98`, `#99`, `#100`, or `#101`
-3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
-4. Do not reopen the now-shipped H3 child queue `#257`-`#268` unless a concrete remaining parity bug is found
+1. `#150`, `#151`, and `#257`-`#268` are now **closed** (recent focused runtime/data batches)
+2. Resume the open runtime-safety/diagnostics path: `#152` then `#153`
+3. Continue with the newly opened child queue for cancel/undo/contention/concurrency under `#13/#14/#98`: `#269`, `#270`, `#271`, `#272`, `#273`
+4. In parallel, continue the .NET parity queue under `#113/#91/#32/#19/#33/#34`: umbrella `#274` with open slices `#277`-`#280` (`#275` and `#276` are now closed)
+5. Keep the `#93` child queue closed unless a concrete parity regression is found
 
 Current shipped highlights worth remembering:
 
@@ -45,8 +46,14 @@ Current shipped highlights worth remembering:
 
 - 2026-05-12: H3/#97, `#99`, `#94`, `#100`, and `#93` queue issues `#258`-`#262` are now shipped. Macro parsing now supports alias-qualified field indirection with macro suffixes (`&cAlias..&cField`) in expressions and command contexts, macro-expanded assignment targets now preserve `PRIVATE` / `PUBLIC` identity instead of collapsing to current values, structural rollback coverage now explicitly proves `ALTER TABLE` and `PACK MEMO` leave tables readable after rollback, wildcard `FIELDS LIKE` / `FIELDS EXCEPT` transfer coverage now reaches `SCATTER/GATHER MEMVAR` plus DBF `COPY TO` / `APPEND FROM`, and targeted SQL `APPEND BLANK IN <alias>` mutation now has focused selected-alias/pointer-isolation coverage beside the existing targeted `REPLACE/DELETE/RECALL` tests.
 
+- 2026-05-12: Follow-up runtime-safety and concurrency child queue was opened from new requirements: `#269` (global cancel/undo rollback-cleanup contract), `#270` (command-level undo journal + `UNDO` command surface), `#271` (`SET REPROCESS` default/behavior under contention), `#272` (`SPAWN`/`ASYNC`/`AWAIT`/`SLEEP` primitives with contention-safe cancel/undo hooks), and `#273` (host `Undo` menu routing across edit-level and command-level undo stacks).
+
+- 2026-05-12: .NET parity planning queue was opened with explicit quality gates and parent mapping. New umbrella `#274` (under `#113`) tracks parity without inheriting undesirable legacy behavior. Child slices: `#275` allowlist/denylist + behavior acceptance matrix (`#91`), `#276` policy-driven .NET call gateway with perf/security eligibility checks (`#91`), `#277` C++ vs C# wrapper routing strategy (`#32`), `#278` deterministic parity manifest + feature flags (`#19`), `#279` security/threat-model enforcement gates (`#33/#34`), and `#280` high-value parity surface pack with FP/VFP-friendly facades (`#91`).
+
+- 2026-05-12: .NET parity slices `#275` and `#276` are now shipped. The platform profile now includes an explicit .NET parity matrix with compatibility tiers (`exact`/`adapted`/`intentionally_not_supported`), allowlist/denylist policy rules, and verification references. A policy-driven interop call gateway (`evaluate_dotnet_interop_call`) now returns deterministic `allow`/`fallback_native`/`reject` decisions using allowlist/denylist checks, latency budget checks, and reflection-on-untrusted guardrails. Runtime packaging manifests now emit gateway decision diagnostics (`dotnet_policy_*`, `dotnet_parity_matrix_entries`, `dotnet_gateway_*`), and focused `test_platform_models` + `test_runtime_pipeline` coverage locks down defaults and decision behavior.
+
 - 2026-05-12: Gap-03 failure-injection/rollback coverage advanced across slice issues `#266`, `#267`, and `#268`. `test_dbf_table` now verifies deterministic staged-write rollback for DBF and memo sidecar write paths (original-bytes preservation plus artifact cleanup), and `src/vfp/dbf_table.cpp` now exposes test-only failure checkpoints (`temp-open`, `before-backup`, `before-promote`) gated by environment variables.
-- 2026-05-12: Additional DBF header guardrail coverage advanced across slice issues `#269`, `#270`, and `#271`, locking down rejection of zero record-length headers, undersized header lengths, and header-length claims beyond physical file size.
+- 2026-05-12: Additional DBF header guardrail coverage advanced across three focused slices, locking down rejection of zero record-length headers, undersized header lengths, and header-length claims beyond physical file size.
 
 - 2026-05-12: Gap-driven DBF robustness coverage advanced across slice issues `#260`, `#261`, `#262`, `#263`, `#264`, and `#265`. `test_dbf_table` now covers currency boundary round-trips, NaN/INF double survivability, descriptor parsing bounded by header length, record-width/field-layout mismatch rejection during mutation, malformed memo sidecar placeholder diagnostics, and full 11-byte non-null-terminated field-name tolerance. Runtime parsing was hardened in `src/vfp/dbf_table.cpp` so descriptor scanning stops at declared `header_length`.
 

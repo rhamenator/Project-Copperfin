@@ -41,6 +41,9 @@ void test_default_extensibility_profile() {
     expect(profile.available, "extensibility profile should be available");
     expect(profile.dotnet_output.available, "extensibility profile should include a .NET output story");
     expect(profile.dotnet_output.managed_wrappers, "extensibility profile should support managed wrappers");
+    expect(!profile.dotnet_output.parity_matrix.empty(), "extensibility profile should define a .NET parity matrix");
+    expect(!profile.dotnet_output.policy.allowlist.empty(), "extensibility profile should include a .NET interop allowlist");
+    expect(!profile.dotnet_output.policy.denylist.empty(), "extensibility profile should include a .NET interop denylist");
 
     const auto python = std::find_if(profile.languages.begin(), profile.languages.end(), [](const auto& language) {
         return language.id == "python";
@@ -51,6 +54,57 @@ void test_default_extensibility_profile() {
         return feature.id == "mcp-host";
     });
     expect(mcp != profile.ai_features.end(), "extensibility profile should include MCP hosting");
+
+    const auto deny_capability = std::find_if(
+        profile.dotnet_output.parity_matrix.begin(),
+        profile.dotnet_output.parity_matrix.end(),
+        [](const auto& capability) {
+            return capability.id == "unsafe-reflection-load" &&
+                capability.tier == copperfin::platform::DotNetParityTier::intentionally_not_supported;
+        });
+    expect(
+        deny_capability != profile.dotnet_output.parity_matrix.end(),
+        "extensibility parity matrix should include explicit intentionally-not-supported capabilities");
+}
+
+void test_dotnet_interop_policy_gateway() {
+    const auto profile = copperfin::platform::default_extensibility_profile();
+
+    const auto allowed = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U,
+            .requires_reflection = false,
+            .untrusted_input = false,
+            .security_sensitive = false});
+    expect(
+        allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
+        "policy gateway should allow listed .NET parity capabilities within budget");
+
+    const auto denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "unsafe-reflection-load",
+            .estimated_latency_ms = 5U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true});
+    expect(
+        denied.decision == copperfin::platform::DotNetInteropDecision::reject,
+        "policy gateway should reject denylisted capabilities");
+
+    const auto fallback = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "json-helpers",
+            .estimated_latency_ms = 250U,
+            .requires_reflection = false,
+            .untrusted_input = false,
+            .security_sensitive = false});
+    expect(
+        fallback.decision == copperfin::platform::DotNetInteropDecision::fallback_native,
+        "policy gateway should fall back to native when estimated latency exceeds budget");
 }
 
 void test_default_database_profile() {
@@ -81,6 +135,7 @@ void test_default_database_profile() {
 int main() {
     test_default_security_profile();
     test_default_extensibility_profile();
+    test_dotnet_interop_policy_gateway();
     test_default_database_profile();
 
     if (failures != 0) {
