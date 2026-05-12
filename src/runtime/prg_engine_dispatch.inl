@@ -4489,6 +4489,7 @@
                     }
 
                     std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
+                    const std::string for_expr = statement.quaternary_expression;
                     std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
                     filtered_target_fields.reserve(target_fields.size());
                     for (const auto &field : target_fields)
@@ -4548,6 +4549,18 @@
                         }
 
                         cursor->remote_records.push_back(std::move(appended_record));
+                        cursor->record_count = cursor->remote_records.size();
+                        cursor->recno = cursor->record_count;
+                        cursor->eof = false;
+                        cursor->bof = cursor->record_count == 0U;
+
+                        if (!trim_copy(for_expr).empty() && !current_record_matches_visibility(*cursor, frame, for_expr))
+                        {
+                            cursor->remote_records.pop_back();
+                            cursor->record_count = cursor->remote_records.size();
+                            continue;
+                        }
+
                         ++appended_count;
                     }
 

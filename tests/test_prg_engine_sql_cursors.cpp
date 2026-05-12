@@ -1175,6 +1175,88 @@ void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_dbf_for_filters_selected_sql_result_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_for_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source_rows.dbf";
+    const fs::path main_path = temp_root / "sql_append_from_for_filter.prg";
+
+    const auto source_write = copperfin::vfp::create_dbf_table_file(
+        source_path.string(),
+        {
+            copperfin::vfp::DbfFieldDescriptor{.name = "ID", .type = 'N', .length = 6U, .decimal_count = 0U},
+            copperfin::vfp::DbfFieldDescriptor{.name = "NAME", .type = 'C', .length = 20U, .decimal_count = 0U},
+            copperfin::vfp::DbfFieldDescriptor{.name = "AMOUNT", .type = 'N', .length = 10U, .decimal_count = 2U},
+        },
+        {
+            {"701", "DELTA", "7"},
+            {"702", "ECHO", "8"},
+        });
+    expect(source_write.ok, "source DBF fixture for SQL APPEND FROM FOR filter should be created successfully");
+
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "nRowsBefore = RECCOUNT()\n"
+        "APPEND FROM '" + source_path.string() + "' FOR NAME == 'DELTA'\n"
+        "nRowsAfter = RECCOUNT()\n"
+        "GO BOTTOM\n"
+        "nBottomId = ID\n"
+        "cBottomName = NAME\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM FOR selected SQL result-cursor script should complete: " + state.message);
+
+    const auto rows_before = state.globals.find("nrowsbefore");
+    const auto rows_after = state.globals.find("nrowsafter");
+    const auto bottom_id = state.globals.find("nbottomid");
+    const auto bottom_name = state.globals.find("cbottomname");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(rows_before != state.globals.end(), "selected SQL cursor row count before APPEND FROM FOR should be captured");
+    expect(rows_after != state.globals.end(), "selected SQL cursor row count after APPEND FROM FOR should be captured");
+    expect(bottom_id != state.globals.end(), "selected SQL cursor bottom ID after APPEND FROM FOR should be captured");
+    expect(bottom_name != state.globals.end(), "selected SQL cursor bottom NAME after APPEND FROM FOR should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after APPEND FROM FOR checks");
+
+    if (rows_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_before->second) == "3",
+            "selected SQL result cursor should start with seeded row count before APPEND FROM FOR");
+    }
+    if (rows_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_after->second) == "4",
+            "APPEND FROM FOR should append only records matching the FOR expression");
+    }
+    if (bottom_id != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom_id->second) == "701",
+            "APPEND FROM FOR should append only matching DBF source rows into selected SQL/result cursor ID field");
+    }
+    if (bottom_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom_name->second) == "DELTA",
+            "APPEND FROM FOR should append only matching DBF source rows into selected SQL/result cursor NAME field");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+            "SQLDISCONNECT should succeed after APPEND FROM FOR checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_mutation_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutations";
@@ -3539,6 +3621,7 @@ int main() {
     test_copy_to_exports_selected_sql_result_cursor_rows();
     test_append_from_dbf_mutates_selected_sql_result_cursor();
     test_copy_structure_to_exports_sql_metadata_cursor_schema();
+    test_append_from_dbf_for_filters_selected_sql_result_cursor();
     test_sql_result_cursor_mutation_commands();
     test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
     test_sql_result_cursors_are_isolated_by_data_session();
