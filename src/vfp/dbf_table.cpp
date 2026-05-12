@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -146,6 +147,20 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
 }
 
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
+    const auto should_inject_write_failure = [&path](const char* stage) {
+        const char* marker = std::getenv("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        const char* stage_filter = std::getenv("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        if (marker == nullptr || stage_filter == nullptr) {
+            return false;
+        }
+        const std::string marker_text(marker);
+        const std::string stage_text(stage_filter);
+        if (marker_text.empty() || stage_text != stage) {
+            return false;
+        }
+        return path.find(marker_text) != std::string::npos;
+    };
+
     const std::filesystem::path target_path(path);
     const std::filesystem::path temp_path = target_path.string() + ".cptmp";
     const std::filesystem::path backup_path = target_path.string() + ".cpbak";
@@ -153,6 +168,10 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     std::error_code ec;
     std::filesystem::remove(temp_path, ec);
     std::filesystem::remove(backup_path, ec);
+
+    if (should_inject_write_failure("temp-open")) {
+        return false;
+    }
 
     std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
     if (!output) {
@@ -172,12 +191,25 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     }
 
     const bool had_target = std::filesystem::exists(target_path, ec);
+    if (should_inject_write_failure("before-backup")) {
+        std::filesystem::remove(temp_path, ec);
+        return false;
+    }
     if (had_target) {
         std::filesystem::rename(target_path, backup_path, ec);
         if (ec) {
             std::filesystem::remove(temp_path, ec);
             return false;
         }
+    }
+
+    if (should_inject_write_failure("before-promote")) {
+        if (had_target) {
+            std::error_code restore_ec;
+            std::filesystem::rename(backup_path, target_path, restore_ec);
+        }
+        std::filesystem::remove(temp_path, ec);
+        return false;
     }
 
     std::filesystem::rename(temp_path, target_path, ec);

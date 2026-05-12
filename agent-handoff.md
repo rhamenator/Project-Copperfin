@@ -28,11 +28,14 @@ Important:
 
 Current priority order:
 
-1. `#151`, `#152`, `#153`, and `#257`-`#265` are now **closed** (recently shipped in focused batches)
+1. `#151`, `#152`, `#153`, and `#257`-`#271` are now **closed** (recently shipped in focused batches)
 2. Continue with the highest-fan-out open child slice under `#93` or `#94`
 3. Parallel the above with remaining high-priority `GAP-03` failure-injection slices from `docs/safety/test-coverage-gap-analysis.md`
 
 Current shipped highlights worth remembering:
+
+- 2026-05-12: Gap-03 failure-injection/rollback coverage advanced across slice issues `#266`, `#267`, and `#268`. `test_dbf_table` now verifies deterministic staged-write rollback for DBF and memo sidecar write paths (original-bytes preservation plus artifact cleanup), and `src/vfp/dbf_table.cpp` now exposes test-only failure checkpoints (`temp-open`, `before-backup`, `before-promote`) gated by environment variables.
+- 2026-05-12: Additional DBF header guardrail coverage advanced across slice issues `#269`, `#270`, and `#271`, locking down rejection of zero record-length headers, undersized header lengths, and header-length claims beyond physical file size.
 
 - 2026-05-12: Gap-driven DBF robustness coverage advanced across slice issues `#260`, `#261`, `#262`, `#263`, `#264`, and `#265`. `test_dbf_table` now covers currency boundary round-trips, NaN/INF double survivability, descriptor parsing bounded by header length, record-width/field-layout mismatch rejection during mutation, malformed memo sidecar placeholder diagnostics, and full 11-byte non-null-terminated field-name tolerance. Runtime parsing was hardened in `src/vfp/dbf_table.cpp` so descriptor scanning stops at declared `header_length`.
 

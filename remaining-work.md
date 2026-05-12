@@ -179,7 +179,7 @@ If direct commits continue, close a child issue only when:
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
   - recently closed prompt-sized slice issues: #142, #143, #144, #145
-    - recently closed prompt-sized slice issues also include #150, #151 under #13 and #152, #153 under #14, plus gap-driven follow-up slices #257-#265
+    - recently closed prompt-sized slice issues also include #150, #151 under #13 and #152, #153 under #14, plus gap-driven follow-up slices #257-#271
     - active prompt-sized slice issues: none currently open under #13/#14
 
 ### Runtime Parity Surfaces

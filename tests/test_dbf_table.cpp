@@ -78,6 +78,22 @@ std::vector<std::uint8_t> read_binary_file(const std::filesystem::path& path) {
     };
 }
 
+void set_env_var(const char* name, const std::string& value) {
+#if defined(_WIN32)
+    _putenv_s(name, value.c_str());
+#else
+    setenv(name, value.c_str(), 1);
+#endif
+}
+
+void clear_env_var(const char* name) {
+#if defined(_WIN32)
+    _putenv_s(name, "");
+#else
+    unsetenv(name);
+#endif
+}
+
 void test_parse_dbf_table_with_memo_sidecar() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1184,6 +1200,214 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
     fs::remove_all(temp_dir, ignored);
 }
 
+    void test_replace_write_failure_leaves_original_dbf_intact() {
+        // #266: staged DBF write failures must preserve the original table bytes.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_replace_write_failure_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "replace_fail.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+         {.name = "NAME", .type = 'C', .length = 10U},
+         {.name = "AGE", .type = 'N', .length = 3U}
+        };
+        const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}};
+        expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
+            "#266: setup should create a DBF table for staged-write rollback validation");
+
+        const auto original_bytes = read_binary_file(table_path);
+
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".dbf");
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
+        const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "BRAVO");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+
+        expect(!replace_result.ok,
+            "#266: injected DBF write failure should surface as a failed replace operation");
+        expect(replace_result.error == "Unable to write table file.",
+            "#266: injected DBF write failure should report the table write error");
+
+        const auto final_bytes = read_binary_file(table_path);
+        expect(final_bytes == original_bytes,
+            "#266: table bytes should be preserved when staged DBF promote fails");
+        expect(!fs::exists(table_path.string() + ".cptmp"),
+            "#266: staged failure should not leak DBF temp files");
+        expect(!fs::exists(table_path.string() + ".cpbak"),
+            "#266: staged failure should not leak DBF backup files");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    void test_memo_sidecar_write_failure_leaves_dbf_header_consistent() {
+        // #267: if memo sidecar write fails after DBF write, rollback must restore
+        // both table content and sidecar consistency.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_memo_write_failure_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "memo_fail.dbf";
+        const fs::path memo_path = temp_dir / "memo_fail.fpt";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+         {.name = "TITLE", .type = 'C', .length = 10U},
+         {.name = "BODY", .type = 'M', .length = 4U}
+        };
+        const std::vector<std::vector<std::string>> records{{"ONE", "Original payload"}};
+        expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
+            "#267: setup should create memo-backed DBF for rollback validation");
+
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".fpt");
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "temp-open");
+        const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated payload");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+
+        expect(!replace_result.ok,
+            "#267: injected memo write failure should surface as a failed replace operation");
+        expect(replace_result.error == "Unable to write memo sidecar.",
+            "#267: injected memo write failure should report the memo-sidecar write error");
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(parse_result.ok,
+            "#267: table should remain readable after memo sidecar write rollback");
+        if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 2U) {
+         expect(parse_result.table.records[0].values[1].display_value == "Original payload",
+             "#267: memo rollback should preserve original payload content");
+        }
+        expect(!fs::exists(memo_path.string() + ".cptmp"),
+            "#267: failed memo write should not leak memo temp files");
+        expect(!fs::exists(memo_path.string() + ".cpbak"),
+            "#267: failed memo write should not leak memo backup files");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    void test_staged_write_rollback_removes_temp_and_preserves_original() {
+        // #268: staged-write rollback should preserve original on-disk state and
+        // clean temp/backup artifacts.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_staged_rollback_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "rollback.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+         {.name = "NAME", .type = 'C', .length = 10U},
+         {.name = "AGE", .type = 'N', .length = 3U}
+        };
+        const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}, {"BRAVO", "20"}};
+        expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
+            "#268: setup should create table for staged-write rollback checks");
+
+        const auto before = read_binary_file(table_path);
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", "rollback.dbf");
+        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
+        const auto result = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "AGE", "21");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+
+        expect(!result.ok,
+            "#268: injected staged promote failure should return a failed write result");
+
+        const auto after = read_binary_file(table_path);
+        expect(after == before,
+            "#268: staged rollback should preserve original table bytes exactly");
+        expect(!fs::exists(table_path.string() + ".cptmp"),
+            "#268: staged rollback should remove DBF temp artifacts");
+        expect(!fs::exists(table_path.string() + ".cpbak"),
+            "#268: staged rollback should remove DBF backup artifacts");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    void test_dbf_with_zero_record_length_is_rejected() {
+        // #269: header-level record_length==0 must be rejected.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_zero_record_length_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "zero_record_len.dbf";
+        std::vector<std::uint8_t> bytes(32U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u16(bytes, 8U, 32U);
+        write_le_u16(bytes, 10U, 0U);
+        {
+         std::ofstream output(table_path, std::ios::binary);
+         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        }
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(!parse_result.ok,
+            "#269: DBF with zero record length should be rejected");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    void test_dbf_with_header_shorter_than_minimum_is_rejected() {
+        // #270: header_length<32 must fail DBF-family header validation.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_short_header_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "short_header.dbf";
+        std::vector<std::uint8_t> bytes(32U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u16(bytes, 8U, 31U);
+        write_le_u16(bytes, 10U, 1U);
+        {
+         std::ofstream output(table_path, std::ios::binary);
+         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        }
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(!parse_result.ok,
+            "#270: DBF with header length < 32 should be rejected");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
+    void test_dbf_header_claim_beyond_file_size_is_rejected() {
+        // #271: header_length claims beyond physical file bytes must be rejected.
+        namespace fs = std::filesystem;
+        const fs::path temp_dir = fs::temp_directory_path() /
+         ("copperfin_dbf_header_claim_beyond_file_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / "header_claim_beyond_file.dbf";
+        std::vector<std::uint8_t> bytes(64U, 0U);
+        bytes[0] = 0x30U;
+        write_le_u16(bytes, 8U, 97U);
+        write_le_u16(bytes, 10U, 14U);
+        {
+         std::ofstream output(table_path, std::ios::binary);
+         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        }
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(!parse_result.ok,
+            "#271: DBF whose header claims bytes beyond file size should be rejected");
+        expect(parse_result.error == "Table file is shorter than its header length.",
+            "#271: oversized header claim should report header-length truncation error");
+
+        fs::remove_all(temp_dir, ignored);
+    }
+
 void test_staged_write_temp_artifacts_are_cleaned_up() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1240,6 +1464,12 @@ int main() {
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();
     test_nan_inf_in_double_field_round_trip_behavior();
+    test_replace_write_failure_leaves_original_dbf_intact();
+    test_memo_sidecar_write_failure_leaves_dbf_header_consistent();
+    test_staged_write_rollback_removes_temp_and_preserves_original();
+    test_dbf_with_zero_record_length_is_rejected();
+    test_dbf_with_header_shorter_than_minimum_is_rejected();
+    test_dbf_header_claim_beyond_file_size_is_rejected();
     test_staged_write_temp_artifacts_are_cleaned_up();
 
     if (failures != 0) {
