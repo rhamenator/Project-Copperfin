@@ -552,7 +552,8 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(asset.type_title) << "|"
                << (asset.excluded ? "true" : "false") << "|"
                << (asset.exists ? "true" : "false") << "|"
-               << quote_manifest_value(asset.sha256) << "\n";
+               << quote_manifest_value(asset.sha256) << "|"
+               << (asset.copied ? "true" : "false") << "\n";
     }
 
     for (const auto& digest : plan.extension_payload_digests) {

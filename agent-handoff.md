@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: D1/#163 semantic manifest/asset-contract coverage deepened in `runtime_pipeline` + `test_runtime_pipeline`. Runtime manifest `asset=` lines now emit a terminal `copied` state field (`true`/`false`) with focused staged-vs-excluded contract checks.
 - 2026-05-12: C5/#162 startup-diagnostics coverage deepened in `test_runtime_pipeline`. Missing startup-record resolution is now explicitly regression-guarded to emit plan warnings and keep startup debug capabilities disabled.
 - 2026-05-12: C4/#161 build-inclusion coverage deepened in `test_runtime_pipeline`. Startup assets are now explicitly regression-guarded to stage into runtime packages even when marked excluded in project entries.
 - 2026-05-12: C4/#160 startup-resolution coverage deepened in `test_runtime_pipeline`. Debug startup capability checks now treat `.PRG` extensions case-insensitively for breakpoint/step-debug support.

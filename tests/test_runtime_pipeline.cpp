@@ -415,6 +415,79 @@ void test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_start
     fs::remove_all(temp_root, ignored);
 }
 
+void test_manifest_asset_lines_include_copy_state_contract() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_manifest_asset_copy_state";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(project_dir / "excluded.txt", "do not stage");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "manifest_contract.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ManifestAssetContract";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "ManifestAssetContract";
+    workspace.build_plan.output_path = (output_dir / "ManifestAssetContract.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "excluded.txt", .relative_path = "excluded.txt", .type_title = "Text", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "manifest-asset-copy-state plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "manifest-asset-copy-state package should materialize");
+    if (result.ok) {
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string startup_line_marker = "asset=1|main.prg|";
+        const std::string excluded_line_marker = "asset=2|excluded.txt|";
+        const std::size_t startup_line_pos = runtime_manifest.find(startup_line_marker);
+        const std::size_t excluded_line_pos = runtime_manifest.find(excluded_line_marker);
+        expect(startup_line_pos != std::string::npos,
+               "runtime manifest should include startup asset line");
+        expect(excluded_line_pos != std::string::npos,
+               "runtime manifest should include excluded asset line");
+
+        const bool startup_copied = startup_line_pos != std::string::npos &&
+            runtime_manifest.find("|true\n", startup_line_pos) != std::string::npos;
+        const bool excluded_not_copied = excluded_line_pos != std::string::npos &&
+            runtime_manifest.find("|false\n", excluded_line_pos) != std::string::npos;
+        expect(startup_copied, "startup asset line should report copied=true in manifest contract");
+        expect(excluded_not_copied, "excluded non-runtime asset line should report copied=false in manifest contract");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -424,6 +497,7 @@ int main() {
     test_startup_prg_extension_matching_is_case_insensitive();
     test_startup_asset_is_staged_even_when_marked_excluded();
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
+    test_manifest_asset_lines_include_copy_state_contract();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
