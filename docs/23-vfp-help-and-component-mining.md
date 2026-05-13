@@ -55,6 +55,7 @@ Recent shipped runtime slices refined the help-mining focus for remaining A3 res
 Next help-mining target for the active runtime queue:
 
 - `#100` field-transfer residuals, especially `SCATTER/GATHER` field-selection semantics (`FIELDS LIKE` / `FIELDS EXCEPT`) and transfer-path filtering behavior across local/remote cursor surfaces.
+- 2026-05-12 note: focused `SCATTER/GATHER FROM array` wildcard/exclusion coverage is now in place (`SCATTER FIELDS LIKE N* TO <array>` and `GATHER FROM <array> FIELDS EXCEPT AGE`); help mining for `#100` should now prioritize any remaining transfer-path differences outside this filtered array path.
 
 Especially high-signal local files and components:
 

@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Field-transfer slice `#100` advanced with focused array transfer-filtering coverage: `test_prg_engine_data_io` now verifies `SCATTER FIELDS LIKE N* TO <array>` includes only wildcard-matching fields and `GATHER FROM <array> FIELDS EXCEPT AGE` updates selected fields while preserving excluded `AGE`.
 - Runtime safety slice `#151` advanced with deeper repeated-continue coverage: focused `test_prg_engine_control_flow` now validates two-fault `CONTINUE` stability in a non-default data session (`SET DATASESSION TO 2`), including selected-alias and record-position preservation after each pause/resume.
 - Runtime diagnostics slice `#152` advanced with repeated-fault stack-frame coverage: focused `test_prg_engine_control_flow` now validates intermediate caller-frame metadata refresh across back-to-back nested faults, including correct routine/line (resume-PC) updates per pause.
 - Runtime diagnostics slice `#153` advanced with repeated-fault normalization coverage: focused `test_prg_engine_control_flow` now validates `AERROR()`/`ERROR()`/`MESSAGE()`/`LINENO()`/`PROGRAM()` refresh coherently across two sequential `ON ERROR` faults, including per-fault line and message updates.

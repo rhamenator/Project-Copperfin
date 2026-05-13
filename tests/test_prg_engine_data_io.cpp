@@ -364,6 +364,68 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_array_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{{"Alice", "Ready", "42"}};
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "SCATTER/GATHER array LIKE/EXCEPT fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_array_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People\n"
+        "GO 1\n"
+        "SCATTER FIELDS LIKE N* TO aRow\n"
+        "cLikeName = aRow[1]\n"
+        "cLikeNote = aRow[2]\n"
+        "nLikeLen = ALEN(aRow)\n"
+        "aRow[1] = 'ArrayName'\n"
+        "aRow[2] = 'ArrayNote'\n"
+        "GATHER FROM aRow FIELDS EXCEPT AGE\n"
+        "cAfterName = People.NAME\n"
+        "cAfterNote = People.NOTE\n"
+        "nAfterAge = People.AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = false
+    });
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER FROM array LIKE/EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("clikename", "Alice", "SCATTER FIELDS LIKE N* TO array should include NAME");
+    chk("clikenote", "Ready", "SCATTER FIELDS LIKE N* TO array should include NOTE");
+    chk("nlikelen", "2", "SCATTER FIELDS LIKE N* TO array should include exactly two fields");
+    chk("caftername", "ArrayName", "GATHER FROM array FIELDS EXCEPT AGE should write NAME");
+    chk("cafternote", "ArrayNote", "GATHER FROM array FIELDS EXCEPT AGE should write NOTE");
+    chk("nafterage", "42", "GATHER FROM array FIELDS EXCEPT AGE should leave AGE unchanged");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_dates";
@@ -5951,6 +6013,7 @@ int main() {
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
     test_scatter_gather_memvar_single_name_field_filter_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
+    test_scatter_gather_array_like_and_except_field_filters();
     test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
     test_scatter_gather_array_preserves_date_and_datetime_like_values();
     test_scatter_gather_name_object_round_trip();
