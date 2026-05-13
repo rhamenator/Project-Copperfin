@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- C1/#155 form data-environment/object-graph slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies root-form selection ignores comment/data-environment records and preserves nested object-path action identifiers.
 - C1/#154 form/class lifecycle slice advanced with explicit routine-order contract coverage: `test_xasset_methods` now verifies startup/shutdown sequence ordering in executable models for form assets (`BeforeOpenTables/OpenTables -> Load/Init/Activate`, shutdown `Destroy -> CloseTables`) and class-library assets (`Load -> Init`, then `Destroy`).
 - Structural table-operation slice `#94` advanced with focused memo-rollback pointer stability coverage: `test_prg_engine_table_structure` now verifies `PACK MEMO` rollback preserves `RECNO()` position while restoring memo sidecar bytes and on-disk readability.
 - SQL/result-cursor slice `#93` advanced with focused selected-cursor JSON-import filter coverage: `test_prg_engine_sql_cursors` now verifies `APPEND FROM ... TYPE JSON FOR ...` applies `FOR` filtering and appends only matching rows.

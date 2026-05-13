@@ -1,5 +1,6 @@
 #include "copperfin/runtime/xasset_methods.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -130,6 +131,54 @@ void test_build_class_library_xasset_executable_model() {
     expect(bootstrap.find("DO __cf_custWidget_Load") != std::string::npos, "class-library bootstrap should call the load method");
     expect(bootstrap.find("DO __cf_custWidget_Init") != std::string::npos, "class-library bootstrap should call the init method");
     expect(bootstrap.find("DO __cf_custWidget_Destroy") != std::string::npos, "class-library bootstrap should call the destroy method after event-loop exit");
+}
+
+void test_form_root_object_path_ignores_comments_and_data_environment() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\root_select.scx)";
+    document.kind = copperfin::studio::StudioAssetKind::form;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "COMMENT"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "CommentRow"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "custom"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Init\r\nx = 0\r\nENDPROC"}
+        }),
+        make_record(1, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "Dataenvironment"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "dataenvironment"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE OpenTables\r\nx = 1\r\nENDPROC"}
+        }),
+        make_record(2, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "frmPrimary"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Load\r\nx = 2\r\nENDPROC\r\nPROCEDURE Init\r\nx = 3\r\nENDPROC"}
+        }),
+        make_record(3, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "txtName"},
+            {.field_name = "PARENT", .field_type = 'M', .display_value = "frmPrimary"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "textbox"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Valid\r\nx = 4\r\nENDPROC"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "form executable model should still build when comment/dataenvironment records appear first");
+    expect(model.root_object_path == "frmPrimary",
+           "root form selection should ignore comment/data-environment records and choose top-level form object");
+    expect(model.actions.size() >= 4U,
+           "form executable model should include actions for data-environment, root form, and nested child object methods");
+    const bool has_nested_action = std::any_of(
+        model.actions.begin(),
+        model.actions.end(),
+        [](const copperfin::runtime::XAssetActionBinding& action) {
+            return action.action_id == "frmprimary.txtname.valid";
+        });
+    expect(has_nested_action, "nested object methods should retain full object-graph action ids");
 }
 
 void test_build_menu_xasset_executable_model() {
@@ -288,6 +337,7 @@ void test_build_real_menu_xasset_executable_model() {
 int main() {
     test_build_xasset_executable_model();
     test_build_class_library_xasset_executable_model();
+    test_form_root_object_path_ignores_comments_and_data_environment();
     test_build_menu_xasset_executable_model();
     test_build_report_xasset_executable_model();
     test_build_label_xasset_executable_model();

@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: C1/#155 object-graph fidelity coverage deepened in `test_xasset_methods`. Form executable-model assertions now lock root-object selection behavior (ignore comment/data-environment records) and nested action-path preservation.
 - 2026-05-12: C1/#154 lifecycle-order coverage deepened in `test_xasset_methods`. Form/class executable-model assertions now lock startup/shutdown sequence ordering for `DataEnvironment` and root-object lifecycle routines.
 - 2026-05-12: H3/#94 structural rollback coverage deepened in `test_prg_engine_table_structure`. New focused `PACK MEMO` transaction rollback assertions now lock down `RECNO()` position retention alongside memo sidecar restoration and disk readability.
 - 2026-05-12: H3/#93 SQL/result-cursor coverage deepened in `test_prg_engine_sql_cursors`. New focused `APPEND FROM ... TYPE JSON FOR ...` assertions now lock down row-filtering behavior on selected SQL/result cursors.
