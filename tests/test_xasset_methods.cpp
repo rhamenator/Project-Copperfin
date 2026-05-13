@@ -236,6 +236,7 @@ void test_build_menu_xasset_executable_model() {
     expect(model.methods.size() >= 5U, "menu methods should include wrapped setup/command/procedure/cleanup code");
     expect(model.actions.size() >= 3U, "menu model should expose runnable menu actions");
     expect(model.shutdown_routines.size() == 1U, "menu model should expose cleanup routines for post-event-loop shutdown");
+    expect(model.shutdown_lines.size() == 1U, "menu model should emit exactly one cleanup shutdown line");
     if (model.actions.size() >= 3U) {
         expect(model.actions[0].action_id == "shortcut.item1", "first action should expose the item1 action id");
         expect(model.actions[1].action_id == "shortcut.item2", "second action should expose the item2 action id");
@@ -263,6 +264,14 @@ void test_build_menu_xasset_executable_model() {
                "menu action binding should dispatch item1 command routine");
         expect(model.actions[1].routine_name == "__cf_Shortcut_item2_ItemAction",
                "menu action binding should dispatch item2 procedure routine");
+    }
+    if (model.shutdown_routines.size() == 1U) {
+        expect(model.shutdown_routines[0] == "__cf_shortcut_cleanup",
+               "menu shutdown routine should dispatch wrapped cleanup routine");
+    }
+    if (model.shutdown_lines.size() == 1U) {
+        expect(model.shutdown_lines[0] == "DO __cf_shortcut_cleanup",
+               "menu shutdown should execute cleanup after event-loop exit");
     }
 }
 

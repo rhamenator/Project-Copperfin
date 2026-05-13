@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- C3/#159 menu lifecycle/cleanup slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies single cleanup shutdown emission and exact cleanup routine/line identity after menu startup activation.
 - C3/#158 menu dispatch/action slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies startup setup→activate ordering and action routine bindings for menu item dispatch.
 - C2/#157 label execution/preview slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies label preview models emit only the direct startup preview command with no synthetic methods/actions or shutdown lines.
 - C2/#156 report execution/output slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies report preview models emit only the direct startup preview command with no synthetic methods/actions or shutdown lines.

@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: C3/#159 menu lifecycle coverage deepened in `test_xasset_methods`. Assertions now lock cleanup routine/line identity and single shutdown emission for menu executable models.
 - 2026-05-12: C3/#158 menu dispatch coverage deepened in `test_xasset_methods`. Menu executable-model assertions now lock startup setup→activate ordering and item action-to-routine binding fidelity.
 - 2026-05-12: C2/#157 label pipeline coverage deepened in `test_xasset_methods`. Label executable-model assertions now lock preview-startup-only behavior (no synthetic methods/actions/shutdown lines).
 - 2026-05-12: C2/#156 report pipeline coverage deepened in `test_xasset_methods`. Report executable-model assertions now lock preview-startup-only behavior (no synthetic methods/actions/shutdown lines).
