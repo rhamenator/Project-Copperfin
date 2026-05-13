@@ -468,9 +468,12 @@ void test_alter_table_rollback_restores_schema_and_disk_readability() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO BOTTOM\n"
+        "nRecBeforeRollback = RECNO('People')\n"
         "BEGIN TRANSACTION\n"
         "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8) NOT NULL DEFAULT 'NEW'\n"
         "ROLLBACK\n"
+        "nRecAfterRollback = RECNO('People')\n"
         "nFields = FCOUNT('People')\n"
         "cField2 = FIELD(2, 'People')\n"
         "GO TOP\n"
@@ -489,9 +492,13 @@ void test_alter_table_rollback_restores_schema_and_disk_readability() {
     const auto field_count = state.globals.find("nfields");
     const auto field2 = state.globals.find("cfield2");
     const auto name_after_rollback = state.globals.find("cnameafterrollback");
+    const auto rec_before_rollback = state.globals.find("nrecbeforerollback");
+    const auto rec_after_rollback = state.globals.find("nrecafterrollback");
     expect(field_count != state.globals.end(), "ALTER TABLE rollback should expose field count");
     expect(field2 != state.globals.end(), "ALTER TABLE rollback should expose second field name");
     expect(name_after_rollback != state.globals.end(), "ALTER TABLE rollback should preserve row readability");
+    expect(rec_before_rollback != state.globals.end(), "ALTER TABLE rollback should expose pre-rollback RECNO()");
+    expect(rec_after_rollback != state.globals.end(), "ALTER TABLE rollback should expose post-rollback RECNO()");
     if (field_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(field_count->second) == "2",
                "ROLLBACK should restore the pre-ALTER field count for the open cursor");
@@ -503,6 +510,14 @@ void test_alter_table_rollback_restores_schema_and_disk_readability() {
     if (name_after_rollback != state.globals.end()) {
         expect(copperfin::runtime::format_value(name_after_rollback->second) == "ALPHA",
                "ROLLBACK should keep the restored table readable through the open cursor");
+    }
+    if (rec_before_rollback != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_before_rollback->second) == "2",
+               "ALTER TABLE rollback fixture should start with cursor at bottom record");
+    }
+    if (rec_after_rollback != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after_rollback->second) == "2",
+               "ROLLBACK should preserve open-cursor record position after ALTER TABLE replay");
     }
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);

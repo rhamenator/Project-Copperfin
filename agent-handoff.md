@@ -28,12 +28,13 @@ Important:
 
 Current priority order:
 
-1. Resume the open runtime/data path in strict order: `#92`, `#97`, `#100`, `#94`
+1. Resume the open runtime/data path in strict order: `#92`, `#97`, `#100`
 2. After those four slices, return to highest-fan-out open A3 lanes: `#92`, then `#93`, then `#94`
 3. Keep work issue-driven at prompt-slice granularity under active-open queue branches (`#154`-`#203`)
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: H3/#94 structural rollback fidelity deepened in `test_prg_engine_table_structure`. New focused `ALTER TABLE ... ROLLBACK` coverage now locks down open-cursor pointer stability (`RECNO()` preserved) alongside schema restoration/readability.
 - 2026-05-12: H3/#93 selected SQL/result-cursor export parity deepened in `test_prg_engine_sql_cursors`. New focused `COPY TO ... TYPE JSON FIELDS ...` coverage now locks down selected alias/pointer preservation plus filtered JSON field materialization for selected SQL/result cursors.
 - 2026-05-12: H3/#101 headless interaction fidelity deepened in `test_prg_engine_data_io`. New focused `INPUT`/`ACCEPT` `TO LOCAL` coverage now locks down local-scope target assignment with deterministic headless values and no post-return global leak.
 - 2026-05-12: H3/#99 memory-binding semantics coverage deepened in `test_prg_engine_control_flow`. New focused `RELEASE ALL` + `PRIVATE` shadow test now locks down in-frame restoration of outer globals and post-return stability.

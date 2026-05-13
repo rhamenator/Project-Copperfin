@@ -565,6 +565,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: Memory-variable slice `#99` advanced with additional `RELEASE ALL` lifetime coverage. Focused `test_prg_engine_control_flow` now verifies `PRIVATE` shadow bindings are cleared and outer globals are restored immediately/in-frame after `RELEASE ALL`, and remain stable after frame unwind.
 - 2026-05-12: Headless interaction slice `#101` advanced with additional dialog target-scope coverage. Focused `test_prg_engine_data_io` now verifies `INPUT`/`ACCEPT` `TO LOCAL` targets stay local within routine scope, receive deterministic headless empty-string results, and do not leak globals after routine return.
 - 2026-05-12: SQL/result-cursor slice `#93` advanced with selected-cursor export coverage for non-DBF copy types. Focused `test_prg_engine_sql_cursors` now verifies selected SQL/result cursor `COPY TO ... TYPE JSON FIELDS ...` preserves selected alias/record pointer while materializing JSON output with requested field filtering.
+- 2026-05-12: Structural table-operation slice `#94` advanced with rollback pointer-stability coverage. Focused `test_prg_engine_table_structure` now verifies `ALTER TABLE ... ROLLBACK` preserves open-cursor `RECNO()` position while restoring pre-alter schema/readability.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
