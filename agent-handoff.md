@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: H3/#94 structural rollback coverage deepened in `test_prg_engine_table_structure`. New focused `PACK MEMO` transaction rollback assertions now lock down `RECNO()` position retention alongside memo sidecar restoration and disk readability.
 - 2026-05-12: H3/#93 SQL/result-cursor coverage deepened in `test_prg_engine_sql_cursors`. New focused `APPEND FROM ... TYPE JSON FOR ...` assertions now lock down row-filtering behavior on selected SQL/result cursors.
 - 2026-05-12: H3/#92 optimizer-support coverage deepened in `test_prg_engine_index_seek_optimization`. New focused tests now lock `IndexSeekPlan::ExecutionStrategy` enum stability plus default `IndexOrderCandidate` metadata initialization used by planning/diagnostic paths.
 - 2026-05-12: H3/#100 field-transfer coverage deepened in `test_prg_engine_data_io`. New focused `SCATTER/GATHER FROM array` tests now lock down `FIELDS LIKE` wildcard selection plus `FIELDS EXCEPT` write filtering (`AGE` exclusion preserved).

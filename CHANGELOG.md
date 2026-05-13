@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Structural table-operation slice `#94` advanced with focused memo-rollback pointer stability coverage: `test_prg_engine_table_structure` now verifies `PACK MEMO` rollback preserves `RECNO()` position while restoring memo sidecar bytes and on-disk readability.
 - SQL/result-cursor slice `#93` advanced with focused selected-cursor JSON-import filter coverage: `test_prg_engine_sql_cursors` now verifies `APPEND FROM ... TYPE JSON FOR ...` applies `FOR` filtering and appends only matching rows.
 - Order/seek slice `#92` optimizer-support contract coverage deepened: `test_prg_engine_index_seek_optimization` now verifies stable `IndexSeekPlan::ExecutionStrategy` enum values and default `IndexOrderCandidate` initialization used by index-planning diagnostics.
 - Field-transfer slice `#100` advanced with focused array transfer-filtering coverage: `test_prg_engine_data_io` now verifies `SCATTER FIELDS LIKE N* TO <array>` includes only wildcard-matching fields and `GATHER FROM <array> FIELDS EXCEPT AGE` updates selected fields while preserving excluded `AGE`.

@@ -556,10 +556,14 @@ void test_pack_memo_rollback_restores_original_sidecar_and_readability() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS Memo IN 0\n"
+        "GO 1\n"
+        "nRecBefore = RECNO()\n"
         "BEGIN TRANSACTION\n"
         "PACK MEMO\n"
         "ROLLBACK\n"
+        "nRecAfter = RECNO()\n"
         "nCount = RECCOUNT()\n"
+        "cName = NAME\n"
         "cNotes = NOTES\n"
         "RETURN\n");
 
@@ -573,12 +577,30 @@ void test_pack_memo_rollback_restores_original_sidecar_and_readability() {
     expect(state.completed, "PACK MEMO rollback script should complete");
 
     const auto count = state.globals.find("ncount");
+    const auto rec_before = state.globals.find("nrecbefore");
+    const auto rec_after = state.globals.find("nrecafter");
+    const auto name = state.globals.find("cname");
     const auto notes = state.globals.find("cnotes");
+    expect(rec_before != state.globals.end(), "PACK MEMO rollback should expose RECNO() before PACK MEMO");
+    expect(rec_after != state.globals.end(), "PACK MEMO rollback should expose RECNO() after ROLLBACK");
     expect(count != state.globals.end(), "PACK MEMO rollback should expose RECCOUNT()");
+    expect(name != state.globals.end(), "PACK MEMO rollback should keep current-row NAME readable");
     expect(notes != state.globals.end(), "PACK MEMO rollback should keep memo field readable");
+    if (rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_before->second) == "1",
+               "PACK MEMO rollback fixture should start from row 1");
+    }
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "1",
+               "ROLLBACK after PACK MEMO should preserve open-cursor record position");
+    }
     if (count != state.globals.end()) {
         expect(copperfin::runtime::format_value(count->second) == "1",
                "PACK MEMO rollback should preserve row count");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALPHA",
+               "PACK MEMO rollback should preserve the current row payload");
     }
     if (notes != state.globals.end()) {
         expect(copperfin::runtime::format_value(notes->second) == "short",
@@ -594,7 +616,7 @@ void test_pack_memo_rollback_restores_original_sidecar_and_readability() {
     expect(parse_result.table.records.size() == 1U, "PACK MEMO rollback should preserve original rows on disk");
     if (parse_result.table.records.size() == 1U) {
         expect(parse_result.table.records[0].values[1].display_value == "short",
-               "PACK MEMO rollback should preserve the memo payload on disk");
+               "PACK MEMO rollback should preserve memo payload on disk");
     }
 
     fs::remove_all(temp_root, ignored);
