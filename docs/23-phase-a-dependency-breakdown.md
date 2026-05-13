@@ -371,6 +371,7 @@ Current dependency links:
 - 2026-05-12 execution note: `#98` implementation slice advanced in focused tests (`SET()` option readback/isolation for `FDOW`/`FWEEK`/`POINT`/`SEPARATOR`/`CURRENCY`); continue strict gate order with `#99` next.
 - 2026-05-12 execution note: `#99` implementation slice advanced in focused tests (`RELEASE ALL` with `PRIVATE` shadow restoration semantics); continue strict gate order with `#100` next.
 - 2026-05-12 execution note: `#101` implementation slice advanced in focused tests (`INPUT`/`ACCEPT` `TO LOCAL` target-scope fidelity in headless mode); continue strict gate order with `#93` next.
+- 2026-05-12 execution note: `#93` implementation slice advanced in focused tests (`COPY TO ... TYPE JSON` selected SQL/result cursor export parity + pointer/alias preservation); continue strict gate order with `#94` next.
 
 ## Slice-Issue Policy
 

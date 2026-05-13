@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <system_error>
 
@@ -1004,6 +1005,75 @@ void test_copy_to_exports_selected_sql_result_cursor_rows() {
         expect(parse_result.table.records.size() == 3U,
             "SQL result-cursor COPY TO output should persist all rows");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_json_exports_selected_sql_result_cursor_and_preserves_selection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_copy_to_json_export";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path export_path = temp_root / "sql_export.json";
+    const fs::path main_path = temp_root / "sql_copy_to_json_export.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "GO 2\n"
+        "nRecBefore = RECNO()\n"
+        "COPY TO '" + export_path.string() + "' TYPE JSON FIELDS NAME, AMOUNT\n"
+        "nRecAfter = RECNO()\n"
+        "cAliasAfterCopy = ALIAS()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create({
+                           .startup_path = main_path.string(),
+                           .working_directory = temp_root.string(),
+                           .stop_on_entry = false
+                       })
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO TYPE JSON selected SQL result-cursor export script should complete: " + state.message);
+
+    const auto rec_before = state.globals.find("nrecbefore");
+    const auto rec_after = state.globals.find("nrecafter");
+    const auto alias_after_copy = state.globals.find("caliasaftercopy");
+    const auto disc = state.globals.find("ldisc");
+    expect(rec_before != state.globals.end(), "RECNO() before SQL COPY TO TYPE JSON should be captured");
+    expect(rec_after != state.globals.end(), "RECNO() after SQL COPY TO TYPE JSON should be captured");
+    expect(alias_after_copy != state.globals.end(), "selected alias after SQL COPY TO TYPE JSON should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after SQL COPY TO TYPE JSON checks");
+
+    if (rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_before->second) == "2",
+            "selected SQL cursor should start on row 2 before COPY TO TYPE JSON");
+    }
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "2",
+            "COPY TO TYPE JSON should preserve the selected SQL cursor pointer");
+    }
+    if (alias_after_copy != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_copy->second)) == "SQLCUST",
+            "COPY TO TYPE JSON should preserve the selected SQL alias");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+            "SQLDISCONNECT should succeed after SQL COPY TO TYPE JSON checks");
+    }
+
+    expect(fs::exists(export_path), "COPY TO TYPE JSON should create a JSON export file for selected SQL result cursors");
+    std::ifstream input(export_path);
+    std::string json_text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    expect(json_text.find("\"NAME\"") != std::string::npos,
+        "COPY TO TYPE JSON export should include NAME field entries");
+    expect(json_text.find("\"AMOUNT\"") != std::string::npos,
+        "COPY TO TYPE JSON export should include AMOUNT field entries");
+    expect(json_text.find("\"ID\"") == std::string::npos,
+        "COPY TO TYPE JSON with FIELDS NAME, AMOUNT should omit ID entries");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -3766,6 +3836,7 @@ int main() {
     test_sql_result_cursor_backward_navigation_in_target_parity();
     test_cursor_identity_functions_for_sql_result_cursors();
     test_copy_to_exports_selected_sql_result_cursor_rows();
+    test_copy_to_type_json_exports_selected_sql_result_cursor_and_preserves_selection();
     test_append_from_dbf_mutates_selected_sql_result_cursor();
     test_copy_structure_to_exports_sql_metadata_cursor_schema();
     test_append_from_dbf_for_filters_selected_sql_result_cursor();
