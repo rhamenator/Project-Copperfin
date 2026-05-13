@@ -579,6 +579,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: C3/#159 menu lifecycle/cleanup fidelity advanced in `test_xasset_methods`. Focused assertions now verify single cleanup shutdown routine/line emission and exact cleanup dispatch identity after event-loop startup flows.
 - 2026-05-12: C4/#160 project startup resolution fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies uppercase startup program extensions (`.PRG`) still enable debug startup capabilities (breakpoints/step-debugging).
 - 2026-05-12: C4/#161 project build inclusion/dependency fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies startup program assets are staged for runtime packaging even when the project entry is marked excluded.
+- 2026-05-12: C5/#162 build/run workflow diagnostics fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies unresolved startup-record indices surface expected plan warnings and keep startup debug capabilities (`supports_breakpoints`, `supports_step_debugging`) disabled.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 

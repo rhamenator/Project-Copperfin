@@ -3,6 +3,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -353,6 +354,67 @@ void test_startup_asset_is_staged_even_when_marked_excluded() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_missing_startup_record";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "missing_startup.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "MissingStartup";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "MissingStartup";
+    workspace.build_plan.output_path = (output_dir / "MissingStartup.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 42U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "runtime package plan should still be creatable when startup record is unresolved");
+    expect(!plan.debug_plan.supports_breakpoints,
+           "missing startup record should disable debug startup breakpoint support");
+    expect(!plan.debug_plan.supports_step_debugging,
+           "missing startup record should disable debug startup step-debug support");
+    const bool has_runtime_startup_warning = std::any_of(
+        plan.warnings.begin(),
+        plan.warnings.end(),
+        [](const std::string& warning) {
+            return warning.find("No startup source asset could be resolved.") != std::string::npos;
+        });
+    const bool has_debug_startup_warning = std::any_of(
+        plan.warnings.begin(),
+        plan.warnings.end(),
+        [](const std::string& warning) {
+            return warning.find("No source-side startup asset could be resolved for debugging.") != std::string::npos;
+        });
+    expect(has_runtime_startup_warning, "missing startup record should emit runtime startup resolution warning");
+    expect(has_debug_startup_warning, "missing startup record should emit debug startup resolution warning");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -361,6 +423,7 @@ int main() {
     test_security_enabled_runtime_host_name_validation();
     test_startup_prg_extension_matching_is_case_insensitive();
     test_startup_asset_is_staged_even_when_marked_excluded();
+    test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

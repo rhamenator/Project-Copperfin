@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- C5/#162 build/run workflow diagnostics slice advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies unresolved startup-record indices emit expected warnings and keep startup debug capabilities disabled.
 - C4/#161 project build-inclusion slice advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies startup program assets are staged into package content even when the startup entry is marked excluded.
 - C4/#160 project startup resolution slice advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies uppercase `.PRG` startup sources still enable breakpoint and step-debug capabilities.
 - C3/#159 menu lifecycle/cleanup slice advanced with focused executable-model coverage: `test_xasset_methods` now verifies single cleanup shutdown emission and exact cleanup routine/line identity after menu startup activation.
