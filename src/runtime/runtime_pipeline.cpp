@@ -317,7 +317,7 @@ std::string join_strings(const std::vector<std::string>& values) {
 }
 
 bool is_prg_path(const std::string& value) {
-    return trim_copy(std::filesystem::path(value).extension().string()) == ".prg";
+    return lowercase_copy(trim_copy(std::filesystem::path(value).extension().string())) == ".prg";
 }
 
 bool is_xasset_path(const std::string& value) {

@@ -249,12 +249,60 @@ void test_security_enabled_runtime_host_name_validation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_startup_prg_extension_matching_is_case_insensitive() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_case_insensitive_startup";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "MAIN.PRG", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "case_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "CaseDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "CaseDemo";
+    workspace.build_plan.output_path = (output_dir / "CaseDemo.exe").string();
+    workspace.build_plan.startup_item = "MAIN.PRG";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "MAIN.PRG", .relative_path = "MAIN.PRG", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "runtime package plan should be created for uppercase PRG startup");
+    expect(plan.debug_plan.supports_breakpoints,
+           "uppercase .PRG startup should enable breakpoint support");
+    expect(plan.debug_plan.supports_step_debugging,
+           "uppercase .PRG startup should enable step-debug support");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_materialize_runtime_package();
     test_materialize_excluded_xasset_startup_package();
     test_security_enabled_runtime_host_name_validation();
+    test_startup_prg_extension_matching_is_case_insensitive();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
