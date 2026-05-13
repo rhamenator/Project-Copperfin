@@ -44,6 +44,18 @@ The next runtime/help-mining targets should stay close to the deepest remaining 
 - report/listener/report-output behavior
 - `foxtools` DLL-call bridge topics
 
+## Phase A Runtime Mapping Updates (2026-05-12)
+
+Recent shipped runtime slices refined the help-mining focus for remaining A3 residuals:
+
+- `#93`: selected SQL/result-cursor `COPY TO ... TYPE JSON FIELDS ...` parity now has focused coverage; keep mining help references around field-projection behavior and selected-cursor state preservation.
+- `#94`: `ALTER TABLE ... ROLLBACK` pointer/schema restoration now has focused coverage; keep mining structural-operation rollback semantics (`ALTER TABLE`, `PACK MEMO`, transaction boundaries).
+- `#99` and `#101`: `RELEASE ALL` shadow-lifetime and headless `INPUT`/`ACCEPT` local-target behavior now have focused coverage; use help references to validate remaining edge semantics.
+
+Next help-mining target for the active runtime queue:
+
+- `#100` field-transfer residuals, especially `SCATTER/GATHER` field-selection semantics (`FIELDS LIKE` / `FIELDS EXCEPT`) and transfer-path filtering behavior across local/remote cursor surfaces.
+
 Especially high-signal local files and components:
 
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\genmenu.prg`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/genmenu.prg)

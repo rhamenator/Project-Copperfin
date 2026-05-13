@@ -373,6 +373,7 @@ Current dependency links:
 - 2026-05-12 execution note: `#101` implementation slice advanced in focused tests (`INPUT`/`ACCEPT` `TO LOCAL` target-scope fidelity in headless mode); continue strict gate order with `#93` next.
 - 2026-05-12 execution note: `#93` implementation slice advanced in focused tests (`COPY TO ... TYPE JSON` selected SQL/result cursor export parity + pointer/alias preservation); continue strict gate order with `#94` next.
 - 2026-05-12 execution note: `#94` implementation slice advanced in focused tests (`ALTER TABLE ... ROLLBACK` open-cursor pointer preservation); continue strict gate order with `#100` residuals if any remain.
+- 2026-05-12 execution note: help-mining tracker `docs/23-vfp-help-and-component-mining.md` now explicitly targets `#100` residual field-transfer semantics after the `#93/#94/#99/#101` coverage expansion.
 
 ## Slice-Issue Policy
 
