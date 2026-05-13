@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- D3/#166 build/run orchestration fidelity advanced with focused runtime-pipeline coverage: runtime-host source validation now occurs before asset staging, and `test_runtime_pipeline` now verifies invalid host inputs fail materialization without staging startup assets.
 - D2/#165 breakpoint and stepping fidelity advanced with focused runtime coverage: `prg_engine` now allows first-line breakpoints to trigger after stop-on-entry continue, while preserving one-shot same-location breakpoint skip on immediate resume, and `test_prg_engine` now locks that behavior.
 - D2/#164 watches/locals evaluation fidelity advanced with focused runtime-pipeline coverage: debug launch `source_roots` now normalize and deduplicate overlapping paths, and `test_runtime_pipeline` now locks single-root manifest output when source and content resolve identically.
 - D1/#163 semantic manifest and asset-contract slice advanced with focused runtime-pipeline coverage: runtime manifest `asset=` entries now include a terminal copied-state field (`true`/`false`), and `test_runtime_pipeline` now verifies staged startup assets report copied true while excluded non-runtime assets report copied false.

@@ -624,13 +624,17 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
     }
 
+    std::string error;
+    if (!validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
+        return {.ok = false, .error = error};
+    }
+
     RuntimePackagePlan materialized_plan = plan;
     for (auto& asset : materialized_plan.assets) {
         if (!should_stage_asset(asset)) {
             continue;
         }
 
-        std::string error;
         const std::filesystem::path destination = std::filesystem::path(plan.content_root) / asset.relative_path;
         if (!copy_file_if_exists(asset.source_path, destination, error)) {
             materialized_plan.warnings.push_back(error);
@@ -651,12 +655,6 @@ RuntimeMaterializeResult materialize_runtime_package(
                 .sha256 = digest.hex_digest
             });
         }
-    }
-
-    std::string error;
-
-    if (!validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
-        return {.ok = false, .error = error};
     }
 
     if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {

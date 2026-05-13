@@ -250,6 +250,60 @@ void test_security_enabled_runtime_host_name_validation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_failfast_invalid_host";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path invalid_runtime_host = temp_root / "missing_runtime_host.exe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "failfast_host.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "FailFastHost";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "FailFastHost";
+    workspace.build_plan.output_path = (output_dir / "FailFastHost.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "fail-fast invalid-host plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        invalid_runtime_host.string());
+
+    expect(!result.ok, "invalid runtime host source should fail materialization");
+    expect(!fs::exists(fs::path(plan.content_root) / "main.prg"),
+           "invalid runtime host source should fail before staging startup assets");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_prg_extension_matching_is_case_insensitive() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_case_insensitive_startup";
@@ -545,6 +599,7 @@ int main() {
     test_materialize_runtime_package();
     test_materialize_excluded_xasset_startup_package();
     test_security_enabled_runtime_host_name_validation();
+    test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
     test_startup_prg_extension_matching_is_case_insensitive();
     test_startup_asset_is_staged_even_when_marked_excluded();
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
