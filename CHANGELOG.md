@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- D2/#164 watches/locals evaluation fidelity advanced with focused runtime-pipeline coverage: debug launch `source_roots` now normalize and deduplicate overlapping paths, and `test_runtime_pipeline` now locks single-root manifest output when source and content resolve identically.
 - D1/#163 semantic manifest and asset-contract slice advanced with focused runtime-pipeline coverage: runtime manifest `asset=` entries now include a terminal copied-state field (`true`/`false`), and `test_runtime_pipeline` now verifies staged startup assets report copied true while excluded non-runtime assets report copied false.
 - C5/#162 build/run workflow diagnostics slice advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies unresolved startup-record indices emit expected warnings and keep startup debug capabilities disabled.
 - C4/#161 project build-inclusion slice advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies startup program assets are staged into package content even when the startup entry is marked excluded.

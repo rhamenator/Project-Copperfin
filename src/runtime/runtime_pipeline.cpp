@@ -8,6 +8,7 @@
 #include <fstream>
 #include <optional>
 #include <sstream>
+#include <unordered_set>
 
 namespace copperfin::runtime {
 
@@ -64,6 +65,23 @@ std::string quote_manifest_value(const std::string& value) {
         }
     }
     return escaped;
+}
+
+std::vector<std::string> unique_non_empty_paths_preserve_order(std::initializer_list<std::string> values) {
+    std::vector<std::string> normalized_values;
+    normalized_values.reserve(values.size());
+    std::unordered_set<std::string> seen;
+    for (const std::string& value : values) {
+        if (value.empty()) {
+            continue;
+        }
+        const std::string normalized = std::filesystem::path(value).lexically_normal().string();
+        if (normalized.empty() || !seen.insert(normalized).second) {
+            continue;
+        }
+        normalized_values.push_back(normalized);
+    }
+    return normalized_values;
 }
 
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error) {
@@ -475,10 +493,10 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.debug_plan.manifest_path = plan.debug_manifest_path;
     plan.debug_plan.startup_item = plan.startup_item;
     plan.debug_plan.working_directory = source_working_directory;
-    plan.debug_plan.source_roots = {
+    plan.debug_plan.source_roots = unique_non_empty_paths_preserve_order({
         source_working_directory,
         plan.content_root
-    };
+    });
     plan.debug_plan.supports_breakpoints =
         is_prg_path(plan.debug_plan.startup_source_path) ||
         is_xasset_path(plan.debug_plan.startup_source_path);

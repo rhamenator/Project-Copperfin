@@ -488,6 +488,57 @@ void test_manifest_asset_lines_include_copy_state_contract() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_debug_roots_unique";
+    const fs::path output_dir = temp_root / "output";
+    const std::string project_title = "SourceRootParity";
+    const fs::path project_dir = output_dir / project_title / "content";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "source_root_parity.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = project_title;
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = project_title;
+    workspace.build_plan.output_path = (output_dir / "SourceRootParity.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "debug source-root uniqueness plan should be created");
+    expect(plan.debug_plan.source_roots.size() == 1U,
+           "debug source roots should collapse to one unique path when source and content roots match");
+
+    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(plan);
+    const std::string expected_roots_line = "source_roots=" + project_dir.lexically_normal().string();
+    expect(debug_manifest.find(expected_roots_line) != std::string::npos,
+           "debug manifest should emit a single normalized source_roots entry");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -498,6 +549,7 @@ int main() {
     test_startup_asset_is_staged_even_when_marked_excluded();
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
     test_manifest_asset_lines_include_copy_state_contract();
+    test_debug_source_roots_are_unique_when_source_and_content_paths_match();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
