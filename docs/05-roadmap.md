@@ -1,145 +1,110 @@
 # Roadmap
 
-## Phase 0: Archaeology And Provenance
+The Copperfin roadmap is dependency-first: complete deep runtime and data-engine behavior before broad surface expansion.
 
-Outputs:
+Current execution authority is:
 
-- behavior inventory
-- file format notes
-- compatibility corpus
-- clean-room process
+- `remaining-work.md`
+- `docs/23-phase-a-dependency-breakdown.md`
+- `agent-handoff.md`
 
-Reference sources:
+## Phase A: Core Data And Compatibility Engine
 
-- installed VFP 9 tree
-- mounted VFP 9 media
-- community-maintained FoxPro/xBase projects
-- local xBase/FoxPro-era code on `E:\`
+Goal:
 
-## Phase 1: Data Foundation
+- full behavioral compatibility for core DBF/CDX/DBC data paths, work areas/data sessions, command/expression runtime semantics, and automation containment foundations
 
-Ship:
+Current state:
 
-- DBF/FPT/CDX/DBC inspector
-- repair/validation utilities
-- schema explorer
-- import/export basics
-- provider abstraction draft
-- SQLite connector MVP
-- 64-bit-first build and packaging baseline
-- VFP asset inventory and binary metadata reader for PJX/SCX/VCX/FRX/MNX families
+- active and near completion
+- critical-path execution is currently anchored to the runtime safety/diagnostics gate and the remaining A3 closure chain
 
-Exit criteria:
+Active issue lanes:
 
-- reliable reading of representative real-world datasets
+- runtime safety/diagnostics gate: `#150`, `#151`, `#152`, `#153`
+- A3 closure lanes: `#92`, `#97`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94`
 
-## Phase 2: Runtime Core
+Execution rule:
 
-Ship:
+- do not advance adjacent open branches (`#154`-`#203`) until `#94` is complete
 
-- parser/evaluator
-- work area model
-- navigation/query basics
-- compatibility test runner
-- SQL-backed cursor and session prototypes
-- CLR host spike
-- native-to-managed marshaling prototype
-- PRG execution host
-- initial project and asset binding layer
+## Phase B: Runtime Safety And Diagnostic Fidelity
 
-Exit criteria:
+Goal:
 
-- representative data-centric scripts execute correctly under tests
+- deterministic fault isolation and repeatable debug metadata across pause/resume/retry flows
 
-## Phase 3: Reports
+Current state:
 
-Ship:
+- in active execution under `#13` and `#14`
+- strict order: `#150` -> `#151` -> `#152` -> `#153`
 
-- report asset parser
-- previewer
-- PDF/HTML export
-- report listener model
-- provider-neutral data source bindings
-- report invocation from managed hosts
-- editable FRX/FRT import and round-trip strategy
+## Phase C: Runtime Parity Surfaces
 
-Exit criteria:
+Goal:
 
-- common business reports render and export predictably
+- forms/classes, reports/labels, menus, and project startup/build behavior parity
 
-## Phase 4: Forms And Designer
+Current state:
 
-Ship:
+- lanes are active-open with focused slice queues (`#154`-`#161`)
+- progress exists, but this phase is not treated as complete while Phase A/B critical-path lanes remain open
 
-- Visual Studio extension MVP for Copperfin assets
-- external Copperfin Studio host
-- project explorer
-- forms/class metadata importer
-- property/event editor
-- builder/wizard skeleton
-- database target configuration in project settings
-- .NET reference and component integration workflow
-- editable SCX/SCT and VCX/VCT workspace model
-- source-control-safe serialization strategy
-- first designer-host integration for SCX/SCT or FRX/FRT
-- labels and menu designer planning for LBX/LBT and MNX/MNT
+## Phase D: Build, Compiler, And Debug Pipeline
 
-Exit criteria:
+Goal:
 
-- imported app assets can be opened from Visual Studio, edited through Copperfin Studio, and rebuilt
+- deterministic package/manifest/build/debug contracts and robust host/runtime launch fidelity
 
-## Phase 5: Security And Packaging
+Current state:
 
-Ship:
+- baseline shipped
+- active-open follow-on queue exists (`#162`-`#167`)
 
-- Copperfin Shield MVP
-- package manifest/signing
-- audit events
-- environment profiles
-- secure connection secret providers
-- managed assembly trust policy
+## Phase E: Designers And IDE Parity
 
-Exit criteria:
+Goal:
 
-- imported legacy app can run under explicit policy and produce usable audit logs
+- shared design model, designer interaction fidelity, and IDE shell parity
 
-## Phase 6: Migration And Integration
+Current state:
 
-Ship:
+- active-open queues remain under `#22`-`#29` (`#168`-`#183`)
 
-- migration reports
-- API gateway
-- identity integration
-- app modernization templates
-- PostgreSQL, SQL Server, and Oracle connectors
-- DBF-to-SQL retargeting workflow
-- .NET wrapper generation
-- NuGet packaging strategy
-- mixed-mode compatibility host for imported VFP projects
+## Phase F: Federation, Interop, And Modern Platform
 
-Exit criteria:
+Goal:
 
-- legacy estate can be preserved, wrapped, or refactored with guided tooling
+- relational/document federation, modern interop outputs, and runtime bridge contracts
 
-## Suggested MVP
+Current state:
 
-The best first real milestone is:
+- active-open queues under `#30`-`#32`, `#57`, `#91` (`#184`-`#189`, `#200`-`#203`)
 
-- a DBF/DBC inspector
-- a SQLite connector
-- a runtime proof for data navigation/query logic
-- a migration analyzer
-- a CLR interop proof-of-concept
-- a round-trip-safe reader for core VFP asset files
+## Phase G: Security And Policy
 
-That gets you immediate practical value without waiting for a full IDE clone.
+Goal:
 
-## Performance And Security Guardrails
+- runtime/project policy depth and extension/host policy hardening
 
-These rules apply from the first prototype:
+Current state:
 
-- benchmark core file and query operations from the beginning
-- keep the parser, evaluator, and storage engine in native code
-- define trusted boundaries before adding convenience tooling
-- do not move hot-path logic into higher-level wrappers for short-term convenience
-- add regression tests for both correctness and performance-sensitive behaviors
+- active-open queue under `#33` and `#34` (`#190`-`#193`)
+
+## Phase H: Portability
+
+Goal:
+
+- portable core boundary and standalone/core host support on macOS and Linux
+
+Current state:
+
+- active-open queue under `#35`-`#37` (`#194`-`#199`)
+- remains downstream of Windows-first runtime stabilization priorities
+
+## Delivery Discipline
+
+- execute one prompt-sized issue slice at a time
+- ship code with focused regression coverage
+- update changelog + handoff + backlog docs with each durable slice
+- prefer critical-path blockers before adjacent depth work

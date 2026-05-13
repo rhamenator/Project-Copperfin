@@ -58,12 +58,15 @@ If you modify documentation that can influence operational behavior:
 
 ## Slice Priority (current)
 
-1. `#92` order/collation/search residuals
-2. `#97` / `#98` / `#99` macro/eval/runtime-state and memory/assignment foundations
-3. `#94` structural table-operation residuals
-4. `#100` field-transfer and macro-target parity
-5. `#101` headless interaction macro/eval fidelity
-6. `#93` / `#95` / `#96` after their prerequisites are quieter
+1. Finish the runtime safety/diagnostics gate: `#150`, `#151`, `#152`, `#153`
+2. Run the remaining A3 critical-path closure chain: `#92`, `#97`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94`
+3. Do not advance adjacent open queue branches (`#154`-`#203`) until `#94` is complete
+
+Dependency notes:
+
+- `#93` is blocked by `#92`
+- `#100` is blocked by `#97`
+- `#95` and `#96` are historical-closed context, not active execution targets
 
 ## Constraints
 
