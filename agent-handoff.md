@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: H3/#92 optimizer-support coverage deepened in `test_prg_engine_index_seek_optimization`. New focused tests now lock `IndexSeekPlan::ExecutionStrategy` enum stability plus default `IndexOrderCandidate` metadata initialization used by planning/diagnostic paths.
 - 2026-05-12: H3/#100 field-transfer coverage deepened in `test_prg_engine_data_io`. New focused `SCATTER/GATHER FROM array` tests now lock down `FIELDS LIKE` wildcard selection plus `FIELDS EXCEPT` write filtering (`AGE` exclusion preserved).
 - 2026-05-12: Help tracker sync completed in `docs/23-vfp-help-and-component-mining.md`. The document now maps recent shipped slices (`#93/#94/#99/#101`) to the remaining `#100` field-transfer help-mining target (`SCATTER/GATHER` field-selection and transfer filtering semantics).
 - 2026-05-12: H3/#94 structural rollback fidelity deepened in `test_prg_engine_table_structure`. New focused `ALTER TABLE ... ROLLBACK` coverage now locks down open-cursor pointer stability (`RECNO()` preserved) alongside schema restoration/readability.

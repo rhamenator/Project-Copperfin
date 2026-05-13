@@ -22,6 +22,17 @@ void test_optimization_confidence_values() {
         "OptimizationConfidence::high should map to the highest confidence");
 }
 
+void test_execution_strategy_values() {
+    expect(static_cast<int>(copperfin::runtime::IndexSeekPlan::ExecutionStrategy::linear_scan) == 0,
+        "ExecutionStrategy::linear_scan should remain stable for diagnostics");
+    expect(static_cast<int>(copperfin::runtime::IndexSeekPlan::ExecutionStrategy::index_seek) == 1,
+        "ExecutionStrategy::index_seek should remain stable for diagnostics");
+    expect(static_cast<int>(copperfin::runtime::IndexSeekPlan::ExecutionStrategy::index_range_seek) == 2,
+        "ExecutionStrategy::index_range_seek should remain stable for future planning");
+    expect(static_cast<int>(copperfin::runtime::IndexSeekPlan::ExecutionStrategy::filtered_index_scan) == 3,
+        "ExecutionStrategy::filtered_index_scan should remain stable for future planning");
+}
+
 void test_expression_pattern_struct_defaults() {
     copperfin::runtime::IndexExpressionPattern pattern{};
     expect(pattern.operator_kind == copperfin::runtime::IndexOperatorKind::unsupported,
@@ -32,6 +43,20 @@ void test_expression_pattern_struct_defaults() {
         "IndexExpressionPattern should default to no selected field");
     expect(pattern.operands.empty(),
         "IndexExpressionPattern should default to no operands");
+}
+
+void test_index_order_candidate_struct_defaults() {
+    copperfin::runtime::IndexOrderCandidate candidate{};
+    expect(candidate.order_name.empty(),
+        "IndexOrderCandidate should default to no order name");
+    expect(candidate.order_expression.empty(),
+        "IndexOrderCandidate should default to no order expression");
+    expect(!candidate.is_descending,
+        "IndexOrderCandidate should default to ascending order");
+    expect(candidate.match_score == 0,
+        "IndexOrderCandidate should default to a zero match score");
+    expect(candidate.optimization_confidence == copperfin::runtime::OptimizationConfidence::not_applicable,
+        "IndexOrderCandidate should default to not_applicable confidence");
 }
 
 void test_index_seek_plan_struct_defaults() {
@@ -72,7 +97,9 @@ void test_index_seek_plan_can_hold_selected_order() {
 int main() {
     test_index_operator_kind_values();
     test_optimization_confidence_values();
+    test_execution_strategy_values();
     test_expression_pattern_struct_defaults();
+    test_index_order_candidate_struct_defaults();
     test_index_seek_plan_struct_defaults();
     test_index_seek_plan_can_hold_selected_order();
 

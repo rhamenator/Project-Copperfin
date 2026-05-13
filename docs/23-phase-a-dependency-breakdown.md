@@ -375,6 +375,7 @@ Current dependency links:
 - 2026-05-12 execution note: `#94` implementation slice advanced in focused tests (`ALTER TABLE ... ROLLBACK` open-cursor pointer preservation); continue strict gate order with `#100` residuals if any remain.
 - 2026-05-12 execution note: help-mining tracker `docs/23-vfp-help-and-component-mining.md` now explicitly targets `#100` residual field-transfer semantics after the `#93/#94/#99/#101` coverage expansion.
 - 2026-05-12 execution note: `#100` implementation slice advanced in focused tests (`SCATTER FIELDS LIKE ... TO <array>` plus `GATHER FROM <array> FIELDS EXCEPT ...` transfer filtering); continue with next unresolved `#100` residual only if a concrete gap remains.
+- 2026-05-12 execution note: `#92` optimizer-support slice advanced in focused tests (`test_prg_engine_index_seek_optimization` enum/default contract coverage for `ExecutionStrategy` and `IndexOrderCandidate` planning metadata).
 
 ## Slice-Issue Policy
 
