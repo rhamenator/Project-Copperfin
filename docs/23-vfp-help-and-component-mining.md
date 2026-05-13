@@ -49,6 +49,7 @@ The next runtime/help-mining targets should stay close to the deepest remaining 
 Recent shipped runtime slices refined the help-mining focus for remaining A3 residuals:
 
 - `#93`: selected SQL/result-cursor `COPY TO ... TYPE JSON FIELDS ...` parity now has focused coverage; keep mining help references around field-projection behavior and selected-cursor state preservation.
+- 2026-05-12 note: selected SQL/result-cursor `APPEND FROM ... TYPE JSON FOR ...` filtering now has focused coverage; prioritize remaining `#93` help-mining against targeted `IN` forms and selected-cursor state guarantees.
 - `#94`: `ALTER TABLE ... ROLLBACK` pointer/schema restoration now has focused coverage; keep mining structural-operation rollback semantics (`ALTER TABLE`, `PACK MEMO`, transaction boundaries).
 - `#99` and `#101`: `RELEASE ALL` shadow-lifetime and headless `INPUT`/`ACCEPT` local-target behavior now have focused coverage; use help references to validate remaining edge semantics.
 
