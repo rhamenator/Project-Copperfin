@@ -251,6 +251,19 @@ void test_build_menu_xasset_executable_model() {
     expect(bootstrap.find("PROCEDURE __cf_Shortcut_item3_activate_popup") != std::string::npos, "menu bootstrap should materialize submenu activation routines");
     expect(bootstrap.find("DO __cf_shortcut_cleanup") != std::string::npos, "menu bootstrap should execute cleanup after event-loop exit");
     expect(bootstrap.find("READ EVENTS") == std::string::npos, "menu bootstrap should not append READ EVENTS when activation already enters the event loop");
+    expect(model.startup_lines.size() == 2U, "menu startup should emit setup then activation lines");
+    if (model.startup_lines.size() == 2U) {
+        expect(model.startup_lines[0] == "DO __cf_shortcut_setup",
+               "menu startup should run setup before activation");
+        expect(model.startup_lines[1] == "ACTIVATE POPUP Shortcut",
+               "menu startup should activate the popup after setup");
+    }
+    if (model.actions.size() >= 2U) {
+        expect(model.actions[0].routine_name == "__cf_Shortcut_item1_command",
+               "menu action binding should dispatch item1 command routine");
+        expect(model.actions[1].routine_name == "__cf_Shortcut_item2_ItemAction",
+               "menu action binding should dispatch item2 procedure routine");
+    }
 }
 
 void test_build_report_xasset_executable_model() {
