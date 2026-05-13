@@ -4730,6 +4730,83 @@ void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_input_accept_to_local_targets_stay_local_in_routine_scope() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_input_accept_local_scope";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "input_accept_local_scope.prg";
+    write_text(
+        main_path,
+        "input_local_type = 'unset'\n"
+        "accept_local_type = 'unset'\n"
+        "DO run_dialogs\n"
+        "after_input_global_type = TYPE('cInputLocal')\n"
+        "after_accept_global_type = TYPE('cAcceptLocal')\n"
+        "RETURN\n"
+        "PROCEDURE run_dialogs\n"
+        "LOCAL cInputLocal, cAcceptLocal\n"
+        "INPUT \"Enter input:\" TO cInputLocal\n"
+        "ACCEPT \"Enter accept:\" TO cAcceptLocal\n"
+        "input_local_type = TYPE('cInputLocal')\n"
+        "accept_local_type = TYPE('cAcceptLocal')\n"
+        "input_local_value = cInputLocal\n"
+        "accept_local_value = cAcceptLocal\n"
+        "RETURN\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create({
+                           .startup_path = main_path.string(),
+                           .working_directory = temp_root.string(),
+                           .stop_on_entry = false
+                       })
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "INPUT/ACCEPT LOCAL-scope script should complete");
+
+    const auto input_local_type = state.globals.find("input_local_type");
+    const auto accept_local_type = state.globals.find("accept_local_type");
+    const auto input_local_value = state.globals.find("input_local_value");
+    const auto accept_local_value = state.globals.find("accept_local_value");
+    const auto after_input_global_type = state.globals.find("after_input_global_type");
+    const auto after_accept_global_type = state.globals.find("after_accept_global_type");
+
+    expect(input_local_type != state.globals.end(), "LOCAL INPUT type capture should exist");
+    expect(accept_local_type != state.globals.end(), "LOCAL ACCEPT type capture should exist");
+    expect(input_local_value != state.globals.end(), "LOCAL INPUT value capture should exist");
+    expect(accept_local_value != state.globals.end(), "LOCAL ACCEPT value capture should exist");
+    expect(after_input_global_type != state.globals.end(), "post-routine INPUT global TYPE() should exist");
+    expect(after_accept_global_type != state.globals.end(), "post-routine ACCEPT global TYPE() should exist");
+
+    if (input_local_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(input_local_type->second) == "C",
+            "INPUT TO LOCAL target should stay character-typed inside routine scope");
+    }
+    if (accept_local_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(accept_local_type->second) == "C",
+            "ACCEPT TO LOCAL target should stay character-typed inside routine scope");
+    }
+    if (input_local_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(input_local_value->second).empty(),
+            "INPUT TO LOCAL target should receive deterministic empty-string headless result");
+    }
+    if (accept_local_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(accept_local_value->second).empty(),
+            "ACCEPT TO LOCAL target should receive deterministic empty-string headless result");
+    }
+    if (after_input_global_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_input_global_type->second) == "U",
+            "INPUT TO LOCAL target should not leak a global binding after routine return");
+    }
+    if (after_accept_global_type != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_accept_global_type->second) == "U",
+            "ACCEPT TO LOCAL target should not leak a global binding after routine return");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_getfile_command_emits_runtime_getfile_event_with_clause_details() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_getfile_cmd";
@@ -5935,6 +6012,7 @@ int main() {
     test_input_command_emits_runtime_input_event_with_prompt();
     test_accept_command_emits_runtime_accept_event_with_prompt();
     test_input_accept_commands_surface_macro_prompt_and_target_detail();
+    test_input_accept_to_local_targets_stay_local_in_routine_scope();
     test_getfile_command_emits_runtime_getfile_event_with_clause_details();
     test_putfile_command_emits_runtime_putfile_event_with_clause_details();
     test_getdir_command_emits_runtime_getdir_event_with_clause_details();

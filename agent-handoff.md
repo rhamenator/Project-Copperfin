@@ -28,12 +28,13 @@ Important:
 
 Current priority order:
 
-1. Resume the open runtime/data path in strict order: `#92`, `#97`, `#100`, `#101`, `#93`, `#94`
+1. Resume the open runtime/data path in strict order: `#92`, `#97`, `#100`, `#93`, `#94`
 2. After those four slices, return to highest-fan-out open A3 lanes: `#92`, then `#93`, then `#94`
 3. Keep work issue-driven at prompt-slice granularity under active-open queue branches (`#154`-`#203`)
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: H3/#101 headless interaction fidelity deepened in `test_prg_engine_data_io`. New focused `INPUT`/`ACCEPT` `TO LOCAL` coverage now locks down local-scope target assignment with deterministic headless values and no post-return global leak.
 - 2026-05-12: H3/#99 memory-binding semantics coverage deepened in `test_prg_engine_control_flow`. New focused `RELEASE ALL` + `PRIVATE` shadow test now locks down in-frame restoration of outer globals and post-return stability.
 - 2026-05-12: H3/#98 runtime-state normalization coverage deepened in `test_prg_engine_runtime_surface_functions`. Added focused `SET()` + `SET DATASESSION` readback/isolation assertions for `FDOW`, `FWEEK`, `POINT`, `SEPARATOR`, and `CURRENCY`, including current `FWEEK` normalization/clamp behavior.
 - 2026-05-12: H3/#153 developer-facing diagnostic normalization deepened in `test_prg_engine_control_flow`. New focused repeated-fault `ON ERROR` coverage now verifies normalized `AERROR()` and helper function diagnostics (`ERROR()`/`MESSAGE()`/`LINENO()`/`PROGRAM()`) refresh per-fault without stale carry-over.
