@@ -274,6 +274,9 @@ void test_build_report_xasset_executable_model() {
     expect(model.ok, "xAsset executable model should be created for reports");
     expect(model.runnable_startup, "report model should be runnable without embedded methods");
     expect(model.startup_enters_event_loop, "report preview startup should enter the event loop");
+    expect(model.methods.empty(), "report executable model should not synthesize object methods for preview-only startup");
+    expect(model.actions.empty(), "report executable model should not emit method actions when no methods exist");
+    expect(model.shutdown_lines.empty(), "report executable model should not emit shutdown lines for preview-only startup");
     expect(model.startup_lines.size() == 1U, "report startup should be a direct preview command");
     expect(model.startup_lines[0].find("REPORT FORM") != std::string::npos, "report startup should preview the report");
 

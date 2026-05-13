@@ -573,6 +573,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: Structural table-operation slice `#94` advanced with additional rollback pointer checks for memo compaction flows. `test_prg_engine_table_structure` now verifies `PACK MEMO` transaction rollback preserves `RECNO()` position while restoring memo sidecar bytes and disk readability.
 - 2026-05-12: C1/#154 form/class lifecycle slice advanced in `test_xasset_methods`. Focused assertions now lock startup/shutdown routine ordering for form and class-library executable models (`BeforeOpenTables/OpenTables -> Load/Init/Activate`, then `Destroy -> CloseTables`).
 - 2026-05-12: C1/#155 form data-environment/object-graph fidelity advanced in `test_xasset_methods`. Focused assertions now verify root-form selection ignores comment/data-environment records and preserves nested object-path action identifiers (`frmPrimary.txtName.Valid`).
+- 2026-05-12: C2/#156 report execution/output pipeline fidelity advanced in `test_xasset_methods`. Focused assertions now verify report executable models stay preview-startup only (single `REPORT FORM ... PREVIEW` line, no synthetic methods/actions/shutdown flow).
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
