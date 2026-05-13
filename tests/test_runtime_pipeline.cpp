@@ -296,6 +296,63 @@ void test_startup_prg_extension_matching_is_case_insensitive() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_startup_asset_is_staged_even_when_marked_excluded() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_startup_excluded_stage";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "MAIN.PRG", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "startup_excluded.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "StartupExcluded";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "StartupExcluded";
+    workspace.build_plan.output_path = (output_dir / "StartupExcluded.exe").string();
+    workspace.build_plan.startup_item = "MAIN.PRG";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "MAIN.PRG", .relative_path = "MAIN.PRG", .type_title = "Program", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "runtime package plan should be created when startup asset is excluded");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "runtime package should materialize when startup asset is excluded");
+    if (result.ok) {
+        expect(fs::exists(fs::path(result.plan.content_root) / "MAIN.PRG"),
+               "startup program should still be staged even when entry is marked excluded");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -303,6 +360,7 @@ int main() {
     test_materialize_excluded_xasset_startup_package();
     test_security_enabled_runtime_host_name_validation();
     test_startup_prg_extension_matching_is_case_insensitive();
+    test_startup_asset_is_staged_even_when_marked_excluded();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

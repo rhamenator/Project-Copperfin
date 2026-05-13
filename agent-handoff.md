@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: C4/#161 build-inclusion coverage deepened in `test_runtime_pipeline`. Startup assets are now explicitly regression-guarded to stage into runtime packages even when marked excluded in project entries.
 - 2026-05-12: C4/#160 startup-resolution coverage deepened in `test_runtime_pipeline`. Debug startup capability checks now treat `.PRG` extensions case-insensitively for breakpoint/step-debug support.
 - 2026-05-12: C3/#159 menu lifecycle coverage deepened in `test_xasset_methods`. Assertions now lock cleanup routine/line identity and single shutdown emission for menu executable models.
 - 2026-05-12: C3/#158 menu dispatch coverage deepened in `test_xasset_methods`. Menu executable-model assertions now lock startup setup→activate ordering and item action-to-routine binding fidelity.
