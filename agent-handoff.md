@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-05-12: C2/#157 label pipeline coverage deepened in `test_xasset_methods`. Label executable-model assertions now lock preview-startup-only behavior (no synthetic methods/actions/shutdown lines).
 - 2026-05-12: C2/#156 report pipeline coverage deepened in `test_xasset_methods`. Report executable-model assertions now lock preview-startup-only behavior (no synthetic methods/actions/shutdown lines).
 - 2026-05-12: C1/#155 object-graph fidelity coverage deepened in `test_xasset_methods`. Form executable-model assertions now lock root-object selection behavior (ignore comment/data-environment records) and nested action-path preservation.
 - 2026-05-12: C1/#154 lifecycle-order coverage deepened in `test_xasset_methods`. Form/class executable-model assertions now lock startup/shutdown sequence ordering for `DataEnvironment` and root-object lifecycle routines.

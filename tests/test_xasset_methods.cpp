@@ -301,6 +301,9 @@ void test_build_label_xasset_executable_model() {
     expect(model.ok, "xAsset executable model should be created for labels");
     expect(model.runnable_startup, "label model should be runnable without embedded methods");
     expect(model.startup_enters_event_loop, "label preview startup should enter the event loop");
+    expect(model.methods.empty(), "label executable model should not synthesize object methods for preview-only startup");
+    expect(model.actions.empty(), "label executable model should not emit method actions when no methods exist");
+    expect(model.shutdown_lines.empty(), "label executable model should not emit shutdown lines for preview-only startup");
     expect(model.startup_lines.size() == 1U, "label startup should be a direct preview command");
     expect(model.startup_lines[0].find("LABEL FORM") != std::string::npos, "label startup should preview the label");
 
