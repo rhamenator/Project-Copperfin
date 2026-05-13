@@ -52,6 +52,7 @@ Recent shipped runtime slices refined the help-mining focus for remaining A3 res
 - 2026-05-12 note: selected SQL/result-cursor `APPEND FROM ... TYPE JSON FOR ...` filtering now has focused coverage; prioritize remaining `#93` help-mining against targeted `IN` forms and selected-cursor state guarantees.
 - `#94`: `ALTER TABLE ... ROLLBACK` pointer/schema restoration now has focused coverage; keep mining structural-operation rollback semantics (`ALTER TABLE`, `PACK MEMO`, transaction boundaries).
 - 2026-05-12 note: `PACK MEMO` rollback `RECNO()` position retention now also has focused coverage; prioritize remaining `#94` help-mining on any structural rollback target-`IN` and multi-cursor edge semantics.
+- 2026-05-12 note: C1/#154 now has focused form/class lifecycle-order coverage in `test_xasset_methods`; help/source mining should prioritize any remaining event-order deltas around `DataEnvironment` open/close versus form/class `Load/Init/Activate/Destroy`.
 - `#99` and `#101`: `RELEASE ALL` shadow-lifetime and headless `INPUT`/`ACCEPT` local-target behavior now have focused coverage; use help references to validate remaining edge semantics.
 
 Next help-mining target for the active runtime queue:

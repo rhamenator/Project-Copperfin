@@ -64,6 +64,24 @@ void test_build_xasset_executable_model() {
     }
     expect(model.startup_routines.size() == 5U, "startup should include data environment, load, init, and activate methods");
     expect(model.shutdown_routines.size() == 2U, "shutdown should include form and data-environment cleanup methods");
+    if (model.startup_routines.size() == 5U) {
+        expect(model.startup_routines[0] == "__cf_Dataenvironment_BeforeOpenTables",
+               "form startup should begin with data-environment BeforeOpenTables");
+        expect(model.startup_routines[1] == "__cf_Dataenvironment_OpenTables",
+               "form startup should run data-environment OpenTables before form methods");
+        expect(model.startup_routines[2] == "__cf_frmDemo_Load",
+               "form startup should run Load before Init");
+        expect(model.startup_routines[3] == "__cf_frmDemo_Init",
+               "form startup should run Init before Activate");
+        expect(model.startup_routines[4] == "__cf_frmDemo_Activate",
+               "form startup should end with Activate");
+    }
+    if (model.shutdown_routines.size() == 2U) {
+        expect(model.shutdown_routines[0] == "__cf_frmDemo_Destroy",
+               "form shutdown should call Destroy before data-environment cleanup");
+        expect(model.shutdown_routines[1] == "__cf_Dataenvironment_CloseTables",
+               "form shutdown should end with data-environment CloseTables");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("DO __cf_Dataenvironment_BeforeOpenTables") != std::string::npos, "bootstrap should call the data environment method");
@@ -97,6 +115,16 @@ void test_build_class_library_xasset_executable_model() {
     expect(model.root_object_path == "custWidget", "class-library root object path should identify the root class");
     expect(model.startup_routines.size() == 2U, "class-library startup should include load and init");
     expect(model.shutdown_routines.size() == 1U, "class-library shutdown should include destroy");
+    if (model.startup_routines.size() == 2U) {
+        expect(model.startup_routines[0] == "__cf_custWidget_Load",
+               "class-library startup should run Load before Init");
+        expect(model.startup_routines[1] == "__cf_custWidget_Init",
+               "class-library startup should end with Init");
+    }
+    if (model.shutdown_routines.size() == 1U) {
+        expect(model.shutdown_routines[0] == "__cf_custWidget_Destroy",
+               "class-library shutdown should dispatch Destroy");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("DO __cf_custWidget_Load") != std::string::npos, "class-library bootstrap should call the load method");

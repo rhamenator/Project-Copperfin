@@ -571,6 +571,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: Order/seek slice `#92` optimizer support advanced with contract-level regression coverage in `test_prg_engine_index_seek_optimization`. Focused assertions now lock enum stability (`ExecutionStrategy`) and default `IndexOrderCandidate`/plan metadata initialization used by diagnostics/planning paths.
 - 2026-05-12: SQL/result-cursor slice `#93` advanced with focused JSON import filter coverage. `test_prg_engine_sql_cursors` now verifies `APPEND FROM ... TYPE JSON FOR ...` on selected SQL/result cursors applies `FOR` filtering and appends only matching rows.
 - 2026-05-12: Structural table-operation slice `#94` advanced with additional rollback pointer checks for memo compaction flows. `test_prg_engine_table_structure` now verifies `PACK MEMO` transaction rollback preserves `RECNO()` position while restoring memo sidecar bytes and disk readability.
+- 2026-05-12: C1/#154 form/class lifecycle slice advanced in `test_xasset_methods`. Focused assertions now lock startup/shutdown routine ordering for form and class-library executable models (`BeforeOpenTables/OpenTables -> Load/Init/Activate`, then `Destroy -> CloseTables`).
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
