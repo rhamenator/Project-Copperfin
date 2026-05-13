@@ -28,9 +28,9 @@ Important:
 
 Current priority order:
 
-1. Resume the open runtime/data path in strict order: `#92`, `#97`, `#100`
-2. After those four slices, return to highest-fan-out open A3 lanes: `#92`, then `#93`, then `#94`
-3. Keep work issue-driven at prompt-slice granularity under active-open queue branches (`#154`-`#203`)
+1. Finish the runtime safety/diagnostics gate in strict order: `#150`, `#151`, `#152`, `#153`
+2. Then run the remaining A3 critical-path closure chain in strict order: `#92`, `#97`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94`
+3. Do not advance adjacent open queue branches (`#154`-`#203`) until `#94` is complete
 
 Current shipped highlights worth remembering:
 

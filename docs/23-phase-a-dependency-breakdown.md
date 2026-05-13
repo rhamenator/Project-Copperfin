@@ -359,6 +359,26 @@ Remaining active-open adjacent prompt-sized native slice queues:
 - `#14`: `#152`, `#153`
 - broader repo execution leaves are now also pre-split beyond Phase A under `#15`-`#43`, `#57`, and `#91`; this document keeps the active queue focused on the Phase A critical path
 
+Canonical remaining Phase A execution order:
+
+1. `#150`
+2. `#151`
+3. `#152`
+4. `#153`
+5. `#92`
+6. `#97`
+7. `#98`
+8. `#99`
+9. `#100`
+10. `#101`
+11. `#93`
+12. `#94`
+
+Execution guardrails:
+
+- treat "coverage advanced" notes as progress evidence, not issue-closure evidence
+- keep adjacent open branches (`#154`-`#203`) paused until the canonical chain above is complete
+
 Current dependency links:
 
 - `#93` is blocked by `#92`

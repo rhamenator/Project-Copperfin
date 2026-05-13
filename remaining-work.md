@@ -182,6 +182,23 @@ If direct commits continue, close a child issue only when:
 - Runtime safety active-open prompt-sized slice issues: #150, #151, #152, #153
 - Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145
 
+Canonical remaining Phase A critical-path order:
+
+1. #150
+2. #151
+3. #152
+4. #153
+5. #92
+6. #97
+7. #98
+8. #99
+9. #100
+10. #101
+11. #93
+12. #94
+
+Execution guardrail: keep adjacent active-open branches (#154-#203) paused until #94 is complete.
+
 ### Runtime Parity Surfaces
 
 - Forms/classes runtime fidelity: #15
