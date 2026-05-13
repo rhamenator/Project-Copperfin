@@ -348,6 +348,7 @@ namespace copperfin::runtime
         std::map<std::string, RuntimeArray> arrays;
         std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;
+        std::optional<SourceLocation> resume_skip_breakpoint_location;
         std::vector<RuntimeEvent> events;
         RuntimePauseState last_state{};
         std::string startup_default_directory;
@@ -1390,7 +1391,6 @@ namespace copperfin::runtime
         }
 
         const std::size_t base_depth = stack.size();
-        bool first_statement = true;
 
         try
         {
@@ -1459,14 +1459,29 @@ namespace copperfin::runtime
                     return build_pause_state(DebugPauseReason::error, last_error_message);
                 }
 
-                if (!first_statement && breakpoint_matches(next->location))
+                if (breakpoint_matches(next->location))
                 {
-                    return build_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
+                    if (resume_skip_breakpoint_location.has_value() &&
+                        normalize_path(resume_skip_breakpoint_location->file_path) == normalize_path(next->location.file_path) &&
+                        resume_skip_breakpoint_location->line == next->location.line)
+                    {
+                        resume_skip_breakpoint_location.reset();
+                    }
+                    else
+                    {
+                        resume_skip_breakpoint_location = next->location;
+                        return build_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
+                    }
+                }
+                else
+                {
+                    resume_skip_breakpoint_location.reset();
                 }
 
                 const ExecutionOutcome outcome = execute_current_statement();
                 if (!outcome.ok)
                 {
+                    resume_skip_breakpoint_location.reset();
                     if (!stack.empty())
                     {
                         capture_last_error_context(stack.back(), *next);
@@ -1522,8 +1537,6 @@ namespace copperfin::runtime
                     }
                     break;
                 }
-
-                first_statement = false;
             }
         }
         catch (const std::bad_alloc &)

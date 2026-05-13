@@ -162,6 +162,44 @@ void test_local_variables_in_stack_frame() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_breakpoint_on_first_executable_line_hits_after_entry_continue() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_first_line_breakpoint";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "first_line_breakpoint.prg";
+    write_text(
+        main_path,
+        "x = 1\n"
+        "x = x + 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
+        .startup_path = main_path.string(),
+        .working_directory = temp_root.string(),
+        .stop_on_entry = true
+    });
+
+    session.add_breakpoint({.file_path = main_path.string(), .line = 1});
+    const auto entry_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(entry_state.reason == copperfin::runtime::DebugPauseReason::entry,
+           "first-line breakpoint test should stop on entry first");
+
+    const auto breakpoint_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(breakpoint_state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "continuing from entry should hit a first-line breakpoint");
+    expect(!breakpoint_state.call_stack.empty(),
+           "first-line breakpoint should expose a stack frame");
+    if (!breakpoint_state.call_stack.empty()) {
+        expect(breakpoint_state.call_stack.front().line == 1U,
+               "first-line breakpoint should report line 1");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1326,6 +1364,7 @@ int main() {
     test_activate_popup_pause();
     test_dispatch_event_handler();
     test_local_variables_in_stack_frame();
+    test_breakpoint_on_first_executable_line_hits_after_entry_continue();
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();
