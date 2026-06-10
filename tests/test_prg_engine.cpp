@@ -48,11 +48,7 @@ void test_read_events_pause() {
         "READ EVENTS\n"
         "x = x + 1\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "READ EVENTS should pause the runtime in event-loop mode");
@@ -74,11 +70,7 @@ void test_activate_popup_pause() {
         "ACTIVATE POPUP Shortcut\n"
         "x = 2\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "ACTIVATE POPUP should pause the runtime in event-loop mode");
@@ -103,11 +95,7 @@ void test_dispatch_event_handler() {
         "PROCEDURE item1\n"
         "x = 7\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "startup popup activation should pause in the event loop");
@@ -141,11 +129,7 @@ void test_local_variables_in_stack_frame() {
         "itemCount = 9\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     session.add_breakpoint({.file_path = main_path.string(), .line = 5});
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -176,11 +160,7 @@ void test_breakpoint_on_first_executable_line_hits_after_entry_continue() {
         "x = x + 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = true
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
 
     session.add_breakpoint({.file_path = main_path.string(), .line = 1});
     const auto entry_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -218,11 +198,7 @@ void test_report_form_pause() {
         "REPORT FORM '" + report_path.string() + "' PREVIEW\n"
         "x = 2\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "REPORT FORM PREVIEW should pause in the event loop");
@@ -249,11 +225,7 @@ void test_label_form_pause() {
         "LABEL FORM '" + label_path.string() + "' PREVIEW\n"
         "x = 2\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "LABEL FORM PREVIEW should pause in the event loop");
@@ -280,11 +252,7 @@ void test_do_form_pause() {
         "DO FORM '" + form_path.string() + "'\n"
         "x = 2\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop, "DO FORM should now enter the event loop for runnable forms");
@@ -310,11 +278,7 @@ void test_do_command_macro_target() {
         "nWorkerRan = 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DO &macro-target script should complete");
@@ -496,11 +460,7 @@ void test_work_area_and_data_session_compatibility() {
         "SET DATASESSION TO 3\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "work area script should complete");
@@ -543,11 +503,7 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cParamResult = p1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession macro_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = (temp_root / "macro_deep.prg").string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession macro_session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options((temp_root / "macro_deep.prg").string(), temp_root.string()));
     const auto macro_state = macro_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     const auto cResult1 = macro_state.globals.find("cresult1");
     const auto cResult2 = macro_state.globals.find("cresult2");
@@ -634,11 +590,7 @@ void test_eval_macro_and_runtime_state_semantics() {
         "lPathFileRestored = FILE('path_only_session.txt')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "eval/macro/state script should complete");
@@ -859,11 +811,7 @@ void test_sql_and_ole_compatibility_functions() {
         "oRunning = GETOBJECT('Word.Application')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "interop script should complete");
@@ -908,11 +856,7 @@ void test_sql_pass_through_rows_affected_and_provider_hint() {
         "nRows = SQLROWCOUNT(nConn)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SQL pass-through DML script should complete");
@@ -956,11 +900,7 @@ void test_sql_prepare_and_connection_properties() {
         "cPrepared = SQLGETPROP(nConn, 'PreparedCommand')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SQL prepare/property script should complete");
@@ -1048,11 +988,8 @@ void test_set_state_variables_strictdate_enginebehavior_optimize() {
         "cEngineBehaviorRestored = SET('ENGINEBEHAVIOR')\n"
         "cOptimizeRestored = SET('OPTIMIZE')\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = prg_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg_path, temp_root));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "set_vars_test script should complete");
@@ -1173,11 +1110,8 @@ void test_set_state_variables_talk_safety_escape() {
         "cSafetyRestored = SET('SAFETY')\n"
         "cEscapeRestored = SET('ESCAPE')\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = prg_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg_path, temp_root));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "set_flags_test script should complete");
@@ -1289,11 +1223,7 @@ void test_transaction_processing_txnlevel_and_sessions() {
         "SET DATASESSION TO 1\n"
         "nTxnRestoredSession1 = TXNLEVEL()\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = prg_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "transactions_test script should complete");

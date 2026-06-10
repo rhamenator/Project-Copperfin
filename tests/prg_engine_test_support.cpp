@@ -252,4 +252,16 @@ bool has_runtime_event(
     });
 }
 
+copperfin::runtime::RuntimeSessionOptions make_runtime_session_options(
+    const std::filesystem::path& startup_path,
+    const std::filesystem::path& working_directory,
+    bool stop_on_entry) {
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.startup_path = startup_path.string();
+    options.working_directory = working_directory.string();
+    options.stop_on_entry = stop_on_entry;
+    options.temp_directory = (working_directory / "runtime-temp").string();
+    return options;
+}
+
 }  // namespace copperfin::test_support

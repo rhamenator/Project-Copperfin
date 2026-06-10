@@ -45,11 +45,8 @@ namespace
             "nCount = aCount[1]\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "COUNT TO ARRAY script should complete");
@@ -104,11 +101,8 @@ namespace
             "nAvg = aAvg[1]\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "SUM/AVERAGE TO ARRAY script should complete");
@@ -193,11 +187,8 @@ namespace
             "nCountIn = aCountIn[1]\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "aggregate TO ARRAY scope/IN script should complete: " + state.message);
@@ -252,11 +243,8 @@ namespace
             "SUM AGE TO ARRAY\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession missing_target_session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = missing_target_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession missing_target_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(missing_target_path.string(), temp_root.string()));
         const auto missing_target_state = missing_target_session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(!missing_target_state.completed, "SUM TO ARRAY without a target should fail");
         expect(lowercase_copy(missing_target_state.message).find("to array requires a target array name") != std::string::npos,
@@ -269,11 +257,8 @@ namespace
             "AVERAGE AGE TO ARRAY aOne, aTwo\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession multiple_targets_session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = multiple_targets_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession multiple_targets_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(multiple_targets_path.string(), temp_root.string()));
         const auto multiple_targets_state = multiple_targets_session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(!multiple_targets_state.completed, "AVERAGE TO ARRAY with multiple targets should fail");
         expect(lowercase_copy(multiple_targets_state.message).find("to array accepts exactly one array target") != std::string::npos,
@@ -323,11 +308,8 @@ namespace
             "nMaxVisible = MAX()\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "aggregate no-expression function script should complete: " + state.message);
@@ -391,11 +373,8 @@ namespace
             "cMaxType = VARTYPE(xMaxNoNumeric)\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "aggregate no-numeric function script should complete: " + state.message);

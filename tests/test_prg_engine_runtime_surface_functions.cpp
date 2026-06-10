@@ -141,11 +141,7 @@ namespace
             "cOnShutdownHandler = ON('SHUTDOWN')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "runtime surface extension script should complete");
@@ -288,11 +284,7 @@ namespace
             "nPathFileSize = FILESIZE('path_only.txt')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "FILESIZE() test script should complete");
@@ -348,11 +340,7 @@ namespace
             "nRecLengthNoArea = RECLENGTH('nonexistent')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "RECSIZE/RECLENGTH test script should complete");
@@ -408,11 +396,7 @@ namespace
             "RETURN\n"
             "ENDPROC\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "environment and SYS helper script should complete");
@@ -493,11 +477,7 @@ namespace
             "lRemoveMissing = REMOVEPROPERTY(oOne, 'SampleProp')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
          expect(state.completed,
@@ -587,11 +567,7 @@ namespace
             "nFileCount = RECCOUNT()\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed,
@@ -654,11 +630,7 @@ namespace
             "lBadExport = CURSORTOXML('MissingAlias', 'missing_output.xml')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "invalid CURSORTOXML/XMLTOCURSOR script should complete safely");
@@ -715,11 +687,7 @@ namespace
             "cgetmethodafterset = GETPEM(oa, 'add')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = main_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed,
@@ -814,7 +782,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "codepage/misc script should complete");
 
@@ -872,7 +840,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "lookup test script should complete");
 
@@ -924,7 +892,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "SQL LOOKUP test script should complete");
         expect(state.sql_connections.empty(), "SQL LOOKUP test should disconnect its SQL handle");
@@ -991,7 +959,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "LOOKUP macro-argument test should complete");
 
@@ -1034,7 +1002,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "OLE property round-trip script should complete");
 
@@ -1086,7 +1054,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "Scripting.Dictionary method script should complete");
 
@@ -1129,7 +1097,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "NEWOBJECT server-targeting script should complete");
         expect(state.ole_objects.size() == 1U, "NEWOBJECT server-targeting script should register one object");
@@ -1169,7 +1137,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "GETOBJECT reuse script should complete");
 

@@ -59,11 +59,8 @@ void test_use_and_data_session_isolation() {
         "cAlias5 = ALIAS()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "table/data-session script should complete");
@@ -145,11 +142,8 @@ void test_report_form_to_file_renders_without_event_loop_pause() {
         "x = 2\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "REPORT FORM TO FILE should complete without entering a preview event loop");
@@ -189,11 +183,8 @@ void test_label_form_to_file_renders_without_event_loop_pause() {
         "x = 2\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LABEL FORM TO FILE should complete without entering a preview event loop");
@@ -244,11 +235,8 @@ void test_cross_session_alias_and_work_area_isolation() {
         "cS2AliasAfterReturn = ALIAS()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "cross-session alias/work-area isolation script should complete");
@@ -334,11 +322,8 @@ void test_use_in_existing_alias_reuses_target_work_area() {
         "cTopName = NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "USE ... IN existing alias script should complete");
@@ -409,11 +394,8 @@ void test_use_in_nonselected_alias_preserves_selected_work_area() {
         "lOrdersOpenAfterClose = USED('Orders')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "USE ... IN non-selected alias script should complete");
@@ -498,11 +480,8 @@ void test_plain_use_reuses_current_selected_work_area() {
         "nPeopleAreaAfterReplace = SELECT('People')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "plain USE current-area script should complete");
@@ -586,11 +565,8 @@ void test_select_and_use_in_designator_expressions() {
         "cTopAfterUse = NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "expression-based SELECT and USE ... IN script should complete");
@@ -696,11 +672,8 @@ void test_expression_driven_in_targeting_across_local_data_commands() {
         "cSelectedAfterCommands = ALIAS()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "expression-driven IN targeting script should complete");
@@ -790,11 +763,8 @@ void test_select_zero_and_use_in_zero_reuse_closed_work_area() {
         "nNextFreeAfterReuse = SELECT(0)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SELECT(0) reuse script should complete");
@@ -865,11 +835,8 @@ void test_go_and_skip_cursor_navigation() {
         "nAfterGoPastEnd = RECNO()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "navigation script should complete");
@@ -964,11 +931,8 @@ void test_cursor_identity_functions_for_local_tables() {
         "lUsedAfterClose = USED('People')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "local cursor identity script should complete");
@@ -1056,11 +1020,8 @@ void test_local_use_auto_allocation_tracks_session_selection_flow() {
         "cSession1AliasBack = ALIAS()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "local selection-flow script should complete");
@@ -1147,11 +1108,8 @@ void test_local_selected_empty_area_reuses_after_datasession_round_trip() {
         "cSession1AliasAfterReuse = ALIAS()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "local selection reuse round-trip script should complete");
@@ -1221,11 +1179,8 @@ void test_set_fields_limits_field_lookup() {
         "nAgeAll = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SET FIELDS field-lookup script should complete");
@@ -1292,11 +1247,8 @@ void test_set_fields_like_and_except_limit_field_lookup() {
         "nAgeExcept = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SET FIELDS LIKE/EXCEPT field-lookup script should complete");
@@ -1352,11 +1304,8 @@ void test_set_fields_is_scoped_by_data_session() {
         "xAgeSession1Restored = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SET FIELDS data-session isolation script should complete");
@@ -1440,11 +1389,8 @@ void test_two_work_areas_on_same_table_see_consistent_mutations() {
         "nArea2Age = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     copperfin::test_support::expect(state.completed, "two-work-areas same table script should complete");

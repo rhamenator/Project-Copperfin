@@ -55,11 +55,8 @@ void test_file_io_runtime_functions()
         "hMissing = FOPEN('missing/does-not-exist.txt', 0)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "file I/O function script should complete: " + state.message);

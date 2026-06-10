@@ -37,9 +37,8 @@ namespace
             "cFallback = &cFallbackExpr\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "macro expression indirection script should complete");
@@ -83,9 +82,8 @@ namespace
             "nMacro = &cExpr && trailing comment should strip\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "double-ampersand parsing script should complete");
@@ -147,9 +145,8 @@ namespace
             "isleadbyte_empty = ISLEADBYTE('')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "type/null function script should complete");
@@ -216,9 +213,8 @@ namespace
             "cTransformLeftTrim = TRANSFORM('  padded text  ', '@B')\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "type/transform depth script should complete");
@@ -274,9 +270,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(),
-             .working_directory = temp_root.string(),
-             .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "macro dot-suffix script should complete");
@@ -331,9 +325,8 @@ namespace
             "cDefaultLabel = cLabel\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "parameter default macro script should complete");
@@ -387,9 +380,7 @@ namespace
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-            {.startup_path = main_path.string(),
-             .working_directory = temp_root.string(),
-             .stop_on_entry = false});
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "macro alias-qualified field-access script should complete");

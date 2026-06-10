@@ -42,4 +42,9 @@ bool has_runtime_event(
     const std::string& category,
     const std::string& detail);
 
+copperfin::runtime::RuntimeSessionOptions make_runtime_session_options(
+    const std::filesystem::path& startup_path,
+    const std::filesystem::path& working_directory,
+    bool stop_on_entry = false);
+
 }  // namespace copperfin::test_support

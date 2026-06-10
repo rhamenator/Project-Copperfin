@@ -46,11 +46,8 @@ void test_scatter_memvar_from_current_record() {
         "grabbed = m.NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER MEMVAR script should complete");
@@ -104,11 +101,8 @@ void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
         "cAfterGather = NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER/GATHER MEMVAR field-filter script should complete");
@@ -201,11 +195,8 @@ void test_scatter_gather_memvar_single_name_field_filter_semantics() {
         "nAfterGatherAge = m.AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "single NAME-field SCATTER/GATHER MEMVAR script should complete: " + state.message);
@@ -283,11 +274,8 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
         "nMacroAfterAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER TO array / GATHER FROM array script should complete: " + state.message);
@@ -398,11 +386,8 @@ void test_scatter_gather_array_like_and_except_field_filters() {
         "nAfterAge = People.AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER/GATHER FROM array LIKE/EXCEPT script should complete: " + state.message);
@@ -469,11 +454,8 @@ void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
         "cAfterBlankStamp = m.STAMP\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "date/datetime SCATTER/GATHER MEMVAR script should complete");
@@ -581,11 +563,8 @@ void test_scatter_gather_array_preserves_date_and_datetime_like_values() {
         "cAfterBlankArrayStamp = aAfterBlank[2]\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "date/datetime SCATTER/GATHER array script should complete");
@@ -688,11 +667,8 @@ void test_scatter_gather_name_object_round_trip() {
         "nAfterAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER/GATHER NAME script should complete: " + state.message);
@@ -761,11 +737,8 @@ void test_scatter_name_additive_merges_existing_object_properties() {
         "nAfterAge = GETPEM(oRow, 'AGE')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER NAME ADDITIVE script should complete: " + state.message);
@@ -842,11 +815,8 @@ void test_scatter_gather_name_single_name_field_filter_semantics() {
         "nAfterGatherAge = m.AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "single NAME-field SCATTER/GATHER NAME script should complete: " + state.message);
@@ -920,11 +890,8 @@ void test_scatter_gather_name_like_and_except_field_filters() {
         "nAfterAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER/GATHER NAME LIKE/EXCEPT script should complete: " + state.message);
@@ -1007,11 +974,8 @@ void test_scatter_gather_memvar_like_and_except_field_filters() {
         "nAfterAge = People.AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER/GATHER MEMVAR LIKE/EXCEPT script should complete: " + state.message);
@@ -1082,11 +1046,8 @@ void test_scatter_gather_name_supports_macro_object_variable_names() {
         "nGatheredAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "macro SCATTER/GATHER NAME script should complete: " + state.message);
@@ -1158,11 +1119,8 @@ void test_scatter_gather_name_supports_nested_object_targets() {
         "nGatheredAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "nested SCATTER/GATHER NAME script should complete: " + state.message);
@@ -1236,11 +1194,8 @@ void test_scatter_gather_name_supports_macro_expanded_nested_property_segments()
         "nGatheredAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "macro nested-segment SCATTER/GATHER NAME script should complete: " + state.message);
@@ -1308,11 +1263,8 @@ void test_scatter_gather_name_creates_missing_nested_object_targets() {
         "nGatheredAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "missing nested SCATTER/GATHER NAME script should complete: " + state.message);
@@ -1375,11 +1327,8 @@ void test_scatter_name_without_additive_replaces_existing_nested_target_object()
         "lExtraExists = PEMSTATUS(GETPEM(oHolder, 'Row'), 'EXTRA', 1)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "non-additive nested SCATTER NAME script should complete: " + state.message);
@@ -1446,11 +1395,8 @@ void test_scatter_gather_predeclared_2d_array_row_one_semantics() {
         "lAfterActive = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "2D row-1 SCATTER/GATHER script should complete: " + state.message);
@@ -1536,11 +1482,8 @@ void test_scatter_gather_two_column_name_value_array_semantics() {
         "lAfterActive = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "2-column name/value SCATTER/GATHER script should complete: " + state.message);
@@ -1627,11 +1570,8 @@ void test_scatter_memo_clause_controls_memo_field_inclusion() {
         "nWithMemoLen = ALEN(aWithMemo)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCATTER MEMO script should complete: " + state.message);
@@ -1815,11 +1755,8 @@ void test_runtime_array_mutator_functions() {
         "cInsertColumn23 = aInsertColumn[2,3]\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "runtime array mutator script should complete");
@@ -2142,11 +2079,8 @@ void test_save_to_writes_variables_to_file() {
         "SAVE TO '" + mem_path.string() + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE TO script should complete");
@@ -2181,11 +2115,8 @@ void test_restore_from_loads_variables_from_file() {
         "RETURN\n");
 
     {
-        copperfin::runtime::PrgRuntimeSession save_session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = save_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession save_session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(save_path.string(), temp_root.string(), false));
         const auto save_state = save_session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(save_state.completed, "SAVE TO setup script should complete before RESTORE FROM test");
     }
@@ -2198,11 +2129,8 @@ void test_restore_from_loads_variables_from_file() {
         "restored_n = nVal\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession restore_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = restore_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession restore_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(restore_path.string(), temp_root.string(), false));
 
     const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(restore_state.completed, "RESTORE FROM script should complete");
@@ -2242,11 +2170,8 @@ void test_restore_from_additive_merges_variables() {
         "after_another = another\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RESTORE FROM ADDITIVE script should complete");
@@ -2283,11 +2208,8 @@ void test_save_to_like_pattern_filters_variables() {
         "SAVE TO '" + mem_path.string() + "' ALL LIKE c*\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE TO ALL LIKE script should complete");
@@ -2320,11 +2242,8 @@ void test_save_to_except_pattern_filters_variables() {
         "SAVE TO '" + mem_path.string() + "' ALL EXCEPT c*\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE TO ALL EXCEPT script should complete");
@@ -2360,11 +2279,8 @@ void test_save_restore_auto_mem_extension_without_explicit_extension() {
         "restored_x = x\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE/RESTORE without explicit extension should complete");
@@ -2400,11 +2316,8 @@ void test_save_restore_round_trips_escaped_string_and_types() {
         "RETURN\n");
 
     {
-        copperfin::runtime::PrgRuntimeSession save_session = copperfin::runtime::PrgRuntimeSession::create({
-            .startup_path = save_path.string(),
-            .working_directory = temp_root.string(),
-            .stop_on_entry = false
-        });
+        copperfin::runtime::PrgRuntimeSession save_session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(save_path.string(), temp_root.string(), false));
         const auto save_state = save_session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(save_state.completed, "SAVE TO escaped setup script should complete");
     }
@@ -2436,11 +2349,8 @@ void test_save_restore_round_trips_escaped_string_and_types() {
         "restored_e_type = VARTYPE(eOnly)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession restore_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = restore_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession restore_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(restore_path.string(), temp_root.string(), false));
 
     const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(restore_state.completed, "RESTORE FROM escaped script should complete");
@@ -2503,11 +2413,8 @@ void test_restore_from_rejects_numeric_trailing_garbage() {
         "after_bad = nBad\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RESTORE FROM numeric garbage script should complete");
@@ -2547,11 +2454,8 @@ void test_restore_from_without_additive_clears_prior_globals() {
         "after_stale_type = VARTYPE(stale_only)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RESTORE FROM non-additive script should complete");
@@ -2596,11 +2500,8 @@ void test_restore_from_honors_current_frame_local_bindings() {
         "restored_local = saved_value\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RESTORE FROM should complete inside a LOCAL frame");
@@ -2650,11 +2551,8 @@ void test_save_restore_round_trips_arrays() {
         "restored_22 = aValues[2,2]\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE/RESTORE array roundtrip should complete");
@@ -2741,11 +2639,8 @@ void test_save_restore_round_trips_public_scope() {
         "after_release_array = TYPE('aPub')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE/RESTORE public scope roundtrip should complete");
@@ -2827,11 +2722,8 @@ void test_save_to_shadowed_public_name_does_not_persist_public_scope_marker() {
         "SAVE TO '" + mem_path.string() + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE TO shadowed PUBLIC scope script should complete");
@@ -2880,11 +2772,8 @@ void test_restore_from_without_additive_clears_stale_arrays() {
         "after_stale_array_type = TYPE('stale_arr')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "non-additive RESTORE should clear stale arrays");
@@ -2922,11 +2811,8 @@ void test_restore_from_without_additive_clears_private_shadow_state() {
         "RESTORE FROM '" + mem_path.string() + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "non-additive RESTORE should complete inside PRIVATE shadowing");
@@ -2957,11 +2843,8 @@ void test_copy_to_emits_event() {
         "COPY TO 'dest'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO script should complete");
@@ -2992,11 +2875,8 @@ void test_copy_to_creates_destination_dbf() {
         "COPY TO '" + dest_path + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO full script should complete");
@@ -3034,11 +2914,8 @@ void test_copy_structure_to_creates_empty_schema() {
         "COPY STRUCTURE TO '" + dest_path + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY STRUCTURE TO script should complete");
@@ -3079,11 +2956,8 @@ void test_copy_to_from_empty_table_produces_valid_empty_dbf() {
     // Pre-create the receiver as an empty table so USE opens it
     write_simple_dbf(temp_root / "recv.dbf", {});
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/FROM empty table script should complete");
@@ -3123,11 +2997,8 @@ void test_append_from_copies_records_into_current_table() {
         "APPEND FROM '" + (temp_root / "source.dbf").string() + "'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM script should complete");
@@ -3171,11 +3042,8 @@ void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
         "COPY TO '" + dest_path + "' TYPE SDF\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO TYPE SDF script should complete");
@@ -3206,11 +3074,8 @@ void test_append_from_type_sdf_imports_fixed_width_text_rows() {
         "APPEND FROM '" + (temp_root / "people.sdf").string() + "' TYPE SDF\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM TYPE SDF script should complete");
@@ -3251,11 +3116,8 @@ void test_copy_to_type_csv_and_delimited_text_rows() {
         "COPY TO '" + custom_path + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE FOR AGE > 10\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO TYPE CSV/DELIMITED script should complete");
@@ -3303,11 +3165,8 @@ void test_append_from_type_csv_imports_delimited_rows() {
         "APPEND FROM '" + (temp_root / "people_custom.txt").string() + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM TYPE CSV/DELIMITED script should complete");
@@ -3380,11 +3239,8 @@ void test_copy_to_type_tab_and_append_from_type_tab_round_trip() {
         "nAge2 = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM TYPE TAB script should complete: " + state.message);
@@ -3472,11 +3328,8 @@ void test_copy_to_type_xls_and_append_from_type_xls_round_trip() {
         "lActive2 = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM TYPE XLS script should complete: " + state.message);
@@ -3570,11 +3423,8 @@ void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
         "lActive2 = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM TYPE DIF script should complete: " + state.message);
@@ -3670,11 +3520,8 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
         "lActive2 = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM TYPE SYLK script should complete: " + state.message);
@@ -3770,11 +3617,8 @@ void test_copy_to_type_json_and_append_from_type_json_round_trip() {
         "lActive2 = ACTIVE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM TYPE JSON script should complete: " + state.message);
@@ -3852,11 +3696,8 @@ void test_copy_to_array_fills_2d_runtime_array() {
         "macro_rows = ALEN(&cMacroArray, 1)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO ARRAY script should complete");
@@ -3911,11 +3752,8 @@ void test_copy_to_array_fields_clause_allows_keyword_named_field() {
         "cRow2Type = aTypeOnly[2, 1]\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO ARRAY FIELDS TYPE script should complete: " + state.message);
@@ -3965,11 +3803,8 @@ void test_append_from_array_writes_records_from_2d_array() {
         "dest_rc = RECCOUNT()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM ARRAY script should complete");
@@ -4030,11 +3865,8 @@ void test_append_from_array_fields_clause_allows_keyword_named_field() {
         "nRows = RECCOUNT()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM ARRAY FIELDS TYPE script should complete: " + state.message);
@@ -4099,11 +3931,8 @@ void test_copy_append_array_like_and_except_field_filters() {
         "nRows = RECCOUNT()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO ARRAY FIELDS LIKE / APPEND FROM ARRAY FIELDS EXCEPT script should complete: " + state.message);
@@ -4168,11 +3997,8 @@ void test_copy_append_dbf_like_and_except_field_filters() {
         "nRows = RECCOUNT()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "COPY TO/APPEND FROM DBF FIELDS LIKE/EXCEPT script should complete: " + state.message);
@@ -4234,11 +4060,8 @@ void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
         "nAge = AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "APPEND FROM ARRAY macro date/datetime script should complete: " + state.message);
@@ -4298,11 +4121,8 @@ void test_gather_memvar_round_trips_field_values() {
         "updated_name = NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "GATHER MEMVAR round-trip script should complete");
@@ -4339,11 +4159,8 @@ void test_m_dot_namespace_shares_bare_memory_variable_binding() {
         "from_public_bare = public_name\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "m. namespace script should complete");
@@ -4408,11 +4225,8 @@ void test_browse_emits_effective_cursor_view_metadata() {
         "BROWSE IN other FIELDS AGE FOR AGE > 40\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "BROWSE script should complete");
@@ -4473,11 +4287,8 @@ void test_browse_like_and_except_field_filters_surface_event_metadata() {
         "BROWSE FIELDS EXCEPT NOTE FOR AGE >= 25\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "BROWSE LIKE/EXCEPT script should complete");
@@ -4521,11 +4332,8 @@ void test_edit_command_emits_runtime_edit_event() {
         "EDIT MEMO notes\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "EDIT script should complete");
@@ -4570,11 +4378,8 @@ void test_change_command_emits_runtime_change_event() {
         "CHANGE FIELD NAME,AGE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CHANGE script should complete");
@@ -4620,11 +4425,8 @@ void test_input_command_emits_runtime_input_event_with_prompt() {
         "cAfterInput = myvar\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "INPUT script should complete");
@@ -4680,11 +4482,8 @@ void test_accept_command_emits_runtime_accept_event_with_prompt() {
         "cAfterAccept = username\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "ACCEPT script should complete");
@@ -4742,11 +4541,8 @@ void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
         "ACCEPT cAcceptPrompt TO &cAcceptTarget\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "INPUT/ACCEPT macro detail script should complete");
@@ -4818,11 +4614,8 @@ void test_input_accept_to_local_targets_stay_local_in_routine_scope() {
         "accept_local_value = cAcceptLocal\n"
         "RETURN\n");
 
-    const auto state = copperfin::runtime::PrgRuntimeSession::create({
-                           .startup_path = main_path.string(),
-                           .working_directory = temp_root.string(),
-                           .stop_on_entry = false
-                       })
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path.string(), temp_root.string()))
                            .run(copperfin::runtime::DebugResumeAction::continue_run);
 
     expect(state.completed, "INPUT/ACCEPT LOCAL-scope script should complete");
@@ -4882,11 +4675,8 @@ void test_getfile_command_emits_runtime_getfile_event_with_clause_details() {
         "GETFILE PROMPT \"Pick a file\" TITLE \"Open\" DEFAULT \"./data\" FILTER \"*.dbf\" TO lcPath\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "GETFILE script should complete");
@@ -4937,11 +4727,8 @@ void test_putfile_command_emits_runtime_putfile_event_with_clause_details() {
         "PUTFILE PROMPT \"Save as\" TITLE \"Save\" DEFAULT \"./output\" FILTER \"*.txt\" TO lcSavePath\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "PUTFILE script should complete");
@@ -4992,11 +4779,8 @@ void test_getdir_command_emits_runtime_getdir_event_with_clause_details() {
         "GETDIR PROMPT \"Choose folder\" TITLE \"Browse\" DEFAULT \"./workspace\" TO lcDir\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "GETDIR script should complete");
@@ -5045,11 +4829,8 @@ void test_inputbox_command_emits_runtime_inputbox_event_with_clause_details() {
         "INPUTBOX PROMPT \"Enter value\" TITLE \"Question\" DEFAULT \"42\" TO lcAnswer\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "INPUTBOX script should complete");
@@ -5103,11 +4884,8 @@ void test_dialog_commands_parenthesized_forms_assign_targets_and_extract_positio
         "INPUTBOX(\"Enter value\", \"Question\", \"42\") TO cAnswer\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "parenthesized dialog script should complete");
@@ -5221,11 +4999,8 @@ void test_wait_window_command_emits_runtime_wait_event() {
         "cAfterWait = m.wResult\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "WAIT WINDOW script should complete");
@@ -5283,11 +5058,8 @@ void test_wait_clear_command_emits_runtime_wait_clear_event() {
         "WAIT CLEAR\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "WAIT CLEAR script should complete");
@@ -5322,11 +5094,8 @@ void test_keyboard_command_emits_runtime_keyboard_event() {
         "KEYBOARD cKeys PLAIN CLEAR\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "KEYBOARD script should complete");
@@ -5369,11 +5138,8 @@ void test_display_structure_emits_runtime_display_event() {
         "DISPLAY STRUCTURE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY STRUCTURE script should complete");
@@ -5418,11 +5184,8 @@ void test_display_status_surfaces_session_metadata() {
         "DISPLAY STATUS\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY STATUS script should complete");
@@ -5478,11 +5241,8 @@ void test_display_memory_surfaces_visible_variable_and_array_metadata() {
         "DISPLAY MEMORY\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY MEMORY script should complete");
@@ -5558,11 +5318,8 @@ void test_display_records_surfaces_effective_cursor_view_metadata() {
         "DISPLAY\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY RECORDS script should complete");
@@ -5607,11 +5364,8 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
         "LIST IN &cAlias FIELDS EXCEPT AGE FOR AGE >= 20 WHILE AGE < 40\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY/LIST target detail script should complete");
@@ -5675,11 +5429,8 @@ void test_display_and_list_structure_surface_target_detail() {
         "LIST STRUCTURE IN &cAlias\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DISPLAY/LIST STRUCTURE target-detail script should complete");
@@ -5738,11 +5489,8 @@ void test_list_status_emits_runtime_list_event() {
         "LIST STATUS\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LIST STATUS script should complete");
@@ -5798,11 +5546,8 @@ void test_list_memory_surfaces_visible_variable_and_array_metadata() {
         "LIST MEMORY\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LIST MEMORY script should complete");
@@ -5865,11 +5610,8 @@ void test_list_structure_surfaces_selected_cursor_schema() {
         "LIST STRUCTURE\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LIST STRUCTURE script should complete");
@@ -5923,11 +5665,8 @@ void test_list_records_surfaces_effective_cursor_view_metadata() {
         "LIST FIELDS EXCEPT NOTE FOR AGE >= 25\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LIST RECORDS script should complete");
@@ -5973,11 +5712,8 @@ void test_aerror_content_for_sql_passthrough_fault() {
         "cErrMsg  = aErr[1,2]\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "AERROR SQL passthrough fault script should complete without crashing");

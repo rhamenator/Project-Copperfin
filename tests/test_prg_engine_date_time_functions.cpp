@@ -174,9 +174,8 @@ namespace
             "seconds_now = SECONDS()\n"
             "RETURN\n");
 
-        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(),
-                                                                                                       .working_directory = temp_root.string(),
-                                                                                                       .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "date/time function script should complete");

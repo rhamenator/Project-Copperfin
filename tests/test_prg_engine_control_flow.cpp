@@ -122,11 +122,8 @@ void test_do_while_and_loop_control_flow() {
         "nAfterWhileIndex = i\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DO WHILE/loop control script should complete");
@@ -228,11 +225,8 @@ void test_do_case_control_flow() {
         "cAfterScan = cTag\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DO CASE script should complete");
@@ -295,11 +289,8 @@ void test_push_pop_key_menu_popup_stack_commands() {
         "POP POPUP\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "PUSH/POP stack command script should complete");
@@ -398,11 +389,8 @@ void test_text_endtext_literal_blocks() {
         "ENDTEXT\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TEXT/ENDTEXT script should complete");
@@ -466,11 +454,8 @@ void test_aggregate_functions_respect_visibility() {
         "nSumPeopleAlias = SUM(AGE, AGE >= 20, 'People')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "aggregate script should complete");
@@ -576,11 +561,8 @@ void test_calculate_command_aggregates() {
         "CALCULATE COUNT() TO nCountPeopleAlias, SUM(AGE) TO nSumPeopleAlias FOR AGE >= 20 IN 'People'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CALCULATE script should complete");
@@ -701,11 +683,8 @@ void test_command_level_aggregate_commands() {
         "nPeopleRec = RECNO('People')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "command-level aggregate script should complete");
@@ -817,11 +796,8 @@ void test_scan_on_empty_table_does_not_execute_body() {
         "lAfterScanEof = EOF()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SCAN over an empty table should complete");
@@ -862,11 +838,8 @@ void test_aggregate_commands_on_empty_table_return_zero() {
         "nAverage = AVERAGE(AGE)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "aggregate helpers over an empty table should complete");
@@ -913,11 +886,8 @@ void test_locate_on_empty_table_sets_eof() {
         "lEofAfterLocate = EOF()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "LOCATE on an empty table should complete");
@@ -961,11 +931,8 @@ void test_go_top_bottom_on_empty_table_does_not_crash() {
         "lEofAfterBottom = EOF()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "GO TOP/BOTTOM on empty table should not crash");
@@ -1023,11 +990,8 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         "CALCULATE COUNT() TO &cCalc WHILE AGE < 35 IN 'People'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "aggregate macro-target/while script should complete");
@@ -1100,11 +1064,8 @@ void test_command_level_aggregate_scope_and_while_semantics() {
         "nPeopleRec = RECNO('People')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "aggregate scope/WHILE script should complete");
@@ -1199,11 +1160,8 @@ void test_total_command_for_local_tables() {
         "nOtherRec = RECNO('Other')\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TOTAL script should complete");
@@ -1277,11 +1235,8 @@ void test_total_command_supports_currency_and_integer_fields() {
         "nRecAfter = RECNO()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TOTAL currency/integer script should complete");
@@ -1333,11 +1288,8 @@ void test_total_command_for_sql_result_cursors() {
         "lDisc = SQLDISCONNECT(nConn)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TOTAL SQL script should complete");
@@ -1407,11 +1359,8 @@ void test_private_declaration_masks_caller_variable() {
         "sub_x = x\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "PRIVATE mask script should complete");
@@ -1453,11 +1402,8 @@ void test_private_variable_visible_to_called_routines() {
         "inner_saw = shared_val\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "PRIVATE visibility script should complete");
@@ -1492,11 +1438,8 @@ void test_release_private_restores_saved_binding_immediately() {
         "sub_x_after_release = x\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE of PRIVATE binding script should complete");
@@ -1540,11 +1483,8 @@ void test_release_local_restores_visible_outer_global() {
         "sub_x_after_release = x\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE of LOCAL binding script should complete");
@@ -1590,11 +1530,8 @@ void test_macro_assignment_target_updates_private_binding_and_release_restores_o
         "sub_x_after_release = x\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "macro-expanded PRIVATE assignment target script should complete");
@@ -1641,11 +1578,8 @@ void test_macro_assignment_target_preserves_public_binding_across_release_all() 
         "nSharedAfterReleaseAll = shared\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "macro-expanded PUBLIC assignment target script should complete");
@@ -1675,11 +1609,8 @@ void test_store_command_assigns_multiple_variables() {
         "STORE 'hello' TO s1, s2\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "STORE script should complete");
@@ -1759,12 +1690,9 @@ void test_runtime_guardrail_limits_call_depth_without_crashing_host() {
         "PROCEDURE d\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false,
-        .max_call_depth = 3
-    });
+    auto session_options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    session_options.max_call_depth = 3;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error, "call-depth guardrail should pause with an error");
@@ -1786,12 +1714,9 @@ void test_runtime_guardrail_exactly_at_call_depth_limit_succeeds() {
     const fs::path main_path = temp_root / "exact_limit.prg";
     write_text(main_path, build_nested_do_chain_script(limit));
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false,
-        .max_call_depth = limit
-    });
+    auto session_options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    session_options.max_call_depth = limit;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "exactly-at-limit nested call chain should complete");
@@ -1812,12 +1737,9 @@ void test_runtime_guardrail_one_over_call_depth_limit_fails() {
     const fs::path main_path = temp_root / "one_over_limit.prg";
     write_text(main_path, build_nested_do_chain_script(limit + 1U));
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false,
-        .max_call_depth = limit
-    });
+    auto session_options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    session_options.max_call_depth = limit;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -1842,13 +1764,10 @@ void test_runtime_guardrail_limits_statement_budget_without_crashing_host() {
         "x = 1\n"
         "ENDDO\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false,
-        .max_executed_statements = 30,
-        .max_loop_iterations = 1000
-    });
+    auto session_options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    session_options.max_executed_statements = 30;
+    session_options.max_loop_iterations = 1000;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error, "statement-budget guardrail should pause with an error");
@@ -1931,11 +1850,8 @@ void test_config_fpw_overrides_runtime_limits() {
         "PROCEDURE d\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error, "config.fpw call-depth limit should pause with an error");
@@ -1963,20 +1879,14 @@ void test_config_fpw_custom_limit_is_enforced_at_boundary() {
     write_text(at_limit_path, build_nested_do_chain_script(custom_limit));
     write_text(over_limit_path, build_nested_do_chain_script(custom_limit + 1U));
 
-    copperfin::runtime::PrgRuntimeSession at_limit_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = at_limit_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession at_limit_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(at_limit_path.string(), temp_root.string(), false));
     const auto at_limit_state = at_limit_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(at_limit_state.completed,
            "config.fpw custom max call depth should allow nested chains exactly at the configured limit");
 
-    copperfin::runtime::PrgRuntimeSession over_limit_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = over_limit_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession over_limit_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(over_limit_path.string(), temp_root.string(), false));
     const auto over_limit_state = over_limit_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(over_limit_state.reason == copperfin::runtime::DebugPauseReason::error,
            "config.fpw custom max call depth should reject nested chains one level over the configured limit");
@@ -2003,6 +1913,9 @@ void test_config_fpw_overrides_temp_directory_default() {
     const fs::path main_path = temp_root / "main.prg";
     write_text(main_path, "x = 1\nRETURN\n");
 
+    // Keep this inline instead of using make_runtime_session_options(...):
+    // the helper always sets temp_directory, which would bypass the config.fpw
+    // TMPFILES fallback path resolution this test is verifying.
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
         .startup_path = main_path.string(),
         .working_directory = temp_root.string(),
@@ -2043,11 +1956,8 @@ void test_elseif_control_flow_executes_matching_branch() {
         "ENDIF\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "ELSEIF script should complete");
@@ -2077,11 +1987,8 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
         "sum_result = a + b\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DO WITH LPARAMETERS script should complete");
@@ -2112,11 +2019,8 @@ void test_call_with_parameters_binds_arguments_in_called_routine() {
         "sum_result = a + b\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CALL WITH LPARAMETERS script should complete");
@@ -2151,11 +2055,8 @@ void test_call_external_target_with_by_reference_updates_caller_variable() {
         "CALL helper WITH @counter\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CALL external WITH @var script should complete");
@@ -2189,11 +2090,8 @@ void test_on_error_do_handler_dispatches_routine() {
         "handled = 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "ON ERROR DO script should complete after handler dispatch");
@@ -2242,11 +2140,8 @@ void test_on_error_do_with_handler_receives_error_metadata() {
         "captured_code = err_code\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "ON ERROR DO WITH script should complete after handler dispatch");
@@ -2332,11 +2227,8 @@ void test_aerror_populates_structured_runtime_error_array() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "AERROR() handler script should complete");
@@ -2458,11 +2350,8 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SQL/OLE AERROR script should complete");
@@ -2594,11 +2483,8 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "ON ERROR handler nested-fault script should complete");
@@ -2694,11 +2580,8 @@ void test_ole_property_fault_dispatches_on_error_and_preserves_object_state() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "OLE property fault script should complete");
@@ -2780,11 +2663,8 @@ void test_ole_method_fault_is_catchable_and_preserves_object_state() {
         "nCountAfterFault = oDict.Count\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "OLE method fault TRY/CATCH script should complete");
@@ -2833,11 +2713,8 @@ void test_thrown_expression_fault_preserves_pause_statement_and_recovery() {
         "after_fault = 7\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -2877,11 +2754,8 @@ void test_repeated_thrown_faults_refresh_pause_metadata_each_time() {
         "after_second = 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -2941,11 +2815,8 @@ void test_nested_routine_faults_report_faulting_stack_frame_line() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -3002,11 +2873,8 @@ void test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -3062,11 +2930,8 @@ void test_with_endwith_resolves_leading_dot_member_access() {
         "ENDWITH\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "WITH/ENDWITH script should complete");
@@ -3117,11 +2982,8 @@ void test_try_catch_finally_handles_runtime_errors() {
         "after_try = 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TRY/CATCH/FINALLY script should complete");
@@ -3168,11 +3030,8 @@ void test_try_finally_runs_without_catch_on_success() {
         "ENDTRY\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "TRY/FINALLY success script should complete");
@@ -3200,11 +3059,8 @@ void test_do_with_by_reference_updates_caller_variable() {
         "pcount = pcount + 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DO WITH @var script should complete");
@@ -3234,11 +3090,8 @@ void test_print_command_emits_event() {
         "? 1 + 2\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "? print command script should complete");
@@ -3273,11 +3126,8 @@ void test_close_command_closes_all_work_areas() {
         "CLOSE ALL\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLOSE ALL script should complete");
@@ -3306,11 +3156,8 @@ void test_close_all_releases_runtime_handles() {
         "CLOSE ALL\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLOSE ALL handle cleanup script should complete");
@@ -3330,11 +3177,8 @@ void test_close_all_releases_runtime_handles() {
         "nClose = FCLOSE(" + std::to_string(handle) + ")\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession verify_session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = verify_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession verify_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(verify_path.string(), temp_root.string(), false));
     const auto verify_state = verify_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(verify_state.completed, "verification script should complete");
 
@@ -3368,11 +3212,8 @@ void test_erase_copy_rename_file_commands() {
         "RENAME 'copied.txt' TO 'renamed.txt'\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "file ops script should complete");
@@ -3403,7 +3244,7 @@ void test_for_each_iterates_array_elements() {
         "ENDFOR\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "FOR EACH over array should complete");
     const auto it = state.globals.find("result");
@@ -3426,7 +3267,7 @@ void test_for_each_single_element_expression() {
         "ENDFOR\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "FOR EACH over scalar should complete");
     const auto it = state.globals.find("result");
@@ -3444,7 +3285,7 @@ void test_release_vars_erases_named_globals() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "x = 10\ny = 20\nRELEASE x\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE should not crash");
     expect(state.globals.find("x") == state.globals.end(), "x should be released");
@@ -3461,7 +3302,7 @@ void test_release_all_clears_all_globals() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "a = 1\nb = 2\nRELEASE ALL\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL should complete");
     expect(state.globals.find("a") == state.globals.end(), "a should be released by RELEASE ALL");
@@ -3490,7 +3331,7 @@ void test_release_all_clears_current_frame_locals_without_global_leak() {
         "after_reassign = x\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL should clear current-frame locals");
     const auto after_release_type = state.globals.find("after_release_type");
@@ -3534,7 +3375,7 @@ void test_release_all_local_shadow_preserves_outer_global() {
         "sub_x_after_release_all = x\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL with LOCAL shadowing should complete");
 
@@ -3573,7 +3414,7 @@ void test_release_all_private_shadow_restores_outer_global() {
         "sub_x_after_release_all = x\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL with PRIVATE shadowing should complete");
 
@@ -3601,7 +3442,7 @@ void test_release_all_like_pattern() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "tmp_a = 1\ntmp_b = 2\nkeep_me = 3\nRELEASE ALL LIKE tmp_*\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL LIKE should complete");
     expect(state.globals.find("tmp_a") == state.globals.end(), "tmp_a should be released");
@@ -3627,7 +3468,7 @@ void test_release_all_like_pattern_reaches_arrays() {
         "keep_val = keep_arr[1]\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL LIKE should reach arrays");
     const auto tmp_type = state.globals.find("tmp_type");
@@ -3652,7 +3493,7 @@ void test_release_all_except_pattern() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "keep_x = 1\ngone_y = 2\nRELEASE ALL EXCEPT keep_*\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL EXCEPT should complete");
     expect(state.globals.find("keep_x") != state.globals.end(), "keep_x should survive EXCEPT keep_*");
@@ -3677,7 +3518,7 @@ void test_release_all_except_pattern_reaches_arrays() {
         "gone_type = TYPE('gone_arr')\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL EXCEPT should reach arrays");
     const auto keep_val = state.globals.find("keep_val");
@@ -3714,7 +3555,7 @@ void test_release_all_preserves_public_bindings() {
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RELEASE ALL should preserve PUBLIC bindings");
 
@@ -3749,7 +3590,7 @@ void test_clear_memory_erases_all_globals() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "p = 42\nq = 99\nCLEAR MEMORY\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLEAR MEMORY should complete");
     expect(state.globals.find("p") == state.globals.end(), "p should be cleared");
@@ -3777,7 +3618,7 @@ void test_clear_memory_prevents_private_bindings_from_restoring() {
         "sub_type = TYPE('x')\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLEAR MEMORY with PRIVATE shadowing should complete");
     const auto sub_type = state.globals.find("sub_type");
@@ -3816,7 +3657,7 @@ void test_clear_memory_clears_current_frame_locals_without_global_leak() {
         "after_reassign = x\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CLEAR MEMORY should clear current-frame locals");
     const auto after_clear_type = state.globals.find("after_clear_type");
@@ -3849,7 +3690,7 @@ void test_cancel_halts_execution() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "x = 1\nCANCEL\nx = 999\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "CANCEL should terminate cleanly");
     const auto it = state.globals.find("x");
@@ -3871,7 +3712,7 @@ void test_quit_emits_event() {
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "y = 5\nQUIT\ny = 999\nRETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "QUIT should terminate cleanly");
     const bool has_quit = std::any_of(state.events.begin(), state.events.end(),
@@ -3891,10 +3732,7 @@ void test_quit_cancelled_by_callback() {
     fs::create_directories(tmp);
     const fs::path prg = tmp / "test.prg";
     write_text(prg, "y = 5\nQUIT\ny = 999\nRETURN\n");
-    copperfin::runtime::RuntimeSessionOptions opts;
-    opts.startup_path = prg.string();
-    opts.working_directory = tmp.string();
-    opts.stop_on_entry = false;
+    auto opts = make_runtime_session_options(prg.string(), tmp.string(), false);
     opts.quit_confirm_callback = []() -> bool { return false; };  // user said no
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(opts);
@@ -3931,7 +3769,7 @@ void test_shutdown_handler_quit_exits_event_loop_without_clear_events() {
                "ENDPROC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
 
     const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
@@ -3969,7 +3807,7 @@ void test_shutdown_handler_cleanup_code_remains_harmless() {
                "ENDPROC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
 
     const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
@@ -4005,7 +3843,7 @@ void test_on_shutdown_clear_events_runs_and_quit_completes() {
                "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
 
     expect(state.completed, "ON SHUTDOWN CLEAR EVENTS + QUIT should complete cleanly");
@@ -4050,7 +3888,7 @@ void test_on_shutdown_do_cleanup_can_call_quit_without_recursing() {
                "ENDPROC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
 
     const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
@@ -4104,7 +3942,7 @@ void test_on_shutdown_inline_close_databases_all_runs_before_quit() {
                "ENDPROC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = prg.string(), .working_directory = tmp.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
 
     const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(paused.reason == copperfin::runtime::DebugPauseReason::event_loop,
@@ -4150,7 +3988,7 @@ void test_quit_closes_open_database_and_runtime_handles() {
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = quit_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(quit_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "QUIT cleanup script should complete");
@@ -4173,7 +4011,7 @@ void test_quit_closes_open_database_and_runtime_handles() {
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession verify_session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = verify_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(verify_path.string(), temp_root.string(), false));
     const auto verify_state = verify_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(verify_state.completed, "verification script should complete");
 
@@ -4206,7 +4044,7 @@ void test_doevents_pumps_event_queue() {
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DOEVENTS test should complete");
 
@@ -4248,7 +4086,7 @@ void test_doevents_in_responsive_loop() {
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create({.startup_path = main_path.string(), .working_directory = temp_root.string(), .stop_on_entry = false});
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "DOEVENTS loop with CLEAR EVENTS should complete");
 
@@ -4295,11 +4133,8 @@ void test_on_error_resume_restores_fault_session_and_cursor_state() {
         "RESUME\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#150: ON ERROR RESUME script should complete");
@@ -4361,11 +4196,8 @@ void test_fault_continue_cycle_preserves_open_cursor_and_record_position() {
         "cur_name = Items.NAME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     // First fault: LOG(-1)
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -4446,11 +4278,8 @@ void test_fault_continue_cycle_preserves_selected_alias_across_data_session_scop
         "recno_after_second = RECNO()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -4535,11 +4364,8 @@ void test_pause_stack_frame_contains_accurate_intermediate_frame_lines() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -4608,11 +4434,8 @@ void test_repeated_fault_pauses_refresh_intermediate_stack_frame_lines() {
         "y = ACOS(2)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -4679,11 +4502,8 @@ void test_thrown_expression_fault_aerror_columns_match_error_message_functions()
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "#153: AERROR normalization script should complete");
@@ -4796,12 +4616,9 @@ void test_repeated_on_error_faults_refresh_normalized_diagnostics() {
         "RETURN\n"
         "ENDPROC\n");
 
-    const auto state = copperfin::runtime::PrgRuntimeSession::create({
-                           .startup_path = main_path.string(),
-                           .working_directory = temp_root.string(),
-                           .stop_on_entry = false
-                       })
-                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto state =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
 
     expect(state.completed, "#153: repeated ON ERROR normalization script should complete");
 
@@ -4890,11 +4707,8 @@ void test_division_by_zero_dispatches_runtime_error() {
         "after_div = 1\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
@@ -4943,11 +4757,8 @@ void test_numeric_field_overflow_is_diagnosed_not_silently_truncated() {
         "RETURN\n"
         "ENDPROC\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = prg_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed,
@@ -4997,11 +4808,8 @@ void test_retry_reexecutes_faulting_statement() {
         "ENDIF\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RETRY test script should complete");
@@ -5041,11 +4849,8 @@ void test_resume_next_continues_after_fault() {
         "RESUME\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RESUME test script should complete");
@@ -5079,11 +4884,8 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
         "RETRY\n"
         "noop_count = 2\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = main_path.string(),
-        .working_directory = temp_root.string(),
-        .stop_on_entry = false
-    });
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "RETRY outside error handler should not crash");
@@ -5103,8 +4905,8 @@ void test_retry_with_no_fault_checkpoint_is_noop() {
 void test_runtime_faults_preserve_state_and_allow_retry() {
     // We will execute a script that intentionally causes a runtime C++ exception (like LOG(-1))
     // We will verify that we can RETRY and the cursor/session state is preserved.
-    copperfin::runtime::RuntimeSessionOptions options;
-    options.startup_path = "runtime_fault_test.prg";
+    namespace fs = std::filesystem;
+    auto options = make_runtime_session_options("runtime_fault_test.prg", fs::current_path(), false);
     
     write_text("runtime_fault_test.prg",
         "CREATE CURSOR test_cursor (id I)\n"

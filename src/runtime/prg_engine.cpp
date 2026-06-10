@@ -14,6 +14,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
+#include <atomic>
 #include <array>
 #include <cctype>
 #include <cmath>

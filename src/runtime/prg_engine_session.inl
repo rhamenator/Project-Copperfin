@@ -484,9 +484,16 @@
 #else
                 static_cast<unsigned long long>(::getpid());
 #endif
-            const std::string nonce = std::to_string(static_cast<unsigned long long>(std::time(nullptr))) +
+            static std::atomic<unsigned long long> transaction_nonce_counter{0ULL};
+            const auto now_ticks = static_cast<unsigned long long>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count());
+            const unsigned long long nonce_counter = transaction_nonce_counter.fetch_add(1ULL, std::memory_order_relaxed);
+            const std::string nonce = std::to_string(now_ticks) +
                                       "_" + std::to_string(process_id) +
-                                      "_" + std::to_string(static_cast<unsigned long long>(current_data_session));
+                                      "_" + std::to_string(static_cast<unsigned long long>(current_data_session)) +
+                                      "_" + std::to_string(nonce_counter);
             journal.root_path = transaction_journal_root_directory() / ("txn_" + nonce);
             journal.journal_path = journal.root_path / "journal.log";
             journal.level = current_transaction_level();
