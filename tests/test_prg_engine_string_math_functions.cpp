@@ -388,6 +388,23 @@ namespace
             "cMerged = TEXTMERGE('Hello <<cName>>!')\n"
             // TEXTMERGE custom delimiters
             "cMergedCustom = TEXTMERGE('Value={|1+1|}', .F., '{|', '|}')\n"
+            "cFieldExpr = 'cName'\n"
+            "cNameExpr = 'cName'\n"
+            "cTemplateText = 'Template <<cName>>'\n"
+            "cTemplateExpr = 'cTemplateText'\n"
+            "cTemplateDeepHolder = 'cTemplateExpr'\n"
+            "cMergedMacroSource = TEXTMERGE(&cTemplateExpr)\n"
+            "cMergedMacroSourceSecondHop = TEXTMERGE(&cTemplateDeepHolder)\n"
+            "cRecursiveCustomExpr = '{|EVAL(cNameExpr)|}'\n"
+            "cMergedCustomNested = TEXTMERGE('Eval={|EVAL(cNameExpr)|}; Macro={|&cFieldExpr|}; Recursive={|cRecursiveCustomExpr|}', .T., '{|', '|}')\n"
+            "cLeftDelim = '{{'\n"
+            "cRightDelim = '}}'\n"
+            "cLeftDelimExpr = 'cLeftDelim'\n"
+            "cRightDelimExpr = 'cRightDelim'\n"
+            "cLeftDelimDeepHolder = 'cLeftDelimExpr'\n"
+            "cRightDelimDeepHolder = 'cRightDelimExpr'\n"
+            "cMergedMacroDelims = TEXTMERGE('Eval={{EVAL(cNameExpr)}}; Macro={{&cFieldExpr}}', .F., &cLeftDelimExpr, &cRightDelimExpr)\n"
+            "cMergedMacroDelimsSecondHop = TEXTMERGE('Eval={{EVAL(cNameExpr)}}; Macro={{&cFieldExpr}}', .F., &cLeftDelimDeepHolder, &cRightDelimDeepHolder)\n"
             // TEXTMERGE no delimiters found
             "cMergedPlain = TEXTMERGE('no markers here')\n"
             // TEXTMERGE recursive nested placeholders
@@ -399,6 +416,16 @@ namespace
             "nExecResult = EXECSCRIPT('RETURN 7 + 3')\n"
             // EXECSCRIPT RETURN string
             "cExecStr = EXECSCRIPT('RETURN LEFT(\"hello\", 3)')\n"
+            "nExecBase = 6\n"
+            "cExecReturnExpr = 'nExecBase * 4'\n"
+            "cExecReturnDeepHolder = 'cExecReturnExpr'\n"
+            "nExecMacroReturn = EXECSCRIPT('RETURN &cExecReturnExpr')\n"
+            "nExecMacroReturnSecondHop = EXECSCRIPT('RETURN &cExecReturnDeepHolder')\n"
+            "cExecScriptText = 'RETURN nExecBase + 5'\n"
+            "cExecScriptExpr = 'cExecScriptText'\n"
+            "cExecScriptDeepHolder = 'cExecScriptExpr'\n"
+            "nExecMacroSource = EXECSCRIPT(&cExecScriptExpr)\n"
+            "nExecMacroSourceSecondHop = EXECSCRIPT(&cExecScriptDeepHolder)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -428,10 +455,72 @@ namespace
         check("nfvzerorate", "1000");
         check("cmerged",       "Hello World!");
         check("cmergedcustom", "Value=2");
+        check("cmergedmacrosource", "Template World");
+        check("cmergedmacrosourcesecondhop", "Template World");
+        check("cmergedcustomnested", "Eval=World; Macro=World; Recursive=World");
+        check("cmergedmacrodelims", "Eval=World; Macro=World");
+        check("cmergedmacrodelimssecondhop", "Eval=World; Macro=World");
         check("cmergedplain",  "no markers here");
         check("cmergedrecursive", "Value: done");
         check("nexecresult",   "10");
         check("cexecstr",      "hel");
+        check("nexecmacroreturn", "24");
+        check("nexecmacroreturnsecondhop", "24");
+        check("nexecmacrosource", "11");
+        check("nexecmacrosourcesecondhop", "11");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_nested_macro_eval_textmerge_execscript_semantics()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_nested_macro_eval_surfaces";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "nested_macro_eval_surfaces.prg";
+        write_text(
+            main_path,
+            "cName = 'Copperfin'\n"
+            "cEvalExpr = 'LEFT(cName, 9)'\n"
+            "cEvalExprHolder = 'cEvalExpr'\n"
+            "cEvalExprDeepHolder = 'cEvalExprHolder'\n"
+            "cEvalNested = EVAL(EVAL(cEvalExprHolder))\n"
+            "cEvalNestedSecondHop = EVAL(&cEvalExprDeepHolder)\n"
+            "cMergedFromEval = TEXTMERGE('Hello <<EVAL(cEvalExpr)>>!')\n"
+            "nBase = 10\n"
+            "cScriptExpr = 'nBase + 2'\n"
+            "cScriptText = 'RETURN EVAL(cScriptExpr)'\n"
+            "cScriptHolder = 'cScriptText'\n"
+            "cScriptDeepHolder = 'cScriptHolder'\n"
+            "nExecNested = EXECSCRIPT(&cScriptHolder)\n"
+            "nExecNestedSecondHop = EXECSCRIPT(&cScriptDeepHolder)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "nested macro/eval surface script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("cevalnested", "Copperfin");
+        check("cevalnestedsecondhop", "Copperfin");
+        check("cmergedfromeval", "Hello Copperfin!");
+        check("nexecnested", "12");
+        check("nexecnestedsecondhop", "12");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -443,6 +532,7 @@ int main()
 {
     test_string_and_math_expression_functions();
     test_financial_and_misc_expression_functions();
+    test_nested_macro_eval_textmerge_execscript_semantics();
 
     if (test_failures() != 0)
     {

@@ -2042,6 +2042,271 @@ void test_sql_result_cursor_temporary_order_normalization_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_derived_string_temporary_order_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_derived_string_orders";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_derived_string_orders.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "lSeekLeft = SEEK('CHA', 'sqlcust', 'UPPER(LEFT(NAME, 3))')\n"
+        "nRecLeft = RECNO()\n"
+        "GO TOP IN sqlcust\n"
+        "lSeekSub = SEEK('RAV', 'sqlcust', 'UPPER(SUBSTR(NAME, 2, 3))')\n"
+        "nRecSub = RECNO()\n"
+        "GO TOP IN sqlcust\n"
+        "lSeekPad = SEEK('000BRAVO', 'sqlcust', \"UPPER(PADL(NAME, 8, '0'))\")\n"
+        "nRecPad = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL derived-string temporary-order parity script should complete");
+    expect(state.sql_connections.empty(), "SQL derived-string temporary-order parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_left = state.globals.find("lseekleft");
+    const auto rec_left = state.globals.find("nrecleft");
+    const auto seek_sub = state.globals.find("lseeksub");
+    const auto rec_sub = state.globals.find("nrecsub");
+    const auto seek_pad = state.globals.find("lseekpad");
+    const auto rec_pad = state.globals.find("nrecpad");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL derived-string temporary-order parity");
+    expect(seek_left != state.globals.end(), "LEFT()-derived SQL SEEK() result should be captured");
+    expect(rec_left != state.globals.end(), "LEFT()-derived SQL SEEK() RECNO() should be captured");
+    expect(seek_sub != state.globals.end(), "SUBSTR()-derived SQL SEEK() result should be captured");
+    expect(rec_sub != state.globals.end(), "SUBSTR()-derived SQL SEEK() RECNO() should be captured");
+    expect(seek_pad != state.globals.end(), "PADL()-derived SQL SEEK() result should be captured");
+    expect(rec_pad != state.globals.end(), "PADL()-derived SQL SEEK() RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL derived-string temporary-order parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before derived-string SQL seek checks");
+    }
+    if (seek_left != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_left->second) == "true", "SEEK() should match LEFT()-derived temporary SQL order keys");
+    }
+    if (rec_left != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_left->second) == "3", "LEFT()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (seek_sub != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_sub->second) == "true", "SEEK() should match SUBSTR()-derived temporary SQL order keys");
+    }
+    if (rec_sub != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_sub->second) == "2", "SUBSTR()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (seek_pad != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_pad->second) == "true", "SEEK() should match PADL()-derived temporary SQL order keys");
+    }
+    if (rec_pad != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_pad->second) == "2", "PADL()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after derived-string SQL seek checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_right_and_str_temporary_order_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_right_str_orders";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_right_str_orders.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "lSeekRight = SEEK('LIE', 'sqlcust', 'UPPER(RIGHT(NAME, 3))')\n"
+        "nRecRight = RECNO()\n"
+        "GO TOP IN sqlcust\n"
+        "lSeekStr = SEEK(' 30', 'sqlcust', 'UPPER(STR(AMOUNT, 3))')\n"
+        "nRecStr = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL RIGHT/STR temporary-order parity script should complete");
+    expect(state.sql_connections.empty(), "SQL RIGHT/STR temporary-order parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_right = state.globals.find("lseekright");
+    const auto rec_right = state.globals.find("nrecright");
+    const auto seek_str = state.globals.find("lseekstr");
+    const auto rec_str = state.globals.find("nrecstr");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL RIGHT/STR temporary-order parity");
+    expect(seek_right != state.globals.end(), "RIGHT()-derived SQL SEEK() result should be captured");
+    expect(rec_right != state.globals.end(), "RIGHT()-derived SQL SEEK() RECNO() should be captured");
+    expect(seek_str != state.globals.end(), "STR()-derived SQL SEEK() result should be captured");
+    expect(rec_str != state.globals.end(), "STR()-derived SQL SEEK() RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL RIGHT/STR temporary-order parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before RIGHT/STR SQL seek checks");
+    }
+    if (seek_right != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_right->second) == "true", "SEEK() should match RIGHT()-derived temporary SQL order keys");
+    }
+    if (rec_right != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_right->second) == "3", "RIGHT()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (seek_str != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_str->second) == "true", "SEEK() should match STR()-derived temporary SQL order keys");
+    }
+    if (rec_str != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_str->second) == "3", "STR()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after RIGHT/STR SQL seek checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_default_padding_and_str_variant_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_padding_str_variants";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_padding_str_variants.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "lSeekPadDefault = SEEK('  BRAVO', 'sqlcust', 'UPPER(PADL(NAME, 7))')\n"
+        "nRecPadDefault = RECNO()\n"
+        "GO TOP IN sqlcust\n"
+        "lSeekStrDefault = SEEK('        30', 'sqlcust', 'UPPER(STR(AMOUNT))')\n"
+        "nRecStrDefault = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL default-padding and STR-variant parity script should complete");
+    expect(state.sql_connections.empty(), "SQL default-padding and STR-variant parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_pad_default = state.globals.find("lseekpaddefault");
+    const auto rec_pad_default = state.globals.find("nrecpaddefault");
+    const auto seek_str_default = state.globals.find("lseekstrdefault");
+    const auto rec_str_default = state.globals.find("nrecstrdefault");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL default-padding/STR variant parity");
+    expect(seek_pad_default != state.globals.end(), "default PADL()-derived SQL SEEK() result should be captured");
+    expect(rec_pad_default != state.globals.end(), "default PADL()-derived SQL SEEK() RECNO() should be captured");
+    expect(seek_str_default != state.globals.end(), "default STR()-derived SQL SEEK() result should be captured");
+    expect(rec_str_default != state.globals.end(), "default STR()-derived SQL SEEK() RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL default-padding/STR variant parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before default-padding/STR variant SQL seek checks");
+    }
+    if (seek_pad_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_pad_default->second) == "true", "SEEK() should match default PADL()-derived temporary SQL order keys");
+    }
+    if (rec_pad_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_pad_default->second) == "2", "default PADL()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (seek_str_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_str_default->second) == "true", "SEEK() should match default STR()-derived temporary SQL order keys");
+    }
+    if (rec_str_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_str_default->second) == "3", "default STR()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after default-padding/STR variant SQL seek checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_padr_default_and_str_decimal_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_padr_str_decimal";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_padr_str_decimal.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "lSeekPadRight = SEEK('BRAVO  ', 'sqlcust', 'UPPER(PADR(NAME, 7))')\n"
+        "nRecPadRight = RECNO()\n"
+        "GO TOP IN sqlcust\n"
+        "lSeekStrDec = SEEK(' 30.0', 'sqlcust', 'UPPER(STR(AMOUNT, 5, 1))')\n"
+        "nRecStrDec = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL PADR default and STR decimal parity script should complete");
+    expect(state.sql_connections.empty(), "SQL PADR default and STR decimal parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto seek_pad_right = state.globals.find("lseekpadright");
+    const auto rec_pad_right = state.globals.find("nrecpadright");
+    const auto seek_str_dec = state.globals.find("lseekstrdec");
+    const auto rec_str_dec = state.globals.find("nrecstrdec");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL PADR-default/STR-decimal parity");
+    expect(seek_pad_right != state.globals.end(), "default PADR()-derived SQL SEEK() result should be captured");
+    expect(rec_pad_right != state.globals.end(), "default PADR()-derived SQL SEEK() RECNO() should be captured");
+    expect(seek_str_dec != state.globals.end(), "decimal STR()-derived SQL SEEK() result should be captured");
+    expect(rec_str_dec != state.globals.end(), "decimal STR()-derived SQL SEEK() RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL PADR-default/STR-decimal parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before PADR-default/STR-decimal SQL seek checks");
+    }
+    if (seek_pad_right != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_pad_right->second) == "true", "SEEK() should match default PADR()-derived temporary SQL order keys");
+    }
+    if (rec_pad_right != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_pad_right->second) == "2", "default PADR()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (seek_str_dec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_str_dec->second) == "true", "SEEK() should match decimal STR()-derived temporary SQL order keys");
+    }
+    if (rec_str_dec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_str_dec->second) == "3", "decimal STR()-derived SQL SEEK() should land on the expected exact match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after PADR-default/STR-decimal SQL seek checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_plain_string_collate_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_collate_parity";
@@ -2397,6 +2662,286 @@ void test_sql_result_cursor_command_seek_parity() {
             return event.category == "runtime.seek" && event.detail.find("NAME: BETA -> not found") != std::string::npos;
         }),
         "SQL command-path SET ORDER and SEEK should emit runtime.order and runtime.seek events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_command_derived_temporary_order_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_command_derived_orders";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_command_derived_orders.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET ORDER TO UPPER(LEFT(NAME, 3))\n"
+        "SEEK 'CHA'\n"
+        "lFoundLeft = FOUND()\n"
+        "nRecLeft = RECNO()\n"
+        "GO TOP\n"
+        "SET ORDER TO UPPER(PADR(NAME, 8, '0'))\n"
+        "SEEK 'BRAVO000'\n"
+        "lFoundPad = FOUND()\n"
+        "nRecPad = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL command-path derived temporary-order parity script should complete");
+    expect(state.sql_connections.empty(), "SQL command-path derived temporary-order parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto found_left = state.globals.find("lfoundleft");
+    const auto rec_left = state.globals.find("nrecleft");
+    const auto found_pad = state.globals.find("lfoundpad");
+    const auto rec_pad = state.globals.find("nrecpad");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL command-path derived temporary-order parity");
+    expect(found_left != state.globals.end(), "LEFT()-derived SQL command SEEK FOUND() should be captured");
+    expect(rec_left != state.globals.end(), "LEFT()-derived SQL command SEEK RECNO() should be captured");
+    expect(found_pad != state.globals.end(), "PADR()-derived SQL command SEEK FOUND() should be captured");
+    expect(rec_pad != state.globals.end(), "PADR()-derived SQL command SEEK RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL command-path derived temporary-order parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL command-path derived-order checks");
+    }
+    if (found_left != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_left->second) == "true", "command SEEK should match LEFT()-derived temporary SQL order keys");
+    }
+    if (rec_left != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_left->second) == "3", "LEFT()-derived SQL command SEEK should land on the expected exact match");
+    }
+    if (found_pad != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_pad->second) == "true", "command SEEK should match PADR()-derived temporary SQL order keys");
+    }
+    if (rec_pad != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_pad->second) == "2", "PADR()-derived SQL command SEEK should land on the expected exact match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL command-path derived-order checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_set_exact_seek_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_set_exact";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_set_exact.prg";
+    write_text(
+        main_path,
+        "nConn1 = SQLCONNECT('dsn=Northwind')\n"
+        "nExec1 = SQLEXEC(nConn1, 'select * from customers', 'sqlcust1')\n"
+        "SELECT sqlcust1\n"
+        "SET ORDER TO NAME\n"
+        "lSeekOff = SEEK('BR')\n"
+        "nRecOff = RECNO()\n"
+        "SET EXACT ON\n"
+        "GO TOP\n"
+        "lSeekOn = SEEK('BR')\n"
+        "lEofOn = EOF()\n"
+        "SET DATASESSION TO 2\n"
+        "nConn2 = SQLCONNECT('dsn=Northwind')\n"
+        "nExec2 = SQLEXEC(nConn2, 'select * from customers', 'sqlcust2')\n"
+        "SELECT sqlcust2\n"
+        "SET ORDER TO NAME\n"
+        "lSeekSession2 = SEEK('BR')\n"
+        "lDisc2 = SQLDISCONNECT(nConn2)\n"
+        "SET DATASESSION TO 1\n"
+        "GO TOP IN sqlcust1\n"
+        "lSeekBack = SEEK('BR')\n"
+        "lDisc1 = SQLDISCONNECT(nConn1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL SET EXACT seek parity script should complete");
+    expect(state.sql_connections.empty(), "SQL SET EXACT seek parity script should disconnect its SQL handles");
+
+    const auto exec1 = state.globals.find("nexec1");
+    const auto seek_off = state.globals.find("lseekoff");
+    const auto rec_off = state.globals.find("nrecoff");
+    const auto seek_on = state.globals.find("lseekon");
+    const auto eof_on = state.globals.find("leofon");
+    const auto exec2 = state.globals.find("nexec2");
+    const auto seek_session2 = state.globals.find("lseeksession2");
+    const auto seek_back = state.globals.find("lseekback");
+    const auto disc2 = state.globals.find("ldisc2");
+    const auto disc1 = state.globals.find("ldisc1");
+
+    expect(exec1 != state.globals.end(), "First SQLEXEC result should be captured for SQL SET EXACT parity");
+    expect(seek_off != state.globals.end(), "SET EXACT OFF SQL seek result should be captured");
+    expect(rec_off != state.globals.end(), "SET EXACT OFF SQL RECNO() should be captured");
+    expect(seek_on != state.globals.end(), "SET EXACT ON SQL seek result should be captured");
+    expect(eof_on != state.globals.end(), "SET EXACT ON SQL EOF() should be captured");
+    expect(exec2 != state.globals.end(), "Second-session SQLEXEC result should be captured for SQL SET EXACT parity");
+    expect(seek_session2 != state.globals.end(), "second-session SQL seek result should be captured");
+    expect(seek_back != state.globals.end(), "restored session-1 SQL seek result should be captured");
+    expect(disc2 != state.globals.end(), "session-2 SQLDISCONNECT result should be captured");
+    expect(disc1 != state.globals.end(), "session-1 SQLDISCONNECT result should be captured");
+
+    if (exec1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec1->second) == "1", "First SQLEXEC should succeed before SQL SET EXACT seek checks");
+    }
+    if (seek_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_off->second) == "true", "SET EXACT OFF should allow prefix seeks on SQL cursors");
+    }
+    if (rec_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_off->second) == "2", "SET EXACT OFF SQL seek should land on the matching prefix row");
+    }
+    if (seek_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_on->second) == "false", "SET EXACT ON should reject prefix seeks on SQL cursors");
+    }
+    if (eof_on != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_on->second) == "true", "SET EXACT ON failed SQL seek should leave the cursor at EOF");
+    }
+    if (exec2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec2->second) == "1", "Second-session SQLEXEC should succeed before session-isolation checks");
+    }
+    if (seek_session2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_session2->second) == "true", "SET EXACT should stay session-scoped so a fresh SQL session keeps prefix-seek behavior");
+    }
+    if (seek_back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(seek_back->second) == "false", "restoring the original SQL session should restore its SET EXACT ON seek behavior");
+    }
+    if (disc2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc2->second) == "1", "session-2 SQLDISCONNECT should succeed after SQL SET EXACT checks");
+    }
+    if (disc1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc1->second) == "1", "session-1 SQLDISCONNECT should succeed after SQL SET EXACT checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_result_cursor_set_near_is_scoped_per_data_session() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_set_near_sessions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_set_near_sessions.prg";
+    write_text(
+        main_path,
+        "nConn1 = SQLCONNECT('dsn=Northwind')\n"
+        "nExec1 = SQLEXEC(nConn1, 'select * from customers', 'sqlcust1')\n"
+        "SELECT sqlcust1\n"
+        "SET ORDER TO NAME\n"
+        "SET NEAR ON\n"
+        "SEEK 'BETA'\n"
+        "lNear1Found = FOUND()\n"
+        "lNear1Eof = EOF()\n"
+        "nNear1Rec = RECNO()\n"
+        "SET DATASESSION TO 2\n"
+        "nConn2 = SQLCONNECT('dsn=Northwind')\n"
+        "nExec2 = SQLEXEC(nConn2, 'select * from customers', 'sqlcust2')\n"
+        "SELECT sqlcust2\n"
+        "SET ORDER TO NAME\n"
+        "SEEK 'BETA'\n"
+        "lNear2Found = FOUND()\n"
+        "lNear2Eof = EOF()\n"
+        "nNear2Rec = RECNO()\n"
+        "lDisc2 = SQLDISCONNECT(nConn2)\n"
+        "SET DATASESSION TO 1\n"
+        "GO TOP IN sqlcust1\n"
+        "SEEK 'BETA'\n"
+        "lNear1BackFound = FOUND()\n"
+        "lNear1BackEof = EOF()\n"
+        "nNear1BackRec = RECNO()\n"
+        "lDisc1 = SQLDISCONNECT(nConn1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL SET NEAR data-session script should complete");
+    expect(state.sql_connections.empty(), "SQL SET NEAR data-session script should disconnect its SQL handles");
+
+    const auto exec1 = state.globals.find("nexec1");
+    const auto near1_found = state.globals.find("lnear1found");
+    const auto near1_eof = state.globals.find("lnear1eof");
+    const auto near1_rec = state.globals.find("nnear1rec");
+    const auto exec2 = state.globals.find("nexec2");
+    const auto near2_found = state.globals.find("lnear2found");
+    const auto near2_eof = state.globals.find("lnear2eof");
+    const auto near2_rec = state.globals.find("nnear2rec");
+    const auto near1_back_found = state.globals.find("lnear1backfound");
+    const auto near1_back_eof = state.globals.find("lnear1backeof");
+    const auto near1_back_rec = state.globals.find("nnear1backrec");
+    const auto disc2 = state.globals.find("ldisc2");
+    const auto disc1 = state.globals.find("ldisc1");
+
+    expect(exec1 != state.globals.end(), "First SQLEXEC result should be captured for SQL SET NEAR session scoping");
+    expect(near1_found != state.globals.end(), "session-1 SQL SET NEAR FOUND() should be captured");
+    expect(near1_eof != state.globals.end(), "session-1 SQL SET NEAR EOF() should be captured");
+    expect(near1_rec != state.globals.end(), "session-1 SQL SET NEAR RECNO() should be captured");
+    expect(exec2 != state.globals.end(), "Second-session SQLEXEC result should be captured for SQL SET NEAR session scoping");
+    expect(near2_found != state.globals.end(), "session-2 SQL SEEK FOUND() should be captured");
+    expect(near2_eof != state.globals.end(), "session-2 SQL SEEK EOF() should be captured");
+    expect(near2_rec != state.globals.end(), "session-2 SQL SEEK RECNO() should be captured");
+    expect(near1_back_found != state.globals.end(), "restored session-1 SQL SEEK FOUND() should be captured");
+    expect(near1_back_eof != state.globals.end(), "restored session-1 SQL SEEK EOF() should be captured");
+    expect(near1_back_rec != state.globals.end(), "restored session-1 SQL SEEK RECNO() should be captured");
+    expect(disc2 != state.globals.end(), "session-2 SQLDISCONNECT result should be captured");
+    expect(disc1 != state.globals.end(), "session-1 SQLDISCONNECT result should be captured");
+
+    if (exec1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec1->second) == "1", "First SQLEXEC should succeed before SQL SET NEAR session checks");
+    }
+    if (near1_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_found->second) == "false", "SET NEAR ON should still leave SQL FOUND() false on a missed seek");
+    }
+    if (near1_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_eof->second) == "false", "SET NEAR ON in SQL session 1 should keep the cursor off EOF");
+    }
+    if (near1_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_rec->second) == "2", "SET NEAR ON in SQL session 1 should move to the nearest ordered row");
+    }
+    if (exec2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec2->second) == "1", "Second-session SQLEXEC should succeed before SQL SET NEAR isolation checks");
+    }
+    if (near2_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_found->second) == "false", "a fresh second SQL data session should still report a missed seek");
+    }
+    if (near2_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_eof->second) == "true", "SET NEAR should not bleed into a fresh second SQL data session");
+    }
+    if (near2_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near2_rec->second) == "4", "a fresh second SQL data session should keep the default SET NEAR OFF seek position");
+    }
+    if (near1_back_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_found->second) == "false", "restoring SQL session 1 should preserve missed-seek FOUND() behavior");
+    }
+    if (near1_back_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_eof->second) == "false", "restoring SQL session 1 should restore its SET NEAR ON behavior");
+    }
+    if (near1_back_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(near1_back_rec->second) == "2", "restoring SQL session 1 should restore its nearest-record seek position");
+    }
+    if (disc2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc2->second) == "1", "session-2 SQLDISCONNECT should succeed after SQL SET NEAR checks");
+    }
+    if (disc1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc1->second) == "1", "session-1 SQLDISCONNECT should succeed after SQL SET NEAR checks");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -3680,6 +4225,99 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_plain_temporary_order_in_target_honors_collate_and_preserves_selection() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_plain_temp_order_collate_in_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_plain_temp_order_collate_in_target.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExecCust = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "nExecOther = SQLEXEC(nConn, 'select * from customers', 'sqlother')\n"
+        "SELECT sqlother\n"
+        "GO BOTTOM\n"
+        "nOtherRecBefore = RECNO()\n"
+        "SET ORDER TO NAME IN sqlcust\n"
+        "lMachineMiss = SEEK('bravo', 'sqlcust', 'NAME')\n"
+        "nCustRecAfterMachine = RECNO('sqlcust')\n"
+        "SET COLLATE TO GENERAL\n"
+        "GO TOP IN sqlcust\n"
+        "lGeneralHit = SEEK('bravo', 'sqlcust', 'NAME')\n"
+        "SELECT sqlcust\n"
+        "cCustNameAfterGeneral = NAME\n"
+        "SELECT sqlother\n"
+        "cAliasAfterSeek = ALIAS()\n"
+        "nOtherRecAfter = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL plain temporary-order IN-target collate script should complete");
+    expect(state.sql_connections.empty(), "SQL plain temporary-order IN-target collate script should disconnect its SQL handle");
+
+    const auto exec_cust = state.globals.find("nexeccust");
+    const auto exec_other = state.globals.find("nexecother");
+    const auto other_rec_before = state.globals.find("notherrecbefore");
+    const auto machine_miss = state.globals.find("lmachinemiss");
+    const auto cust_rec_after_machine = state.globals.find("ncustrecaftermachine");
+    const auto general_hit = state.globals.find("lgeneralhit");
+    const auto cust_name_after_general = state.globals.find("ccustnameaftergeneral");
+    const auto alias_after_seek = state.globals.find("caliasafterseek");
+    const auto other_rec_after = state.globals.find("notherrecafter");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec_cust != state.globals.end(), "First SQLEXEC result should be captured for targeted SQL collate seek parity");
+    expect(exec_other != state.globals.end(), "Second SQLEXEC result should be captured for targeted SQL collate seek parity");
+    expect(other_rec_before != state.globals.end(), "selected SQL cursor RECNO() before targeted collate seek should be captured");
+    expect(machine_miss != state.globals.end(), "MACHINE-collate targeted SQL SEEK() miss should be captured");
+    expect(cust_rec_after_machine != state.globals.end(), "target SQL cursor RECNO() after MACHINE-collate seek should be captured");
+    expect(general_hit != state.globals.end(), "GENERAL-collate targeted SQL SEEK() hit should be captured");
+    expect(cust_name_after_general != state.globals.end(), "target SQL cursor NAME after GENERAL-collate seek should be captured");
+    expect(alias_after_seek != state.globals.end(), "ALIAS() after targeted SQL collate seek should be captured");
+    expect(other_rec_after != state.globals.end(), "selected SQL cursor RECNO() after targeted collate seek should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for targeted SQL collate seek parity");
+
+    if (exec_cust != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cust->second) == "1", "First SQLEXEC should succeed before targeted SQL collate seek checks");
+    }
+    if (exec_other != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_other->second) == "1", "Second SQLEXEC should succeed before targeted SQL collate seek checks");
+    }
+    if (other_rec_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_before->second) == "3", "selected non-target SQL cursor should begin at bottom");
+    }
+    if (machine_miss != state.globals.end()) {
+        expect(copperfin::runtime::format_value(machine_miss->second) == "false", "MACHINE collation should keep plain NAME seek case-sensitive in targeted SQL cursor");
+    }
+    if (cust_rec_after_machine != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_rec_after_machine->second) == "4", "MACHINE-collate miss should position the targeted SQL cursor at EOF");
+    }
+    if (general_hit != state.globals.end()) {
+        expect(copperfin::runtime::format_value(general_hit->second) == "true", "GENERAL collation should case-fold plain NAME seek in targeted SQL cursor");
+    }
+    if (cust_name_after_general != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cust_name_after_general->second) == "BRAVO", "GENERAL-collate targeted SQL seek should expose the case-folded match row");
+    }
+    if (alias_after_seek != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias_after_seek->second)) == "SQLOTHER", "targeted SQL SEEK() should preserve the selected non-target alias");
+    }
+    if (other_rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec_after->second) == "3", "targeted SQL SEEK() should preserve the selected non-target SQL cursor pointer");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after targeted SQL collate seek checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_json_for_filters_selected_sql_result_cursor() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_json_for";
@@ -3771,13 +4409,21 @@ int main() {
     test_sql_result_cursors_and_ole_actions();
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
+    test_sql_result_cursor_derived_string_temporary_order_parity();
+    test_sql_result_cursor_right_and_str_temporary_order_parity();
+    test_sql_result_cursor_default_padding_and_str_variant_parity();
+    test_sql_result_cursor_padr_default_and_str_decimal_parity();
     test_sql_result_cursor_plain_string_collate_parity();
     test_sql_result_cursor_temporary_order_for_expression_parity();
     test_sql_result_cursor_numeric_temporary_order_domain_parity();
     test_sql_result_cursor_temporary_order_normalization_parity();
     test_sql_result_cursor_temporary_order_direction_suffix_parity();
     test_sql_result_cursor_command_seek_parity();
+    test_sql_result_cursor_command_derived_temporary_order_parity();
+    test_sql_result_cursor_set_exact_seek_parity();
+    test_sql_result_cursor_set_near_is_scoped_per_data_session();
     test_sql_result_cursor_command_seek_in_target_parity();
+    test_sql_plain_temporary_order_in_target_honors_collate_and_preserves_selection();
     test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_order_direction_in_target_parity();
     test_sql_result_cursor_mutation_parity();

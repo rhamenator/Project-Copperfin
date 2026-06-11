@@ -1019,8 +1019,57 @@
                             const std::string raw_text = trim_copy(raw_arguments[index]);
                             if (!raw_text.empty() && raw_text.front() == '&')
                             {
-                                const PrgValue expanded = eval_expression_callback_(raw_text);
-                                const std::string expanded_text = trim_copy(value_as_string(expanded));
+                                std::string expanded_text;
+                                const std::string macro_variable_text = trim_copy(raw_text.substr(1U));
+                                const bool simple_macro_variable =
+                                    !macro_variable_text.empty() &&
+                                    std::all_of(
+                                        macro_variable_text.begin(),
+                                        macro_variable_text.end(),
+                                        [](unsigned char ch)
+                                        {
+                                            return std::isalnum(ch) != 0 || ch == '_';
+                                        });
+                                if (simple_macro_variable)
+                                {
+                                    expanded_text = trim_copy(
+                                        value_as_string(eval_expression_callback_("m." + macro_variable_text)));
+                                    if (!expanded_text.empty())
+                                    {
+                                        constexpr std::size_t max_macro_text_depth = 16U;
+                                        std::vector<std::string> visited_identifiers;
+                                        visited_identifiers.reserve(8U);
+                                        for (std::size_t depth = 0U; depth < max_macro_text_depth; ++depth)
+                                        {
+                                            if (!is_bare_identifier_text(expanded_text))
+                                            {
+                                                break;
+                                            }
+                                            const std::string normalized_identifier =
+                                                normalize_memory_variable_identifier(expanded_text);
+                                            if (std::find(
+                                                    visited_identifiers.begin(),
+                                                    visited_identifiers.end(),
+                                                    normalized_identifier) != visited_identifiers.end())
+                                            {
+                                                break;
+                                            }
+                                            visited_identifiers.push_back(normalized_identifier);
+                                            const std::string next_text = trim_copy(
+                                                value_as_string(eval_expression_callback_("m." + expanded_text)));
+                                            if (next_text.empty() || next_text == expanded_text)
+                                            {
+                                                break;
+                                            }
+                                            expanded_text = next_text;
+                                        }
+                                    }
+                                }
+                                if (expanded_text.empty())
+                                {
+                                    const PrgValue expanded = eval_expression_callback_(raw_text);
+                                    expanded_text = trim_copy(value_as_string(expanded));
+                                }
                                 if (!expanded_text.empty())
                                 {
                                     resolved = expanded_text;
@@ -1030,22 +1079,41 @@
                         return resolved;
                     };
                     const std::string return_expr_raw = raw_arguments[0];
-                    const std::string search_key  = value_as_string(arguments[1]);
+                    const std::string return_expr_text =
+                        !trim_copy(return_expr_raw).empty() && trim_copy(return_expr_raw).front() == '&'
+                            ? resolve_lookup_text_argument(0U)
+                            : return_expr_raw;
+                    const std::string search_key =
+                        raw_arguments.size() >= 2U &&
+                        !trim_copy(raw_arguments[1]).empty() &&
+                        trim_copy(raw_arguments[1]).front() == '&'
+                            ? resolve_lookup_text_argument(1U)
+                            : value_as_string(arguments[1]);
                     const std::string table_alias = resolve_lookup_text_argument(2U);
                     const std::string tag_name    = arguments.size() >= 4U ? resolve_lookup_text_argument(3U) : std::string{};
+                    PrgValue pre = arguments[0];
+                    try
+                    {
+                        if (!trim_copy(return_expr_text).empty())
+                        {
+                            pre = eval_expression_callback_(return_expr_text);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
                     if (seek_callback_(search_key, /*move_pointer=*/true, table_alias, tag_name))
                     {
                         try
                         {
-                            return eval_expression_callback_(return_expr_raw);
+                            return eval_expression_callback_(return_expr_text);
                         }
                         catch (...)
                         {
                             return arguments[0]; // fallback to pre-seek value
                         }
                     }
-                    // Not found — return typed default based on pre-evaluated return expr kind
-                    const PrgValue &pre = arguments[0];
+                    // Not found — return typed default based on the fully-resolved return expr kind
                     if (pre.kind == PrgValueKind::number) return make_number_value(0.0);
                     if (pre.kind == PrgValueKind::boolean) return make_boolean_value(false);
                     return make_boolean_value(false);
@@ -1216,6 +1284,55 @@
             std::string parse_identifier()
             {
                 skip_whitespace();
+                const auto expand_embedded_macro_identifier = [&](const std::string &macro_identifier)
+                {
+                    std::string resolved = trim_copy(macro_identifier);
+                    if (resolved.empty())
+                    {
+                        return resolved;
+                    }
+
+                    std::vector<std::string> visited_identifiers;
+                    constexpr std::size_t max_macro_identifier_depth = 16U;
+                    for (std::size_t depth = 0U; depth < max_macro_identifier_depth; ++depth)
+                    {
+                        const std::string normalized = normalize_memory_variable_identifier(resolved);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized);
+
+                        const auto local = frame_.locals.find(normalized);
+                        if (local != frame_.locals.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(local->second));
+                            if (next.empty() || next == resolved)
+                            {
+                                break;
+                            }
+                            resolved = next;
+                            continue;
+                        }
+
+                        const auto global = globals_.find(normalized);
+                        if (global != globals_.end())
+                        {
+                            const std::string next = trim_copy(value_as_string(global->second));
+                            if (next.empty() || next == resolved)
+                            {
+                                break;
+                            }
+                            resolved = next;
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    return resolved;
+                };
+
                 // Check whether an embedded `&macro.` substitution is present
                 // anywhere within the upcoming identifier token (e.g. `m&cType.ID`).
                 // If so we must build the result dynamically; otherwise use the
@@ -1290,7 +1407,8 @@
                             {
                                 ++position_;
                             }
-                            result += trim_copy(value_as_string(resolve_identifier(emb_macro_name)));
+                            result += expand_embedded_macro_identifier(
+                                trim_copy(value_as_string(resolve_identifier(emb_macro_name))));
                         }
                         continue;
                     }
@@ -1486,7 +1604,8 @@
                     }
                 }
 
-                const std::string expanded = trim_copy(value_as_string(resolve_identifier(macro_name)));
+                const std::string expanded = expand_memory_macro_identifier(
+                    trim_copy(value_as_string(resolve_identifier(macro_name))));
                 if (expanded.empty())
                 {
                     return make_empty_value();
@@ -1540,10 +1659,16 @@
                 }
 
                 // Always treat macro expansion as an expression when possible.
-                const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
-                if (expanded_value.kind != PrgValueKind::empty)
+                try
                 {
-                    return expanded_value;
+                    const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
+                    if (expanded_value.kind != PrgValueKind::empty)
+                    {
+                        return expanded_value;
+                    }
+                }
+                catch (...)
+                {
                 }
                 // If not an expression, return the expanded string value.
                 return make_string_value(resolved_expression);

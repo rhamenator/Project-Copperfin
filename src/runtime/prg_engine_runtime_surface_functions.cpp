@@ -735,7 +735,55 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return make_number_value(static_cast<double>(aerror_callback(raw_arguments[0])));
     }
     if ((function == "eval" || function == "evaluate") && !arguments.empty()) {
-        return eval_expression_callback(value_as_string(arguments[0]));
+        std::string expression_text = value_as_string(arguments[0]);
+        if (!raw_arguments.empty()) {
+            const std::string raw_text = trim_copy(raw_arguments[0]);
+            if (!raw_text.empty() && raw_text.front() == '&') {
+                const std::string macro_variable_text = trim_copy(raw_text.substr(1U));
+                const bool simple_macro_variable =
+                    !macro_variable_text.empty() &&
+                    std::all_of(
+                        macro_variable_text.begin(),
+                        macro_variable_text.end(),
+                        [](unsigned char ch) {
+                            return std::isalnum(ch) != 0 || ch == '_';
+                        });
+                if (simple_macro_variable) {
+                    std::string expanded_text =
+                        trim_copy(value_as_string(eval_expression_callback(macro_variable_text)));
+                    if (!expanded_text.empty()) {
+                        constexpr std::size_t max_macro_expression_depth = 16U;
+                        std::vector<std::string> visited_macros;
+                        visited_macros.reserve(8U);
+                        for (std::size_t depth = 0U; depth < max_macro_expression_depth; ++depth) {
+                            const bool bare_identifier =
+                                std::all_of(
+                                    expanded_text.begin(),
+                                    expanded_text.end(),
+                                    [](unsigned char ch) {
+                                        return std::isalnum(ch) != 0 || ch == '_';
+                                    });
+                            if (!bare_identifier) {
+                                break;
+                            }
+                            const std::string normalized_identifier = normalize_memory_variable_identifier(expanded_text);
+                            if (std::find(visited_macros.begin(), visited_macros.end(), normalized_identifier) != visited_macros.end()) {
+                                break;
+                            }
+                            visited_macros.push_back(normalized_identifier);
+                            const std::string next_text =
+                                trim_copy(value_as_string(eval_expression_callback(expanded_text)));
+                            if (next_text.empty() || next_text == expanded_text) {
+                                break;
+                            }
+                            expanded_text = next_text;
+                        }
+                        expression_text = expanded_text;
+                    }
+                }
+            }
+        }
+        return eval_expression_callback(expression_text);
     }
     if (function == "cursortoxml") {
         const std::string cursor_designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);

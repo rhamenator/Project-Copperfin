@@ -255,15 +255,27 @@ namespace
             main_path,
             // Basic &stem.suffix: cType="First", FirstName="John" => &cType.Name = "FirstName" variable
             "cType = 'First'\n"
+            "cTypeHolder = 'cType'\n"
+            "cTypeDeepHolder = 'cTypeHolder'\n"
             "FirstName = 'John'\n"
             "cResult1 = &cType.Name\n"
+            "cResult1Nested = &cTypeHolder.Name\n"
+            "cResult1SecondHop = &cTypeDeepHolder.Name\n"
             // Trailing dot (no suffix): dot is terminator, expands cleanly
             "cField = 'FirstName'\n"
+            "cFieldHolder = 'cField'\n"
+            "cFieldDeepHolder = 'cFieldHolder'\n"
             "cResult2 = &cField.\n"
+            "cResult2Nested = &cFieldHolder.\n"
+            "cResult2SecondHop = &cFieldDeepHolder.\n"
             // m&cType.ID embedded macro form: mCustomerID = 99, cType="Customer"
             "cType2 = 'Customer'\n"
+            "cType2Holder = 'cType2'\n"
+            "cType2DeepHolder = 'cType2Holder'\n"
             "mCustomerID = 99\n"
             "nResult3 = m&cType2.ID\n"
+            "nResult3Nested = m&cType2Holder.ID\n"
+            "nResult3SecondHop = m&cType2DeepHolder.ID\n"
             // &stem.suffix where result is used as a string (stem resolves to non-var)
             "cStem = 'Hello'\n"
             "cResult4 = &cStem.World\n"
@@ -289,10 +301,22 @@ namespace
 
         // &cType.Name → "FirstName" → value of FirstName = "John"
         check("cresult1", "John");
+        // &cTypeHolder.Name → "cType" → "FirstName" → value of FirstName = "John"
+        check("cresult1nested", "John");
+        // &cTypeDeepHolder.Name → "cTypeHolder" → "cType" → "FirstName" → value of FirstName = "John"
+        check("cresult1secondhop", "John");
         // &cField. → "FirstName" (trailing dot, no suffix) → value of FirstName = "John"
         check("cresult2", "John");
+        // &cFieldHolder. → "cField" → "FirstName" → value of FirstName = "John"
+        check("cresult2nested", "John");
+        // &cFieldDeepHolder. → "cFieldHolder" → "cField" → "FirstName" → value of FirstName = "John"
+        check("cresult2secondhop", "John");
         // m&cType2.ID → "mCustomerID" → value of mCustomerID = 99
         check("nresult3", "99");
+        // m&cType2Holder.ID → "mcType2ID" → "mCustomerID" → value of mCustomerID = 99
+        check("nresult3nested", "99");
+        // m&cType2DeepHolder.ID → "mcType2HolderID" → "mcType2ID" → "mCustomerID" → value of mCustomerID = 99
+        check("nresult3secondhop", "99");
         // &cStem.World → "Hello" + "World" = "HelloWorld" (no such variable, returns expanded string)
         check("cresult4", "HelloWorld");
 
@@ -367,14 +391,25 @@ namespace
             main_path,
             "USE '" + table_path.string() + "' ALIAS People IN 0\n"
             "cAlias = 'People'\n"
+            "cAliasHolder = 'cAlias'\n"
             "cNameField = 'NAME'\n"
+            "cNameFieldHolder = 'cNameField'\n"
             "cAgeField = 'AGE'\n"
+            "cAgeFieldHolder = 'cAgeField'\n"
             "cNestedField = 'cNameField'\n"
+            "cNestedFieldHolder = 'cNestedField'\n"
             "cNameFromAlias = &cAlias..NAME\n"
+            "cNameFromAliasNested = &cAliasHolder..NAME\n"
             "nAgeFromAlias = &cAlias..AGE\n"
+            "nAgeFromAliasNested = &cAliasHolder..AGE\n"
             "cNameFromDynamicField = &cAlias..&cNameField\n"
+            "cNameFromDynamicFieldNested = &cAliasHolder..&cNameFieldHolder\n"
+            "cNameFromDynamicFieldSecondHop = &cAliasHolder..&cNestedFieldHolder\n"
             "nAgeFromDynamicField = &cAlias..&cAgeField\n"
+            "nAgeFromDynamicFieldNested = &cAliasHolder..&cAgeFieldHolder\n"
             "LOCATE FOR &cAlias..&cNestedField = 'BRAVO'\n"
+            "LOCATE FOR &cAliasHolder..&cNestedFieldHolder = 'BRAVO'\n"
+            "LOCATE FOR &cAliasHolder..&cNestedField = 'BRAVO'\n"
             "lFoundDynamic = FOUND()\n"
             "cLocatedName = NAME\n"
             "RETURN\n");
@@ -398,9 +433,14 @@ namespace
         };
 
         check("cnamefromalias", "ALPHA");
+        check("cnamefromaliasnested", "ALPHA");
         check("nagefromalias", "11");
+        check("nagefromaliasnested", "11");
         check("cnamefromdynamicfield", "ALPHA");
+        check("cnamefromdynamicfieldnested", "ALPHA");
+        check("cnamefromdynamicfieldsecondhop", "ALPHA");
         check("nagefromdynamicfield", "11");
+        check("nagefromdynamicfieldnested", "11");
         check("lfounddynamic", "true");
         check("clocatedname", "BRAVO");
 

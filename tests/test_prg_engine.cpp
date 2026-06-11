@@ -543,6 +543,9 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cAliasExpr = 'People'\n"
         "cFieldExpr = 'NAME'\n"
         "cEvalExpr = 'AGE + 5'\n"
+        "cEvalAliasExpr = 'ALIAS()'\n"
+        "cEvalAliasExprHolder = 'cEvalAliasExpr'\n"
+        "cEvalAliasExprDeepHolder = 'cEvalAliasExprHolder'\n"
         "cNearBefore = SET('NEAR')\n"
         "SET NEAR ON\n"
         "cNearAfter = SET('NEAR')\n"
@@ -567,6 +570,9 @@ void test_eval_macro_and_runtime_state_semantics() {
         "SET DEFAULT TO '" + new_default.string() + "'\n"
         "cDefaultAfter = SET('DEFAULT')\n"
         "cAliasFromEval = EVAL('ALIAS()')\n"
+        "cAliasFromEvalMacro = EVAL(&cEvalAliasExpr)\n"
+        "cAliasFromEvalNested = EVAL(&cEvalAliasExprHolder)\n"
+        "cAliasFromEvalSecondHop = EVAL(&cEvalAliasExprDeepHolder)\n"
         "cNameFromMacro = &cFieldExpr\n"
         "nEvalAge = EVAL(cEvalExpr)\n"
         "USE IN &cAliasExpr\n"
@@ -611,6 +617,9 @@ void test_eval_macro_and_runtime_state_semantics() {
     const auto default_before = state.globals.find("cdefaultbefore");
     const auto default_after = state.globals.find("cdefaultafter");
     const auto alias_from_eval = state.globals.find("caliasfromeval");
+    const auto alias_from_eval_macro = state.globals.find("caliasfromevalmacro");
+    const auto alias_from_eval_nested = state.globals.find("caliasfromevalnested");
+    const auto alias_from_eval_second_hop = state.globals.find("caliasfromevalsecondhop");
     const auto name_from_macro = state.globals.find("cnamefrommacro");
     const auto eval_age = state.globals.find("nevalage");
     const auto used_after_close = state.globals.find("lusedafterclose");
@@ -646,6 +655,9 @@ void test_eval_macro_and_runtime_state_semantics() {
     expect(default_before != state.globals.end(), "SET('DEFAULT') before change should be captured");
     expect(default_after != state.globals.end(), "SET('DEFAULT') after change should be captured");
     expect(alias_from_eval != state.globals.end(), "EVAL() should be able to evaluate runtime-state expressions");
+    expect(alias_from_eval_macro != state.globals.end(), "EVAL(&macro) should preserve expression text for runtime-state evaluation");
+    expect(alias_from_eval_nested != state.globals.end(), "EVAL(&holder) should preserve nested macro-indirection for runtime-state evaluation");
+    expect(alias_from_eval_second_hop != state.globals.end(), "EVAL(&deep-holder) should preserve second-hop nested macro-indirection for runtime-state evaluation");
     expect(name_from_macro != state.globals.end(), "&macro field resolution should be captured");
     expect(eval_age != state.globals.end(), "EVAL() of a stored expression should be captured");
     expect(used_after_close != state.globals.end(), "USE IN <expr> close semantics should be captured");
@@ -689,6 +701,10 @@ void test_eval_macro_and_runtime_state_semantics() {
     if (deleted_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted_after->second) == "ON", "SET('DELETED') should report ON after SET DELETED ON");
     }
+    if (alias_from_eval_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_from_eval_second_hop->second) == "People",
+               "EVAL(&deep-holder) should preserve runtime-state expression text through a second holder hop");
+    }
     if (deleted_after_to_zero != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted_after_to_zero->second) == "OFF", "SET('DELETED') should report OFF after SET DELETED TO 0");
     }
@@ -720,6 +736,12 @@ void test_eval_macro_and_runtime_state_semantics() {
     }
     if (alias_from_eval != state.globals.end()) {
         expect(copperfin::runtime::format_value(alias_from_eval->second) == "People", "EVAL('ALIAS()') should evaluate in the current runtime context");
+    }
+    if (alias_from_eval_macro != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_from_eval_macro->second) == "People", "EVAL(&cExpr) should evaluate the macro-expanded expression text in the current runtime context");
+    }
+    if (alias_from_eval_nested != state.globals.end()) {
+        expect(copperfin::runtime::format_value(alias_from_eval_nested->second) == "People", "EVAL(&cHolder) should chase nested macro indirection before evaluating runtime-state expression text");
     }
     if (name_from_macro != state.globals.end()) {
         expect(copperfin::runtime::format_value(name_from_macro->second) == "ALPHA", "&macro should substitute a stored field name inside expressions");

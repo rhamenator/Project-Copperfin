@@ -387,6 +387,16 @@ void test_text_endtext_literal_blocks() {
         "TEXT TO cMerged TEXTMERGE NOSHOW\n"
         "Name=<<cName>>; Count=<<nCount>>\n"
         "ENDTEXT\n"
+        "cNameExpr = 'LEFT(cName, 9)'\n"
+        "cNameExprDeepHolder = 'cNameExpr'\n"
+        "cFieldExpr = 'cName'\n"
+        "cFieldExprDeepHolder = 'cFieldExpr'\n"
+        "TEXT TO cMergedNested TEXTMERGE NOSHOW\n"
+        "Eval=<<EVAL(cNameExpr)>>; Macro=<<&cFieldExpr>>\n"
+        "ENDTEXT\n"
+        "TEXT TO cMergedSecondHop TEXTMERGE NOSHOW\n"
+        "Eval=<<EVAL(&cNameExprDeepHolder)>>; Macro=<<&cFieldExprDeepHolder>>\n"
+        "ENDTEXT\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -411,10 +421,26 @@ void test_text_endtext_literal_blocks() {
             "TEXT TEXTMERGE should interpolate <<expression>> segments using runtime expression evaluation");
     }
 
+    const auto merged_nested = state.globals.find("cmergednested");
+    expect(merged_nested != state.globals.end(), "TEXT TEXTMERGE should assign nested eval/macro merged block content");
+    if (merged_nested != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_nested->second) == "Eval=Copperfin; Macro=Copperfin\n",
+            "TEXT TEXTMERGE should preserve nested EVAL() and &macro interpolation inside merged expressions");
+    }
+
+    const auto merged_second_hop = state.globals.find("cmergedsecondhop");
+    expect(merged_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign second-hop nested eval/macro merged block content");
+    if (merged_second_hop != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_second_hop->second) == "Eval=Copperfin; Macro=Copperfin\n",
+            "TEXT TEXTMERGE should preserve second-hop nested EVAL() and &macro interpolation inside merged expressions");
+    }
+
     const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.text";
     }));
-    expect(text_events == 3, "each TEXT block should emit a runtime.text event");
+    expect(text_events == 5, "each TEXT block should emit a runtime.text event");
 
     fs::remove_all(temp_root, ignored);
 }
