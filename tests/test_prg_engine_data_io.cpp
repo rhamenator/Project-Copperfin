@@ -4103,9 +4103,11 @@ void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
         main_path,
         "USE '" + source_path.string() + "'\n"
         "cArrayName = 'aTemporal'\n"
-        "COPY TO ARRAY &cArrayName FIELDS BIRTHDAY, STAMP\n"
+        "cArrayNameHolder = 'cArrayName'\n"
+        "cArrayNameDeepHolder = 'cArrayNameHolder'\n"
+        "COPY TO ARRAY &cArrayNameDeepHolder FIELDS BIRTHDAY, STAMP\n"
         "USE '" + dest_path.string() + "'\n"
-        "APPEND FROM ARRAY &cArrayName FIELDS BIRTHDAY, STAMP\n"
+        "APPEND FROM ARRAY &cArrayNameDeepHolder FIELDS BIRTHDAY, STAMP\n"
         "GO 1\n"
         "cBirthday = DTOC(BIRTHDAY, 1)\n"
         "cStamp = TTOC(STAMP, 1)\n"
