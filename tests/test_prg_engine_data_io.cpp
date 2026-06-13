@@ -4581,11 +4581,13 @@ void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
         "cInputPrompt = 'Enter code:'\n"
         "cInputTarget = 'cInputValue'\n"
         "cInputTargetHolder = 'cInputTarget'\n"
+        "cInputTargetDeepHolder = 'cInputTargetHolder'\n"
         "cAcceptPrompt = 'Enter name:'\n"
         "cAcceptTarget = 'cAcceptValue'\n"
         "cAcceptTargetHolder = 'cAcceptTarget'\n"
-        "INPUT cInputPrompt TO &cInputTargetHolder\n"
-        "ACCEPT cAcceptPrompt TO &cAcceptTargetHolder\n"
+        "cAcceptTargetDeepHolder = 'cAcceptTargetHolder'\n"
+        "INPUT cInputPrompt TO &cInputTargetDeepHolder\n"
+        "ACCEPT cAcceptPrompt TO &cAcceptTargetDeepHolder\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -4611,7 +4613,7 @@ void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
             "INPUT should surface the resolved prompt text");
         expect(input_event->detail.find("prompt_expr=cInputPrompt") != std::string::npos,
             "INPUT should preserve the source prompt expression");
-        expect(input_event->detail.find("target=&cInputTargetHolder") != std::string::npos,
+        expect(input_event->detail.find("target=&cInputTargetDeepHolder") != std::string::npos,
             "INPUT should retain the raw TO target expression");
         expect(input_event->detail.find("target_resolved=cInputValue") != std::string::npos,
             "INPUT should surface the second-hop resolved TO target name");
@@ -4621,7 +4623,7 @@ void test_input_accept_commands_surface_macro_prompt_and_target_detail() {
             "ACCEPT should surface the resolved prompt text");
         expect(accept_event->detail.find("prompt_expr=cAcceptPrompt") != std::string::npos,
             "ACCEPT should preserve the source prompt expression");
-        expect(accept_event->detail.find("target=&cAcceptTargetHolder") != std::string::npos,
+        expect(accept_event->detail.find("target=&cAcceptTargetDeepHolder") != std::string::npos,
             "ACCEPT should retain the raw TO target expression");
         expect(accept_event->detail.find("target_resolved=cAcceptValue") != std::string::npos,
             "ACCEPT should surface the second-hop resolved TO target name");
@@ -5043,7 +5045,8 @@ void test_wait_window_command_emits_runtime_wait_event() {
         "nDelay = 5\n"
         "cWaitTarget = \"m.wResult\"\n"
         "cWaitTargetHolder = \"cWaitTarget\"\n"
-        "WAIT WINDOW cPrompt TIMEOUT nDelay TO &cWaitTargetHolder NOWAIT NOCLEAR\n"
+        "cWaitTargetDeepHolder = \"cWaitTargetHolder\"\n"
+        "WAIT WINDOW cPrompt TIMEOUT nDelay TO &cWaitTargetDeepHolder NOWAIT NOCLEAR\n"
         "cAfterWait = m.wResult\n"
         "RETURN\n");
 
@@ -5077,7 +5080,7 @@ void test_wait_window_command_emits_runtime_wait_event() {
             "WAIT WINDOW event should surface the NOWAIT flag");
         expect(wait_events[0].detail.find("flag=NOCLEAR") != std::string::npos,
             "WAIT WINDOW event should surface the NOCLEAR flag");
-        expect(wait_events[0].detail.find("target=&cWaitTargetHolder") != std::string::npos,
+        expect(wait_events[0].detail.find("target=&cWaitTargetDeepHolder") != std::string::npos,
             "WAIT WINDOW event should include the raw TO target expression");
         expect(wait_events[0].detail.find("target_resolved=m.wResult") != std::string::npos,
             "WAIT WINDOW event should include the second-hop resolved TO target");
@@ -5409,8 +5412,9 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
         "cAlias = 'people'\n"
         "cAliasHolder = 'cAlias'\n"
-        "DISPLAY IN &cAliasHolder FIELDS NAME FOR AGE >= 25 WHILE AGE < 40\n"
-        "LIST IN &cAliasHolder FIELDS EXCEPT AGE FOR AGE >= 20 WHILE AGE < 40\n"
+        "cAliasDeepHolder = 'cAliasHolder'\n"
+        "DISPLAY IN &cAliasDeepHolder FIELDS NAME FOR AGE >= 25 WHILE AGE < 40\n"
+        "LIST IN &cAliasDeepHolder FIELDS EXCEPT AGE FOR AGE >= 20 WHILE AGE < 40\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -5432,7 +5436,7 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
     expect(display_event != nullptr, "DISPLAY target detail script should emit runtime.display");
     expect(list_event != nullptr, "LIST target detail script should emit runtime.list");
     if (display_event != nullptr) {
-        expect(display_event->detail.find("target=&cAliasHolder") != std::string::npos,
+        expect(display_event->detail.find("target=&cAliasDeepHolder") != std::string::npos,
             "DISPLAY RECORDS should retain the raw IN target expression");
         expect(display_event->detail.find("target_resolved=people") != std::string::npos,
             "DISPLAY RECORDS should surface the second-hop resolved IN target");
@@ -5444,7 +5448,7 @@ void test_display_and_list_records_surface_resolved_in_target_detail() {
             "DISPLAY RECORDS should preserve the WHILE clause with macro IN");
     }
     if (list_event != nullptr) {
-        expect(list_event->detail.find("target=&cAliasHolder") != std::string::npos,
+        expect(list_event->detail.find("target=&cAliasDeepHolder") != std::string::npos,
             "LIST RECORDS should retain the raw IN target expression");
         expect(list_event->detail.find("target_resolved=people") != std::string::npos,
             "LIST RECORDS should surface the second-hop resolved IN target");
