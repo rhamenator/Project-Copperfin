@@ -1133,34 +1133,52 @@
                 std::string text_value = statement.expression;
                 if (normalize_identifier(statement.tertiary_expression) == "textmerge")
                 {
-                    std::string merged_text;
-                    merged_text.reserve(text_value.size());
+                    const auto apply_textmerge =
+                        [&](const std::string& source_text) {
+                            std::string merged_text;
+                            merged_text.reserve(source_text.size());
 
-                    std::size_t cursor = 0U;
-                    while (cursor < text_value.size())
+                            std::size_t cursor = 0U;
+                            while (cursor < source_text.size())
+                            {
+                                const std::size_t start = source_text.find("<<", cursor);
+                                if (start == std::string::npos)
+                                {
+                                    merged_text.append(source_text.substr(cursor));
+                                    break;
+                                }
+
+                                merged_text.append(source_text.substr(cursor, start - cursor));
+                                const std::size_t end = source_text.find(">>", start + 2U);
+                                if (end == std::string::npos)
+                                {
+                                    merged_text.append(source_text.substr(start));
+                                    break;
+                                }
+
+                                const std::string merge_expression =
+                                    trim_copy(source_text.substr(start + 2U, end - start - 2U));
+                                if (!merge_expression.empty())
+                                {
+                                    merged_text.append(value_as_string(evaluate_expression(merge_expression, frame)));
+                                }
+
+                                cursor = end + 2U;
+                            }
+
+                            return merged_text;
+                        };
+
+                    std::string merged_text = apply_textmerge(text_value);
+                    constexpr std::size_t max_recursive_merges = 16U;
+                    for (std::size_t depth = 0U; depth < max_recursive_merges; ++depth)
                     {
-                        const std::size_t start = text_value.find("<<", cursor);
-                        if (start == std::string::npos)
+                        const std::string next_merged_text = apply_textmerge(merged_text);
+                        if (next_merged_text == merged_text)
                         {
-                            merged_text.append(text_value.substr(cursor));
                             break;
                         }
-
-                        merged_text.append(text_value.substr(cursor, start - cursor));
-                        const std::size_t end = text_value.find(">>", start + 2U);
-                        if (end == std::string::npos)
-                        {
-                            merged_text.append(text_value.substr(start));
-                            break;
-                        }
-
-                        const std::string merge_expression = trim_copy(text_value.substr(start + 2U, end - start - 2U));
-                        if (!merge_expression.empty())
-                        {
-                            merged_text.append(value_as_string(evaluate_expression(merge_expression, frame)));
-                        }
-
-                        cursor = end + 2U;
+                        merged_text = std::move(next_merged_text);
                     }
 
                     text_value = std::move(merged_text);

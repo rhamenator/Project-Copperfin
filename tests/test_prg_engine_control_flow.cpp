@@ -393,11 +393,17 @@ void test_text_endtext_literal_blocks() {
         "cFieldExpr = 'cName'\n"
         "cFieldExprHolder = 'cFieldExpr'\n"
         "cFieldExprDeepHolder = 'cFieldExprHolder'\n"
+        "cRecursiveExpr = '<<EVAL(&cNameExprDeepHolder)>>'\n"
+        "cRecursiveExprHolder = 'cRecursiveExpr'\n"
+        "cRecursiveExprDeepHolder = 'cRecursiveExprHolder'\n"
         "TEXT TO cMergedNested TEXTMERGE NOSHOW\n"
         "Eval=<<EVAL(cNameExpr)>>; Macro=<<&cFieldExpr>>\n"
         "ENDTEXT\n"
         "TEXT TO cMergedSecondHop TEXTMERGE NOSHOW\n"
         "Eval=<<EVAL(&cNameExprDeepHolder)>>; Macro=<<&cFieldExprDeepHolder>>\n"
+        "ENDTEXT\n"
+        "TEXT TO cMergedRecursiveSecondHop TEXTMERGE NOSHOW\n"
+        "Recursive=<<&cRecursiveExprDeepHolder>>\n"
         "ENDTEXT\n"
         "RETURN\n");
 
@@ -439,10 +445,18 @@ void test_text_endtext_literal_blocks() {
             "TEXT TEXTMERGE should preserve second-hop nested EVAL() and &macro interpolation inside merged expressions");
     }
 
+    const auto merged_recursive_second_hop = state.globals.find("cmergedrecursivesecondhop");
+    expect(merged_recursive_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign recursive second-hop merged block content");
+    if (merged_recursive_second_hop != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_recursive_second_hop->second) == "Recursive=Copperfin\n",
+            "TEXT TEXTMERGE should preserve recursive second-hop nested merged expressions");
+    }
+
     const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.text";
     }));
-    expect(text_events == 5, "each TEXT block should emit a runtime.text event");
+    expect(text_events == 6, "each TEXT block should emit a runtime.text event");
 
     fs::remove_all(temp_root, ignored);
 }
