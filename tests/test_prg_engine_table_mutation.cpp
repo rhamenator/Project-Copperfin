@@ -938,8 +938,10 @@ void test_sql_style_for_clauses_accept_macro_expressions() {
         "USE '" + table_path.string() + "' ALIAS People\n"
         "cDeleteExpr = \"AGE = 20\"\n"
         "cUpdateExpr = \"AGE = 30\"\n"
-        "DELETE FROM People FOR &cDeleteExpr\n"
-        "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExpr\n"
+        "cDeleteExprDeepHolder = 'cDeleteExpr'\n"
+        "cUpdateExprDeepHolder = 'cUpdateExpr'\n"
+        "DELETE FROM People FOR &cDeleteExprDeepHolder\n"
+        "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExprDeepHolder\n"
         "GO 2\n"
         "lDeleted = DELETED()\n"
         "GO 3\n"
@@ -958,17 +960,17 @@ void test_sql_style_for_clauses_accept_macro_expressions() {
     expect(third_name != state.globals.end(), "UPDATE ... FOR &expr should expose updated NAME");
     if (deleted != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted->second) == "true",
-            "DELETE FROM ... FOR &expr should evaluate the macro-expanded filter expression");
+            "DELETE FROM ... FOR second-hop &expr should evaluate the macro-expanded filter expression");
     }
     if (third_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(third_name->second) == "Thirty",
-            "UPDATE ... FOR &expr should evaluate the macro-expanded filter expression");
+            "UPDATE ... FOR second-hop &expr should evaluate the macro-expanded filter expression");
     }
 
-    expect(has_runtime_event(state.events, "runtime.delete_from", "People WHERE &cDeleteExpr"),
-        "DELETE FROM with macro FOR should emit a runtime.delete_from event");
-    expect(has_runtime_event(state.events, "runtime.update", "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExpr"),
-        "UPDATE with macro FOR should emit a runtime.update event");
+    expect(has_runtime_event(state.events, "runtime.delete_from", "People WHERE &cDeleteExprDeepHolder"),
+        "DELETE FROM with second-hop macro FOR should emit a runtime.delete_from event");
+    expect(has_runtime_event(state.events, "runtime.update", "UPDATE People SET NAME = 'Thirty' FOR &cUpdateExprDeepHolder"),
+        "UPDATE with second-hop macro FOR should emit a runtime.update event");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
     expect(parse_result.ok, "SQL-style FOR macro commands should leave the DBF readable");
