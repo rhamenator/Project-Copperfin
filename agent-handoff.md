@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#359` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for `SCATTER ... NAME &macro` / `GATHER NAME &macro` object targets, verifying forms such as `&cObjectNameDeepHolder` on the existing additive object-target path.
 - 2026-06-13: H3/#97 child issue `#358` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for `DISPLAY STRUCTURE IN &alias` / `LIST STRUCTURE IN &alias`, verifying raw/resolved target detail through `&cAliasDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#357` is now shipped. Focused `test_prg_engine` coverage now uses true second-hop holder chains for macro-expanded array subscripts and function arguments in `macro_deep.prg`, verifying `aData[&cRowExprDeepHolder]` and `LEN(&cFieldExprDeepHolder)`.
 - 2026-06-13: H3/#97 child issue `#356` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for macro assignment targets, verifying `&cTargetDeepHolder = 'MACROASSIGN'` through the shared assignment-target resolver.
