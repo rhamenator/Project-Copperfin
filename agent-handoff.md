@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#356` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for macro assignment targets, verifying `&cTargetDeepHolder = 'MACROASSIGN'` through the shared assignment-target resolver.
 - 2026-06-13: H3/#97 child issue `#355` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for `DO ... WITH &macro` argument binding, verifying `DO testparam WITH &cParamExprDeepHolder` through the shared call-argument path.
 - 2026-06-13: H3/#97 child issue `#354` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for `DO &macro` routine targets, verifying `DO &cProcDeepHolder` through the shared command-target dispatch path.
 - 2026-06-13: H3/#97 child issue `#353` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for `USE IN &alias` closure, verifying `USE IN &cAliasExprDeepHolder` through the shared alias-target runtime-state path.

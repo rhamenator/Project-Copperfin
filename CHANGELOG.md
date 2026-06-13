@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#356` with focused proof-hardening for macro assignment targets: `test_prg_engine` now uses a true second-hop holder chain for `&target = value`, verifying `&cTargetDeepHolder = 'MACROASSIGN'` through the shared assignment-target resolver.
 - Macro/eval slice `#97` advanced across child issue `#355` with focused proof-hardening for `DO ... WITH &macro` argument binding: `test_prg_engine` now uses a true second-hop holder chain for the macro-expanded argument path, verifying `DO testparam WITH &cParamExprDeepHolder` through the shared call-argument binding path.
 - Macro/eval slice `#97` advanced across child issue `#354` with focused proof-hardening for `DO &macro` routine targets: `test_prg_engine` now uses a true second-hop holder chain for the macro-expanded routine target, verifying `DO &cProcDeepHolder` through the shared command-target dispatch path.
 - Macro/eval slice `#97` advanced across child issue `#353` with focused proof-hardening for `USE IN &alias` closure: `test_prg_engine` now uses a true second-hop holder chain for the macro-expanded alias target, verifying `USE IN &cAliasExprDeepHolder` through the shared alias-target runtime-state path.
