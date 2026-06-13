@@ -511,6 +511,49 @@
             auto parse_command_object_target_path = [&](const std::string &raw_name, const std::string &command_name)
                 -> std::optional<std::vector<std::string>>
             {
+                auto expand_object_target_identifier_chain = [&](std::string text)
+                {
+                    text = trim_copy(std::move(text));
+                    if (text.empty())
+                    {
+                        return text;
+                    }
+
+                    constexpr std::size_t max_macro_object_target_depth = 16U;
+                    std::vector<std::string> visited_identifiers;
+                    visited_identifiers.reserve(8U);
+                    for (std::size_t depth = 0U; depth < max_macro_object_target_depth; ++depth)
+                    {
+                        if (!is_bare_identifier_text(text))
+                        {
+                            break;
+                        }
+
+                        const std::string normalized_identifier = normalize_memory_variable_identifier(text);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized_identifier) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized_identifier);
+
+                        const PrgValue expanded_value = lookup_variable(frame, text);
+                        if (expanded_value.kind != PrgValueKind::string)
+                        {
+                            break;
+                        }
+
+                        const std::string next = trim_copy(value_as_string(expanded_value));
+                        if (next.empty() || next == text || !is_bare_identifier_text(next))
+                        {
+                            break;
+                        }
+
+                        text = next;
+                    }
+
+                    return text;
+                };
+
                 std::string candidate = trim_copy(raw_name);
                 if (candidate.empty())
                 {
@@ -530,7 +573,7 @@
 
                     if (is_bare_identifier_text(macro_expression))
                     {
-                        const std::string expanded_base = trim_copy(value_as_string(lookup_variable(frame, macro_expression)));
+                        const std::string expanded_base = expand_object_target_identifier_chain(macro_expression);
                         candidate = trim_copy(expanded_base + (dot_suffix.empty() ? std::string{} : "." + dot_suffix));
                     }
                     else
@@ -568,12 +611,14 @@
                                 const std::string nested_segment = trim_copy(expanded.substr(
                                     nested_start,
                                     nested_dot == std::string::npos ? std::string::npos : nested_dot - nested_start));
-                                if (!is_bare_identifier_text(nested_segment))
+                                const std::string expanded_nested_segment =
+                                    expand_object_target_identifier_chain(nested_segment);
+                                if (!is_bare_identifier_text(expanded_nested_segment))
                                 {
                                     last_error_message = command_name + ": invalid object target";
                                     return std::nullopt;
                                 }
-                                segments.push_back(nested_segment);
+                                segments.push_back(expanded_nested_segment);
                                 if (nested_dot == std::string::npos)
                                 {
                                     break;
@@ -587,7 +632,7 @@
                             start = dot + 1U;
                             continue;
                         }
-                        segment = expanded;
+                        segment = expand_object_target_identifier_chain(expanded);
                     }
                     if (!is_bare_identifier_text(segment))
                     {
