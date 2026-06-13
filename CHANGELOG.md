@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#365` with focused proof-hardening for literal `&stem.suffix` expansion: `test_prg_engine_functions` now uses a true second-hop holder chain for `&cStemDeepHolder.World`, verifying the fallback expanded-string branch through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#364` with focused proof-hardening for `LPARAMETERS` macro defaults: `test_prg_engine_functions` now uses a true second-hop holder chain for `LPARAMETERS nValue = &cDefaultExprDeepHolder`, verifying default-expression binding through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#363` with focused proof-hardening for full SQL `LOOKUP()` macro argument coverage: `test_prg_engine_runtime_surface_functions` now verifies `LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)`, proving all four SQL macro arguments together through true second-hop holder chains.
 - Macro/eval slice `#97` advanced across child issue `#362` with focused proof-hardening for numeric `LOOKUP()` return expressions: `test_prg_engine_runtime_surface_functions` now uses a true second-hop holder chain for `LOOKUP(&cAgeExprDeepHolder, &cSearchExpr, cAlias, cTag)`, verifying the typed numeric return-expression path through real intermediate holders.

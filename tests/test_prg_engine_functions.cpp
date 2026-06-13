@@ -282,7 +282,9 @@ namespace
             "nResult3SecondHop = m&cType2DeepHolder.ID\n"
             // &stem.suffix where result is used as a string (stem resolves to non-var)
             "cStem = 'Hello'\n"
-            "cResult4 = &cStem.World\n"
+            "cStemHolder = 'cStem'\n"
+            "cStemDeepHolder = 'cStemHolder'\n"
+            "cResult4 = &cStemDeepHolder.World\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
