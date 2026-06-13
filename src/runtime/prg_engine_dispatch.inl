@@ -262,7 +262,24 @@
                                 break;
                             }
 
+                            const bool next_is_bare_identifier =
+                                is_bare_identifier_text(next) &&
+                                !next.empty() &&
+                                (std::isalpha(static_cast<unsigned char>(next.front())) != 0 || next.front() == '_');
+                            const bool next_is_structured_target =
+                                next.find('.') != std::string::npos ||
+                                next.find('[') != std::string::npos ||
+                                next.find('(') != std::string::npos;
+                            if (!next_is_bare_identifier && !next_is_structured_target)
+                            {
+                                break;
+                            }
+
                             expanded_text = next;
+                            if (!next_is_bare_identifier)
+                            {
+                                break;
+                            }
                         }
 
                         resolved_identifier = expanded_text + resolved_identifier.substr(macro_end);

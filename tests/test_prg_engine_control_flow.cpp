@@ -1009,11 +1009,14 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "GO TOP\n"
         "cCount = 'nCountWhile'\n"
+        "cCountHolder = 'cCount'\n"
         "cSum = 'nSumWhile'\n"
+        "cSumHolder = 'cSum'\n"
         "cCalc = 'nCalcWhile'\n"
-        "COUNT WHILE AGE < 35 TO &cCount\n"
-        "SUM AGE WHILE AGE < 35 TO &cSum\n"
-        "CALCULATE COUNT() TO &cCalc WHILE AGE < 35 IN 'People'\n"
+        "cCalcHolder = 'cCalc'\n"
+        "COUNT WHILE AGE < 35 TO &cCountHolder\n"
+        "SUM AGE WHILE AGE < 35 TO &cSumHolder\n"
+        "CALCULATE COUNT() TO &cCalcHolder WHILE AGE < 35 IN 'People'\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1033,9 +1036,9 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         }
     };
 
-    check("ncountwhile", "3", "COUNT WHILE TO &macro should assign the resolved target");
-    check("nsumwhile", "60", "SUM WHILE TO &macro should assign the resolved target");
-    check("ncalcwhile", "3", "CALCULATE WHILE TO &macro should assign the resolved target");
+    check("ncountwhile", "3", "COUNT WHILE TO second-hop &macro should assign the resolved target");
+    check("nsumwhile", "60", "SUM WHILE TO second-hop &macro should assign the resolved target");
+    check("ncalcwhile", "3", "CALCULATE WHILE TO second-hop &macro should assign the resolved target");
 
     const auto count_event = std::find_if(
         state.events.begin(),
@@ -1044,9 +1047,9 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         {
             return event.category == "runtime.count" &&
                    event.detail.find("while=AGE < 35") != std::string::npos &&
-                   event.detail.find("into=&cCount") != std::string::npos;
+                   event.detail.find("into=&cCountHolder") != std::string::npos;
         });
-    expect(count_event != state.events.end(), "COUNT should surface WHILE and raw INTO metadata");
+    expect(count_event != state.events.end(), "COUNT should surface WHILE and second-hop raw INTO metadata");
 
     const auto calculate_event = std::find_if(
         state.events.begin(),
