@@ -409,8 +409,10 @@ namespace
             "cNestedFieldHolder = 'cNestedField'\n"
             "cNameFromAlias = &cAlias..NAME\n"
             "cNameFromAliasNested = &cAliasHolder..NAME\n"
+            "cNameFromAliasSecondHop = &cAliasDeepHolder..NAME\n"
             "nAgeFromAlias = &cAlias..AGE\n"
             "nAgeFromAliasNested = &cAliasHolder..AGE\n"
+            "nAgeFromAliasSecondHop = &cAliasDeepHolder..AGE\n"
             "cNameFromDynamicField = &cAlias..&cNameField\n"
             "cNameFromDynamicFieldNested = &cAliasHolder..&cNameFieldHolder\n"
             "cNameFromDynamicFieldSecondHop = &cAliasDeepHolder..&cNestedFieldHolder\n"
@@ -443,8 +445,10 @@ namespace
 
         check("cnamefromalias", "ALPHA");
         check("cnamefromaliasnested", "ALPHA");
+        check("cnamefromaliassecondhop", "ALPHA");
         check("nagefromalias", "11");
         check("nagefromaliasnested", "11");
+        check("nagefromaliassecondhop", "11");
         check("cnamefromdynamicfield", "ALPHA");
         check("cnamefromdynamicfieldnested", "ALPHA");
         check("cnamefromdynamicfieldsecondhop", "ALPHA");

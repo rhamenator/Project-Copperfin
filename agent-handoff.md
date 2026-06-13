@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#366` is now shipped. Focused `test_prg_engine_functions` coverage now uses true second-hop holder chains for direct alias-qualified field reads, verifying `&cAliasDeepHolder..NAME` and `&cAliasDeepHolder..AGE`.
 - 2026-06-13: H3/#97 child issue `#365` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the literal `&stem.suffix` fallback branch, verifying `&cStemDeepHolder.World`.
 - 2026-06-13: H3/#97 child issue `#364` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for `LPARAMETERS nValue = &cDefaultExprDeepHolder`, verifying default-expression binding through real intermediate holders.
 - 2026-06-13: H3/#97 child issue `#363` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now verifies the full SQL `LOOKUP()` all-argument path through true second-hop holder chains, using `LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)`.
