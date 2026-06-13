@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#331` with focused second-hop holder coverage: `test_prg_engine_data_io` now verifies the shared command array-name resolver preserves nested holder indirection for `COPY TO ARRAY` and `APPEND FROM ARRAY` forms such as `&cMacroArrayHolder` and `&cTempArrayHolder`.
 - Macro/eval slice `#97` advanced across child issue `#330` with focused second-hop holder coverage: `test_prg_engine_runtime_surface_functions` now verifies `EVALUATE(&cEvalPathExprHolder)` preserves nested holder indirection before evaluating runtime-state path text such as `SET('PATH')`.
 - Macro/eval slice `#97` advanced across child issue `#329` with focused second-hop holder coverage: `test_prg_engine_functions` now verifies direct `&macro` expression indirection preserves nested holder hops such as `&cMacroNameDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#328` with focused second-hop holder coverage: `test_prg_engine` now verifies runtime-state `&macro` field-name resolution preserves nested indirection through a second holder hop such as `&cFieldExprDeepHolder`.

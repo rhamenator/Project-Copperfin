@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#331` is now shipped. Focused `test_prg_engine_data_io` coverage now locks down second-hop nested-holder command array-name resolution for `COPY TO ARRAY` and `APPEND FROM ARRAY` forms such as `&cMacroArrayHolder` and `&cTempArrayHolder`.
 - 2026-06-13: H3/#97 child issue `#330` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop nested-holder `EVALUATE()` runtime-state path text such as `EVALUATE(&cEvalPathExprHolder)` over `SET('PATH')`.
 - 2026-06-13: H3/#97 child issue `#329` is now shipped. Focused `test_prg_engine_functions` coverage now locks down second-hop nested-holder direct `&macro` expression indirection such as `&cMacroNameDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#328` is now shipped. Focused `test_prg_engine` coverage now locks down second-hop nested-holder runtime-state `&macro` field-name resolution such as `&cFieldExprDeepHolder`.

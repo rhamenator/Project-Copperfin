@@ -3685,7 +3685,10 @@ void test_copy_to_array_fills_2d_runtime_array() {
         "USE '" + (temp_root / "people.dbf").string() + "'\n"
         "COPY TO ARRAY myarr\n"
         "cMacroArray = 'macroarr'\n"
+        "cMacroArraySecondHop = 'macroarr2'\n"
+        "cMacroArrayHolder = 'cMacroArraySecondHop'\n"
         "COPY TO ARRAY &cMacroArray\n"
+        "COPY TO ARRAY &cMacroArrayHolder\n"
         "row1_name = myarr[1, 1]\n"
         "row1_age = myarr[1, 2]\n"
         "row2_name = myarr[2, 1]\n"
@@ -3694,6 +3697,8 @@ void test_copy_to_array_fills_2d_runtime_array() {
         "arr_cols = ALEN(myarr, 2)\n"
         "macro_row1_name = &cMacroArray[1, 1]\n"
         "macro_rows = ALEN(&cMacroArray, 1)\n"
+        "macro_row1_name_second_hop = &cMacroArraySecondHop[1, 1]\n"
+        "macro_rows_second_hop = ALEN(&cMacroArraySecondHop, 1)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -3718,6 +3723,8 @@ void test_copy_to_array_fills_2d_runtime_array() {
     chk("row2_age",  "25",    "COPY TO ARRAY row 2 col 2 should be AGE");
     chk("macro_row1_name", "Alice", "COPY TO ARRAY macro-expanded target row 1 col 1 should be NAME");
     chk("macro_rows", "2", "COPY TO ARRAY macro-expanded target should give 2 rows");
+    chk("macro_row1_name_second_hop", "Alice", "COPY TO ARRAY second-hop macro-expanded target row 1 col 1 should be NAME");
+    chk("macro_rows_second_hop", "2", "COPY TO ARRAY second-hop macro-expanded target should give 2 rows");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -3791,9 +3798,10 @@ void test_append_from_array_writes_records_from_2d_array() {
         main_path,
         "USE '" + (temp_root / "source.dbf").string() + "'\n"
         "cTempArray = 'tmparr'\n"
+        "cTempArrayHolder = 'cTempArray'\n"
         "COPY TO ARRAY &cTempArray\n"
         "USE '" + (temp_root / "dest.dbf").string() + "'\n"
-        "APPEND FROM ARRAY &cTempArray\n"
+        "APPEND FROM ARRAY &cTempArrayHolder\n"
         "GO 1\n"
         "dest_name1 = NAME\n"
         "dest_age1 = AGE\n"
