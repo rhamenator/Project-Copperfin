@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#361` is now shipped. Focused `test_prg_engine_data_io` coverage now reuses the existing true second-hop holder chain on both sides of the round-trip array harness, verifying `COPY TO ARRAY &cTempArrayDeepHolder` alongside `APPEND FROM ARRAY &cTempArrayDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#360` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for temporal `COPY TO ARRAY &macro` / `APPEND FROM ARRAY &macro` flows, verifying `&cArrayNameDeepHolder` on the typed date/datetime round-trip path.
 - 2026-06-13: H3/#97 child issue `#359` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for `SCATTER ... NAME &macro` / `GATHER NAME &macro` object targets, verifying forms such as `&cObjectNameDeepHolder` on the existing additive object-target path.
 - 2026-06-13: H3/#97 child issue `#358` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for `DISPLAY STRUCTURE IN &alias` / `LIST STRUCTURE IN &alias`, verifying raw/resolved target detail through `&cAliasDeepHolder`.

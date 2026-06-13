@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#361` with focused proof-hardening for round-trip `COPY TO ARRAY` macro targets: `test_prg_engine_data_io` now reuses the existing true second-hop holder chain on both sides of the round-trip harness, verifying `COPY TO ARRAY &cTempArrayDeepHolder` alongside `APPEND FROM ARRAY &cTempArrayDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#360` with focused proof-hardening for temporal `COPY TO ARRAY` / `APPEND FROM ARRAY` macros: `test_prg_engine_data_io` now uses a true second-hop holder chain for `&cArrayNameDeepHolder` on the date/datetime round-trip path, verifying typed temporal array transfer through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#359` with focused proof-hardening for `SCATTER NAME` / `GATHER NAME` macro object targets: `test_prg_engine_data_io` now uses a true second-hop holder chain for `SCATTER ... NAME &cObjectNameDeepHolder` and `GATHER NAME &cObjectNameDeepHolder`, verifying the existing additive object-target path through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#358` with focused proof-hardening for `DISPLAY` / `LIST STRUCTURE` macro `IN` targets: `test_prg_engine_data_io` now uses a true second-hop holder chain for `DISPLAY STRUCTURE IN &cAliasDeepHolder` and `LIST STRUCTURE IN &cAliasDeepHolder`, verifying raw/resolved target detail through the shared cursor-designator event path.

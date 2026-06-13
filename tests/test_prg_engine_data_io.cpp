@@ -3843,7 +3843,7 @@ void test_append_from_array_writes_records_from_2d_array() {
         "cTempArray = 'tmparr'\n"
         "cTempArrayHolder = 'cTempArray'\n"
         "cTempArrayDeepHolder = 'cTempArrayHolder'\n"
-        "COPY TO ARRAY &cTempArray\n"
+        "COPY TO ARRAY &cTempArrayDeepHolder\n"
         "USE '" + (temp_root / "dest.dbf").string() + "'\n"
         "APPEND FROM ARRAY &cTempArrayDeepHolder\n"
         "GO 1\n"
