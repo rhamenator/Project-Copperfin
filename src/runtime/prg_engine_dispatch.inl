@@ -2444,19 +2444,6 @@
                     }
                     return false;
                 };
-                const auto evaluate_set_string_value = [&](const std::string &raw_value, const std::string &default_value) -> std::string
-                {
-                    const std::string candidate = strip_set_to_value(raw_value);
-                    if (candidate.empty())
-                    {
-                        return default_value;
-                    }
-                    if (should_evaluate_set_value(candidate))
-                    {
-                        return value_as_string(evaluate_expression(candidate, frame));
-                    }
-                    return unquote_string(candidate);
-                };
                 const auto expand_set_text_macro = [&](const std::string &raw_value) -> std::optional<std::string>
                 {
                     std::string candidate = strip_set_to_value(raw_value);
@@ -2504,6 +2491,23 @@
                     }
 
                     return expanded == candidate ? std::optional<std::string>{std::string{}} : std::optional<std::string>{expanded};
+                };
+                const auto evaluate_set_string_value = [&](const std::string &raw_value, const std::string &default_value) -> std::string
+                {
+                    const std::string candidate = strip_set_to_value(raw_value);
+                    if (candidate.empty())
+                    {
+                        return default_value;
+                    }
+                    if (const auto expanded_macro = expand_set_text_macro(candidate); expanded_macro.has_value())
+                    {
+                        return *expanded_macro;
+                    }
+                    if (should_evaluate_set_value(candidate))
+                    {
+                        return value_as_string(evaluate_expression(candidate, frame));
+                    }
+                    return unquote_string(candidate);
                 };
                 const auto evaluate_set_integer_value = [&](const std::string &raw_value, int default_value, int min_value, int max_value) -> int
                 {

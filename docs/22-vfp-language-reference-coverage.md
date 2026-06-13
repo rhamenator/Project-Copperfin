@@ -99,7 +99,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `USE`, `USE IN`, `USE AGAIN`
 - `SET DATASESSION TO`
 - `SET DEFAULT TO`
-- `SET`
+- `SET` — first-pass runtime-state surface now includes second-hop holder macro value coverage across ordinary string/numeric/logical options in addition to the earlier direct-variable paths; focused regressions now lock down representative forms such as `SET PATH TO &cPathTargetDeepHolder`, `SET MARK TO &cMarkTargetDeepHolder`, `SET DECIMALS TO &cDecimalsTargetDeepHolder`, `SET COLLATE TO &cCollateTargetDeepHolder`, `SET NULL TO &cNullTargetDeepHolder`, and `SET ANSI TO &cAnsiTargetDeepHolder`
 - `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover both open work-area cursors and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
 - `ON ERROR`
 - `ON SHUTDOWN` — first-pass shutdown-handler semantics for `ON SHUTDOWN DO <routine> [WITH ...]` plus common inline compatibility forms including `ON SHUTDOWN CLEAR EVENTS` and close-style cleanup commands such as `ON SHUTDOWN CLOSE DATABASES ALL`; shutdown routines run before final `QUIT` completion and nested `QUIT` inside the shutdown routine is treated as the terminal quit rather than recursing indefinitely

@@ -99,20 +99,41 @@ namespace
             "nDecimalsTarget = 4\n"
             "cCollateTarget = 'machine'\n"
             "lNullTarget = .T.\n"
+            "cPathTargetHolder = 'cPathTarget'\n"
+            "cPathTargetDeepHolder = 'cPathTargetHolder'\n"
+            "cMarkTargetHolder = 'cMarkTarget'\n"
+            "cMarkTargetDeepHolder = 'cMarkTargetHolder'\n"
+            "cDecimalsTargetHolder = 'nDecimalsTarget'\n"
+            "cDecimalsTargetDeepHolder = 'cDecimalsTargetHolder'\n"
+            "cCollateTargetHolder = 'cCollateTarget'\n"
+            "cCollateTargetDeepHolder = 'cCollateTargetHolder'\n"
+            "cNullTargetHolder = 'lNullTarget'\n"
+            "cNullTargetDeepHolder = 'cNullTargetHolder'\n"
+            "lAnsiTarget = .F.\n"
+            "cAnsiTargetHolder = 'lAnsiTarget'\n"
+            "cAnsiTargetDeepHolder = 'cAnsiTargetHolder'\n"
             "SET PATH TO '/tmp/copperfin'\n"
             "cPathValue = SET('PATH')\n"
             "SET PATH TO cPathTarget\n"
             "cPathFromVariable = SET('PATH')\n"
+            "SET PATH TO &cPathTargetDeepHolder\n"
+            "cPathFromSecondHopMacro = SET('PATH')\n"
             "cEvalPathExpr = \"SET('PATH')\"\n"
             "cEvalPathMacro = EVALUATE(&cEvalPathExpr)\n"
             "cEvalPathExprHolder = 'cEvalPathExpr'\n"
             "cEvalPathSecondHopMacro = EVALUATE(&cEvalPathExprHolder)\n"
             "SET MARK TO cMarkTarget\n"
             "cMarkFromVariable = SET('MARK')\n"
+            "SET MARK TO &cMarkTargetDeepHolder\n"
+            "cMarkFromSecondHopMacro = SET('MARK')\n"
             "SET DECIMALS TO nDecimalsTarget\n"
             "cDecimalsFromVariable = SET('DECIMALS')\n"
+            "SET DECIMALS TO &cDecimalsTargetDeepHolder\n"
+            "cDecimalsFromSecondHopMacro = SET('DECIMALS')\n"
             "SET COLLATE TO cCollateTarget\n"
             "cCollateFromVariable = SET('COLLATE')\n"
+            "SET COLLATE TO &cCollateTargetDeepHolder\n"
+            "cCollateFromSecondHopMacro = SET('COLLATE')\n"
             "SET FDOW TO 7\n"
             "cFdowFromSet = SET('FDOW')\n"
             "SET FWEEK TO 4\n"
@@ -125,8 +146,13 @@ namespace
             "cCurrencyFromSet = SET('CURRENCY')\n"
             "SET NULL TO lNullTarget\n"
             "cNullFromVariable = SET('NULL')\n"
+            "SET NULL TO &cNullTargetDeepHolder\n"
+            "cNullFromSecondHopMacro = SET('NULL')\n"
             "SET ANSI ON\n"
             "cAnsiOn = SET('ANSI')\n"
+            "SET ANSI TO &cAnsiTargetDeepHolder\n"
+            "cAnsiFromSecondHopMacro = SET('ANSI')\n"
+            "SET ANSI ON\n"
             "SET DATASESSION TO 2\n"
             "cCollateSession2 = SET('COLLATE')\n"
             "cFdowSession2 = SET('FDOW')\n"
@@ -225,17 +251,23 @@ namespace
         check("cdefaultcurrency", "$");
         check("cpathvalue", "/tmp/copperfin");
         check("cpathfromvariable", "/tmp/copperfin");
+        check("cpathfromsecondhopmacro", "/tmp/copperfin");
         check("cevalpathmacro", "/tmp/copperfin");
         check("cmarkfromvariable", "-");
+        check("cmarkfromsecondhopmacro", "-");
         check("cdecimalsfromvariable", "4");
+        check("cdecimalsfromsecondhopmacro", "4");
         check("ccollatefromvariable", "MACHINE");
+        check("ccollatefromsecondhopmacro", "MACHINE");
         check("cfdowfromset", "7");
         check("cfweekfromset", "3");
         check("cpointfromset", ";");
         check("cseparatorfromset", ":");
         check("ccurrencyfromset", "USD");
         check("cnullfromvariable", "ON");
+        check("cnullfromsecondhopmacro", "ON");
         check("cansion", "ON");
+        check("cansifromsecondhopmacro", "OFF");
         check("ccollatesession2", "MACHINE");
         check("cfdowsession2", "1");
         check("cfweeksession2", "1");
