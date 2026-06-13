@@ -33,11 +33,13 @@ namespace
             "cMacroNameDeepHolder = 'cMacroNameHolder'\n"
             "cSelfRef = 'cSelfRef'\n"
             "cFallbackExpr = 'plain text value'\n"
+            "cFallbackExprHolder = 'cFallbackExpr'\n"
+            "cFallbackExprDeepHolder = 'cFallbackExprHolder'\n"
             "nDirect = &cExpr\n"
             "nIndirect = &cMacroName\n"
             "nIndirectSecondHop = &cMacroNameDeepHolder\n"
             "cSelfResult = &cSelfRef\n"
-            "cFallback = &cFallbackExpr\n"
+            "cFallback = &cFallbackExprDeepHolder\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
