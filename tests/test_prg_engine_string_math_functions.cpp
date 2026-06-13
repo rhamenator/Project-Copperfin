@@ -495,6 +495,7 @@ namespace
             "cEvalNested = EVAL(EVAL(cEvalExprHolder))\n"
             "cEvalNestedSecondHop = EVAL(&cEvalExprDeepHolder)\n"
             "cMergedFromEval = TEXTMERGE('Hello <<EVAL(cEvalExpr)>>!')\n"
+            "cMergedFromEvalSecondHop = TEXTMERGE('Hello <<EVAL(&cEvalExprDeepHolder)>>!')\n"
             "nBase = 10\n"
             "cScriptExpr = 'nBase + 2'\n"
             "cScriptText = 'RETURN EVAL(cScriptExpr)'\n"
@@ -524,6 +525,7 @@ namespace
         check("cevalnested", "Copperfin");
         check("cevalnestedsecondhop", "Copperfin");
         check("cmergedfromeval", "Hello Copperfin!");
+        check("cmergedfromevalsecondhop", "Hello Copperfin!");
         check("nexecnested", "12");
         check("nexecnestedsecondhop", "12");
 
