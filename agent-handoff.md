@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#354` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for `DO &macro` routine targets, verifying `DO &cProcDeepHolder` through the shared command-target dispatch path.
 - 2026-06-13: H3/#97 child issue `#353` is now shipped. Focused `test_prg_engine` coverage now uses a true second-hop holder chain for `USE IN &alias` closure, verifying `USE IN &cAliasExprDeepHolder` through the shared alias-target runtime-state path.
 - 2026-06-13: H3/#97 child issue `#352` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain on the alias side in the deepest alias-qualified macro field-access and `LOCATE FOR` cases, verifying forms such as `&cAliasDeepHolder..&cNestedFieldHolder`.
 - 2026-06-13: H3/#97 child issue `#351` is now shipped. Focused `test_prg_engine_table_mutation` coverage now uses true second-hop holder chains for local SQL-style `DELETE FROM` and `UPDATE ... FOR &expr` flows, verifying forms such as `&cDeleteExprDeepHolder` and `&cUpdateExprDeepHolder`.

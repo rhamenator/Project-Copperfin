@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#354` with focused proof-hardening for `DO &macro` routine targets: `test_prg_engine` now uses a true second-hop holder chain for the macro-expanded routine target, verifying `DO &cProcDeepHolder` through the shared command-target dispatch path.
 - Macro/eval slice `#97` advanced across child issue `#353` with focused proof-hardening for `USE IN &alias` closure: `test_prg_engine` now uses a true second-hop holder chain for the macro-expanded alias target, verifying `USE IN &cAliasExprDeepHolder` through the shared alias-target runtime-state path.
 - Macro/eval slice `#97` advanced across child issue `#352` with focused proof-hardening for alias-qualified macro field access: `test_prg_engine_functions` now uses a true second-hop holder chain on the alias side in the deepest alias-qualified field-access and `LOCATE FOR` cases, verifying forms such as `&cAliasDeepHolder..&cNestedFieldHolder`.
 - Macro/eval slice `#97` advanced across child issue `#351` with focused proof-hardening for local SQL-style `FOR &expr` flows: `test_prg_engine_table_mutation` now uses true second-hop holder chains for `DELETE FROM` and `UPDATE ... FOR` filter expressions, verifying forms such as `&cDeleteExprDeepHolder` and `&cUpdateExprDeepHolder` against the shared local SQL-style filter path and event payloads.

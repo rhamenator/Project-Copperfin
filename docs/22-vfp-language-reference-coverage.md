@@ -56,7 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
-- `DO`, `DO FORM`, `REPORT FORM`, `LABEL FORM`
+- `DO`, `DO FORM`, `REPORT FORM`, `LABEL FORM` — command-target coverage now also includes true second-hop macro-expanded routine dispatch such as `DO &cProcDeepHolder`
 - `CALL` — first-pass command-path parity now includes `CALL <target> WITH ...` argument binding and external `.prg` target resolution when local routines are not found, including BYREF `@var` write-back through existing call-reference plumbing
 - `ACTIVATE POPUP`, `ACTIVATE MENU`, `RELEASE POPUP`, `RELEASE MENU`
 - `RETURN`
