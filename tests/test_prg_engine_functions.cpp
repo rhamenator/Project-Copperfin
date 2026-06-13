@@ -418,6 +418,7 @@ namespace
             "cNameFromDynamicFieldSecondHop = &cAliasDeepHolder..&cNestedFieldHolder\n"
             "nAgeFromDynamicField = &cAlias..&cAgeField\n"
             "nAgeFromDynamicFieldNested = &cAliasHolder..&cAgeFieldHolder\n"
+            "nAgeFromDynamicFieldSecondHop = &cAliasDeepHolder..&cAgeFieldHolder\n"
             "LOCATE FOR &cAlias..&cNestedField = 'BRAVO'\n"
             "LOCATE FOR &cAliasHolder..&cNestedFieldHolder = 'BRAVO'\n"
             "LOCATE FOR &cAliasDeepHolder..&cNestedFieldHolder = 'BRAVO'\n"
@@ -454,6 +455,7 @@ namespace
         check("cnamefromdynamicfieldsecondhop", "ALPHA");
         check("nagefromdynamicfield", "11");
         check("nagefromdynamicfieldnested", "11");
+        check("nagefromdynamicfieldsecondhop", "11");
         check("lfounddynamic", "true");
         check("clocatedname", "BRAVO");
 
