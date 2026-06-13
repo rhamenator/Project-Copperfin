@@ -513,7 +513,26 @@
                             match(",");
                         }
                     }
-                    if (array_exists_callback_(identifier))
+                    const std::string normalized_identifier = normalize_identifier(identifier);
+                    const bool prefer_function_call =
+                        normalized_identifier == "acopy" ||
+                        normalized_identifier == "adel" ||
+                        normalized_identifier == "adir" ||
+                        normalized_identifier == "aelement" ||
+                        normalized_identifier == "afields" ||
+                        normalized_identifier == "afont" ||
+                        normalized_identifier == "agetfileversion" ||
+                        normalized_identifier == "ains" ||
+                        normalized_identifier == "alen" ||
+                        normalized_identifier == "alines" ||
+                        normalized_identifier == "aprinters" ||
+                        normalized_identifier == "ascan" ||
+                        normalized_identifier == "asessions" ||
+                        normalized_identifier == "asize" ||
+                        normalized_identifier == "asort" ||
+                        normalized_identifier == "asubscript" ||
+                        normalized_identifier == "aused";
+                    if (!prefer_function_call && array_exists_callback_(identifier))
                     {
                         const std::size_t row = arguments.empty()
                                                     ? 0U
@@ -1233,20 +1252,47 @@
                 const std::string &raw_argument,
                 const PrgValue *evaluated_argument) const
             {
-                const std::string trimmed_raw = trim_copy(raw_argument);
-                if (is_bare_identifier_text(trimmed_raw))
-                {
-                    return trimmed_raw;
-                }
-                if (evaluated_argument != nullptr && evaluated_argument->kind == PrgValueKind::string)
+                std::string candidate = trim_copy(raw_argument);
+                if (!is_bare_identifier_text(candidate) &&
+                    evaluated_argument != nullptr &&
+                    evaluated_argument->kind == PrgValueKind::string)
                 {
                     const std::string evaluated_name = trim_copy(value_as_string(*evaluated_argument));
                     if (is_bare_identifier_text(evaluated_name))
                     {
-                        return evaluated_name;
+                        candidate = evaluated_name;
                     }
                 }
-                return trimmed_raw;
+                if (is_bare_identifier_text(candidate))
+                {
+                    constexpr std::size_t max_array_name_depth = 16U;
+                    std::vector<std::string> visited_identifiers;
+                    visited_identifiers.reserve(8U);
+                    for (std::size_t depth = 0U; depth < max_array_name_depth; ++depth)
+                    {
+                        const std::string normalized = normalize_memory_variable_identifier(candidate);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized);
+
+                        const PrgValue indirect_value = resolve_identifier(candidate);
+                        if (indirect_value.kind != PrgValueKind::string)
+                        {
+                            break;
+                        }
+
+                        const std::string next = trim_copy(value_as_string(indirect_value));
+                        if (next.empty() || next == candidate || !is_bare_identifier_text(next))
+                        {
+                            break;
+                        }
+
+                        candidate = next;
+                    }
+                }
+                return candidate;
             }
 
             PrgValue resolve_identifier(const std::string &identifier) const

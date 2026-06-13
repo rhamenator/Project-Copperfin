@@ -13,20 +13,48 @@
             }
             const auto resolve_array_argument_name = [&](std::size_t index)
             {
-                const std::string raw_argument = index < raw_arguments.size() ? trim_copy(raw_arguments[index]) : std::string{};
-                if (is_bare_identifier_text(raw_argument))
-                {
-                    return raw_argument;
-                }
-                if (index < arguments.size() && arguments[index].kind == PrgValueKind::string)
+                std::string candidate = index < raw_arguments.size() ? trim_copy(raw_arguments[index]) : std::string{};
+                if (!is_bare_identifier_text(candidate) &&
+                    index < arguments.size() &&
+                    arguments[index].kind == PrgValueKind::string)
                 {
                     const std::string evaluated_name = trim_copy(value_as_string(arguments[index]));
                     if (is_bare_identifier_text(evaluated_name))
                     {
-                        return evaluated_name;
+                        candidate = evaluated_name;
                     }
                 }
-                return raw_argument;
+                if (is_bare_identifier_text(candidate) && !stack.empty())
+                {
+                    Frame &frame = stack.back();
+                    constexpr std::size_t max_array_name_depth = 16U;
+                    std::vector<std::string> visited_identifiers;
+                    visited_identifiers.reserve(8U);
+                    for (std::size_t depth = 0U; depth < max_array_name_depth; ++depth)
+                    {
+                        const std::string normalized = normalize_memory_variable_identifier(candidate);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized);
+
+                        const PrgValue indirect_value = lookup_variable(frame, candidate);
+                        if (indirect_value.kind != PrgValueKind::string)
+                        {
+                            break;
+                        }
+
+                        const std::string next = trim_copy(value_as_string(indirect_value));
+                        if (next.empty() || next == candidate || !is_bare_identifier_text(next))
+                        {
+                            break;
+                        }
+
+                        candidate = next;
+                    }
+                }
+                return candidate;
             };
             const std::string array_name = resolve_array_argument_name(0U);
             const std::string normalized_function = normalize_identifier(function);

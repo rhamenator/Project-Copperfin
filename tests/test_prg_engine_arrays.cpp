@@ -417,9 +417,12 @@ void test_macro_expanded_array_helpers_and_access() {
     write_text(
         main_path,
         "cArrayName = 'cResolvedArray'\n"
+        "cArrayNameDeepHolder = 'cArrayName'\n"
         "cResolvedArray = 'aGrid'\n"
         "cLinesName = 'aLines'\n"
+        "cLinesNameDeepHolder = 'cLinesName'\n"
         "cCopyName = 'aCopy'\n"
+        "cCopyNameDeepHolder = 'cCopyName'\n"
         "DIMENSION aGrid[2,2]\n"
         "aGrid[1,1] = 'A'\n"
         "aGrid[1,2] = 'B'\n"
@@ -438,13 +441,26 @@ void test_macro_expanded_array_helpers_and_access() {
         "cCopiedTwo = &cCopyName[2]\n"
         "cLineOne = &cLinesName[1]\n"
         "cLineTwo = &cLinesName[2]\n"
+        "nLineCountSecondHop = ALINES(&cLinesNameDeepHolder, 'east' + CHR(13) + CHR(10) + 'west')\n"
+        "nGridSizeSecondHop = ALEN(&cArrayNameDeepHolder)\n"
+        "nGridRowsSecondHop = ALEN(&cArrayNameDeepHolder, 1)\n"
+        "nGridColsSecondHop = ALEN(&cArrayNameDeepHolder, 2)\n"
+        "cMacroBracketSecondHop = &cArrayNameDeepHolder[2,1]\n"
+        "cMacroParenSecondHop = &cArrayNameDeepHolder(1,2)\n"
+        "nMacroElementSecondHop = AELEMENT(&cArrayNameDeepHolder, 2, 2)\n"
+        "nCopiedSecondHop = ACOPY(&cArrayNameDeepHolder, &cCopyNameDeepHolder, 2, 2, 1)\n"
+        "nCopySizeSecondHop = ALEN(&cCopyNameDeepHolder)\n"
+        "cCopiedOneSecondHop = &cCopyNameDeepHolder[1]\n"
+        "cCopiedTwoSecondHop = &cCopyNameDeepHolder[2]\n"
+        "cLineOneSecondHop = &cLinesNameDeepHolder[1]\n"
+        "cLineTwoSecondHop = &cLinesNameDeepHolder[2]\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "macro-expanded array helper script should complete");
+    expect(state.completed, "macro-expanded array helper script should complete: " + state.message);
 
     const auto line_count = state.globals.find("nlinecount");
     const auto grid_size = state.globals.find("ngridsize");
@@ -459,6 +475,19 @@ void test_macro_expanded_array_helpers_and_access() {
     const auto copied_two = state.globals.find("ccopiedtwo");
     const auto line_one = state.globals.find("clineone");
     const auto line_two = state.globals.find("clinetwo");
+    const auto line_count_second_hop = state.globals.find("nlinecountsecondhop");
+    const auto grid_size_second_hop = state.globals.find("ngridsizesecondhop");
+    const auto grid_rows_second_hop = state.globals.find("ngridrowssecondhop");
+    const auto grid_cols_second_hop = state.globals.find("ngridcolssecondhop");
+    const auto macro_bracket_second_hop = state.globals.find("cmacrobracketsecondhop");
+    const auto macro_paren_second_hop = state.globals.find("cmacroparensecondhop");
+    const auto macro_element_second_hop = state.globals.find("nmacroelementsecondhop");
+    const auto copied_second_hop = state.globals.find("ncopiedsecondhop");
+    const auto copy_size_second_hop = state.globals.find("ncopysizesecondhop");
+    const auto copied_one_second_hop = state.globals.find("ccopiedonesecondhop");
+    const auto copied_two_second_hop = state.globals.find("ccopiedtwosecondhop");
+    const auto line_one_second_hop = state.globals.find("clineonesecondhop");
+    const auto line_two_second_hop = state.globals.find("clinetwosecondhop");
 
     expect(line_count != state.globals.end(), "ALINES should accept a macro-expanded target array name");
     expect(grid_size != state.globals.end(), "ALEN should accept a macro-expanded array identifier");
@@ -473,6 +502,19 @@ void test_macro_expanded_array_helpers_and_access() {
     expect(copied_two != state.globals.end(), "macro-expanded ACOPY target second element should be readable");
     expect(line_one != state.globals.end(), "macro-expanded ALINES target first line should be readable");
     expect(line_two != state.globals.end(), "macro-expanded ALINES target second line should be readable");
+    expect(line_count_second_hop != state.globals.end(), "ALINES should accept a second-hop macro-expanded target array name");
+    expect(grid_size_second_hop != state.globals.end(), "ALEN should accept a second-hop macro-expanded array identifier");
+    expect(grid_rows_second_hop != state.globals.end(), "ALEN(...,1) should accept a second-hop macro-expanded array identifier");
+    expect(grid_cols_second_hop != state.globals.end(), "ALEN(...,2) should accept a second-hop macro-expanded array identifier");
+    expect(macro_bracket_second_hop != state.globals.end(), "second-hop macro-expanded bracket array access should resolve");
+    expect(macro_paren_second_hop != state.globals.end(), "second-hop macro-expanded paren array access should resolve");
+    expect(macro_element_second_hop != state.globals.end(), "AELEMENT should accept a second-hop macro-expanded array identifier");
+    expect(copied_second_hop != state.globals.end(), "ACOPY should accept second-hop macro-expanded source and target array names");
+    expect(copy_size_second_hop != state.globals.end(), "second-hop macro-expanded ACOPY target should be readable through ALEN");
+    expect(copied_one_second_hop != state.globals.end(), "second-hop macro-expanded ACOPY target first element should be readable");
+    expect(copied_two_second_hop != state.globals.end(), "second-hop macro-expanded ACOPY target second element should be readable");
+    expect(line_one_second_hop != state.globals.end(), "second-hop macro-expanded ALINES target first line should be readable");
+    expect(line_two_second_hop != state.globals.end(), "second-hop macro-expanded ALINES target second line should be readable");
 
     if (line_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(line_count->second) == "2",
@@ -525,6 +567,58 @@ void test_macro_expanded_array_helpers_and_access() {
     if (line_two != state.globals.end()) {
         expect(copperfin::runtime::format_value(line_two->second) == "south",
             "ALINES should preserve the second line in a macro-expanded target array");
+    }
+    if (line_count_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_count_second_hop->second) == "2",
+            "ALINES should populate a second-hop macro-expanded target array name");
+    }
+    if (grid_size_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_size_second_hop->second) == "4",
+            "ALEN should report total elements for a second-hop macro-expanded array identifier");
+    }
+    if (grid_rows_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_rows_second_hop->second) == "2",
+            "ALEN(..., 1) should report rows for a second-hop macro-expanded array identifier");
+    }
+    if (grid_cols_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(grid_cols_second_hop->second) == "2",
+            "ALEN(..., 2) should report columns for a second-hop macro-expanded array identifier");
+    }
+    if (macro_bracket_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_bracket_second_hop->second) == "C",
+            "second-hop &macro[ row, col ] should resolve through the expanded array identifier");
+    }
+    if (macro_paren_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_paren_second_hop->second) == "B",
+            "second-hop &macro(row, col) should resolve through the expanded array identifier");
+    }
+    if (macro_element_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_element_second_hop->second) == "4",
+            "AELEMENT should use the second-hop expanded array identifier and preserve mixed-type cells");
+    }
+    if (copied_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied_second_hop->second) == "2",
+            "ACOPY should copy from a second-hop macro-expanded source into a second-hop macro-expanded target array");
+    }
+    if (copy_size_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_size_second_hop->second) == "2",
+            "second-hop macro-expanded ACOPY target should have two copied elements");
+    }
+    if (copied_one_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied_one_second_hop->second) == "B",
+            "ACOPY should preserve the first copied value through a second-hop macro-expanded target name");
+    }
+    if (copied_two_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied_two_second_hop->second) == "C",
+            "ACOPY should preserve adjacent mixed-type-compatible copied values through a second-hop macro-expanded target name");
+    }
+    if (line_one_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_one_second_hop->second) == "east",
+            "ALINES should preserve the first line in a second-hop macro-expanded target array");
+    }
+    if (line_two_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(line_two_second_hop->second) == "west",
+            "ALINES should preserve the second line in a second-hop macro-expanded target array");
     }
 
     fs::remove_all(temp_root, ignored);
