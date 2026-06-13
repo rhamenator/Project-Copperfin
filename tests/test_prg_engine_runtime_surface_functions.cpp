@@ -1076,7 +1076,7 @@ namespace
             "cSearchExprDeepHolder = 'cSearchExprHolder'\n"
             "cFound = LOOKUP(&cReturnExpr, &cSearchExpr, cAlias, cTag)\n"
             "cFoundNested = LOOKUP(&cReturnExprHolder, &cSearchExprHolder, cAlias, cTag)\n"
-            "cFoundSecondHop = LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, cAlias, cTag)\n"
+            "cFoundSecondHop = LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)\n"
             "nFoundAge = LOOKUP(&cAgeExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)\n"
             "nSelectedAfter = SELECT()\n"
             "cAliasAfter = ALIAS()\n"
