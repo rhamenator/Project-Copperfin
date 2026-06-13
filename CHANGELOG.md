@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#379` with focused proof-hardening for `STORE ... TO &target` array-element assignment: `test_prg_engine_arrays` now uses a true second-hop holder chain for the macro target path, verifying `STORE 6 TO &cMacroTargetDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#378` with focused proof-hardening for `DO &macro` routine targets: `test_prg_engine` now uses a true second-hop holder chain for the routine-target path, verifying `DO &cProcDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#377` with focused proof-hardening for the `macro_deep.prg` harness: `test_prg_engine` now uses true second-hop holder chains for the row-expression, field-expression, assignment-target, and `DO ... WITH` argument paths, verifying forms such as `aData[&cRowExprDeepHolder]`, `LEN(&cFieldExprDeepHolder)`, `&cTargetDeepHolder = 'MACROASSIGN'`, and `DO testparam WITH &cParamExprDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#376` with focused proof-hardening for local SQL-style `FOR` expression macros: `test_prg_engine_table_mutation` now uses true second-hop holder chains for the delete/update expression paths, verifying `DELETE FROM People FOR &cDeleteExprDeepHolder` and `UPDATE People SET NAME = 'Thirty' FOR &cUpdateExprDeepHolder`.

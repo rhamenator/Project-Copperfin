@@ -639,7 +639,8 @@ void test_store_uses_assignment_target_semantics() {
         main_path,
         "DIMENSION aVals[3]\n"
         "cMacroTarget = 'aVals[2]'\n"
-        "cMacroTargetDeepHolder = 'cMacroTarget'\n"
+        "cMacroTargetHolder = 'cMacroTarget'\n"
+        "cMacroTargetDeepHolder = 'cMacroTargetHolder'\n"
         "STORE 5 TO aVals[1]\n"
         "STORE 6 TO &cMacroTargetDeepHolder\n"
         "STORE 7 TO nScalar, aVals[3]\n"
