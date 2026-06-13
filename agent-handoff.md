@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#339` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now uses a true second-hop holder chain for runtime-state path text, verifying `EVALUATE(&cEvalPathExprDeepHolder)` instead of a first-hop-only holder mislabeled as second-hop.
 - 2026-06-13: H3/#97 child issue `#338` is now shipped. Focused `test_prg_engine_data_io` coverage now uses true second-hop holder chains for headless command target-detail proof across `INPUT` / `ACCEPT`, `WAIT WINDOW`, and `DISPLAY` / `LIST`, verifying raw/resolved detail against forms such as `&cInputTargetDeepHolder`, `&cWaitTargetDeepHolder`, and `&cAliasDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#337` is now shipped. `evaluate_set_string_value()` now reuses bounded raw macro expansion before expression evaluation, and focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop holder value macros across ordinary `SET` runtime-state options such as `PATH`, `MARK`, `DECIMALS`, `COLLATE`, `NULL`, and `ANSI`.
 - 2026-06-13: H3/#97 child issue `#336` is now shipped. `expand_set_text_macro()` now chases bounded bare-identifier holder hops after the initial `&macro` expansion, and focused `test_prg_engine_sql_cursors` coverage now locks down second-hop `SET FIELDS TO &...` visible-field metadata plus second-hop `SET FILTER TO &... IN sqlcust` positioning and field lookup parity.
