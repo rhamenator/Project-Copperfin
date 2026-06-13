@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#372` with focused proof-hardening for direct macro self-reference fallback: `test_prg_engine_functions` now uses a true second-hop holder chain for the self-reference branch, verifying `&cSelfRefDeepHolder` still resolves to the literal fallback text `cSelfRef`.
 - Macro/eval slice `#97` advanced across child issue `#371` with focused proof-hardening for direct macro fallback text: `test_prg_engine_functions` now uses a true second-hop holder chain for the fallback-text branch, verifying `&cFallbackExprDeepHolder` when the expanded text should remain raw string content.
 - Macro/eval slice `#97` advanced across child issue `#370` with focused proof-hardening for the first `COPY TO ARRAY` macro target: `test_prg_engine_data_io` now uses a true second-hop holder chain for the `macroarr` export/readback path, verifying forms such as `&cMacroArrayDeepHolder` alongside the existing deeper companion branch.
 - Macro/eval slice `#97` advanced across child issue `#369` with focused proof-hardening for array-helper target names: `test_prg_engine_arrays` now uses true second-hop holder chains for the `ALINES` target-array path and `ACOPY` target-array path, verifying forms such as `&cLinesNameDeepHolder` and `&cCopyNameDeepHolder`.

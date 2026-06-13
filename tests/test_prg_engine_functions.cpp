@@ -32,13 +32,15 @@ namespace
             "cMacroNameHolder = 'cMacroName'\n"
             "cMacroNameDeepHolder = 'cMacroNameHolder'\n"
             "cSelfRef = 'cSelfRef'\n"
+            "cSelfRefHolder = 'cSelfRef'\n"
+            "cSelfRefDeepHolder = 'cSelfRefHolder'\n"
             "cFallbackExpr = 'plain text value'\n"
             "cFallbackExprHolder = 'cFallbackExpr'\n"
             "cFallbackExprDeepHolder = 'cFallbackExprHolder'\n"
             "nDirect = &cExpr\n"
             "nIndirect = &cMacroName\n"
             "nIndirectSecondHop = &cMacroNameDeepHolder\n"
-            "cSelfResult = &cSelfRef\n"
+            "cSelfResult = &cSelfRefDeepHolder\n"
             "cFallback = &cFallbackExprDeepHolder\n"
             "RETURN\n");
 
