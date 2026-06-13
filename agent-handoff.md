@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#352` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain on the alias side in the deepest alias-qualified macro field-access and `LOCATE FOR` cases, verifying forms such as `&cAliasDeepHolder..&cNestedFieldHolder`.
 - 2026-06-13: H3/#97 child issue `#351` is now shipped. Focused `test_prg_engine_table_mutation` coverage now uses true second-hop holder chains for local SQL-style `DELETE FROM` and `UPDATE ... FOR &expr` flows, verifying forms such as `&cDeleteExprDeepHolder` and `&cUpdateExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#350` is now shipped. Focused `test_prg_engine_sql_cursors` coverage now uses true second-hop holder chains for SQL cursor `LOCATE` / `DELETE` / `RECALL FOR &expr` flows, verifying forms such as `&cLocateExprDeepHolder` and `&cDeleteExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#349` is now shipped. Focused `test_prg_engine_arrays` coverage now uses a true second-hop holder chain for `STORE ... TO &target` array-element assignment, verifying `STORE 6 TO &cMacroTargetDeepHolder` through the shared assignment-target path.
