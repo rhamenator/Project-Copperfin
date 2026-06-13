@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#368` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for the first macro-expanded `SCATTER TO` / `GATHER FROM` round-trip, verifying `&cMacroRowNameDeepHolder` across scatter, gather, and adjacent macro array reads.
 - 2026-06-13: H3/#97 child issue `#367` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the alias-qualified dynamic `AGE` branch, verifying `&cAliasDeepHolder..&cAgeFieldHolder`.
 - 2026-06-13: H3/#97 child issue `#366` is now shipped. Focused `test_prg_engine_functions` coverage now uses true second-hop holder chains for direct alias-qualified field reads, verifying `&cAliasDeepHolder..NAME` and `&cAliasDeepHolder..AGE`.
 - 2026-06-13: H3/#97 child issue `#365` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the literal `&stem.suffix` fallback branch, verifying `&cStemDeepHolder.World`.

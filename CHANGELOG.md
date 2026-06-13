@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#368` with focused proof-hardening for the first macro-expanded `SCATTER TO` / `GATHER FROM` round-trip: `test_prg_engine_data_io` now uses a true second-hop holder chain for `&cMacroRowNameDeepHolder` across both scatter and gather plus the adjacent macro array reads.
 - Macro/eval slice `#97` advanced across child issue `#367` with focused proof-hardening for alias-qualified `AGE` macro reads: `test_prg_engine_functions` now uses a true second-hop holder chain for `&cAliasDeepHolder..&cAgeFieldHolder`, verifying the dynamic `AGE` branch through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#366` with focused proof-hardening for direct alias-qualified macro reads: `test_prg_engine_functions` now uses true second-hop holder chains for `&cAliasDeepHolder..NAME` and `&cAliasDeepHolder..AGE`, verifying direct alias-qualified field reads through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#365` with focused proof-hardening for literal `&stem.suffix` expansion: `test_prg_engine_functions` now uses a true second-hop holder chain for `&cStemDeepHolder.World`, verifying the fallback expanded-string branch through real intermediate holders.
