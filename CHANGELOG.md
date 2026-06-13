@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#334` with a small shared target-resolution fix plus focused second-hop coverage: `resolve_runtime_target_identifier()` now chases bounded holder hops for `TO &target` assignment/detail paths, and `test_prg_engine_data_io` now verifies second-hop target detail for `INPUT`, `ACCEPT`, and `WAIT WINDOW` plus second-hop `IN` target detail for `DISPLAY` / `LIST`.
 - Macro/eval slice `#97` advanced across child issue `#333` with focused second-hop holder coverage: `test_prg_engine_data_io` now verifies `SCATTER TO` / `GATHER FROM` preserve nested holder indirection for command array-name targets such as `&cMacroRowNameDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#332` with a small command object-target helper fix plus focused second-hop coverage: `parse_command_object_target_path()` now chases bounded string-holder hops while stopping before runtime object-reference strings, and `test_prg_engine_data_io` now verifies `SCATTER NAME` / `GATHER NAME` preserve second-hop nested holder indirection for object targets such as `&cHolderDeepHolder.&cChildDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#331` with focused second-hop holder coverage: `test_prg_engine_data_io` now verifies the shared command array-name resolver preserves nested holder indirection for `COPY TO ARRAY` and `APPEND FROM ARRAY` forms such as `&cMacroArrayHolder` and `&cTempArrayHolder`.

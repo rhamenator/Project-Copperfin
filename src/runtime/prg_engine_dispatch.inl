@@ -230,23 +230,39 @@
                     if (!macro_name.empty())
                     {
                         std::string expanded_text = macro_name;
-                        const std::string normalized = normalize_memory_variable_identifier(macro_name);
-                        const auto local = current_frame.locals.find(normalized);
-                        if (local != current_frame.locals.end())
+                        constexpr std::size_t max_macro_target_depth = 16U;
+                        std::vector<std::string> visited_identifiers;
+                        visited_identifiers.reserve(8U);
+                        for (std::size_t depth = 0U; depth < max_macro_target_depth; ++depth)
                         {
-                            const std::string next = trim_copy(value_as_string(local->second));
-                            if (!next.empty())
+                            if (!is_bare_identifier_text(expanded_text))
                             {
-                                expanded_text = next;
+                                break;
                             }
-                        }
-                        else if (const auto global = globals.find(normalized); global != globals.end())
-                        {
-                            const std::string next = trim_copy(value_as_string(global->second));
-                            if (!next.empty())
+
+                            const std::string normalized = normalize_memory_variable_identifier(expanded_text);
+                            if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
                             {
-                                expanded_text = next;
+                                break;
                             }
+                            visited_identifiers.push_back(normalized);
+
+                            std::string next;
+                            if (const auto local = current_frame.locals.find(normalized); local != current_frame.locals.end())
+                            {
+                                next = trim_copy(value_as_string(local->second));
+                            }
+                            else if (const auto global = globals.find(normalized); global != globals.end())
+                            {
+                                next = trim_copy(value_as_string(global->second));
+                            }
+
+                            if (next.empty() || next == expanded_text)
+                            {
+                                break;
+                            }
+
+                            expanded_text = next;
                         }
 
                         resolved_identifier = expanded_text + resolved_identifier.substr(macro_end);
