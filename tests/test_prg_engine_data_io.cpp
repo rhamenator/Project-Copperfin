@@ -5483,8 +5483,10 @@ void test_display_and_list_structure_surface_target_detail() {
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people IN 0\n"
         "USE '" + (temp_root / "people.dbf").string() + "' ALIAS other AGAIN IN 0\n"
         "cAlias = 'other'\n"
-        "DISPLAY STRUCTURE IN &cAlias\n"
-        "LIST STRUCTURE IN &cAlias\n"
+        "cAliasHolder = 'cAlias'\n"
+        "cAliasDeepHolder = 'cAliasHolder'\n"
+        "DISPLAY STRUCTURE IN &cAliasDeepHolder\n"
+        "LIST STRUCTURE IN &cAliasDeepHolder\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -5510,7 +5512,7 @@ void test_display_and_list_structure_surface_target_detail() {
             "DISPLAY STRUCTURE target-detail event should report mode=STRUCTURE");
         expect(display_event->detail.find("other@") != std::string::npos,
             "DISPLAY STRUCTURE should surface the targeted cursor");
-        expect(display_event->detail.find("target=&cAlias") != std::string::npos,
+        expect(display_event->detail.find("target=&cAliasDeepHolder") != std::string::npos,
             "DISPLAY STRUCTURE should retain the raw IN target expression");
         expect(display_event->detail.find("target_resolved=other") != std::string::npos,
             "DISPLAY STRUCTURE should surface the resolved IN target");
@@ -5520,7 +5522,7 @@ void test_display_and_list_structure_surface_target_detail() {
             "LIST STRUCTURE target-detail event should report mode=STRUCTURE");
         expect(list_event->detail.find("other@") != std::string::npos,
             "LIST STRUCTURE should surface the targeted cursor");
-        expect(list_event->detail.find("target=&cAlias") != std::string::npos,
+        expect(list_event->detail.find("target=&cAliasDeepHolder") != std::string::npos,
             "LIST STRUCTURE should retain the raw IN target expression");
         expect(list_event->detail.find("target_resolved=other") != std::string::npos,
             "LIST STRUCTURE should surface the resolved IN target");
