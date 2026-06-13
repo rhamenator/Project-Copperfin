@@ -412,7 +412,7 @@ namespace
             "cLeftDelimDeepHolder = 'cLeftDelimHolder'\n"
             "cRightDelimDeepHolder = 'cRightDelimHolder'\n"
             "cMergedMacroDelims = TEXTMERGE('Eval={{EVAL(cNameExpr)}}; Macro={{&cFieldExpr}}', .F., &cLeftDelimExpr, &cRightDelimExpr)\n"
-            "cMergedMacroDelimsSecondHop = TEXTMERGE('Eval={{EVAL(cNameExpr)}}; Macro={{&cFieldExpr}}', .F., &cLeftDelimDeepHolder, &cRightDelimDeepHolder)\n"
+            "cMergedMacroDelimsSecondHop = TEXTMERGE('Eval={{EVAL(&cNameExprDeepHolder)}}; Macro={{&cFieldExprDeepHolder}}', .F., &cLeftDelimDeepHolder, &cRightDelimDeepHolder)\n"
             // TEXTMERGE no delimiters found
             "cMergedPlain = TEXTMERGE('no markers here')\n"
             // TEXTMERGE recursive nested placeholders

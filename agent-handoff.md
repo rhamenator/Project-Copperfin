@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#382` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses true second-hop holder chains for nested `EVAL()` and `&macro` interpolation inside the alternate-delimiter `TEXTMERGE(..., &cLeftDelimDeepHolder, &cRightDelimDeepHolder)` branch.
 - 2026-06-13: H3/#97 child issue `#381` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses true second-hop holder chains for custom-delimiter `TEXTMERGE()` nested `EVAL()` and `&macro` interpolation, and `evaluate_runtime_surface_function()` now falls back to the last valid bare identifier when macro-expanded `EVAL()` input over-expands into final scalar text.
 - 2026-06-13: H3/#97 child issue `#380` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses a true second-hop holder chain inside merged `TEXTMERGE()` eval content, verifying `EVAL(&cEvalExprDeepHolder)` inside the template.
 - 2026-06-13: H3/#97 child issue `#379` is now shipped. Focused `test_prg_engine_arrays` coverage now uses a true second-hop holder chain for the `STORE ... TO &target` array-element assignment path, verifying `STORE 6 TO &cMacroTargetDeepHolder`.
