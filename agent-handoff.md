@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#363` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now verifies the full SQL `LOOKUP()` all-argument path through true second-hop holder chains, using `LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)`.
 - 2026-06-13: H3/#97 child issue `#362` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now uses a true second-hop holder chain for the numeric `LOOKUP()` return-expression path, verifying `LOOKUP(&cAgeExprDeepHolder, &cSearchExpr, cAlias, cTag)`.
 - 2026-06-13: H3/#97 child issue `#361` is now shipped. Focused `test_prg_engine_data_io` coverage now reuses the existing true second-hop holder chain on both sides of the round-trip array harness, verifying `COPY TO ARRAY &cTempArrayDeepHolder` alongside `APPEND FROM ARRAY &cTempArrayDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#360` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for temporal `COPY TO ARRAY &macro` / `APPEND FROM ARRAY &macro` flows, verifying `&cArrayNameDeepHolder` on the typed date/datetime round-trip path.

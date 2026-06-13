@@ -1141,6 +1141,7 @@ namespace
             "nLookupAmountNested = LOOKUP(&cReturnExpr, &cSearchExpr, &cAliasHolder, &cTagHolder)\n"
             "nLookupAmountSecondHop = LOOKUP(&cReturnExpr, &cSearchExpr, &cAliasDeepHolder, &cTagDeepHolder)\n"
             "nLookupAmountExprSecondHop = LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAlias, &cTag)\n"
+            "nLookupAmountAllSecondHop = LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)\n"
             "nSqlRec = RECNO('sqlcust')\n"
             "nSelectedAfter = SELECT()\n"
             "cAliasAfter = ALIAS()\n"
@@ -1169,6 +1170,7 @@ namespace
         check("nlookupamountnested", "20");
         check("nlookupamountsecondhop", "20");
         check("nlookupamountexprsecondhop", "20");
+        check("nlookupamountallsecondhop", "20");
         check("nselectedafter", "1");
         check("caliasafter", "people");
         check("ldisc", "1");
