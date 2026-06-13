@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#346` is now shipped. Focused `test_prg_engine_data_io` coverage now uses true second-hop holder chains for both macro-expanded nested-property segments in `SCATTER NAME` / `GATHER NAME`, verifying forms such as `&cHolderDeepHolder.&cChildDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#345` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for direct `&macro` expression indirection.
 - 2026-06-13: H3/#97 child issue `#344` is now shipped. Focused `test_prg_engine_control_flow` coverage now uses true second-hop holder chains for command-path `TEXT TO ... TEXTMERGE` nested `EVAL()` and `&macro` interpolation.
 - 2026-06-13: H3/#97 child issue `#343` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses true second-hop holder chains for `TEXTMERGE()` and `EXECSCRIPT()` macro surfaces, including source-template, delimiter, `RETURN &macro`, and script-source forms.
