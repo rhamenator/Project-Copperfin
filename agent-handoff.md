@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#336` is now shipped. `expand_set_text_macro()` now chases bounded bare-identifier holder hops after the initial `&macro` expansion, and focused `test_prg_engine_sql_cursors` coverage now locks down second-hop `SET FIELDS TO &...` visible-field metadata plus second-hop `SET FILTER TO &... IN sqlcust` positioning and field lookup parity.
 - 2026-06-13: H3/#97 child issue `#335` is now shipped. `resolve_runtime_target_identifier()` now stops before scalar values when expanding `&target`, preserving assignment identity across cases such as `PUBLIC shared` plus `RELEASE ALL`, and focused `test_prg_engine_control_flow` coverage now locks down second-hop aggregate `TO` targets such as `&cCountHolder`, `&cSumHolder`, and `&cCalcHolder`.
 - 2026-06-13: H3/#97 child issue `#334` is now shipped. `resolve_runtime_target_identifier()` now chases bounded holder hops for `TO &target` assignment/detail paths, and focused `test_prg_engine_data_io` coverage now locks down second-hop target detail for `INPUT`, `ACCEPT`, and `WAIT WINDOW` plus second-hop `IN` target detail for `DISPLAY` / `LIST`.
 - 2026-06-13: H3/#97 child issue `#333` is now shipped. Focused `test_prg_engine_data_io` coverage now locks down second-hop nested-holder command array-name resolution for `SCATTER TO` / `GATHER FROM` forms such as `&cMacroRowNameDeepHolder`.

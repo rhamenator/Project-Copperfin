@@ -2482,6 +2482,27 @@
                         expanded = referent_text;
                     }
 
+                    constexpr std::size_t max_identifier_hops = 16U;
+                    std::vector<std::string> visited_identifiers;
+                    visited_identifiers.reserve(8U);
+                    while (is_bare_identifier_text(expanded) && visited_identifiers.size() < max_identifier_hops)
+                    {
+                        const std::string normalized = normalize_memory_variable_identifier(expanded);
+                        if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                        {
+                            break;
+                        }
+                        visited_identifiers.push_back(normalized);
+
+                        const PrgValue referent_value = evaluate_expression(expanded, frame);
+                        const std::string referent_text = trim_copy(value_as_string(referent_value));
+                        if (referent_text.empty() || referent_text == expanded)
+                        {
+                            break;
+                        }
+                        expanded = referent_text;
+                    }
+
                     return expanded == candidate ? std::optional<std::string>{std::string{}} : std::optional<std::string>{expanded};
                 };
                 const auto evaluate_set_integer_value = [&](const std::string &raw_value, int default_value, int min_value, int max_value) -> int

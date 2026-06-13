@@ -3954,11 +3954,13 @@ void test_sql_result_cursor_macro_fields_and_filter_parity() {
         "nConn = SQLCONNECT('dsn=Northwind')\n"
         "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
         "cFieldsSpec = 'LIKE N*'\n"
-        "SET FIELDS TO &cFieldsSpec\n"
+        "cFieldsSpecHolder = 'cFieldsSpec'\n"
+        "SET FIELDS TO &cFieldsSpecHolder\n"
         "DISPLAY IN 'sqlcust'\n"
         "SET FIELDS TO OFF\n"
         "cFilterExpr = 'AMOUNT >= 20'\n"
-        "SET FILTER TO &cFilterExpr IN sqlcust\n"
+        "cFilterExprHolder = 'cFilterExpr'\n"
+        "SET FILTER TO &cFilterExprHolder IN sqlcust\n"
         "GO TOP IN sqlcust\n"
         "nFilteredRec = RECNO('sqlcust')\n"
         "cFilteredName = sqlcust.NAME\n"
@@ -3998,10 +4000,10 @@ void test_sql_result_cursor_macro_fields_and_filter_parity() {
         expect(copperfin::runtime::format_value(exec_result->second) == "1", "SQLEXEC should succeed before SQL macro fields/filter checks");
     }
     if (display_event != nullptr) {
-        expect(display_event->detail.find("fields=NAME") != std::string::npos, "SET FIELDS TO &cSpec should drive SQL cursor visible-field metadata");
+        expect(display_event->detail.find("fields=NAME") != std::string::npos, "SET FIELDS TO second-hop &cSpec should drive SQL cursor visible-field metadata");
     }
     if (filtered_rec != state.globals.end()) {
-        expect(copperfin::runtime::format_value(filtered_rec->second) == "2", "SET FILTER TO &cExpr IN sqlcust should position GO TOP on the first visible SQL row");
+        expect(copperfin::runtime::format_value(filtered_rec->second) == "2", "SET FILTER TO second-hop &cExpr IN sqlcust should position GO TOP on the first visible SQL row");
     }
     if (filtered_name != state.globals.end()) {
         expect(uppercase_ascii(copperfin::runtime::format_value(filtered_name->second)) == "BRAVO", "macro-expanded SQL filter should preserve field lookup on the first visible row");
