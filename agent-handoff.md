@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#389` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the `LOOKUP()` miss-default branch through deep return/search holders plus `&cAliasDeepHolder` and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#388` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the local string-return `LOOKUP()` branch through `&cReturnExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#387` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the numeric `LOOKUP()` branch through `&cAgeExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#386` is now shipped. Focused `test_prg_engine_control_flow` coverage now routes recursive command-path merged text through `&cRecursiveExprDeepHolder`, and the `TEXT TO ... TEXTMERGE` dispatcher now reapplies merged interpolation to a bounded fixed point.

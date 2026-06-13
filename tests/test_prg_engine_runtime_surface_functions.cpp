@@ -1219,10 +1219,16 @@ namespace
             "cMissingSearch = 'ZZZZ'\n"
             "cMissingSearchHolder = 'cMissingSearch'\n"
             "cMissingSearchDeepHolder = 'cMissingSearchHolder'\n"
+            "cAlias = 'people'\n"
+            "cAliasHolder = 'cAlias'\n"
+            "cAliasDeepHolder = 'cAliasHolder'\n"
+            "cTag = 'NAME'\n"
+            "cTagHolder = 'cTag'\n"
+            "cTagDeepHolder = 'cTagHolder'\n"
             "nMissing = LOOKUP(&cNumberExpr, &cMissingSearch, 'people', 'NAME')\n"
             "lMissing = LOOKUP(&cTextExpr, &cMissingSearch, 'people', 'NAME')\n"
-            "nMissingSecondHop = LOOKUP(&cNumberExprDeepHolder, &cMissingSearchDeepHolder, 'people', 'NAME')\n"
-            "lMissingSecondHop = LOOKUP(&cTextExprDeepHolder, &cMissingSearchDeepHolder, 'people', 'NAME')\n"
+            "nMissingSecondHop = LOOKUP(&cNumberExprDeepHolder, &cMissingSearchDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)\n"
+            "lMissingSecondHop = LOOKUP(&cTextExprDeepHolder, &cMissingSearchDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
