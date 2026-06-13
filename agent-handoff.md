@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#374` is now shipped. Focused `test_prg_engine_arrays` coverage now uses a true second-hop holder chain for the source-array branch in the array helper/access harness, verifying forms such as `ALEN(&cArrayNameDeepHolder)` and `&cArrayNameDeepHolder[2,1]`.
 - 2026-06-13: H3/#97 child issue `#373` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop field-name holder chain for the alias-qualified dynamic `AGE` branch, verifying `&cAliasDeepHolder..&cAgeNestedFieldHolder`.
 - 2026-06-13: H3/#97 child issue `#372` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the direct macro self-reference branch, verifying `&cSelfRefDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#371` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the direct macro fallback-text branch, verifying `&cFallbackExprDeepHolder`.

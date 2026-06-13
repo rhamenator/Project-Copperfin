@@ -417,7 +417,8 @@ void test_macro_expanded_array_helpers_and_access() {
     write_text(
         main_path,
         "cArrayName = 'cResolvedArray'\n"
-        "cArrayNameDeepHolder = 'cArrayName'\n"
+        "cArrayNameHolder = 'cArrayName'\n"
+        "cArrayNameDeepHolder = 'cArrayNameHolder'\n"
         "cResolvedArray = 'aGrid'\n"
         "cLinesName = 'aLines'\n"
         "cLinesNameHolder = 'cLinesName'\n"
