@@ -82,8 +82,8 @@ The native runtime/parser currently has first-pass support for these command fam
 - `DELETE FROM`
 - `INSERT INTO`
 - `PACK`, `ZAP`
-- `SET FILTER TO/OFF` — first-pass cursor-scoped filter state for local and synthetic SQL/result cursors, including macro-expanded expression text through the shared `SET` helper; current coverage now includes second-hop holder forms such as `SET FILTER TO &cFilterExprHolder IN sqlcust`
-- `SET FIELDS TO/ON/OFF` — first-pass session-scoped field visibility for runtime field lookup, including list readback through `SET('FIELDS')`; the shipped visibility lane now also honors `LIKE` / `EXCEPT` filters for both direct field resolution and consumers such as `BROWSE`, including second-hop holder forms such as `SET FIELDS TO &cFieldsSpecHolder`
+- `SET FILTER TO/OFF` — first-pass cursor-scoped filter state for local and synthetic SQL/result cursors, including macro-expanded expression text through the shared `SET` helper; current coverage now includes true second-hop holder forms such as `SET FILTER TO &cFilterExprDeepHolder IN sqlcust`
+- `SET FIELDS TO/ON/OFF` — first-pass session-scoped field visibility for runtime field lookup, including list readback through `SET('FIELDS')`; the shipped visibility lane now also honors `LIKE` / `EXCEPT` filters for both direct field resolution and consumers such as `BROWSE`, including true second-hop holder forms such as `SET FIELDS TO &cFieldsSpecDeepHolder`
 - `SET ORDER TO TAG`
 - `SEEK`
 - `GO` / `GOTO`
