@@ -636,8 +636,9 @@ void test_store_uses_assignment_target_semantics() {
         main_path,
         "DIMENSION aVals[3]\n"
         "cMacroTarget = 'aVals[2]'\n"
+        "cMacroTargetDeepHolder = 'cMacroTarget'\n"
         "STORE 5 TO aVals[1]\n"
-        "STORE 6 TO &cMacroTarget\n"
+        "STORE 6 TO &cMacroTargetDeepHolder\n"
         "STORE 7 TO nScalar, aVals[3]\n"
         "nOne = aVals[1]\n"
         "nTwo = aVals[2]\n"
@@ -668,7 +669,7 @@ void test_store_uses_assignment_target_semantics() {
     }
     if (two != state.globals.end()) {
         expect(copperfin::runtime::format_value(two->second) == "6",
-            "STORE should assign macro-expanded array element targets");
+            "STORE should assign second-hop macro-expanded array element targets");
     }
     if (three != state.globals.end()) {
         expect(copperfin::runtime::format_value(three->second) == "7",
