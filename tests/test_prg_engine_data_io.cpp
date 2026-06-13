@@ -265,13 +265,23 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
         "cAfterName = NAME\n"
         "nAfterAge = AGE\n"
         "cMacroRowName = 'aMacroRow'\n"
+        "cMacroRowNameHolder = 'cMacroRowName'\n"
         "SCATTER FIELDS NAME, AGE TO &cMacroRowName\n"
         "nMacroArrayLen = ALEN(&cMacroRowName)\n"
         "cMacroFirst = &cMacroRowName[1]\n"
         "REPLACE NAME WITH 'MacroChg', AGE WITH 8\n"
-        "GATHER FROM &cMacroRowName FIELDS NAME, AGE\n"
+        "GATHER FROM &cMacroRowNameHolder FIELDS NAME, AGE\n"
         "cMacroAfterName = NAME\n"
         "nMacroAfterAge = AGE\n"
+        "cMacroRowNameSecondHop = 'aMacroRow2'\n"
+        "cMacroRowNameDeepHolder = 'cMacroRowNameSecondHop'\n"
+        "SCATTER FIELDS NAME, AGE TO &cMacroRowNameDeepHolder\n"
+        "nMacroArrayLenSecondHop = ALEN(&cMacroRowNameSecondHop)\n"
+        "cMacroFirstSecondHop = &cMacroRowNameSecondHop[1]\n"
+        "REPLACE NAME WITH 'DeepMacroChg', AGE WITH 9\n"
+        "GATHER FROM &cMacroRowNameDeepHolder FIELDS NAME, AGE\n"
+        "cMacroAfterNameSecondHop = NAME\n"
+        "nMacroAfterAgeSecondHop = AGE\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -291,6 +301,10 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     const auto macro_first = state.globals.find("cmacrofirst");
     const auto macro_after_name = state.globals.find("cmacroaftername");
     const auto macro_after_age = state.globals.find("nmacroafterage");
+    const auto macro_array_len_second_hop = state.globals.find("nmacroarraylensecondhop");
+    const auto macro_first_second_hop = state.globals.find("cmacrofirstsecondhop");
+    const auto macro_after_name_second_hop = state.globals.find("cmacroafternamesecondhop");
+    const auto macro_after_age_second_hop = state.globals.find("nmacroafteragesecondhop");
 
     expect(array_len != state.globals.end(), "ALEN(aRow) should expose array element count");
     expect(rows != state.globals.end(), "ALEN(aRow, 1) should expose first dimension");
@@ -303,6 +317,10 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     expect(macro_first != state.globals.end(), "SCATTER TO macro-expanded array should be readable through macro access");
     expect(macro_after_name != state.globals.end(), "GATHER FROM macro-expanded array should restore NAME");
     expect(macro_after_age != state.globals.end(), "GATHER FROM macro-expanded array should restore AGE");
+    expect(macro_array_len_second_hop != state.globals.end(), "SCATTER TO second-hop macro-expanded array should expose array element count");
+    expect(macro_first_second_hop != state.globals.end(), "SCATTER TO second-hop macro-expanded array should be readable through macro access");
+    expect(macro_after_name_second_hop != state.globals.end(), "GATHER FROM second-hop macro-expanded array should restore NAME");
+    expect(macro_after_age_second_hop != state.globals.end(), "GATHER FROM second-hop macro-expanded array should restore AGE");
 
     if (array_len != state.globals.end()) {
         expect(copperfin::runtime::format_value(array_len->second) == "2",
@@ -347,6 +365,22 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     if (macro_after_age != state.globals.end()) {
         expect(copperfin::runtime::format_value(macro_after_age->second) == "42",
             "GATHER FROM macro-expanded array should write AGE from the array");
+    }
+    if (macro_array_len_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_array_len_second_hop->second) == "2",
+            "SCATTER TO second-hop macro-expanded array should create two array elements");
+    }
+    if (macro_first_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_first_second_hop->second) == "Alice",
+            "second-hop macro-expanded SCATTER array access should read the first scattered value");
+    }
+    if (macro_after_name_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_after_name_second_hop->second) == "Alice",
+            "GATHER FROM second-hop macro-expanded array should write NAME from the array");
+    }
+    if (macro_after_age_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(macro_after_age_second_hop->second) == "42",
+            "GATHER FROM second-hop macro-expanded array should write AGE from the array");
     }
 
     fs::remove_all(temp_root, ignored);

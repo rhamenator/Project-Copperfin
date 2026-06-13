@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#333` is now shipped. Focused `test_prg_engine_data_io` coverage now locks down second-hop nested-holder command array-name resolution for `SCATTER TO` / `GATHER FROM` forms such as `&cMacroRowNameDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#332` is now shipped. `parse_command_object_target_path()` now chases bounded string-holder hops without consuming runtime object-reference strings, and focused `test_prg_engine_data_io` coverage now locks down second-hop nested-holder `SCATTER NAME` / `GATHER NAME` object targets such as `&cHolderDeepHolder.&cChildDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#331` is now shipped. Focused `test_prg_engine_data_io` coverage now locks down second-hop nested-holder command array-name resolution for `COPY TO ARRAY` and `APPEND FROM ARRAY` forms such as `&cMacroArrayHolder` and `&cTempArrayHolder`.
 - 2026-06-13: H3/#97 child issue `#330` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop nested-holder `EVALUATE()` runtime-state path text such as `EVALUATE(&cEvalPathExprHolder)` over `SET('PATH')`.
