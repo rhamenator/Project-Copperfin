@@ -542,6 +542,8 @@ void test_eval_macro_and_runtime_state_semantics() {
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "cAliasExpr = 'People'\n"
         "cFieldExpr = 'NAME'\n"
+        "cFieldExprHolder = 'cFieldExpr'\n"
+        "cFieldExprDeepHolder = 'cFieldExprHolder'\n"
         "cEvalExpr = 'AGE + 5'\n"
         "cEvalAliasExpr = 'ALIAS()'\n"
         "cEvalAliasExprHolder = 'cEvalAliasExpr'\n"
@@ -574,6 +576,7 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cAliasFromEvalNested = EVAL(&cEvalAliasExprHolder)\n"
         "cAliasFromEvalSecondHop = EVAL(&cEvalAliasExprDeepHolder)\n"
         "cNameFromMacro = &cFieldExpr\n"
+        "cNameFromMacroSecondHop = &cFieldExprDeepHolder\n"
         "nEvalAge = EVAL(cEvalExpr)\n"
         "USE IN &cAliasExpr\n"
         "lUsedAfterClose = USED('People')\n"
@@ -621,6 +624,7 @@ void test_eval_macro_and_runtime_state_semantics() {
     const auto alias_from_eval_nested = state.globals.find("caliasfromevalnested");
     const auto alias_from_eval_second_hop = state.globals.find("caliasfromevalsecondhop");
     const auto name_from_macro = state.globals.find("cnamefrommacro");
+    const auto name_from_macro_second_hop = state.globals.find("cnamefrommacrosecondhop");
     const auto eval_age = state.globals.find("nevalage");
     const auto used_after_close = state.globals.find("lusedafterclose");
     const auto area_after_close = state.globals.find("nareaafterclose");
@@ -659,6 +663,7 @@ void test_eval_macro_and_runtime_state_semantics() {
     expect(alias_from_eval_nested != state.globals.end(), "EVAL(&holder) should preserve nested macro-indirection for runtime-state evaluation");
     expect(alias_from_eval_second_hop != state.globals.end(), "EVAL(&deep-holder) should preserve second-hop nested macro-indirection for runtime-state evaluation");
     expect(name_from_macro != state.globals.end(), "&macro field resolution should be captured");
+    expect(name_from_macro_second_hop != state.globals.end(), "&deep-holder field resolution should be captured");
     expect(eval_age != state.globals.end(), "EVAL() of a stored expression should be captured");
     expect(used_after_close != state.globals.end(), "USE IN <expr> close semantics should be captured");
     expect(area_after_close != state.globals.end(), "SELECT('alias') after USE IN <expr> should be captured");
@@ -745,6 +750,10 @@ void test_eval_macro_and_runtime_state_semantics() {
     }
     if (name_from_macro != state.globals.end()) {
         expect(copperfin::runtime::format_value(name_from_macro->second) == "ALPHA", "&macro should substitute a stored field name inside expressions");
+    }
+    if (name_from_macro_second_hop != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name_from_macro_second_hop->second) == "ALPHA",
+               "&deep-holder should substitute a second-hop stored field name inside expressions");
     }
     if (eval_age != state.globals.end()) {
         expect(copperfin::runtime::format_value(eval_age->second) == "15", "EVAL() should evaluate stored arithmetic expressions against the current record");

@@ -6,6 +6,9 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#330` with focused second-hop holder coverage: `test_prg_engine_runtime_surface_functions` now verifies `EVALUATE(&cEvalPathExprHolder)` preserves nested holder indirection before evaluating runtime-state path text such as `SET('PATH')`.
+- Macro/eval slice `#97` advanced across child issue `#329` with focused second-hop holder coverage: `test_prg_engine_functions` now verifies direct `&macro` expression indirection preserves nested holder hops such as `&cMacroNameDeepHolder`.
+- Macro/eval slice `#97` advanced across child issue `#328` with focused second-hop holder coverage: `test_prg_engine` now verifies runtime-state `&macro` field-name resolution preserves nested indirection through a second holder hop such as `&cFieldExprDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#327` with a small `LOOKUP()` miss-path typing fix plus focused second-hop coverage: `LOOKUP()` now derives miss defaults from the fully-resolved macro return-expression text without over-rewriting non-macro expressions, and `test_prg_engine_runtime_surface_functions` now verifies second-hop holder miss paths preserve numeric `0` and logical `.F.` defaults.
 - Macro/eval slice `#97` advanced across child issue `#326` with focused second-hop holder coverage: `test_prg_engine_runtime_surface_functions` now verifies local `LOOKUP(..., &cAliasDeepHolder, &cTagDeepHolder)` preserves nested macro indirection through a second holder hop while keeping selected-alias context stable.
 - Macro/eval slice `#97` advanced across child issue `#325` with focused second-hop holder coverage: `test_prg_engine_string_math_functions` now verifies the combined nested-surface harness preserves second-hop holder indirection across `EVAL()` and `EXECSCRIPT()` inputs before reaching stored expression or script text.

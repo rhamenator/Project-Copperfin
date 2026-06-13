@@ -105,6 +105,8 @@ namespace
             "cPathFromVariable = SET('PATH')\n"
             "cEvalPathExpr = \"SET('PATH')\"\n"
             "cEvalPathMacro = EVALUATE(&cEvalPathExpr)\n"
+            "cEvalPathExprHolder = 'cEvalPathExpr'\n"
+            "cEvalPathSecondHopMacro = EVALUATE(&cEvalPathExprHolder)\n"
             "SET MARK TO cMarkTarget\n"
             "cMarkFromVariable = SET('MARK')\n"
             "SET DECIMALS TO nDecimalsTarget\n"
@@ -170,6 +172,7 @@ namespace
         check("nevalmacro", "14");
         check("nevalnestedmacro", "14");
         check("nevalsecondhopmacro", "14");
+        check("cevalpathsecondhopmacro", "/tmp/copperfin");
         check("cexistingfile", "runtime_surface_extensions.prg");
         check("lfilehit", "true");
         check("lfilemiss", "false");

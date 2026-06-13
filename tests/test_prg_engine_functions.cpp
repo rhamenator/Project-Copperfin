@@ -29,10 +29,12 @@ namespace
             "x = 5\n"
             "cExpr = 'x + 1'\n"
             "cMacroName = 'cExpr'\n"
+            "cMacroNameDeepHolder = 'cMacroName'\n"
             "cSelfRef = 'cSelfRef'\n"
             "cFallbackExpr = 'plain text value'\n"
             "nDirect = &cExpr\n"
             "nIndirect = &cMacroName\n"
+            "nIndirectSecondHop = &cMacroNameDeepHolder\n"
             "cSelfResult = &cSelfRef\n"
             "cFallback = &cFallbackExpr\n"
             "RETURN\n");
@@ -57,6 +59,7 @@ namespace
 
         check("ndirect", "6");
         check("nindirect", "6");
+        check("nindirectsecondhop", "6");
         check("cselfresult", "cSelfRef");
         check("cfallback", "plain text value");
 

@@ -34,6 +34,9 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#330` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop nested-holder `EVALUATE()` runtime-state path text such as `EVALUATE(&cEvalPathExprHolder)` over `SET('PATH')`.
+- 2026-06-13: H3/#97 child issue `#329` is now shipped. Focused `test_prg_engine_functions` coverage now locks down second-hop nested-holder direct `&macro` expression indirection such as `&cMacroNameDeepHolder`.
+- 2026-06-13: H3/#97 child issue `#328` is now shipped. Focused `test_prg_engine` coverage now locks down second-hop nested-holder runtime-state `&macro` field-name resolution such as `&cFieldExprDeepHolder`.
 - 2026-06-11: H3/#97 child issue `#327` is now shipped. `LOOKUP()` now derives miss defaults from fully-resolved macro return-expression text without over-rewriting non-macro expressions, and focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop holder miss paths for numeric `0` and logical `.F.` defaults.
 - 2026-06-11: H3/#97 child issue `#326` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now locks down second-hop nested-holder local `LOOKUP()` alias/tag designators such as `LOOKUP(..., &cAliasDeepHolder, &cTagDeepHolder)`.
 - 2026-06-11: H3/#97 child issue `#325` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now locks down second-hop nested-holder combined nested-surface flows across `EVAL()` and `EXECSCRIPT()`.
