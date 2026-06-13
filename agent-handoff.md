@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#370` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for the first `COPY TO ARRAY` macro target path, verifying forms such as `&cMacroArrayDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#369` is now shipped. Focused `test_prg_engine_arrays` coverage now uses true second-hop holder chains for the `ALINES` target-array path and `ACOPY` target-array path, verifying forms such as `&cLinesNameDeepHolder` and `&cCopyNameDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#368` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for the first macro-expanded `SCATTER TO` / `GATHER FROM` round-trip, verifying `&cMacroRowNameDeepHolder` across scatter, gather, and adjacent macro array reads.
 - 2026-06-13: H3/#97 child issue `#367` is now shipped. Focused `test_prg_engine_functions` coverage now uses a true second-hop holder chain for the alias-qualified dynamic `AGE` branch, verifying `&cAliasDeepHolder..&cAgeFieldHolder`.
