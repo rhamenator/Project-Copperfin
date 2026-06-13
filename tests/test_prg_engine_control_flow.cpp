@@ -1010,13 +1010,16 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         "GO TOP\n"
         "cCount = 'nCountWhile'\n"
         "cCountHolder = 'cCount'\n"
+        "cCountDeepHolder = 'cCountHolder'\n"
         "cSum = 'nSumWhile'\n"
         "cSumHolder = 'cSum'\n"
+        "cSumDeepHolder = 'cSumHolder'\n"
         "cCalc = 'nCalcWhile'\n"
         "cCalcHolder = 'cCalc'\n"
-        "COUNT WHILE AGE < 35 TO &cCountHolder\n"
-        "SUM AGE WHILE AGE < 35 TO &cSumHolder\n"
-        "CALCULATE COUNT() TO &cCalcHolder WHILE AGE < 35 IN 'People'\n"
+        "cCalcDeepHolder = 'cCalcHolder'\n"
+        "COUNT WHILE AGE < 35 TO &cCountDeepHolder\n"
+        "SUM AGE WHILE AGE < 35 TO &cSumDeepHolder\n"
+        "CALCULATE COUNT() TO &cCalcDeepHolder WHILE AGE < 35 IN 'People'\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1047,7 +1050,7 @@ void test_aggregate_commands_support_macro_targets_and_calculate_while() {
         {
             return event.category == "runtime.count" &&
                    event.detail.find("while=AGE < 35") != std::string::npos &&
-                   event.detail.find("into=&cCountHolder") != std::string::npos;
+                   event.detail.find("into=&cCountDeepHolder") != std::string::npos;
         });
     expect(count_event != state.events.end(), "COUNT should surface WHILE and second-hop raw INTO metadata");
 
