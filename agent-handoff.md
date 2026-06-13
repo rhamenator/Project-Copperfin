@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#343` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses true second-hop holder chains for `TEXTMERGE()` and `EXECSCRIPT()` macro surfaces, including source-template, delimiter, `RETURN &macro`, and script-source forms.
 - 2026-06-13: H3/#97 child issue `#342` is now shipped. Focused `test_prg_engine_data_io` coverage now uses true second-hop holder chains for command array-name targets, verifying forms such as `&cMacroArrayDeepHolder` and `&cTempArrayDeepHolder` across `COPY TO ARRAY` and `APPEND FROM ARRAY`.
 - 2026-06-13: H3/#97 child issue `#341` is now shipped. Focused `test_prg_engine_control_flow` coverage now uses true second-hop holder chains for aggregate `TO` targets, verifying forms such as `&cCountDeepHolder`, `&cSumDeepHolder`, and `&cCalcDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#340` is now shipped. Focused `test_prg_engine_sql_cursors` coverage now uses true second-hop holder chains for SQL cursor `SET FIELDS TO` / `SET FILTER TO` text macros, verifying forms such as `&cFieldsSpecDeepHolder` and `&cFilterExprDeepHolder`.
