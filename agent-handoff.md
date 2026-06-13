@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#377` is now shipped. Focused `test_prg_engine` coverage now uses true second-hop holder chains in the `macro_deep.prg` harness for row-expression, field-expression, assignment-target, and `DO ... WITH` argument paths, verifying `&cRowExprDeepHolder`, `&cFieldExprDeepHolder`, `&cTargetDeepHolder`, and `&cParamExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#376` is now shipped. Focused `test_prg_engine_table_mutation` coverage now uses true second-hop holder chains for the local SQL-style `DELETE FROM` / `UPDATE ... FOR &expr` paths, verifying `&cDeleteExprDeepHolder` and `&cUpdateExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#375` is now shipped. Focused `test_prg_engine_sql_cursors` coverage now uses true second-hop holder chains for the SQL cursor `LOCATE` / `DELETE` / `RECALL FOR &expr` paths, verifying `&cLocateExprDeepHolder` and `&cDeleteExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#374` is now shipped. Focused `test_prg_engine_arrays` coverage now uses a true second-hop holder chain for the source-array branch in the array helper/access harness, verifying forms such as `ALEN(&cArrayNameDeepHolder)` and `&cArrayNameDeepHolder[2,1]`.
