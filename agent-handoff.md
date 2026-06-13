@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#350` is now shipped. Focused `test_prg_engine_sql_cursors` coverage now uses true second-hop holder chains for SQL cursor `LOCATE` / `DELETE` / `RECALL FOR &expr` flows, verifying forms such as `&cLocateExprDeepHolder` and `&cDeleteExprDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#349` is now shipped. Focused `test_prg_engine_arrays` coverage now uses a true second-hop holder chain for `STORE ... TO &target` array-element assignment, verifying `STORE 6 TO &cMacroTargetDeepHolder` through the shared assignment-target path.
 - 2026-06-13: H3/#97 child issue `#348` is now shipped. `parse_primary()` now prefers shipped array-helper function calls over same-named runtime arrays when `(` follows an identifier, and focused `test_prg_engine_arrays` coverage now verifies true second-hop macro-expanded array helper/access forms across `ALINES`, `ALEN`, `AELEMENT`, `ACOPY`, and `&array[...]` / `&array(...)`.
 - 2026-06-13: H3/#97 child issue `#347` is now shipped. Focused `test_prg_engine_data_io` coverage now uses a true second-hop holder chain for `SCATTER TO` / `GATHER FROM` array-name macros, verifying `&cMacroRowNameDeepHolder` through a real intermediate holder.

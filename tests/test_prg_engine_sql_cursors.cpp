@@ -4033,14 +4033,16 @@ void test_sql_result_cursor_macro_for_expression_parity() {
         "nConn = SQLCONNECT('dsn=Northwind')\n"
         "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
         "cLocateExpr = 'AMOUNT = 30'\n"
+        "cLocateExprDeepHolder = 'cLocateExpr'\n"
         "cDeleteExpr = 'NAME = ''BRAVO''' \n"
-        "LOCATE FOR &cLocateExpr IN sqlcust\n"
+        "cDeleteExprDeepHolder = 'cDeleteExpr'\n"
+        "LOCATE FOR &cLocateExprDeepHolder IN sqlcust\n"
         "nLocateRec = RECNO('sqlcust')\n"
         "cLocateName = sqlcust.NAME\n"
-        "DELETE FOR &cDeleteExpr IN sqlcust\n"
+        "DELETE FOR &cDeleteExprDeepHolder IN sqlcust\n"
         "LOCATE FOR DELETED() IN sqlcust\n"
         "cDeletedName = sqlcust.NAME\n"
-        "RECALL FOR &cDeleteExpr IN sqlcust\n"
+        "RECALL FOR &cDeleteExprDeepHolder IN sqlcust\n"
         "LOCATE FOR DELETED() IN sqlcust\n"
         "lDeletedAfterRecall = FOUND()\n"
         "lDisc = SQLDISCONNECT(nConn)\n"
@@ -4070,16 +4072,16 @@ void test_sql_result_cursor_macro_for_expression_parity() {
         expect(copperfin::runtime::format_value(exec_result->second) == "1", "SQLEXEC should succeed before SQL macro FOR-expression checks");
     }
     if (locate_rec != state.globals.end()) {
-        expect(copperfin::runtime::format_value(locate_rec->second) == "3", "LOCATE FOR &cExpr IN sqlcust should position the SQL cursor on the matching row");
+        expect(copperfin::runtime::format_value(locate_rec->second) == "3", "LOCATE FOR second-hop &cExpr IN sqlcust should position the SQL cursor on the matching row");
     }
     if (locate_name != state.globals.end()) {
-        expect(uppercase_ascii(copperfin::runtime::format_value(locate_name->second)) == "CHARLIE", "LOCATE FOR &cExpr IN sqlcust should expose the matching SQL row");
+        expect(uppercase_ascii(copperfin::runtime::format_value(locate_name->second)) == "CHARLIE", "LOCATE FOR second-hop &cExpr IN sqlcust should expose the matching SQL row");
     }
     if (deleted_name != state.globals.end()) {
-        expect(uppercase_ascii(copperfin::runtime::format_value(deleted_name->second)) == "BRAVO", "DELETE FOR &cExpr IN sqlcust should tombstone the matching SQL row");
+        expect(uppercase_ascii(copperfin::runtime::format_value(deleted_name->second)) == "BRAVO", "DELETE FOR second-hop &cExpr IN sqlcust should tombstone the matching SQL row");
     }
     if (deleted_after_recall != state.globals.end()) {
-        expect(copperfin::runtime::format_value(deleted_after_recall->second) == "false", "RECALL FOR &cExpr IN sqlcust should clear the tombstone before the final DELETED() locate");
+        expect(copperfin::runtime::format_value(deleted_after_recall->second) == "false", "RECALL FOR second-hop &cExpr IN sqlcust should clear the tombstone before the final DELETED() locate");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL macro FOR-expression checks");
