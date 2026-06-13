@@ -736,6 +736,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     }
     if ((function == "eval" || function == "evaluate") && !arguments.empty()) {
         std::string expression_text = value_as_string(arguments[0]);
+        std::string last_identifier_text;
         if (!raw_arguments.empty()) {
             const std::string raw_text = trim_copy(raw_arguments[0]);
             if (!raw_text.empty() && raw_text.front() == '&') {
@@ -776,6 +777,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                             if (next_text.empty() || next_text == expanded_text) {
                                 break;
                             }
+                            last_identifier_text = expanded_text;
                             expanded_text = next_text;
                         }
                         expression_text = expanded_text;
@@ -783,7 +785,15 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 }
             }
         }
-        return eval_expression_callback(expression_text);
+        PrgValue evaluated = eval_expression_callback(expression_text);
+        const bool empty_string_result =
+            evaluated.kind == PrgValueKind::string && value_as_string(evaluated).empty();
+        if ((evaluated.kind == PrgValueKind::empty || empty_string_result) &&
+            !last_identifier_text.empty() &&
+            expression_text != last_identifier_text) {
+            evaluated = eval_expression_callback(last_identifier_text);
+        }
+        return evaluated;
     }
     if (function == "cursortoxml") {
         const std::string cursor_designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);

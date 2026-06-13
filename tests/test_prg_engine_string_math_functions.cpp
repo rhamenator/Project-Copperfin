@@ -389,7 +389,11 @@ namespace
             // TEXTMERGE custom delimiters
             "cMergedCustom = TEXTMERGE('Value={|1+1|}', .F., '{|', '|}')\n"
             "cFieldExpr = 'cName'\n"
+            "cFieldExprHolder = 'cFieldExpr'\n"
+            "cFieldExprDeepHolder = 'cFieldExprHolder'\n"
             "cNameExpr = 'cName'\n"
+            "cNameExprHolder = 'cNameExpr'\n"
+            "cNameExprDeepHolder = 'cNameExprHolder'\n"
             "cTemplateText = 'Template <<cName>>'\n"
             "cTemplateExpr = 'cTemplateText'\n"
             "cTemplateHolder = 'cTemplateExpr'\n"
@@ -398,6 +402,7 @@ namespace
             "cMergedMacroSourceSecondHop = TEXTMERGE(&cTemplateDeepHolder)\n"
             "cRecursiveCustomExpr = '{|EVAL(cNameExpr)|}'\n"
             "cMergedCustomNested = TEXTMERGE('Eval={|EVAL(cNameExpr)|}; Macro={|&cFieldExpr|}; Recursive={|cRecursiveCustomExpr|}', .T., '{|', '|}')\n"
+            "cMergedCustomSecondHop = TEXTMERGE('Eval={|EVAL(&cNameExprDeepHolder)|}; Macro={|&cFieldExprDeepHolder|}; Recursive={|cRecursiveCustomExpr|}', .T., '{|', '|}')\n"
             "cLeftDelim = '{{'\n"
             "cRightDelim = '}}'\n"
             "cLeftDelimExpr = 'cLeftDelim'\n"
@@ -463,6 +468,7 @@ namespace
         check("cmergedmacrosource", "Template World");
         check("cmergedmacrosourcesecondhop", "Template World");
         check("cmergedcustomnested", "Eval=World; Macro=World; Recursive=World");
+        check("cmergedcustomsecondhop", "Eval=World; Macro=World; Recursive=World");
         check("cmergedmacrodelims", "Eval=World; Macro=World");
         check("cmergedmacrodelimssecondhop", "Eval=World; Macro=World");
         check("cmergedplain",  "no markers here");
