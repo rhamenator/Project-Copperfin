@@ -34,6 +34,7 @@ Current priority order:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: H3/#97 child issue `#385` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses `EVAL(EVAL(cEvalExprDeepHolder))`, and `evaluate_runtime_surface_function()` now preserves the last identifier in bounded direct-holder `EVAL()` chains before final evaluation.
 - 2026-06-13: H3/#97 child issue `#384` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now drives nested `EXECSCRIPT()` body evaluation through `EVAL(&cScriptExprDeepHolder)` while the script source still resolves via `&cScriptDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#383` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now routes recursive custom-delimiter merged text through `&cRecursiveCustomExprDeepHolder`, and the recursive template itself now uses `EVAL(&cNameExprDeepHolder)`.
 - 2026-06-13: H3/#97 child issue `#382` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses true second-hop holder chains for nested `EVAL()` and `&macro` interpolation inside the alternate-delimiter `TEXTMERGE(..., &cLeftDelimDeepHolder, &cRightDelimDeepHolder)` branch.

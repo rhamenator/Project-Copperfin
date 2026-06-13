@@ -500,7 +500,7 @@ namespace
             "cEvalExpr = 'LEFT(cName, 9)'\n"
             "cEvalExprHolder = 'cEvalExpr'\n"
             "cEvalExprDeepHolder = 'cEvalExprHolder'\n"
-            "cEvalNested = EVAL(EVAL(cEvalExprHolder))\n"
+            "cEvalNested = EVAL(EVAL(cEvalExprDeepHolder))\n"
             "cEvalNestedSecondHop = EVAL(&cEvalExprDeepHolder)\n"
             "cMergedFromEval = TEXTMERGE('Hello <<EVAL(cEvalExpr)>>!')\n"
             "cMergedFromEvalSecondHop = TEXTMERGE('Hello <<EVAL(&cEvalExprDeepHolder)>>!')\n"
