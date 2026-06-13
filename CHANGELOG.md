@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#364` with focused proof-hardening for `LPARAMETERS` macro defaults: `test_prg_engine_functions` now uses a true second-hop holder chain for `LPARAMETERS nValue = &cDefaultExprDeepHolder`, verifying default-expression binding through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#363` with focused proof-hardening for full SQL `LOOKUP()` macro argument coverage: `test_prg_engine_runtime_surface_functions` now verifies `LOOKUP(&cReturnExprDeepHolder, &cSearchExprDeepHolder, &cAliasDeepHolder, &cTagDeepHolder)`, proving all four SQL macro arguments together through true second-hop holder chains.
 - Macro/eval slice `#97` advanced across child issue `#362` with focused proof-hardening for numeric `LOOKUP()` return expressions: `test_prg_engine_runtime_surface_functions` now uses a true second-hop holder chain for `LOOKUP(&cAgeExprDeepHolder, &cSearchExpr, cAlias, cTag)`, verifying the typed numeric return-expression path through real intermediate holders.
 - Macro/eval slice `#97` advanced across child issue `#361` with focused proof-hardening for round-trip `COPY TO ARRAY` macro targets: `test_prg_engine_data_io` now reuses the existing true second-hop holder chain on both sides of the round-trip harness, verifying `COPY TO ARRAY &cTempArrayDeepHolder` alongside `APPEND FROM ARRAY &cTempArrayDeepHolder`.

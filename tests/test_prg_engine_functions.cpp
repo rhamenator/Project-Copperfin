@@ -339,16 +339,18 @@ namespace
         write_text(
             main_path,
             "cDefaultExpr = '40 + 2'\n"
+            "cDefaultExprHolder = 'cDefaultExpr'\n"
+            "cDefaultExprDeepHolder = 'cDefaultExprHolder'\n"
             "DO FillProvided WITH 7\n"
             "DO FillDefault\n"
             "RETURN\n"
             "PROCEDURE FillProvided\n"
-            "LPARAMETERS nValue = &cDefaultExpr, cLabel = 'fallback'\n"
+            "LPARAMETERS nValue = &cDefaultExprDeepHolder, cLabel = 'fallback'\n"
             "nProvidedSeen = nValue\n"
             "cProvidedLabel = cLabel\n"
             "RETURN\n"
             "PROCEDURE FillDefault\n"
-            "LPARAMETERS nValue = &cDefaultExpr, cLabel = 'fallback'\n"
+            "LPARAMETERS nValue = &cDefaultExprDeepHolder, cLabel = 'fallback'\n"
             "nDefaultSeen = nValue\n"
             "cDefaultLabel = cLabel\n"
             "RETURN\n");
