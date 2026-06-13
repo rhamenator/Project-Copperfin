@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-05-12
 
+- Macro/eval slice `#97` advanced across child issue `#376` with focused proof-hardening for local SQL-style `FOR` expression macros: `test_prg_engine_table_mutation` now uses true second-hop holder chains for the delete/update expression paths, verifying `DELETE FROM People FOR &cDeleteExprDeepHolder` and `UPDATE People SET NAME = 'Thirty' FOR &cUpdateExprDeepHolder`.
 - Macro/eval slice `#97` advanced across child issue `#375` with focused proof-hardening for SQL cursor `FOR` expression macros: `test_prg_engine_sql_cursors` now uses true second-hop holder chains for the locate/delete/recall expression paths, verifying forms such as `LOCATE FOR &cLocateExprDeepHolder IN sqlcust` and `DELETE FOR &cDeleteExprDeepHolder IN sqlcust`.
 - Macro/eval slice `#97` advanced across child issue `#374` with focused proof-hardening for array helper source macros: `test_prg_engine_arrays` now uses a true second-hop holder chain for the source-array branch, verifying forms such as `ALEN(&cArrayNameDeepHolder)` and `&cArrayNameDeepHolder[2,1]`.
 - Macro/eval slice `#97` advanced across child issue `#373` with focused proof-hardening for alias-qualified dynamic `AGE` field macros: `test_prg_engine_functions` now uses a true second-hop field-name holder chain for the deepest `AGE` branch, verifying `&cAliasDeepHolder..&cAgeNestedFieldHolder`.
