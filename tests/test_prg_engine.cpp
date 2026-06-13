@@ -541,6 +541,8 @@ void test_eval_macro_and_runtime_state_semantics() {
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "cAliasExpr = 'People'\n"
+        "cAliasExprHolder = 'cAliasExpr'\n"
+        "cAliasExprDeepHolder = 'cAliasExprHolder'\n"
         "cFieldExpr = 'NAME'\n"
         "cFieldExprHolder = 'cFieldExpr'\n"
         "cFieldExprDeepHolder = 'cFieldExprHolder'\n"
@@ -578,7 +580,7 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cNameFromMacro = &cFieldExpr\n"
         "cNameFromMacroSecondHop = &cFieldExprDeepHolder\n"
         "nEvalAge = EVAL(cEvalExpr)\n"
-        "USE IN &cAliasExpr\n"
+        "USE IN &cAliasExprDeepHolder\n"
         "lUsedAfterClose = USED('People')\n"
         "nAreaAfterClose = SELECT('People')\n"
         "SET DATASESSION TO 2\n"
