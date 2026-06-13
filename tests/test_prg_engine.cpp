@@ -272,7 +272,8 @@ void test_do_command_macro_target() {
     write_text(
         main_path,
         "cProc = 'worker'\n"
-        "cProcDeepHolder = 'cProc'\n"
+        "cProcHolder = 'cProc'\n"
+        "cProcDeepHolder = 'cProcHolder'\n"
         "DO &cProcDeepHolder\n"
         "RETURN\n"
         "PROCEDURE worker\n"
