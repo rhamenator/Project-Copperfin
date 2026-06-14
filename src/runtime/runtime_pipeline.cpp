@@ -1,4 +1,5 @@
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/runtime/xasset_methods.h"
 #include "prg_engine_internal.h"
 #include "copperfin/security/sha256.h"
 
@@ -770,6 +771,125 @@ std::string transpile_statement_to_csharp(
     return "throw new NotSupportedException(\"Unsupported FoxPro statement: " + json_escape(statement.text) + "\");\n";
 }
 
+std::string sanitize_csharp_compound_identifier(std::string value, const std::string& fallback) {
+    value = trim_copy(std::move(value));
+    if (value.empty()) {
+        return fallback;
+    }
+
+    std::string sanitized;
+    sanitized.reserve(value.size());
+    bool capitalize_next = true;
+    for (const char raw_ch : value) {
+        const unsigned char ch = static_cast<unsigned char>(raw_ch);
+        if (std::isalnum(ch) != 0) {
+            char output = static_cast<char>(ch);
+            if (capitalize_next && std::isalpha(ch) != 0) {
+                output = static_cast<char>(std::toupper(ch));
+            }
+            if (sanitized.empty() && std::isdigit(ch) != 0) {
+                sanitized.push_back('_');
+            }
+            sanitized.push_back(output);
+            capitalize_next = false;
+            continue;
+        }
+
+        if (!sanitized.empty() && sanitized.back() != '_') {
+            sanitized.push_back('_');
+        }
+        capitalize_next = true;
+    }
+
+    while (!sanitized.empty() && sanitized.back() == '_') {
+        sanitized.pop_back();
+    }
+    return sanitized.empty() ? fallback : sanitized;
+}
+
+std::string build_xasset_csharp_method_identifier(
+    const XAssetExecutableModel& model,
+    const XAssetMethod& method) {
+    const std::string normalized_root = lowercase_copy(trim_copy(model.root_object_path));
+    const std::string normalized_object = lowercase_copy(trim_copy(method.object_path));
+    if (!normalized_root.empty() && normalized_object == normalized_root) {
+        return sanitize_csharp_compound_identifier(method.method_name, "Method");
+    }
+
+    std::string method_prefix = method.object_path;
+    if (!model.root_object_path.empty() &&
+        normalized_object.size() > normalized_root.size() &&
+        normalized_object.rfind(normalized_root + ".", 0U) == 0U) {
+        method_prefix = method.object_path.substr(model.root_object_path.size() + 1U);
+    }
+    if (!method_prefix.empty()) {
+        method_prefix += ".";
+    }
+    method_prefix += method.method_name;
+    return sanitize_csharp_compound_identifier(method_prefix, "Method");
+}
+
+void append_xasset_csharp_type(
+    std::ostringstream& stream,
+    const studio::StudioDocumentModel& document) {
+    const XAssetExecutableModel model = build_xasset_executable_model(document);
+    if (!model.ok || model.root_object_path.empty()) {
+        return;
+    }
+
+    const std::string type_name = sanitize_csharp_compound_identifier(model.root_object_path, "XAssetObject");
+    std::map<std::string, std::string> method_name_map;
+    for (const auto& method : model.methods) {
+        method_name_map.emplace(method.routine_name, build_xasset_csharp_method_identifier(model, method));
+    }
+
+    stream << "    public sealed class " << type_name << "\n";
+    stream << "    {\n";
+
+    for (const auto& method : model.methods) {
+        const auto mapped_name = method_name_map.find(method.routine_name);
+        if (mapped_name == method_name_map.end()) {
+            continue;
+        }
+
+        const std::string method_identity = method.object_path.empty()
+            ? method.method_name
+            : method.object_path + "." + method.method_name;
+        stream << "        public void " << mapped_name->second << "()\n";
+        stream << "        {\n";
+        stream << "            throw new NotSupportedException(\"Manual port required for FoxPro xAsset method: "
+               << json_escape(method_identity)
+               << "\");\n";
+        stream << "        }\n\n";
+    }
+
+    if (!model.startup_routines.empty()) {
+        stream << "        public void RunStartup()\n";
+        stream << "        {\n";
+        for (const auto& routine_name : model.startup_routines) {
+            const auto found = method_name_map.find(routine_name);
+            if (found != method_name_map.end()) {
+                stream << "            " << found->second << "();\n";
+            }
+        }
+        stream << "        }\n\n";
+    }
+
+    if (!model.shutdown_routines.empty()) {
+        stream << "        public void RunShutdown()\n";
+        stream << "        {\n";
+        for (const auto& routine_name : model.shutdown_routines) {
+            const auto found = method_name_map.find(routine_name);
+            if (found != method_name_map.end()) {
+                stream << "            " << found->second << "();\n";
+            }
+        }
+        stream << "        }\n\n";
+    }
+
+    stream << "    }\n\n";
+}
+
 std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "using System;\n\n";
@@ -808,7 +928,25 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
         }
     }
 
-    stream << "    }\n";
+    stream << "    }\n\n";
+
+    for (const auto& asset : plan.assets) {
+        const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string()));
+        if (extension != ".scx" && extension != ".vcx") {
+            continue;
+        }
+
+        const auto open_result = studio::open_document({
+            .path = asset.source_path,
+            .load_full_table = true
+        });
+        if (!open_result.ok) {
+            continue;
+        }
+
+        append_xasset_csharp_type(stream, open_result.document);
+    }
+
     stream << "}\n";
     return stream.str();
 }

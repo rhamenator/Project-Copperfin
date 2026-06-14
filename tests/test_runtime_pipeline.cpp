@@ -2,6 +2,7 @@
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -161,6 +162,34 @@ bool compile_csharp_artifact(const std::filesystem::path& source_path, std::stri
     }
 
     return true;
+}
+
+void write_synthetic_class_library_asset(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "custWidget",
+            "",
+            "custom",
+            "PROCEDURE Load\r\nx = 1\r\nENDPROC\r\n"
+            "PROCEDURE Init\r\nx = 2\r\nENDPROC\r\n"
+            "PROCEDURE Destroy\r\nx = 3\r\nENDPROC\r\n"
+        },
+        {
+            "txtName",
+            "custWidget",
+            "textbox",
+            "PROCEDURE Valid\r\nTHISFORM.Refresh\r\nENDPROC\r\n"
+        }
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "synthetic VCX/VCT fixture should be created");
 }
 
 void test_materialize_runtime_package() {
@@ -1243,6 +1272,99 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_emits_csharp_transpilation_for_class_library_objects() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_csharp_xasset_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    const fs::path class_library_path = project_dir / "widget.vcx";
+    write_synthetic_class_library_asset(class_library_path);
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "widgetdemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "WidgetDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "WidgetDemo";
+    workspace.build_plan.output_path = (output_dir / "WidgetDemo.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "widget.vcx";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "widget.vcx", .relative_path = "widget.vcx", .type_title = "Class Library"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "class-library csharp-output plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "class-library csharp-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.transpiled_csharp_path),
+               "class-library csharp-output package should emit a C# transpilation artifact");
+
+        const std::string transpiled = read_text(result.plan.transpiled_csharp_path);
+        expect(transpiled.find("public sealed class CustWidget") != std::string::npos,
+               "class-library transpilation should emit a concrete C# type for the root object");
+        expect(transpiled.find("public void Load()") != std::string::npos,
+               "class-library transpilation should surface the root Load lifecycle method");
+        expect(transpiled.find("public void Init()") != std::string::npos,
+               "class-library transpilation should surface the root Init lifecycle method");
+        expect(transpiled.find("public void Destroy()") != std::string::npos,
+               "class-library transpilation should surface the root Destroy lifecycle method");
+        expect(transpiled.find("public void TxtName_Valid()") != std::string::npos,
+               "class-library transpilation should surface nested object methods");
+        expect(transpiled.find("public void RunStartup()") != std::string::npos,
+               "class-library transpilation should emit an ordered startup wrapper");
+        expect(transpiled.find("Load();") != std::string::npos &&
+               transpiled.find("Init();") != std::string::npos,
+               "class-library transpilation should preserve root startup ordering");
+        expect(transpiled.find("public void RunShutdown()") != std::string::npos,
+               "class-library transpilation should emit an ordered shutdown wrapper");
+        expect(transpiled.find("Destroy();") != std::string::npos,
+               "class-library transpilation should preserve root shutdown ordering");
+        expect(transpiled.find("Manual port required for FoxPro xAsset method: custWidget.txtName.Valid") != std::string::npos,
+               "class-library transpilation should stay honest about untranslated xAsset method bodies");
+
+        if (dotnet_is_available()) {
+            std::string compile_error;
+            const bool compiled = compile_csharp_artifact(result.plan.transpiled_csharp_path, compile_error);
+            if (!compiled && !compile_error.empty()) {
+                std::cerr << "FAIL: " << compile_error << "\n";
+            }
+            expect(compiled,
+                   "class-library csharp transpilation should compile under dotnet");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1789,6 +1911,7 @@ int main() {
     test_runtime_package_emits_ast_manifest_for_prg_sources();
     test_runtime_package_emits_ir_manifest_with_instruction_mapping();
     test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code();
+    test_runtime_package_emits_csharp_transpilation_for_class_library_objects();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
