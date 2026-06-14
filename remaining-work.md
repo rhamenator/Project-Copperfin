@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #166-#167; #162-#165 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #168-#169; #162-#167 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #166-#167; #162-#165 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #168-#169; #162-#167 shipped)
 
 ### Designers And IDE Parity
 
@@ -700,6 +700,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: D2/#164 watch/locals launch fidelity advanced in `runtime_pipeline` + `test_runtime_pipeline`. Debug launch `source_roots` now normalize and deduplicate path entries, with focused coverage locking single-entry output when source and content roots resolve to the same path.
 - 2026-06-13: D2/#165 breakpoint/stepping fidelity shipped in `prg_engine` + `test_prg_engine`. Breakpoints now trigger correctly on the first executable line after stop-on-entry continue, while resume logic still skips exactly one immediate re-hit on the same location.
 - 2026-05-12: D3/#166 build/run orchestration fidelity advanced in `runtime_pipeline` + `test_runtime_pipeline`. Runtime package materialization now validates runtime-host source input before asset staging, with focused fail-fast coverage locking no staged content on invalid host paths.
+- 2026-06-13: D3/#167 deploy and migration-report fidelity shipped in `runtime_pipeline` + `test_runtime_pipeline`. Runtime packaging now emits manifest/report diagnostics alongside launcher and host bundling, with focused coverage locking the package materialization contract and its reporting keys.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
