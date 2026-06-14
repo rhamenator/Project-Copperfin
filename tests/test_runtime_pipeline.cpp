@@ -1625,6 +1625,26 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the ParamBlk callable signature");
         expect(runtime_manifest.find("fll_default_return_helper=_RetInt") != std::string::npos,
                "fll-output manifest should record the default return helper");
+        expect(runtime_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+               "fll-output manifest should mirror InitLibrary routine kind");
+        expect(runtime_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
+               "fll-output manifest should mirror AddNumbers routine kind");
+        expect(runtime_manifest.find("library_function_source=InitLibrary|" + (project_dir / "librarymain.prg").string() + "|1") != std::string::npos,
+               "fll-output manifest should mirror InitLibrary source provenance");
+        expect(runtime_manifest.find("library_function_source=AddNumbers|" + (project_dir / "helper.prg").string() + "|1") != std::string::npos,
+               "fll-output manifest should mirror AddNumbers source provenance");
+        expect(runtime_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "fll-output manifest should mirror InitLibrary parameter names");
+        expect(runtime_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "fll-output manifest should mirror AddNumbers parameter names");
+        expect(runtime_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "fll-output manifest should mirror InitLibrary parameter declaration style");
+        expect(runtime_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "fll-output manifest should mirror AddNumbers parameter declaration style");
+        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
+               "fll-output manifest should mirror InitLibrary callable surface");
+        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
+               "fll-output manifest should mirror AddNumbers callable surface");
         expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "fll-output manifest should record the wrapper source path");
         expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
@@ -1649,6 +1669,26 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the ParamBlk callable signature");
         expect(debug_manifest.find("fll_default_return_helper=_RetInt") != std::string::npos,
                "fll-output debug manifest should record the default return helper");
+        expect(debug_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+               "fll-output debug manifest should mirror InitLibrary routine kind");
+        expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
+               "fll-output debug manifest should mirror AddNumbers routine kind");
+        expect(debug_manifest.find("library_function_source=InitLibrary|" + (project_dir / "librarymain.prg").string() + "|1") != std::string::npos,
+               "fll-output debug manifest should mirror InitLibrary source provenance");
+        expect(debug_manifest.find("library_function_source=AddNumbers|" + (project_dir / "helper.prg").string() + "|1") != std::string::npos,
+               "fll-output debug manifest should mirror AddNumbers source provenance");
+        expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "fll-output debug manifest should mirror InitLibrary parameter names");
+        expect(debug_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "fll-output debug manifest should mirror AddNumbers parameter names");
+        expect(debug_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "fll-output debug manifest should mirror InitLibrary parameter declaration style");
+        expect(debug_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "fll-output debug manifest should mirror AddNumbers parameter declaration style");
+        expect(debug_manifest.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
+               "fll-output debug manifest should mirror InitLibrary callable surface");
+        expect(debug_manifest.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
+               "fll-output debug manifest should mirror AddNumbers callable surface");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "fll-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,

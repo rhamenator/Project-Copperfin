@@ -981,6 +981,62 @@ bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::strin
     return write_text_file(plan.launcher_output_path, stream.str(), error);
 }
 
+void append_library_function_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
+    if (!is_library_output_kind(plan.output_kind)) {
+        return;
+    }
+
+    const auto parameter_counts = collect_library_export_parameter_counts(plan);
+    const auto parameter_names = collect_library_export_parameter_names(plan);
+    const auto parameter_declaration_kinds = collect_library_export_parameter_declaration_kinds(plan);
+    const auto routine_kinds = collect_library_export_routine_kinds(plan);
+    const auto routine_locations = collect_library_export_routine_locations(plan);
+    for (const auto& symbol : plan.exported_symbols) {
+        const auto found = parameter_counts.find(symbol);
+        const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+        const auto names_found = parameter_names.find(symbol);
+        const auto declaration_kind_found = parameter_declaration_kinds.find(symbol);
+        const auto kind_found = routine_kinds.find(symbol);
+        const auto location_found = routine_locations.find(symbol);
+        stream << "library_function_kind="
+               << quote_manifest_value(symbol) << "|"
+               << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
+        stream << "library_function_source="
+               << quote_manifest_value(symbol) << "|"
+               << (location_found == routine_locations.end()
+                       ? std::string{}
+                       : build_manifest_source_location(location_found->second))
+               << "\n";
+        stream << "library_function_arity="
+               << quote_manifest_value(symbol) << "|"
+               << parameter_count << "\n";
+        stream << "library_function_parameter_declaration="
+               << quote_manifest_value(symbol) << "|"
+               << quote_manifest_value(
+                      declaration_kind_found == parameter_declaration_kinds.end()
+                          ? std::string{}
+                          : declaration_kind_found->second)
+               << "\n";
+        stream << "library_function_parameters="
+               << quote_manifest_value(symbol) << "|"
+               << (names_found == parameter_names.end() ? std::string{} : build_manifest_parameter_names(names_found->second)) << "\n";
+        stream << "library_function_call_surface="
+               << quote_manifest_value(symbol) << "|"
+               << quote_manifest_value(
+                      plan.output_kind == BuildOutputKind::fll
+                          ? std::string(kFllCallableSignature)
+                          : std::string(kVfpLibraryCallableConvention))
+               << "|"
+               << quote_manifest_value(
+                      plan.output_kind == BuildOutputKind::fll
+                          ? std::string(kFllDefaultReturnHelper)
+                          : (names_found == parameter_names.end()
+                                 ? std::string{}
+                                 : build_placeholder_int_parameter_list(names_found->second)))
+               << "\n";
+    }
+}
+
 const char* statement_kind_name(const StatementKind kind) {
     switch (kind) {
         case StatementKind::assignment:
@@ -2318,51 +2374,7 @@ std::string build_runtime_manifest_text(
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
 
-    if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
-        const auto parameter_counts = collect_library_export_parameter_counts(plan);
-        const auto parameter_names = collect_library_export_parameter_names(plan);
-        const auto parameter_declaration_kinds = collect_library_export_parameter_declaration_kinds(plan);
-        const auto routine_kinds = collect_library_export_routine_kinds(plan);
-        const auto routine_locations = collect_library_export_routine_locations(plan);
-        for (const auto& symbol : plan.exported_symbols) {
-            const auto found = parameter_counts.find(symbol);
-            const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
-            const auto names_found = parameter_names.find(symbol);
-            const auto declaration_kind_found = parameter_declaration_kinds.find(symbol);
-            const auto kind_found = routine_kinds.find(symbol);
-            const auto location_found = routine_locations.find(symbol);
-            stream << "library_function_kind="
-                   << quote_manifest_value(symbol) << "|"
-                   << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
-            stream << "library_function_source="
-                   << quote_manifest_value(symbol) << "|"
-                   << (location_found == routine_locations.end()
-                           ? std::string{}
-                           : build_manifest_source_location(location_found->second))
-                   << "\n";
-            stream << "library_function_arity="
-                   << quote_manifest_value(symbol) << "|"
-                   << parameter_count << "\n";
-            stream << "library_function_parameter_declaration="
-                   << quote_manifest_value(symbol) << "|"
-                   << quote_manifest_value(
-                          declaration_kind_found == parameter_declaration_kinds.end()
-                              ? std::string{}
-                              : declaration_kind_found->second)
-                   << "\n";
-            stream << "library_function_parameters="
-                   << quote_manifest_value(symbol) << "|"
-                   << (names_found == parameter_names.end() ? std::string{} : build_manifest_parameter_names(names_found->second)) << "\n";
-            stream << "library_function_call_surface="
-                   << quote_manifest_value(symbol) << "|"
-                   << quote_manifest_value(std::string(kVfpLibraryCallableConvention)) << "|"
-                   << quote_manifest_value(
-                          names_found == parameter_names.end()
-                              ? std::string{}
-                              : build_placeholder_int_parameter_list(names_found->second))
-                   << "\n";
-        }
-    }
+    append_library_function_manifest_lines(stream, plan);
 
     for (const auto& warning : plan.warnings) {
         stream << "warning=" << quote_manifest_value(warning) << "\n";
@@ -2400,6 +2412,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
+    append_library_function_manifest_lines(stream, plan);
     return stream.str();
 }
 

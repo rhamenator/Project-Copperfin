@@ -502,6 +502,62 @@ void run_library_build_host_smoke(
         }
 
         if (extension == "fll") {
+            expect(manifest_text.find("fll_loader_entrypoint=FoxInfo") != std::string::npos,
+                   "build host manifest should record the FLL loader entrypoint");
+            expect(manifest_text.find("fll_registration_symbol=_FoxTable") != std::string::npos,
+                   "build host manifest should record the FLL registration symbol");
+            expect(manifest_text.find("fll_callable_signature=ParamBlk*") != std::string::npos,
+                   "build host manifest should record the FLL callable signature");
+            expect(manifest_text.find("fll_default_return_helper=_RetInt") != std::string::npos,
+                   "build host manifest should record the FLL default return helper");
+            expect(manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+                   "build host manifest should mirror InitLibrary FLL routine kind");
+            expect(manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
+                   "build host manifest should mirror AddNumbers FLL routine kind");
+            expect(manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+                   "build host manifest should mirror InitLibrary FLL source provenance");
+            expect(manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+                   "build host manifest should mirror AddNumbers FLL source provenance");
+            expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+                   "build host manifest should mirror InitLibrary FLL parameter names");
+            expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+                   "build host manifest should mirror AddNumbers FLL parameter names");
+            expect(manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+                   "build host manifest should mirror InitLibrary FLL parameter declaration style");
+            expect(manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+                   "build host manifest should mirror AddNumbers FLL parameter declaration style");
+            expect(manifest_text.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host manifest should mirror InitLibrary FLL callable surface");
+            expect(manifest_text.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host manifest should mirror AddNumbers FLL callable surface");
+        }
+    }
+
+    if (fs::exists(expected_output) && native_symbol_dump_is_available()) {
+        std::string symbol_error;
+        const std::set<std::string> exported_symbols = read_native_exported_symbols(expected_output, symbol_error);
+        if (exported_symbols.empty() && !symbol_error.empty()) {
+            std::cerr << "FAIL: " << symbol_error << "\n";
+        }
+
+        const fs::path module_definition_path = value_for_key(process.stdout_text, "module.definition");
+        const std::set<std::string> declared_module_symbols = read_module_definition_exports(module_definition_path);
+        expect(exported_symbols == declared_module_symbols,
+               "build host should preserve the module-definition export contract for " + extension + " outputs");
+
+        if (extension == "dll") {
+            const fs::path library_api_manifest_path = value_for_key(process.stdout_text, "library.api.manifest");
+            const std::set<std::string> declared_api_symbols = read_library_api_declared_symbols(library_api_manifest_path);
+            expect(exported_symbols == declared_api_symbols,
+                   "build host should preserve the dedicated DLL API-manifest export contract");
+            const std::string api_manifest = read_text(library_api_manifest_path);
+            expect(api_manifest.find("output_kind=dll") != std::string::npos,
+                   "build host DLL API manifest should declare the DLL output kind");
+            expect(api_manifest.find("callable_convention=vfp_declare_default") != std::string::npos,
+                   "build host DLL API manifest should declare the VFP DLL calling convention");
+        }
+
+        if (extension == "fll") {
             const fs::path fll_api_manifest_path = value_for_key(process.stdout_text, "fll.api.manifest");
             const std::set<std::string> declared_api_symbols = read_fll_api_declared_symbols(fll_api_manifest_path);
             expect(exported_symbols == declared_api_symbols,
