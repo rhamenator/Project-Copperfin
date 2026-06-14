@@ -1233,6 +1233,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=dll") != std::string::npos,
                "library-output manifest should record DLL output kind");
+        expect(runtime_manifest.find("configuration=debug") != std::string::npos,
+               "library-output manifest should record the debug build configuration");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
         expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
@@ -1286,6 +1288,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record staged asset inventory");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
+        expect(debug_manifest.find("configuration=debug") != std::string::npos,
+               "library-output debug manifest should record the debug build configuration");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1344,6 +1348,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should record the built DLL as an extension payload");
                 expect(built_debug_manifest.find("primary_output_path=" + quote_manifest_value(build_result.plan.launcher_output_path)) != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with the materialized DLL output path");
+                expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
+                       "library-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1725,11 +1731,15 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should expose the native-wrapper feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the FLL API-contract feature flag");
+        expect(runtime_manifest.find("configuration=debug") != std::string::npos,
+               "fll-output manifest should record the debug build configuration");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
         expect(!runtime_asset_lines.empty(),
                "fll-output manifest should record staged asset inventory");
         expect(debug_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output debug manifest should record FLL output kind");
+        expect(debug_manifest.find("configuration=debug") != std::string::npos,
+               "fll-output debug manifest should record the debug build configuration");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1816,6 +1826,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should record the built FLL as an extension payload");
                 expect(built_debug_manifest.find("primary_output_path=" + quote_manifest_value(build_result.plan.launcher_output_path)) != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with the materialized FLL output path");
+                expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
