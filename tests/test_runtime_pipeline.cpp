@@ -1257,6 +1257,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the security mode");
         expect(runtime_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
                "library-output manifest should record the audit log path");
+        expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
+               "library-output manifest should record the runtime host SHA-256 digest");
+        expect(runtime_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+               "library-output manifest should record the security-role count");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
         expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
@@ -1334,6 +1338,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the security mode");
         expect(debug_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
                "library-output debug manifest should record the audit log path");
+        expect(debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
+               "library-output debug manifest should record the runtime host SHA-256 digest");
+        expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+               "library-output debug manifest should record the security-role count");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1416,6 +1424,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the security mode in the rewritten debug manifest");
                 expect(built_debug_manifest.find("audit_log_path=" + quote_manifest_value(build_result.plan.audit_log_path)) != std::string::npos,
                        "library-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(build_result.plan.runtime_host_sha256)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+                       "library-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1821,6 +1833,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the security mode");
         expect(runtime_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
                "fll-output manifest should record the audit log path");
+        expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
+               "fll-output manifest should record the runtime host SHA-256 digest");
+        expect(runtime_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+               "fll-output manifest should record the security-role count");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
         expect(!runtime_asset_lines.empty(),
                "fll-output manifest should record staged asset inventory");
@@ -1850,6 +1866,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the security mode");
         expect(debug_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
                "fll-output debug manifest should record the audit log path");
+        expect(debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
+               "fll-output debug manifest should record the runtime host SHA-256 digest");
+        expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+               "fll-output debug manifest should record the security-role count");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1960,6 +1980,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the security mode in the rewritten debug manifest");
                 expect(built_debug_manifest.find("audit_log_path=" + quote_manifest_value(build_result.plan.audit_log_path)) != std::string::npos,
                        "fll-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(build_result.plan.runtime_host_sha256)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,

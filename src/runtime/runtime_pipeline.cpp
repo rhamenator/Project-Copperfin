@@ -2408,6 +2408,8 @@ std::string build_debug_manifest_text(
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
+    stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
+    stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.debug_plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.debug_plan.startup_source_path) << "\n";
     stream << "working_directory=" << quote_manifest_value(plan.debug_plan.working_directory) << "\n";

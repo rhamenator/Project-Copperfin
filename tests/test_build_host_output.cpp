@@ -486,6 +486,10 @@ void run_library_build_host_smoke(
                "build host manifest should record the disabled security state for " + extension + " outputs");
         expect(manifest_text.find("audit_log_path=" + expected_audit_log.string()) != std::string::npos,
                "build host manifest should record the audit log path for " + extension + " outputs");
+        expect(manifest_text.find("runtime_host_sha256=") != std::string::npos,
+               "build host manifest should record the runtime host SHA-256 digest for " + extension + " outputs");
+        expect(manifest_text.find("security_roles=") != std::string::npos,
+               "build host manifest should record the security-role count for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host manifest should record the built primary output as an extension payload for " + extension + " outputs");
         if (extension == "dll") {
@@ -544,10 +548,16 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the audit log path for " + extension + " outputs");
         const std::string security_role = manifest_value_for_key(manifest_text, "security_role");
         const std::string security_mode = manifest_value_for_key(manifest_text, "security_mode");
+        const std::string runtime_host_sha256 = manifest_value_for_key(manifest_text, "runtime_host_sha256");
+        const std::string security_roles = manifest_value_for_key(manifest_text, "security_roles");
         expect(debug_manifest_text.find("security_role=" + security_role) != std::string::npos,
                "build host debug manifest should mirror the effective security role for " + extension + " outputs");
         expect(debug_manifest_text.find("security_mode=" + security_mode) != std::string::npos,
                "build host debug manifest should mirror the security mode for " + extension + " outputs");
+        expect(debug_manifest_text.find("runtime_host_sha256=" + runtime_host_sha256) != std::string::npos,
+               "build host debug manifest should mirror the runtime host SHA-256 digest for " + extension + " outputs");
+        expect(debug_manifest_text.find("security_roles=" + security_roles) != std::string::npos,
+               "build host debug manifest should mirror the security-role count for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
