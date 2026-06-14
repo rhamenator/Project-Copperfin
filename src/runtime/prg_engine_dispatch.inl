@@ -1015,6 +1015,22 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::yield_statement:
+            {
+                if (!trim_copy(statement.expression).empty())
+                {
+                    last_error_message = "YIELD does not take arguments";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::this_thread::yield();
+                events.push_back({.category = "runtime.yield",
+                                  .detail = "cooperative",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::spawn_command:
             {
                 std::string target = trim_copy(statement.identifier);

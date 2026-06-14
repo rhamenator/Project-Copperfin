@@ -466,6 +466,11 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::cancel_statement;
         } else if (upper == "QUIT") {
             statement.kind = StatementKind::quit_statement;
+        } else if (upper == "YIELD") {
+            statement.kind = StatementKind::yield_statement;
+        } else if (starts_with_insensitive(line, "YIELD ")) {
+            statement.kind = StatementKind::yield_statement;
+            statement.expression = trim_copy(line.substr(5U));
         } else if (starts_with_insensitive(line, "ENTER CRITICAL") || upper == "ENTER CRITICAL") {
             statement.kind = StatementKind::enter_critical_command;
             statement.identifier = upper == "ENTER CRITICAL" ? std::string{} : trim_copy(line.substr(14U));

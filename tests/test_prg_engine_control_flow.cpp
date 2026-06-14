@@ -4346,6 +4346,91 @@ void test_spawn_critical_section_serializes_workers() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_command_emits_runtime_yield_event_and_preserves_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 1\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "nBefore = 1\n"
+        "SPAWN worker TO nTask\n"
+        "YIELD\n"
+        "nAfter = 42\n"
+        "AWAIT nTask TO lDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "YIELD test should complete");
+
+    const auto yield_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.yield"; });
+    expect(yield_event != state.events.end(), "YIELD should emit a runtime.yield event");
+
+    const auto before_it = state.globals.find("nbefore");
+    const auto after_it = state.globals.find("nafter");
+    const auto done_it = state.globals.find("ldone");
+    expect(before_it != state.globals.end(), "YIELD script should capture the pre-yield value");
+    expect(after_it != state.globals.end(), "YIELD script should continue after yielding");
+    expect(done_it != state.globals.end(), "YIELD script should wait for the spawned task");
+    if (before_it != state.globals.end()) {
+        expect(before_it->second.number_value == 1.0, "pre-yield state should remain intact");
+    }
+    if (after_it != state.globals.end()) {
+        expect(after_it->second.number_value == 42.0, "post-yield assignment should execute");
+    }
+    if (done_it != state.globals.end()) {
+        expect(done_it->second.boolean_value, "awaited worker should complete successfully");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_yield_preserves_fault_metadata_when_followed_by_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_fault_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_fault_test.prg";
+    write_text(
+        main_path,
+        "YIELD\n"
+        "nFail = 1 / 0\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "YIELD fault test should stop on error");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "YIELD fault test should pause on error");
+    expect(state.location.line == 2U, "fault metadata should point at the post-YIELD faulting line");
+    expect(state.statement_text.find("1 / 0") != std::string::npos || state.statement_text.find("1/0") != std::string::npos,
+        "fault metadata should preserve the offending statement text");
+
+    const auto yield_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.yield"; });
+    const auto error_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.error"; });
+    expect(yield_event != state.events.end(), "YIELD should still emit its runtime.yield event before the fault");
+    expect(error_event != state.events.end(), "faulting line should still emit a runtime.error event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_on_error_resume_restores_fault_session_and_cursor_state() {
     // #150: RESUME should restore the captured fault-side data session/work area
     // even when the handler changes its own session and cursor selection.
@@ -5344,6 +5429,8 @@ int main() {
     test_spawn_and_await_command_runs_task_to_completion();
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_spawn_critical_section_serializes_workers();
+    test_yield_command_emits_runtime_yield_event_and_preserves_state();
+    test_yield_preserves_fault_metadata_when_followed_by_error();
     test_on_error_resume_restores_fault_session_and_cursor_state();
     test_retry_reexecutes_faulting_statement();
     test_resume_next_continues_after_fault();

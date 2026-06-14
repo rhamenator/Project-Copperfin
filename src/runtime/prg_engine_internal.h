@@ -106,6 +106,7 @@ enum class StatementKind {
     clear_memory_command,
     cancel_statement,
     quit_statement,
+    yield_statement,
     doevents_command,
     enter_critical_command,
     exit_critical_command,
