@@ -363,10 +363,18 @@ void run_library_build_host_smoke(
             const std::string api_manifest = read_text(fll_api_manifest_path);
             expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
                    "build host FLL manifest should declare the FoxTable registration symbol");
+            expect(api_manifest.find("callable_signature=ParamBlk*") != std::string::npos,
+                   "build host FLL manifest should declare the ParamBlk callable signature");
+            expect(api_manifest.find("default_return_helper=_RetInt") != std::string::npos,
+                   "build host FLL manifest should declare the default return helper");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary arity");
             expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers arity");
+            expect(api_manifest.find("function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary callable surface");
+            expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers callable surface");
         }
     }
 

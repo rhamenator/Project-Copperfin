@@ -198,6 +198,8 @@ bool is_native_host_output_kind(const BuildOutputKind output_kind) {
 
 constexpr std::string_view kFllLoaderEntrypoint = "FoxInfo";
 constexpr std::string_view kFllRegistrationSymbol = "_FoxTable";
+constexpr std::string_view kFllCallableSignature = "ParamBlk*";
+constexpr std::string_view kFllDefaultReturnHelper = "_RetInt";
 
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
     const std::filesystem::path configured_output(workspace.build_plan.output_path);
@@ -368,15 +370,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "#define COPPERFIN_EXPORT extern \"C\"\n";
     stream << "#endif\n\n";
 
-    for (const auto& symbol : plan.exported_symbols) {
-        stream << "COPPERFIN_EXPORT int " << symbol << "() {\n";
-        stream << "    return -1;\n";
-        stream << "}\n\n";
-    }
-
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
-        stream << "using CopperfinFllEntryPoint = int (*)();\n\n";
+        stream << "struct ParamBlk {\n";
+        stream << "    int reserved = 0;\n";
+        stream << "};\n\n";
+        stream << "static int " << kFllDefaultReturnHelper << "(int value) {\n";
+        stream << "    return value;\n";
+        stream << "}\n\n";
+        stream << "using CopperfinFllEntryPoint = int (*)(ParamBlk*);\n\n";
         stream << "struct CopperfinFoxInfoRecord {\n";
         stream << "    const char* function_name;\n";
         stream << "    CopperfinFllEntryPoint entrypoint;\n";
@@ -387,6 +389,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "    unsigned int entry_count;\n";
         stream << "    const CopperfinFoxInfoRecord* entries;\n";
         stream << "};\n\n";
+        for (const auto& symbol : plan.exported_symbols) {
+            stream << "COPPERFIN_EXPORT int " << symbol << "(ParamBlk* parm) {\n";
+            stream << "    (void)parm;\n";
+            stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
+            stream << "}\n\n";
+        }
         stream << "static const CopperfinFoxInfoRecord kCopperfinFoxInfo[] = {\n";
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
@@ -403,6 +411,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "COPPERFIN_EXPORT const CopperfinFoxTableRecord* " << kFllLoaderEntrypoint << "() {\n";
         stream << "    return &" << kFllRegistrationSymbol << ";\n";
         stream << "}\n";
+        return stream.str();
+    }
+
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "COPPERFIN_EXPORT int " << symbol << "() {\n";
+        stream << "    return -1;\n";
+        stream << "}\n\n";
     }
 
     return stream.str();
@@ -469,6 +484,8 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     stream << "additive_supported=true\n";
     stream << "loader_entrypoint=" << kFllLoaderEntrypoint << "\n";
     stream << "registration_symbol=" << kFllRegistrationSymbol << "\n";
+    stream << "callable_signature=" << kFllCallableSignature << "\n";
+    stream << "default_return_helper=" << kFllDefaultReturnHelper << "\n";
     for (const auto& symbol : plan.exported_symbols) {
         stream << "function=" << quote_manifest_value(symbol) << "\n";
         const auto found = parameter_counts.find(symbol);
@@ -476,6 +493,10 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
         stream << "function_arity="
                << quote_manifest_value(symbol) << "|"
                << parameter_count << "\n";
+        stream << "function_call_surface="
+               << quote_manifest_value(symbol) << "|"
+               << quote_manifest_value(std::string(kFllCallableSignature)) << "|"
+               << quote_manifest_value(std::string(kFllDefaultReturnHelper)) << "\n";
     }
     return stream.str();
 }
@@ -1759,6 +1780,10 @@ std::string build_runtime_manifest_text(
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
     stream << "fll_registration_symbol="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllRegistrationSymbol) : std::string()) << "\n";
+    stream << "fll_callable_signature="
+           << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllCallableSignature) : std::string()) << "\n";
+    stream << "fll_default_return_helper="
+           << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllDefaultReturnHelper) : std::string()) << "\n";
     stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
@@ -1868,6 +1893,10 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
     stream << "fll_registration_symbol="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllRegistrationSymbol) : std::string()) << "\n";
+    stream << "fll_callable_signature="
+           << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllCallableSignature) : std::string()) << "\n";
+    stream << "fll_default_return_helper="
+           << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllDefaultReturnHelper) : std::string()) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
