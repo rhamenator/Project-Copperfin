@@ -15,6 +15,7 @@ internal static class Program
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
+        TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
 
         if (failures != 0)
         {
@@ -193,6 +194,55 @@ internal static class Program
                 "project insights should keep direct procedure call detail");
             Expect(references.Exists(reference => reference.Kind == "call.member" && reference.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
                 "project insights should keep dotted procedure call detail");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestRenamePreviewCollectsDefinitionAndNormalizedReferences()
+    {
+        var root = CreateProjectRoot("rename_preview");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "? SaveOrder('ALFKI')" + Environment.NewLine +
+                "? oToolbar.SaveOrder('ANTON')" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "main.prg",
+                            RelativePath = "main.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var preview = CopperfinProjectInsightClient.BuildRenamePreview(snapshot, "oToolbar.SaveOrder");
+            Expect(preview.SymbolName == "SaveOrder", "rename preview should normalize dotted symbols to the trailing project symbol");
+            Expect(preview.Occurrences.Count == 3, "rename preview should include the definition and both collected call references");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "definition" && occurrence.Detail.Contains("PROCEDURE SaveOrder", StringComparison.Ordinal)),
+                "rename preview should include the defining procedure");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("SaveOrder('ALFKI')", StringComparison.Ordinal)),
+                "rename preview should include direct call references");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
+                "rename preview should include dotted call references");
         }
         finally
         {

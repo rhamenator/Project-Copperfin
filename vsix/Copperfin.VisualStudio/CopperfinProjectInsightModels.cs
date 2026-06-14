@@ -13,6 +13,21 @@ internal sealed class CopperfinProjectInsights
     public List<string> Warnings { get; set; } = new();
 }
 
+internal sealed class CopperfinProjectRenamePreview
+{
+    public string SymbolName { get; set; } = string.Empty;
+    public List<CopperfinProjectRenameOccurrence> Occurrences { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+}
+
+internal sealed class CopperfinProjectRenameOccurrence
+{
+    public string Kind { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public int Line { get; set; }
+    public string Detail { get; set; } = string.Empty;
+}
+
 internal sealed class CopperfinProjectTaskItem
 {
     public string Category { get; set; } = string.Empty;

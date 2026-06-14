@@ -83,6 +83,52 @@ internal static class CopperfinProjectInsightClient
         return insights;
     }
 
+    public static CopperfinProjectRenamePreview BuildRenamePreview(CopperfinStudioSnapshotDocument snapshot, string symbolName)
+    {
+        var preview = new CopperfinProjectRenamePreview
+        {
+            SymbolName = NormalizeRenameSymbol(symbolName)
+        };
+
+        if (string.IsNullOrWhiteSpace(preview.SymbolName))
+        {
+            return preview;
+        }
+
+        var insights = BuildInsights(snapshot);
+        preview.Warnings.AddRange(insights.Warnings);
+
+        foreach (var definition in insights.DefinedSymbols
+                     .Where(symbol => string.Equals(symbol.Name, preview.SymbolName, StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(symbol => symbol.FilePath, StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(symbol => symbol.Line))
+        {
+            preview.Occurrences.Add(new CopperfinProjectRenameOccurrence
+            {
+                Kind = "definition",
+                FilePath = definition.FilePath,
+                Line = definition.Line,
+                Detail = definition.Detail
+            });
+        }
+
+        foreach (var reference in insights.RuntimeReferences
+                     .Where(symbol => string.Equals(symbol.Name, preview.SymbolName, StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(symbol => symbol.FilePath, StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(symbol => symbol.Line))
+        {
+            preview.Occurrences.Add(new CopperfinProjectRenameOccurrence
+            {
+                Kind = "reference",
+                FilePath = reference.FilePath,
+                Line = reference.Line,
+                Detail = reference.Detail
+            });
+        }
+
+        return preview;
+    }
+
     private static void CollectWorkspaceArtifacts(
         CopperfinStudioProjectEntry entry,
         string projectRoot,
@@ -278,6 +324,19 @@ internal static class CopperfinProjectInsightClient
 
         var memberName = invocation.Split('.').Last();
         return knownCallableSymbols.Contains(memberName) ? memberName : string.Empty;
+    }
+
+    private static string NormalizeRenameSymbol(string symbolName)
+    {
+        var trimmed = symbolName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return string.Empty;
+        }
+
+        return trimmed.Contains('.')
+            ? trimmed.Split('.').Last()
+            : trimmed;
     }
 
     private static void AddDefinitionIfMatch(string path, int lineNumber, string line, Regex regex, string kind, CopperfinProjectInsights insights)
