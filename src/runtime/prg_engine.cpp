@@ -297,6 +297,7 @@ namespace copperfin::runtime
             int level = 0;
             std::filesystem::path root_path;
             std::filesystem::path journal_path;
+            std::string command_label;
             std::map<std::string, TransactionJournalFileEntry> tracked_files;
         };
 
@@ -1756,6 +1757,16 @@ namespace copperfin::runtime
     bool PrgRuntimeSession::dispatch_event_handler(const std::string &routine_name)
     {
         return impl_->dispatch_event_handler(routine_name);
+    }
+
+    bool PrgRuntimeSession::can_undo_command() const
+    {
+        return impl_->can_undo_command();
+    }
+
+    std::string PrgRuntimeSession::command_undo_label() const
+    {
+        return impl_->command_undo_label();
     }
 
     RuntimePauseState PrgRuntimeSession::run(DebugResumeAction action)

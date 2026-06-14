@@ -288,12 +288,14 @@
                 return resolved_identifier;
             };
 
-            auto execute_with_command_undo = [&](const std::string &table_path, auto &&operation) -> bool
+            auto execute_with_command_undo = [&](const std::string &table_path, const std::string &command_label, auto &&operation) -> bool
             {
                 if (!ensure_command_undo_backup_for_table(table_path))
                 {
                     return false;
                 }
+
+                current_command_undo_journal().command_label = uppercase_copy(trim_copy(command_label));
 
                 if (!operation())
                 {
@@ -2222,7 +2224,7 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "REPLACE", [&]
                     {
                         return replace_records(*cursor, assignments, frame, statement.tertiary_expression, statement.quaternary_expression);
                     }))
@@ -2271,7 +2273,7 @@
                 const std::string for_expression = trim_copy(statement.tertiary_expression).empty()
                                                        ? ".T."
                                                        : statement.tertiary_expression;
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "UPDATE", [&]
                     {
                         return replace_records(*cursor, assignments, frame, for_expression, statement.quaternary_expression);
                     }))
@@ -2296,7 +2298,7 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "APPEND BLANK", [&]
                     {
                         return append_blank_record(*cursor);
                     }))
@@ -2321,7 +2323,7 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "DELETE", [&]
                     {
                         return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, true);
                     }))
@@ -2354,7 +2356,7 @@
                 const std::string where_expression = trim_copy(statement.expression).empty()
                                                          ? ".T."
                                                          : statement.expression;
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "DELETE FROM", [&]
                     {
                         return set_deleted_flag(*cursor, frame, where_expression, statement.tertiary_expression, true);
                     }))
@@ -2384,7 +2386,7 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "RECALL", [&]
                     {
                         return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, false);
                     }))
@@ -2421,7 +2423,7 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, [&]
+                if (!execute_with_command_undo(cursor->source_path, "INSERT INTO", [&]
                     {
                         return insert_record_values(*cursor, frame, statement.expression, statement.secondary_expression);
                     }))
@@ -3668,7 +3670,7 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                if (!execute_with_command_undo(table_path.string(), [&]
+                if (!execute_with_command_undo(table_path.string(), "CREATE TABLE", [&]
                     {
                         if (!ensure_transaction_backup_for_table(table_path.string()))
                         {
@@ -3742,7 +3744,7 @@
                 table_path = table_path.lexically_normal();
                 std::string affected_field = trim_copy(statement.expression);
 
-                if (!execute_with_command_undo(table_path.string(), [&]
+                if (!execute_with_command_undo(table_path.string(), "ALTER TABLE", [&]
                 {
                     if (!ensure_transaction_backup_for_table(table_path.string()))
                     {
@@ -4810,7 +4812,7 @@
                     }
 
                     std::size_t appended_count = 0U;
-                    if (!execute_with_command_undo(cursor->source_path, [&]
+                    if (!execute_with_command_undo(cursor->source_path, "APPEND FROM ARRAY", [&]
                     {
                         // Determine dest fields order (filtered by FIELDS clause)
                         const std::vector<std::string> field_filter =

@@ -310,6 +310,22 @@
             return iterator->second;
         }
 
+        [[nodiscard]] bool can_undo_command() const
+        {
+            const auto found = command_undo_stack_by_session.find(current_data_session);
+            return found != command_undo_stack_by_session.end() && !found->second.empty();
+        }
+
+        [[nodiscard]] std::string command_undo_label() const
+        {
+            const auto found = command_undo_stack_by_session.find(current_data_session);
+            if (found == command_undo_stack_by_session.end() || found->second.empty())
+            {
+                return {};
+            }
+            return found->second.back().command_label;
+        }
+
         bool begin_command_undo_journal_if_needed()
         {
             TransactionJournalState &journal = current_command_undo_journal();

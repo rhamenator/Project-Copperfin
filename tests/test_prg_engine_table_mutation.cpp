@@ -1031,6 +1031,36 @@ void test_undo_reverts_latest_replacement_command() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_command_undo_query_reports_available_label_after_bulk_operation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_query";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_query.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'CHANGED'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "command undo query script should complete");
+    expect(session.can_undo_command(), "command undo query should report an available undo");
+    const std::string undo_label = session.command_undo_label();
+    expect(undo_label.find("REPLACE") != std::string::npos,
+        "command undo query should expose the last undoable command label (got '" + undo_label + "')");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_undo_reverts_latest_append_blank() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_append_blank";
@@ -1917,6 +1947,7 @@ int main() {
     test_undo_reverts_latest_alter_table_command();
     test_undo_reverts_latest_append_from_array();
     test_undo_reverts_latest_replacement_command();
+    test_command_undo_query_reports_available_label_after_bulk_operation();
     test_undo_all_reverts_multiple_latest_commands();
     test_undo_without_history_fails_deterministically();
     test_rollback_transaction_replays_local_dbf_changes();
