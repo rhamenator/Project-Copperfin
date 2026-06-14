@@ -24,6 +24,7 @@ internal static class Program
         TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
         TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
+        TestCrossFileProjectBoundaryResolvesProcedureDefinition();
 
         if (failures != 0)
         {
@@ -479,6 +480,37 @@ internal static class Program
         {
             TryDelete(root);
             TryDelete(externalRoot);
+        }
+    }
+
+    private static void TestCrossFileProjectBoundaryResolvesProcedureDefinition()
+    {
+        var root = CreateProjectRoot("cross_file_project_boundary");
+        try
+        {
+            var entryPath = Path.Combine(root, "main.prg");
+            var libraryPath = Path.Combine(root, "orders.prg");
+            File.WriteAllText(entryPath, "DO SaveOrder" + Environment.NewLine);
+            File.WriteAllText(
+                libraryPath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(entryPath, "SaveOrder", out var definition);
+            Expect(resolved, "symbols defined in a sibling project file should resolve across the project boundary");
+            if (resolved)
+            {
+                Expect(definition.FilePath == libraryPath, "cross-file project-boundary resolution should land on the defining project file");
+                Expect(definition.LineNumber == 1, "cross-file project-boundary resolution should land on the defining line");
+            }
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(entryPath, "SaveOrder");
+            Expect(signatures.Count == 1, "cross-file project-boundary lookup should also surface the defining procedure signature");
+        }
+        finally
+        {
+            TryDelete(root);
         }
     }
 
