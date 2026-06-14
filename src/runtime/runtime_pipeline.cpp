@@ -111,6 +111,19 @@ std::vector<std::string> unique_non_empty_paths_preserve_order(std::initializer_
     return normalized_values;
 }
 
+std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier) {
+    switch (tier) {
+        case copperfin::platform::DotNetParityTier::exact:
+            return "exact";
+        case copperfin::platform::DotNetParityTier::adapted:
+            return "adapted";
+        case copperfin::platform::DotNetParityTier::intentionally_not_supported:
+            return "intentionally_not_supported";
+        default:
+            return "unknown";
+    }
+}
+
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error) {
     std::ofstream output(path, std::ios::binary);
     if (!output) {
@@ -2116,6 +2129,47 @@ std::string build_runtime_manifest_text(
     stream << "dotnet_policy_allowlist=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
     stream << "dotnet_policy_denylist=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
     stream << "dotnet_parity_matrix_entries=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
+    stream << "dotnet_policy_allowlist_items=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
+    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.allowlist) {
+        stream << "dotnet_policy_allowlist_item=" << quote_manifest_value(capability_id) << "\n";
+    }
+    stream << "dotnet_policy_denylist_items=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
+    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.denylist) {
+        stream << "dotnet_policy_denylist_item=" << quote_manifest_value(capability_id) << "\n";
+    }
+    stream << "dotnet_parity_matrix_count=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
+    for (const auto& capability : extensibility_profile.dotnet_output.parity_matrix) {
+        stream << "dotnet_parity_matrix_item="
+               << quote_manifest_value(capability.id) << "|"
+               << quote_manifest_value(capability.title) << "|"
+               << dotnet_parity_tier_name(capability.tier) << "|"
+               << quote_manifest_value(capability.rationale) << "|"
+               << quote_manifest_value(capability.verification_reference) << "\n";
+    }
+
+    stream << "language_integration_count=" << extensibility_profile.languages.size() << "\n";
+    for (const auto& language : extensibility_profile.languages) {
+        stream << "language_integration="
+               << quote_manifest_value(language.id) << "|"
+               << quote_manifest_value(language.title) << "|"
+               << quote_manifest_value(language.integration_mode) << "|"
+               << quote_manifest_value(language.trust_boundary) << "|"
+               << quote_manifest_value(language.output_story) << "|"
+               << (language.enabled_by_default ? "true" : "false") << "\n";
+    }
+    stream << "ai_feature_count=" << extensibility_profile.ai_features.size() << "\n";
+    for (const auto& feature : extensibility_profile.ai_features) {
+        stream << "ai_feature="
+               << quote_manifest_value(feature.id) << "|"
+               << quote_manifest_value(feature.title) << "|"
+               << quote_manifest_value(feature.description) << "|"
+               << quote_manifest_value(feature.trust_boundary) << "|"
+               << (feature.enabled_by_default ? "true" : "false") << "\n";
+    }
+    stream << "extensibility_guardrail_count=" << extensibility_profile.guardrails.size() << "\n";
+    for (const auto& guardrail : extensibility_profile.guardrails) {
+        stream << "extensibility_guardrail=" << quote_manifest_value(guardrail) << "\n";
+    }
 
     const platform::DotNetInteropCallDecision launcher_decision = platform::evaluate_dotnet_interop_call(
         extensibility_profile,

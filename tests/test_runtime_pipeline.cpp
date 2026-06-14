@@ -702,6 +702,31 @@ void test_materialize_runtime_package() {
         expect(runtime_manifest.find("dotnet_policy_allowlist=") != std::string::npos, "runtime manifest should include .NET policy allowlist metadata");
         expect(runtime_manifest.find("dotnet_policy_denylist=") != std::string::npos, "runtime manifest should include .NET policy denylist metadata");
         expect(runtime_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos, "runtime manifest should include .NET parity matrix metadata");
+        expect(runtime_manifest.find("dotnet_policy_allowlist_items=") != std::string::npos, "runtime manifest should include .NET policy allowlist item count");
+        expect(runtime_manifest.find("dotnet_policy_denylist_items=") != std::string::npos, "runtime manifest should include .NET policy denylist item count");
+        expect(runtime_manifest.find("dotnet_policy_allowlist_item=task-primitives") != std::string::npos,
+               "runtime manifest should emit task-primitives allowlist entry");
+        expect(runtime_manifest.find("dotnet_policy_denylist_item=unsafe-reflection-load") != std::string::npos,
+               "runtime manifest should emit unsafe-reflection-load denylist entry");
+        expect(runtime_manifest.find("dotnet_parity_matrix_count=") != std::string::npos, "runtime manifest should include .NET parity matrix count");
+        expect(runtime_manifest.find("dotnet_parity_matrix_item=task-primitives") != std::string::npos,
+               "runtime manifest should emit task-primitives parity matrix entry");
+        expect(runtime_manifest.find("dotnet_parity_matrix_item=unsafe-reflection-load") != std::string::npos,
+               "runtime manifest should emit unsafe-reflection-load parity matrix entry");
+        expect(runtime_manifest.find("language_integration_count=") != std::string::npos, "runtime manifest should include language integration count");
+        expect(runtime_manifest.find("language_integration=python|") != std::string::npos,
+               "runtime manifest should emit python sidecar language integration");
+        expect(runtime_manifest.find("language_integration=r|") != std::string::npos,
+               "runtime manifest should emit R sidecar language integration");
+        expect(runtime_manifest.find("ai_feature_count=") != std::string::npos, "runtime manifest should include AI feature count");
+        expect(runtime_manifest.find("ai_feature=mcp-host|") != std::string::npos,
+               "runtime manifest should emit MCP host AI feature metadata");
+        expect(runtime_manifest.find("ai_feature=ai-assist|") != std::string::npos,
+               "runtime manifest should emit AI-assisted developer workflow metadata");
+        expect(runtime_manifest.find("extensibility_guardrail_count=") != std::string::npos,
+               "runtime manifest should include extensibility guardrail count");
+        expect(runtime_manifest.find("The trusted execution core stays native-first and security-first.") != std::string::npos,
+               "runtime manifest should include explicit extensibility guardrails");
         expect(runtime_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos, "runtime manifest should include .NET gateway allow decision diagnostics");
         expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos, "runtime manifest should include .NET gateway deny decision diagnostics");
         expect(runtime_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
