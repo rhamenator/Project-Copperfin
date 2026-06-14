@@ -4967,9 +4967,27 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
         expect(entered->second.boolean_value, "CRITICAL body should set entry flag");
     }
 
-    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+    const auto yield_event_pos = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.yield";
-    }), "ENTER CRITICAL + YIELD should emit runtime.yield");
+    });
+    expect(yield_event_pos != state.events.end(), "ENTER CRITICAL + YIELD should emit runtime.yield");
+    const auto first_critical_enter = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.enter";
+    });
+    const auto first_critical_exit = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.exit";
+    });
+    expect(first_critical_enter != state.events.end(), "ENTER CRITICAL should emit runtime.critical.enter");
+    expect(first_critical_exit != state.events.end(), "EXIT CRITICAL should emit runtime.critical.exit");
+    if (first_critical_enter != state.events.end() && first_critical_exit != state.events.end() &&
+        yield_event_pos != state.events.end()) {
+        expect(std::distance(state.events.begin(), first_critical_enter) <
+               std::distance(state.events.begin(), yield_event_pos),
+               "runtime.yield should occur after entering CRITICAL");
+        expect(std::distance(state.events.begin(), yield_event_pos) <
+               std::distance(state.events.begin(), first_critical_exit),
+               "runtime.yield should occur before CRITICAL exit");
+    }
     expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.critical.blocking_violation" &&
                event.detail.find("operation=YIELD") != std::string::npos;
