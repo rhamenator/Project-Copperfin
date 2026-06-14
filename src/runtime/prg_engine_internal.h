@@ -147,8 +147,15 @@ struct Statement {
     std::vector<std::string> names;
 };
 
+enum class RoutineKind {
+    main,
+    procedure,
+    function
+};
+
 struct Routine {
     std::string name;
+    RoutineKind kind = RoutineKind::main;
     std::vector<Statement> statements;
 };
 

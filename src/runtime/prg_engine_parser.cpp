@@ -298,6 +298,9 @@ Program parse_program(const std::string& path) {
             const auto separator = line.find(' ');
             Routine routine;
             routine.name = trim_copy(line.substr(separator + 1U));
+            routine.kind = starts_with_insensitive(line, "FUNCTION ")
+                ? RoutineKind::function
+                : RoutineKind::procedure;
             current = &program.routines[normalize_identifier(routine.name)];
             *current = std::move(routine);
             continue;

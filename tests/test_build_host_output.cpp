@@ -365,6 +365,10 @@ void run_library_build_host_smoke(
                    "build host manifest should record InitLibrary DLL arity");
             expect(manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
                    "build host manifest should record AddNumbers DLL arity");
+            expect(manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL routine kind");
+            expect(manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL routine kind");
             expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host manifest should record InitLibrary DLL parameter names");
             expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
@@ -416,6 +420,10 @@ void run_library_build_host_smoke(
                    "build host FLL manifest should declare InitLibrary arity");
             expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers arity");
+            expect(api_manifest.find("function_kind=InitLibrary|procedure") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary routine kind");
+            expect(api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers routine kind");
             expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary parameter names");
             expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
