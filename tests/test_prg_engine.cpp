@@ -318,6 +318,115 @@ void test_breakpoint_pause_preserves_selected_cursor_inspection_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_step_pause_preserves_selected_cursor_inspection_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_step_cursor_state";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "step_cursor_state.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "DO worker\n"
+        "x = AGE\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "y = 1\n"
+        "RETURN\n");
+
+    const auto expect_cursor_state = [](const copperfin::runtime::RuntimePauseState& state,
+                                        const std::string& expected_statement,
+                                        const std::string& expected_frame) {
+        expect(state.reason == copperfin::runtime::DebugPauseReason::step,
+               "step cursor-state test should pause with step reason");
+        expect(state.statement_text == expected_statement,
+               "step cursor-state test should preserve the expected paused statement text");
+        expect(state.work_area.selected == 1,
+               "step cursor-state test should preserve the selected work area");
+        expect(state.work_area.aliases.size() == 1U,
+               "step cursor-state test should preserve the alias map");
+        if (state.work_area.aliases.size() == 1U) {
+            expect(state.work_area.aliases.begin()->second == "People",
+                   "step cursor-state test should preserve the selected alias name");
+        }
+        expect(!state.call_stack.empty(),
+               "step cursor-state test should expose a stack frame");
+        if (!state.call_stack.empty()) {
+            expect(state.call_stack.front().routine_name == expected_frame,
+                   "step cursor-state test should preserve the expected top frame");
+        }
+
+        const auto runtime_cursor = std::find_if(state.cursors.begin(), state.cursors.end(), [](const auto& cursor) {
+            return cursor.alias == "People";
+        });
+        expect(runtime_cursor != state.cursors.end(),
+               "step cursor-state test should preserve the open cursor in runtime inspection state");
+        if (runtime_cursor != state.cursors.end()) {
+            expect(runtime_cursor->work_area == 1,
+                   "step cursor-state test should preserve cursor work area");
+            expect(runtime_cursor->recno == 2U,
+                   "step cursor-state test should preserve current record position");
+            expect(runtime_cursor->record_count == 2U,
+                   "step cursor-state test should preserve current record count");
+            expect(!runtime_cursor->source_path.empty(),
+                   "step cursor-state test should preserve cursor source path");
+        }
+    };
+
+    copperfin::runtime::PrgRuntimeSession step_into_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+    const auto step_into_entry = step_into_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(step_into_entry.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-into cursor-state test should stop on entry first");
+    const auto step_into_use = step_into_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_into_use.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-into cursor-state setup should pause after USE");
+    const auto step_into_go = step_into_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_into_go.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-into cursor-state setup should pause after GO");
+    const auto step_into_state = step_into_session.run(copperfin::runtime::DebugResumeAction::step_into); // into worker
+    expect_cursor_state(step_into_state, "y = 1", "worker");
+
+    copperfin::runtime::PrgRuntimeSession step_over_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+    const auto step_over_entry = step_over_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(step_over_entry.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-over cursor-state test should stop on entry first");
+    const auto step_over_use = step_over_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_over_use.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-over cursor-state setup should pause after USE");
+    const auto step_over_go = step_over_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_over_go.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-over cursor-state setup should pause after GO");
+    const auto step_over_state = step_over_session.run(copperfin::runtime::DebugResumeAction::step_over); // over DO worker
+    expect_cursor_state(step_over_state, "x = AGE", "main");
+
+    copperfin::runtime::PrgRuntimeSession step_out_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+    const auto step_out_entry = step_out_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(step_out_entry.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-out cursor-state test should stop on entry first");
+    const auto step_out_use = step_out_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_out_use.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-out cursor-state setup should pause after USE");
+    const auto step_out_go = step_out_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_out_go.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-out cursor-state setup should pause after GO");
+    const auto step_out_inner = step_out_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_out_inner.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-out cursor-state setup should step into worker before stepping out");
+    const auto step_out_state = step_out_session.run(copperfin::runtime::DebugResumeAction::step_out);
+    expect_cursor_state(step_out_state, "x = AGE", "main");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1478,6 +1587,7 @@ int main() {
     test_breakpoint_on_first_executable_line_hits_after_entry_continue();
     test_step_pause_state_preserves_statement_text_across_step_modes();
     test_breakpoint_pause_preserves_selected_cursor_inspection_state();
+    test_step_pause_preserves_selected_cursor_inspection_state();
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();

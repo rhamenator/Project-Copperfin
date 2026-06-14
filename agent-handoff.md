@@ -34,6 +34,7 @@ Next: the highest-priority open umbrellas are still `#19` and `#20`. Create the 
 
 Language-service queue update:
 
+- 2026-06-14: **`#407` is now shipped.** Focused `test_prg_engine` coverage now proves `step_into`, `step_over`, and `step_out` preserve the selected work area, alias map, and open-cursor inspection state alongside the existing statement-text and frame-routing contract across a simple `DO worker` flow.
 - 2026-06-14: **`#406` is now shipped.** Focused `test_prg_engine` coverage now proves a breakpoint pause preserves the selected work area, alias map, and open-cursor inspection state (work area, record position, record count, and source path) alongside the existing statement-text contract.
 - 2026-06-14: **`#405` is now shipped.** Focused `test_prg_engine` coverage now proves `step_into`, `step_over`, and `step_out` each pause with `DebugPauseReason::step` and preserve the expected current/next statement text plus caller-vs-callee frame routing across a simple `DO worker` flow.
 - 2026-06-14: **`#404` is now shipped.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract. Focused `test_prg_engine` coverage locks both the ordinary in-routine breakpoint and the first-line breakpoint case down directly.
@@ -59,6 +60,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#407` is now closed.** Step pauses now have explicit regression coverage for selected work-area and open-cursor inspection fidelity, including alias/work-area identity plus current record position across `step_into`, `step_over`, and `step_out`.
 - 2026-06-14: **`#406` is now closed.** Breakpoint pauses now have explicit regression coverage for selected work-area and open-cursor inspection fidelity, including alias/work-area identity plus current record position at the paused statement.
 - 2026-06-14: **`#405` is now closed.** Step pause-state routing is now explicitly regression-guarded: `step_into`, `step_over`, and `step_out` each preserve the expected current/next statement text and caller-vs-callee frame routing across a simple `DO worker` flow.
 - 2026-06-14: **`#404` is now closed.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract in both ordinary and first-line breakpoint cases.

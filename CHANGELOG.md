@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-06-14
 
+- D2/#407 step cursor-inspection fidelity shipped with focused debugger coverage: `test_prg_engine` now explicitly proves `step_into`, `step_over`, and `step_out` preserve the selected work area, alias map, and open-cursor inspection state (work area, record position, record count, and source path) alongside the existing statement-text and frame-routing contract across a simple `DO worker` flow.
 - D2/#406 breakpoint cursor-inspection fidelity shipped with focused debugger coverage: `test_prg_engine` now explicitly proves a breakpoint pause preserves the selected work area, alias map, and open-cursor inspection state (work area, record position, record count, and source path) alongside the existing statement-text contract.
 - D2/#405 step pause-state fidelity shipped with focused debugger coverage: `test_prg_engine` now explicitly proves `step_into`, `step_over`, and `step_out` each pause with `DebugPauseReason::step` and preserve the expected current/next statement text plus caller-vs-callee frame routing across a simple `DO worker` flow.
 - D2/#404 breakpoint statement-text fidelity shipped with focused debugger coverage: breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract, and `test_prg_engine` now locks both the ordinary in-routine breakpoint and first-line breakpoint cases down directly.
