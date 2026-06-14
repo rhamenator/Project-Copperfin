@@ -189,16 +189,20 @@ internal static class FoxProIntelliSenseCatalog
             AddEntries(completions, SetKeywords, "set", priority: 20);
         }
 
-        if (LooksLikeMemberAccess(linePrefix))
-        {
-            AddEntries(completions, GenericObjectMembers, "member", priority: 20);
-        }
-
         if (!string.IsNullOrWhiteSpace(filePath))
         {
             var index = GetProjectIndex(filePath!);
+            if (LooksLikeMemberAccess(linePrefix))
+            {
+                AddProjectMemberEntries(completions, index);
+            }
             AddContextualProjectEntries(completions, index, linePrefix);
             AddSymbolEntries(completions, index);
+        }
+
+        if (LooksLikeMemberAccess(linePrefix))
+        {
+            AddEntries(completions, GenericObjectMembers, "member", priority: 20);
         }
 
         return completions.Values
@@ -411,6 +415,15 @@ internal static class FoxProIntelliSenseCatalog
         AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from USE ... ALIAS statements.")), "alias", priority: 100);
     }
 
+    private static void AddProjectMemberEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index)
+    {
+        AddEntries(
+            completions,
+            index.Methods.Select(method => (ExtractMethodName(method), $"Project method member from {ExtractContainingType(method)}.")),
+            "member",
+            priority: 0);
+    }
+
     private static bool LooksLikeSetContext(string linePrefix)
     {
         return linePrefix.TrimStart().StartsWith("SET ", StringComparison.OrdinalIgnoreCase);
@@ -419,6 +432,18 @@ internal static class FoxProIntelliSenseCatalog
     private static bool LooksLikeMemberAccess(string linePrefix)
     {
         return MemberAccessRegex.IsMatch(linePrefix);
+    }
+
+    private static string ExtractMethodName(string qualifiedMethodName)
+    {
+        var separator = qualifiedMethodName.LastIndexOf('.');
+        return separator >= 0 ? qualifiedMethodName[(separator + 1)..] : qualifiedMethodName;
+    }
+
+    private static string ExtractContainingType(string qualifiedMethodName)
+    {
+        var separator = qualifiedMethodName.LastIndexOf('.');
+        return separator >= 0 ? qualifiedMethodName[..separator] : "the active project";
     }
 
     private static void AddEntries(

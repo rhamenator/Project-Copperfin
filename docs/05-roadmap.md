@@ -59,7 +59,7 @@ Goal:
 Current state:
 
 - baseline shipped
-- current prompt-sized child queues are closed on this branch (`#162`-`#177` shipped for build/debug; `#178`-`#183` and `#395` shipped for language service)
+- current prompt-sized child queues are closed on this branch (`#162`-`#177` shipped for build/debug; `#178`-`#183`, `#395`, and `#396` shipped for language service)
 
 ## Phase E: Designers And IDE Parity
 

@@ -20,6 +20,7 @@ internal static class Program
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
         TestQualifiedProjectMethodSignatureHelpAndDefinition();
+        TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
 
         if (failures != 0)
         {
@@ -341,6 +342,35 @@ internal static class Program
             {
                 Expect(definition.Kind == "method", "qualified project methods should resolve as method definitions");
                 Expect(definition.LineNumber == 2, "qualified project methods should resolve to the procedure line inside the class");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers()
+    {
+        var root = CreateProjectRoot("project_member_completion");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "oEditor.", "S");
+            Expect(completions.Count > 0, "member access context should return completion candidates");
+            if (completions.Count > 0)
+            {
+                Expect(completions[0].DisplayText == "SaveOrder" && completions[0].Kind == "member",
+                    "member access context should rank project-defined methods ahead of generic fallback members");
+                Expect(completions[0].Description == "Project method member from app.customer.editor.",
+                    "member access context should surface the originating class path for project method members");
             }
         }
         finally
