@@ -4,6 +4,10 @@ This changelog is an exhaustive ledger compiled from the dated implementation no
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
 
+## 2026-06-13
+
+- D1/#19 child slice `#162` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies the generated launcher contract itself, including manifest forwarding, `--debug` propagation, package-directory working directory, and the sanitized assembly-name contract in the emitted launcher project.
+
 ## 2026-05-12
 
 - Macro/eval slice `#97` advanced across child issue `#380` with focused proof-hardening for nested `TEXTMERGE()` eval surfaces: `test_prg_engine_string_math_functions` now uses a true second-hop holder chain inside merged `EVAL(&macro)` content, verifying `TEXTMERGE('Hello <<EVAL(&cEvalExprDeepHolder)>>!')`.

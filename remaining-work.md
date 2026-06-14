@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #162-#167)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #163-#167; #162 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #162-#167)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #163-#167; #162 shipped)
 
 ### Designers And IDE Parity
 

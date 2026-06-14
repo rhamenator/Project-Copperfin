@@ -126,6 +126,76 @@ void test_materialize_runtime_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_generated_launcher_forwards_manifest_and_debug_flag() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_launcher_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "launcher_contract.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LauncherContract";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "LauncherContract";
+    workspace.build_plan.output_path = (output_dir / "LauncherContract.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "launcher contract plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "launcher contract package should materialize");
+    if (result.ok) {
+        const std::string launcher_source = read_text(result.plan.launcher_source_path);
+        const std::string launcher_project = read_text(result.plan.launcher_project_path);
+        expect(
+            launcher_source.find("var forwarded = new List<string> { \"--manifest\", Quote(manifest) };") != std::string::npos,
+            "generated launcher should forward the manifest path to the runtime host");
+        expect(
+            launcher_source.find("string.Equals(arg, \"--debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
+            launcher_source.find("string.Equals(arg, \"/debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos,
+            "generated launcher should preserve debug command-line forwarding");
+        expect(
+            launcher_source.find("WorkingDirectory = baseDir") != std::string::npos,
+            "generated launcher should run the runtime host from the package directory");
+        expect(
+            launcher_project.find("<AssemblyName>LauncherContract</AssemblyName>") != std::string::npos,
+            "generated launcher project should preserve the sanitized assembly name contract");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_materialize_excluded_xasset_startup_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_xasset_tests";
@@ -597,6 +667,7 @@ void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
 
 int main() {
     test_materialize_runtime_package();
+    test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
