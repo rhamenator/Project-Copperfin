@@ -156,6 +156,24 @@ void test_legacy_function_compatibility_across_backends() {
     }
 }
 
+void test_boolean_literals_are_dialect_sensitive() {
+    const auto sqlserver = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlserver,
+        "SELECT * FROM customer WHERE active = .T. AND archived = .F.");
+
+    expect(sqlserver.ok, "sqlserver translation should preserve booleans in deterministic form");
+    if (sqlserver.ok) {
+        expect(sqlserver.translated_sql.find("active = 1") != std::string::npos,
+               "sqlserver translator should emit numeric true literal");
+        expect(sqlserver.translated_sql.find("archived = 0") != std::string::npos,
+               "sqlserver translator should emit numeric false literal");
+        expect(sqlserver.translated_sql.find("TRUE") == std::string::npos,
+               "sqlserver output should avoid generic TRUE literal");
+        expect(sqlserver.translated_sql.find("FALSE") == std::string::npos,
+               "sqlserver output should avoid generic FALSE literal");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -165,6 +183,7 @@ int main() {
     test_nested_iif_is_translated_recursively();
     test_literals_and_functions_are_not_rewritten_in_string_literals();
     test_legacy_function_compatibility_across_backends();
+    test_boolean_literals_are_dialect_sensitive();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -392,7 +392,13 @@ void replace_iif_calls(std::string& text) {
     }
 }
 
-void replace_all_literals(std::string& text) {
+void replace_all_literals(std::string& text, FederationBackend backend) {
+    if (backend == FederationBackend::sqlserver) {
+        replace_keyword_in_sql(text, ".T.", "1", false);
+        replace_keyword_in_sql(text, ".F.", "0", false);
+        return;
+    }
+
     replace_keyword_in_sql(text, ".T.", "TRUE", false);
     replace_keyword_in_sql(text, ".F.", "FALSE", false);
     replace_keyword_function_in_sql(text, "ALLTRIM", "TRIM");
@@ -443,7 +449,7 @@ QueryTranslationResult translate_fox_sql_to_backend(
     }
 
     std::string translated = fox_sql;
-    replace_all_literals(translated);
+    replace_all_literals(translated, backend);
     replace_fox_sql_dialect(translated, backend);
 
     return {.ok = true, .translated_sql = translated, .error = {}};
