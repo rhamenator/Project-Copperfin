@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include <system_error>
+#include <unordered_map>
 #include <vector>
 
 #if defined(_WIN32)
@@ -54,6 +55,38 @@ std::string read_text(const std::filesystem::path& path) {
     std::ostringstream stream;
     stream << input.rdbuf();
     return stream.str();
+}
+
+std::string hex_decode_bytes(const std::string& encoded) {
+    std::string bytes;
+    bytes.reserve(encoded.size() / 2U);
+    for (std::size_t index = 0; index + 1U < encoded.size(); index += 2U) {
+        const std::string chunk = encoded.substr(index, 2U);
+        bytes.push_back(static_cast<char>(std::strtoul(chunk.c_str(), nullptr, 16)));
+    }
+    return bytes;
+}
+
+std::unordered_map<std::string, std::string> parse_app_archive_payloads(const std::string& archive_text) {
+    std::unordered_map<std::string, std::string> payloads;
+    std::istringstream input(archive_text);
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind("payload=", 0U) != 0U) {
+            continue;
+        }
+
+        const std::string payload = line.substr(8U);
+        const std::size_t separator = payload.find('|');
+        if (separator == std::string::npos) {
+            continue;
+        }
+        payloads.emplace(payload.substr(0U, separator), hex_decode_bytes(payload.substr(separator + 1U)));
+    }
+    return payloads;
 }
 
 std::string trim_copy(std::string value) {
@@ -1580,7 +1613,7 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
            "app-output plan should not route through .NET launcher emission");
     expect(plan.launcher_mode == "foxpro_application_archive_contract",
            "app-output plan should switch to the archive-contract packaging mode");
-    expect(plan.launcher_fallback == "app_archive_generation_pending",
+    expect(plan.launcher_fallback == "foxpro_app_binary_generation_pending",
            "app-output plan should record the honest non-binary fallback state");
     expect(fs::path(plan.launcher_output_path).filename() == "ArchiveDemo.app",
            "app-output plan should preserve the requested output filename");
@@ -1597,12 +1630,12 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     if (result.ok) {
         expect(fs::exists(result.plan.app_archive_manifest_path),
                "app-output package should emit an archive manifest");
-        expect(!fs::exists(result.plan.launcher_output_path),
-               "app-output package should not fake an APP binary");
+        expect(fs::exists(result.plan.launcher_output_path),
+               "app-output package should materialize an honest APP archive contract");
         expect(!fs::exists(result.plan.runtime_host_destination_path),
                "app-output package should not bundle an executable runtime host into the APP output slot");
-        expect(!result.plan.primary_output_materialized,
-               "app-output package should report that the primary APP binary is not yet materialized");
+        expect(result.plan.primary_output_materialized,
+               "app-output package should report that the APP archive contract is materialized");
         expect(fs::exists(fs::path(result.plan.content_root) / "main.prg"),
                "app-output package should still stage the startup program");
         expect(fs::exists(fs::path(result.plan.content_root) / "helper.prg"),
@@ -1626,12 +1659,43 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         expect(archive_manifest.find("asset=config.txt|Text|false|true") != std::string::npos,
                "app-output archive manifest should record staged non-program assets");
 
+        const std::string app_archive = read_text(result.plan.launcher_output_path);
+        expect(app_archive.find("copperfin_app_archive_version=1") != std::string::npos,
+               "app-output primary output should identify the Copperfin APP archive format");
+        expect(app_archive.find("archive_contract=copperfin_content_archive_v1") != std::string::npos,
+               "app-output primary output should declare the APP archive contract");
+        expect(app_archive.find("content_manifest=" + quote_manifest_value(result.plan.app_archive_manifest_path)) != std::string::npos,
+               "app-output primary output should point back to the staged-content manifest");
+        const auto archive_payloads = parse_app_archive_payloads(app_archive);
+        expect(archive_payloads.contains("main.prg"),
+               "app-output primary archive should carry the startup program payload");
+        expect(archive_payloads.contains("helper.prg"),
+               "app-output primary archive should carry supporting program payloads");
+        expect(archive_payloads.contains("config.txt"),
+               "app-output primary archive should carry non-program payloads");
+        if (archive_payloads.contains("main.prg")) {
+            expect(archive_payloads.at("main.prg") == "DO helper\nRETURN\n",
+                   "app-output primary archive should preserve startup program bytes");
+        }
+        if (archive_payloads.contains("helper.prg")) {
+            expect(archive_payloads.at("helper.prg") == "WAIT WINDOW 'archived'\nRETURN\n",
+                   "app-output primary archive should preserve supporting program bytes");
+        }
+        if (archive_payloads.contains("config.txt")) {
+            expect(archive_payloads.at("config.txt") == "mode=demo",
+                   "app-output primary archive should preserve non-program asset bytes");
+        }
+
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=app") != std::string::npos,
                "app-output manifest should record APP output kind");
         expect(runtime_manifest.find("app_archive_manifest_path=" + quote_manifest_value(result.plan.app_archive_manifest_path)) != std::string::npos,
                "app-output manifest should record the emitted archive-manifest path");
+        expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
+               "app-output manifest should record the materialized primary archive");
+        expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
+               "app-output manifest should record the emitted APP archive as an extension payload");
         expect(runtime_manifest.find("feature_flag=build.output.app_archive_contract|true|build_output") != std::string::npos,
                "app-output manifest should expose the APP archive-contract feature flag");
         expect(debug_manifest.find("output_kind=app") != std::string::npos,

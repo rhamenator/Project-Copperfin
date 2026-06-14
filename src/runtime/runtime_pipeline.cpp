@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <optional>
 #include <sstream>
 #include <unordered_set>
@@ -129,6 +130,28 @@ std::string read_text_file(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     std::ostringstream stream;
     stream << input.rdbuf();
+    return stream.str();
+}
+
+std::string read_binary_file(const std::filesystem::path& path, std::string& error) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        error = "Unable to open file: " + path.string();
+        return {};
+    }
+
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
+std::string hex_encode_bytes(const std::string& bytes) {
+    std::ostringstream stream;
+    stream << std::hex << std::setfill('0');
+    for (const unsigned char byte : bytes) {
+        stream << std::setw(2) << static_cast<unsigned int>(byte);
+    }
     return stream.str();
 }
 
@@ -425,6 +448,39 @@ std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
                << (asset.copied ? "true" : "false") << "\n";
     }
     return stream.str();
+}
+
+bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::string& error) {
+    std::ostringstream stream;
+    stream << "copperfin_app_archive_version=1\n";
+    stream << "archive_contract=copperfin_content_archive_v1\n";
+    stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
+    stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
+    stream << "content_manifest=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
+
+    for (const auto& asset : plan.assets) {
+        if (!asset.copied || trim_copy(asset.staged_path).empty() || !std::filesystem::exists(asset.staged_path)) {
+            continue;
+        }
+
+        error.clear();
+        const std::string bytes = read_binary_file(asset.staged_path, error);
+        if (!error.empty()) {
+            return false;
+        }
+
+        stream << "asset="
+               << quote_manifest_value(asset.relative_path) << "|"
+               << quote_manifest_value(asset.type_title) << "|"
+               << (asset.required_for_runtime ? "true" : "false") << "|"
+               << bytes.size() << "|"
+               << quote_manifest_value(asset.sha256) << "\n";
+        stream << "payload="
+               << quote_manifest_value(asset.relative_path) << "|"
+               << hex_encode_bytes(bytes) << "\n";
+    }
+
+    return write_text_file(plan.launcher_output_path, stream.str(), error);
 }
 
 const char* statement_kind_name(const StatementKind kind) {
@@ -1451,7 +1507,7 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.launcher_fallback = "library_binary_generation_pending";
     } else if (plan.output_kind == BuildOutputKind::app) {
         plan.launcher_mode = "foxpro_application_archive_contract";
-        plan.launcher_fallback = "app_archive_generation_pending";
+        plan.launcher_fallback = "foxpro_app_binary_generation_pending";
     } else if (plan.output_kind == BuildOutputKind::fxp) {
         plan.launcher_mode = "foxpro_tokenized_contract";
         plan.launcher_fallback = "fxp_binary_generation_pending";
@@ -1830,6 +1886,13 @@ RuntimeMaterializeResult materialize_runtime_package(
         if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.app_archive_manifest_path, error)) {
             return {.ok = false, .error = error};
         }
+        if (!write_app_archive_primary_output(materialized_plan, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        materialized_plan.primary_output_materialized = true;
     } else {
         if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
             return {.ok = false, .error = error};

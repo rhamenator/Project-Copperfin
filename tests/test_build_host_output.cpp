@@ -7,6 +7,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #if !defined(_WIN32)
@@ -35,6 +36,38 @@ std::string read_text(const std::filesystem::path& path) {
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
+}
+
+std::string hex_decode_bytes(const std::string& encoded) {
+    std::string bytes;
+    bytes.reserve(encoded.size() / 2U);
+    for (std::size_t index = 0; index + 1U < encoded.size(); index += 2U) {
+        const std::string chunk = encoded.substr(index, 2U);
+        bytes.push_back(static_cast<char>(std::strtoul(chunk.c_str(), nullptr, 16)));
+    }
+    return bytes;
+}
+
+std::unordered_map<std::string, std::string> parse_app_archive_payloads(const std::string& archive_text) {
+    std::unordered_map<std::string, std::string> payloads;
+    std::istringstream input(archive_text);
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind("payload=", 0U) != 0U) {
+            continue;
+        }
+
+        const std::string payload = line.substr(8U);
+        const std::size_t separator = payload.find('|');
+        if (separator == std::string::npos) {
+            continue;
+        }
+        payloads.emplace(payload.substr(0U, separator), hex_decode_bytes(payload.substr(separator + 1U)));
+    }
+    return payloads;
 }
 
 std::string quote_command_argument(const std::string& value) {
@@ -221,6 +254,28 @@ void write_synthetic_project(
     expect(create_result.ok, "synthetic PJX fixture should be created");
 }
 
+void write_synthetic_app_project(
+    const std::filesystem::path& project_path,
+    const std::filesystem::path& project_dir,
+    const std::filesystem::path& output_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 1U},
+        {.name = "KEY", .type = 'C', .length = 32U},
+        {.name = "HOMEDIR", .type = 'C', .length = 200U},
+        {.name = "OUTFILE", .type = 'C', .length = 200U},
+        {.name = "NAME", .type = 'C', .length = 200U},
+        {.name = "MAINPROG", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"H", "ArchiveDemo", project_dir.string(), output_path.string(), "", "false"},
+        {"K", "", "", "", "main.prg", "true"},
+        {"K", "", "", "", "helper.prg", "false"},
+        {"K", "", "", "", "config.txt", "false"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(project_path.string(), fields, records);
+    expect(create_result.ok, "synthetic APP PJX fixture should be created");
+}
+
 void run_library_build_host_smoke(
     const std::string& build_host_path,
     const std::string& extension) {
@@ -289,6 +344,78 @@ void run_library_build_host_smoke(
     fs::remove_all(temp_root, ignored);
 }
 
+void run_app_build_host_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running the APP smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_app_smoke";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path project_path = project_dir / "archivedemo.pjx";
+    const fs::path expected_output = output_dir / "ArchiveDemo" / "ArchiveDemo.app";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+
+    write_text(project_dir / "main.prg", "DO helper\nRETURN\n");
+    write_text(project_dir / "helper.prg", "WAIT WINDOW 'archived'\nRETURN\n");
+    write_text(project_dir / "config.txt", "mode=demo");
+    write_synthetic_app_project(project_path, project_dir, expected_output);
+
+    const auto process = run_process_capture(
+        build_host_path,
+        {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+        temp_root);
+
+    expect(process.exit_code == 0, "build host should succeed for APP outputs");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "build host should report success for APP outputs");
+    expect(process.stdout_text.find("output.kind: app") != std::string::npos,
+           "build host should report the correct output kind for APP outputs");
+    expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+           "build host should report a materialized primary output for APP outputs");
+    expect(fs::exists(expected_output),
+           "build host should materialize the requested APP primary output");
+
+    const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+    expect(!manifest_path.empty(), "build host should report a manifest path for APP outputs");
+    if (!manifest_path.empty()) {
+        const std::string manifest_text = read_text(manifest_path);
+        expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
+               "build host manifest should record a materialized APP primary output");
+        expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+               "build host manifest should record the APP archive as an extension payload");
+    }
+
+    const std::string app_archive = read_text(expected_output);
+    expect(app_archive.find("copperfin_app_archive_version=1") != std::string::npos,
+           "build host APP output should identify the Copperfin APP archive format");
+    expect(app_archive.find("archive_contract=copperfin_content_archive_v1") != std::string::npos,
+           "build host APP output should declare the Copperfin APP archive contract");
+    const auto archive_payloads = parse_app_archive_payloads(app_archive);
+    expect(archive_payloads.contains("main.prg"),
+           "build host APP archive should carry the startup program payload");
+    expect(archive_payloads.contains("helper.prg"),
+           "build host APP archive should carry supporting program payloads");
+    expect(archive_payloads.contains("config.txt"),
+           "build host APP archive should carry non-program payloads");
+    if (archive_payloads.contains("main.prg")) {
+        expect(archive_payloads.at("main.prg") == "DO helper\nRETURN\n",
+               "build host APP archive should preserve startup program bytes");
+    }
+    if (archive_payloads.contains("helper.prg")) {
+        expect(archive_payloads.at("helper.prg") == "WAIT WINDOW 'archived'\nRETURN\n",
+               "build host APP archive should preserve supporting program bytes");
+    }
+    if (archive_payloads.contains("config.txt")) {
+        expect(archive_payloads.at("config.txt") == "mode=demo",
+               "build host APP archive should preserve non-program asset bytes");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -299,6 +426,7 @@ int main(int argc, char** argv) {
 
     run_library_build_host_smoke(argv[1], "dll");
     run_library_build_host_smoke(argv[1], "fll");
+    run_app_build_host_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
