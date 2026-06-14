@@ -1037,6 +1037,20 @@ void append_library_function_manifest_lines(std::ostringstream& stream, const Ru
     }
 }
 
+void append_runtime_asset_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
+    for (const auto& asset : plan.assets) {
+        stream << "asset="
+               << asset.record_index << "|"
+               << quote_manifest_value(asset.relative_path) << "|"
+               << quote_manifest_value(asset.staged_path) << "|"
+               << quote_manifest_value(asset.type_title) << "|"
+               << (asset.excluded ? "true" : "false") << "|"
+               << (asset.exists ? "true" : "false") << "|"
+               << quote_manifest_value(asset.sha256) << "|"
+               << (asset.copied ? "true" : "false") << "\n";
+    }
+}
+
 const char* statement_kind_name(const StatementKind kind) {
     switch (kind) {
         case StatementKind::assignment:
@@ -2346,17 +2360,7 @@ std::string build_runtime_manifest_text(
         plan.security_enabled && security_profile.available,
         "security");
 
-    for (const auto& asset : plan.assets) {
-        stream << "asset="
-               << asset.record_index << "|"
-               << quote_manifest_value(asset.relative_path) << "|"
-               << quote_manifest_value(asset.staged_path) << "|"
-               << quote_manifest_value(asset.type_title) << "|"
-               << (asset.excluded ? "true" : "false") << "|"
-               << (asset.exists ? "true" : "false") << "|"
-               << quote_manifest_value(asset.sha256) << "|"
-               << (asset.copied ? "true" : "false") << "\n";
-    }
+    append_runtime_asset_manifest_lines(stream, plan);
 
     for (const auto& digest : plan.extension_payload_digests) {
         stream << "extension_payload="
@@ -2432,6 +2436,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
+    append_runtime_asset_manifest_lines(stream, plan);
     append_library_function_manifest_lines(stream, plan);
     return stream.str();
 }

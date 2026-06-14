@@ -119,6 +119,21 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
+std::vector<std::string> lines_with_prefix(const std::string& text, const std::string& prefix) {
+    std::vector<std::string> matches;
+    std::istringstream input(text);
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            matches.push_back(line);
+        }
+    }
+    return matches;
+}
+
 std::string getenv_value(const std::string& name) {
 #if defined(_WIN32)
     char* raw = nullptr;
@@ -1266,6 +1281,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should expose the library-contract feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
                "library-output manifest should expose the native-wrapper feature flag");
+        const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
+        expect(!runtime_asset_lines.empty(),
+               "library-output manifest should record staged asset inventory");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -1298,6 +1316,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the wrapper shell build script path");
         expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper PowerShell build script path");
+        for (const auto& asset_line : runtime_asset_lines) {
+            expect(debug_manifest.find(asset_line) != std::string::npos,
+                   "library-output debug manifest should mirror each staged asset line from the runtime manifest");
+        }
 
         if (runtime_pipeline_primary_output_build_supported()) {
             const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
@@ -1338,6 +1360,13 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve DLL export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
                        "library-output runtime pipeline should preserve all DLL export symbols in the rewritten debug manifest");
+                const std::vector<std::string> built_runtime_asset_lines = lines_with_prefix(built_runtime_manifest, "asset=");
+                expect(!built_runtime_asset_lines.empty(),
+                       "library-output runtime pipeline should preserve staged asset inventory in the rewritten runtime manifest");
+                for (const auto& asset_line : built_runtime_asset_lines) {
+                    expect(built_debug_manifest.find(asset_line) != std::string::npos,
+                           "library-output runtime pipeline should preserve each staged asset line in the rewritten debug manifest");
+                }
                 if (native_symbol_dump_is_available()) {
                     std::string symbol_error;
                     const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);
@@ -1696,6 +1725,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should expose the native-wrapper feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the FLL API-contract feature flag");
+        const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
+        expect(!runtime_asset_lines.empty(),
+               "fll-output manifest should record staged asset inventory");
         expect(debug_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output debug manifest should record FLL output kind");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -1756,6 +1788,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the wrapper shell build script path");
         expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
                "fll-output debug manifest should record the wrapper PowerShell build script path");
+        for (const auto& asset_line : runtime_asset_lines) {
+            expect(debug_manifest.find(asset_line) != std::string::npos,
+                   "fll-output debug manifest should mirror each staged asset line from the runtime manifest");
+        }
 
         if (runtime_pipeline_primary_output_build_supported()) {
             const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
@@ -1798,6 +1834,13 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve discovered FLL routine export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
                        "fll-output runtime pipeline should preserve all FLL export symbols in the rewritten debug manifest");
+                const std::vector<std::string> built_runtime_asset_lines = lines_with_prefix(built_runtime_manifest, "asset=");
+                expect(!built_runtime_asset_lines.empty(),
+                       "fll-output runtime pipeline should preserve staged asset inventory in the rewritten runtime manifest");
+                for (const auto& asset_line : built_runtime_asset_lines) {
+                    expect(built_debug_manifest.find(asset_line) != std::string::npos,
+                           "fll-output runtime pipeline should preserve each staged asset line in the rewritten debug manifest");
+                }
                 if (native_symbol_dump_is_available()) {
                     std::string symbol_error;
                     const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);

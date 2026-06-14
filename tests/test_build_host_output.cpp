@@ -89,6 +89,21 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::vector<std::string> lines_with_prefix(const std::string& text, const std::string& prefix) {
+    std::vector<std::string> matches;
+    std::istringstream input(text);
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            matches.push_back(line);
+        }
+    }
+    return matches;
+}
+
 std::string hex_decode_bytes(const std::string& encoded) {
     std::string bytes;
     bytes.reserve(encoded.size() / 2U);
@@ -443,6 +458,7 @@ void run_library_build_host_smoke(
     const std::string add_numbers_source = (project_dir / "helper.prg").string();
     const std::string manifest_text = manifest_path.empty() ? std::string{} : read_text(manifest_path);
     const std::string debug_manifest_text = debug_manifest_path.empty() ? std::string{} : read_text(debug_manifest_path);
+    const std::vector<std::string> manifest_asset_lines = lines_with_prefix(manifest_text, "asset=");
     if (!manifest_path.empty()) {
         expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host manifest should record a materialized primary output for " + extension + " outputs");
@@ -486,6 +502,12 @@ void run_library_build_host_smoke(
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host debug manifest should record the built primary output as an extension payload for " + extension + " outputs");
+        expect(!manifest_asset_lines.empty(),
+               "build host manifest should record staged asset inventory for " + extension + " outputs");
+        for (const auto& asset_line : manifest_asset_lines) {
+            expect(debug_manifest_text.find(asset_line) != std::string::npos,
+                   "build host debug manifest should mirror each staged asset line for " + extension + " outputs");
+        }
         if (extension == "dll") {
             expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
                    "build host DLL debug manifest should record the module-definition path");
