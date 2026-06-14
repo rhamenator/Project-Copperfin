@@ -1224,6 +1224,163 @@ void test_undo_reverts_latest_insert_into_command() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_undo_reverts_latest_create_table_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_create_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "created_from_undo.dbf";
+    const fs::path main_path = temp_root / "undo_create_table.prg";
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (NAME C(10), AGE N(3))\n"
+        "UNDO\n"
+        "lUsed = USED('created_from_undo')\n"
+        "lExists = FILE('" + table_path.string() + "')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest CREATE TABLE script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.create_table";
+    }), "CREATE TABLE should emit runtime.create_table");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto used = state.globals.find("lused");
+    const auto exists = state.globals.find("lexists");
+    expect(used != state.globals.end(), "UNDO create-table script should capture USED() state");
+    expect(exists != state.globals.end(), "UNDO create-table script should capture FILE() state");
+    if (used != state.globals.end()) {
+        expect(copperfin::runtime::format_value(used->second) == "false", "UNDO should close the created table alias");
+    }
+    if (exists != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exists->second) == "false", "UNDO should remove the created table file");
+    }
+    expect(!fs::exists(table_path), "UNDO should remove CREATE TABLE output file from disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_reverts_latest_alter_table_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_alter_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_alter_table.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8) DEFAULT 'NEW'\n"
+        "UNDO\n"
+        "nFields = FCOUNT('People')\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest ALTER TABLE script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.alter_table";
+    }), "ALTER TABLE should emit a runtime.alter_table event");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto fields = state.globals.find("nfields");
+    const auto name = state.globals.find("cname");
+    expect(fields != state.globals.end(), "UNDO ALTER TABLE should expose restored field count");
+    expect(name != state.globals.end(), "UNDO ALTER TABLE should expose existing row data");
+    if (fields != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fields->second) == "2",
+            "UNDO should restore original field count");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALPHA",
+            "UNDO should preserve existing row data");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parse_result.ok, "UNDO ALTER TABLE should keep DBF readable");
+    expect(parse_result.table.fields.size() == 2U, "UNDO should restore the original schema");
+    expect(parse_result.table.records.size() == 2U, "UNDO ALTER TABLE should preserve record count");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_reverts_latest_append_from_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_append_from_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_append_from_array.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "DIMENSION aRows[2,2]\n"
+        "aRows[1,1] = 'GAMMA'\n"
+        "aRows[1,2] = 30\n"
+        "aRows[2,1] = 'DELTA'\n"
+        "aRows[2,2] = 40\n"
+        "APPEND FROM ARRAY aRows\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest APPEND FROM ARRAY script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.append_from_array";
+    }), "APPEND FROM ARRAY should emit a runtime.append_from_array event");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto count = state.globals.find("ncount");
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    expect(count != state.globals.end(), "UNDO should expose RECCOUNT after bulk append rollback");
+    expect(name1 != state.globals.end(), "UNDO should expose first-row NAME");
+    expect(name2 != state.globals.end(), "UNDO should expose second-row NAME");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "UNDO APPEND FROM ARRAY should restore original row count");
+    }
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "ALPHA",
+            "UNDO APPEND FROM ARRAY should preserve first-row NAME");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "BRAVO",
+            "UNDO APPEND FROM ARRAY should preserve second-row NAME");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_undo_all_reverts_multiple_latest_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_all";
@@ -1756,6 +1913,9 @@ int main() {
     test_undo_reverts_latest_delete_command();
     test_undo_reverts_latest_update_command();
     test_undo_reverts_latest_insert_into_command();
+    test_undo_reverts_latest_create_table_command();
+    test_undo_reverts_latest_alter_table_command();
+    test_undo_reverts_latest_append_from_array();
     test_undo_reverts_latest_replacement_command();
     test_undo_all_reverts_multiple_latest_commands();
     test_undo_without_history_fails_deterministically();

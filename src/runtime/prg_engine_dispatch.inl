@@ -4559,76 +4559,80 @@
                                           .location = statement.location});
                         return {};
                     }
-                    // Determine dest fields order (filtered by FIELDS clause)
-                    const std::vector<std::string> field_filter = parse_field_filter_clause(statement.tertiary_expression);
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
-                    if (!dest_result.ok)
-                    {
-                        last_error_message = "APPEND FROM ARRAY: " + dest_result.error;
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &f : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(f.name, field_filter))
-                        {
-                            target_fields.push_back(f);
-                        }
-                    }
-                    if (target_fields.empty())
-                    {
-                        last_error_message = "APPEND FROM ARRAY: no fields match the FIELDS clause";
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    if (!ensure_transaction_backup_for_table(cursor->source_path))
-                    {
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    const std::size_t num_rows = array_length(array_name, 1);
-                    const std::size_t num_cols = std::max<std::size_t>(1U, array_length(array_name, 2));
+
                     std::size_t appended_count = 0U;
-                    for (std::size_t row = 1U; row <= num_rows; ++row)
+                    if (!execute_with_command_undo(cursor->source_path, [&]
                     {
-                        const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
-                        if (!blank_result.ok)
+                        // Determine dest fields order (filtered by FIELDS clause)
+                        const std::vector<std::string> field_filter =
+                            parse_field_filter_clause(statement.tertiary_expression);
+                        const auto dest_result = vfp::parse_dbf_table_from_file(
+                            cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                        if (!dest_result.ok)
                         {
-                            last_error_message = "APPEND FROM ARRAY: " + blank_result.error;
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
+                            last_error_message = "APPEND FROM ARRAY: " + dest_result.error;
+                            return false;
                         }
-                        cursor->record_count = blank_result.record_count;
-                        cursor->eof = false;
-                        cursor->recno = blank_result.record_count;
-                        const std::size_t usable_cols = std::min(target_fields.size(), num_cols);
-                        for (std::size_t col = 1U; col <= usable_cols; ++col)
+                        std::vector<vfp::DbfFieldDescriptor> target_fields;
+                        for (const auto &f : dest_result.table.fields)
                         {
-                            const PrgValue val = array_value(array_name, row, col);
-                            const vfp::DbfRecordValue synthetic_field{
-                                .field_name = target_fields[col - 1U].name,
-                                .field_type = target_fields[col - 1U].type,
-                                .is_null = false,
-                                .display_value = {}};
-                            const auto rep_result = vfp::replace_record_field_value(
-                                cursor->source_path,
-                                cursor->recno - 1U,
-                                target_fields[col - 1U].name,
-                                serialize_prg_value_for_record_field(synthetic_field, val));
-                            if (!rep_result.ok)
+                            if (field_matches_filter(f.name, field_filter))
                             {
-                                continue;
+                                target_fields.push_back(f);
                             }
-                            cursor->record_count = rep_result.record_count;
                         }
-                        ++appended_count;
+                        if (target_fields.empty())
+                        {
+                            last_error_message = "APPEND FROM ARRAY: no fields match the FIELDS clause";
+                            return false;
+                        }
+                        if (!ensure_transaction_backup_for_table(cursor->source_path))
+                        {
+                            return false;
+                        }
+                        const std::size_t num_rows = array_length(array_name, 1);
+                        const std::size_t num_cols = std::max<std::size_t>(1U, array_length(array_name, 2));
+                        appended_count = 0U;
+                        for (std::size_t row = 1U; row <= num_rows; ++row)
+                        {
+                            const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
+                            if (!blank_result.ok)
+                            {
+                                last_error_message = "APPEND FROM ARRAY: " + blank_result.error;
+                                return false;
+                            }
+                            cursor->record_count = blank_result.record_count;
+                            cursor->eof = false;
+                            cursor->recno = blank_result.record_count;
+                            const std::size_t usable_cols = std::min(target_fields.size(), num_cols);
+                            for (std::size_t col = 1U; col <= usable_cols; ++col)
+                            {
+                                const PrgValue val = array_value(array_name, row, col);
+                                const vfp::DbfRecordValue synthetic_field{
+                                    .field_name = target_fields[col - 1U].name,
+                                    .field_type = target_fields[col - 1U].type,
+                                    .is_null = false,
+                                    .display_value = {}};
+                                const auto rep_result = vfp::replace_record_field_value(
+                                    cursor->source_path,
+                                    cursor->recno - 1U,
+                                    target_fields[col - 1U].name,
+                                    serialize_prg_value_for_record_field(synthetic_field, val));
+                                if (rep_result.ok)
+                                {
+                                    cursor->record_count = rep_result.record_count;
+                                }
+                            }
+                            ++appended_count;
+                        }
+                        return true;
+                    }))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
                     }
+
                     events.push_back({.category = "runtime.append_from_array",
                                       .detail = array_name + " (" + std::to_string(appended_count) + " records)",
                                       .location = statement.location});

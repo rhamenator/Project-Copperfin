@@ -178,8 +178,8 @@ If direct commits continue, close a child issue only when:
 - A3 historical native slice ranges in this lane: `#115`-`#130` plus `#146`-`#149` under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
-- Runtime safety active-open prompt-sized slice issues: #270, #272, #273
-- Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145, #150, #151, #152, #153, #269
+- Runtime safety active-open prompt-sized slice issues: #272, #273
+- Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145, #150, #151, #152, #153, #269, #270
 
 Canonical Phase A critical-path order (all closed as of 2026-06-13):
 
