@@ -5661,6 +5661,90 @@ void test_list_memory_surfaces_visible_variable_and_array_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_display_list_memory_like_except_filter_applies_to_output() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_memory_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "display_memory_filter_test.prg";
+    write_text(
+        main_path,
+        "cAlpha = 'alpha'\n"
+        "cBeta = 'beta'\n"
+        "nGamma = 3\n"
+        "DIMENSION aAlpha(2)\n"
+        "aAlpha[1] = 1\n"
+        "DIMENSION aBeta(3)\n"
+        "aBeta[1] = 2\n"
+        "* LIKE c* should show cAlpha and cBeta but not nGamma\n"
+        "DISPLAY MEMORY LIKE c*\n"
+        "* EXCEPT c* should show nGamma but not cAlpha or cBeta\n"
+        "LIST MEMORY EXCEPT c*\n"
+        "* LIKE *alpha should include calpha and aalpha but not cbeta or abeta\n"
+        "DISPLAY MEMORY LIKE *alpha\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#392: DISPLAY/LIST MEMORY LIKE/EXCEPT filter script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") { display_events.push_back(event); }
+        if (event.category == "runtime.list") { list_events.push_back(event); }
+    }
+
+    expect(display_events.size() == 2U, "#392: should emit two runtime.display events");
+    expect(list_events.size() == 1U, "#392: should emit one runtime.list event");
+
+    if (display_events.size() >= 1U) {
+        const auto &d0 = display_events[0].detail;
+        expect(d0.find("clause=LIKE c*") != std::string::npos,
+               "#392: DISPLAY MEMORY LIKE c* event should record the filter clause");
+        expect(d0.find("calpha{global:C=alpha}") != std::string::npos,
+               "#392: LIKE c* should include calpha");
+        expect(d0.find("cbeta{global:C=beta}") != std::string::npos,
+               "#392: LIKE c* should include cbeta");
+        expect(d0.find("ngamma") == std::string::npos,
+               "#392: LIKE c* should exclude ngamma");
+        expect(d0.find("aalpha") == std::string::npos,
+               "#392: LIKE c* should exclude arrays not matching the pattern");
+    }
+    if (list_events.size() >= 1U) {
+        const auto &l0 = list_events[0].detail;
+        expect(l0.find("clause=EXCEPT c*") != std::string::npos,
+               "#392: LIST MEMORY EXCEPT c* event should record the filter clause");
+        expect(l0.find("ngamma{global:N=3}") != std::string::npos,
+               "#392: EXCEPT c* should include ngamma");
+        expect(l0.find("calpha") == std::string::npos,
+               "#392: EXCEPT c* should exclude calpha");
+        expect(l0.find("cbeta") == std::string::npos,
+               "#392: EXCEPT c* should exclude cbeta");
+    }
+    if (display_events.size() >= 2U) {
+        const auto &d1 = display_events[1].detail;
+        expect(d1.find("clause=LIKE *alpha") != std::string::npos,
+               "#392: DISPLAY MEMORY LIKE *alpha event should record the filter clause");
+        expect(d1.find("aalpha{global:A=2x1}") != std::string::npos,
+               "#392: LIKE *alpha should include aalpha array");
+        expect(d1.find("calpha{global:C=alpha}") != std::string::npos,
+               "#392: LIKE *alpha should include calpha variable");
+        expect(d1.find("abeta") == std::string::npos,
+               "#392: LIKE *alpha should exclude abeta array");
+        expect(d1.find("cbeta") == std::string::npos,
+               "#392: LIKE *alpha should exclude cbeta variable");
+        expect(d1.find("ngamma") == std::string::npos,
+               "#392: LIKE *alpha should exclude ngamma variable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_list_structure_surfaces_selected_cursor_schema() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_list_structure";
@@ -5895,6 +5979,7 @@ int main() {
     test_display_and_list_structure_surface_target_detail();
     test_list_status_emits_runtime_list_event();
     test_list_memory_surfaces_visible_variable_and_array_metadata();
+    test_display_list_memory_like_except_filter_applies_to_output();
     test_list_structure_surfaces_selected_cursor_schema();
     test_list_records_surfaces_effective_cursor_view_metadata();
     test_aerror_content_for_sql_passthrough_fault();

@@ -344,8 +344,51 @@
                 return "global";
             };
 
-            auto append_memory_metadata = [&](Frame &current_frame, std::string &detail)
+            auto append_memory_metadata = [&](Frame &current_frame, std::string &detail,
+                                               const std::string &filter_pattern = std::string{},
+                                               bool filter_is_except = false)
             {
+                auto memory_name_wildcard_match = [](const std::string &pattern, const std::string &text) -> bool
+                {
+                    const std::string p = lowercase_copy(pattern);
+                    const std::string t = lowercase_copy(text);
+                    std::size_t pi = 0U;
+                    std::size_t ti = 0U;
+                    std::size_t star = std::string::npos;
+                    std::size_t star_t = 0U;
+                    while (ti < t.size())
+                    {
+                        if (pi < p.size() && (p[pi] == '?' || p[pi] == t[ti]))
+                        {
+                            ++pi; ++ti;
+                        }
+                        else if (pi < p.size() && p[pi] == '*')
+                        {
+                            star = pi++;
+                            star_t = ti;
+                        }
+                        else if (star != std::string::npos)
+                        {
+                            pi = star + 1U;
+                            ti = ++star_t;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    while (pi < p.size() && p[pi] == '*') { ++pi; }
+                    return pi == p.size();
+                };
+                auto name_passes_filter = [&](const std::string &name) -> bool
+                {
+                    if (filter_pattern.empty())
+                    {
+                        return true;
+                    }
+                    const bool matches = memory_name_wildcard_match(filter_pattern, name);
+                    return filter_is_except ? !matches : matches;
+                };
                 struct MemoryEntry
                 {
                     std::string name;
@@ -360,6 +403,10 @@
 
                 for (const auto &[name, value] : globals)
                 {
+                    if (!name_passes_filter(name))
+                    {
+                        continue;
+                    }
                     const MemoryEntry global_entry{
                         .name = name,
                         .scope = current_frame.private_saved_values.contains(name) ? "private" : (public_names.contains(name) ? "public" : "global"),
@@ -377,6 +424,10 @@
 
                 for (const auto &[name, value] : current_frame.locals)
                 {
+                    if (!name_passes_filter(name))
+                    {
+                        continue;
+                    }
                     entries.push_back({.name = name,
                                        .scope = "local",
                                        .type = memory_value_type_code(name, value),
@@ -437,6 +488,10 @@
                 array_entries.reserve(arrays.size());
                 for (const auto &[name, array] : arrays)
                 {
+                    if (!name_passes_filter(name))
+                    {
+                        continue;
+                    }
                     array_entries.push_back(name + "{" + memory_scope_for_name(name, current_frame) + ":A=" +
                                             std::to_string(array.rows) + "x" + std::to_string(array.columns) + "}");
                 }
@@ -6422,7 +6477,19 @@
                 }
                 else if (normalize_identifier(statement.identifier) == "memory")
                 {
-                    append_memory_metadata(frame, detail);
+                    std::string mem_pattern;
+                    bool mem_is_except = false;
+                    const std::string mem_clause = trim_copy(statement.expression);
+                    if (starts_with_insensitive(mem_clause, "LIKE "))
+                    {
+                        mem_pattern = trim_copy(mem_clause.substr(5U));
+                    }
+                    else if (starts_with_insensitive(mem_clause, "EXCEPT "))
+                    {
+                        mem_pattern = trim_copy(mem_clause.substr(7U));
+                        mem_is_except = true;
+                    }
+                    append_memory_metadata(frame, detail, mem_pattern, mem_is_except);
                 }
                 if (!statement.expression.empty())
                 {
@@ -6506,7 +6573,19 @@
                 }
                 else if (normalize_identifier(statement.identifier) == "memory")
                 {
-                    append_memory_metadata(frame, detail);
+                    std::string mem_pattern;
+                    bool mem_is_except = false;
+                    const std::string mem_clause = trim_copy(statement.expression);
+                    if (starts_with_insensitive(mem_clause, "LIKE "))
+                    {
+                        mem_pattern = trim_copy(mem_clause.substr(5U));
+                    }
+                    else if (starts_with_insensitive(mem_clause, "EXCEPT "))
+                    {
+                        mem_pattern = trim_copy(mem_clause.substr(7U));
+                        mem_is_except = true;
+                    }
+                    append_memory_metadata(frame, detail, mem_pattern, mem_is_except);
                 }
                 if (!statement.expression.empty())
                 {
