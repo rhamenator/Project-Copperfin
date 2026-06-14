@@ -236,7 +236,7 @@ bool compile_native_wrapper_scaffold(
 
 bool build_native_wrapper_with_cmake(
     const std::filesystem::path& cmake_lists_path,
-    const std::string& target_stem,
+    const std::string& expected_output_file_name,
     std::filesystem::path& output_path,
     std::string& error) {
     namespace fs = std::filesystem;
@@ -269,19 +269,10 @@ bool build_native_wrapper_with_cmake(
         return false;
     }
 
-    std::vector<fs::path> candidates;
-#if defined(_WIN32)
-    candidates.push_back(build_root / (target_stem + ".dll"));
-#else
-    candidates.push_back(build_root / ("lib" + target_stem + ".so"));
-    candidates.push_back(build_root / (target_stem + ".so"));
-#endif
-
-    for (const auto& candidate : candidates) {
-        if (fs::exists(candidate)) {
-            output_path = candidate;
-            return true;
-        }
+    const fs::path expected_output_path = build_root / expected_output_file_name;
+    if (fs::exists(expected_output_path)) {
+        output_path = expected_output_path;
+        return true;
     }
 
     error = "native wrapper CMake build did not produce the expected shared-library artifact";
@@ -907,6 +898,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("PREFIX \"\" SUFFIX \".dll\"") != std::string::npos,
+               "library-output wrapper CMake should preserve the requested DLL filename shape");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "library-output wrapper CMake should forward the module-definition file on MSVC");
         if (native_cxx_is_available()) {
@@ -941,7 +934,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             std::string cmake_error;
             const bool cmake_built = build_native_wrapper_with_cmake(
                 result.plan.native_wrapper_cmake_path,
-                "LibraryDemo",
+                "LibraryDemo.dll",
                 cmake_output_path,
                 cmake_error);
             if (!cmake_built && !cmake_error.empty()) {
@@ -949,6 +942,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             }
             expect(cmake_built,
                    "library-output wrapper CMake metadata should configure and build under CMake");
+            if (cmake_built) {
+                expect(cmake_output_path.filename() == "LibraryDemo.dll",
+                       "library-output generated-CMake artifact should preserve the requested DLL filename");
+            }
             if (cmake_built && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(cmake_output_path, symbol_error);
@@ -1102,6 +1099,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "fll-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("PREFIX \"\" SUFFIX \".fll\"") != std::string::npos,
+               "fll-output wrapper CMake should preserve the requested FLL filename shape");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "fll-output wrapper CMake should forward the module-definition file on MSVC");
         if (native_cxx_is_available()) {
@@ -1141,7 +1140,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             std::string cmake_error;
             const bool cmake_built = build_native_wrapper_with_cmake(
                 result.plan.native_wrapper_cmake_path,
-                "LibraryDemo",
+                "LibraryDemo.fll",
                 cmake_output_path,
                 cmake_error);
             if (!cmake_built && !cmake_error.empty()) {
@@ -1149,6 +1148,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             }
             expect(cmake_built,
                    "fll-output wrapper CMake metadata should configure and build under CMake");
+            if (cmake_built) {
+                expect(cmake_output_path.filename() == "LibraryDemo.fll",
+                       "fll-output generated-CMake artifact should preserve the requested FLL filename");
+            }
             if (cmake_built && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(cmake_output_path, symbol_error);

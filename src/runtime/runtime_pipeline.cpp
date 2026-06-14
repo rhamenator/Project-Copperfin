@@ -309,6 +309,8 @@ std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const std::string output_stem =
         std::filesystem::path(plan.launcher_output_path).stem().string();
+    const std::string output_extension =
+        std::filesystem::path(plan.launcher_output_path).extension().string();
     const std::string wrapper_file_name =
         std::filesystem::path(plan.native_wrapper_source_path).filename().string();
     const std::string module_definition_file_name =
@@ -318,7 +320,9 @@ std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
     stream << "project(" << output_stem << "Wrapper LANGUAGES CXX)\n\n";
     stream << "add_library(" << output_stem << " SHARED " << wrapper_file_name << ")\n";
     stream << "target_compile_features(" << output_stem << " PRIVATE cxx_std_20)\n";
-    stream << "set_target_properties(" << output_stem << " PROPERTIES OUTPUT_NAME \"" << output_stem << "\")\n";
+    stream << "set_target_properties(" << output_stem
+           << " PROPERTIES OUTPUT_NAME \"" << output_stem
+           << "\" PREFIX \"\" SUFFIX \"" << output_extension << "\")\n";
     stream << "if(MSVC)\n";
     stream << "  target_link_options(" << output_stem
            << " PRIVATE \"/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../" << module_definition_file_name << "\")\n";
