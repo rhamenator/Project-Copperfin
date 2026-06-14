@@ -54,6 +54,8 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex ParametersRegex = new(@"^\s*(?:L?PARAMETERS)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -529,6 +531,8 @@ internal static class FoxProIntelliSenseCatalog
 
             AddMatch(index.Defines, index.Definitions, DefineRegex, line, path, lineIndex + 1, "define", "Project preprocessor symbol.");
             AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, path, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
+            AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
+            AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
 
             var classMatch = DefineClassRegex.Match(line);
             if (classMatch.Success)

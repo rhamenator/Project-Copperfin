@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 
 namespace Copperfin.VisualStudio;
 
@@ -16,6 +17,7 @@ internal static class Program
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
+        TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
 
         if (failures != 0)
         {
@@ -243,6 +245,34 @@ internal static class Program
                 "rename preview should include direct call references");
             Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
                 "rename preview should include dotted call references");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases()
+    {
+        var root = CreateProjectRoot("cursor_metadata_ingestion");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "CREATE CURSOR curLocal (id I)" + Environment.NewLine +
+                "SELECT * FROM customer INTO CURSOR curRemote" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "SELECT ", string.Empty);
+            Expect(completions.Any(entry => entry.DisplayText == "curLocal" && entry.Kind == "alias"),
+                "completion catalog should ingest CREATE CURSOR aliases");
+            Expect(completions.Any(entry => entry.DisplayText == "curRemote" && entry.Kind == "alias"),
+                "completion catalog should ingest SELECT ... INTO CURSOR aliases");
+
+            var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "curRemote");
+            Expect(
+                string.Equals(description, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
+                "described cursor aliases should reuse the alias metadata description");
         }
         finally
         {

@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #182-#183; #162-#181 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #183; #162-#182 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #182-#183; #162-#181 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #183; #162-#182 shipped)
 
 ### Designers And IDE Parity
 
@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #27-#29: #182-#183
+- active-open native slice queues under #27-#29: #183
 
 ### Future Enhancements
 
@@ -232,7 +232,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Editor semantics and completions: #27
 - Navigation/refactoring depth: #28
 - IntelliSense metadata inputs: #29
-- active-open native slice queues under #27-#29: #182-#183
+- active-open native slice queues under #27-#29: #183
 
 ### Federation, Interop, And Modern Platform
 
@@ -605,6 +605,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-14: G1/#179 language-service signature-help fidelity shipped in `FoxProIntelliSenseCatalog`. Project-defined procedures/functions now derive signature-help entries from adjacent `LPARAMETERS` / `PARAMETERS` declarations, preserving raw parameter text in the displayed signature and still resolving dotted invocation names such as `oToolbar.SaveOrder` through the trailing project procedure symbol. Focused `Copperfin.LanguageServiceTests` coverage validates both direct and dotted invocation signature lookup.
 - 2026-06-14: G2/#180 definition/reference-navigation fidelity shipped in `CopperfinProjectInsightClient`. Project insight scanning now collects definitions before reference extraction so project-defined procedures/functions remain discoverable from ordinary call expressions, and direct plus dotted invocation forms such as `SaveOrder(...)` and `oToolbar.SaveOrder(...)` now register as runtime references against the shared project symbol. Focused `Copperfin.LanguageServiceTests` coverage validates both call shapes.
 - 2026-06-14: G2/#181 rename/refactoring fidelity shipped in `CopperfinProjectInsightClient`. The project insight layer now builds a first rename preview over the shared definition/reference index, normalizing dotted invocation tokens such as `oToolbar.SaveOrder` back to `SaveOrder` and returning the defining declaration plus all collected call references for that symbol. Focused `Copperfin.LanguageServiceTests` coverage validates normalized rename preview assembly over direct and dotted call sites.
+- 2026-06-14: G3/#182 IntelliSense metadata-ingestion fidelity shipped in `FoxProIntelliSenseCatalog`. The project symbol index now ingests aliases created by `CREATE CURSOR` and `SELECT ... INTO CURSOR` in addition to `USE ... ALIAS`, so metadata-driven completion and description flows surface source-created cursor names consistently. Focused `Copperfin.LanguageServiceTests` coverage validates both cursor-alias ingestion paths.
 - 2026-06-13: Child issue `#387` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the numeric `LOOKUP()` path through `&cAgeExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, closing the remaining first-hop-only arguments in that typed numeric lane.
 - 2026-06-13: Child issue `#386` under `#97` is now shipped. Focused `test_prg_engine_control_flow` coverage now routes recursive command-path merged text through `&cRecursiveExprDeepHolder`, and the command-path `TEXT TO ... TEXTMERGE` dispatcher now reapplies `<<...>>` interpolation to a bounded fixed point so recursively inserted merged text resolves fully.
 - 2026-06-13: Child issue `#385` under `#97` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses `EVAL(EVAL(cEvalExprDeepHolder))`, and `evaluate_runtime_surface_function()` now preserves the last identifier in bounded direct-holder `EVAL()` chains so nested direct evaluation reaches the final expression identifier instead of stopping one hop off.
