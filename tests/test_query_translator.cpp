@@ -38,10 +38,36 @@ void test_basic_translation() {
     expect(!rejected.ok, "non-select SQL should be rejected in first-pass deterministic translator");
 }
 
+void test_case_variants_and_whitespace_variants() {
+    const auto sqlite = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "select alltrim ( name ) from customer where active = .t. and inactive = .F.");
+
+    expect(sqlite.ok, "lower-case select and spaced alltrim should still translate");
+    if (sqlite.ok) {
+        expect(sqlite.translated_sql.find("TRIM(") != std::string::npos,
+               "case-insensitive and whitespace-tolerant ALLTRIM should map to TRIM");
+        expect(sqlite.translated_sql.find("TRUE") != std::string::npos,
+               "lowercase .t. literal should map to TRUE");
+        expect(sqlite.translated_sql.find("FALSE") != std::string::npos,
+               "uppercase .F. literal should map to FALSE");
+    }
+
+    const auto sqlserver = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlserver,
+        "SeLeCt sUbStR(name, 1, 2) FROM customer");
+    expect(sqlserver.ok, "case-mixed backend function names should still translate");
+    if (sqlserver.ok) {
+        expect(sqlserver.translated_sql.find("SUBSTRING(") != std::string::npos,
+               "mixed-case SUBSTR should map to SUBSTRING for sqlserver");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_basic_translation();
+    test_case_variants_and_whitespace_variants();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
