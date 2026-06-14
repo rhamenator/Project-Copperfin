@@ -92,6 +92,97 @@ void test_index_seek_plan_can_hold_selected_order() {
     }
 }
 
+void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain() {
+    copperfin::runtime::IndexExpressionAnalyzer analyzer;
+    const std::vector<std::string> fields = {"NAME", "AGE", "DOB"};
+
+    const auto equality = analyzer.analyze_expression("NAME = 'BRAVO'", fields);
+    expect(equality.operator_kind == copperfin::runtime::IndexOperatorKind::equal,
+        "analyzer should recognize simple equality comparisons");
+    expect(equality.confidence == copperfin::runtime::OptimizationConfidence::high,
+        "analyzer should rate literal equality as high confidence");
+    expect(equality.field.has_value() && equality.field->field_name == "NAME",
+        "analyzer should normalize the comparison field");
+    expect(equality.operands.size() == 2U,
+        "analyzer should capture both operands for a simple comparison");
+
+    const auto between = analyzer.analyze_expression("AGE BETWEEN 10 AND 20", fields);
+    expect(between.operator_kind == copperfin::runtime::IndexOperatorKind::between,
+        "analyzer should recognize BETWEEN comparisons");
+    expect(between.confidence == copperfin::runtime::OptimizationConfidence::high,
+        "analyzer should rate literal BETWEEN comparisons as high confidence");
+    expect(between.field.has_value() && between.field->field_name == "AGE",
+        "analyzer should normalize the BETWEEN field");
+    expect(between.operands.size() == 3U,
+        "analyzer should capture all BETWEEN operands");
+
+    const auto and_chain = analyzer.analyze_expression("NAME = 'BRAVO' AND AGE > 20", fields);
+    expect(and_chain.operator_kind == copperfin::runtime::IndexOperatorKind::and_chain,
+        "analyzer should recognize top-level AND chains");
+    expect(and_chain.confidence == copperfin::runtime::OptimizationConfidence::medium,
+        "analyzer should downgrade compound AND chains to medium confidence");
+    expect(and_chain.sub_patterns.size() == 2U,
+        "analyzer should preserve both AND-chain subpatterns");
+    expect(and_chain.sub_patterns[0].operator_kind == copperfin::runtime::IndexOperatorKind::equal,
+        "first AND-chain branch should remain an equality pattern");
+    expect(and_chain.sub_patterns[1].operator_kind == copperfin::runtime::IndexOperatorKind::greater_than,
+        "second AND-chain branch should remain a range pattern");
+
+    const auto not_pattern = analyzer.analyze_expression(".NOT. NAME = 'BRAVO'", fields);
+    expect(not_pattern.operator_kind == copperfin::runtime::IndexOperatorKind::not_pattern,
+        "analyzer should recognize NOT wrappers");
+    expect(not_pattern.sub_patterns.size() == 1U,
+        "analyzer should preserve the wrapped NOT subpattern");
+    expect(not_pattern.sub_patterns[0].operator_kind == copperfin::runtime::IndexOperatorKind::equal,
+        "NOT wrapper should preserve the inner comparison pattern");
+}
+
+void test_index_seek_matcher_ranks_and_limits_candidate_orders() {
+    copperfin::runtime::IndexExpressionAnalyzer analyzer;
+    copperfin::runtime::IndexSeekMatcher matcher;
+
+    const auto pattern = analyzer.analyze_expression("NAME = 'BRAVO'", {"NAME", "AGE"});
+
+    copperfin::runtime::IndexOrderCandidate exact;
+    exact.order_name = "NAME";
+    exact.order_expression = "NAME";
+    exact.optimization_confidence = copperfin::runtime::OptimizationConfidence::medium;
+
+    copperfin::runtime::IndexOrderCandidate wrapped;
+    wrapped.order_name = "NAME_UPPER";
+    wrapped.order_expression = "UPPER(NAME)";
+
+    copperfin::runtime::IndexOrderCandidate age;
+    age.order_name = "AGE";
+    age.order_expression = "AGE";
+
+    copperfin::runtime::IndexOrderCandidate unmatched;
+    unmatched.order_name = "DELETED";
+    unmatched.order_expression = "DELETED";
+
+    const auto plan = matcher.create_plan(pattern, {age, wrapped, unmatched, exact}, "NAME");
+    expect(plan.can_optimize, "matcher should choose an optimized plan for a direct field comparison");
+    expect(plan.strategy == copperfin::runtime::IndexSeekPlan::ExecutionStrategy::index_seek,
+        "matcher should select index seek for a direct field comparison");
+    expect(plan.selected_order.has_value(), "matcher should select a best candidate order");
+    if (plan.selected_order.has_value()) {
+        expect(plan.selected_order->order_name == "NAME",
+            "matcher should prefer the exact field order");
+        expect(plan.selected_order->match_score >= 90,
+            "exact field order should score as a high-confidence match");
+    }
+    expect(plan.candidate_orders.size() == 3U,
+        "matcher should return only the top three candidate orders");
+    if (plan.candidate_orders.size() == 3U) {
+        expect(plan.candidate_orders[0].match_score >= plan.candidate_orders[1].match_score,
+            "candidate orders should be sorted by descending match score");
+        expect(plan.candidate_orders[1].match_score >= plan.candidate_orders[2].match_score,
+            "candidate orders should keep descending score order after truncation");
+    }
+    expect(plan.decision_rationale.find("NAME") != std::string::npos,
+        "matcher should emit a readable decision rationale");
+}
+
 }  // namespace
 
 int main() {
@@ -102,6 +193,8 @@ int main() {
     test_index_order_candidate_struct_defaults();
     test_index_seek_plan_struct_defaults();
     test_index_seek_plan_can_hold_selected_order();
+    test_index_expression_analyzer_recognizes_comparison_between_and_not_chain();
+    test_index_seek_matcher_ranks_and_limits_candidate_orders();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

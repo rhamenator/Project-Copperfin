@@ -94,6 +94,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
+    src/runtime/index_seek_optimizer.cpp
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_numeric_functions.cpp
     src/runtime/prg_engine_path_functions.cpp
