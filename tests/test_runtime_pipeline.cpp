@@ -133,6 +133,21 @@ bool native_symbol_dump_is_available() {
 #endif
 }
 
+bool cmake_is_available() {
+#if defined(_WIN32)
+    std::vector<std::string> args = {"cmake", "--version"};
+    std::vector<const char*> argv;
+    argv.reserve(args.size() + 1U);
+    for (const auto& arg : args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    return _spawnvp(_P_WAIT, "cmake", const_cast<char* const*>(argv.data())) == 0;
+#else
+    return std::system("command -v cmake >/dev/null 2>&1") == 0;
+#endif
+}
+
 bool compile_native_wrapper_scaffold(
     const std::filesystem::path& source_path,
     std::filesystem::path& output_path,
@@ -217,6 +232,60 @@ bool compile_native_wrapper_scaffold(
     }
 
     return true;
+}
+
+bool build_native_wrapper_with_cmake(
+    const std::filesystem::path& cmake_lists_path,
+    const std::string& target_stem,
+    std::filesystem::path& output_path,
+    std::string& error) {
+    namespace fs = std::filesystem;
+    const fs::path source_root = cmake_lists_path.parent_path();
+    const fs::path build_root = source_root / "cmake_build_check";
+    const fs::path configure_log_path = build_root / "cmake-configure.log";
+    const fs::path build_log_path = build_root / "cmake-build.log";
+    std::error_code ignored;
+    fs::remove_all(build_root, ignored);
+    fs::create_directories(build_root);
+
+    const std::string configure_command =
+        "cmake -S \"" + source_root.string() + "\" -B \"" + build_root.string() + "\" > \"" +
+        configure_log_path.string() + "\" 2>&1";
+    if (std::system(configure_command.c_str()) != 0) {
+        error = "native wrapper CMake configure failed";
+        if (fs::exists(configure_log_path)) {
+            error += ":\n" + read_text(configure_log_path);
+        }
+        return false;
+    }
+
+    const std::string build_command =
+        "cmake --build \"" + build_root.string() + "\" > \"" + build_log_path.string() + "\" 2>&1";
+    if (std::system(build_command.c_str()) != 0) {
+        error = "native wrapper CMake build failed";
+        if (fs::exists(build_log_path)) {
+            error += ":\n" + read_text(build_log_path);
+        }
+        return false;
+    }
+
+    std::vector<fs::path> candidates;
+#if defined(_WIN32)
+    candidates.push_back(build_root / (target_stem + ".dll"));
+#else
+    candidates.push_back(build_root / ("lib" + target_stem + ".so"));
+    candidates.push_back(build_root / (target_stem + ".so"));
+#endif
+
+    for (const auto& candidate : candidates) {
+        if (fs::exists(candidate)) {
+            output_path = candidate;
+            return true;
+        }
+    }
+
+    error = "native wrapper CMake build did not produce the expected shared-library artifact";
+    return false;
 }
 
 std::set<std::string> read_native_exported_symbols(const std::filesystem::path& binary_path, std::string& error) {
@@ -867,6 +936,20 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output compiled wrapper exports should stay synchronized with the module-definition contract");
             }
         }
+        if (cmake_is_available()) {
+            fs::path cmake_output_path;
+            std::string cmake_error;
+            const bool cmake_built = build_native_wrapper_with_cmake(
+                result.plan.native_wrapper_cmake_path,
+                "LibraryDemo",
+                cmake_output_path,
+                cmake_error);
+            if (!cmake_built && !cmake_error.empty()) {
+                std::cerr << "FAIL: " << cmake_error << "\n";
+            }
+            expect(cmake_built,
+                   "library-output wrapper CMake metadata should configure and build under CMake");
+        }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -1042,6 +1125,20 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                 expect(exported_symbols == declared_api_symbols,
                        "fll-output compiled wrapper exports should stay synchronized with the API manifest contract");
             }
+        }
+        if (cmake_is_available()) {
+            fs::path cmake_output_path;
+            std::string cmake_error;
+            const bool cmake_built = build_native_wrapper_with_cmake(
+                result.plan.native_wrapper_cmake_path,
+                "LibraryDemo",
+                cmake_output_path,
+                cmake_error);
+            if (!cmake_built && !cmake_error.empty()) {
+                std::cerr << "FAIL: " << cmake_error << "\n";
+            }
+            expect(cmake_built,
+                   "fll-output wrapper CMake metadata should configure and build under CMake");
         }
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
