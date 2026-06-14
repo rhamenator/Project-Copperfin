@@ -172,7 +172,7 @@ If direct commits continue, close a child issue only when:
 ### Runtime Compatibility And Command Surface
 
 - A3 runtime semantics and command depth: #7, #8
-- A3 active-open lane issues: #92, #93, #94, #97, #98, #99, #100, #101
+- A3 active-open lane issues: #92, #93, #94, #98, #99, #100, #101 (#97 closed 2026-06-13)
 - A3 historical-closed lane issues: #95, #96
 - A3 active-open prompt-sized slice issues under #92-#101: none currently open under #93
 - A3 historical-closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262, #263, #264, #265, #266, #267, #268
@@ -184,12 +184,12 @@ If direct commits continue, close a child issue only when:
 
 Canonical remaining Phase A critical-path order:
 
-1. #150
-2. #151
-3. #152
-4. #153
+1. #150 (closed)
+2. #151 (closed)
+3. #152 (closed)
+4. #153 (closed)
 5. #92
-6. #97
+6. #97 (closed 2026-06-13)
 7. #98
 8. #99
 9. #100
@@ -597,6 +597,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-05-12: C4/#160 project startup resolution fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies uppercase startup program extensions (`.PRG`) still enable debug startup capabilities (breakpoints/step-debugging).
 - 2026-05-12: C4/#161 project build inclusion/dependency fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies startup program assets are staged for runtime packaging even when the project entry is marked excluded.
 - 2026-05-12: C5/#162 build/run workflow diagnostics fidelity advanced in `test_runtime_pipeline`. Focused coverage now verifies unresolved startup-record indices surface expected plan warnings and keep startup debug capabilities (`supports_breakpoints`, `supports_step_debugging`) disabled.
+- 2026-06-13: Child issue `#391` under `#97` is now shipped. Focused `test_prg_engine_arrays` coverage now proves `ASCAN()` correctly resolves variable-reference, first-hop macro, and second-hop holder predicates while restoring all four `_ASCAN*` metadata variables on every exit path (match, no-match, early-return). Issue `#391` is closed and all `#97` child slices are now complete.
 - 2026-06-13: Child issue `#390` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the SQL/result-cursor `LOOKUP()` miss path through `&cReturnExprDeepHolder`, `&cMissingSearchDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, proving the all-argument second-hop miss-preservation lane returns the typed numeric default.
 - 2026-06-13: Child issue `#389` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the `LOOKUP()` miss-default path through deep return/search holders plus `&cAliasDeepHolder` and `&cTagDeepHolder`, closing the remaining hardcoded alias/tag designators in that miss-preservation lane.
 - 2026-06-13: Child issue `#388` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the local string-return `LOOKUP()` path through `&cReturnExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, closing the remaining first-hop-only alias/tag arguments in that local lane.

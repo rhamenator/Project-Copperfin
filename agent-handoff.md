@@ -29,11 +29,12 @@ Important:
 Current priority order:
 
 1. Finish the runtime safety/diagnostics gate in strict order: `#150`, `#151`, `#152`, `#153`
-2. Then run the remaining A3 critical-path closure chain in strict order: `#92`, `#97`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94`
+2. Then run the remaining A3 critical-path closure chain in strict order: `#92`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94` (`#97` is now closed)
 3. Do not advance adjacent open queue branches (`#154`-`#203`) until `#94` is complete
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: **`#97` is now closed.** All 45 child slices (#347–#391) shipped, completing G9 (Macro/Eval Core). Final child: `#391` — `ASCAN()` macro-expanded predicate fidelity and `_ASCAN*` metadata cleanup proof across variable-reference, first-hop macro, and second-hop holder paths.
 - 2026-06-13: H3/#97 child issue `#390` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the SQL/result-cursor `LOOKUP()` miss path through `&cReturnExprDeepHolder`, `&cMissingSearchDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#389` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the `LOOKUP()` miss-default branch through deep return/search holders plus `&cAliasDeepHolder` and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#388` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the local string-return `LOOKUP()` branch through `&cReturnExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`.
