@@ -574,6 +574,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
            "library-output plan should preserve the requested output filename");
     expect(fs::path(plan.module_definition_path).filename() == "LibraryDemo.def",
            "library-output plan should derive a matching module-definition filename");
+    expect(fs::path(plan.native_wrapper_source_path).filename() == "LibraryDemo_wrapper.cpp",
+           "library-output plan should derive a matching native-wrapper source filename");
+    expect(fs::path(plan.native_wrapper_cmake_path).filename() == "CMakeLists.txt",
+           "library-output plan should derive a native-wrapper CMake filename");
     expect(plan.exported_symbols.size() == 2U,
            "library-output plan should discover routine exports from PRG assets");
 
@@ -587,6 +591,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     if (result.ok) {
         expect(fs::exists(result.plan.module_definition_path),
                "library-output package should emit a module-definition file");
+        expect(fs::exists(result.plan.native_wrapper_source_path),
+               "library-output package should emit a native-wrapper source scaffold");
+        expect(fs::exists(result.plan.native_wrapper_cmake_path),
+               "library-output package should emit native-wrapper build metadata");
         expect(!fs::exists(result.plan.launcher_output_path),
                "library-output package should not fake a DLL binary");
         expect(!fs::exists(result.plan.runtime_host_destination_path),
@@ -603,6 +611,20 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "module-definition file should export discovered procedure names");
         expect(module_definition.find("AddNumbers") != std::string::npos,
                "module-definition file should export discovered function names");
+        const std::string wrapper_source = read_text(result.plan.native_wrapper_source_path);
+        expect(wrapper_source.find("Generated Copperfin native wrapper scaffold") != std::string::npos,
+               "library-output wrapper source should identify the generated scaffold");
+        expect(wrapper_source.find("extern \"C\"") != std::string::npos,
+               "library-output wrapper source should use C exports");
+        expect(wrapper_source.find("int InitLibrary()") != std::string::npos,
+               "library-output wrapper source should scaffold procedure entrypoints");
+        expect(wrapper_source.find("int AddNumbers()") != std::string::npos,
+               "library-output wrapper source should scaffold function entrypoints");
+        const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
+        expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
+               "library-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
+               "library-output wrapper CMake should forward the module-definition file on MSVC");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -610,6 +632,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record DLL output kind");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
+        expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
+               "library-output manifest should record the wrapper source path");
+        expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
+               "library-output manifest should record the wrapper CMake path");
         expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output manifest should record discovered export symbols");
         expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -618,8 +644,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the honest non-materialized DLL state");
         expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                "library-output manifest should expose the library-contract feature flag");
+        expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+               "library-output manifest should expose the native-wrapper feature flag");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
+        expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
+               "library-output debug manifest should record the wrapper source path");
+        expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
+               "library-output debug manifest should record the wrapper CMake path");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -684,6 +716,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
            "fll-output plan should preserve the requested output filename");
     expect(fs::path(plan.module_definition_path).filename() == "LibraryDemo.def",
            "fll-output plan should derive a matching module-definition filename");
+    expect(fs::path(plan.native_wrapper_source_path).filename() == "LibraryDemo_wrapper.cpp",
+           "fll-output plan should derive a matching native-wrapper source filename");
+    expect(fs::path(plan.native_wrapper_cmake_path).filename() == "CMakeLists.txt",
+           "fll-output plan should derive a native-wrapper CMake filename");
     expect(fs::path(plan.fll_api_manifest_path).filename() == "LibraryDemo.fll.api",
            "fll-output plan should derive a matching API-manifest filename");
     expect(plan.exported_symbols.size() == 2U,
@@ -699,6 +735,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
     if (result.ok) {
         expect(fs::exists(result.plan.module_definition_path),
                "fll-output package should emit a module-definition file");
+        expect(fs::exists(result.plan.native_wrapper_source_path),
+               "fll-output package should emit a native-wrapper source scaffold");
+        expect(fs::exists(result.plan.native_wrapper_cmake_path),
+               "fll-output package should emit native-wrapper build metadata");
         expect(fs::exists(result.plan.fll_api_manifest_path),
                "fll-output package should emit an API manifest");
         expect(!fs::exists(result.plan.launcher_output_path),
@@ -715,6 +755,20 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output module-definition file should export discovered procedure names");
         expect(module_definition.find("AddNumbers") != std::string::npos,
                "fll-output module-definition file should export discovered function names");
+        const std::string wrapper_source = read_text(result.plan.native_wrapper_source_path);
+        expect(wrapper_source.find("Generated Copperfin native wrapper scaffold") != std::string::npos,
+               "fll-output wrapper source should identify the generated scaffold");
+        expect(wrapper_source.find("int InitLibrary()") != std::string::npos,
+               "fll-output wrapper source should scaffold procedure entrypoints");
+        expect(wrapper_source.find("int AddNumbers()") != std::string::npos,
+               "fll-output wrapper source should scaffold function entrypoints");
+        expect(wrapper_source.find("int FoxInfo()") != std::string::npos,
+               "fll-output wrapper source should scaffold the FoxInfo entrypoint");
+        const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
+        expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
+               "fll-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
+               "fll-output wrapper CMake should forward the module-definition file on MSVC");
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
         expect(api_manifest.find("output_kind=fll") != std::string::npos,
@@ -738,12 +792,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record FLL output kind");
         expect(runtime_manifest.find("fll_api_manifest_path=" + quote_manifest_value(result.plan.fll_api_manifest_path)) != std::string::npos,
                "fll-output manifest should record the emitted API-manifest path");
+        expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
+               "fll-output manifest should record the wrapper source path");
+        expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
+               "fll-output manifest should record the wrapper CMake path");
         expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the library-contract feature flag");
+        expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+               "fll-output manifest should expose the native-wrapper feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the FLL API-contract feature flag");
         expect(debug_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output debug manifest should record FLL output kind");
+        expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
+               "fll-output debug manifest should record the wrapper source path");
+        expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
+               "fll-output debug manifest should record the wrapper CMake path");
     }
 
     fs::remove_all(temp_root, ignored);

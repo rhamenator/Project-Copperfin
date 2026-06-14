@@ -277,6 +277,52 @@ std::string build_module_definition_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "// Generated Copperfin native wrapper scaffold\n";
+    stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
+    stream << "#if defined(_WIN32)\n";
+    stream << "#define COPPERFIN_EXPORT extern \"C\" __declspec(dllexport)\n";
+    stream << "#else\n";
+    stream << "#define COPPERFIN_EXPORT extern \"C\"\n";
+    stream << "#endif\n\n";
+
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "COPPERFIN_EXPORT int " << symbol << "() {\n";
+        stream << "    return -1;\n";
+        stream << "}\n\n";
+    }
+
+    if (plan.output_kind == BuildOutputKind::fll) {
+        stream << "COPPERFIN_EXPORT int FoxInfo() {\n";
+        stream << "    return -1;\n";
+        stream << "}\n";
+    }
+
+    return stream.str();
+}
+
+std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    const std::string output_stem =
+        std::filesystem::path(plan.launcher_output_path).stem().string();
+    const std::string wrapper_file_name =
+        std::filesystem::path(plan.native_wrapper_source_path).filename().string();
+    const std::string module_definition_file_name =
+        std::filesystem::path(plan.module_definition_path).filename().string();
+
+    stream << "cmake_minimum_required(VERSION 3.20)\n";
+    stream << "project(" << output_stem << "Wrapper LANGUAGES CXX)\n\n";
+    stream << "add_library(" << output_stem << " SHARED " << wrapper_file_name << ")\n";
+    stream << "target_compile_features(" << output_stem << " PRIVATE cxx_std_20)\n";
+    stream << "set_target_properties(" << output_stem << " PROPERTIES OUTPUT_NAME \"" << output_stem << "\")\n";
+    stream << "if(MSVC)\n";
+    stream << "  target_link_options(" << output_stem
+           << " PRIVATE \"/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../" << module_definition_file_name << "\")\n";
+    stream << "endif()\n";
+    return stream.str();
+}
+
 std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "manifest_version=1\n";
@@ -1400,6 +1446,12 @@ RuntimePackagePlan create_runtime_package_plan(
     module_definition_file_name.replace_extension(".def");
     plan.launcher_output_path = (package_root / output_file_name).string();
     plan.module_definition_path = (package_root / module_definition_file_name).string();
+    if (is_library_output_kind(plan.output_kind)) {
+        const std::filesystem::path wrapper_root = package_root / "wrapper";
+        const std::string output_stem = output_file_name.stem().string();
+        plan.native_wrapper_source_path = (wrapper_root / (output_stem + "_wrapper.cpp")).string();
+        plan.native_wrapper_cmake_path = (wrapper_root / "CMakeLists.txt").string();
+    }
     if (plan.output_kind == BuildOutputKind::fll) {
         std::filesystem::path fll_api_manifest_file_name = output_file_name;
         fll_api_manifest_file_name += ".api";
@@ -1506,6 +1558,8 @@ std::string build_runtime_manifest_text(
     stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
     stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
+    stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
+    stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
@@ -1552,6 +1606,7 @@ std::string build_runtime_manifest_text(
     append_feature_flag_line(stream, "build.output.ir_contract", true, "build_output");
     append_feature_flag_line(stream, "build.output.csharp_transpilation", plan.requested_dotnet_launcher, "build_output");
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
     append_feature_flag_line(stream, "build.output.app_archive_contract", plan.output_kind == BuildOutputKind::app, "build_output");
@@ -1607,6 +1662,8 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "supports_breakpoints=" << (plan.debug_plan.supports_breakpoints ? "true" : "false") << "\n";
     stream << "supports_step_debugging=" << (plan.debug_plan.supports_step_debugging ? "true" : "false") << "\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
+    stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
+    stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
@@ -1672,10 +1729,26 @@ RuntimeMaterializeResult materialize_runtime_package(
     }
 
     if (is_library_output_kind(plan.output_kind)) {
+        std::filesystem::create_directories(std::filesystem::path(plan.native_wrapper_source_path).parent_path(), directory_error);
+        if (directory_error) {
+            return {.ok = false, .error = "Unable to create native wrapper directory."};
+        }
         if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
         }
         if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.module_definition_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!write_text_file(plan.native_wrapper_source_path, build_native_wrapper_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_source_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!write_text_file(plan.native_wrapper_cmake_path, build_native_wrapper_cmake_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_cmake_path, error)) {
             return {.ok = false, .error = error};
         }
         if (plan.output_kind == BuildOutputKind::fll) {

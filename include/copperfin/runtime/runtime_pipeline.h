@@ -69,6 +69,8 @@ struct RuntimePackagePlan {
     std::string launcher_source_path;
     std::string launcher_output_path;
     std::string module_definition_path;
+    std::string native_wrapper_source_path;
+    std::string native_wrapper_cmake_path;
     std::string fll_api_manifest_path;
     std::string fxp_token_manifest_path;
     std::string app_archive_manifest_path;

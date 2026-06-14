@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-14: D1/#418 native DLL/FLL wrapper scaffold packaging is now shipped. Library-style runtime packages now emit an honest generated native-wrapper scaffold (`wrapper/<stem>_wrapper.cpp`) plus wrapper-local `CMakeLists.txt` build metadata alongside the existing `.def` / `.fll.api` contracts, runtime/debug manifests now record the wrapper artifact paths plus a `build.output.native_library_wrapper` feature flag, and focused `test_runtime_pipeline` coverage now proves the DLL/FLL wrapper contract without pretending the final FoxPro/VFP-compatible binary bridge already exists.
 - 2026-06-14: D2/#416 xAsset-aware pause-state breakpoint metadata is now shipped. `copperfin_runtime_host` now enriches ordinary pause-state breakpoint listings with `debug.breakpoint[n].xasset.action_id` and `debug.breakpoint[n].xasset.title` when an active breakpoint maps back to an xAsset action, so debugger clients can recover designer-facing breakpoint identity directly from pause output without a separate `break:list` round-trip. `test_runtime_host_debug_output` now proves that metadata appears during ordinary xAsset pause output with no explicit inventory command, and adjacent `test_runtime_host_binding` / `test_xasset_methods` coverage still passes.
 - 2026-06-14: D2/#20 debugger completion is now closed. The dedicated child queue is exhausted after `#164`, `#165`, `#404`, `#405`, `#406`, `#407`, `#408`, `#411`, `#412`, `#413`, `#414`, `#415`, and `#416`, covering watch evaluation, locals/pause metadata, breakpoint management, richer stepping, cursor/runtime inspection, and xAsset-to-debugger linkage.
 - 2026-06-14: D3/#21 build/run/debug/deploy workflow tightening is now closed. The dedicated child queue is exhausted after `#166` and `#167`, and the shipped follow-on packaging/workflow slices `#206`, `#207`, `#278`, and `#403` now cover native entrypoint packaging, deployed-package rebinding, launcher routing/reporting, and argument-forwarding fidelity across the current workflow baseline.
@@ -249,7 +250,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Debugger completion: #20
 - Build/run/deploy workflow tightening: #21 (prompt-sized slice queue currently closed on this branch; #162-#177 shipped)
 - AST/IR outputs: #42
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (no prompt-sized child queue currently open on this branch; #162-#177 shipped in the build/debug lane)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (`#418` shipped the first honest native-wrapper scaffold under `#40`; no prompt-sized child queue is currently open on this branch, and `#162`-`#177` shipped earlier in the build/debug lane)
 
 ### Designers And IDE Parity
 
