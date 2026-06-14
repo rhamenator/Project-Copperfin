@@ -12,6 +12,8 @@
 
 #if !defined(_WIN32)
 #include <sys/wait.h>
+#else
+#include <process.h>
 #endif
 
 namespace {
@@ -24,6 +26,55 @@ void expect(bool condition, const std::string& message) {
         ++failures;
     }
 }
+
+std::string getenv_value(const std::string& name) {
+#ifdef _WIN32
+    const char* value = std::getenv(name.c_str());
+    if (value == nullptr) {
+        return {};
+    }
+    return value;
+#else
+    const char* value = std::getenv(name.c_str());
+    if (value == nullptr) {
+        return {};
+    }
+    return value;
+#endif
+}
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s((name + "=").c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original;
+    bool had_original = false;
+
+    explicit ScopedEnvironmentValue(const std::string& environment_name)
+        : name(environment_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_value(name, "", false);
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original, had_original);
+    }
+};
 
 void write_text(const std::filesystem::path& path, const std::string& text) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
@@ -284,6 +335,27 @@ void write_synthetic_project(
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(project_path.string(), fields, records);
     expect(create_result.ok, "synthetic PJX fixture should be created");
+}
+
+void write_synthetic_executable_project(
+    const std::filesystem::path& project_path,
+    const std::filesystem::path& project_dir,
+    const std::filesystem::path& output_path,
+    const std::string& project_title = "HostResolutionDemo") {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 1U},
+        {.name = "KEY", .type = 'C', .length = 32U},
+        {.name = "HOMEDIR", .type = 'C', .length = 200U},
+        {.name = "OUTFILE", .type = 'C', .length = 200U},
+        {.name = "NAME", .type = 'C', .length = 200U},
+        {.name = "MAINPROG", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"H", project_title, project_dir.string(), output_path.string(), "", "false"},
+        {"K", "", "", "", "main.prg", "true"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(project_path.string(), fields, records);
+    expect(create_result.ok, "synthetic executable PJX fixture should be created");
 }
 
 void write_synthetic_app_project(
@@ -614,6 +686,89 @@ void run_fxp_build_host_smoke(const std::string& build_host_path) {
     fs::remove_all(temp_root, ignored);
 }
 
+void run_default_runtime_host_resolution_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running runtime-host resolution smoke test");
+    const fs::path original_build_host = fs::path(build_host_path);
+    const fs::path original_runtime_host_dir = original_build_host.parent_path();
+    const std::vector<fs::path> runtime_host_candidates{
+        original_runtime_host_dir / "copperfin_runtime_host.exe",
+        original_runtime_host_dir / "copperfin_runtime_host"
+    };
+    fs::path source_runtime_host;
+    for (const auto& candidate : runtime_host_candidates) {
+        if (fs::exists(candidate)) {
+            source_runtime_host = candidate;
+            break;
+        }
+    }
+    expect(!source_runtime_host.empty(), "runtime host executable should be discoverable for runtime-host resolution smoke test");
+    if (source_runtime_host.empty()) {
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_runtime_host_fallback";
+    const fs::path temp_bundle = temp_root / "bundle";
+    const fs::path temp_project_dir = temp_bundle / "project";
+    const fs::path output_dir = temp_bundle / "output";
+    const fs::path temp_build_host = temp_bundle / original_build_host.filename();
+    const fs::path temp_runtime_host = temp_bundle / source_runtime_host.filename();
+    const fs::path project_path = temp_project_dir / "hostresolution.pjx";
+    const fs::path expected_output = output_dir / "HostResolutionDemo" / "HostResolutionDemo.exe";
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_project_dir);
+    fs::create_directories(output_dir);
+
+    std::error_code copy_error;
+    fs::copy_file(original_build_host, temp_build_host, fs::copy_options::overwrite_existing, copy_error);
+    expect(!copy_error, "copied build-host fixture should be readable");
+    if (copy_error) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    fs::copy_file(source_runtime_host, temp_runtime_host, fs::copy_options::overwrite_existing, copy_error);
+    expect(!copy_error, "copied runtime-host fixture should be readable");
+    if (copy_error) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(temp_bundle / "main.prg", "WAIT WINDOW 'host-resolution'\nRETURN\n");
+    write_synthetic_executable_project(project_path, temp_project_dir, expected_output);
+
+    {
+        ScopedEnvironmentValue clear_runtime_host_env("COPPERFIN_RUNTIME_HOST_PATH");
+
+        const auto process = run_process_capture(
+            temp_build_host.string(),
+            {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+            temp_root);
+
+        expect(process.exit_code == 0, "build host should resolve runtime host from executable directory");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "runtime-host resolution smoke test should report status: ok");
+        expect(process.stdout_text.find("output.kind: executable") != std::string::npos,
+               "runtime-host resolution smoke test should build an executable output");
+        expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+               "runtime-host resolution smoke test should materialize executable output");
+        const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+        expect(!manifest_path.empty(), "runtime-host resolution smoke test should report manifest path");
+        if (!manifest_path.empty()) {
+            const std::string manifest_text = read_text(manifest_path);
+            expect(manifest_text.find("runtime_host_sha256=") != std::string::npos,
+                   "runtime-host resolution smoke test should persist runtime host digest");
+            expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
+                   "runtime-host resolution smoke test manifest should report primary output materialized");
+        }
+        expect(fs::exists(expected_output), "runtime-host fallback test should materialize requested executable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -626,6 +781,7 @@ int main(int argc, char** argv) {
     run_library_build_host_smoke(argv[1], "fll");
     run_app_build_host_smoke(argv[1]);
     run_fxp_build_host_smoke(argv[1]);
+    run_default_runtime_host_resolution_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

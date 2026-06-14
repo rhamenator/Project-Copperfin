@@ -29,18 +29,16 @@ void print_usage() {
     std::cout << "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory> [--configuration debug|release] [--enable-security] [--emit-dotnet-launcher] [--runtime-host <path>]\n";
 }
 
-std::string resolve_runtime_host_path(const std::string& override_path) {
+std::string resolve_runtime_host_path(const std::string& override_path, const std::string& executable_path) {
     if (!override_path.empty()) {
         return override_path;
     }
 
     std::string resolved;
 #ifdef _WIN32
-    char* configured = nullptr;
-    std::size_t configured_length = 0;
-    if (_dupenv_s(&configured, &configured_length, "COPPERFIN_RUNTIME_HOST_PATH") == 0 && configured != nullptr) {
+    const char* configured = std::getenv("COPPERFIN_RUNTIME_HOST_PATH");
+    if (configured != nullptr) {
         resolved = configured;
-        std::free(configured);
     }
 #else
     if (const char* configured = std::getenv("COPPERFIN_RUNTIME_HOST_PATH"); configured != nullptr) {
@@ -52,7 +50,28 @@ std::string resolve_runtime_host_path(const std::string& override_path) {
         return resolved;
     }
 
-    return R"(E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe)";
+    const std::filesystem::path host_root = std::filesystem::absolute(executable_path).parent_path();
+    const std::filesystem::path host_name =
+#ifdef _WIN32
+        "copperfin_runtime_host.exe";
+#else
+        "copperfin_runtime_host";
+#endif
+    const std::vector<std::filesystem::path> candidate_paths{
+        host_root / host_name,
+#ifdef _WIN32
+        host_root / "copperfin_runtime_host"
+#else
+        host_root / "copperfin_runtime_host.exe"
+#endif
+    };
+    for (const auto& candidate : candidate_paths) {
+        if (std::filesystem::exists(candidate)) {
+            return candidate.string();
+        }
+    }
+
+    return host_root / host_name;
 }
 
 bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std::string& error) {
@@ -292,7 +311,7 @@ int main(int argc, char** argv) {
         return 4;
     }
 
-    const std::string runtime_host_path = resolve_runtime_host_path(runtime_host_override);
+    const std::string runtime_host_path = resolve_runtime_host_path(runtime_host_override, argv[0]);
     const auto materialized = copperfin::runtime::materialize_runtime_package(
         plan,
         security_profile,
