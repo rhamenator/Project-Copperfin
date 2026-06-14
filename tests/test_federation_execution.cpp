@@ -56,12 +56,74 @@ void test_plan_rejection() {
     expect(!plan.error.empty(), "failed execution planning should report an error message");
 }
 
+void test_plan_rejects_with_ai_policy_disabled() {
+    const auto plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::oracle,
+        .fox_sql = "DELETE FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = false, .require_ai_assistance = false}
+    });
+
+    expect(!plan.ok, "AI-disabled policy should reject non-deterministic plan paths");
+    expect(plan.planning_mode == "deterministic_rejected", "planning mode should be deterministic_rejected when AI is disabled");
+    expect(!plan.ai_assisted, "AI-assistance should remain disabled");
+    expect(!plan.planning_policy_allows_ai, "policy should report AI disallowed");
+    expect(!plan.deterministic_translation_succeeded, "deterministic translation should be marked failed");
+}
+
+void test_plan_allows_ai_fallback_metadata() {
+    const auto plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::oracle,
+        .fox_sql = "DELETE FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = true, .require_ai_assistance = false}
+    });
+
+    expect(!plan.ok, "AI-enabled policy should still fail while planner is not implemented");
+    expect(plan.planning_mode == "ai_optional_fallback", "planning mode should describe optional AI fallback request");
+    expect(plan.ai_assisted, "plan should mark AI assistance as requested when policy enables it");
+    expect(plan.planning_policy_allows_ai, "policy should report AI as allowed");
+    expect(!plan.deterministic_translation_succeeded, "deterministic translation should be marked failed");
+    expect(plan.execution_command.find("connector.plan_query(") == 0, "fallback plan should expose connector plan_query intent");
+}
+
+void test_plan_requires_ai_fallback_metadata() {
+    const auto plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::oracle,
+        .fox_sql = "DELETE FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = true, .require_ai_assistance = true}
+    });
+
+    expect(!plan.ok, "required AI policy should also route to AI fallback metadata");
+    expect(plan.planning_mode == "ai_required_fallback", "planning mode should describe required AI fallback request");
+    expect(plan.ai_assisted, "required AI policy should mark AI assistance as requested");
+    expect(plan.planning_policy_allows_ai, "required AI policy should report AI allowed");
+    expect(!plan.deterministic_translation_succeeded, "deterministic translation should still be marked failed");
+    expect(plan.planning_policy_audit_enabled, "required AI policy should preserve default audit setting");
+}
+
+void test_plan_tracks_policy_audit_toggle() {
+    const auto plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::sqlite,
+        .fox_sql = "SELECT * FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = false, .require_ai_assistance = false, .policy_audit_enabled = false}
+    });
+
+    expect(plan.planning_policy_audit_enabled == false, "planning policy audit flag should be preserved in the plan");
+}
+
 }  // namespace
 
 int main() {
     test_backend_parsing();
     test_plan_generation();
     test_plan_rejection();
+    test_plan_rejects_with_ai_policy_disabled();
+    test_plan_allows_ai_fallback_metadata();
+    test_plan_requires_ai_fallback_metadata();
+    test_plan_tracks_policy_audit_toggle();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

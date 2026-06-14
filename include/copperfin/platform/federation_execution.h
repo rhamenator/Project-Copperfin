@@ -7,10 +7,17 @@
 
 namespace copperfin::platform {
 
+struct FederationPlanningPolicy {
+    bool enable_ai_assistance = false;
+    bool require_ai_assistance = false;
+    bool policy_audit_enabled = true;
+};
+
 struct FederationExecutionRequest {
     FederationBackend backend = FederationBackend::sqlite;
     std::string fox_sql;
     std::string target;
+    FederationPlanningPolicy planning_policy{};
 };
 
 struct FederationExecutionPlan {
@@ -19,7 +26,12 @@ struct FederationExecutionPlan {
     std::string connector;
     std::string target;
     std::string translated_sql;
+    std::string planning_mode;
     std::string execution_command;
+    bool ai_assisted = false;
+    bool deterministic_translation_succeeded = false;
+    bool planning_policy_allows_ai = false;
+    bool planning_policy_audit_enabled = true;
     std::string error;
 };
 

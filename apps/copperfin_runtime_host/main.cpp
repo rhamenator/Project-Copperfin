@@ -276,6 +276,7 @@ bool verify_manifest_hashes(
 void print_usage() {
     std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>]\n";
     std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
+    std::cout << "       [--federation-planning-enable <true|false>] [--federation-planning-require <true|false>] [--federation-planning-audit <true|false>]\n";
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -650,6 +651,9 @@ int main(int argc, char** argv) {
     std::string federation_backend;
     std::string federation_query;
     std::string federation_target;
+    bool federation_planning_enable = false;
+    bool federation_planning_require = false;
+    bool federation_policy_audit = true;
     bool debug_mode = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
@@ -664,6 +668,12 @@ int main(int argc, char** argv) {
             federation_query = argv[++index];
         } else if (arg == "--federation-target" && (index + 1) < argc) {
             federation_target = argv[++index];
+        } else if (arg == "--federation-planning-enable" && (index + 1) < argc) {
+            federation_planning_enable = parse_bool(argv[++index]);
+        } else if (arg == "--federation-planning-require" && (index + 1) < argc) {
+            federation_planning_require = parse_bool(argv[++index]);
+        } else if (arg == "--federation-planning-audit" && (index + 1) < argc) {
+            federation_policy_audit = parse_bool(argv[++index]);
         } else if (arg == "--debug") {
             debug_mode = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {
@@ -697,7 +707,10 @@ int main(int argc, char** argv) {
         const auto plan = copperfin::platform::build_federation_execution_plan({
             .backend = *backend,
             .fox_sql = federation_query,
-            .target = federation_target
+            .target = federation_target,
+            .planning_policy = {.enable_ai_assistance = federation_planning_enable,
+                               .require_ai_assistance = federation_planning_require,
+                               .policy_audit_enabled = federation_policy_audit}
         });
         if (!plan.ok) {
             std::cout << "status: error\n";
@@ -711,6 +724,11 @@ int main(int argc, char** argv) {
         std::cout << "federation.backend: " << copperfin::platform::federation_backend_name(plan.backend) << "\n";
         std::cout << "federation.connector: " << plan.connector << "\n";
         std::cout << "federation.target: " << plan.target << "\n";
+        std::cout << "federation.planning_mode: " << plan.planning_mode << "\n";
+        std::cout << "federation.ai_assisted: " << (plan.ai_assisted ? "true" : "false") << "\n";
+        std::cout << "federation.deterministic_translation_succeeded: " << (plan.deterministic_translation_succeeded ? "true" : "false") << "\n";
+        std::cout << "federation.planning_policy_allows_ai: " << (plan.planning_policy_allows_ai ? "true" : "false") << "\n";
+        std::cout << "federation.planning_policy_audit_enabled: " << (plan.planning_policy_audit_enabled ? "true" : "false") << "\n";
         std::cout << "federation.translated_sql: " << plan.translated_sql << "\n";
         std::cout << "federation.command: " << plan.execution_command << "\n";
         return 0;
