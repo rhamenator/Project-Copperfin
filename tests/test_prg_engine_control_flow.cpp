@@ -5114,6 +5114,72 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_allowed_in_reentrant_enter_critical_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_reentrant_enter_critical_regression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_reentrant_enter_critical_regression_test.prg";
+    write_text(
+        main_path,
+        "lOuterEntered = .F.\n"
+        "lInnerEntered = .F.\n"
+        "lYielded = .F.\n"
+        "ENTER CRITICAL shared\n"
+        "lOuterEntered = .T.\n"
+        "ENTER CRITICAL shared\n"
+        "lInnerEntered = .T.\n"
+        "YIELD\n"
+        "lYielded = .T.\n"
+        "EXIT CRITICAL shared\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "YIELD inside reentrant ENTER CRITICAL should complete");
+
+    const auto outer_entered = state.globals.find("louterentered");
+    const auto inner_entered = state.globals.find("linnerentered");
+    const auto yielded = state.globals.find("lyielded");
+    expect(outer_entered != state.globals.end(), "outer ENTER CRITICAL body should execute");
+    expect(inner_entered != state.globals.end(), "inner ENTER CRITICAL body should execute");
+    expect(yielded != state.globals.end(), "YIELD should execute inside reentrant ENTER CRITICAL");
+    if (outer_entered != state.globals.end()) {
+        expect(outer_entered->second.boolean_value, "outer CRITICAL entry flag should be true");
+    }
+    if (inner_entered != state.globals.end()) {
+        expect(inner_entered->second.boolean_value, "inner CRITICAL entry flag should be true");
+    }
+    if (yielded != state.globals.end()) {
+        expect(yielded->second.boolean_value, "YIELD should execute and set lYielded");
+    }
+
+    const auto critical_enter_count =
+        static_cast<std::size_t>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.critical.enter";
+        }));
+    const auto critical_exit_count =
+        static_cast<std::size_t>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.critical.exit";
+        }));
+    expect(critical_enter_count == 2U, "reentrant ENTER CRITICAL should emit two enter events");
+    expect(critical_exit_count == 2U, "reentrant ENTER CRITICAL should emit two exit events");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield" && event.detail.find("operation=YIELD") != std::string::npos;
+    }), "reentrant ENTER CRITICAL should emit runtime.yield");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD inside reentrant ENTER CRITICAL should remain allowed");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_preserves_fault_metadata_when_followed_by_error() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_fault_cmd";
@@ -6160,6 +6226,7 @@ int main() {
     test_yield_is_allowed_in_critical_section_is_policy_exception();
     test_yield_inside_critical_section_is_allowed();
     test_yield_allowed_in_enter_critical_is_small_regression();
+    test_yield_allowed_in_reentrant_enter_critical_section();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
     test_yield_preserves_fault_metadata_when_followed_by_error();
     test_on_error_resume_restores_fault_session_and_cursor_state();
