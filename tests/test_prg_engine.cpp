@@ -184,6 +184,85 @@ void test_breakpoint_on_first_executable_line_hits_after_entry_continue() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_step_pause_state_preserves_statement_text_across_step_modes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_step_statement_text";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "step_statement_text.prg";
+    write_text(
+        main_path,
+        "DO worker\n"
+        "x = 2\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "y = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+
+    const auto entry_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(entry_state.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-state test should stop on entry first");
+
+    const auto step_into_state = session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_into_state.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-into should pause with step reason");
+    expect(step_into_state.statement_text == "y = 1",
+           "step-into over DO worker should pause on the first worker statement");
+    expect(!step_into_state.call_stack.empty(),
+           "step-into state should expose a stack frame");
+    if (!step_into_state.call_stack.empty()) {
+        expect(step_into_state.call_stack.front().routine_name == "worker",
+               "step-into should move execution into the worker routine");
+    }
+
+    copperfin::runtime::PrgRuntimeSession step_over_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+    const auto step_over_entry = step_over_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(step_over_entry.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-over test should stop on entry first");
+
+    const auto step_over_state = step_over_session.run(copperfin::runtime::DebugResumeAction::step_over);
+    expect(step_over_state.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-over should pause with step reason");
+    expect(step_over_state.statement_text == "x = 2",
+           "step-over on DO worker should resume at the caller's next statement");
+    expect(!step_over_state.call_stack.empty(),
+           "step-over state should expose a stack frame");
+    if (!step_over_state.call_stack.empty()) {
+        expect(step_over_state.call_stack.front().routine_name == "main",
+               "step-over should return to the caller frame");
+    }
+
+    copperfin::runtime::PrgRuntimeSession step_out_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), true));
+    const auto step_out_entry = step_out_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(step_out_entry.reason == copperfin::runtime::DebugPauseReason::entry,
+           "step-out test should stop on entry first");
+
+    const auto step_out_inner = step_out_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(step_out_inner.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-out setup should first step into the worker routine");
+
+    const auto step_out_state = step_out_session.run(copperfin::runtime::DebugResumeAction::step_out);
+    expect(step_out_state.reason == copperfin::runtime::DebugPauseReason::step,
+           "step-out should pause with step reason");
+    expect(step_out_state.statement_text == "x = 2",
+           "step-out from worker should resume at the caller's next statement");
+    expect(!step_out_state.call_stack.empty(),
+           "step-out state should expose a stack frame");
+    if (!step_out_state.call_stack.empty()) {
+        expect(step_out_state.call_stack.front().routine_name == "main",
+               "step-out should unwind back to the caller frame");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1342,6 +1421,7 @@ int main() {
     test_dispatch_event_handler();
     test_local_variables_in_stack_frame();
     test_breakpoint_on_first_executable_line_hits_after_entry_continue();
+    test_step_pause_state_preserves_statement_text_across_step_modes();
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();
