@@ -155,6 +155,9 @@ std::string infer_output_kind(const std::string& output_path) {
     if (extension == ".fll") {
         return "fll";
     }
+    if (extension == ".fxp") {
+        return "fxp";
+    }
     if (extension == ".ocx") {
         return "ocx";
     }
@@ -170,6 +173,9 @@ std::string build_target_for_output_kind(const std::string& output_kind) {
     }
     if (output_kind == "fll") {
         return "x64 Visual FoxPro library";
+    }
+    if (output_kind == "fxp") {
+        return "x64 Visual FoxPro tokenized program";
     }
     if (output_kind == "ocx") {
         return "x64 Windows ActiveX control";

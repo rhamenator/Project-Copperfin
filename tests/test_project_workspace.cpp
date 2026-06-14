@@ -163,6 +163,31 @@ void test_build_project_workspace_with_fll_output() {
            "build plan should label .fll outputs as Visual FoxPro libraries");
 }
 
+void test_build_project_workspace_with_fxp_output() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\compiledemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "COMPILEDEMO"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\compiledemo.fxp)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "fxp project workspace should be available");
+    expect(workspace.build_plan.output_kind == "fxp", "build plan should infer FXP output kind from .fxp output path");
+    expect(workspace.build_plan.build_target == "x64 Visual FoxPro tokenized program",
+           "build plan should label .fxp outputs as Visual FoxPro tokenized programs");
+}
+
 }  // namespace
 
 int main() {
@@ -170,6 +195,7 @@ int main() {
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_with_dll_output();
     test_build_project_workspace_with_fll_output();
+    test_build_project_workspace_with_fxp_output();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

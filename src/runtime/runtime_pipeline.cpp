@@ -59,6 +59,9 @@ BuildOutputKind parse_build_output_kind(const std::string& value) {
     if (normalized == "fll") {
         return BuildOutputKind::fll;
     }
+    if (normalized == "fxp") {
+        return BuildOutputKind::fxp;
+    }
     if (normalized == "ocx") {
         return BuildOutputKind::ocx;
     }
@@ -124,6 +127,11 @@ bool is_library_output_kind(const BuildOutputKind output_kind) {
         output_kind == BuildOutputKind::ocx;
 }
 
+bool is_native_host_output_kind(const BuildOutputKind output_kind) {
+    return output_kind == BuildOutputKind::executable ||
+        output_kind == BuildOutputKind::unknown;
+}
+
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
     const std::filesystem::path configured_output(workspace.build_plan.output_path);
     const std::string file_name = configured_output.filename().string();
@@ -140,6 +148,9 @@ BuildOutputKind infer_build_output_kind_from_output_path(const std::string& outp
     }
     if (extension == ".fll") {
         return BuildOutputKind::fll;
+    }
+    if (extension == ".fxp") {
+        return BuildOutputKind::fxp;
     }
     if (extension == ".ocx") {
         return BuildOutputKind::ocx;
@@ -212,6 +223,39 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     stream << "additive_supported=true\n";
     for (const auto& symbol : plan.exported_symbols) {
         stream << "function=" << quote_manifest_value(symbol) << "\n";
+    }
+    return stream.str();
+}
+
+void append_fxp_statement_lines(
+    std::ostringstream& stream,
+    const std::string& scope_name,
+    const std::vector<Statement>& statements) {
+    for (const auto& statement : statements) {
+        stream << "statement="
+               << quote_manifest_value(scope_name) << "|"
+               << statement.location.line << "|"
+               << quote_manifest_value(statement.text) << "\n";
+    }
+}
+
+std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "manifest_version=1\n";
+    stream << "output_kind=fxp\n";
+    stream << "token_contract=logical_statements\n";
+    stream << "primary_output=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
+    for (const auto& asset : plan.assets) {
+        if (lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            continue;
+        }
+        const Program program = parse_program(asset.source_path);
+        stream << "program=" << quote_manifest_value(asset.relative_path) << "\n";
+        append_fxp_statement_lines(stream, "MAIN", program.main.statements);
+        for (const auto& routine_entry : program.routines) {
+            append_fxp_statement_lines(stream, routine_entry.first, routine_entry.second.statements);
+        }
     }
     return stream.str();
 }
@@ -560,6 +604,8 @@ const char* build_output_kind_name(BuildOutputKind output_kind) {
             return "dll";
         case BuildOutputKind::fll:
             return "fll";
+        case BuildOutputKind::fxp:
+            return "fxp";
         case BuildOutputKind::ocx:
             return "ocx";
         case BuildOutputKind::unknown:
@@ -590,12 +636,15 @@ RuntimePackagePlan create_runtime_package_plan(
     }
     plan.requested_dotnet_launcher = emit_dotnet_launcher;
     plan.emit_dotnet_launcher =
-        !is_library_output_kind(plan.output_kind) &&
+        is_native_host_output_kind(plan.output_kind) &&
         emit_dotnet_launcher &&
         extensibility_profile.dotnet_output.available;
     if (is_library_output_kind(plan.output_kind)) {
         plan.launcher_mode = "foxpro_library_definition";
         plan.launcher_fallback = "library_binary_generation_pending";
+    } else if (plan.output_kind == BuildOutputKind::fxp) {
+        plan.launcher_mode = "foxpro_tokenized_contract";
+        plan.launcher_fallback = "fxp_binary_generation_pending";
     } else {
         plan.launcher_mode = plan.emit_dotnet_launcher ? "dotnet_launcher" : "native_runtime_host";
         plan.launcher_fallback =
@@ -627,6 +676,11 @@ RuntimePackagePlan create_runtime_package_plan(
         std::filesystem::path fll_api_manifest_file_name = output_file_name;
         fll_api_manifest_file_name += ".api";
         plan.fll_api_manifest_path = (package_root / fll_api_manifest_file_name).string();
+    }
+    if (plan.output_kind == BuildOutputKind::fxp) {
+        std::filesystem::path fxp_token_manifest_file_name = output_file_name;
+        fxp_token_manifest_file_name += ".tokens";
+        plan.fxp_token_manifest_path = (package_root / fxp_token_manifest_file_name).string();
     }
     plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
     plan.working_directory = content_root.lexically_normal().string();
@@ -685,6 +739,13 @@ RuntimePackagePlan create_runtime_package_plan(
         if (plan.exported_symbols.empty()) {
             plan.warnings.push_back("No PRG routine exports were discovered for the library output contract.");
         }
+    } else if (plan.output_kind == BuildOutputKind::fxp) {
+        const bool has_prg_asset = std::any_of(plan.assets.begin(), plan.assets.end(), [](const RuntimePackageAsset& asset) {
+            return is_prg_path(asset.source_path);
+        });
+        if (!has_prg_asset) {
+            plan.warnings.push_back("No PRG sources were discovered for the FXP token contract.");
+        }
     }
 
     plan.ok = true;
@@ -710,6 +771,7 @@ std::string build_runtime_manifest_text(
     stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
+    stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
@@ -748,9 +810,10 @@ std::string build_runtime_manifest_text(
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
     append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
     append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
-    append_feature_flag_line(stream, "runtime.host.native", !is_library_output_kind(plan.output_kind), "host_compatibility");
+    append_feature_flag_line(stream, "runtime.host.native", is_native_host_output_kind(plan.output_kind), "host_compatibility");
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
+    append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
     append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
     append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
     append_feature_flag_line(
@@ -830,7 +893,7 @@ RuntimeMaterializeResult materialize_runtime_package(
 
     RuntimePackagePlan materialized_plan = plan;
     std::string error;
-    if (!is_library_output_kind(plan.output_kind) &&
+    if (is_native_host_output_kind(plan.output_kind) &&
         !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
     }
@@ -869,6 +932,10 @@ RuntimeMaterializeResult materialize_runtime_package(
             if (!write_text_file(plan.fll_api_manifest_path, build_fll_api_manifest_source(materialized_plan), error)) {
                 return {.ok = false, .error = error};
             }
+        }
+    } else if (plan.output_kind == BuildOutputKind::fxp) {
+        if (!write_text_file(plan.fxp_token_manifest_path, build_fxp_token_manifest_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
         }
     } else {
         if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {

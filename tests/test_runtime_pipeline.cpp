@@ -615,6 +615,122 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_fxp_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+               "LOCAL nValue\n"
+               "nValue = 1\n"
+               "DO worker\n"
+               "RETURN\n"
+               "PROCEDURE worker\n"
+               "WAIT WINDOW 'hello'\n"
+               "RETURN\n"
+               "ENDPROC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "compiledemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "CompileDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "CompileDemo";
+    workspace.build_plan.output_path = (output_dir / "CompileDemo.fxp").string();
+    workspace.build_plan.output_kind = "fxp";
+    workspace.build_plan.build_target = "x64 Visual FoxPro tokenized program";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "fxp-output plan should be created");
+    expect(plan.output_kind == copperfin::runtime::BuildOutputKind::fxp,
+           "fxp-output plan should preserve FXP output kind");
+    expect(!plan.emit_dotnet_launcher,
+           "fxp-output plan should not route through .NET launcher emission");
+    expect(plan.launcher_mode == "foxpro_tokenized_contract",
+           "fxp-output plan should switch to the tokenized-contract packaging mode");
+    expect(plan.launcher_fallback == "fxp_binary_generation_pending",
+           "fxp-output plan should record the honest non-binary fallback state");
+    expect(fs::path(plan.launcher_output_path).filename() == "CompileDemo.fxp",
+           "fxp-output plan should preserve the requested output filename");
+    expect(fs::path(plan.fxp_token_manifest_path).filename() == "CompileDemo.fxp.tokens",
+           "fxp-output plan should derive a matching token-manifest filename");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "fxp-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.fxp_token_manifest_path),
+               "fxp-output package should emit a token manifest");
+        expect(!fs::exists(result.plan.launcher_output_path),
+               "fxp-output package should not fake an FXP binary");
+        expect(!fs::exists(result.plan.runtime_host_destination_path),
+               "fxp-output package should not bundle an executable runtime host into the FXP output slot");
+        expect(!result.plan.primary_output_materialized,
+               "fxp-output package should report that the primary FXP binary is not yet materialized");
+
+        const std::string token_manifest = read_text(result.plan.fxp_token_manifest_path);
+        expect(token_manifest.find("output_kind=fxp") != std::string::npos,
+               "fxp-output token manifest should declare the FXP output kind");
+        expect(token_manifest.find("token_contract=logical_statements") != std::string::npos,
+               "fxp-output token manifest should declare the token-contract mode");
+        expect(token_manifest.find("primary_output=CompileDemo.fxp") != std::string::npos,
+               "fxp-output token manifest should name the requested FXP file");
+        expect(token_manifest.find("program=main.prg") != std::string::npos,
+               "fxp-output token manifest should list the source program");
+        expect(token_manifest.find("statement=MAIN|") != std::string::npos,
+               "fxp-output token manifest should include main-scope statements");
+        expect(token_manifest.find("DO worker") != std::string::npos,
+               "fxp-output token manifest should preserve logical statement text");
+        expect(token_manifest.find("statement=worker|") != std::string::npos,
+               "fxp-output token manifest should include routine-scope statements");
+        expect(token_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
+               "fxp-output token manifest should preserve routine statement text");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("output_kind=fxp") != std::string::npos,
+               "fxp-output manifest should record FXP output kind");
+        expect(runtime_manifest.find("fxp_token_manifest_path=" + quote_manifest_value(result.plan.fxp_token_manifest_path)) != std::string::npos,
+               "fxp-output manifest should record the emitted token-manifest path");
+        expect(runtime_manifest.find("feature_flag=build.output.fxp_token_contract|true|build_output") != std::string::npos,
+               "fxp-output manifest should expose the FXP token-contract feature flag");
+        expect(debug_manifest.find("output_kind=fxp") != std::string::npos,
+               "fxp-output debug manifest should record FXP output kind");
+        expect(debug_manifest.find("launcher_mode=foxpro_tokenized_contract") != std::string::npos,
+               "fxp-output debug manifest should record the tokenized-contract mode");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1156,6 +1272,7 @@ int main() {
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
+    test_fxp_output_package_emits_token_manifest_from_prg_statements();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

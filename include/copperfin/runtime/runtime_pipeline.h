@@ -20,6 +20,7 @@ enum class BuildOutputKind {
     executable,
     dll,
     fll,
+    fxp,
     ocx,
     unknown
 };
@@ -65,6 +66,7 @@ struct RuntimePackagePlan {
     std::string launcher_output_path;
     std::string module_definition_path;
     std::string fll_api_manifest_path;
+    std::string fxp_token_manifest_path;
     std::string runtime_host_destination_path;
     std::string startup_item;
     std::string startup_source_path;
