@@ -18,6 +18,7 @@ internal static class Program
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
+        TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
 
         if (failures != 0)
         {
@@ -273,6 +274,36 @@ internal static class Program
             Expect(
                 string.Equals(description, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
                 "described cursor aliases should reuse the alias metadata description");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols()
+    {
+        var root = CreateProjectRoot("select_context_ranking");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "CREATE CURSOR curLocal (id I)" + Environment.NewLine +
+                "PROCEDURE curProc" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "SELECT ", "cur");
+            Expect(completions.Count >= 2, "select context should return both alias and procedure candidates for the shared prefix");
+            if (completions.Count >= 2)
+            {
+                Expect(completions[0].DisplayText == "curLocal" && completions[0].Kind == "alias",
+                    "select context should rank alias completions ahead of unrelated global procedure symbols");
+                Expect(completions[0].Description == "Known work-area alias from project source.",
+                    "select context should preserve the context-specific alias description instead of overwriting it with the global symbol entry");
+                Expect(completions.Any(entry => entry.DisplayText == "curProc" && entry.Kind == "symbol"),
+                    "select context should still keep global procedure symbols available after the context-ranked alias");
+            }
         }
         finally
         {

@@ -13,6 +13,7 @@ internal sealed class FoxProCompletionEntry
     public string InsertionText { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Kind { get; set; } = string.Empty;
+    public int Priority { get; set; }
 }
 
 internal sealed class FoxProParameterEntry
@@ -179,17 +180,17 @@ internal static class FoxProIntelliSenseCatalog
     {
         var prefix = tokenPrefix ?? string.Empty;
         var completions = new Dictionary<string, FoxProCompletionEntry>(StringComparer.OrdinalIgnoreCase);
-        AddEntries(completions, Keywords, "keyword");
-        AddEntries(completions, Functions, "function");
+        AddEntries(completions, Keywords, "keyword", priority: 200);
+        AddEntries(completions, Functions, "function", priority: 180);
 
         if (LooksLikeSetContext(linePrefix))
         {
-            AddEntries(completions, SetKeywords, "set");
+            AddEntries(completions, SetKeywords, "set", priority: 20);
         }
 
         if (LooksLikeMemberAccess(linePrefix))
         {
-            AddEntries(completions, GenericObjectMembers, "member");
+            AddEntries(completions, GenericObjectMembers, "member", priority: 20);
         }
 
         if (!string.IsNullOrWhiteSpace(filePath))
@@ -201,7 +202,8 @@ internal static class FoxProIntelliSenseCatalog
 
         return completions.Values
             .Where(entry => string.IsNullOrWhiteSpace(prefix) || entry.DisplayText.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(entry => RankKind(entry.Kind))
+            .OrderBy(entry => entry.Priority)
+            .ThenBy(entry => RankKind(entry.Kind))
             .ThenBy(entry => entry.DisplayText, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
@@ -363,49 +365,49 @@ internal static class FoxProIntelliSenseCatalog
         var upper = linePrefix.TrimStart().ToUpperInvariant();
         if (upper.StartsWith("DO FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Forms.Select(name => (name, "Project form asset.")), "asset");
+            AddEntries(completions, index.Forms.Select(name => (name, "Project form asset.")), "asset", priority: 0);
             return;
         }
 
         if (upper.StartsWith("REPORT FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Reports.Select(name => (name, "Project report asset.")), "asset");
+            AddEntries(completions, index.Reports.Select(name => (name, "Project report asset.")), "asset", priority: 0);
             return;
         }
 
         if (upper.StartsWith("LABEL FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Labels.Select(name => (name, "Project label asset.")), "asset");
+            AddEntries(completions, index.Labels.Select(name => (name, "Project label asset.")), "asset", priority: 0);
             return;
         }
 
         if (upper.StartsWith("USE ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset");
-            AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from project source.")), "alias");
+            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from project source.")), "alias", priority: 0);
             return;
         }
 
         if (upper.StartsWith("SELECT ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Aliases.Select(name => (name, "Known work-area alias from project source.")), "alias");
-            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset");
+            AddEntries(completions, index.Aliases.Select(name => (name, "Known work-area alias from project source.")), "alias", priority: 0);
+            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset", priority: 0);
             return;
         }
 
         if (upper.StartsWith("DO ", StringComparison.Ordinal) && !upper.StartsWith("DO FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function/program symbol in the active project.")), "symbol");
-            AddEntries(completions, index.Menus.Select(name => (name, "Project menu asset.")), "asset");
+            AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function/program symbol in the active project.")), "symbol", priority: 0);
+            AddEntries(completions, index.Menus.Select(name => (name, "Project menu asset.")), "asset", priority: 0);
         }
     }
 
     private static void AddSymbolEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index)
     {
-        AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function symbol in the active project.")), "symbol");
-        AddEntries(completions, index.Classes.Select(name => (name, "Class symbol in the active project.")), "class");
-        AddEntries(completions, index.Defines.Select(name => (name, "Preprocessor symbol in the active project.")), "define");
-        AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from USE ... ALIAS statements.")), "alias");
+        AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function symbol in the active project.")), "symbol", priority: 100);
+        AddEntries(completions, index.Classes.Select(name => (name, "Class symbol in the active project.")), "class", priority: 100);
+        AddEntries(completions, index.Defines.Select(name => (name, "Preprocessor symbol in the active project.")), "define", priority: 100);
+        AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from USE ... ALIAS statements.")), "alias", priority: 100);
     }
 
     private static bool LooksLikeSetContext(string linePrefix)
@@ -421,7 +423,8 @@ internal static class FoxProIntelliSenseCatalog
     private static void AddEntries(
         IDictionary<string, FoxProCompletionEntry> completions,
         IEnumerable<(string Name, string Description)> source,
-        string kind)
+        string kind,
+        int priority)
     {
         foreach (var item in source)
         {
@@ -430,13 +433,21 @@ internal static class FoxProIntelliSenseCatalog
                 continue;
             }
 
-            completions[item.Name] = new FoxProCompletionEntry
+            var candidate = new FoxProCompletionEntry
             {
                 DisplayText = item.Name,
                 InsertionText = item.Name,
                 Description = item.Description,
-                Kind = kind
+                Kind = kind,
+                Priority = priority
             };
+
+            if (completions.TryGetValue(item.Name, out var existing) && existing.Priority <= candidate.Priority)
+            {
+                continue;
+            }
+
+            completions[item.Name] = candidate;
         }
     }
 

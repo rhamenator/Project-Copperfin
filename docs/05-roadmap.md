@@ -59,7 +59,7 @@ Goal:
 Current state:
 
 - baseline shipped
-- active-open follow-on queue exists (`#183`; `#162`-`#182` shipped)
+- current prompt-sized child queues are closed on this branch (`#162`-`#177` shipped for build/debug; `#178`-`#183` shipped for language service)
 
 ## Phase E: Designers And IDE Parity
 
