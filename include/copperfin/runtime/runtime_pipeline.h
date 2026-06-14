@@ -89,6 +89,7 @@ struct RuntimePackagePlan {
     std::string launcher_fallback;
     std::vector<RuntimePackageAsset> assets;
     std::vector<std::string> exported_symbols;
+    std::vector<RuntimeArtifactDigest> compiler_contract_digests;
     std::vector<RuntimeArtifactDigest> extension_payload_digests;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;

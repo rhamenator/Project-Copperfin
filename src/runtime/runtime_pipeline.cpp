@@ -125,6 +125,35 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
     return true;
 }
 
+bool append_runtime_artifact_digest(
+    std::vector<RuntimeArtifactDigest>& digests,
+    const std::string& path,
+    std::string& error) {
+    if (trim_copy(path).empty() || !std::filesystem::exists(path)) {
+        return true;
+    }
+
+    const auto digest = security::sha256_hex_for_file(path);
+    if (!digest.ok) {
+        error = digest.error;
+        return false;
+    }
+
+    const auto existing = std::find_if(digests.begin(), digests.end(), [&](const RuntimeArtifactDigest& entry) {
+        return entry.path == path;
+    });
+    if (existing != digests.end()) {
+        existing->sha256 = digest.hex_digest;
+        return true;
+    }
+
+    digests.push_back({
+        .path = path,
+        .sha256 = digest.hex_digest
+    });
+    return true;
+}
+
 bool is_library_output_kind(const BuildOutputKind output_kind) {
     return output_kind == BuildOutputKind::dll ||
         output_kind == BuildOutputKind::fll ||
@@ -1552,6 +1581,12 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.sha256) << "\n";
     }
 
+    for (const auto& digest : plan.compiler_contract_digests) {
+        stream << "compiler_contract="
+               << quote_manifest_value(digest.path) << "|"
+               << quote_manifest_value(digest.sha256) << "\n";
+    }
+
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
@@ -1640,8 +1675,14 @@ RuntimeMaterializeResult materialize_runtime_package(
         if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
         }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.module_definition_path, error)) {
+            return {.ok = false, .error = error};
+        }
         if (plan.output_kind == BuildOutputKind::fll) {
             if (!write_text_file(plan.fll_api_manifest_path, build_fll_api_manifest_source(materialized_plan), error)) {
+                return {.ok = false, .error = error};
+            }
+            if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.fll_api_manifest_path, error)) {
                 return {.ok = false, .error = error};
             }
         }
@@ -1649,8 +1690,14 @@ RuntimeMaterializeResult materialize_runtime_package(
         if (!write_text_file(plan.fxp_token_manifest_path, build_fxp_token_manifest_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
         }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.fxp_token_manifest_path, error)) {
+            return {.ok = false, .error = error};
+        }
     } else if (plan.output_kind == BuildOutputKind::app) {
         if (!write_text_file(plan.app_archive_manifest_path, build_app_archive_manifest_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.app_archive_manifest_path, error)) {
             return {.ok = false, .error = error};
         }
     } else {
@@ -1697,11 +1744,21 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (!write_text_file(plan.ast_manifest_path, build_ast_manifest_source(materialized_plan), error)) {
         return {.ok = false, .error = error};
     }
+    if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.ast_manifest_path, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!write_text_file(plan.ir_manifest_path, build_ir_manifest_source(materialized_plan), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.ir_manifest_path, error)) {
         return {.ok = false, .error = error};
     }
     if (plan.requested_dotnet_launcher &&
         !write_text_file(plan.transpiled_csharp_path, build_csharp_transpilation_source(materialized_plan), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (plan.requested_dotnet_launcher &&
+        !append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.transpiled_csharp_path, error)) {
         return {.ok = false, .error = error};
     }
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {

@@ -1365,6 +1365,87 @@ void test_runtime_package_emits_csharp_transpilation_for_class_library_objects()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_manifest_records_generated_compiler_contract_digests() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_compiler_contract_digests";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+               "LOCAL nValue\n"
+               "nValue = 1\n"
+               "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "contractdigests.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ContractDigests";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "ContractDigests";
+    workspace.build_plan.output_path = (output_dir / "ContractDigests.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "compiler-contract-digest plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "compiler-contract-digest package should materialize");
+    if (result.ok) {
+        const auto has_digest = [&](const std::string& path) {
+            return std::find_if(
+                       result.plan.compiler_contract_digests.begin(),
+                       result.plan.compiler_contract_digests.end(),
+                       [&](const copperfin::runtime::RuntimeArtifactDigest& digest) {
+                           return digest.path == path && !digest.sha256.empty();
+                       }) != result.plan.compiler_contract_digests.end();
+        };
+
+        expect(has_digest(result.plan.ast_manifest_path),
+               "compiler-contract digests should include the AST artifact");
+        expect(has_digest(result.plan.ir_manifest_path),
+               "compiler-contract digests should include the IR artifact");
+        expect(has_digest(result.plan.transpiled_csharp_path),
+               "compiler-contract digests should include the transpiled C# artifact");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        for (const auto& digest : result.plan.compiler_contract_digests) {
+            expect(runtime_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) != std::string::npos,
+                   "runtime manifest should record each generated compiler-contract digest");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1912,6 +1993,7 @@ int main() {
     test_runtime_package_emits_ir_manifest_with_instruction_mapping();
     test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code();
     test_runtime_package_emits_csharp_transpilation_for_class_library_objects();
+    test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
