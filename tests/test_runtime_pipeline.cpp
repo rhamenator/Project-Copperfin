@@ -949,6 +949,16 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             }
             expect(cmake_built,
                    "library-output wrapper CMake metadata should configure and build under CMake");
+            if (cmake_built && native_symbol_dump_is_available()) {
+                std::string symbol_error;
+                const std::set<std::string> exported_symbols = read_native_exported_symbols(cmake_output_path, symbol_error);
+                const std::set<std::string> declared_symbols = read_module_definition_exports(result.plan.module_definition_path);
+                if (exported_symbols.empty() && !symbol_error.empty()) {
+                    std::cerr << "FAIL: " << symbol_error << "\n";
+                }
+                expect(exported_symbols == declared_symbols,
+                       "library-output generated-CMake artifact exports should stay synchronized with the module-definition contract");
+            }
         }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -1139,6 +1149,19 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             }
             expect(cmake_built,
                    "fll-output wrapper CMake metadata should configure and build under CMake");
+            if (cmake_built && native_symbol_dump_is_available()) {
+                std::string symbol_error;
+                const std::set<std::string> exported_symbols = read_native_exported_symbols(cmake_output_path, symbol_error);
+                const std::set<std::string> declared_module_symbols = read_module_definition_exports(result.plan.module_definition_path);
+                const std::set<std::string> declared_api_symbols = read_fll_api_declared_symbols(result.plan.fll_api_manifest_path);
+                if (exported_symbols.empty() && !symbol_error.empty()) {
+                    std::cerr << "FAIL: " << symbol_error << "\n";
+                }
+                expect(exported_symbols == declared_module_symbols,
+                       "fll-output generated-CMake artifact exports should stay synchronized with the module-definition contract");
+                expect(exported_symbols == declared_api_symbols,
+                       "fll-output generated-CMake artifact exports should stay synchronized with the API manifest contract");
+            }
         }
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);

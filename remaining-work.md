@@ -3,6 +3,7 @@
 This file is the working guide for the remaining Copperfin implementation effort.
 
 - 2026-06-14: D1/#422 generated wrapper CMake build validation is now shipped. `test_runtime_pipeline` now configures and builds the emitted wrapper-local `CMakeLists.txt` through `cmake -S` / `cmake --build` and proves the generated wrapper project produces the expected shared-library artifact under host CMake/toolchain support, so the build pipeline now validates the emitted wrapper build metadata itself rather than only compiling the wrapper source directly.
+- 2026-06-14: D1/#423 generated-CMake export-contract validation is now shipped. `test_runtime_pipeline` now inspects the shared-library artifacts produced through the emitted wrapper-local `CMakeLists.txt` and proves those generated-CMake DLL/FLL smoke artifacts export exactly the symbol sets declared by the generated `.def` / `.fll.api` contracts, closing the gap between wrapper-source validation and wrapper-project validation without overstating full FoxPro/VFP loader compatibility.
 - 2026-06-14: D1/#421 end-to-end wrapper export-contract synchronization is now shipped. FLL contracts now explicitly declare `FoxInfo` in both the generated `.def` and `.fll.api` outputs, and `test_runtime_pipeline` now proves the compiled DLL/FLL wrapper smoke artifacts export exactly the same symbol sets declared by the generated contract files, tightening the library-output pipeline around a single consistent export surface without overstating full FoxPro/VFP loader compatibility.
 - 2026-06-14: D1/#420 compiled wrapper export-surface validation is now shipped. `test_runtime_pipeline` now inspects host-built DLL/FLL wrapper smoke artifacts with `nm -D --defined-only` and proves the compiled stubs actually export the expected entrypoints (`InitLibrary`, `AddNumbers`, and `FoxInfo` for FLL), so the build pipeline now validates symbol-surface fidelity in addition to scaffold emission and compileability without overstating full FoxPro/VFP loader compatibility.
 - 2026-06-14: D1/#419 native wrapper compile-smoke validation is now shipped. `test_runtime_pipeline` now detects a host C++ toolchain and proves the generated DLL/FLL wrapper scaffolds compile as shared-library stubs, so the build pipeline now validates the emitted native wrapper sources are buildable without overstating them as FoxPro/VFP-compatible runtime bridges.
@@ -254,7 +255,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Debugger completion: #20
 - Build/run/deploy workflow tightening: #21 (prompt-sized slice queue currently closed on this branch; #162-#177 shipped)
 - AST/IR outputs: #42
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (`#418` shipped the first honest native-wrapper scaffold under `#40`; no prompt-sized child queue is currently open on this branch, and `#162`-`#177` shipped earlier in the build/debug lane)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (`#418`, `#419`, `#420`, `#421`, `#422`, and `#423` have now tightened the honest native-wrapper scaffold/build/export-validation chain under `#40`; no prompt-sized child queue is currently open on this branch, and `#162`-`#177` shipped earlier in the build/debug lane)
 
 ### Designers And IDE Parity
 
