@@ -2481,6 +2481,31 @@ std::string build_debug_manifest_text(
             .untrusted_input = true,
             .security_sensitive = true});
     stream << "dotnet_gateway_unsafe_reflection=" << quote_manifest_value(denied_decision.execution_path + ":" + denied_decision.reason) << "\n";
+    stream << "language_integration_count=" << extensibility_profile.languages.size() << "\n";
+    for (const auto& language : extensibility_profile.languages) {
+        stream << "language_integration="
+               << quote_manifest_value(language.id) << "|"
+               << quote_manifest_value(language.title) << "|"
+               << quote_manifest_value(language.integration_mode) << "|"
+               << quote_manifest_value(language.trust_boundary) << "|"
+               << quote_manifest_value(language.output_story) << "|"
+               << (language.enabled_by_default ? "true" : "false") << "\n";
+    }
+    stream << "ai_feature_count=" << extensibility_profile.ai_features.size() << "\n";
+    for (const auto& feature : extensibility_profile.ai_features) {
+        stream << "ai_feature="
+               << quote_manifest_value(feature.id) << "|"
+               << quote_manifest_value(feature.title) << "|"
+               << quote_manifest_value(feature.description) << "|"
+               << quote_manifest_value(feature.trust_boundary) << "|"
+               << (feature.enabled_by_default ? "true" : "false") << "\n";
+    }
+    stream << "extensibility_guardrail_count=" << extensibility_profile.guardrails.size() << "\n";
+    for (const auto& guardrail : extensibility_profile.guardrails) {
+        stream << "extensibility_guardrail=" << quote_manifest_value(guardrail) << "\n";
+    }
+    stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
+    stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");

@@ -1381,6 +1381,25 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should mirror the .NET denylist items");
         expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
                "library-output debug manifest should mirror the .NET parity entries");
+        const std::vector<std::string> extensibility_summary_keys{
+            "language_integration_count",
+            "ai_feature_count",
+            "extensibility_guardrail_count",
+            "language_integrations",
+            "ai_features"};
+        for (const auto& key : extensibility_summary_keys) {
+            const std::string value = manifest_value_for_key(runtime_manifest, key);
+            expect(!value.empty(),
+                   "library-output runtime manifest should provide " + key + " for debug-manifest mirroring");
+            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
+                   "library-output debug manifest should mirror " + key);
+        }
+        expect(lines_with_prefix(debug_manifest, "language_integration=") == lines_with_prefix(runtime_manifest, "language_integration="),
+               "library-output debug manifest should mirror language integration entries");
+        expect(lines_with_prefix(debug_manifest, "ai_feature=") == lines_with_prefix(runtime_manifest, "ai_feature="),
+               "library-output debug manifest should mirror AI feature entries");
+        expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
+               "library-output debug manifest should mirror extensibility guardrails");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1480,6 +1499,19 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
                        "library-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
+                for (const auto& key : extensibility_summary_keys) {
+                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
+                    expect(!value.empty(),
+                           "library-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
+                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                           "library-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
+                }
+                expect(lines_with_prefix(built_debug_manifest, "language_integration=") == lines_with_prefix(built_runtime_manifest, "language_integration="),
+                       "library-output runtime pipeline should preserve language integration entries in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "ai_feature=") == lines_with_prefix(built_runtime_manifest, "ai_feature="),
+                       "library-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
+                       "library-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1946,6 +1978,25 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should mirror the .NET denylist items");
         expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
                "fll-output debug manifest should mirror the .NET parity entries");
+        const std::vector<std::string> fll_extensibility_summary_keys{
+            "language_integration_count",
+            "ai_feature_count",
+            "extensibility_guardrail_count",
+            "language_integrations",
+            "ai_features"};
+        for (const auto& key : fll_extensibility_summary_keys) {
+            const std::string value = manifest_value_for_key(runtime_manifest, key);
+            expect(!value.empty(),
+                   "fll-output runtime manifest should provide " + key + " for debug-manifest mirroring");
+            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
+                   "fll-output debug manifest should mirror " + key);
+        }
+        expect(lines_with_prefix(debug_manifest, "language_integration=") == lines_with_prefix(runtime_manifest, "language_integration="),
+               "fll-output debug manifest should mirror language integration entries");
+        expect(lines_with_prefix(debug_manifest, "ai_feature=") == lines_with_prefix(runtime_manifest, "ai_feature="),
+               "fll-output debug manifest should mirror AI feature entries");
+        expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
+               "fll-output debug manifest should mirror extensibility guardrails");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -2073,6 +2124,19 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
                        "fll-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
+                for (const auto& key : fll_extensibility_summary_keys) {
+                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
+                    expect(!value.empty(),
+                           "fll-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
+                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                           "fll-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
+                }
+                expect(lines_with_prefix(built_debug_manifest, "language_integration=") == lines_with_prefix(built_runtime_manifest, "language_integration="),
+                       "fll-output runtime pipeline should preserve language integration entries in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "ai_feature=") == lines_with_prefix(built_runtime_manifest, "ai_feature="),
+                       "fll-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
+                       "fll-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,

@@ -600,6 +600,31 @@ void run_library_build_host_smoke(
         const std::vector<std::string> debug_parity_items = lines_with_prefix(debug_manifest_text, "dotnet_parity_matrix_item=");
         expect(debug_parity_items == runtime_parity_items,
                "build host debug manifest should mirror the .NET parity entries for " + extension + " outputs");
+        const std::vector<std::string> extensibility_summary_keys{
+            "language_integration_count",
+            "ai_feature_count",
+            "extensibility_guardrail_count",
+            "language_integrations",
+            "ai_features"};
+        for (const auto& key : extensibility_summary_keys) {
+            const std::string value = manifest_value_for_key(manifest_text, key);
+            expect(!value.empty(),
+                   "build host runtime manifest should provide " + key + " for debug-manifest mirroring on " + extension + " outputs");
+            expect(debug_manifest_text.find(key + "=" + value) != std::string::npos,
+                   "build host debug manifest should mirror " + key + " for " + extension + " outputs");
+        }
+        const std::vector<std::string> runtime_language_integrations = lines_with_prefix(manifest_text, "language_integration=");
+        const std::vector<std::string> debug_language_integrations = lines_with_prefix(debug_manifest_text, "language_integration=");
+        expect(debug_language_integrations == runtime_language_integrations,
+               "build host debug manifest should mirror language integration entries for " + extension + " outputs");
+        const std::vector<std::string> runtime_ai_features = lines_with_prefix(manifest_text, "ai_feature=");
+        const std::vector<std::string> debug_ai_features = lines_with_prefix(debug_manifest_text, "ai_feature=");
+        expect(debug_ai_features == runtime_ai_features,
+               "build host debug manifest should mirror AI feature entries for " + extension + " outputs");
+        const std::vector<std::string> runtime_guardrails = lines_with_prefix(manifest_text, "extensibility_guardrail=");
+        const std::vector<std::string> debug_guardrails = lines_with_prefix(debug_manifest_text, "extensibility_guardrail=");
+        expect(debug_guardrails == runtime_guardrails,
+               "build host debug manifest should mirror extensibility guardrails for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
