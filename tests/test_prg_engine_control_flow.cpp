@@ -4147,6 +4147,44 @@ void test_doevents_in_responsive_loop() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sleep_command_emits_runtime_sleep_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_sleep_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sleep_test.prg";
+    write_text(
+        main_path,
+        "nDelay = 1\n"
+        "SLEEP nDelay\n"
+        "nAfter = 42\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SLEEP test should complete");
+
+    const auto sleep_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.sleep"; });
+    expect(sleep_event != state.events.end(), "SLEEP should emit a runtime.sleep event");
+    if (sleep_event != state.events.end()) {
+        expect(sleep_event->detail.find("duration=1ms") != std::string::npos,
+            "SLEEP event should report the resolved duration");
+    }
+
+    const auto after_it = state.globals.find("nafter");
+    expect(after_it != state.globals.end(), "SLEEP script should continue after the delay");
+    if (after_it != state.globals.end()) {
+        expect(after_it->second.number_value == 42.0, "SLEEP should not disturb later statements");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_on_error_resume_restores_fault_session_and_cursor_state() {
     // #150: RESUME should restore the captured fault-side data session/work area
     // even when the handler changes its own session and cursor selection.
@@ -5141,6 +5179,7 @@ int main() {
     test_quit_closes_open_database_and_runtime_handles();
     test_doevents_pumps_event_queue();
     test_doevents_in_responsive_loop();
+    test_sleep_command_emits_runtime_sleep_event();
     test_on_error_resume_restores_fault_session_and_cursor_state();
     test_retry_reexecutes_faulting_statement();
     test_resume_next_continues_after_fault();

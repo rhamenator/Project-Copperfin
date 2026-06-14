@@ -902,6 +902,13 @@ Program parse_program(const std::string& path) {
                     statement.names.push_back(target);
                 }
             }
+        } else if (starts_with_insensitive(line, "SLEEP") || upper == "SLEEP") {
+            statement.kind = StatementKind::sleep_command;
+            std::string body = upper == "SLEEP" ? std::string{} : trim_copy(line.substr(5U));
+            if (!body.empty() && body.front() == '(' && body.back() == ')' && body.size() >= 2U) {
+                body = trim_copy(body.substr(1U, body.size() - 2U));
+            }
+            statement.expression = body;
         } else if (starts_with_insensitive(line, "KEYBOARD ") || upper == "KEYBOARD") {
             statement.kind = StatementKind::keyboard_command;
             const std::string body = upper == "KEYBOARD" ? std::string{} : trim_copy(line.substr(9U));

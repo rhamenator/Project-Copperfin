@@ -6471,6 +6471,41 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::sleep_command:
+            {
+                std::size_t sleep_duration_ms = scheduler_yield_sleep_ms;
+                if (!trim_copy(statement.expression).empty())
+                {
+                    const double evaluated_delay = value_as_number(evaluate_expression(statement.expression, frame));
+                    if (!std::isfinite(evaluated_delay) || evaluated_delay < 0.0)
+                    {
+                        last_error_message = "SLEEP: invalid duration";
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    sleep_duration_ms = static_cast<std::size_t>(std::llround(evaluated_delay));
+                }
+
+                if (sleep_duration_ms == 0U)
+                {
+                    std::this_thread::yield();
+                }
+                else
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_duration_ms));
+                }
+
+                std::string detail = "duration=" + std::to_string(sleep_duration_ms) + "ms";
+                if (!trim_copy(statement.expression).empty())
+                {
+                    detail += " expression=" + trim_copy(statement.expression);
+                }
+                events.push_back({.category = "runtime.sleep",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::keyboard_command:
             {
                 std::string detail;

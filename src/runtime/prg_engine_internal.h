@@ -117,6 +117,7 @@ enum class StatementKind {
     getdir_command,
     inputbox_command,
     wait_command,
+    sleep_command,
     keyboard_command,
     push_key_command,
     pop_key_command,
