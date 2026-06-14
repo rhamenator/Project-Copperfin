@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #177; #162-#176 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #178-#179; #162-#177 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #177; #162-#176 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #178-#179; #162-#177 shipped)
 
 ### Designers And IDE Parity
 
@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #22-#26: #177
+- active-open native slice queues under #27-#29: #178-#179
 
 ### Future Enhancements
 
@@ -710,6 +710,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-13: F1/#174 Visual Studio pane/tool-window parity shipped in `product_subsystems` + `test_product_subsystems`. The subsystem registry now explicitly retains the planned toolbox/task-pane entry alongside the implemented shell and designer surfaces.
 - 2026-06-13: F1/#175 editor/designer integration parity shipped in `studio_host` + `test_studio_host`. Launch parsing and context-aware open-document handling now preserve the Visual Studio host/editor contract through the studio boundary.
 - 2026-06-13: F2/#176 standalone workspace and project-shell parity shipped in `project_workspace` + `test_project_workspace`. The standalone shell now keeps workspace grouping, startup selection, and excluded-asset fallback behavior coherent through the project-shell contract.
+- 2026-06-13: F2/#177 standalone build/debug workflow parity shipped in `runtime_pipeline` + `test_runtime_pipeline`. Standalone runtime packaging now preserves launcher emission, manifest forwarding, and debug-plan derivation through the build/debug workflow contract.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
