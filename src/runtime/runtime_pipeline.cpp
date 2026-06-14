@@ -2399,6 +2399,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
     stream << "ast_manifest_path=" << quote_manifest_value(plan.ast_manifest_path) << "\n";
     stream << "ir_manifest_path=" << quote_manifest_value(plan.ir_manifest_path) << "\n";
+    stream << "transpiled_csharp_path=" << quote_manifest_value(plan.transpiled_csharp_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.debug_plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.debug_plan.startup_source_path) << "\n";

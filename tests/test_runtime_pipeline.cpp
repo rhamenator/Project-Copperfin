@@ -1243,6 +1243,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the AST manifest path");
         expect(runtime_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
                "library-output manifest should record the IR manifest path");
+        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "library-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "library-output manifest should record the debug build configuration");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
@@ -1308,6 +1310,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the AST manifest path");
         expect(debug_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
                "library-output debug manifest should record the IR manifest path");
+        expect(debug_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "library-output debug manifest should record the transpiled C# path");
         expect(debug_manifest.find("configuration=debug") != std::string::npos,
                "library-output debug manifest should record the debug build configuration");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -1378,6 +1382,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the AST manifest path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("ir_manifest_path=" + quote_manifest_value(build_result.plan.ir_manifest_path)) != std::string::npos,
                        "library-output runtime pipeline should preserve the IR manifest path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("transpiled_csharp_path=" + quote_manifest_value(build_result.plan.transpiled_csharp_path)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the transpiled C# path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
                        "library-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
@@ -1771,6 +1777,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the AST manifest path");
         expect(runtime_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
                "fll-output manifest should record the IR manifest path");
+        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "fll-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "fll-output manifest should record the debug build configuration");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
@@ -1788,6 +1796,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the AST manifest path");
         expect(debug_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
                "fll-output debug manifest should record the IR manifest path");
+        expect(debug_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "fll-output debug manifest should record the transpiled C# path");
         expect(debug_manifest.find("configuration=debug") != std::string::npos,
                "fll-output debug manifest should record the debug build configuration");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -1886,6 +1896,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the AST manifest path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("ir_manifest_path=" + quote_manifest_value(build_result.plan.ir_manifest_path)) != std::string::npos,
                        "fll-output runtime pipeline should preserve the IR manifest path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("transpiled_csharp_path=" + quote_manifest_value(build_result.plan.transpiled_csharp_path)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the transpiled C# path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
                        "fll-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
