@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -53,6 +54,19 @@ std::string read_text(const std::filesystem::path& path) {
     std::ostringstream stream;
     stream << input.rdbuf();
     return stream.str();
+}
+
+std::string trim_copy(std::string value) {
+    const auto is_space = [](unsigned char ch) {
+        return std::isspace(ch) != 0;
+    };
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), [&](unsigned char ch) {
+        return !is_space(ch);
+    }));
+    while (!value.empty() && is_space(static_cast<unsigned char>(value.back()))) {
+        value.pop_back();
+    }
+    return value;
 }
 
 std::string quote_manifest_value(const std::string& value) {
@@ -238,6 +252,47 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     }
     return symbols;
 #endif
+}
+
+std::set<std::string> read_module_definition_exports(const std::filesystem::path& path) {
+    std::set<std::string> exports;
+    std::istringstream input(read_text(path));
+    std::string line;
+    bool in_exports = false;
+    while (std::getline(input, line)) {
+        line = trim_copy(std::move(line));
+        if (line.empty()) {
+            continue;
+        }
+        if (line == "EXPORTS") {
+            in_exports = true;
+            continue;
+        }
+        if (!in_exports) {
+            continue;
+        }
+        const std::size_t split = line.find_first_of(" \t");
+        exports.insert(split == std::string::npos ? line : line.substr(0U, split));
+    }
+    return exports;
+}
+
+std::set<std::string> read_fll_api_declared_symbols(const std::filesystem::path& path) {
+    std::set<std::string> symbols;
+    std::istringstream input(read_text(path));
+    std::string line;
+    while (std::getline(input, line)) {
+        line = trim_copy(std::move(line));
+        if (line.rfind("function=", 0U) == 0U) {
+            symbols.insert(line.substr(9U));
+            continue;
+        }
+        if (line.rfind("loader_entrypoint=", 0U) == 0U) {
+            symbols.insert(line.substr(18U));
+            continue;
+        }
+    }
+    return symbols;
 }
 
 bool compile_csharp_artifact(const std::filesystem::path& source_path, std::string& error) {
@@ -800,6 +855,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             if (compiled && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);
+                const std::set<std::string> declared_symbols = read_module_definition_exports(result.plan.module_definition_path);
                 if (exported_symbols.empty() && !symbol_error.empty()) {
                     std::cerr << "FAIL: " << symbol_error << "\n";
                 }
@@ -807,6 +863,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output compiled wrapper should export InitLibrary");
                 expect(exported_symbols.contains("AddNumbers"),
                        "library-output compiled wrapper should export AddNumbers");
+                expect(exported_symbols == declared_symbols,
+                       "library-output compiled wrapper exports should stay synchronized with the module-definition contract");
             }
         }
 
@@ -968,6 +1026,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             if (compiled && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);
+                const std::set<std::string> declared_module_symbols = read_module_definition_exports(result.plan.module_definition_path);
+                const std::set<std::string> declared_api_symbols = read_fll_api_declared_symbols(result.plan.fll_api_manifest_path);
                 if (exported_symbols.empty() && !symbol_error.empty()) {
                     std::cerr << "FAIL: " << symbol_error << "\n";
                 }
@@ -977,6 +1037,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output compiled wrapper should export AddNumbers");
                 expect(exported_symbols.contains("FoxInfo"),
                        "fll-output compiled wrapper should export FoxInfo");
+                expect(exported_symbols == declared_module_symbols,
+                       "fll-output compiled wrapper exports should stay synchronized with the module-definition contract");
+                expect(exported_symbols == declared_api_symbols,
+                       "fll-output compiled wrapper exports should stay synchronized with the API manifest contract");
             }
         }
 
@@ -991,6 +1055,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should declare the release command");
         expect(api_manifest.find("additive_supported=true") != std::string::npos,
                "fll-output API manifest should declare additive loading support");
+        expect(api_manifest.find("loader_entrypoint=FoxInfo") != std::string::npos,
+               "fll-output API manifest should declare the loader entrypoint");
         expect(api_manifest.find("function=InitLibrary") != std::string::npos,
                "fll-output API manifest should list discovered procedure names");
         expect(api_manifest.find("function=AddNumbers") != std::string::npos,

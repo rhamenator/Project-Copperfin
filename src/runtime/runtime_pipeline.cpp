@@ -274,6 +274,9 @@ std::string build_module_definition_source(const RuntimePackagePlan& plan) {
     for (const auto& symbol : plan.exported_symbols) {
         stream << "    " << symbol << "\n";
     }
+    if (plan.output_kind == BuildOutputKind::fll) {
+        stream << "    FoxInfo\n";
+    }
     return stream.str();
 }
 
@@ -331,6 +334,7 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     stream << "registration_command=SET LIBRARY TO\n";
     stream << "release_command=RELEASE LIBRARY\n";
     stream << "additive_supported=true\n";
+    stream << "loader_entrypoint=FoxInfo\n";
     for (const auto& symbol : plan.exported_symbols) {
         stream << "function=" << quote_manifest_value(symbol) << "\n";
     }
