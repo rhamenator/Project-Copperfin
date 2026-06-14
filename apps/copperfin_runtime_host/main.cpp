@@ -130,14 +130,88 @@ std::vector<std::string> split_pipe(const std::string& value) {
     return result;
 }
 
-bool verify_manifest_hashes(const ManifestMap& manifest, std::string& error) {
+bool relative_path_escapes_root(const std::filesystem::path& relative_path) {
+    for (const auto& part : relative_path) {
+        if (part == "..") {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::optional<std::filesystem::path> bind_packaged_path(
+    const std::string& manifest_value,
+    const std::string& recorded_package_root,
+    const std::filesystem::path& manifest_directory) {
+    if (trim_copy(manifest_value).empty()) {
+        return std::nullopt;
+    }
+
+    const std::filesystem::path recorded_path(manifest_value);
+    if (std::filesystem::exists(recorded_path)) {
+        return recorded_path.lexically_normal();
+    }
+
+    if (recorded_path.is_relative()) {
+        const std::filesystem::path relative_candidate =
+            (manifest_directory / recorded_path).lexically_normal();
+        if (std::filesystem::exists(relative_candidate)) {
+            return relative_candidate;
+        }
+    }
+
+    if (!trim_copy(recorded_package_root).empty()) {
+        const std::filesystem::path package_root(recorded_package_root);
+        const std::filesystem::path relative =
+            recorded_path.lexically_relative(package_root);
+        if (!relative.empty() &&
+            relative != recorded_path &&
+            !relative_path_escapes_root(relative)) {
+            const std::filesystem::path rebound =
+                (manifest_directory / relative).lexically_normal();
+            if (std::filesystem::exists(rebound)) {
+                return rebound;
+            }
+        }
+    }
+
+    const std::filesystem::path filename_candidate =
+        (manifest_directory / recorded_path.filename()).lexically_normal();
+    if (std::filesystem::exists(filename_candidate)) {
+        return filename_candidate;
+    }
+
+    return std::nullopt;
+}
+
+std::string resolve_manifest_bound_directory(
+    const ManifestMap& manifest,
+    const std::string& key,
+    const std::filesystem::path& manifest_directory,
+    const std::filesystem::path& fallback_relative_path) {
+    const std::string recorded_package_root = first_value(manifest, "package_root");
+    if (const auto bound = bind_packaged_path(first_value(manifest, key), recorded_package_root, manifest_directory)) {
+        return bound->string();
+    }
+
+    const std::filesystem::path fallback_path =
+        (manifest_directory / fallback_relative_path).lexically_normal();
+    return fallback_path.string();
+}
+
+bool verify_manifest_hashes(
+    const ManifestMap& manifest,
+    const std::filesystem::path& manifest_directory,
+    std::string& error) {
+    const std::string recorded_package_root = first_value(manifest, "package_root");
     const std::string expected_runtime_host_hash = first_value(manifest, "runtime_host_sha256");
     if (expected_runtime_host_hash.empty()) {
         error = "security-enabled manifest is missing runtime_host_sha256.";
         return false;
     }
 
-    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file("copperfin_runtime_host.exe");
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(
+        (manifest_directory / "copperfin_runtime_host.exe").string());
     if (!runtime_host_hash.ok) {
         error = runtime_host_hash.error;
         return false;
@@ -155,15 +229,19 @@ bool verify_manifest_hashes(const ManifestMap& manifest, std::string& error) {
             return false;
         }
 
-        const std::filesystem::path payload_path(parts[0]);
-        const std::filesystem::path file_name = payload_path.filename();
-        const auto digest = copperfin::security::sha256_hex_for_file(file_name.string());
+        const auto bound_payload_path = bind_packaged_path(parts[0], recorded_package_root, manifest_directory);
+        if (!bound_payload_path.has_value()) {
+            error = "extension payload is missing from the package: " + std::filesystem::path(parts[0]).filename().string();
+            return false;
+        }
+
+        const auto digest = copperfin::security::sha256_hex_for_file(bound_payload_path->string());
         if (!digest.ok) {
             error = digest.error;
             return false;
         }
         if (lowercase_copy(digest.hex_digest) != lowercase_copy(parts[1])) {
-            error = "extension payload hash mismatch: " + file_name.string();
+            error = "extension payload hash mismatch: " + bound_payload_path->filename().string();
             return false;
         }
     }
@@ -324,26 +402,54 @@ std::optional<std::string> resolve_action_routine_name(
     return found->routine_name;
 }
 
-std::string resolve_startup_source(const ManifestMap& manifest) {
+std::string resolve_effective_working_directory(
+    const ManifestMap& manifest,
+    const std::filesystem::path& manifest_directory) {
+    return resolve_manifest_bound_directory(
+        manifest,
+        "working_directory",
+        manifest_directory,
+        "content");
+}
+
+std::string resolve_effective_audit_log_path(
+    const ManifestMap& manifest,
+    const std::filesystem::path& manifest_directory) {
+    return resolve_manifest_bound_directory(
+        manifest,
+        "audit_log_path",
+        manifest_directory,
+        "security_audit.log");
+}
+
+std::string resolve_startup_source(
+    const ManifestMap& manifest,
+    const std::filesystem::path& manifest_directory) {
+    const std::string recorded_package_root = first_value(manifest, "package_root");
     const std::string startup_source = first_value(manifest, "startup_source");
-    if (!startup_source.empty() && std::filesystem::exists(startup_source)) {
-        return std::filesystem::path(startup_source).lexically_normal().string();
+    if (const auto bound_startup = bind_packaged_path(startup_source, recorded_package_root, manifest_directory)) {
+        return bound_startup->string();
     }
 
     const std::string startup_item = first_value(manifest, "startup_item");
-    const std::string working_directory = first_value(manifest, "working_directory");
-    if (!startup_item.empty() && !working_directory.empty()) {
+    const std::string content_root = resolve_manifest_bound_directory(
+        manifest,
+        "content_root",
+        manifest_directory,
+        "content");
+    if (!startup_item.empty() && !content_root.empty()) {
         const std::filesystem::path candidate =
-            (std::filesystem::path(working_directory) / startup_item).lexically_normal();
+            (std::filesystem::path(content_root) / startup_item).lexically_normal();
         if (std::filesystem::exists(candidate)) {
             return candidate.string();
         }
     }
 
-    const std::string content_root = first_value(manifest, "content_root");
-    if (!startup_item.empty() && !content_root.empty()) {
+    const std::string working_directory =
+        resolve_effective_working_directory(manifest, manifest_directory);
+    if (!startup_item.empty() && !working_directory.empty()) {
         const std::filesystem::path candidate =
-            (std::filesystem::path(content_root) / startup_item).lexically_normal();
+            (std::filesystem::path(working_directory) / startup_item).lexically_normal();
         if (std::filesystem::exists(candidate)) {
             return candidate.string();
         }
@@ -473,11 +579,14 @@ int main(int argc, char** argv) {
         return 4;
     }
 
+    const std::filesystem::path manifest_directory =
+        std::filesystem::path(manifest_path).parent_path().lexically_normal();
     const auto assets = all_values(manifest, "asset");
     const auto warnings = all_values(manifest, "warning");
     const bool security_enabled = parse_bool(first_value(manifest, "security_enabled"));
     const std::string security_role = first_value(manifest, "security_role");
-    const std::string audit_log_path = first_value(manifest, "audit_log_path");
+    const std::string audit_log_path =
+        resolve_effective_audit_log_path(manifest, manifest_directory);
     const auto security_profile = copperfin::security::default_native_security_profile();
 
     if (security_enabled) {
@@ -494,7 +603,7 @@ int main(int argc, char** argv) {
         }
 
         std::string verification_error;
-        if (!verify_manifest_hashes(manifest, verification_error)) {
+        if (!verify_manifest_hashes(manifest, manifest_directory, verification_error)) {
             if (!audit_log_path.empty()) {
                 (void)copperfin::security::append_immutable_audit_event(
                     audit_log_path,
@@ -513,8 +622,10 @@ int main(int argc, char** argv) {
                 "role=" + security_role + ",manifest=" + manifest_path);
         }
     }
-    const std::string startup_source = resolve_startup_source(manifest);
-    const std::string working_directory = first_value(manifest, "working_directory");
+    const std::string startup_source =
+        resolve_startup_source(manifest, manifest_directory);
+    const std::string working_directory =
+        resolve_effective_working_directory(manifest, manifest_directory);
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
     const bool prg_startup = startup_extension == ".prg";
     copperfin::runtime::XAssetExecutableModel xasset_model;

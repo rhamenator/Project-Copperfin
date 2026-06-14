@@ -23,6 +23,13 @@ if(DOTNET_EXECUTABLE)
     )
 endif()
 
+add_test(
+    NAME test_runtime_host_binding
+    COMMAND ${CMAKE_COMMAND}
+        -DRUNTIME_HOST_EXECUTABLE=$<TARGET_FILE:copperfin_runtime_host>
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_host_binding_check.cmake
+)
+
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
