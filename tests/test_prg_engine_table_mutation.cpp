@@ -836,6 +836,69 @@ void test_rlock_retry_blocking_is_rejected_inside_critical_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_flock_retry_blocking_is_rejected_inside_critical_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_flock_critical_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "flock_critical_policy.prg";
+    write_text(
+        main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "lHeldLock = FLOCK()\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "ENTER CRITICAL shared\n"
+        "lSecondLock = FLOCK()\n"
+        "lPolicyRejected = (lSecondLock = .F.)\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section FLOCK policy script should complete: " + state.message);
+
+    const auto held_lock = state.globals.find("lheldlock");
+    const auto second_lock = state.globals.find("lsecondlock");
+    const auto policy_rejected = state.globals.find("lpolicyrejected");
+    expect(held_lock != state.globals.end(), "FLOCK policy script should capture the first-session file lock");
+    expect(second_lock != state.globals.end(), "FLOCK policy script should capture the second-session contested lock attempt");
+    expect(policy_rejected != state.globals.end(), "FLOCK policy script should capture rejection state");
+    if (held_lock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(held_lock->second) == "true",
+               "first-session FLOCK should acquire and hold the file lock");
+    }
+    if (second_lock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_lock->second) == "false",
+               "FLOCK under contention inside a critical section should return false");
+    }
+    if (policy_rejected != state.globals.end()) {
+        expect(copperfin::runtime::format_value(policy_rejected->second) == "true",
+               "FLOCK contention inside a critical section should be rejected");
+    }
+
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_retry" &&
+               event.detail.find("PeopleTwo FLOCK") != std::string::npos;
+    }), "FLOCK inside a critical section should fail before emitting retry backoff events");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=LOCK RETRY") != std::string::npos &&
+               event.detail.find("PeopleTwo FLOCK") != std::string::npos;
+    }), "FLOCK contention inside a critical section should emit a runtime.critical.blocking_violation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_and_delete_from_local_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
@@ -2174,6 +2237,7 @@ int main() {
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_lock_retry_blocking_is_rejected_inside_critical_section();
     test_rlock_retry_blocking_is_rejected_inside_critical_section();
+    test_flock_retry_blocking_is_rejected_inside_critical_section();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
