@@ -813,6 +813,7 @@ int main(int argc, char** argv) {
     std::cout << "working.directory: " << working_directory << "\n";
     std::cout << "security.enabled: " << first_value(manifest, "security_enabled") << "\n";
     std::cout << "security.role: " << security_role << "\n";
+    std::cout << "security.audit_log_path: " << (security_enabled ? audit_log_path : std::string{}) << "\n";
     std::cout << "security.mode: " << first_value(manifest, "security_mode") << "\n";
     std::cout << "dotnet.story: " << first_value(manifest, "dotnet_story") << "\n";
     std::cout << "asset.count: " << assets.size() << "\n";

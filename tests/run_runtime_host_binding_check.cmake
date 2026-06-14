@@ -96,6 +96,11 @@ if(NOT run_output MATCHES "working\\.directory: ${escaped_content_root}")
     message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package content root.\nstdout:\n${run_output}")
 endif()
 
+string(REPLACE "\\" "\\\\" escaped_audit_log_path "${deployed_root}/security_audit.log")
+if(NOT run_output MATCHES "security\\.audit_log_path: ${escaped_audit_log_path}")
+    message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package-local audit log path.\nstdout:\n${run_output}")
+endif()
+
 if(NOT EXISTS "${deployed_root}/security_audit.log")
     message(FATAL_ERROR "Runtime host binding smoke did not write the rebound package-local audit log.")
 endif()
