@@ -134,6 +134,8 @@ void test_local_variables_in_stack_frame() {
     session.add_breakpoint({.file_path = main_path.string(), .line = 5});
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::breakpoint, "local-variable test should stop on the itemCount assignment");
+    expect(state.statement_text == "itemCount = 9",
+           "breakpoint pause state should preserve the current statement text");
     expect(!state.call_stack.empty(), "local-variable test should include a stack frame");
     if (!state.call_stack.empty()) {
         const auto local = state.call_stack.front().locals.find("itemcount");
@@ -170,6 +172,8 @@ void test_breakpoint_on_first_executable_line_hits_after_entry_continue() {
     const auto breakpoint_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(breakpoint_state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
            "continuing from entry should hit a first-line breakpoint");
+    expect(breakpoint_state.statement_text == "x = 1",
+           "first-line breakpoint should preserve the current statement text");
     expect(!breakpoint_state.call_stack.empty(),
            "first-line breakpoint should expose a stack frame");
     if (!breakpoint_state.call_stack.empty()) {

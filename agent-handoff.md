@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the highest-priority open umbrellas are now `#19` and `#20`. Create the next prompt-sized child issue under that build/debug pipeline branch before coding.
+Next: the highest-priority open umbrellas are still `#19` and `#20`. Create the next prompt-sized child issue under that build/debug pipeline branch before coding.
 
 Language-service queue update:
 
+- 2026-06-14: **`#404` is now shipped.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract. Focused `test_prg_engine` coverage locks both the ordinary in-routine breakpoint and the first-line breakpoint case down directly.
 - 2026-06-14: **`#403` is now shipped.** The generated .NET launcher now preserves ordinary application arguments instead of dropping everything except `--debug`, while keeping the manifest injection and debug-flag normalization contract intact. Focused `test_runtime_pipeline` coverage locks that launcher source contract down directly.
 - 2026-06-14: **`#402` is now shipped.** `ENTER CRITICAL` now enforces ascending normalized lock ordering for nested acquisitions, and shipped blocking wait surfaces now reject blocking while a critical section is held (`AWAIT`, positive-duration `SLEEP`, and lock-retry/backoff under contention). Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic `runtime.critical.order_violation` / `runtime.critical.blocking_violation` diagnostics instead of deadlock-prone hangs.
 - 2026-06-14: **`#271` is now shipped.** `SET('REPROCESS')` now defaults to `AUTOMATIC`, lock acquisition honors per-session retry budgets across explicit lock commands plus shipped local mutation paths, and contention now emits deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics instead of busy-spinning. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove cross-session contention, retry counts, timeout errors, and session isolation/restoration.
@@ -56,6 +57,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#404` is now closed.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract in both ordinary and first-line breakpoint cases.
 - 2026-06-14: **`#403` is now closed.** Generated .NET launchers now preserve ordinary application arguments while still injecting the manifest path and normalizing debug flags, and focused `test_runtime_pipeline` coverage now proves the launcher source contract directly.
 - 2026-06-14: **`#402` is now closed.** The runtime now has an explicit in-memory critical-section policy: nested acquisitions must follow ascending normalized section-name order, and blocking wait surfaces are rejected while a critical section is held. Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic diagnostics for order violations and lock/wait blocking violations.
 - 2026-06-14: **`#271` is now closed.** The lock/reprocess lane now defaults `SET('REPROCESS')` to `AUTOMATIC`, preserves data-session isolation of that state, and applies bounded retry/timeout behavior to explicit lock commands plus shipped local mutation paths. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove contention retries, timeout diagnostics, and non-busy-spin behavior.
