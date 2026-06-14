@@ -2,6 +2,8 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-14: A3/#271 REPROCESS contention semantics are now shipped. `SET('REPROCESS')` defaults to `AUTOMATIC`, local lock acquisition now honors per-session retry budgets across `RLOCK()`, `FLOCK()` / `LOCK()`, `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL`, conflicting attempts emit deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics instead of busy-spinning, and focused `test_prg_engine_table_mutation` plus `test_prg_engine_work_areas` coverage now proves cross-session contention, explicit retry overrides, timeout errors, and session isolation/restoration.
+
 It is intentionally ordered by dependency depth:
 
 1. deepest shared engine layers first
@@ -763,7 +765,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 - 2026-04-26: Transaction-processing compatibility gained a first-pass in-process lane. The parser/dispatcher now support `BEGIN TRANSACTION`, `END TRANSACTION`, and `ROLLBACK`; runtime state tracks nested transaction depth per data session; and `TXNLEVEL()` now reports the active nesting depth through the expression path. Focused PRG-engine regression coverage validates nesting behavior, rollback-to-zero semantics, runtime transaction event emission, and `SET DATASESSION` isolation/restoration of transaction levels. This intentionally stops short of durable DBF transaction journaling/undo replay.
 
-- 2026-04-26: Locking semantics gained a first-pass in-process runtime foundation. `SET REPROCESS` and `SET MULTILOCKS` now round-trip through `SET()`, open cursor state can be record-locked or table-locked through `RLOCK()`, `FLOCK()` / `LOCK()`, queried through `ISRLOCKED()` / `ISFLOCKED()`, and released through `UNLOCK` or `UNLOCK ALL`. Focused `test_prg_engine_table_mutation` coverage validates state readback, current/named cursor locks, and multi-cursor unlock behavior. This deliberately stops short of cross-process OS locking.
+- 2026-04-26: Locking semantics gained a first-pass in-process runtime foundation. `SET REPROCESS` and `SET MULTILOCKS` now round-trip through `SET()`, open cursor state can be record-locked or table-locked through `RLOCK()`, `FLOCK()` / `LOCK()`, queried through `ISRLOCKED()` / `ISFLOCKED()`, and released through `UNLOCK` or `UNLOCK ALL`. That baseline now also includes `AUTOMATIC` default `REPROCESS` behavior plus bounded retry/timeout semantics across explicit lock calls and shipped local mutation paths, with deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics under contention. This deliberately stops short of cross-process OS locking.
 
 - 2026-04-26: Table-maintenance safety gained first-pass `SET EXCLUSIVE` and `USE ... SHARED|EXCLUSIVE` support. `SET('EXCLUSIVE')` defaults to `ON`, local `USE` cursors inherit the session default unless an explicit open mode is provided, and local `PACK`/`PACK MEMO`/`ZAP` now require an exclusive cursor while synthetic remote/result cursors keep their existing in-memory behavior. Focused `test_prg_engine_table_mutation` coverage validates shared-cursor guard failures plus explicit exclusive override success.
 

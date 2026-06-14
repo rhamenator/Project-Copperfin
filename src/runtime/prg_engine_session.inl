@@ -259,6 +259,158 @@
             return 0;
         }
 
+        static std::string make_lock_owner_key(std::uint64_t runtime_id, int data_session)
+        {
+            return std::to_string(runtime_id) + ":" + std::to_string(std::max(1, data_session));
+        }
+
+        [[nodiscard]] std::string current_lock_owner_key() const
+        {
+            return make_lock_owner_key(runtime_instance_id, current_data_session);
+        }
+
+        [[nodiscard]] std::string cursor_lock_resource_key(const CursorState &cursor) const
+        {
+            if (!cursor.source_path.empty())
+            {
+                return normalize_path(cursor.source_path);
+            }
+
+            return "runtime:" + std::to_string(runtime_instance_id) +
+                   ":session:" + std::to_string(std::max(1, current_data_session)) +
+                   ":area:" + std::to_string(cursor.work_area);
+        }
+
+        struct ReprocessPolicy
+        {
+            std::string display_value = "AUTOMATIC";
+            std::size_t retry_budget = 8U;
+        };
+
+        [[nodiscard]] ReprocessPolicy current_reprocess_policy() const
+        {
+            const auto found = current_set_state().find("reprocess");
+            if (found == current_set_state().end())
+            {
+                return {};
+            }
+
+            const std::string trimmed = trim_copy(found->second);
+            if (trimmed.empty())
+            {
+                return {};
+            }
+
+            const std::string normalized = normalize_identifier(trimmed);
+            if (normalized == "automatic" || normalized == "auto" ||
+                normalized == "on" || normalized == "true" || normalized == "yes")
+            {
+                return {.display_value = "AUTOMATIC", .retry_budget = 8U};
+            }
+
+            try
+            {
+                const long long parsed = std::stoll(trimmed);
+                return {.display_value = std::to_string(std::max<long long>(0LL, parsed)),
+                        .retry_budget = static_cast<std::size_t>(std::max<long long>(0LL, parsed))};
+            }
+            catch (...)
+            {
+                return {.display_value = uppercase_copy(trimmed), .retry_budget = 0U};
+            }
+        }
+
+        void release_shared_lock_ownership_for_cursor(const CursorState &cursor,
+                                                      const DataSessionState &session,
+                                                      int data_session)
+        {
+            const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
+            const std::string resource_key = cursor_lock_resource_key(cursor);
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+
+            if (session.table_locks.contains(cursor.work_area))
+            {
+                const auto table_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+                if (table_found != concurrency_state->table_lock_owner_by_resource.end() &&
+                    table_found->second == owner_key)
+                {
+                    concurrency_state->table_lock_owner_by_resource.erase(table_found);
+                }
+            }
+
+            const auto record_found = session.record_locks.find(cursor.work_area);
+            if (record_found == session.record_locks.end())
+            {
+                return;
+            }
+
+            auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+            if (shared_record_found == concurrency_state->record_lock_owner_by_resource.end())
+            {
+                return;
+            }
+
+            for (const std::size_t recno : record_found->second)
+            {
+                const auto owner_found = shared_record_found->second.find(recno);
+                if (owner_found != shared_record_found->second.end() && owner_found->second == owner_key)
+                {
+                    shared_record_found->second.erase(owner_found);
+                }
+            }
+
+            if (shared_record_found->second.empty())
+            {
+                concurrency_state->record_lock_owner_by_resource.erase(shared_record_found);
+            }
+        }
+
+        void release_shared_record_lock_ownership(const CursorState &cursor,
+                                                  std::size_t recno,
+                                                  int data_session)
+        {
+            const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
+            const std::string resource_key = cursor_lock_resource_key(cursor);
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+
+            auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+            if (shared_record_found == concurrency_state->record_lock_owner_by_resource.end())
+            {
+                return;
+            }
+
+            const auto owner_found = shared_record_found->second.find(recno);
+            if (owner_found != shared_record_found->second.end() && owner_found->second == owner_key)
+            {
+                shared_record_found->second.erase(owner_found);
+                if (shared_record_found->second.empty())
+                {
+                    concurrency_state->record_lock_owner_by_resource.erase(shared_record_found);
+                }
+            }
+        }
+
+        void release_shared_table_lock_ownership(const CursorState &cursor, int data_session)
+        {
+            const std::string owner_key = make_lock_owner_key(runtime_instance_id, data_session);
+            const std::string resource_key = cursor_lock_resource_key(cursor);
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+
+            const auto table_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+            if (table_found != concurrency_state->table_lock_owner_by_resource.end() &&
+                table_found->second == owner_key)
+            {
+                concurrency_state->table_lock_owner_by_resource.erase(table_found);
+            }
+        }
+
+        void clear_all_shared_lock_ownership()
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            concurrency_state->table_lock_owner_by_resource.clear();
+            concurrency_state->record_lock_owner_by_resource.clear();
+        }
+
         std::filesystem::path transaction_journal_root_directory() const
         {
             return runtime_temp_directory / "transactions";
@@ -1000,6 +1152,10 @@
 
             for (const int area : closed_areas)
             {
+                if (const auto cursor_found = session.cursors.find(area); cursor_found != session.cursors.end())
+                {
+                    release_shared_lock_ownership_for_cursor(cursor_found->second, session, current_data_session);
+                }
                 session.aliases.erase(area);
                 session.table_locks.erase(area);
                 session.record_locks.erase(area);
@@ -1070,6 +1226,7 @@
                 session.selected_work_area = 1;
                 session.next_work_area = 1;
             }
+            clear_all_shared_lock_ownership();
 
             // Release synthetic SQL/OLE/runtime interop state.
             sql_connections_by_session.clear();

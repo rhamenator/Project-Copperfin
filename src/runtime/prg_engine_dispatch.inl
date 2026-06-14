@@ -1110,6 +1110,8 @@
                 child->transaction_journal_by_session.clear();
                 child->command_undo_journal_by_session.clear();
                 child->command_undo_stack_by_session.clear();
+                static std::atomic<std::uint64_t> spawned_runtime_instance_counter{1000000ULL};
+                child->runtime_instance_id = spawned_runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
                 child->current_data_session = current_data_session;
                 std::string task_source_path = program.path;
                 if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
@@ -3021,8 +3023,21 @@
                     }
                     else if (normalized_name == "reprocess")
                     {
-                        std::string reprocess_value = evaluate_set_string_value(option_value, "0");
-                        current_set_state()[normalized_name] = uppercase_copy(reprocess_value.empty() ? std::string{"0"} : reprocess_value);
+                        std::string reprocess_value = trim_copy(evaluate_set_string_value(option_value, "AUTOMATIC"));
+                        const std::string normalized_reprocess = normalize_identifier(reprocess_value);
+                        if (reprocess_value.empty() ||
+                            normalized_reprocess == "automatic" ||
+                            normalized_reprocess == "auto" ||
+                            normalized_reprocess == "on" ||
+                            normalized_reprocess == "true" ||
+                            normalized_reprocess == "yes")
+                        {
+                            current_set_state()[normalized_name] = "AUTOMATIC";
+                        }
+                        else
+                        {
+                            current_set_state()[normalized_name] = uppercase_copy(reprocess_value);
+                        }
                     }
                     else if (normalized_name == "hours")
                     {

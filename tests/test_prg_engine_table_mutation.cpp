@@ -559,11 +559,11 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
             name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
     };
 
-    check("cdefaultreprocess", "0");
+    check("cdefaultreprocess", "AUTOMATIC");
     check("cdefaultmultilocks", "OFF");
     check("creprocess", "3");
     check("cmultilocks", "ON");
-    check("creprocesssession2", "0");
+    check("creprocesssession2", "AUTOMATIC");
     check("cmultilockssession2", "OFF");
     check("creprocessrestored", "3");
     check("cmultilocksrestored", "ON");
@@ -593,6 +593,110 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.unlock" && event.detail == "People RECORD 1";
     }), "UNLOCK RECORD should emit a record-specific runtime.unlock event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_reprocess_contention";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "reprocess_contention.prg";
+    write_text(
+        main_path,
+        "cDefaultReprocess = SET('REPROCESS')\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "GO 1\n"
+        "lHeldLock = RLOCK()\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "GO 1\n"
+        "cDefaultReprocessSession2 = SET('REPROCESS')\n"
+        "lDefaultConflict = RLOCK()\n"
+        "SET REPROCESS TO 2\n"
+        "lRetryConflict = RLOCK()\n"
+        "TRY\n"
+        "    REPLACE NAME WITH 'BLOCKED'\n"
+        "    lReplaceBlocked = .F.\n"
+        "CATCH TO err_text\n"
+        "    lReplaceBlocked = .T.\n"
+        "    cReplaceError = err_text\n"
+        "ENDTRY\n"
+        "SET REPROCESS TO 0\n"
+        "lZeroConflict = RLOCK()\n"
+        "SET DATASESSION TO 1\n"
+        "UNLOCK ALL\n"
+        "SET DATASESSION TO 2\n"
+        "SET REPROCESS TO 2\n"
+        "lAfterRelease = RLOCK()\n"
+        "lAfterReleaseState = ISRLOCKED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "REPROCESS contention script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("cdefaultreprocess", "AUTOMATIC");
+    check("cdefaultreprocesssession2", "AUTOMATIC");
+    check("lheldlock", "true");
+    check("ldefaultconflict", "false");
+    check("lretryconflict", "false");
+    check("lreplaceblocked", "true");
+    check("lzeroconflict", "false");
+    check("lafterrelease", "true");
+    check("lafterreleasestate", "true");
+
+    const auto replace_error = state.globals.find("creplaceerror");
+    expect(replace_error != state.globals.end(), "REPLACE contention script should capture the caught error text");
+    if (replace_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(replace_error->second).find("timed out waiting for record lock") != std::string::npos,
+               "REPLACE contention error should report the record-lock timeout");
+    }
+
+    const auto count_retry_events = [&](const std::string& detail_fragment) {
+        return static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [&](const auto& event) {
+            return event.category == "runtime.lock_retry" &&
+                   event.detail.find(detail_fragment) != std::string::npos;
+        }));
+    };
+
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=AUTOMATIC") == 8,
+           "default REPROCESS should perform eight retry/yield attempts before RLOCK() fails");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=2") == 2,
+           "SET REPROCESS TO 2 should perform two retry attempts before RLOCK() fails");
+    expect(count_retry_events("REPLACE recno=1 reprocess=2") == 2,
+           "REPLACE under lock contention should honor the per-session REPROCESS retry budget");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=0") == 0,
+           "SET REPROCESS TO 0 should not busy-spin before RLOCK() fails");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_timeout" &&
+               event.detail.find("PeopleTwo RLOCK timeout recno=1 reprocess=AUTOMATIC") != std::string::npos;
+    }), "default RLOCK contention should emit a deterministic runtime.lock_timeout event");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_timeout" &&
+               event.detail.find("REPLACE timeout recno=1 reprocess=2") != std::string::npos;
+    }), "REPLACE contention should emit a deterministic runtime.lock_timeout event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1932,6 +2036,7 @@ int main() {
     test_memo_field_replace_with_empty_string();
     test_set_exclusive_controls_table_maintenance_guards();
     test_lock_functions_and_unlock_command_track_session_locks();
+    test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();

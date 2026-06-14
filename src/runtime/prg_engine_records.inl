@@ -450,6 +450,174 @@
             return true;
         }
 
+        bool pause_for_lock_retry(const std::string &detail,
+                                  const SourceLocation &location,
+                                  std::size_t attempt_number)
+        {
+            std::size_t sleep_duration_ms = 0U;
+            if (scheduler_yield_sleep_ms != 0U)
+            {
+                sleep_duration_ms = scheduler_yield_sleep_ms * attempt_number;
+            }
+
+            events.push_back({.category = "runtime.lock_retry",
+                              .detail = detail + " attempt=" + std::to_string(attempt_number) +
+                                        (sleep_duration_ms == 0U ? " sleep=yield"
+                                                                 : " sleep=" + std::to_string(sleep_duration_ms) + "ms"),
+                              .location = location});
+
+            if (sleep_duration_ms == 0U)
+            {
+                std::this_thread::yield();
+                return true;
+            }
+
+            for (std::size_t elapsed = 0U; elapsed < sleep_duration_ms; ++elapsed)
+            {
+                if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                {
+                    last_error_message = "Lock retry cancelled.";
+                    return false;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1U));
+            }
+
+            return true;
+        }
+
+        bool acquire_table_lock(CursorState &cursor,
+                                const std::string &context,
+                                bool explicit_lock_command,
+                                bool &new_lock)
+        {
+            const ReprocessPolicy policy = current_reprocess_policy();
+            const std::string owner_key = current_lock_owner_key();
+            const std::string resource_key = cursor_lock_resource_key(cursor);
+            DataSessionState &session = current_session_state();
+            const SourceLocation location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location;
+
+            for (std::size_t attempt = 0U;; ++attempt)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                    const auto table_owner_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+                    bool other_record_lock_present = false;
+                    const auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+                    if (shared_record_found != concurrency_state->record_lock_owner_by_resource.end())
+                    {
+                        for (const auto &[_, record_owner] : shared_record_found->second)
+                        {
+                            if (record_owner != owner_key)
+                            {
+                                other_record_lock_present = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    const bool table_conflict = table_owner_found != concurrency_state->table_lock_owner_by_resource.end() &&
+                                                table_owner_found->second != owner_key;
+                    if (!table_conflict && !other_record_lock_present)
+                    {
+                        const bool already_owned = session.table_locks.contains(cursor.work_area);
+                        session.table_locks.insert(cursor.work_area);
+                        concurrency_state->table_lock_owner_by_resource[resource_key] = owner_key;
+                        new_lock = !already_owned;
+                        if (explicit_lock_command)
+                        {
+                            events.push_back({.category = "runtime.lock",
+                                              .detail = cursor.alias.empty() ? std::to_string(cursor.work_area) : cursor.alias + " FLOCK",
+                                              .location = location});
+                        }
+                        return true;
+                    }
+                }
+
+                if (attempt >= policy.retry_budget)
+                {
+                    events.push_back({.category = "runtime.lock_timeout",
+                                      .detail = context + " timeout reprocess=" + policy.display_value,
+                                      .location = location});
+                    if (!explicit_lock_command)
+                    {
+                        last_error_message = context + " timed out waiting for table lock (" + policy.display_value + ")";
+                    }
+                    return false;
+                }
+
+                if (!pause_for_lock_retry(context + " reprocess=" + policy.display_value, location, attempt + 1U))
+                {
+                    return false;
+                }
+            }
+        }
+
+        bool acquire_record_lock(CursorState &cursor,
+                                 std::size_t recno,
+                                 const std::string &context,
+                                 bool explicit_lock_command,
+                                 bool &new_lock)
+        {
+            const ReprocessPolicy policy = current_reprocess_policy();
+            const std::string owner_key = current_lock_owner_key();
+            const std::string resource_key = cursor_lock_resource_key(cursor);
+            DataSessionState &session = current_session_state();
+            const SourceLocation location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location;
+
+            for (std::size_t attempt = 0U;; ++attempt)
+            {
+                {
+                    std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                    const auto table_owner_found = concurrency_state->table_lock_owner_by_resource.find(resource_key);
+                    const bool table_conflict = table_owner_found != concurrency_state->table_lock_owner_by_resource.end() &&
+                                                table_owner_found->second != owner_key;
+                    const auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+                    const auto owner_found = shared_record_found == concurrency_state->record_lock_owner_by_resource.end()
+                                                 ? typename std::map<std::size_t, std::string>::const_iterator{}
+                                                 : shared_record_found->second.find(recno);
+                    const bool record_conflict = shared_record_found != concurrency_state->record_lock_owner_by_resource.end() &&
+                                                 owner_found != shared_record_found->second.end() &&
+                                                 owner_found->second != owner_key;
+                    if (!table_conflict && !record_conflict)
+                    {
+                        const bool already_owned = session.record_locks[cursor.work_area].contains(recno);
+                        session.record_locks[cursor.work_area].insert(recno);
+                        concurrency_state->record_lock_owner_by_resource[resource_key][recno] = owner_key;
+                        new_lock = !already_owned;
+                        if (explicit_lock_command)
+                        {
+                            events.push_back({.category = "runtime.lock",
+                                              .detail = (cursor.alias.empty() ? std::to_string(cursor.work_area) : cursor.alias) +
+                                                        " RLOCK " + std::to_string(recno),
+                                              .location = location});
+                        }
+                        return true;
+                    }
+                }
+
+                if (attempt >= policy.retry_budget)
+                {
+                    events.push_back({.category = "runtime.lock_timeout",
+                                      .detail = context + " timeout recno=" + std::to_string(recno) +
+                                                " reprocess=" + policy.display_value,
+                                      .location = location});
+                    if (!explicit_lock_command)
+                    {
+                        last_error_message = context + " timed out waiting for record lock (" + policy.display_value + ")";
+                    }
+                    return false;
+                }
+
+                if (!pause_for_lock_retry(context + " recno=" + std::to_string(recno) +
+                                          " reprocess=" + policy.display_value,
+                                          location,
+                                          attempt + 1U))
+                {
+                    return false;
+                }
+            }
+        }
+
         bool replace_current_record_fields(
             CursorState &cursor,
             const std::vector<ReplaceAssignment> &assignments,
@@ -486,6 +654,12 @@
                 return false;
             }
             if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
+                return false;
+            }
+
+            bool temporary_record_lock = false;
+            if (!acquire_record_lock(cursor, cursor.recno, "REPLACE", false, temporary_record_lock))
             {
                 return false;
             }
@@ -529,6 +703,10 @@
                     return false;
                 }
                 cursor.record_count = result.record_count;
+            }
+            if (temporary_record_lock)
+            {
+                unlock_cursor_record_lock(cursor, cursor.recno);
             }
             return true;
         }
@@ -987,16 +1165,33 @@
                 return false;
             }
 
+            DataSessionState &session = current_session_state();
+            bool temporary_table_lock = false;
+            if (!acquire_table_lock(cursor, "APPEND BLANK", false, temporary_table_lock))
+            {
+                return false;
+            }
+
             const auto result = vfp::append_blank_record_to_file(cursor.source_path);
             if (!result.ok)
             {
                 last_error_message = result.error;
+                if (temporary_table_lock)
+                {
+                    session.table_locks.erase(cursor.work_area);
+                    release_shared_table_lock_ownership(cursor, current_data_session);
+                }
                 return false;
             }
 
             cursor.record_count = result.record_count;
             move_cursor_to(cursor, static_cast<long long>(result.record_count));
             cursor.found = false;
+            if (temporary_table_lock)
+            {
+                session.table_locks.erase(cursor.work_area);
+                release_shared_table_lock_ownership(cursor, current_data_session);
+            }
             return true;
         }
 
@@ -1090,13 +1285,26 @@
 
             for (const std::size_t recno : target_records)
             {
+                bool temporary_record_lock = false;
+                if (!acquire_record_lock(cursor, recno, deleted ? "DELETE" : "RECALL", false, temporary_record_lock))
+                {
+                    return false;
+                }
                 const auto result = vfp::set_record_deleted_flag(cursor.source_path, recno - 1U, deleted);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
+                    if (temporary_record_lock)
+                    {
+                        unlock_cursor_record_lock(cursor, recno);
+                    }
                     return false;
                 }
                 cursor.record_count = result.record_count;
+                if (temporary_record_lock)
+                {
+                    unlock_cursor_record_lock(cursor, recno);
+                }
             }
 
             return true;
@@ -1238,20 +1446,21 @@
                 return make_boolean_value(false);
             }
 
-            DataSessionState &session = current_session_state();
             const int area = cursor->work_area;
             const std::string normalized_function = normalize_identifier(function);
             if (normalized_function == "flock" || normalized_function == "lock")
             {
-                session.table_locks.insert(area);
-                events.push_back({.category = "runtime.lock",
-                                  .detail = cursor->alias.empty() ? std::to_string(area) : cursor->alias + " FLOCK",
-                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                return make_boolean_value(true);
+                bool new_lock = false;
+                return make_boolean_value(acquire_table_lock(*cursor,
+                                                            (cursor->alias.empty() ? std::to_string(area) : cursor->alias) + " FLOCK",
+                                                            true,
+                                                            new_lock));
             }
             if (normalized_function == "isflocked")
             {
-                return make_boolean_value(session.table_locks.contains(area));
+                const std::string resource_key = cursor_lock_resource_key(*cursor);
+                std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                return make_boolean_value(concurrency_state->table_lock_owner_by_resource.contains(resource_key));
             }
 
             std::size_t recno = cursor->recno;
@@ -1266,16 +1475,20 @@
 
             if (normalized_function == "rlock")
             {
-                session.record_locks[area].insert(recno);
-                events.push_back({.category = "runtime.lock",
-                                  .detail = (cursor->alias.empty() ? std::to_string(area) : cursor->alias) + " RLOCK " + std::to_string(recno),
-                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                return make_boolean_value(true);
+                bool new_lock = false;
+                return make_boolean_value(acquire_record_lock(*cursor,
+                                                             recno,
+                                                             (cursor->alias.empty() ? std::to_string(area) : cursor->alias) + " RLOCK",
+                                                             true,
+                                                             new_lock));
             }
             if (normalized_function == "isrlocked")
             {
-                const auto found = session.record_locks.find(area);
-                return make_boolean_value(found != session.record_locks.end() && found->second.contains(recno));
+                const std::string resource_key = cursor_lock_resource_key(*cursor);
+                std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                const auto shared_record_found = concurrency_state->record_lock_owner_by_resource.find(resource_key);
+                return make_boolean_value(shared_record_found != concurrency_state->record_lock_owner_by_resource.end() &&
+                                          shared_record_found->second.contains(recno));
             }
 
             return make_empty_value();
@@ -1286,11 +1499,16 @@
             DataSessionState &session = current_session_state();
             if (all_locks || cursor == nullptr)
             {
+                for (const auto &[_, held_cursor] : session.cursors)
+                {
+                    release_shared_lock_ownership_for_cursor(held_cursor, session, current_data_session);
+                }
                 session.table_locks.clear();
                 session.record_locks.clear();
                 return;
             }
 
+            release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
         }
@@ -1305,6 +1523,7 @@
             }
 
             found->second.erase(recno);
+            release_shared_record_lock_ownership(cursor, recno, current_data_session);
             if (found->second.empty())
             {
                 session.record_locks.erase(found);

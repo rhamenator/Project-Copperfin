@@ -318,6 +318,8 @@ namespace copperfin::runtime
             std::map<int, std::map<int, std::shared_ptr<AsyncTaskState>>> async_tasks_by_session;
             std::map<int, int> next_async_task_handle_by_session;
             std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_sections;
+            std::map<std::string, std::string> table_lock_owner_by_resource;
+            std::map<std::string, std::map<std::size_t, std::string>> record_lock_owner_by_resource;
         };
 
 #include "prg_engine_free_functions.inl"
@@ -328,12 +330,14 @@ namespace copperfin::runtime
         explicit Impl(RuntimeSessionOptions session_options)
             : options(std::move(session_options))
         {
+            static std::atomic<std::uint64_t> runtime_instance_counter{1ULL};
             max_call_depth = std::max<std::size_t>(1U, options.max_call_depth);
             max_executed_statements = std::max<std::size_t>(1U, options.max_executed_statements);
             max_loop_iterations = std::max<std::size_t>(1U, options.max_loop_iterations);
             scheduler_yield_statement_interval = std::max<std::size_t>(1U, options.scheduler_yield_statement_interval);
             scheduler_yield_sleep_ms = options.scheduler_yield_sleep_ms;
             task_cancel_requested = std::make_shared<std::atomic<bool>>(false);
+            runtime_instance_id = runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
             concurrency_state = std::make_shared<RuntimeConcurrencyState>();
             runtime_temp_directory = choose_runtime_temp_directory(options);
         }
@@ -426,6 +430,7 @@ namespace copperfin::runtime
         std::size_t max_executed_statements = 500000;
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
+        std::uint64_t runtime_instance_id = 0;
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
         std::shared_ptr<std::atomic<bool>> task_cancel_requested;
@@ -943,7 +948,7 @@ namespace copperfin::runtime
                     }
                     if (normalized_name == "reprocess")
                     {
-                        return std::string("0");
+                        return std::string("AUTOMATIC");
                     }
                     if (normalized_name == "path")
                     {

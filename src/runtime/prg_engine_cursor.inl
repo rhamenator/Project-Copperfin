@@ -144,6 +144,7 @@
             {
                 session.selected_work_area = cursor->work_area;
             }
+            release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
             session.aliases.erase(cursor->work_area);
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
