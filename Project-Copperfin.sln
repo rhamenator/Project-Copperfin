@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Copperfin.VisualStudio", "v
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Copperfin.DesignerSmokeTests", "vsix\Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj", "{B7967534-C9F3-8ED3-5978-41D5E69325A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Copperfin.LanguageServiceTests", "vsix\Copperfin.LanguageServiceTests\Copperfin.LanguageServiceTests.csproj", "{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{B7967534-C9F3-8ED3-5978-41D5E69325A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7967534-C9F3-8ED3-5978-41D5E69325A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7967534-C9F3-8ED3-5978-41D5E69325A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +42,7 @@ Global
 		{38FBF314-0A5D-AABE-F64B-046D97084F99} = {A712043F-CEB5-65E9-D16A-FE8756ACDF20}
 		{3AE43156-662E-8232-25BF-E156DDC41FA0} = {A712043F-CEB5-65E9-D16A-FE8756ACDF20}
 		{B7967534-C9F3-8ED3-5978-41D5E69325A0} = {A712043F-CEB5-65E9-D16A-FE8756ACDF20}
+		{F3D1F1BE-6C3D-4691-A3DE-5C29D9170AD6} = {A712043F-CEB5-65E9-D16A-FE8756ACDF20}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CE7644DD-DAA9-4638-9FAA-BF0831B52321}

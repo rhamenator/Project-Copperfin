@@ -32,6 +32,11 @@ Current priority order:
 
 Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the highest-value open branch from `remaining-work.md` or the gap tracking issues.
 
+Language-service queue update:
+
+- 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
+- Next language-service slice: `#179` (signature-help and completion fidelity).
+
 Current shipped highlights worth remembering:
 
 - 2026-06-13: **`#7` and `#8` are now closed.** All active lane issues (#92-#101) complete. A3 (Command/Expression Surface) is done at ~98%.

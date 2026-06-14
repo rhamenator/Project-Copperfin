@@ -4,8 +4,10 @@ This changelog is an exhaustive ledger compiled from the dated implementation no
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
 
-## 2026-06-13
+## 2026-06-14
 
+- G1/#178 language-service symbol-resolution fidelity shipped with focused standalone coverage: `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before falling back to the trailing member name, and `Copperfin.LanguageServiceTests` now verifies dotted class-prefix navigation, trailing procedure fallback, and quick-info description reuse.
+## 2026-06-13
 - D2/#20 child slice `#164` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies debug source roots preserve source-first ordering when source and content roots differ, keeping watch/locals lookup roots deterministic.
 - D1/#19 child slice `#163` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies startup DBF companion assets are staged along with the required startup asset, while the manifest still reports the startup asset as copied.
 - D1/#19 child slice `#162` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies the generated launcher contract itself, including manifest forwarding, `--debug` propagation, package-directory working directory, and the sanitized assembly-name contract in the emitted launcher project.

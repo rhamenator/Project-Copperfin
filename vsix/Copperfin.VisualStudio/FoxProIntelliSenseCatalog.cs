@@ -251,6 +251,11 @@ internal static class FoxProIntelliSenseCatalog
         if (!string.IsNullOrWhiteSpace(filePath))
         {
             var index = GetProjectIndex(filePath!);
+            if (TryResolveDefinitionCandidate(index, key, out var definition))
+            {
+                return definition.Description;
+            }
+
             if (index.Procedures.Contains(key))
             {
                 return "Project procedure or function symbol.";
@@ -338,18 +343,7 @@ internal static class FoxProIntelliSenseCatalog
         }
 
         var index = GetProjectIndex(filePath!);
-        if (TryResolveDefinition(index, NormalizeLookupToken(token), out definition))
-        {
-            return true;
-        }
-
-        if (token.Contains('.'))
-        {
-            var memberName = token.Split('.').Last();
-            return TryResolveDefinition(index, NormalizeLookupToken(memberName), out definition);
-        }
-
-        return false;
+        return TryResolveDefinitionCandidate(index, NormalizeLookupToken(token), out definition);
     }
 
     private static void AddContextualProjectEntries(
@@ -654,6 +648,31 @@ internal static class FoxProIntelliSenseCatalog
 
         definition = new FoxProDefinitionLocation();
         return false;
+    }
+
+    private static bool TryResolveDefinitionCandidate(ProjectSymbolIndex index, string token, out FoxProDefinitionLocation definition)
+    {
+        if (TryResolveDefinition(index, token, out definition))
+        {
+            return true;
+        }
+
+        if (!token.Contains('.'))
+        {
+            return false;
+        }
+
+        var segments = token.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        for (var segmentCount = segments.Length - 1; segmentCount > 0; segmentCount--)
+        {
+            var prefix = string.Join(".", segments.Take(segmentCount));
+            if (TryResolveDefinition(index, prefix, out definition))
+            {
+                return true;
+            }
+        }
+
+        return TryResolveDefinition(index, segments[^1], out definition);
     }
 
     private static void AddAsset(

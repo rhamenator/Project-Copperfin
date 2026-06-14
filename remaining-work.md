@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #178-#179; #162-#177 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #179; #162-#178 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #178-#179; #162-#177 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #179; #162-#178 shipped)
 
 ### Designers And IDE Parity
 
@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #27-#29: #178-#179
+- active-open native slice queues under #27-#29: #179
 
 ### Future Enhancements
 
@@ -232,7 +232,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Editor semantics and completions: #27
 - Navigation/refactoring depth: #28
 - IntelliSense metadata inputs: #29
-- active-open native slice queues under #27-#29: #178-#183
+- active-open native slice queues under #27-#29: #179-#183
 
 ### Federation, Interop, And Modern Platform
 
@@ -601,6 +601,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-13: Child issue `#390` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the SQL/result-cursor `LOOKUP()` miss path through `&cReturnExprDeepHolder`, `&cMissingSearchDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, proving the all-argument second-hop miss-preservation lane returns the typed numeric default.
 - 2026-06-13: Child issue `#389` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the `LOOKUP()` miss-default path through deep return/search holders plus `&cAliasDeepHolder` and `&cTagDeepHolder`, closing the remaining hardcoded alias/tag designators in that miss-preservation lane.
 - 2026-06-13: Child issue `#388` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the local string-return `LOOKUP()` path through `&cReturnExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, closing the remaining first-hop-only alias/tag arguments in that local lane.
+- 2026-06-14: G1/#178 language-service symbol-resolution fidelity shipped in `FoxProIntelliSenseCatalog`. Dotted/member lookup now resolves through the longest matching project-symbol prefix before falling back to the trailing member token, so navigation and quick info on forms such as `app.customer.editor.Init` land on the defining class instead of missing the symbol. Focused `Copperfin.LanguageServiceTests` coverage validates longest-prefix class resolution, trailing procedure fallback, and quick-info description reuse.
 - 2026-06-13: Child issue `#387` under `#97` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the numeric `LOOKUP()` path through `&cAgeExprDeepHolder`, `&cSearchExprDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`, closing the remaining first-hop-only arguments in that typed numeric lane.
 - 2026-06-13: Child issue `#386` under `#97` is now shipped. Focused `test_prg_engine_control_flow` coverage now routes recursive command-path merged text through `&cRecursiveExprDeepHolder`, and the command-path `TEXT TO ... TEXTMERGE` dispatcher now reapplies `<<...>>` interpolation to a bounded fixed point so recursively inserted merged text resolves fully.
 - 2026-06-13: Child issue `#385` under `#97` is now shipped. Focused `test_prg_engine_string_math_functions` coverage now uses `EVAL(EVAL(cEvalExprDeepHolder))`, and `evaluate_runtime_surface_function()` now preserves the last identifier in bounded direct-holder `EVAL()` chains so nested direct evaluation reaches the final expression identifier instead of stopping one hop off.
