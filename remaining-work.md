@@ -171,33 +171,32 @@ If direct commits continue, close a child issue only when:
 
 ### Runtime Compatibility And Command Surface
 
-- A3 runtime semantics and command depth: #7, #8
-- A3 active-open lane issues: #92, #93, #94, #98, #99, #100, #101 (#97 closed 2026-06-13)
-- A3 historical-closed lane issues: #95, #96
-- A3 active-open prompt-sized slice issues under #92-#101: none currently open under #93
-- A3 historical-closed prompt-sized slice issues in the current H3 batch: #257, #258, #259, #260, #261, #262, #263, #264, #265, #266, #267, #268
+- A3 runtime semantics and command depth: #7 (closed 2026-06-13), #8 (closed 2026-06-13)
+- A3 active-open lane issues: none — all closed
+- A3 closed lane issues: #92 (2026-06-13), #93 (2026-06-13), #94 (2026-06-13), #95, #96, #97 (2026-06-13), #98 (2026-06-13), #99 (2026-06-13), #100 (2026-06-13), #101 (2026-06-13)
+- A3 historical-closed prompt-sized slice issues in the current H3 batch: #257-#268, #391-#393
 - A3 historical native slice ranges in this lane: `#115`-`#130` plus `#146`-`#149` under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
 - Runtime safety and diagnostics: #13, #14
 - Runtime safety active-open prompt-sized slice issues: #150, #151, #152, #153
 - Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145
 
-Canonical remaining Phase A critical-path order:
+Canonical Phase A critical-path order (all closed as of 2026-06-13):
 
 1. #150 (closed)
 2. #151 (closed)
 3. #152 (closed)
 4. #153 (closed)
-5. #92
+5. #92 (closed 2026-06-13)
 6. #97 (closed 2026-06-13)
-7. #98
-8. #99
-9. #100
-10. #101
-11. #93
-12. #94
+7. #98 (closed 2026-06-13)
+8. #99 (closed 2026-06-13)
+9. #100 (closed 2026-06-13)
+10. #101 (closed 2026-06-13)
+11. #93 (closed 2026-06-13)
+12. #94 (closed 2026-06-13)
 
-Execution guardrail: keep adjacent active-open branches (#154-#203) paused until #94 is complete.
+Phase A critical path is complete. Active adjacent branches (#154-#203) are now unblocked.
 
 ### Runtime Parity Surfaces
 
@@ -278,7 +277,7 @@ flowchart TD
         A6["Work Areas And Data Sessions<br/>96%"]
         A7["Local Query/Mutation Commands<br/>93%"]
         A8["SQL Pass-Through / Remote Cursor Behavior<br/>90%<br/>#7"]
-        A9["PRG Execution Engine<br/>82%<br/>#7 / #8"]
+        A9["PRG Execution Engine<br/>~98%<br/>#7 / #8 closed 2026-06-13"]
     end
 
     subgraph PB[Phase B - Runtime Parity Surfaces]
@@ -344,7 +343,7 @@ flowchart LR
         direction TB
         SA1["A1 File And Index Fidelity<br/>~93%"]
         SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>~93%"]
-        SA3["A3 Command / Expression Surface<br/>82%<br/>#7,#8,#92-#101"]
+        SA3["A3 Command / Expression Surface<br/>~98%<br/>#7,#8 closed 2026-06-13"]
         SA4["A4 Automation / Interop Semantics<br/>100%<br/>#10,#11,#12"]
     end
 
@@ -447,7 +446,7 @@ Current repo status against the Windows-first product goal:
 | Work areas and data sessions | 96% | The runtime now provides robust session-scoped work-area semantics across `SELECT`, plain `USE`, `USE AGAIN`, `SET DATASESSION`, cursor identity and alias lookup functions, expression-driven `SELECT`/`USE ... IN` designators, `SELECT(0)` next-free probing with freed-area reuse, session-local SQL cursor/handle allocation, session-local `SET DEFAULT TO` and `SET` state restoration, and strict cross-session alias/work-area isolation (including same-work-area-number independence and close semantics) with full runtime regression coverage. |
 | Local query/mutation commands | 93% | Local runtime command parity now includes `GO`, `SKIP`, `SEEK`, `LOCATE`, `SCAN`, `REPLACE`, `APPEND BLANK`, `DELETE`, `RECALL`, SQL-style `DELETE FROM` / `INSERT INTO`, first-pass `CREATE TABLE`, first-pass structural `ALTER TABLE ... ADD/DROP/ALTER COLUMN`, `PACK`, `PACK MEMO`, and `ZAP` with command-level `FOR`/`WHILE` and expression-driven `IN`/cursor-target support where applicable, plus `SET FILTER TO/OFF`, aggregate built-ins, `CALCULATE`, command-level `COUNT`/`SUM`/`AVERAGE` with scope/`WHILE`/`IN` and `TO ARRAY`, and `TOTAL` with `IN` targeting plus local `I`/`Y` field support. Focused regressions now lock down cross-cursor targeting, boundary behavior, SQL-style local DBF insert/delete persistence and rollback, physical DBF creation/schema rewrite/compaction/memo-sidecar rewrite/truncation, and mutation persistence across local DBF workflows. |
 | SQL pass-through/remote cursor behavior | 90% | SQL pass-through now includes connection/session plumbing (`SQLCONNECT`/`SQLSTRINGCONNECT`/`SQLDISCONNECT`), command execution (`SQLEXEC`) with DML rows-affected tracking (`SQLROWCOUNT`), prepared-command execution (`SQLPREPARE` + `SQLEXEC(handle)`), and connection property metadata (`SQLGETPROP`/`SQLSETPROP`) with provider-hint classification. Remote cursor behavior covers local-style field lookup/navigation/filter-aware visibility, index-aware seek/order flows, aggregate semantics, in-memory mutation commands (`APPEND BLANK`, `REPLACE`, `DELETE`/`RECALL` including `FOR`/`WHILE` targeting), and SQL-style `INSERT INTO` / `DELETE FROM` over `SQLEXEC()` result cursors with focused runtime regression coverage. |
-| PRG execution engine | 82% | Core execution semantics are in place, but command-surface depth and runtime-state/macro parity still have active backlog in #7 and #8. |
+| PRG execution engine | ~98% | Core execution semantics complete. #7 and #8 closed 2026-06-13 after final slices for remote cursor parity, structural ops, field-transfer, SCATTER BLANK, and headless interaction macro fidelity. |
 | Forms/classes runtime parity | 38% | First-pass runtime bootstrap is shipped, but event/lifecycle and behavior-fidelity depth remains open in #15. |
 | Reports/labels runtime parity | 42% | Preview and first output paths are shipped, but report/label runtime and pipeline completion remains open in #16. |
 | Menus runtime parity | 36% | First-pass bootstrap and dispatch are shipped, but menu routing/state semantics remain open in #17. |

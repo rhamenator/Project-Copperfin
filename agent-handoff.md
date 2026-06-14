@@ -28,12 +28,20 @@ Important:
 
 Current priority order:
 
-1. Finish the runtime safety/diagnostics gate in strict order: `#150`, `#151`, `#152`, `#153`
-2. Then run the remaining A3 critical-path closure chain in strict order: `#92`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94` (`#97` is now closed)
-3. Do not advance adjacent open queue branches (`#154`-`#203`) until `#94` is complete
+**Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
+
+Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the highest-value open branch from `remaining-work.md` or the gap tracking issues.
 
 Current shipped highlights worth remembering:
 
+- 2026-06-13: **`#7` and `#8` are now closed.** All active lane issues (#92-#101) complete. A3 (Command/Expression Surface) is done at ~98%.
+- 2026-06-13: **`#100` is now closed.** Child slice #393 fixed `SCATTER BLANK` on zero-record tables (schema-fallback path) and `blank_value_for_field` for character/varchar fields. G12 (Field Projection/Data Transfer) complete.
+- 2026-06-13: **`#101` is now closed.** All headless interaction commands (WAIT/KEYBOARD/INPUT/ACCEPT/GETFILE/PUTFILE/GETDIR/INPUTBOX) have macro-expanded prompt/target second-hop coverage. G14 (Headless Interaction) complete.
+- 2026-06-13: **`#93` is now closed.** SQL result-cursor parity is fully proven across navigation, ordering, filtering, mutation, import, export, identity, session isolation, seek, and OLE actions (45+ tests in test_prg_engine_sql_cursors.cpp). G8 (Remote/Result-Cursor) complete.
+- 2026-06-13: **`#94` is now closed.** Structural table-operation parity proven for CREATE TABLE, ALTER TABLE, PACK, PACK MEMO, ZAP, COPY TO (7 formats), APPEND FROM (7 formats), and journaling/rollback. G11 (Structural Table Ops) complete.
+- 2026-06-13: **`#99` is now closed.** Child slice #392 implemented DISPLAY/LIST MEMORY LIKE/EXCEPT wildcard name-filter clause. G15 (Memory/Assignment Semantics) complete.
+- 2026-06-13: **`#98` is now closed.** All child slices (#105, #106, #107) shipped; runtime-state normalization and SET() compatibility residuals proven complete.
+- 2026-06-13: **`#92` is now closed.** All child slices (#102, #103, #104) shipped; G6 (Order/Seek/Collation) is proven for local DBF-backed and synthetic SQL/result cursors. `SET COLLATE`, `FOR`-filtered temporary orders, and grounded numeric-field seek metadata all confirmed.
 - 2026-06-13: **`#97` is now closed.** All 45 child slices (#347–#391) shipped, completing G9 (Macro/Eval Core). Final child: `#391` — `ASCAN()` macro-expanded predicate fidelity and `_ASCAN*` metadata cleanup proof across variable-reference, first-hop macro, and second-hop holder paths.
 - 2026-06-13: H3/#97 child issue `#390` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the SQL/result-cursor `LOOKUP()` miss path through `&cReturnExprDeepHolder`, `&cMissingSearchDeepHolder`, `&cAliasDeepHolder`, and `&cTagDeepHolder`.
 - 2026-06-13: H3/#97 child issue `#389` is now shipped. Focused `test_prg_engine_runtime_surface_functions` coverage now drives the `LOOKUP()` miss-default branch through deep return/search holders plus `&cAliasDeepHolder` and `&cTagDeepHolder`.
