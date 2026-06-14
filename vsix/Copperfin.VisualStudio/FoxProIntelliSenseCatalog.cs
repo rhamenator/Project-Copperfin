@@ -769,6 +769,11 @@ internal static class FoxProIntelliSenseCatalog
             }
         }
 
+        if (TryResolveUniqueProjectMethodDefinition(index, segments[^1], out definition))
+        {
+            return true;
+        }
+
         return TryResolveDefinition(index, segments[^1], out definition);
     }
 
@@ -794,9 +799,56 @@ internal static class FoxProIntelliSenseCatalog
             }
         }
 
+        if (TryResolveUniqueProjectMethodSignature(index, segments[^1], out signatures))
+        {
+            return signatures;
+        }
+
         return index.Signatures.TryGetValue(segments[^1], out signatures)
             ? signatures
             : Array.Empty<FoxProSignatureEntry>();
+    }
+
+    private static bool TryResolveUniqueProjectMethodSignature(
+        ProjectSymbolIndex index,
+        string methodName,
+        out IReadOnlyList<FoxProSignatureEntry> signatures)
+    {
+        signatures = Array.Empty<FoxProSignatureEntry>();
+        var matches = index.Methods
+            .Where(method => string.Equals(ExtractMethodName(method), methodName, StringComparison.OrdinalIgnoreCase))
+            .Take(2)
+            .ToList();
+        if (matches.Count != 1)
+        {
+            return false;
+        }
+
+        if (!index.Signatures.TryGetValue(matches[0], out var resolvedSignatures))
+        {
+            return false;
+        }
+
+        signatures = resolvedSignatures;
+        return true;
+    }
+
+    private static bool TryResolveUniqueProjectMethodDefinition(
+        ProjectSymbolIndex index,
+        string methodName,
+        out FoxProDefinitionLocation definition)
+    {
+        definition = new FoxProDefinitionLocation();
+        var matches = index.Methods
+            .Where(method => string.Equals(ExtractMethodName(method), methodName, StringComparison.OrdinalIgnoreCase))
+            .Take(2)
+            .ToList();
+        if (matches.Count != 1)
+        {
+            return false;
+        }
+
+        return TryResolveDefinition(index, matches[0], out definition);
     }
 
     private static void AddAsset(

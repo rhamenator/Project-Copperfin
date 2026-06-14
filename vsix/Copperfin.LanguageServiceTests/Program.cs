@@ -21,6 +21,8 @@ internal static class Program
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
         TestQualifiedProjectMethodSignatureHelpAndDefinition();
         TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
+        TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
+        TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
 
         if (failures != 0)
         {
@@ -372,6 +374,71 @@ internal static class Program
                 Expect(completions[0].Description == "Project method member from app.customer.editor.",
                     "member access context should surface the originating class path for project method members");
             }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName()
+    {
+        var root = CreateProjectRoot("instance_method_fallback");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "oEditor.SaveOrder");
+            Expect(signatures.Count == 1, "instance-style method tokens should surface signature help when the trailing method name is unique");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "app.customer.editor.SaveOrder(tcCustomerId)",
+                    "instance-style method fallback should reuse the unique project method signature");
+            }
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "oEditor.SaveOrder", out var definition);
+            Expect(resolved, "instance-style method tokens should resolve to a unique project method definition");
+            if (resolved)
+            {
+                Expect(definition.Kind == "method", "instance-style method fallback should resolve a method definition");
+                Expect(definition.Name == "app.customer.editor.SaveOrder", "instance-style method fallback should resolve the unique fully-qualified project method");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches()
+    {
+        var root = CreateProjectRoot("ambiguous_instance_method_fallback");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "DEFINE CLASS app.invoice.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "oEditor.SaveOrder");
+            Expect(signatures.Count == 0, "instance-style method fallback should not guess when multiple project methods share the same trailing name");
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "oEditor.SaveOrder", out _);
+            Expect(!resolved, "instance-style method fallback should not resolve an ambiguous trailing method name");
         }
         finally
         {
