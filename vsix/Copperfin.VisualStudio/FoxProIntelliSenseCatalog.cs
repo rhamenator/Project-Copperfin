@@ -54,6 +54,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ParametersRegex = new(@"^\s*(?:L?PARAMETERS)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly (string Name, string Description)[] Keywords =
@@ -325,6 +326,12 @@ internal static class FoxProIntelliSenseCatalog
         if (!string.IsNullOrWhiteSpace(filePath))
         {
             var index = GetProjectIndex(filePath!);
+            var projectSignatures = TryResolveProjectSignatures(index, key);
+            if (projectSignatures.Count != 0)
+            {
+                return projectSignatures;
+            }
+
             if (index.Classes.Contains(key) || index.Procedures.Contains(key))
             {
                 return Array.Empty<FoxProSignatureEntry>();
@@ -502,8 +509,24 @@ internal static class FoxProIntelliSenseCatalog
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             var line = lines[lineIndex];
-            AddMatch(index.Procedures, index.Definitions, ProcedureRegex, line, path, lineIndex + 1, "procedure", "Project procedure symbol.");
-            AddMatch(index.Procedures, index.Definitions, FunctionRegex, line, path, lineIndex + 1, "function", "Project function symbol.");
+            var procedureMatch = ProcedureRegex.Match(line);
+            if (procedureMatch.Success)
+            {
+                var name = procedureMatch.Groups[1].Value;
+                index.Procedures.Add(name);
+                TryAddDefinition(index.Definitions, name, "procedure", path, lineIndex + 1, procedureMatch.Groups[1].Index + 1, "Project procedure symbol.");
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project procedure signature discovered in source.");
+            }
+
+            var functionMatch = FunctionRegex.Match(line);
+            if (functionMatch.Success)
+            {
+                var name = functionMatch.Groups[1].Value;
+                index.Procedures.Add(name);
+                TryAddDefinition(index.Definitions, name, "function", path, lineIndex + 1, functionMatch.Groups[1].Index + 1, "Project function symbol.");
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project function signature discovered in source.");
+            }
+
             AddMatch(index.Defines, index.Definitions, DefineRegex, line, path, lineIndex + 1, "define", "Project preprocessor symbol.");
             AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, path, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
 
@@ -675,6 +698,33 @@ internal static class FoxProIntelliSenseCatalog
         return TryResolveDefinition(index, segments[^1], out definition);
     }
 
+    private static IReadOnlyList<FoxProSignatureEntry> TryResolveProjectSignatures(ProjectSymbolIndex index, string invocationName)
+    {
+        if (index.Signatures.TryGetValue(invocationName, out var signatures))
+        {
+            return signatures;
+        }
+
+        if (!invocationName.Contains('.'))
+        {
+            return Array.Empty<FoxProSignatureEntry>();
+        }
+
+        var segments = invocationName.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        for (var segmentCount = segments.Length - 1; segmentCount > 0; segmentCount--)
+        {
+            var prefix = string.Join(".", segments.Take(segmentCount));
+            if (index.Signatures.TryGetValue(prefix, out signatures))
+            {
+                return signatures;
+            }
+        }
+
+        return index.Signatures.TryGetValue(segments[^1], out signatures)
+            ? signatures
+            : Array.Empty<FoxProSignatureEntry>();
+    }
+
     private static void AddAsset(
         ISet<string> bucket,
         ProjectSymbolIndex index,
@@ -712,6 +762,85 @@ internal static class FoxProIntelliSenseCatalog
         };
     }
 
+    private static void TryAddProjectSignature(
+        IDictionary<string, IReadOnlyList<FoxProSignatureEntry>> signatures,
+        string name,
+        IReadOnlyList<string> lines,
+        int definitionLineIndex,
+        string documentation)
+    {
+        if (string.IsNullOrWhiteSpace(name) || signatures.ContainsKey(name))
+        {
+            return;
+        }
+
+        var rawParameters = TryReadProjectParameterList(lines, definitionLineIndex);
+        var parameters = ParseProjectParameters(rawParameters);
+        var content = parameters.Count == 0
+            ? $"{name}()"
+            : $"{name}({string.Join(", ", parameters.Select(parameter => parameter.Documentation))})";
+
+        signatures[name] = new[]
+        {
+            new FoxProSignatureEntry
+            {
+                Name = name,
+                Content = content,
+                Documentation = documentation,
+                Parameters = parameters
+            }
+        };
+    }
+
+    private static string TryReadProjectParameterList(IReadOnlyList<string> lines, int definitionLineIndex)
+    {
+        for (var lineIndex = definitionLineIndex + 1; lineIndex < lines.Count; lineIndex++)
+        {
+            var candidate = lines[lineIndex].Trim();
+            if (string.IsNullOrWhiteSpace(candidate) || candidate.StartsWith("*", StringComparison.Ordinal) || candidate.StartsWith("&&", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var match = ParametersRegex.Match(candidate);
+            return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    private static IReadOnlyList<FoxProParameterEntry> ParseProjectParameters(string rawParameters)
+    {
+        if (string.IsNullOrWhiteSpace(rawParameters))
+        {
+            return Array.Empty<FoxProParameterEntry>();
+        }
+
+        return rawParameters
+            .Split(',')
+            .Select(parameter => parameter.Trim())
+            .Where(parameter => !string.IsNullOrWhiteSpace(parameter))
+            .Select(parameter => new FoxProParameterEntry
+            {
+                Name = NormalizeProjectParameterName(parameter),
+                Documentation = parameter
+            })
+            .ToList();
+    }
+
+    private static string NormalizeProjectParameterName(string parameter)
+    {
+        var separatorIndex = parameter.IndexOf('=');
+        var candidate = separatorIndex >= 0 ? parameter[..separatorIndex] : parameter;
+        var asIndex = candidate.IndexOf(" AS ", StringComparison.OrdinalIgnoreCase);
+        if (asIndex >= 0)
+        {
+            candidate = candidate[..asIndex];
+        }
+
+        return candidate.Trim();
+    }
+
     private static FoxProSignatureEntry CreateSignature(string name, string content, string documentation, params (string Name, string Documentation)[] parameters)
     {
         return new FoxProSignatureEntry
@@ -741,6 +870,7 @@ internal static class FoxProIntelliSenseCatalog
         public HashSet<string> Labels { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Menus { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, FoxProDefinitionLocation> Definitions { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, IReadOnlyList<FoxProSignatureEntry>> Signatures { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public bool ShouldRefresh => (DateTime.UtcNow - BuiltAtUtc) > TimeSpan.FromSeconds(15);
     }

@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-06-14
 
+- G1/#179 language-service signature-help fidelity shipped with focused standalone coverage: `FoxProIntelliSenseCatalog` now derives project procedure/function signatures from adjacent `LPARAMETERS` / `PARAMETERS` declarations and reuses them for dotted invocation fallback, while `Copperfin.LanguageServiceTests` now verifies raw parameter-text preservation and dotted-call signature lookup.
 - G1/#178 language-service symbol-resolution fidelity shipped with focused standalone coverage: `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before falling back to the trailing member name, and `Copperfin.LanguageServiceTests` now verifies dotted class-prefix navigation, trailing procedure fallback, and quick-info description reuse.
 ## 2026-06-13
 - D2/#20 child slice `#164` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies debug source roots preserve source-first ordering when source and content roots differ, keeping watch/locals lookup roots deterministic.

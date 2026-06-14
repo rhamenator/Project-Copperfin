@@ -12,6 +12,8 @@ internal static class Program
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
+        TestProjectProcedureSignatureHelpUsesLparameters();
+        TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
 
         if (failures != 0)
         {
@@ -90,6 +92,59 @@ internal static class Program
             Expect(
                 string.Equals(description, "Project class symbol deriving from custom.", StringComparison.Ordinal),
                 "quick info should reuse the resolved dotted class definition description");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectProcedureSignatureHelpUsesLparameters()
+    {
+        var root = CreateProjectRoot("procedure_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "orders.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId, tlPreview = .F." + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "SaveOrder");
+            Expect(signatures.Count == 1, "project procedures with LPARAMETERS should surface one signature entry");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "SaveOrder(tcCustomerId, tlPreview = .F.)", "project procedure signature help should preserve raw parameter text in the signature content");
+                Expect(signatures[0].Parameters.Count == 2, "project procedure signature help should surface each LPARAMETERS argument");
+                Expect(signatures[0].Parameters[0].Name == "tcCustomerId", "project procedure signature help should normalize the first parameter name");
+                Expect(signatures[0].Parameters[1].Name == "tlPreview", "project procedure signature help should normalize defaulted parameter names");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation()
+    {
+        var root = CreateProjectRoot("dotted_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "orders.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "PARAMETERS tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "oToolbar.SaveOrder");
+            Expect(signatures.Count == 1, "dotted invocation names should still surface project procedure signature help");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "SaveOrder(tcCustomerId)", "dotted invocation signature help should fall back to the trailing procedure symbol");
+            }
         }
         finally
         {
