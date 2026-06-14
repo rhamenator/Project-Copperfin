@@ -464,6 +464,8 @@ void run_library_build_host_smoke(
                "build host manifest should record a materialized primary output for " + extension + " outputs");
         expect(manifest_text.find("project_title=LibraryDemo") != std::string::npos,
                "build host manifest should record the project title for " + extension + " outputs");
+        expect(manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
+               "build host manifest should record the project path for " + extension + " outputs");
         expect(manifest_text.find("configuration=debug") != std::string::npos,
                "build host manifest should record the debug build configuration for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
@@ -504,6 +506,8 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the materialized primary output path for " + extension + " outputs");
         expect(debug_manifest_text.find("project_title=LibraryDemo") != std::string::npos,
                "build host debug manifest should record the project title for " + extension + " outputs");
+        expect(debug_manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
+               "build host debug manifest should record the project path for " + extension + " outputs");
         expect(debug_manifest_text.find("configuration=debug") != std::string::npos,
                "build host debug manifest should record the debug build configuration for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
