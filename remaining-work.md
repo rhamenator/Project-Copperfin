@@ -7,6 +7,7 @@ This file is the working guide for the remaining Copperfin implementation effort
 - 2026-06-14: D1/#403 launcher argument-forwarding fidelity is now shipped. Generated launcher sources now preserve ordinary application arguments while still injecting the manifest path and normalizing debug flags, and focused `test_runtime_pipeline` coverage now locks that source contract down directly.
 - 2026-06-14: D2/#404 breakpoint statement-text fidelity is now shipped. Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract, and focused `test_prg_engine` coverage locks both ordinary in-routine and first-line breakpoint cases down directly.
 - 2026-06-14: D2/#405 step pause-state fidelity is now shipped. Focused `test_prg_engine` coverage now proves `step_into`, `step_over`, and `step_out` each pause with `DebugPauseReason::step` and preserve the expected current/next statement text plus caller-vs-callee frame routing across a simple `DO worker` flow.
+- 2026-06-14: D2/#406 breakpoint cursor-inspection fidelity is now shipped. Focused `test_prg_engine` coverage now proves a breakpoint pause preserves the selected work area, alias map, and open-cursor inspection state (work area, record position, record count, and source path) alongside the existing statement-text contract.
 
 It is intentionally ordered by dependency depth:
 

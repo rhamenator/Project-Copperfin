@@ -34,6 +34,7 @@ Next: the highest-priority open umbrellas are still `#19` and `#20`. Create the 
 
 Language-service queue update:
 
+- 2026-06-14: **`#406` is now shipped.** Focused `test_prg_engine` coverage now proves a breakpoint pause preserves the selected work area, alias map, and open-cursor inspection state (work area, record position, record count, and source path) alongside the existing statement-text contract.
 - 2026-06-14: **`#405` is now shipped.** Focused `test_prg_engine` coverage now proves `step_into`, `step_over`, and `step_out` each pause with `DebugPauseReason::step` and preserve the expected current/next statement text plus caller-vs-callee frame routing across a simple `DO worker` flow.
 - 2026-06-14: **`#404` is now shipped.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract. Focused `test_prg_engine` coverage locks both the ordinary in-routine breakpoint and the first-line breakpoint case down directly.
 - 2026-06-14: **`#403` is now shipped.** The generated .NET launcher now preserves ordinary application arguments instead of dropping everything except `--debug`, while keeping the manifest injection and debug-flag normalization contract intact. Focused `test_runtime_pipeline` coverage locks that launcher source contract down directly.
@@ -58,6 +59,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#406` is now closed.** Breakpoint pauses now have explicit regression coverage for selected work-area and open-cursor inspection fidelity, including alias/work-area identity plus current record position at the paused statement.
 - 2026-06-14: **`#405` is now closed.** Step pause-state routing is now explicitly regression-guarded: `step_into`, `step_over`, and `step_out` each preserve the expected current/next statement text and caller-vs-callee frame routing across a simple `DO worker` flow.
 - 2026-06-14: **`#404` is now closed.** Breakpoint pauses now have explicit regression coverage proving the debug state preserves the current statement text alongside the existing line/frame/locals contract in both ordinary and first-line breakpoint cases.
 - 2026-06-14: **`#403` is now closed.** Generated .NET launchers now preserve ordinary application arguments while still injecting the manifest path and normalizing debug flags, and focused `test_runtime_pipeline` coverage now proves the launcher source contract directly.

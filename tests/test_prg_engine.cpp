@@ -263,6 +263,61 @@ void test_step_pause_state_preserves_statement_text_across_step_modes() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_breakpoint_pause_preserves_selected_cursor_inspection_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_breakpoint_cursor_state";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "breakpoint_cursor_state.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "x = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    session.add_breakpoint({.file_path = main_path.string(), .line = 3});
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "cursor-state test should stop on the third-line breakpoint");
+    expect(state.statement_text == "x = AGE",
+           "cursor-state breakpoint should preserve the current statement text");
+    expect(state.work_area.selected == 1,
+           "breakpoint pause should preserve the selected work area");
+    expect(state.work_area.aliases.size() == 1U,
+           "breakpoint pause should preserve the open alias map");
+    if (state.work_area.aliases.size() == 1U) {
+        expect(state.work_area.aliases.begin()->second == "People",
+               "breakpoint pause should preserve the selected alias name");
+    }
+
+    const auto runtime_cursor = std::find_if(state.cursors.begin(), state.cursors.end(), [](const auto& cursor) {
+        return cursor.alias == "People";
+    });
+    expect(runtime_cursor != state.cursors.end(),
+           "breakpoint pause should preserve the open cursor in runtime inspection state");
+    if (runtime_cursor != state.cursors.end()) {
+        expect(runtime_cursor->work_area == 1,
+               "breakpoint pause should preserve the cursor work area");
+        expect(runtime_cursor->recno == 2U,
+               "breakpoint pause should preserve the current record position");
+        expect(runtime_cursor->record_count == 2U,
+               "breakpoint pause should preserve the open cursor record count");
+        expect(!runtime_cursor->source_path.empty(),
+               "breakpoint pause should preserve the cursor source path");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1422,6 +1477,7 @@ int main() {
     test_local_variables_in_stack_frame();
     test_breakpoint_on_first_executable_line_hits_after_entry_continue();
     test_step_pause_state_preserves_statement_text_across_step_modes();
+    test_breakpoint_pause_preserves_selected_cursor_inspection_state();
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();
