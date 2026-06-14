@@ -365,9 +365,13 @@ void run_library_build_host_smoke(
                    "build host manifest should record InitLibrary DLL arity");
             expect(manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
                    "build host manifest should record AddNumbers DLL arity");
-            expect(manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int arg1") != std::string::npos,
+            expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL parameter names");
+            expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL parameter names");
+            expect(manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
                    "build host manifest should record InitLibrary DLL call surface");
-            expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int arg1, int arg2") != std::string::npos,
+            expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
                    "build host manifest should record AddNumbers DLL call surface");
         }
     }
@@ -412,6 +416,10 @@ void run_library_build_host_smoke(
                    "build host FLL manifest should declare InitLibrary arity");
             expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers arity");
+            expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary parameter names");
+            expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers parameter names");
             expect(api_manifest.find("function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary callable surface");
             expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,

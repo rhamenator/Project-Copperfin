@@ -345,13 +345,107 @@ std::map<std::string, std::size_t> collect_library_export_parameter_counts(const
     return parameter_counts;
 }
 
-std::string build_placeholder_int_parameter_list(const std::size_t parameter_count) {
+std::string extract_declared_parameter_name(const std::string& raw_name) {
+    std::string parameter_name = trim_copy(raw_name);
+    if (!parameter_name.empty() && parameter_name.front() == '@') {
+        parameter_name.erase(parameter_name.begin());
+    }
+    const std::size_t equals = parameter_name.find('=');
+    if (equals != std::string::npos) {
+        parameter_name = trim_copy(parameter_name.substr(0U, equals));
+    }
+    return parameter_name;
+}
+
+std::string sanitize_cpp_identifier(const std::string& value, const std::size_t fallback_index) {
+    std::string sanitized;
+    sanitized.reserve(value.size() + 8U);
+    for (const char ch : value) {
+        if ((ch >= 'A' && ch <= 'Z') ||
+            (ch >= 'a' && ch <= 'z') ||
+            (ch >= '0' && ch <= '9') ||
+            ch == '_') {
+            sanitized.push_back(ch);
+        } else {
+            sanitized.push_back('_');
+        }
+    }
+
+    if (sanitized.empty()) {
+        sanitized = "arg" + std::to_string(fallback_index + 1U);
+    }
+    if ((sanitized.front() >= '0' && sanitized.front() <= '9')) {
+        sanitized.insert(sanitized.begin(), '_');
+    }
+    return sanitized;
+}
+
+std::map<std::string, std::vector<std::string>> collect_library_export_parameter_names(const RuntimePackagePlan& plan) {
+    std::map<std::string, std::vector<std::string>> parameter_names;
+    std::unordered_set<std::string> seen;
+    for (const auto& asset : plan.assets) {
+        if (!asset.exists || asset.excluded) {
+            continue;
+        }
+
+        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+        if (extension != ".prg") {
+            continue;
+        }
+
+        const Program program = parse_program(asset.source_path);
+        for (const auto& [_, routine] : program.routines) {
+            const std::string export_name = normalize_export_symbol(routine.name);
+            if (export_name.empty()) {
+                continue;
+            }
+
+            const std::string normalized = lowercase_copy(export_name);
+            if (!seen.insert(normalized).second) {
+                continue;
+            }
+
+            std::vector<std::string> names;
+            for (const auto& statement : routine.statements) {
+                if (statement.kind != StatementKind::parameters_declaration &&
+                    statement.kind != StatementKind::lparameters_declaration) {
+                    continue;
+                }
+
+                names.reserve(statement.names.size());
+                for (std::size_t index = 0; index < statement.names.size(); ++index) {
+                    names.push_back(sanitize_cpp_identifier(
+                        extract_declared_parameter_name(statement.names[index]),
+                        index));
+                }
+                break;
+            }
+
+            parameter_names.emplace(export_name, std::move(names));
+        }
+    }
+
+    return parameter_names;
+}
+
+std::string build_placeholder_int_parameter_list(const std::vector<std::string>& parameter_names) {
     std::ostringstream stream;
-    for (std::size_t index = 0; index < parameter_count; ++index) {
+    for (std::size_t index = 0; index < parameter_names.size(); ++index) {
         if (index > 0U) {
             stream << ", ";
         }
-        stream << "int arg" << (index + 1U);
+        stream << "int " << sanitize_cpp_identifier(parameter_names[index], index);
+    }
+    return stream.str();
+}
+
+std::string build_manifest_parameter_names(const std::vector<std::string>& parameter_names) {
+    std::ostringstream stream;
+    for (std::size_t index = 0; index < parameter_names.size(); ++index) {
+        if (index > 0U) {
+            stream << "|";
+        }
+        stream << quote_manifest_value(parameter_names[index]);
     }
     return stream.str();
 }
@@ -428,6 +522,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
 
     if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
+        const auto parameter_names = collect_library_export_parameter_names(plan);
         stream << "#if defined(_WIN32) && defined(_M_IX86)\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL __stdcall\n";
         stream << "#else\n";
@@ -436,10 +531,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+            const auto names_found = parameter_names.find(symbol);
+            const std::vector<std::string> effective_names =
+                names_found == parameter_names.end()
+                    ? std::vector<std::string>(parameter_count, std::string{})
+                    : names_found->second;
             stream << "COPPERFIN_EXPORT int COPPERFIN_VFP_DLL_CALL " << symbol << "("
-                   << build_placeholder_int_parameter_list(parameter_count) << ") {\n";
-            for (std::size_t index = 0; index < parameter_count; ++index) {
-                stream << "    (void)arg" << (index + 1U) << ";\n";
+                   << build_placeholder_int_parameter_list(effective_names) << ") {\n";
+            for (std::size_t index = 0; index < effective_names.size(); ++index) {
+                stream << "    (void)" << sanitize_cpp_identifier(effective_names[index], index) << ";\n";
             }
             stream << "    return -1;\n";
             stream << "}\n\n";
@@ -508,6 +608,7 @@ std::string build_native_wrapper_powershell_script_source() {
 std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
+    const auto parameter_names = collect_library_export_parameter_names(plan);
     stream << "manifest_version=1\n";
     stream << "output_kind=fll\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
@@ -523,9 +624,13 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
         stream << "function=" << quote_manifest_value(symbol) << "\n";
         const auto found = parameter_counts.find(symbol);
         const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+        const auto names_found = parameter_names.find(symbol);
         stream << "function_arity="
                << quote_manifest_value(symbol) << "|"
                << parameter_count << "\n";
+        stream << "function_parameters="
+               << quote_manifest_value(symbol) << "|"
+               << (names_found == parameter_names.end() ? std::string{} : build_manifest_parameter_names(names_found->second)) << "\n";
         stream << "function_call_surface="
                << quote_manifest_value(symbol) << "|"
                << quote_manifest_value(std::string(kFllCallableSignature)) << "|"
@@ -537,6 +642,7 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
 std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
+    const auto parameter_names = collect_library_export_parameter_names(plan);
     stream << "manifest_version=1\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
@@ -544,14 +650,22 @@ std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     for (const auto& symbol : plan.exported_symbols) {
         const auto found = parameter_counts.find(symbol);
         const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+        const auto names_found = parameter_names.find(symbol);
         stream << "function=" << quote_manifest_value(symbol) << "\n";
         stream << "function_arity="
                << quote_manifest_value(symbol) << "|"
                << parameter_count << "\n";
+        stream << "function_parameters="
+               << quote_manifest_value(symbol) << "|"
+               << (names_found == parameter_names.end() ? std::string{} : build_manifest_parameter_names(names_found->second)) << "\n";
         stream << "function_call_surface="
                << quote_manifest_value(symbol) << "|"
                << quote_manifest_value(std::string(kVfpLibraryCallableConvention)) << "|"
-               << quote_manifest_value(build_placeholder_int_parameter_list(parameter_count)) << "\n";
+               << quote_manifest_value(
+                      names_found == parameter_names.end()
+                          ? std::string{}
+                          : build_placeholder_int_parameter_list(names_found->second))
+               << "\n";
     }
     return stream.str();
 }
@@ -1936,16 +2050,25 @@ std::string build_runtime_manifest_text(
 
     if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
+        const auto parameter_names = collect_library_export_parameter_names(plan);
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+            const auto names_found = parameter_names.find(symbol);
             stream << "library_function_arity="
                    << quote_manifest_value(symbol) << "|"
                    << parameter_count << "\n";
+            stream << "library_function_parameters="
+                   << quote_manifest_value(symbol) << "|"
+                   << (names_found == parameter_names.end() ? std::string{} : build_manifest_parameter_names(names_found->second)) << "\n";
             stream << "library_function_call_surface="
                    << quote_manifest_value(symbol) << "|"
                    << quote_manifest_value(std::string(kVfpLibraryCallableConvention)) << "|"
-                   << quote_manifest_value(build_placeholder_int_parameter_list(parameter_count)) << "\n";
+                   << quote_manifest_value(
+                          names_found == parameter_names.end()
+                              ? std::string{}
+                              : build_placeholder_int_parameter_list(names_found->second))
+                   << "\n";
         }
     }
 

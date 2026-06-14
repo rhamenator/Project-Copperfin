@@ -1001,13 +1001,13 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should use C exports");
         expect(wrapper_source.find("#define COPPERFIN_VFP_DLL_CALL __stdcall") != std::string::npos,
                "library-output wrapper source should declare the VFP DLL calling-convention macro");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int arg1)") != std::string::npos,
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int tcMode)") != std::string::npos,
                "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)arg1;") != std::string::npos,
+        expect(wrapper_source.find("(void)tcMode;") != std::string::npos,
                "library-output wrapper source should consume placeholder DLL arguments");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int arg1, int arg2)") != std::string::npos,
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)arg2;") != std::string::npos,
+        expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
                "library-output wrapper source should consume multiple placeholder DLL arguments");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
@@ -1113,6 +1113,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL API manifest should list discovered procedure names");
         expect(library_api_manifest.find("function=AddNumbers") != std::string::npos,
                "library-output DLL API manifest should list discovered function names");
+        expect(library_api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "library-output DLL API manifest should record InitLibrary parameter names");
+        expect(library_api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "library-output DLL API manifest should record AddNumbers parameter names");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -1136,9 +1140,13 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record InitLibrary arity");
         expect(runtime_manifest.find("library_function_arity=AddNumbers|2") != std::string::npos,
                "library-output manifest should record AddNumbers arity");
-        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int arg1") != std::string::npos,
+        expect(runtime_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "library-output manifest should record InitLibrary parameter names");
+        expect(runtime_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "library-output manifest should record AddNumbers parameter names");
+        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
                "library-output manifest should record InitLibrary call-surface contract");
-        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int arg1, int arg2") != std::string::npos,
+        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
                "library-output manifest should record AddNumbers call-surface contract");
         expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output manifest should record discovered export symbols");
@@ -1464,6 +1472,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should declare InitLibrary arity");
         expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
                "fll-output API manifest should declare AddNumbers arity");
+        expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "fll-output API manifest should record InitLibrary parameter names");
+        expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "fll-output API manifest should record AddNumbers parameter names");
         expect(api_manifest.find("function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
                "fll-output API manifest should declare InitLibrary callable surface");
         expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
