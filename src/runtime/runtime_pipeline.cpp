@@ -200,6 +200,7 @@ constexpr std::string_view kFllLoaderEntrypoint = "FoxInfo";
 constexpr std::string_view kFllRegistrationSymbol = "_FoxTable";
 constexpr std::string_view kFllCallableSignature = "ParamBlk*";
 constexpr std::string_view kFllDefaultReturnHelper = "_RetInt";
+constexpr std::string_view kVfpLibraryCallableConvention = "vfp_declare_default";
 
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
     const std::filesystem::path configured_output(workspace.build_plan.output_path);
@@ -414,8 +415,20 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         return stream.str();
     }
 
+    if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+        stream << "#if defined(_WIN32) && defined(_M_IX86)\n";
+        stream << "#define COPPERFIN_VFP_DLL_CALL __stdcall\n";
+        stream << "#else\n";
+        stream << "#define COPPERFIN_VFP_DLL_CALL\n";
+        stream << "#endif\n\n";
+    }
+
     for (const auto& symbol : plan.exported_symbols) {
-        stream << "COPPERFIN_EXPORT int " << symbol << "() {\n";
+        stream << "COPPERFIN_EXPORT int ";
+        if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+            stream << "COPPERFIN_VFP_DLL_CALL ";
+        }
+        stream << symbol << "() {\n";
         stream << "    return -1;\n";
         stream << "}\n\n";
     }
@@ -1784,6 +1797,10 @@ std::string build_runtime_manifest_text(
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllCallableSignature) : std::string()) << "\n";
     stream << "fll_default_return_helper="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllDefaultReturnHelper) : std::string()) << "\n";
+    stream << "library_callable_convention="
+           << quote_manifest_value((plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx)
+                                       ? std::string(kVfpLibraryCallableConvention)
+                                       : std::string()) << "\n";
     stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
@@ -1897,6 +1914,10 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllCallableSignature) : std::string()) << "\n";
     stream << "fll_default_return_helper="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllDefaultReturnHelper) : std::string()) << "\n";
+    stream << "library_callable_convention="
+           << quote_manifest_value((plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx)
+                                       ? std::string(kVfpLibraryCallableConvention)
+                                       : std::string()) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";

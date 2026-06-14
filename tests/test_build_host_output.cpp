@@ -341,6 +341,10 @@ void run_library_build_host_smoke(
                "build host manifest should record a materialized primary output for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host manifest should record the built primary output as an extension payload for " + extension + " outputs");
+        if (extension == "dll") {
+            expect(manifest_text.find("library_callable_convention=vfp_declare_default") != std::string::npos,
+                   "build host manifest should record the VFP DLL calling convention contract");
+        }
     }
 
     if (fs::exists(expected_output) && native_symbol_dump_is_available()) {

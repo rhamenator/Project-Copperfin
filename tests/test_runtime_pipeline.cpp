@@ -982,10 +982,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should identify the generated scaffold");
         expect(wrapper_source.find("extern \"C\"") != std::string::npos,
                "library-output wrapper source should use C exports");
-        expect(wrapper_source.find("int InitLibrary()") != std::string::npos,
-               "library-output wrapper source should scaffold procedure entrypoints");
-        expect(wrapper_source.find("int AddNumbers()") != std::string::npos,
-               "library-output wrapper source should scaffold function entrypoints");
+        expect(wrapper_source.find("#define COPPERFIN_VFP_DLL_CALL __stdcall") != std::string::npos,
+               "library-output wrapper source should declare the VFP DLL calling-convention macro");
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary()") != std::string::npos,
+               "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers()") != std::string::npos,
+               "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");
@@ -1089,6 +1091,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the wrapper shell build script path");
         expect(runtime_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
                "library-output manifest should record the wrapper PowerShell build script path");
+        expect(runtime_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
+               "library-output manifest should record the VFP DLL calling convention contract");
         expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output manifest should record discovered export symbols");
         expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1101,6 +1105,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should expose the native-wrapper feature flag");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
+        expect(debug_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
+               "library-output debug manifest should record the VFP DLL calling convention contract");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
