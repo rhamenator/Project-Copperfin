@@ -4397,6 +4397,66 @@ void test_critical_section_order_policy_rejects_descending_nested_acquire() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_critical_section_exit_order_is_enforced() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_exit_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_exit_order_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE workerbad\n"
+        "    ENTER CRITICAL alpha\n"
+        "    ENTER CRITICAL beta\n"
+        "    EXIT CRITICAL alpha\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE workergood\n"
+        "    ENTER CRITICAL alpha\n"
+        "    ENTER CRITICAL beta\n"
+        "    EXIT CRITICAL beta\n"
+        "    EXIT CRITICAL alpha\n"
+        "    lGoodDone = .T.\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN workerbad TO nBad\n"
+        "SPAWN workergood TO nGood\n"
+        "AWAIT nBad TO lBadAwaitDone\n"
+        "AWAIT nGood TO lGoodAwaitDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section exit-order policy script should complete");
+
+    const auto bad_await_done = state.globals.find("lbadawaitdone");
+    const auto good_await_done = state.globals.find("lgoodawaitdone");
+    expect(bad_await_done != state.globals.end(), "bad worker should report await completion");
+    expect(good_await_done != state.globals.end(), "good worker should report await completion");
+    if (bad_await_done != state.globals.end()) {
+        expect(!bad_await_done->second.boolean_value, "out-of-order EXIT CRITICAL should fault the bad worker");
+    }
+    if (good_await_done != state.globals.end()) {
+        expect(good_await_done->second.boolean_value, "good worker should terminate after valid critical usage");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.order_violation" &&
+               event.detail.find("held=beta requested=alpha") != std::string::npos;
+    }), "out-of-order EXIT CRITICAL should emit runtime.critical.order_violation");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.task.await" &&
+               event.detail.find("state=error") != std::string::npos &&
+               event.detail.find("handle=") != std::string::npos;
+    }), "bad worker AWAIT should report task error state");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_critical_section_blocking_policy_rejects_await_inside_section() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_await_policy";
@@ -5634,6 +5694,7 @@ int main() {
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_spawn_critical_section_serializes_workers();
     test_critical_section_order_policy_rejects_descending_nested_acquire();
+    test_critical_section_exit_order_is_enforced();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_yield_inside_critical_section_is_allowed();

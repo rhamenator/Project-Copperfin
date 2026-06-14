@@ -37,14 +37,18 @@ These sections are an engine coordination construct. They are not exposed as bit
 - If a worker already holds section `beta`, it must not then enter `alpha`.
 - Violations must fail fast with deterministic diagnostics instead of waiting indefinitely.
 
+### 3. Exit critical sections in strict LIFO order
+
+If nested `ENTER CRITICAL` operations are active, `EXIT CRITICAL` must target the most recent section first.
+
 Engine diagnostic contract:
 
 - event category: `runtime.critical.order_violation`
 - fault text includes the held section and requested section
 
-This single total-order rule prevents circular wait between workers that would otherwise deadlock on opposing nested acquire orders.
+This rule prevents stack corruption and unlock races caused by out-of-order unwinds and keeps lock-state deterministic for deadlock prevention.
 
-### 3. No blocking while any critical section is held
+### 4. No blocking while any critical section is held
 
 Once a worker holds at least one critical section, it must not perform an operation that can block on:
 
@@ -97,9 +101,10 @@ The compatibility objective is therefore:
 
 ## Deadlock Prevention Summary
 
-Copperfin prevents critical-section deadlocks with two hard rules:
+Copperfin prevents critical-section deadlocks with these hard rules:
 
 1. all nested section acquires use one global name order
-2. no worker may block while holding a section
+2. exits must unwind in strict LIFO order
+3. no worker may block while holding a section
 
 If both rules continue to hold, the engine avoids the classic circular-wait pattern that causes deadlocks in multi-worker code.

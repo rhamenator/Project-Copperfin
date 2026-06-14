@@ -798,9 +798,26 @@
             return true;
         }
 
-        bool exit_critical_section(const std::string &name)
+        bool exit_critical_section(const std::string &name,
+                                   const SourceLocation &location)
         {
             const std::string section_name = normalize_identifier(name.empty() ? std::string{"default"} : name);
+            if (critical_section_stack.empty())
+            {
+                last_error_message = "Unknown critical section: " + section_name;
+                return false;
+            }
+
+            if (section_name != critical_section_stack.back())
+            {
+                const std::string held_section = critical_section_stack.back();
+                last_error_message = "Critical sections must be exited in LIFO order: held " + held_section + " before " + section_name;
+                events.push_back({.category = "runtime.critical.order_violation",
+                                  .detail = "held=" + held_section + " requested=" + section_name,
+                                  .location = location});
+                return false;
+            }
+
             auto depth_found = critical_section_depth_by_name.find(section_name);
             if (depth_found == critical_section_depth_by_name.end() || depth_found->second == 0U)
             {
@@ -822,11 +839,7 @@
                 critical_section_mutexes_by_name.erase(mutex_found);
             }
 
-            const auto stack_found = std::find(critical_section_stack.rbegin(), critical_section_stack.rend(), section_name);
-            if (stack_found != critical_section_stack.rend())
-            {
-                critical_section_stack.erase(std::next(stack_found).base());
-            }
+            critical_section_stack.pop_back();
             return true;
         }
 

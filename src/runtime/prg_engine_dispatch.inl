@@ -1010,7 +1010,7 @@
             case StatementKind::exit_critical_command:
             {
                 const std::string section_name = trim_copy(statement.identifier);
-                if (!exit_critical_section(section_name))
+                if (!exit_critical_section(section_name, statement.location))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
