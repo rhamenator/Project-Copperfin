@@ -274,7 +274,7 @@ bool verify_manifest_hashes(
 }
 
 void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>>]\n";
+    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:clear|break:list>]\n";
     std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
 }
 
@@ -309,13 +309,21 @@ copperfin::runtime::DebugResumeAction parse_resume_action(const std::string& val
 
 void print_pause_state(
     const copperfin::runtime::RuntimePauseState& state,
-    const copperfin::runtime::XAssetExecutableModel* xasset_model = nullptr) {
+    const copperfin::runtime::XAssetExecutableModel* xasset_model = nullptr,
+    const std::vector<copperfin::runtime::RuntimeBreakpoint>* breakpoints = nullptr) {
     std::cout << "debug.reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) << "\n";
     std::cout << "debug.location: " << state.location.file_path << ":" << state.location.line << "\n";
     std::cout << "debug.statement: " << state.statement_text << "\n";
     std::cout << "debug.message: " << state.message << "\n";
     std::cout << "debug.stack.depth: " << state.call_stack.size() << "\n";
     std::cout << "debug.executed.statements: " << state.executed_statement_count << "\n";
+    if (breakpoints != nullptr) {
+        std::cout << "debug.breakpoint.count: " << breakpoints->size() << "\n";
+        for (std::size_t index = 0; index < breakpoints->size(); ++index) {
+            const auto& breakpoint = (*breakpoints)[index];
+            std::cout << "debug.breakpoint[" << index << "]: " << breakpoint.file_path << ":" << breakpoint.line << "\n";
+        }
+    }
     if (xasset_model != nullptr) {
         if (const auto* xasset_action = find_pause_xasset_action(state, *xasset_model)) {
             std::cout << "debug.xasset.action_id: " << xasset_action->action_id << "\n";
@@ -366,6 +374,15 @@ void print_pause_state(
         std::cout << "debug.event[" << index << "].category: " << event.category << "\n";
         std::cout << "debug.event[" << index << "].detail: " << event.detail << "\n";
         std::cout << "debug.event[" << index << "].location: " << event.location.file_path << ":" << event.location.line << "\n";
+    }
+}
+
+void print_breakpoint_inventory(const copperfin::runtime::PrgRuntimeSession& session) {
+    const auto breakpoints = session.list_breakpoints();
+    std::cout << "debug.breakpoint.count: " << breakpoints.size() << "\n";
+    for (std::size_t index = 0; index < breakpoints.size(); ++index) {
+        const auto& breakpoint = breakpoints[index];
+        std::cout << "debug.breakpoint[" << index << "]: " << breakpoint.file_path << ":" << breakpoint.line << "\n";
     }
 }
 
@@ -722,7 +739,8 @@ int main(int argc, char** argv) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     } else if (debug_commands.empty()) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        print_pause_state(state, &xasset_model);
+        const auto breakpoints = session.list_breakpoints();
+        print_pause_state(state, &xasset_model, &breakpoints);
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
             const std::string& command = debug_commands[index];
@@ -766,13 +784,35 @@ int main(int argc, char** argv) {
                 } else {
                     std::cout << "debug.watch.error: " << watch.message << "\n";
                 }
-                print_pause_state(state, &xasset_model);
+                const auto breakpoints = session.list_breakpoints();
+                print_pause_state(state, &xasset_model, &breakpoints);
+                continue;
+            } else if (starts_with_insensitive(command, "break:add:")) {
+                const auto breakpoint = parse_breakpoint(command.substr(10U), effective_startup_source);
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Invalid breakpoint command: " << command << "\n";
+                    return 5;
+                }
+                session.add_breakpoint(*breakpoint);
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
+                continue;
+            } else if (lowercase_copy(trim_copy(command)) == "break:clear") {
+                session.clear_breakpoints();
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
+                continue;
+            } else if (lowercase_copy(trim_copy(command)) == "break:list") {
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
                 continue;
             } else {
                 state = session.run(parse_resume_action(command));
             }
             std::cout << "debug.command[" << index << "]: " << command << "\n";
-            print_pause_state(state, &xasset_model);
+            const auto breakpoints = session.list_breakpoints();
+            print_pause_state(state, &xasset_model, &breakpoints);
             if (state.completed || state.reason == copperfin::runtime::DebugPauseReason::error) {
                 break;
             }

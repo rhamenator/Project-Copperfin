@@ -190,6 +190,79 @@ void write_synthetic_form_asset(const std::filesystem::path& table_path) {
     expect(create_result.ok, "synthetic SCX/SCT debugger fixture should be created");
 }
 
+void test_runtime_host_supports_breakpoint_management_commands(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_breakpoint_command_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(
+        startup_path,
+        "LOCAL nValue\n"
+        "nValue = 1\n"
+        "nValue = 2\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=BreakpointDemo\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--debug-command", "break:add:2",
+            "--debug-command", "break:list",
+            "--debug-command", "break:clear",
+            "--debug-command", "break:list",
+            "--debug-command", "break:add:3",
+            "--debug-command", "continue"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "breakpoint command stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "breakpoint command stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0, "runtime host breakpoint-command smoke should exit successfully");
+    expect(process.stdout_text.find("debug.command[0]: break:add:2") != std::string::npos,
+           "runtime host should report breakpoint add commands");
+    expect(process.stdout_text.find("debug.command[1]: break:list") != std::string::npos,
+           "runtime host should report breakpoint list commands");
+    expect(process.stdout_text.find("debug.command[2]: break:clear") != std::string::npos,
+           "runtime host should report breakpoint clear commands");
+    expect(process.stdout_text.find("debug.breakpoint.count: 1") != std::string::npos,
+           "runtime host should report one active breakpoint after add");
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":2") != std::string::npos,
+           "runtime host should list the added breakpoint against the startup source");
+    expect(process.stdout_text.find("debug.breakpoint.count: 0") != std::string::npos,
+           "runtime host should report an empty breakpoint inventory after clear");
+    expect(process.stdout_text.find("debug.command[5]: continue") != std::string::npos,
+           "runtime host should continue after breakpoint management commands");
+    expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+           "runtime host should still pause on the live managed breakpoint");
+    expect(process.stdout_text.find("debug.location: " + startup_path.string() + ":3") != std::string::npos,
+           "runtime host should break on the breakpoint added after clear");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -293,6 +366,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    test_runtime_host_supports_breakpoint_management_commands(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
 
     if (failures != 0) {

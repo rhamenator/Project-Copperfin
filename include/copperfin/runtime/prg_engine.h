@@ -175,6 +175,7 @@ public:
 
     void add_breakpoint(const RuntimeBreakpoint& breakpoint);
     void clear_breakpoints();
+    [[nodiscard]] std::vector<RuntimeBreakpoint> list_breakpoints() const;
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);
     [[nodiscard]] bool can_undo_command() const;
     [[nodiscard]] std::string command_undo_label() const;
