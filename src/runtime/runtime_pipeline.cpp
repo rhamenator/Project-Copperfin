@@ -654,6 +654,37 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return copperfin_wrapper_module_directory(symbol_address) / \"copperfin_runtime_host\";\n";
     stream << "#endif\n";
     stream << "}\n\n";
+    stream << "struct CopperfinRuntimeBridgeDescriptor {\n";
+    stream << "    const char* export_name;\n";
+    stream << "    const char* routine_kind;\n";
+    stream << "    const char* source_path;\n";
+    stream << "    unsigned int source_line;\n";
+    stream << "    const char* parameter_declaration_kind;\n";
+    stream << "    const char* parameter_names;\n";
+    stream << "    unsigned int parameter_count;\n";
+    stream << "    std::filesystem::path manifest_path;\n";
+    stream << "    std::filesystem::path runtime_host_path;\n";
+    stream << "};\n\n";
+    stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
+    stream << "    const char* export_name,\n";
+    stream << "    const char* routine_kind,\n";
+    stream << "    const char* source_path,\n";
+    stream << "    unsigned int source_line,\n";
+    stream << "    const char* parameter_declaration_kind,\n";
+    stream << "    const char* parameter_names,\n";
+    stream << "    unsigned int parameter_count,\n";
+    stream << "    void* symbol_address) {\n";
+    stream << "    return CopperfinRuntimeBridgeDescriptor{\n";
+    stream << "        export_name,\n";
+    stream << "        routine_kind,\n";
+    stream << "        source_path,\n";
+    stream << "        source_line,\n";
+    stream << "        parameter_declaration_kind,\n";
+    stream << "        parameter_names,\n";
+    stream << "        parameter_count,\n";
+    stream << "        copperfin_runtime_manifest_path(symbol_address),\n";
+    stream << "        copperfin_runtime_host_path(symbol_address)};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -684,10 +715,33 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "    const CopperfinFoxInfoRecord* entries;\n";
         stream << "};\n\n";
         for (const auto& symbol : plan.exported_symbols) {
+            const auto found = parameter_counts.find(symbol);
+            const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+            const auto names_found = parameter_names.find(symbol);
+            const auto declaration_kind_found = parameter_declaration_kinds.find(symbol);
+            const auto kind_found = routine_kinds.find(symbol);
+            const auto location_found = routine_locations.find(symbol);
+            const std::string routine_kind =
+                kind_found == routine_kinds.end() ? std::string("function") : kind_found->second;
+            const SourceLocation location =
+                location_found == routine_locations.end() ? SourceLocation{} : location_found->second;
+            const std::string parameter_name_manifest =
+                names_found == parameter_names.end()
+                    ? std::string{}
+                    : build_manifest_parameter_names(names_found->second);
+            const std::string parameter_declaration_kind =
+                declaration_kind_found == parameter_declaration_kinds.end()
+                    ? std::string{}
+                    : declaration_kind_found->second;
             stream << "COPPERFIN_EXPORT int " << symbol << "(ParamBlk* parm) {\n";
             stream << "    (void)parm;\n";
-            stream << "    (void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&" << symbol << "));\n";
-            stream << "    (void)copperfin_runtime_host_path(reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    const auto descriptor = copperfin_build_runtime_bridge_descriptor(\""
+                   << quote_manifest_value(symbol) << "\", \"" << quote_manifest_value(routine_kind)
+                   << "\", \"" << quote_manifest_value(location.file_path) << "\", " << location.line
+                   << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
+                   << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
+                   << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    (void)descriptor;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -734,6 +788,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
         const auto parameter_names = collect_library_export_parameter_names(plan);
+        const auto parameter_declaration_kinds = collect_library_export_parameter_declaration_kinds(plan);
+        const auto routine_kinds = collect_library_export_routine_kinds(plan);
+        const auto routine_locations = collect_library_export_routine_locations(plan);
         stream << "#if defined(_WIN32) && defined(_M_IX86)\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL __stdcall\n";
         stream << "#else\n";
@@ -743,17 +800,34 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
             const auto names_found = parameter_names.find(symbol);
+            const auto declaration_kind_found = parameter_declaration_kinds.find(symbol);
+            const auto kind_found = routine_kinds.find(symbol);
+            const auto location_found = routine_locations.find(symbol);
             const std::vector<std::string> effective_names =
                 names_found == parameter_names.end()
                     ? std::vector<std::string>(parameter_count, std::string{})
                     : names_found->second;
+            const std::string routine_kind =
+                kind_found == routine_kinds.end() ? std::string("function") : kind_found->second;
+            const SourceLocation location =
+                location_found == routine_locations.end() ? SourceLocation{} : location_found->second;
+            const std::string parameter_declaration_kind =
+                declaration_kind_found == parameter_declaration_kinds.end()
+                    ? std::string{}
+                    : declaration_kind_found->second;
+            const std::string parameter_name_manifest = build_manifest_parameter_names(effective_names);
             stream << "COPPERFIN_EXPORT int COPPERFIN_VFP_DLL_CALL " << symbol << "("
                    << build_placeholder_int_parameter_list(effective_names) << ") {\n";
             for (std::size_t index = 0; index < effective_names.size(); ++index) {
                 stream << "    (void)" << sanitize_cpp_identifier(effective_names[index], index) << ";\n";
             }
-            stream << "    (void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&" << symbol << "));\n";
-            stream << "    (void)copperfin_runtime_host_path(reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    const auto descriptor = copperfin_build_runtime_bridge_descriptor(\""
+                   << quote_manifest_value(symbol) << "\", \"" << quote_manifest_value(routine_kind)
+                   << "\", \"" << quote_manifest_value(location.file_path) << "\", " << location.line
+                   << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
+                   << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
+                   << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    (void)descriptor;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
