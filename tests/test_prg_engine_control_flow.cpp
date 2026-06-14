@@ -4459,6 +4459,72 @@ void test_critical_section_exit_order_is_enforced() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_critical_section_reentrant_enter_same_section_is_allowed() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_reentrant_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_reentrant_test.prg";
+    write_text(
+        main_path,
+        "lOuterEntered = .F.\n"
+        "lInnerEntered = .F.\n"
+        "lInnerExited = .F.\n"
+        "lOuterExited = .F.\n"
+        "ENTER CRITICAL  shared\n"
+        "lOuterEntered = .T.\n"
+        "ENTER CRITICAL    sHaReD\n"
+        "lInnerEntered = .T.\n"
+        "EXIT CRITICAL shared\n"
+        "lInnerExited = .T.\n"
+        "EXIT CRITICAL shared\n"
+        "lOuterExited = .T.\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section reentrant-enter script should complete");
+
+    const auto outer_entered = state.globals.find("louterentered");
+    const auto inner_entered = state.globals.find("linnerentered");
+    const auto inner_exited = state.globals.find("linnerexited");
+    const auto outer_exited = state.globals.find("louterexited");
+    expect(outer_entered != state.globals.end(), "outer critical section should be entered");
+    expect(inner_entered != state.globals.end(), "inner critical section should be entered with same normalized section");
+    expect(inner_exited != state.globals.end(), "inner critical section should be exited");
+    expect(outer_exited != state.globals.end(), "outer critical section should be exited");
+    if (outer_entered != state.globals.end()) {
+        expect(outer_entered->second.boolean_value, "outer critical section should execute");
+    }
+    if (inner_entered != state.globals.end()) {
+        expect(inner_entered->second.boolean_value, "inner critical section should execute");
+    }
+    if (inner_exited != state.globals.end()) {
+        expect(inner_exited->second.boolean_value, "inner critical exit path should execute");
+    }
+    if (outer_exited != state.globals.end()) {
+        expect(outer_exited->second.boolean_value, "outer critical exit path should execute");
+    }
+
+    const auto enter_count = std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.enter";
+    });
+    const auto exit_count = std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.exit";
+    });
+    expect(enter_count == 2U, "same-section re-entry should emit two enter events");
+    expect(exit_count == 2U, "same-section re-entry should emit two exit events");
+
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.order_violation";
+    }), "same-section re-entry should not emit critical order violations");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_critical_section_blocking_policy_rejects_await_inside_section() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_await_policy";
@@ -6083,6 +6149,7 @@ int main() {
     test_spawn_critical_section_serializes_workers();
     test_critical_section_order_policy_rejects_descending_nested_acquire();
     test_critical_section_exit_order_is_enforced();
+    test_critical_section_reentrant_enter_same_section_is_allowed();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_critical_section_blocking_policy_allows_yield_inside_enter_critical();
