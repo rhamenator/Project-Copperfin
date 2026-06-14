@@ -16,6 +16,14 @@ enum class BuildConfiguration {
     release
 };
 
+enum class BuildOutputKind {
+    executable,
+    dll,
+    fll,
+    ocx,
+    unknown
+};
+
 struct RuntimePackageAsset {
     std::size_t record_index = 0;
     std::string source_path;
@@ -55,6 +63,7 @@ struct RuntimePackagePlan {
     std::string launcher_project_path;
     std::string launcher_source_path;
     std::string launcher_output_path;
+    std::string module_definition_path;
     std::string runtime_host_destination_path;
     std::string startup_item;
     std::string startup_source_path;
@@ -63,12 +72,15 @@ struct RuntimePackagePlan {
     std::string audit_log_path;
     std::string runtime_host_sha256;
     BuildConfiguration configuration = BuildConfiguration::debug;
+    BuildOutputKind output_kind = BuildOutputKind::executable;
     bool security_enabled = false;
     bool requested_dotnet_launcher = false;
     bool emit_dotnet_launcher = true;
+    bool primary_output_materialized = false;
     std::string launcher_mode;
     std::string launcher_fallback;
     std::vector<RuntimePackageAsset> assets;
+    std::vector<std::string> exported_symbols;
     std::vector<RuntimeArtifactDigest> extension_payload_digests;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;
@@ -82,6 +94,7 @@ struct RuntimeMaterializeResult {
 
 [[nodiscard]] const char* build_configuration_name(BuildConfiguration configuration);
 [[nodiscard]] BuildConfiguration parse_build_configuration(const std::string& value);
+[[nodiscard]] const char* build_output_kind_name(BuildOutputKind output_kind);
 
 [[nodiscard]] RuntimePackagePlan create_runtime_package_plan(
     const studio::StudioDocumentModel& document,

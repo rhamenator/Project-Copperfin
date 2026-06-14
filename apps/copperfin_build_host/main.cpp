@@ -305,7 +305,7 @@ int main(int argc, char** argv) {
             "role=" + security_role + ",project=" + materialized.plan.project_title);
     }
 
-    if (emit_dotnet_launcher) {
+    if (materialized.plan.emit_dotnet_launcher) {
         std::string publish_error;
         if (!run_dotnet_publish(materialized.plan, publish_error)) {
             if (enable_security && !materialized.plan.audit_log_path.empty()) {
@@ -327,7 +327,10 @@ int main(int argc, char** argv) {
     std::cout << "debug.manifest.path: " << materialized.plan.debug_manifest_path << "\n";
     std::cout << "startup.item: " << materialized.plan.startup_item << "\n";
     std::cout << "startup.source: " << materialized.plan.startup_source_path << "\n";
+    std::cout << "output.kind: " << copperfin::runtime::build_output_kind_name(materialized.plan.output_kind) << "\n";
     std::cout << "launcher.output: " << materialized.plan.launcher_output_path << "\n";
+    std::cout << "module.definition: " << materialized.plan.module_definition_path << "\n";
+    std::cout << "primary.output.materialized: " << (materialized.plan.primary_output_materialized ? "true" : "false") << "\n";
     std::cout << "security.enabled: " << (materialized.plan.security_enabled ? "true" : "false") << "\n";
     std::cout << "warnings: " << materialized.plan.warnings.size() << "\n";
     for (const auto& warning : materialized.plan.warnings) {

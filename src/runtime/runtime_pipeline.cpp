@@ -1,4 +1,5 @@
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "prg_engine_internal.h"
 #include "copperfin/security/sha256.h"
 
 #include <cctype>
@@ -50,6 +51,23 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+BuildOutputKind parse_build_output_kind(const std::string& value) {
+    const std::string normalized = lowercase_copy(trim_copy(value));
+    if (normalized == "dll") {
+        return BuildOutputKind::dll;
+    }
+    if (normalized == "fll") {
+        return BuildOutputKind::fll;
+    }
+    if (normalized == "ocx") {
+        return BuildOutputKind::ocx;
+    }
+    if (normalized == "executable") {
+        return BuildOutputKind::executable;
+    }
+    return BuildOutputKind::unknown;
+}
+
 std::string quote_manifest_value(const std::string& value) {
     std::string escaped;
     escaped.reserve(value.size());
@@ -98,6 +116,90 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
     }
 
     return true;
+}
+
+bool is_library_output_kind(const BuildOutputKind output_kind) {
+    return output_kind == BuildOutputKind::dll ||
+        output_kind == BuildOutputKind::fll ||
+        output_kind == BuildOutputKind::ocx;
+}
+
+std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
+    const std::filesystem::path configured_output(workspace.build_plan.output_path);
+    const std::string file_name = configured_output.filename().string();
+    if (!trim_copy(file_name).empty()) {
+        return file_name;
+    }
+    return sanitize_file_name(project_title) + ".exe";
+}
+
+BuildOutputKind infer_build_output_kind_from_output_path(const std::string& output_path) {
+    const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(output_path).extension().string()));
+    if (extension == ".dll") {
+        return BuildOutputKind::dll;
+    }
+    if (extension == ".fll") {
+        return BuildOutputKind::fll;
+    }
+    if (extension == ".ocx") {
+        return BuildOutputKind::ocx;
+    }
+    if (extension == ".exe") {
+        return BuildOutputKind::executable;
+    }
+    return BuildOutputKind::unknown;
+}
+
+std::string normalize_export_symbol(std::string value) {
+    value = trim_copy(std::move(value));
+    const std::size_t whitespace = value.find_first_of(" \t(");
+    if (whitespace != std::string::npos) {
+        value = trim_copy(value.substr(0U, whitespace));
+    }
+    return value;
+}
+
+std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan) {
+    std::vector<std::string> exported_symbols;
+    std::unordered_set<std::string> seen;
+
+    for (const auto& asset : plan.assets) {
+        if (asset.excluded || !asset.exists) {
+            continue;
+        }
+
+        if (lowercase_copy(std::filesystem::path(asset.source_path).extension().string()) != ".prg") {
+            continue;
+        }
+
+        const Program program = parse_program(asset.source_path);
+        for (const auto& [_, routine] : program.routines) {
+            const std::string export_name = normalize_export_symbol(routine.name);
+            if (export_name.empty()) {
+                continue;
+            }
+
+            const std::string normalized = lowercase_copy(export_name);
+            if (!seen.insert(normalized).second) {
+                continue;
+            }
+            exported_symbols.push_back(export_name);
+        }
+    }
+
+    return exported_symbols;
+}
+
+std::string build_module_definition_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    const std::string output_stem =
+        std::filesystem::path(plan.launcher_output_path).stem().string();
+    stream << "LIBRARY " << output_stem << "\n";
+    stream << "EXPORTS\n";
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "    " << symbol << "\n";
+    }
+    return stream.str();
 }
 
 std::string build_launcher_program_source(const RuntimePackagePlan&) {
@@ -436,6 +538,22 @@ BuildConfiguration parse_build_configuration(const std::string& value) {
         : BuildConfiguration::debug;
 }
 
+const char* build_output_kind_name(BuildOutputKind output_kind) {
+    switch (output_kind) {
+        case BuildOutputKind::executable:
+            return "executable";
+        case BuildOutputKind::dll:
+            return "dll";
+        case BuildOutputKind::fll:
+            return "fll";
+        case BuildOutputKind::ocx:
+            return "ocx";
+        case BuildOutputKind::unknown:
+            return "unknown";
+    }
+    return "unknown";
+}
+
 RuntimePackagePlan create_runtime_package_plan(
     const studio::StudioDocumentModel& document,
     const studio::StudioProjectWorkspace& workspace,
@@ -452,13 +570,25 @@ RuntimePackagePlan create_runtime_package_plan(
         : workspace.project_title;
     plan.configuration = configuration;
     plan.security_enabled = enable_security;
+    plan.output_kind = parse_build_output_kind(workspace.build_plan.output_kind);
+    if (plan.output_kind == BuildOutputKind::unknown) {
+        plan.output_kind = infer_build_output_kind_from_output_path(workspace.build_plan.output_path);
+    }
     plan.requested_dotnet_launcher = emit_dotnet_launcher;
-    plan.emit_dotnet_launcher = emit_dotnet_launcher && extensibility_profile.dotnet_output.available;
-    plan.launcher_mode = plan.emit_dotnet_launcher ? "dotnet_launcher" : "native_runtime_host";
-    plan.launcher_fallback =
-        (plan.requested_dotnet_launcher && !plan.emit_dotnet_launcher)
-            ? "dotnet_output_unavailable"
-            : "none";
+    plan.emit_dotnet_launcher =
+        !is_library_output_kind(plan.output_kind) &&
+        emit_dotnet_launcher &&
+        extensibility_profile.dotnet_output.available;
+    if (is_library_output_kind(plan.output_kind)) {
+        plan.launcher_mode = "foxpro_library_definition";
+        plan.launcher_fallback = "library_binary_generation_pending";
+    } else {
+        plan.launcher_mode = plan.emit_dotnet_launcher ? "dotnet_launcher" : "native_runtime_host";
+        plan.launcher_fallback =
+            (plan.requested_dotnet_launcher && !plan.emit_dotnet_launcher)
+                ? "dotnet_output_unavailable"
+                : "none";
+    }
 
     if (!workspace.available) {
         plan.warnings.push_back("Project workspace is not available.");
@@ -474,7 +604,11 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.debug_manifest_path = (package_root / "app.cfdebug").string();
     plan.launcher_project_path = (package_root / "launcher" / "Copperfin.GeneratedLauncher.csproj").string();
     plan.launcher_source_path = (package_root / "launcher" / "Program.cs").string();
-    plan.launcher_output_path = (package_root / (sanitize_file_name(plan.project_title) + ".exe")).string();
+    const std::filesystem::path output_file_name(resolve_output_file_name(workspace, plan.project_title));
+    std::filesystem::path module_definition_file_name = output_file_name;
+    module_definition_file_name.replace_extension(".def");
+    plan.launcher_output_path = (package_root / output_file_name).string();
+    plan.module_definition_path = (package_root / module_definition_file_name).string();
     plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
@@ -527,6 +661,12 @@ RuntimePackagePlan create_runtime_package_plan(
     if (emit_dotnet_launcher && !extensibility_profile.dotnet_output.available) {
         plan.warnings.push_back(".NET launcher generation was requested but no .NET output profile is available.");
     }
+    if (is_library_output_kind(plan.output_kind)) {
+        plan.exported_symbols = collect_library_exported_symbols(plan);
+        if (plan.exported_symbols.empty()) {
+            plan.warnings.push_back("No PRG routine exports were discovered for the library output contract.");
+        }
+    }
 
     plan.ok = true;
     return plan;
@@ -546,6 +686,10 @@ std::string build_runtime_manifest_text(
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
+    stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
+    stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
+    stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
+    stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
@@ -584,7 +728,8 @@ std::string build_runtime_manifest_text(
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
     append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
     append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
-    append_feature_flag_line(stream, "runtime.host.native", true, "host_compatibility");
+    append_feature_flag_line(stream, "runtime.host.native", !is_library_output_kind(plan.output_kind), "host_compatibility");
+    append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
     append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
     append_feature_flag_line(
@@ -611,6 +756,10 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.sha256) << "\n";
     }
 
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
+    }
+
     for (const auto& warning : plan.warnings) {
         stream << "warning=" << quote_manifest_value(warning) << "\n";
     }
@@ -626,6 +775,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "working_directory=" << quote_manifest_value(plan.debug_plan.working_directory) << "\n";
     stream << "supports_breakpoints=" << (plan.debug_plan.supports_breakpoints ? "true" : "false") << "\n";
     stream << "supports_step_debugging=" << (plan.debug_plan.supports_step_debugging ? "true" : "false") << "\n";
+    stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
@@ -657,12 +807,12 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
     }
 
+    RuntimePackagePlan materialized_plan = plan;
     std::string error;
-    if (!validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
+    if (!is_library_output_kind(plan.output_kind) &&
+        !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
     }
-
-    RuntimePackagePlan materialized_plan = plan;
     for (auto& asset : materialized_plan.assets) {
         if (!should_stage_asset(asset)) {
             continue;
@@ -690,33 +840,40 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
     }
 
-    if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
-        return {.ok = false, .error = error};
-    }
-
-    const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
-    if (!runtime_host_digest.ok) {
-        return {.ok = false, .error = runtime_host_digest.error};
-    }
-    materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
-    materialized_plan.extension_payload_digests.push_back({
-        .path = plan.runtime_host_destination_path,
-        .sha256 = runtime_host_digest.hex_digest
-    });
-
-    if (!plan.emit_dotnet_launcher) {
-        if (!copy_file_if_exists(plan.runtime_host_destination_path, plan.launcher_output_path, error)) {
+    if (is_library_output_kind(plan.output_kind)) {
+        if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
+        }
+    } else {
+        if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
             return {.ok = false, .error = error};
         }
 
-        const auto native_entrypoint_digest = security::sha256_hex_for_file(plan.launcher_output_path);
-        if (!native_entrypoint_digest.ok) {
-            return {.ok = false, .error = native_entrypoint_digest.error};
+        const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
+        if (!runtime_host_digest.ok) {
+            return {.ok = false, .error = runtime_host_digest.error};
         }
+        materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
         materialized_plan.extension_payload_digests.push_back({
-            .path = plan.launcher_output_path,
-            .sha256 = native_entrypoint_digest.hex_digest
+            .path = plan.runtime_host_destination_path,
+            .sha256 = runtime_host_digest.hex_digest
         });
+
+        if (!plan.emit_dotnet_launcher) {
+            if (!copy_file_if_exists(plan.runtime_host_destination_path, plan.launcher_output_path, error)) {
+                return {.ok = false, .error = error};
+            }
+
+            const auto native_entrypoint_digest = security::sha256_hex_for_file(plan.launcher_output_path);
+            if (!native_entrypoint_digest.ok) {
+                return {.ok = false, .error = native_entrypoint_digest.error};
+            }
+            materialized_plan.extension_payload_digests.push_back({
+                .path = plan.launcher_output_path,
+                .sha256 = native_entrypoint_digest.hex_digest
+            });
+            materialized_plan.primary_output_materialized = true;
+        }
     }
 
     if (plan.emit_dotnet_launcher) {

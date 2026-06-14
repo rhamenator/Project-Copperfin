@@ -381,6 +381,116 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_library_output_package_emits_module_definition_from_prg_routines() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_library_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "librarymain.prg",
+               "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
+    write_text(project_dir / "helper.prg",
+               "FUNCTION AddNumbers\nRETURN 1\nENDFUNC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "librarydemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LibraryDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "LibraryDemo";
+    workspace.build_plan.output_path = (output_dir / "LibraryDemo.dll").string();
+    workspace.build_plan.output_kind = "dll";
+    workspace.build_plan.build_target = "x64 Windows dynamic-link library";
+    workspace.build_plan.startup_item = "librarymain.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "librarymain.prg", .relative_path = "librarymain.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "helper.prg", .relative_path = "helper.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "library-output plan should be created");
+    expect(plan.output_kind == copperfin::runtime::BuildOutputKind::dll,
+           "library-output plan should preserve DLL output kind");
+    expect(!plan.emit_dotnet_launcher,
+           "library-output plan should not route through .NET launcher emission");
+    expect(plan.launcher_mode == "foxpro_library_definition",
+           "library-output plan should switch to the library-definition packaging mode");
+    expect(plan.launcher_fallback == "library_binary_generation_pending",
+           "library-output plan should record the honest non-binary fallback state");
+    expect(fs::path(plan.launcher_output_path).filename() == "LibraryDemo.dll",
+           "library-output plan should preserve the requested output filename");
+    expect(fs::path(plan.module_definition_path).filename() == "LibraryDemo.def",
+           "library-output plan should derive a matching module-definition filename");
+    expect(plan.exported_symbols.size() == 2U,
+           "library-output plan should discover routine exports from PRG assets");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "library-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.module_definition_path),
+               "library-output package should emit a module-definition file");
+        expect(!fs::exists(result.plan.launcher_output_path),
+               "library-output package should not fake a DLL binary");
+        expect(!fs::exists(result.plan.runtime_host_destination_path),
+               "library-output package should not bundle an executable runtime host into the DLL output slot");
+        expect(!result.plan.primary_output_materialized,
+               "library-output package should report that the primary DLL binary is not yet materialized");
+
+        const std::string module_definition = read_text(result.plan.module_definition_path);
+        expect(module_definition.find("LIBRARY LibraryDemo") != std::string::npos,
+               "module-definition file should declare the library name");
+        expect(module_definition.find("EXPORTS") != std::string::npos,
+               "module-definition file should include an EXPORTS section");
+        expect(module_definition.find("InitLibrary") != std::string::npos,
+               "module-definition file should export discovered procedure names");
+        expect(module_definition.find("AddNumbers") != std::string::npos,
+               "module-definition file should export discovered function names");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("output_kind=dll") != std::string::npos,
+               "library-output manifest should record DLL output kind");
+        expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
+               "library-output manifest should record the emitted module-definition path");
+        expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
+               "library-output manifest should record discovered export symbols");
+        expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,
+               "library-output manifest should record all discovered export symbols");
+        expect(runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
+               "library-output manifest should record the honest non-materialized DLL state");
+        expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+               "library-output manifest should expose the library-contract feature flag");
+        expect(debug_manifest.find("output_kind=dll") != std::string::npos,
+               "library-output debug manifest should record DLL output kind");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -920,6 +1030,7 @@ int main() {
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
+    test_library_output_package_emits_module_definition_from_prg_routines();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

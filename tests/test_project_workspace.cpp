@@ -66,6 +66,8 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.available, "build plan should be available");
     expect(workspace.build_plan.can_build, "build plan should be buildable with entries and an output path");
     expect(workspace.build_plan.output_path == R"(E:\Project-Copperfin\build\demoapp.exe)", "build plan should keep the explicit output path");
+    expect(workspace.build_plan.output_kind == "executable", "build plan should infer executable output kind from .exe output path");
+    expect(workspace.build_plan.build_target == "x64 Windows executable", "build plan should label .exe outputs as Windows executables");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
@@ -102,6 +104,7 @@ void test_build_project_workspace_with_excluded_assets() {
     expect(
         workspace.build_plan.output_path == R"(E:\Project-Copperfin\samples\LEGACYAPP.exe)",
         "workspace should fall back to a default output path when the stored memo output is unresolved");
+    expect(workspace.build_plan.output_kind == "executable", "default output path fallback should still infer executable output kind");
     expect(
         workspace.build_plan.startup_item == R"(forms\legacy.scx)",
         "workspace should choose a real asset as startup even when every asset is excluded");
@@ -110,11 +113,37 @@ void test_build_project_workspace_with_excluded_assets() {
         "workspace should keep the excluded asset record index when it becomes the startup fallback");
 }
 
+void test_build_project_workspace_with_dll_output() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\librarydemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LIBRARYDEMO"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\librarydemo.dll)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "librarymain.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "library project workspace should be available");
+    expect(workspace.build_plan.output_kind == "dll", "build plan should infer DLL output kind from .dll output path");
+    expect(workspace.build_plan.build_target == "x64 Windows dynamic-link library",
+           "build plan should label .dll outputs as Windows dynamic-link libraries");
+}
+
 }  // namespace
 
 int main() {
     test_build_project_workspace();
     test_build_project_workspace_with_excluded_assets();
+    test_build_project_workspace_with_dll_output();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

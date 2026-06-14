@@ -38,6 +38,7 @@ struct StudioProjectBuildPlan {
     std::string project_key;
     std::string home_directory;
     std::string output_path;
+    std::string output_kind;
     std::string build_target;
     std::string startup_item;
     std::size_t startup_record_index = 0;

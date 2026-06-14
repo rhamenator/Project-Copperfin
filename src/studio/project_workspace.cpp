@@ -147,6 +147,36 @@ std::string default_output_path(const StudioDocumentModel& document, const std::
     return (std::filesystem::path(document.path).parent_path() / leaf).string();
 }
 
+std::string infer_output_kind(const std::string& output_path) {
+    const std::string extension = extension_of(output_path);
+    if (extension == ".dll") {
+        return "dll";
+    }
+    if (extension == ".fll") {
+        return "fll";
+    }
+    if (extension == ".ocx") {
+        return "ocx";
+    }
+    if (extension == ".exe") {
+        return "executable";
+    }
+    return "unknown";
+}
+
+std::string build_target_for_output_kind(const std::string& output_kind) {
+    if (output_kind == "dll") {
+        return "x64 Windows dynamic-link library";
+    }
+    if (output_kind == "fll") {
+        return "x64 Visual FoxPro library";
+    }
+    if (output_kind == "ocx") {
+        return "x64 Windows ActiveX control";
+    }
+    return "x64 Windows executable";
+}
+
 }  // namespace
 
 StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& document) {
@@ -247,7 +277,8 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     workspace.build_plan.project_key = workspace.project_key;
     workspace.build_plan.home_directory = workspace.home_directory;
     workspace.build_plan.output_path = workspace.output_path;
-    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.output_kind = infer_output_kind(workspace.output_path);
+    workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind);
     workspace.build_plan.total_items = workspace.entries.size();
     workspace.build_plan.excluded_items = static_cast<std::size_t>(std::count_if(
         workspace.entries.begin(),

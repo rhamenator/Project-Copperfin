@@ -145,6 +145,7 @@ target_link_libraries(cf_runtime_pipeline
         cf_design_model
         cf_security
         cf_platform_profile
+        cf_xbase_runtime
 )
 
 if(MSVC)
