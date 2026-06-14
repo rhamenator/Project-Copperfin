@@ -46,6 +46,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_runtime_host_debug_output> $<TARGET_FILE:copperfin_runtime_host>
 )
 
+add_executable(test_build_host_output
+    test_build_host_output.cpp
+)
+target_link_libraries(test_build_host_output PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_build_host_output PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_build_host_output PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_build_host_output
+    COMMAND $<TARGET_FILE:test_build_host_output> $<TARGET_FILE:copperfin_build_host>
+)
+
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )

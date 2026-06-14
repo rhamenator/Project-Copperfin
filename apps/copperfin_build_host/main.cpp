@@ -143,6 +143,12 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     return true;
 }
 
+bool is_library_output_kind(const copperfin::runtime::BuildOutputKind output_kind) {
+    return output_kind == copperfin::runtime::BuildOutputKind::dll ||
+        output_kind == copperfin::runtime::BuildOutputKind::fll ||
+        output_kind == copperfin::runtime::BuildOutputKind::ocx;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -298,19 +304,34 @@ int main(int argc, char** argv) {
         return 5;
     }
 
-    if (enable_security && !materialized.plan.audit_log_path.empty()) {
-        (void)copperfin::security::append_immutable_audit_event(
-            materialized.plan.audit_log_path,
-            "build.package_materialized",
-            "role=" + security_role + ",project=" + materialized.plan.project_title);
+    auto final_plan = materialized.plan;
+
+    if (is_library_output_kind(materialized.plan.output_kind)) {
+        const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+            materialized.plan,
+            security_profile,
+            extensibility_profile);
+        if (!build_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << build_result.error << "\n";
+            return 8;
+        }
+        final_plan = build_result.plan;
     }
 
-    if (materialized.plan.emit_dotnet_launcher) {
+    if (enable_security && !final_plan.audit_log_path.empty()) {
+        (void)copperfin::security::append_immutable_audit_event(
+            final_plan.audit_log_path,
+            "build.package_materialized",
+            "role=" + security_role + ",project=" + final_plan.project_title);
+    }
+
+    if (final_plan.emit_dotnet_launcher) {
         std::string publish_error;
-        if (!run_dotnet_publish(materialized.plan, publish_error)) {
-            if (enable_security && !materialized.plan.audit_log_path.empty()) {
+        if (!run_dotnet_publish(final_plan, publish_error)) {
+            if (enable_security && !final_plan.audit_log_path.empty()) {
                 (void)copperfin::security::append_immutable_audit_event(
-                    materialized.plan.audit_log_path,
+                    final_plan.audit_log_path,
                     "policy.denied",
                     publish_error);
             }
@@ -321,25 +342,25 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "status: ok\n";
-    std::cout << "project.title: " << materialized.plan.project_title << "\n";
-    std::cout << "package.root: " << materialized.plan.package_root << "\n";
-    std::cout << "manifest.path: " << materialized.plan.manifest_path << "\n";
-    std::cout << "debug.manifest.path: " << materialized.plan.debug_manifest_path << "\n";
-    std::cout << "ast.manifest.path: " << materialized.plan.ast_manifest_path << "\n";
-    std::cout << "ir.manifest.path: " << materialized.plan.ir_manifest_path << "\n";
-    std::cout << "transpiled.csharp.path: " << materialized.plan.transpiled_csharp_path << "\n";
-    std::cout << "startup.item: " << materialized.plan.startup_item << "\n";
-    std::cout << "startup.source: " << materialized.plan.startup_source_path << "\n";
-    std::cout << "output.kind: " << copperfin::runtime::build_output_kind_name(materialized.plan.output_kind) << "\n";
-    std::cout << "launcher.output: " << materialized.plan.launcher_output_path << "\n";
-    std::cout << "module.definition: " << materialized.plan.module_definition_path << "\n";
-    std::cout << "fll.api.manifest: " << materialized.plan.fll_api_manifest_path << "\n";
-    std::cout << "fxp.token.manifest: " << materialized.plan.fxp_token_manifest_path << "\n";
-    std::cout << "app.archive.manifest: " << materialized.plan.app_archive_manifest_path << "\n";
-    std::cout << "primary.output.materialized: " << (materialized.plan.primary_output_materialized ? "true" : "false") << "\n";
-    std::cout << "security.enabled: " << (materialized.plan.security_enabled ? "true" : "false") << "\n";
-    std::cout << "warnings: " << materialized.plan.warnings.size() << "\n";
-    for (const auto& warning : materialized.plan.warnings) {
+    std::cout << "project.title: " << final_plan.project_title << "\n";
+    std::cout << "package.root: " << final_plan.package_root << "\n";
+    std::cout << "manifest.path: " << final_plan.manifest_path << "\n";
+    std::cout << "debug.manifest.path: " << final_plan.debug_manifest_path << "\n";
+    std::cout << "ast.manifest.path: " << final_plan.ast_manifest_path << "\n";
+    std::cout << "ir.manifest.path: " << final_plan.ir_manifest_path << "\n";
+    std::cout << "transpiled.csharp.path: " << final_plan.transpiled_csharp_path << "\n";
+    std::cout << "startup.item: " << final_plan.startup_item << "\n";
+    std::cout << "startup.source: " << final_plan.startup_source_path << "\n";
+    std::cout << "output.kind: " << copperfin::runtime::build_output_kind_name(final_plan.output_kind) << "\n";
+    std::cout << "launcher.output: " << final_plan.launcher_output_path << "\n";
+    std::cout << "module.definition: " << final_plan.module_definition_path << "\n";
+    std::cout << "fll.api.manifest: " << final_plan.fll_api_manifest_path << "\n";
+    std::cout << "fxp.token.manifest: " << final_plan.fxp_token_manifest_path << "\n";
+    std::cout << "app.archive.manifest: " << final_plan.app_archive_manifest_path << "\n";
+    std::cout << "primary.output.materialized: " << (final_plan.primary_output_materialized ? "true" : "false") << "\n";
+    std::cout << "security.enabled: " << (final_plan.security_enabled ? "true" : "false") << "\n";
+    std::cout << "warnings: " << final_plan.warnings.size() << "\n";
+    for (const auto& warning : final_plan.warnings) {
         std::cout << "warning: " << warning << "\n";
     }
 
