@@ -723,10 +723,18 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared bridge-descriptor surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(") != std::string::npos,
                    "build host DLL wrapper should declare a bridge-descriptor helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeInvocation") != std::string::npos,
+                   "build host DLL wrapper should declare a shared bridge-invocation surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
+                   "build host DLL wrapper should declare a bridge-invocation helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for AddNumbers");
+            expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
+                   "build host DLL wrapper should build a bridge invocation from the descriptor");
+            expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
+                   "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -813,6 +821,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared bridge-descriptor surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(") != std::string::npos,
                    "build host FLL wrapper should declare a bridge-descriptor helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeInvocation") != std::string::npos,
+                   "build host FLL wrapper should declare a shared bridge-invocation surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
+                   "build host FLL wrapper should declare a bridge-invocation helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -831,6 +843,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                    "build host FLL wrapper should build a bridge descriptor for AddNumbers");
+            expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
+                   "build host FLL wrapper should build a bridge invocation from the descriptor");
+            expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
+                   "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
