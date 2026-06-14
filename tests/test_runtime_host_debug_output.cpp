@@ -1,4 +1,5 @@
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/vfp/dbf_table.h"
 
@@ -680,6 +681,85 @@ void test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(const
     }
 }
 
+void test_runtime_host_rejects_extension_payload_basename_fallback(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_payload_path_fidelity";
+    const fs::path builder_root = temp_root / "builder" / "DemoApp";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path content_root = deployed_root / "content";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(builder_root / "content" / "plugins");
+    fs::create_directories(content_root);
+
+    const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path root_helper_path = deployed_root / "helper.dll";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    write_text(startup_path, "RETURN\n");
+    write_text(root_helper_path, "plugin-payload");
+
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto helper_hash = copperfin::security::sha256_hex_for_file(root_helper_path.string());
+    expect(runtime_host_hash.ok, "payload-path fidelity fixture should hash the deployed runtime host");
+    expect(helper_hash.ok, "payload-path fidelity fixture should hash the decoy root helper payload");
+    if (!runtime_host_hash.ok || !helper_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=PayloadPathFidelity\n"
+        "project_path=" + (builder_root / "demo.pjx").string() + "\n"
+        "package_root=" + builder_root.string() + "\n"
+        "content_root=" + (builder_root / "content").string() + "\n"
+        "working_directory=" + (builder_root / "content").string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + (builder_root / "content" / "main.prg").string() + "\n"
+        "configuration=debug\n"
+        "security_enabled=true\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "audit_log_path=" + (builder_root / "security_audit.log").string() + "\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "extension_payload=" + deployed_runtime_host.string() + "|" + runtime_host_hash.hex_digest + "\n"
+        "extension_payload=" + (builder_root / "content" / "plugins" / "helper.dll").string() + "|" + helper_hash.hex_digest + "\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        temp_root);
+
+    if (process.exit_code == 0) {
+        std::cerr << "payload-path fidelity stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "payload-path fidelity stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 8,
+           "runtime host should reject extension payloads that only match by basename outside their recorded package path");
+    expect(process.stdout_text.find("error: extension payload is missing from the package: helper.dll") != std::string::npos,
+           "runtime host should report the missing recorded payload path instead of accepting a same-named root payload");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -693,6 +773,7 @@ int main(int argc, char** argv) {
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
+    test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

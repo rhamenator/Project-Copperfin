@@ -108,6 +108,11 @@ std::string unescape_manifest_value(std::string value) {
 
 using ManifestMap = std::multimap<std::string, std::string>;
 
+enum class PackagePathBindingMode {
+    allow_filename_fallback,
+    strict_relative_fidelity
+};
+
 ManifestMap load_manifest(const std::string& path) {
     ManifestMap values;
     std::ifstream input(path, std::ios::binary);
@@ -166,7 +171,8 @@ bool relative_path_escapes_root(const std::filesystem::path& relative_path) {
 std::optional<std::filesystem::path> bind_packaged_path(
     const std::string& manifest_value,
     const std::string& recorded_package_root,
-    const std::filesystem::path& manifest_directory) {
+    const std::filesystem::path& manifest_directory,
+    const PackagePathBindingMode binding_mode = PackagePathBindingMode::allow_filename_fallback) {
     if (trim_copy(manifest_value).empty()) {
         return std::nullopt;
     }
@@ -199,10 +205,12 @@ std::optional<std::filesystem::path> bind_packaged_path(
         }
     }
 
-    const std::filesystem::path filename_candidate =
-        (manifest_directory / recorded_path.filename()).lexically_normal();
-    if (std::filesystem::exists(filename_candidate)) {
-        return filename_candidate;
+    if (binding_mode == PackagePathBindingMode::allow_filename_fallback) {
+        const std::filesystem::path filename_candidate =
+            (manifest_directory / recorded_path.filename()).lexically_normal();
+        if (std::filesystem::exists(filename_candidate)) {
+            return filename_candidate;
+        }
     }
 
     return std::nullopt;
@@ -253,7 +261,11 @@ bool verify_manifest_hashes(
             return false;
         }
 
-        const auto bound_payload_path = bind_packaged_path(parts[0], recorded_package_root, manifest_directory);
+        const auto bound_payload_path = bind_packaged_path(
+            parts[0],
+            recorded_package_root,
+            manifest_directory,
+            PackagePathBindingMode::strict_relative_fidelity);
         if (!bound_payload_path.has_value()) {
             error = "extension payload is missing from the package: " + std::filesystem::path(parts[0]).filename().string();
             return false;
