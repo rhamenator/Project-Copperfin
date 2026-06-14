@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the highest-priority open umbrellas are still `#19` and `#20`. `#213` is now shipped; the next prompt-sized issue in order on that build/debug branch is `#214` under `#43` unless the live blocker tree changes before work starts.
+Next: the highest-priority open umbrellas are still `#19` and `#20`. `#214` is now shipped; the next prompt-sized issue in order on that build/debug branch is `#215` under `#43` unless the live blocker tree changes before work starts.
 
 Language-service queue update:
 
+- 2026-06-14: **`#214` is now shipped.** Runtime packages now emit a target-specific `.transpiled.cs` artifact whenever `.NET`-oriented output is requested, the generated source now maps first-pass procedural PRG constructs (`LOCAL`, assignment, `DO`, `WAIT WINDOW`, and `RETURN`) into deterministic C# scaffolding with stable routine naming, the runtime manifest now records that artifact path plus a `build.output.csharp_transpilation` feature flag, and focused `test_runtime_pipeline` coverage now proves both the emitted source contract and a direct `dotnet build` compile check for the generated artifact.
 - 2026-06-14: **`#213` is now shipped.** Runtime packages now emit a target-specific `.ir.json` artifact alongside the selected output, the IR schema records PRG-relative files, routines, stable statement opcode names, and mapped instruction operands/metadata derived from parsed statements, and the runtime manifest now records that IR artifact path as part of the shared compiler contract.
 - 2026-06-14: **`#212` is now shipped.** Runtime packages now emit a target-specific `.ast.json` artifact alongside the selected output, the AST schema records project title, output kind, PRG-relative paths, routines, and logical statement line/text metadata, and the runtime manifest now records that AST artifact path as part of the compiler contract.
 - 2026-06-14: **`#211` is now shipped.** Project workspaces now infer `.app` outputs as Visual FoxPro application archives, runtime package plans now emit a `.app.contents` contract only for APP targets, and materialized APP packages now record staged content membership plus startup fidelity while honestly recording that the primary APP archive is still not materialized.
@@ -72,6 +73,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#214` is now closed.** The build pipeline now has an explicit C# transpilation artifact contract: `.NET`-oriented package requests emit a target-specific `.transpiled.cs` file whose first-pass generator maps procedural PRG control flow into deterministic C# scaffolding with stable routine naming, the runtime manifest carries that artifact path plus a build-output feature flag, and focused runtime-pipeline coverage now includes a direct `dotnet build` proof that the emitted source stays syntactically valid.
 - 2026-06-14: **`#213` is now closed.** The build pipeline now has an explicit IR emission contract: every packaged output gets a target-specific `.ir.json` artifact whose schema records PRG-relative files, routines, stable statement opcode names, and mapped statement operand metadata, and the runtime manifest carries that IR path for downstream consumers.
 - 2026-06-14: **`#212` is now closed.** The build pipeline now has an explicit AST emission contract: every packaged output gets a target-specific `.ast.json` artifact whose schema records PRG-relative files, routines, and logical statement line/text fidelity, and the runtime manifest carries that AST path for downstream consumers.
 - 2026-06-14: **`#211` is now closed.** APP package planning is now explicitly regression-guarded: `.app` outputs infer the right Visual FoxPro application-archive target kind, emit a dedicated `.app.contents` contract only for APP builds, and materialize staged content membership plus startup fidelity instead of pretending the compiled APP archive already exists.

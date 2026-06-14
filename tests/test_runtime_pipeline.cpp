@@ -4,11 +4,23 @@
 #include "copperfin/studio/project_workspace.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <system_error>
+#include <vector>
+
+#if defined(_WIN32)
+#include <process.h>
+#else
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 namespace {
 
@@ -56,6 +68,99 @@ std::string quote_manifest_value(const std::string& value) {
         }
     }
     return escaped;
+}
+
+bool dotnet_is_available() {
+#if defined(_WIN32)
+    const char* argv[] = {"dotnet", "--version", nullptr};
+    return _spawnvp(_P_WAIT, "dotnet", const_cast<char* const*>(argv)) == 0;
+#else
+    return std::system("command -v dotnet >/dev/null 2>&1") == 0;
+#endif
+}
+
+bool compile_csharp_artifact(const std::filesystem::path& source_path, std::string& error) {
+    namespace fs = std::filesystem;
+    const fs::path compile_root = source_path.parent_path() / "transpiled_compile_check";
+    std::error_code ignored;
+    fs::remove_all(compile_root, ignored);
+    fs::create_directories(compile_root);
+
+    const fs::path compile_source_path = compile_root / "TranspiledProgram.cs";
+    const fs::path compile_project_path = compile_root / "TranspiledProgram.csproj";
+    const fs::path build_log_path = compile_root / "dotnet-build.log";
+    write_text(compile_source_path, read_text(source_path));
+    write_text(
+        compile_project_path,
+        "<Project Sdk=\"Microsoft.NET.Sdk\">\n"
+        "  <PropertyGroup>\n"
+        "    <TargetFramework>net8.0</TargetFramework>\n"
+        "    <OutputType>Library</OutputType>\n"
+        "    <ImplicitUsings>enable</ImplicitUsings>\n"
+        "    <Nullable>disable</Nullable>\n"
+        "  </PropertyGroup>\n"
+        "</Project>\n");
+
+    std::vector<std::string> build_args = {
+        "dotnet",
+        "build",
+        compile_project_path.string(),
+        "--nologo",
+        "-v",
+        "minimal"
+    };
+
+    intptr_t exit_code = -1;
+#if defined(_WIN32)
+    std::vector<const char*> argv;
+    argv.reserve(build_args.size() + 1U);
+    for (const auto& arg : build_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    exit_code = _spawnvp(_P_WAIT, "dotnet", const_cast<char* const*>(argv.data()));
+#else
+    const pid_t child = fork();
+    if (child == 0) {
+        ::close(STDOUT_FILENO);
+        ::close(STDERR_FILENO);
+        const int log_fd = ::creat(build_log_path.c_str(), 0644);
+        if (log_fd >= 0) {
+            ::dup2(log_fd, STDOUT_FILENO);
+            ::dup2(log_fd, STDERR_FILENO);
+            ::close(log_fd);
+        }
+
+        std::vector<const char*> argv;
+        argv.reserve(build_args.size() + 1U);
+        for (const auto& arg : build_args) {
+            argv.push_back(arg.c_str());
+        }
+        argv.push_back(nullptr);
+        ::execvp("dotnet", const_cast<char* const*>(argv.data()));
+        _exit(127);
+    }
+    if (child > 0) {
+        int status = 0;
+        if (waitpid(child, &status, 0) == child && WIFEXITED(status)) {
+            exit_code = WEXITSTATUS(status);
+        }
+    }
+#endif
+
+    if (exit_code == -1) {
+        error = "dotnet build failed to launch: " + std::error_code(errno, std::generic_category()).message();
+        return false;
+    }
+    if (exit_code != 0) {
+        error = "dotnet build failed for emitted transpilation";
+        if (fs::exists(build_log_path)) {
+            error += ":\n" + read_text(build_log_path);
+        }
+        return false;
+    }
+
+    return true;
 }
 
 void test_materialize_runtime_package() {
@@ -1037,6 +1142,107 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_csharp_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+               "LOCAL nValue\n"
+               "nValue = 1\n"
+               "DO worker\n"
+               "RETURN\n"
+               "PROCEDURE worker\n"
+               "WAIT WINDOW 'csharp'\n"
+               "RETURN\n"
+               "ENDPROC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "csharpdemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "CSharpDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "CSharpDemo";
+    workspace.build_plan.output_path = (output_dir / "CSharpDemo.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "csharp-output plan should be created");
+    expect(fs::path(plan.transpiled_csharp_path).filename() == "CSharpDemo.exe.transpiled.cs",
+           "csharp-output plan should derive a target-specific transpilation filename");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "csharp-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.transpiled_csharp_path),
+               "csharp-output package should emit a C# transpilation artifact");
+
+        const std::string transpiled = read_text(result.plan.transpiled_csharp_path);
+        expect(transpiled.find("public static class TranspiledProgram") != std::string::npos,
+               "csharp transpilation should emit the generated container type");
+        expect(transpiled.find("public static void MainRoutine()") != std::string::npos,
+               "csharp transpilation should emit a main routine");
+        expect(transpiled.find("dynamic nValue = null;") != std::string::npos,
+               "csharp transpilation should map LOCAL declarations to dynamic locals");
+        expect(transpiled.find("nValue = 1;") != std::string::npos,
+               "csharp transpilation should preserve simple assignments");
+        expect(transpiled.find("Worker();") != std::string::npos,
+               "csharp transpilation should map DO worker to a routine call");
+        expect(transpiled.find("public static void worker()") != std::string::npos ||
+               transpiled.find("public static void Worker()") != std::string::npos,
+               "csharp transpilation should emit the called FoxPro routine");
+        expect(transpiled.find("Console.WriteLine(\"csharp\");") != std::string::npos,
+               "csharp transpilation should map WAIT WINDOW literal output to Console.WriteLine");
+        if (dotnet_is_available()) {
+            std::string compile_error;
+            const bool compiled = compile_csharp_artifact(result.plan.transpiled_csharp_path, compile_error);
+            if (!compiled && !compile_error.empty()) {
+                std::cerr << "FAIL: " << compile_error << "\n";
+            }
+            expect(compiled,
+                   "csharp transpilation should compile under dotnet");
+        }
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "runtime manifest should record the transpiled C# artifact path");
+        expect(runtime_manifest.find("feature_flag=build.output.csharp_transpilation|true|build_output") != std::string::npos,
+               "runtime manifest should expose the C# transpilation feature flag");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1582,6 +1788,7 @@ int main() {
     test_app_output_package_emits_archive_manifest_for_staged_assets();
     test_runtime_package_emits_ast_manifest_for_prg_sources();
     test_runtime_package_emits_ir_manifest_with_instruction_mapping();
+    test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

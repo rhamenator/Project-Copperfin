@@ -689,6 +689,130 @@ std::string build_ir_manifest_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+std::string sanitize_csharp_identifier(std::string value, const std::string& fallback) {
+    value = trim_copy(std::move(value));
+    if (value.empty()) {
+        return fallback;
+    }
+
+    std::string sanitized;
+    sanitized.reserve(value.size());
+    for (std::size_t index = 0; index < value.size(); ++index) {
+        const unsigned char ch = static_cast<unsigned char>(value[index]);
+        const bool valid =
+            std::isalnum(ch) != 0 ||
+            ch == '_';
+        if (!valid) {
+            sanitized.push_back('_');
+            continue;
+        }
+        if (sanitized.empty() && std::isdigit(ch) != 0) {
+            sanitized.push_back('_');
+        }
+        sanitized.push_back(static_cast<char>(ch));
+    }
+    return sanitized.empty() ? fallback : sanitized;
+}
+
+std::string sanitize_csharp_routine_identifier(std::string value, const std::string& fallback) {
+    std::string sanitized = sanitize_csharp_identifier(std::move(value), fallback);
+    for (char& ch : sanitized) {
+        if (std::isalpha(static_cast<unsigned char>(ch)) != 0) {
+            ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+            break;
+        }
+    }
+    return sanitized;
+}
+
+std::string unquote_literal(std::string value) {
+    value = trim_copy(std::move(value));
+    if (value.size() >= 2U &&
+        ((value.front() == '\'' && value.back() == '\'') ||
+         (value.front() == '"' && value.back() == '"'))) {
+        value = value.substr(1U, value.size() - 2U);
+    }
+    return value;
+}
+
+std::string transpile_statement_to_csharp(
+    const Statement& statement,
+    const std::map<std::string, std::string>& routine_name_map) {
+    switch (statement.kind) {
+        case StatementKind::local_declaration: {
+            std::ostringstream stream;
+            for (const auto& name : statement.names) {
+                stream << "dynamic " << sanitize_csharp_identifier(name, "localValue") << " = null;\n";
+            }
+            return stream.str();
+        }
+        case StatementKind::assignment:
+            return statement.text + ";\n";
+        case StatementKind::do_command: {
+            const std::string routine_name = lowercase_copy(trim_copy(statement.identifier));
+            const auto found = routine_name_map.find(routine_name);
+            if (found != routine_name_map.end()) {
+                return found->second + "();\n";
+            }
+            break;
+        }
+        case StatementKind::wait_command:
+            if (!statement.expression.empty()) {
+                return "Console.WriteLine(\"" + json_escape(unquote_literal(statement.expression)) + "\");\n";
+            }
+            break;
+        case StatementKind::return_statement:
+            return "return;\n";
+        default:
+            break;
+    }
+
+    return "throw new NotSupportedException(\"Unsupported FoxPro statement: " + json_escape(statement.text) + "\");\n";
+}
+
+std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "using System;\n\n";
+    stream << "namespace Copperfin.Generated\n";
+    stream << "{\n";
+    stream << "    public static class TranspiledProgram\n";
+    stream << "    {\n";
+
+    for (const auto& asset : plan.assets) {
+        if (lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            continue;
+        }
+        const Program program = parse_program(asset.source_path);
+        std::map<std::string, std::string> routine_name_map;
+        for (const auto& routine_entry : program.routines) {
+            routine_name_map.emplace(lowercase_copy(routine_entry.first),
+                                     sanitize_csharp_routine_identifier(routine_entry.first, "Routine"));
+        }
+
+        stream << "        public static void MainRoutine()\n";
+        stream << "        {\n";
+        for (const auto& statement : program.main.statements) {
+            stream << "            " << transpile_statement_to_csharp(statement, routine_name_map);
+        }
+        stream << "        }\n\n";
+
+        for (const auto& routine_entry : program.routines) {
+            stream << "        public static void "
+                   << sanitize_csharp_routine_identifier(routine_entry.first, "Routine")
+                   << "()\n";
+            stream << "        {\n";
+            for (const auto& statement : routine_entry.second.statements) {
+                stream << "            " << transpile_statement_to_csharp(statement, routine_name_map);
+            }
+            stream << "        }\n\n";
+        }
+    }
+
+    stream << "    }\n";
+    stream << "}\n";
+    return stream.str();
+}
+
 std::string build_launcher_program_source(const RuntimePackagePlan&) {
     std::ostringstream stream;
     stream << "using System;\n";
@@ -1104,6 +1228,7 @@ RuntimePackagePlan create_runtime_package_plan(
     const std::filesystem::path output_file_name(resolve_output_file_name(workspace, plan.project_title));
     plan.ast_manifest_path = (package_root / (output_file_name.string() + ".ast.json")).string();
     plan.ir_manifest_path = (package_root / (output_file_name.string() + ".ir.json")).string();
+    plan.transpiled_csharp_path = (package_root / (output_file_name.string() + ".transpiled.cs")).string();
     std::filesystem::path module_definition_file_name = output_file_name;
     module_definition_file_name.replace_extension(".def");
     plan.launcher_output_path = (package_root / output_file_name).string();
@@ -1206,6 +1331,7 @@ std::string build_runtime_manifest_text(
     stream << "working_directory=" << quote_manifest_value(plan.working_directory) << "\n";
     stream << "ast_manifest_path=" << quote_manifest_value(plan.ast_manifest_path) << "\n";
     stream << "ir_manifest_path=" << quote_manifest_value(plan.ir_manifest_path) << "\n";
+    stream << "transpiled_csharp_path=" << quote_manifest_value(plan.transpiled_csharp_path) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
@@ -1257,6 +1383,7 @@ std::string build_runtime_manifest_text(
     append_feature_flag_line(stream, "runtime.host.native", is_native_host_output_kind(plan.output_kind), "host_compatibility");
     append_feature_flag_line(stream, "build.output.ast_contract", true, "build_output");
     append_feature_flag_line(stream, "build.output.ir_contract", true, "build_output");
+    append_feature_flag_line(stream, "build.output.csharp_transpilation", plan.requested_dotnet_launcher, "build_output");
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
@@ -1433,6 +1560,10 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
     if (!write_text_file(plan.ir_manifest_path, build_ir_manifest_source(materialized_plan), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (plan.requested_dotnet_launcher &&
+        !write_text_file(plan.transpiled_csharp_path, build_csharp_transpilation_source(materialized_plan), error)) {
         return {.ok = false, .error = error};
     }
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
