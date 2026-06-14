@@ -2416,6 +2416,9 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
+    append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     for (const auto& digest : plan.compiler_contract_digests) {
         stream << "compiler_contract="
                << quote_manifest_value(digest.path) << "|"

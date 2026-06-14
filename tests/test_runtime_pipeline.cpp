@@ -1282,6 +1282,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the module-definition compiler-contract digest");
         expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.library_api_manifest_path) + "|") != std::string::npos,
                "library-output debug manifest should record the DLL API-manifest compiler-contract digest");
+        expect(debug_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+               "library-output debug manifest should expose the library-contract feature flag");
+        expect(debug_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+               "library-output debug manifest should expose the native-wrapper feature flag");
         expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output debug manifest should record discovered DLL export symbols");
         expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1324,6 +1328,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the module-definition compiler-contract digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.library_api_manifest_path) + "|") != std::string::npos,
                        "library-output runtime pipeline should preserve the DLL API-manifest compiler-contract digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+                       "library-output runtime pipeline should preserve the library-contract feature flag in the rewritten debug manifest");
+                expect(built_debug_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+                       "library-output runtime pipeline should preserve the native-wrapper feature flag in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                        "library-output runtime pipeline should preserve DLL export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1708,6 +1716,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the module-definition compiler-contract digest");
         expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.fll_api_manifest_path) + "|") != std::string::npos,
                "fll-output debug manifest should record the API-manifest compiler-contract digest");
+        expect(debug_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+               "fll-output debug manifest should expose the library-contract feature flag");
+        expect(debug_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+               "fll-output debug manifest should expose the native-wrapper feature flag");
+        expect(debug_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
+               "fll-output debug manifest should expose the FLL API-contract feature flag");
         expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "fll-output debug manifest should record discovered FLL routine export symbols");
         expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1770,6 +1784,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the module-definition compiler-contract digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.fll_api_manifest_path) + "|") != std::string::npos,
                        "fll-output runtime pipeline should preserve the API-manifest compiler-contract digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the library-contract feature flag in the rewritten debug manifest");
+                expect(built_debug_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the native-wrapper feature flag in the rewritten debug manifest");
+                expect(built_debug_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the FLL API-contract feature flag in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                        "fll-output runtime pipeline should preserve discovered FLL routine export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
