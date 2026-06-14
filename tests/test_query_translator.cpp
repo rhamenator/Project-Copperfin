@@ -63,11 +63,37 @@ void test_case_variants_and_whitespace_variants() {
     }
 }
 
+void test_iif_is_translated_to_case_when() {
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "SELECT IIF(active = .T., 'ENABLED', 'DISABLED') AS status FROM customer");
+
+    expect(translated.ok, "IIF call should translate in sqlite query");
+    if (translated.ok) {
+        expect(translated.translated_sql.find("CASE WHEN active = TRUE THEN 'ENABLED' ELSE 'DISABLED' END") != std::string::npos,
+               "IIF should emit CASE WHEN cond THEN true_expr ELSE false_expr END");
+    }
+}
+
+void test_nested_iif_is_translated_recursively() {
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::postgresql,
+        "SELECT IIF(active = .T., IIF(score > 10, 'HIGH', 'LOW'), 'UNKNOWN') AS level FROM customer");
+
+    expect(translated.ok, "nested IIF should translate in first-pass SQL");
+    if (translated.ok) {
+        expect(translated.translated_sql.find("CASE WHEN active = TRUE THEN CASE WHEN score > 10 THEN 'HIGH' ELSE 'LOW' END ELSE 'UNKNOWN' END") != std::string::npos,
+               "nested IIF should remain a full CASE expression after translation");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_basic_translation();
     test_case_variants_and_whitespace_variants();
+    test_iif_is_translated_to_case_when();
+    test_nested_iif_is_translated_recursively();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
