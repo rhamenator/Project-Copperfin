@@ -59,6 +59,59 @@ struct ProcessResult {
     std::string stderr_text;
 };
 
+class ScopedEnvironmentVariable {
+public:
+    ScopedEnvironmentVariable(const char* name, std::string value)
+        : name_(name == nullptr ? "" : name),
+          had_original_(false) {
+        if (name_.empty()) {
+            return;
+        }
+
+#if defined(_WIN32)
+        char* raw_value = nullptr;
+        std::size_t raw_length = 0;
+        if (_dupenv_s(&raw_value, &raw_length, name_.c_str()) == 0 && raw_value != nullptr) {
+            had_original_ = true;
+            original_value_ = raw_value;
+            std::free(raw_value);
+        }
+        _putenv_s(name_.c_str(), value.c_str());
+#else
+        if (const char* raw_value = std::getenv(name_.c_str()); raw_value != nullptr) {
+            had_original_ = true;
+            original_value_ = raw_value;
+        }
+        setenv(name_.c_str(), value.c_str(), 1);
+#endif
+    }
+
+    ~ScopedEnvironmentVariable() {
+        if (name_.empty()) {
+            return;
+        }
+
+#if defined(_WIN32)
+        if (had_original_) {
+            _putenv_s(name_.c_str(), original_value_.c_str());
+        } else {
+            _putenv_s(name_.c_str(), "");
+        }
+#else
+        if (had_original_) {
+            setenv(name_.c_str(), original_value_.c_str(), 1);
+        } else {
+            unsetenv(name_.c_str());
+        }
+#endif
+    }
+
+private:
+    std::string name_;
+    std::string original_value_;
+    bool had_original_;
+};
+
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
@@ -760,6 +813,58 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
     }
 }
 
+void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_federation_ai_permission_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--federation-backend", "oracle",
+            "--federation-query", "DELETE FROM customer",
+            "--federation-planning-enable", "true"
+        },
+        temp_root);
+
+    if (process.exit_code == 0) {
+        std::cerr << "federation-ai-permission stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "federation-ai-permission stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 7,
+           "runtime host should deny AI-assisted federation planning when the effective role lacks ai.mcp");
+    expect(process.stdout_text.find("runtime.mode: federation-query-plan") != std::string::npos,
+           "runtime host should keep the federation runtime mode visible on AI permission denials");
+    expect(process.stdout_text.find("error: Security policy denied ai.mcp for role 'developer'.") != std::string::npos,
+           "runtime host should report the missing ai.mcp permission for the default developer role");
+
+    {
+        ScopedEnvironmentVariable allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
+        const auto allowed_process = run_process_capture(
+            runtime_host_path,
+            {
+                "--federation-backend", "oracle",
+                "--federation-query", "DELETE FROM customer",
+                "--federation-planning-enable", "true"
+            },
+            temp_root);
+
+        expect(allowed_process.exit_code == 6,
+               "runtime host should advance past AI permission gating for runtime-operator and reach planner fallback");
+        expect(allowed_process.stdout_text.find("Planner is not yet implemented for optional AI policy.") != std::string::npos,
+               "runtime host should surface the existing planner-fallback error once AI permission is granted");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -774,6 +879,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
+    test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
