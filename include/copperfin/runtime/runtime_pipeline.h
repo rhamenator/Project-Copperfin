@@ -73,6 +73,7 @@ struct RuntimePackagePlan {
     std::string native_wrapper_cmake_path;
     std::string native_wrapper_build_script_path;
     std::string native_wrapper_build_powershell_path;
+    std::string library_api_manifest_path;
     std::string fll_api_manifest_path;
     std::string fxp_token_manifest_path;
     std::string app_archive_manifest_path;

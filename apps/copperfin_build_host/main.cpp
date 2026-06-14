@@ -354,6 +354,7 @@ int main(int argc, char** argv) {
     std::cout << "output.kind: " << copperfin::runtime::build_output_kind_name(final_plan.output_kind) << "\n";
     std::cout << "launcher.output: " << final_plan.launcher_output_path << "\n";
     std::cout << "module.definition: " << final_plan.module_definition_path << "\n";
+    std::cout << "library.api.manifest: " << final_plan.library_api_manifest_path << "\n";
     std::cout << "fll.api.manifest: " << final_plan.fll_api_manifest_path << "\n";
     std::cout << "fxp.token.manifest: " << final_plan.fxp_token_manifest_path << "\n";
     std::cout << "app.archive.manifest: " << final_plan.app_archive_manifest_path << "\n";

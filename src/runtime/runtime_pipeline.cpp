@@ -534,6 +534,28 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    const auto parameter_counts = collect_library_export_parameter_counts(plan);
+    stream << "manifest_version=1\n";
+    stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
+    stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "callable_convention=" << kVfpLibraryCallableConvention << "\n";
+    for (const auto& symbol : plan.exported_symbols) {
+        const auto found = parameter_counts.find(symbol);
+        const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+        stream << "function=" << quote_manifest_value(symbol) << "\n";
+        stream << "function_arity="
+               << quote_manifest_value(symbol) << "|"
+               << parameter_count << "\n";
+        stream << "function_call_surface="
+               << quote_manifest_value(symbol) << "|"
+               << quote_manifest_value(std::string(kVfpLibraryCallableConvention)) << "|"
+               << quote_manifest_value(build_placeholder_int_parameter_list(parameter_count)) << "\n";
+    }
+    return stream.str();
+}
+
 void append_fxp_statement_lines(
     std::ostringstream& stream,
     const std::string& scope_name,
@@ -1698,6 +1720,11 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.native_wrapper_build_script_path = (wrapper_root / "build_wrapper.sh").string();
         plan.native_wrapper_build_powershell_path = (wrapper_root / "build_wrapper.ps1").string();
     }
+    if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+        std::filesystem::path library_api_manifest_file_name = output_file_name;
+        library_api_manifest_file_name += ".api";
+        plan.library_api_manifest_path = (package_root / library_api_manifest_file_name).string();
+    }
     if (plan.output_kind == BuildOutputKind::fll) {
         std::filesystem::path fll_api_manifest_file_name = output_file_name;
         fll_api_manifest_file_name += ".api";
@@ -1808,6 +1835,7 @@ std::string build_runtime_manifest_text(
     stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
     stream << "native_wrapper_build_script_path=" << quote_manifest_value(plan.native_wrapper_build_script_path) << "\n";
     stream << "native_wrapper_build_powershell_path=" << quote_manifest_value(plan.native_wrapper_build_powershell_path) << "\n";
+    stream << "library_api_manifest_path=" << quote_manifest_value(plan.library_api_manifest_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fll_loader_entrypoint="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
@@ -1941,6 +1969,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
     stream << "native_wrapper_build_script_path=" << quote_manifest_value(plan.native_wrapper_build_script_path) << "\n";
     stream << "native_wrapper_build_powershell_path=" << quote_manifest_value(plan.native_wrapper_build_powershell_path) << "\n";
+    stream << "library_api_manifest_path=" << quote_manifest_value(plan.library_api_manifest_path) << "\n";
     stream << "fll_loader_entrypoint="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
     stream << "fll_registration_symbol="
@@ -2051,6 +2080,14 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
         if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_build_powershell_path, error)) {
             return {.ok = false, .error = error};
+        }
+        if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+            if (!write_text_file(plan.library_api_manifest_path, build_library_api_manifest_source(materialized_plan), error)) {
+                return {.ok = false, .error = error};
+            }
+            if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.library_api_manifest_path, error)) {
+                return {.ok = false, .error = error};
+            }
         }
         if (plan.output_kind == BuildOutputKind::fll) {
             if (!write_text_file(plan.fll_api_manifest_path, build_fll_api_manifest_source(materialized_plan), error)) {

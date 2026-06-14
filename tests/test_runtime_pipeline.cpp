@@ -438,6 +438,19 @@ std::set<std::string> read_fll_api_declared_symbols(const std::filesystem::path&
     return symbols;
 }
 
+std::set<std::string> read_library_api_declared_symbols(const std::filesystem::path& path) {
+    std::set<std::string> symbols;
+    std::istringstream input(read_text(path));
+    std::string line;
+    while (std::getline(input, line)) {
+        line = trim_copy(std::move(line));
+        if (line.rfind("function=", 0U) == 0U) {
+            symbols.insert(line.substr(9U));
+        }
+    }
+    return symbols;
+}
+
 bool compile_csharp_artifact(const std::filesystem::path& source_path, std::string& error) {
     namespace fs = std::filesystem;
     const fs::path compile_root = source_path.parent_path() / "transpiled_compile_check";
@@ -940,6 +953,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
            "library-output plan should derive a native-wrapper shell build script filename");
     expect(fs::path(plan.native_wrapper_build_powershell_path).filename() == "build_wrapper.ps1",
            "library-output plan should derive a native-wrapper PowerShell build script filename");
+    expect(fs::path(plan.library_api_manifest_path).filename() == "LibraryDemo.dll.api",
+           "library-output plan should derive a matching DLL API-manifest filename");
     expect(plan.exported_symbols.size() == 2U,
            "library-output plan should discover routine exports from PRG assets");
 
@@ -961,6 +976,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output package should emit a native-wrapper shell build script");
         expect(fs::exists(result.plan.native_wrapper_build_powershell_path),
                "library-output package should emit a native-wrapper PowerShell build script");
+        expect(fs::exists(result.plan.library_api_manifest_path),
+               "library-output package should emit a dedicated DLL API manifest");
         expect(!fs::exists(result.plan.launcher_output_path),
                "library-output package should not fake a DLL binary");
         expect(!fs::exists(result.plan.runtime_host_destination_path),
@@ -1029,6 +1046,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);
                 const std::set<std::string> declared_symbols = read_module_definition_exports(result.plan.module_definition_path);
+                const std::set<std::string> declared_api_symbols = read_library_api_declared_symbols(result.plan.library_api_manifest_path);
                 if (exported_symbols.empty() && !symbol_error.empty()) {
                     std::cerr << "FAIL: " << symbol_error << "\n";
                 }
@@ -1038,6 +1056,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output compiled wrapper should export AddNumbers");
                 expect(exported_symbols == declared_symbols,
                        "library-output compiled wrapper exports should stay synchronized with the module-definition contract");
+                expect(exported_symbols == declared_api_symbols,
+                       "library-output compiled wrapper exports should stay synchronized with the DLL API-manifest contract");
             }
         }
         if (cmake_is_available() && shell_is_available()) {
@@ -1073,13 +1093,26 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(cmake_output_path, symbol_error);
                 const std::set<std::string> declared_symbols = read_module_definition_exports(result.plan.module_definition_path);
+                const std::set<std::string> declared_api_symbols = read_library_api_declared_symbols(result.plan.library_api_manifest_path);
                 if (exported_symbols.empty() && !symbol_error.empty()) {
                     std::cerr << "FAIL: " << symbol_error << "\n";
                 }
                 expect(exported_symbols == declared_symbols,
                        "library-output generated-CMake artifact exports should stay synchronized with the module-definition contract");
+                expect(exported_symbols == declared_api_symbols,
+                       "library-output generated-CMake artifact exports should stay synchronized with the DLL API-manifest contract");
             }
         }
+
+        const std::string library_api_manifest = read_text(result.plan.library_api_manifest_path);
+        expect(library_api_manifest.find("output_kind=dll") != std::string::npos,
+               "library-output DLL API manifest should declare the DLL output kind");
+        expect(library_api_manifest.find("callable_convention=vfp_declare_default") != std::string::npos,
+               "library-output DLL API manifest should declare the VFP DLL calling convention");
+        expect(library_api_manifest.find("function=InitLibrary") != std::string::npos,
+               "library-output DLL API manifest should list discovered procedure names");
+        expect(library_api_manifest.find("function=AddNumbers") != std::string::npos,
+               "library-output DLL API manifest should list discovered function names");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -1087,6 +1120,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record DLL output kind");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
+        expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
+               "library-output manifest should record the dedicated DLL API-manifest path");
         expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "library-output manifest should record the wrapper source path");
         expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
@@ -1117,6 +1152,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should expose the native-wrapper feature flag");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
+        expect(debug_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
+               "library-output debug manifest should record the dedicated DLL API-manifest path");
         expect(debug_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output debug manifest should record the VFP DLL calling convention contract");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
@@ -1152,11 +1189,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                     std::string symbol_error;
                     const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);
                     const std::set<std::string> declared_symbols = read_module_definition_exports(build_result.plan.module_definition_path);
+                    const std::set<std::string> declared_api_symbols = read_library_api_declared_symbols(build_result.plan.library_api_manifest_path);
                     if (exported_symbols.empty() && !symbol_error.empty()) {
                         std::cerr << "FAIL: " << symbol_error << "\n";
                     }
                     expect(exported_symbols == declared_symbols,
                            "library-output runtime pipeline build should preserve the module-definition export contract");
+                    expect(exported_symbols == declared_api_symbols,
+                           "library-output runtime pipeline build should preserve the DLL API-manifest export contract");
                 }
             }
         }

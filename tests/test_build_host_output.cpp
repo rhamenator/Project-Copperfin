@@ -223,6 +223,21 @@ std::set<std::string> read_fll_api_declared_symbols(const std::filesystem::path&
     return symbols;
 }
 
+std::set<std::string> read_library_api_declared_symbols(const std::filesystem::path& path) {
+    std::set<std::string> symbols;
+    std::istringstream input(read_text(path));
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind("function=", 0U) == 0U) {
+            symbols.insert(line.substr(9U));
+        }
+    }
+    return symbols;
+}
+
 std::string value_for_key(const std::string& text, const std::string& key) {
     std::istringstream input(text);
     std::string line;
@@ -344,6 +359,8 @@ void run_library_build_host_smoke(
         if (extension == "dll") {
             expect(manifest_text.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                    "build host manifest should record the VFP DLL calling convention contract");
+            expect(manifest_text.find("library_api_manifest_path=") != std::string::npos,
+                   "build host manifest should record the dedicated DLL API-manifest path");
             expect(manifest_text.find("library_function_arity=InitLibrary|1") != std::string::npos,
                    "build host manifest should record InitLibrary DLL arity");
             expect(manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
@@ -366,6 +383,18 @@ void run_library_build_host_smoke(
         const std::set<std::string> declared_module_symbols = read_module_definition_exports(module_definition_path);
         expect(exported_symbols == declared_module_symbols,
                "build host should preserve the module-definition export contract for " + extension + " outputs");
+
+        if (extension == "dll") {
+            const fs::path library_api_manifest_path = value_for_key(process.stdout_text, "library.api.manifest");
+            const std::set<std::string> declared_api_symbols = read_library_api_declared_symbols(library_api_manifest_path);
+            expect(exported_symbols == declared_api_symbols,
+                   "build host should preserve the dedicated DLL API-manifest export contract");
+            const std::string api_manifest = read_text(library_api_manifest_path);
+            expect(api_manifest.find("output_kind=dll") != std::string::npos,
+                   "build host DLL API manifest should declare the DLL output kind");
+            expect(api_manifest.find("callable_convention=vfp_declare_default") != std::string::npos,
+                   "build host DLL API manifest should declare the VFP DLL calling convention");
+        }
 
         if (extension == "fll") {
             const fs::path fll_api_manifest_path = value_for_key(process.stdout_text, "fll.api.manifest");
