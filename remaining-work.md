@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #22-#26: #168-#177
+- active-open native slice queues under #22-#26: #169-#177
 
 ### Future Enhancements
 
@@ -701,6 +701,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-13: D2/#165 breakpoint/stepping fidelity shipped in `prg_engine` + `test_prg_engine`. Breakpoints now trigger correctly on the first executable line after stop-on-entry continue, while resume logic still skips exactly one immediate re-hit on the same location.
 - 2026-05-12: D3/#166 build/run orchestration fidelity advanced in `runtime_pipeline` + `test_runtime_pipeline`. Runtime package materialization now validates runtime-host source input before asset staging, with focused fail-fast coverage locking no staged content on invalid host paths.
 - 2026-06-13: D3/#167 deploy and migration-report fidelity shipped in `runtime_pipeline` + `test_runtime_pipeline`. Runtime packaging now emits manifest/report diagnostics alongside launcher and host bundling, with focused coverage locking the package materialization contract and its reporting keys.
+- 2026-06-13: E1/#168 normalized design-model fidelity shipped in `project_workspace` + `test_project_workspace`. The normalized workspace model now rounds up project header, grouping, startup selection, and fallback output-path behavior with focused regression coverage.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
