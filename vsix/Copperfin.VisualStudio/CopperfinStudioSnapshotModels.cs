@@ -22,6 +22,8 @@ internal sealed class CopperfinStudioSnapshotDocument
     public string HeaderVersionDescription { get; set; } = string.Empty;
     public int FieldCount { get; set; }
     public int RecordCount { get; set; }
+    public bool CommandUndoAvailable { get; set; }
+    public string CommandUndoLabel { get; set; } = string.Empty;
     public List<CopperfinStudioSnapshotField> Fields { get; set; } = new();
     public CopperfinStudioReportLayout? ReportLayout { get; set; }
     public CopperfinStudioProjectWorkspace? ProjectWorkspace { get; set; }

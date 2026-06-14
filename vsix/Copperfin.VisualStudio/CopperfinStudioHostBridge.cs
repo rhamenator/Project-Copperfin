@@ -37,6 +37,11 @@ internal static class CopperfinStudioHostBridge
         return $"--from-vs --json --set-property --record {recordIndex} --property-name {Quote(propertyName)} --property-value {Quote(propertyValue)} --path {Quote(documentPath)}";
     }
 
+    public static string BuildUndoArguments(string documentPath)
+    {
+        return $"--from-vs --json --undo-mode command --path {Quote(documentPath)}";
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo

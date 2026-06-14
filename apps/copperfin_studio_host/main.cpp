@@ -78,6 +78,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto security_profile = copperfin::security::default_native_security_profile();
     const auto database_profile = copperfin::platform::default_database_federation_profile();
     const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    const auto command_undo_status = copperfin::vfp::query_visual_object_undo(document.path);
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -111,6 +112,10 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << ",\n";
     std::cout << "    \"fieldCount\": " << document.table_preview.fields.size() << ",\n";
     std::cout << "    \"recordCount\": " << document.table_preview.records.size() << ",\n";
+    std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
+    std::cout << "    \"commandUndoLabel\": ";
+    print_json_string(command_undo_status.label);
+    std::cout << ",\n";
     std::cout << "    \"fields\": [\n";
     for (std::size_t index = 0; index < document.table_preview.fields.size(); ++index) {
         const auto& field = document.table_preview.fields[index];
@@ -815,6 +820,15 @@ int main(int argc, char** argv) {
     if (parse_result.show_help) {
         print_usage();
         return 0;
+    }
+
+    if (parse_result.request.undo_mode == copperfin::studio::StudioUndoMode::command) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(parse_result.request.path);
+        if (!undo_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << undo_result.error << "\n";
+            return 5;
+        }
     }
 
     if (parse_result.request.apply_property_update) {

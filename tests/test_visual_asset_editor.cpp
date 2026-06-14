@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <cmath>
+#include <limits>
 #if defined(_WIN32)
 #include <process.h>
 #else
@@ -23,6 +25,14 @@ void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
+    }
+}
+
+double parse_number(const std::string& text) {
+    try {
+        return std::stod(text);
+    } catch (...) {
+        return std::numeric_limits<double>::quiet_NaN();
     }
 }
 
@@ -145,6 +155,27 @@ void test_update_visual_object_property_rewrites_properties_memo() {
         expect(found, "updated record should still expose the PROPERTIES field");
     }
 
+    const auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_status.available, "memo-backed asset edits should leave an undo journal entry behind");
+    expect(undo_status.label.find("Left") != std::string::npos, "undo label should name the edited property");
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "undo_visual_object_property should revert memo-backed asset edits");
+
+    const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(reverted_parse_result.ok, "reverted synthetic SCX/SCT should remain readable");
+    if (reverted_parse_result.ok && reverted_parse_result.table.records.size() == 1U) {
+        const auto& record = reverted_parse_result.table.records[0];
+        for (const auto& value : record.values) {
+            if (value.field_name == "PROPERTIES") {
+                expect(value.display_value.find("Left = 10") != std::string::npos, "undo should restore the original Left value");
+            }
+        }
+    }
+
+    const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(!empty_undo_status.available, "undo journal should be empty after undoing the only memo-backed edit");
+
     fs::remove_all(temp_dir, ignored);
 }
 
@@ -236,6 +267,53 @@ void test_update_visual_object_property_rewrites_direct_fields() {
             }
             if (value.field_name == "EXPR") {
                 expect(value.display_value == "\"newexpr\"", "updated EXPR memo should be reflected in the parsed table");
+            }
+        }
+    }
+
+    auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_status.available, "direct-field asset edits should expose an undo entry");
+    expect(undo_status.label.find("EXPR") != std::string::npos, "latest undo label should name the latest edited property");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "undo should revert the latest direct-field or memo-backed report edit");
+    auto after_first_undo = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(after_first_undo.ok, "asset should remain readable after the first undo");
+    if (after_first_undo.ok && after_first_undo.table.records.size() == 1U) {
+        const auto& record = after_first_undo.table.records[0];
+        for (const auto& value : record.values) {
+            if (value.field_name == "EXPR") {
+                expect(value.display_value == "customer.company", "first undo should restore the original memo-backed EXPR value");
+            }
+            if (value.field_name == "GRID") {
+                expect(value.display_value == "true", "first undo should leave earlier direct-field edits intact");
+            }
+        }
+    }
+
+    undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_status.available, "older undo entries should remain after undoing the latest edit");
+    expect(undo_status.label.find("GRID") != std::string::npos, "undo label should walk back to the next-most-recent property");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "second undo should revert the logical field edit");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "third undo should revert the numeric field edit");
+
+    const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(reverted_parse_result.ok, "asset should remain readable after all direct-field undos");
+    if (reverted_parse_result.ok && reverted_parse_result.table.records.size() == 1U) {
+        const auto& record = reverted_parse_result.table.records[0];
+        for (const auto& value : record.values) {
+            if (value.field_name == "HPOS") {
+                expect(std::fabs(parse_number(value.display_value) - 7812.5) < 0.0001,
+                    "full undo should restore the original HPOS numerically");
+            }
+            if (value.field_name == "GRID") {
+                expect(value.display_value == "false", "full undo should restore the original GRID logical value");
+            }
+            if (value.field_name == "EXPR") {
+                expect(value.display_value == "customer.company", "full undo should preserve the original EXPR");
             }
         }
     }

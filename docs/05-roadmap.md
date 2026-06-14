@@ -16,17 +16,17 @@ Goal:
 
 Current state:
 
-- active and near completion
-- critical-path execution is currently anchored to the runtime safety/diagnostics gate and the remaining A3 closure chain
+- critical-path closure is complete
+- adjacent open branches now proceed from the post-Phase-A queue instead of the old runtime-safety gate
 
 Active issue lanes:
 
-- runtime safety/diagnostics gate: `#150`, `#151`, `#152`, `#153`
-- A3 closure lanes: `#92`, `#97`, `#98`, `#99`, `#100`, `#101`, `#93`, `#94`
+- critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
+- next execution branches come from the open post-Phase-A tree (`#154`-`#203`) and any still-open gap-tracking evidence issues
 
 Execution rule:
 
-- do not advance adjacent open branches (`#154`-`#203`) until `#94` is complete
+- do not reopen closed Phase A lanes without a concrete regression; prefer the highest-value open child issue in the adjacent branch tree
 
 ## Phase B: Runtime Safety And Diagnostic Fidelity
 
@@ -36,8 +36,8 @@ Goal:
 
 Current state:
 
-- in active execution under `#13` and `#14`
-- strict order: `#150` -> `#151` -> `#152` -> `#153`
+- `#13` is closed and the current prompt-sized `#14` child queue is exhausted through `#273`
+- any new work under this phase should start with a fresh child issue instead of reusing the closed safety queue
 
 ## Phase C: Runtime Parity Surfaces
 
@@ -47,8 +47,8 @@ Goal:
 
 Current state:
 
-- lanes are active-open with focused slice queues (`#154`-`#161`)
-- progress exists, but this phase is not treated as complete while Phase A/B critical-path lanes remain open
+- first-pass runtime parity lanes are closed (`#15`-`#18`, `#154`-`#161`)
+- follow-on work here should reopen only when a new parity gap is identified or a deeper child issue is created
 
 ## Phase D: Build, Compiler, And Debug Pipeline
 
@@ -60,6 +60,7 @@ Current state:
 
 - baseline shipped
 - current prompt-sized child queues are closed on this branch (`#162`-`#177` shipped for build/debug; `#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, `#400`, and `#401` shipped for language service)
+- routine validation now also includes a managed compile gate over `Copperfin.LanguageServiceTests`, `Copperfin.Studio`, and `Copperfin.DesignerSmokeTests`
 
 ## Phase E: Designers And IDE Parity
 

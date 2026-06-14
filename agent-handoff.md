@@ -34,6 +34,7 @@ Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the
 
 Language-service queue update:
 
+- 2026-06-14: **`#273` is now shipped.** The Visual Studio asset editor pane now routes `Undo` through edit-level text-box undo or host-backed command undo as appropriate, `copperfin_studio_host` now reports command-undo availability/labels and executes `--undo-mode command`, and the native CTest suite now includes `test_managed_compile` so `Copperfin.LanguageServiceTests`, `Copperfin.Studio`, and `Copperfin.DesignerSmokeTests` all compile in routine validation.
 - 2026-06-14: **`#401` is now shipped.** `CopperfinProjectInsightClient` now records class-scoped methods under their fully qualified symbol name and maps qualified plus instance-style method calls back to that symbol for reference collection and rename preview.
 - 2026-06-14: **`#400` is now shipped.** `FoxProIntelliSenseCatalog` now infers default work-area aliases from plain `USE <path>` opens and ingests literal `SQLEXEC(..., ..., "alias")` target cursors, so those source-derived cursor names surface in completion and description flows.
 - 2026-06-14: **`#399` is now shipped.** `Copperfin.LanguageServiceTests` now proves a procedure defined in one project file resolves from a sibling project file and surfaces signature help through the shared project-root symbol index.
@@ -48,6 +49,7 @@ Language-service queue update:
 - 2026-06-14: **`#179` is now shipped.** `FoxProIntelliSenseCatalog` now derives project procedure/function signature help from nearby `LPARAMETERS` / `PARAMETERS` declarations and reuses it for dotted invocation fallback such as `oToolbar.SaveOrder`.
 - 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
 - The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, `#400`, and `#401` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
+- The current prompt-sized runtime-safety child queue is also closed (`#142`-`#145`, `#150`-`#153`, `#269`, `#270`, `#272`, and `#273` shipped). Choose the next slice from the adjacent open branch queue instead of reopening `#14` without a new child issue.
 
 Current shipped highlights worth remembering:
 

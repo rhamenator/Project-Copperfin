@@ -9,8 +9,10 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <optional>
 #include <sstream>
+#include <system_error>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -141,6 +143,20 @@ struct RawFieldDescriptor {
     std::uint8_t length = 0;
 };
 
+struct VisualAssetUndoEntry {
+    std::size_t record_index = 0;
+    std::string property_name;
+    std::string prior_value;
+    bool prior_value_exists = false;
+    std::string label;
+};
+
+struct VisualPropertyState {
+    bool exists = false;
+    bool direct_field = false;
+    std::string value;
+};
+
 VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
     std::size_t record_index,
@@ -263,6 +279,297 @@ std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std
         descriptor_offset += 32U;
     }
     return fields;
+}
+
+std::filesystem::path visual_asset_undo_root_directory(const std::string& path) {
+    const auto normalized = std::filesystem::absolute(std::filesystem::path(path)).string();
+    const auto hash = static_cast<unsigned long long>(std::hash<std::string>{}(normalized));
+    std::ostringstream stream;
+    stream << "asset_" << std::hex << std::setw(16) << std::setfill('0') << hash;
+    return std::filesystem::temp_directory_path() / "copperfin_visual_asset_undo" / stream.str();
+}
+
+std::filesystem::path visual_asset_undo_entries_directory(const std::string& path) {
+    return visual_asset_undo_root_directory(path) / "entries";
+}
+
+std::vector<std::filesystem::path> list_visual_asset_undo_entry_files(const std::string& path) {
+    std::vector<std::filesystem::path> files;
+    const auto entries_directory = visual_asset_undo_entries_directory(path);
+    std::error_code error;
+    if (!std::filesystem::exists(entries_directory, error)) {
+        return files;
+    }
+
+    for (const auto& entry : std::filesystem::directory_iterator(entries_directory, error)) {
+        if (error) {
+            break;
+        }
+        if (entry.is_regular_file()) {
+            files.push_back(entry.path());
+        }
+    }
+
+    std::sort(files.begin(), files.end());
+    return files;
+}
+
+bool write_visual_asset_undo_entry(const std::filesystem::path& path, const VisualAssetUndoEntry& entry) {
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    if (!output) {
+        return false;
+    }
+
+    const std::uint64_t record_index = static_cast<std::uint64_t>(entry.record_index);
+    const std::uint8_t prior_exists = entry.prior_value_exists ? 1U : 0U;
+    const std::uint64_t property_name_length = static_cast<std::uint64_t>(entry.property_name.size());
+    const std::uint64_t prior_value_length = static_cast<std::uint64_t>(entry.prior_value.size());
+    const std::uint64_t label_length = static_cast<std::uint64_t>(entry.label.size());
+
+    output.write(reinterpret_cast<const char*>(&record_index), sizeof(record_index));
+    output.write(reinterpret_cast<const char*>(&prior_exists), sizeof(prior_exists));
+    output.write(reinterpret_cast<const char*>(&property_name_length), sizeof(property_name_length));
+    output.write(reinterpret_cast<const char*>(&prior_value_length), sizeof(prior_value_length));
+    output.write(reinterpret_cast<const char*>(&label_length), sizeof(label_length));
+    output.write(entry.property_name.data(), static_cast<std::streamsize>(entry.property_name.size()));
+    output.write(entry.prior_value.data(), static_cast<std::streamsize>(entry.prior_value.size()));
+    output.write(entry.label.data(), static_cast<std::streamsize>(entry.label.size()));
+    return static_cast<bool>(output);
+}
+
+std::optional<VisualAssetUndoEntry> read_visual_asset_undo_entry(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        return std::nullopt;
+    }
+
+    VisualAssetUndoEntry entry;
+    std::uint64_t record_index = 0;
+    std::uint8_t prior_exists = 0;
+    std::uint64_t property_name_length = 0;
+    std::uint64_t prior_value_length = 0;
+    std::uint64_t label_length = 0;
+    input.read(reinterpret_cast<char*>(&record_index), sizeof(record_index));
+    input.read(reinterpret_cast<char*>(&prior_exists), sizeof(prior_exists));
+    input.read(reinterpret_cast<char*>(&property_name_length), sizeof(property_name_length));
+    input.read(reinterpret_cast<char*>(&prior_value_length), sizeof(prior_value_length));
+    input.read(reinterpret_cast<char*>(&label_length), sizeof(label_length));
+    if (!input.good()) {
+        return std::nullopt;
+    }
+
+    entry.record_index = static_cast<std::size_t>(record_index);
+    entry.prior_value_exists = prior_exists != 0U;
+    entry.property_name.resize(static_cast<std::size_t>(property_name_length));
+    entry.prior_value.resize(static_cast<std::size_t>(prior_value_length));
+    entry.label.resize(static_cast<std::size_t>(label_length));
+    input.read(entry.property_name.data(), static_cast<std::streamsize>(entry.property_name.size()));
+    input.read(entry.prior_value.data(), static_cast<std::streamsize>(entry.prior_value.size()));
+    input.read(entry.label.data(), static_cast<std::streamsize>(entry.label.size()));
+    return input.good() ? std::optional<VisualAssetUndoEntry>(entry) : std::nullopt;
+}
+
+bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUndoEntry& entry, std::string& error) {
+    std::error_code fs_error;
+    const auto entries_directory = visual_asset_undo_entries_directory(path);
+    std::filesystem::create_directories(entries_directory, fs_error);
+    if (fs_error) {
+        error = "Unable to create the visual asset undo journal.";
+        return false;
+    }
+
+    const auto existing_files = list_visual_asset_undo_entry_files(path);
+    std::uint64_t next_index = 1U;
+    if (!existing_files.empty()) {
+        try {
+            next_index = static_cast<std::uint64_t>(std::stoull(existing_files.back().stem().string())) + 1U;
+        } catch (...) {
+            next_index = static_cast<std::uint64_t>(existing_files.size()) + 1U;
+        }
+    }
+
+    std::ostringstream file_name;
+    file_name << std::setw(20) << std::setfill('0') << next_index << ".bin";
+    const auto entry_path = entries_directory / file_name.str();
+    if (!write_visual_asset_undo_entry(entry_path, entry)) {
+        error = "Unable to persist the visual asset undo journal.";
+        return false;
+    }
+
+    return true;
+}
+
+VisualAssetUndoStatus query_visual_asset_undo_status_internal(const std::string& path) {
+    const auto files = list_visual_asset_undo_entry_files(path);
+    if (files.empty()) {
+        return {};
+    }
+
+    const auto entry = read_visual_asset_undo_entry(files.back());
+    if (!entry.has_value()) {
+        return {};
+    }
+
+    return {
+        .available = true,
+        .label = entry->label
+    };
+}
+
+std::optional<VisualPropertyState> read_current_visual_property_state(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& property_name) {
+    const auto table_result = parse_dbf_table_from_file(path, record_index + 1U);
+    if (!table_result.ok || record_index >= table_result.table.records.size()) {
+        return std::nullopt;
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const auto direct_field_value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& value) {
+        return value.field_name == property_name;
+    });
+    if (direct_field_value != record.values.end()) {
+        return VisualPropertyState{
+            .exists = true,
+            .direct_field = true,
+            .value = direct_field_value->display_value
+        };
+    }
+
+    if (!is_property_blob_asset_path(path)) {
+        return std::nullopt;
+    }
+
+    const auto properties_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_field == record.values.end()) {
+        return std::nullopt;
+    }
+
+    const auto assignments = parse_visual_property_blob(properties_field->display_value);
+    const auto property = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
+        return assignment.name == property_name;
+    });
+    if (property == assignments.end()) {
+        return VisualPropertyState{
+            .exists = false,
+            .direct_field = false,
+            .value = {}
+        };
+    }
+
+    return VisualPropertyState{
+        .exists = true,
+        .direct_field = false,
+        .value = property->value
+    };
+}
+
+VisualAssetEditResult apply_visual_object_property_change(
+    const VisualObjectEditRequest& request,
+    bool record_undo_entry,
+    bool remove_property_if_missing) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.property_name.empty()) {
+        return {.ok = false, .error = "No property name was provided."};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, request.record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (request.record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return field.name == request.property_name;
+    });
+    if (direct_field_it != fields.end()) {
+        if (record_undo_entry) {
+            const auto property_state = read_current_visual_property_state(request.path, request.record_index, request.property_name);
+            if (!property_state.has_value()) {
+                return {.ok = false, .error = "Unable to read the current property value for undo."};
+            }
+            if (!property_state->direct_field) {
+                return {.ok = false, .error = "Property lookup mismatch while recording undo."};
+            }
+            if (!(property_state->exists && property_state->value == request.property_value)) {
+                std::string error;
+                if (!record_visual_asset_undo_entry(request.path, {
+                        .record_index = request.record_index,
+                        .property_name = request.property_name,
+                        .prior_value = property_state->value,
+                        .prior_value_exists = property_state->exists,
+                        .label = "Property " + request.property_name
+                    }, error)) {
+                    return {.ok = false, .error = error};
+                }
+            }
+        }
+
+        return replace_field_value(request.path, request.record_index, *direct_field_it, request.property_value);
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = "The requested property is not exposed as a writable field on this asset."};
+    }
+
+    const auto& record = table_result.table.records[request.record_index];
+    auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_it == record.values.end()) {
+        return {.ok = false, .error = "The object does not expose a PROPERTIES memo field."};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_it->display_value);
+    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& property) {
+        return property.name == request.property_name;
+    });
+
+    if (record_undo_entry) {
+        const bool exists = assignment_it != assignments.end();
+        const std::string prior_value = exists ? assignment_it->value : std::string{};
+        if (!(exists && prior_value == request.property_value)) {
+            std::string error;
+            if (!record_visual_asset_undo_entry(request.path, {
+                    .record_index = request.record_index,
+                    .property_name = request.property_name,
+                    .prior_value = prior_value,
+                    .prior_value_exists = exists,
+                    .label = "Property " + request.property_name
+                }, error)) {
+                return {.ok = false, .error = error};
+            }
+        }
+    }
+
+    if (assignment_it == assignments.end()) {
+        if (!remove_property_if_missing) {
+            assignments.push_back({.name = request.property_name, .value = request.property_value});
+        }
+    } else if (remove_property_if_missing) {
+        assignments.erase(assignment_it);
+    } else {
+        assignment_it->value = request.property_value;
+    }
+
+    return replace_memo_field_value(
+        request.path,
+        request.record_index,
+        "PROPERTIES",
+        serialize_visual_property_blob(assignments));
 }
 
 VisualAssetEditResult replace_memo_field_value(
@@ -421,61 +728,50 @@ bool is_property_blob_asset_path(const std::string& path) {
 }
 
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
-    if (request.path.empty()) {
+    return apply_visual_object_property_change(request, true, false);
+}
+
+VisualAssetUndoStatus query_visual_object_undo(const std::string& path) {
+    return query_visual_asset_undo_status_internal(path);
+}
+
+VisualAssetEditResult undo_visual_object_property(const std::string& path) {
+    if (path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
     }
-    if (request.property_name.empty()) {
-        return {.ok = false, .error = "No property name was provided."};
+
+    const auto files = list_visual_asset_undo_entry_files(path);
+    if (files.empty()) {
+        return {.ok = false, .error = "No visual asset undo history is available."};
     }
 
-    const auto table_result = parse_dbf_table_from_file(request.path, request.record_index + 1U);
-    if (!table_result.ok) {
-        return {.ok = false, .error = table_result.error};
-    }
-    if (request.record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+    const auto entry = read_visual_asset_undo_entry(files.back());
+    if (!entry.has_value()) {
+        return {.ok = false, .error = "Unable to read the visual asset undo journal."};
     }
 
-    const auto table_bytes = read_binary_file(request.path);
-    if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+    const auto result = apply_visual_object_property_change(
+        {
+            .path = path,
+            .record_index = entry->record_index,
+            .property_name = entry->property_name,
+            .property_value = entry->prior_value
+        },
+        false,
+        !entry->prior_value_exists);
+    if (!result.ok) {
+        return result;
     }
 
-    const auto fields = read_raw_field_descriptors(table_bytes);
-    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
-        return field.name == request.property_name;
-    });
-    if (direct_field_it != fields.end()) {
-        return replace_field_value(request.path, request.record_index, *direct_field_it, request.property_value);
+    std::error_code error;
+    std::filesystem::remove(files.back(), error);
+    const auto entries_directory = visual_asset_undo_entries_directory(path);
+    if (!error && std::filesystem::exists(entries_directory, error) && std::filesystem::is_empty(entries_directory, error)) {
+        std::filesystem::remove(entries_directory, error);
+        std::filesystem::remove(visual_asset_undo_root_directory(path), error);
     }
 
-    if (!is_property_blob_asset_path(request.path)) {
-        return {.ok = false, .error = "The requested property is not exposed as a writable field on this asset."};
-    }
-
-    const auto& record = table_result.table.records[request.record_index];
-    auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
-        return value.field_name == "PROPERTIES";
-    });
-    if (properties_it == record.values.end()) {
-        return {.ok = false, .error = "The object does not expose a PROPERTIES memo field."};
-    }
-
-    auto assignments = parse_visual_property_blob(properties_it->display_value);
-    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& property) {
-        return property.name == request.property_name;
-    });
-    if (assignment_it == assignments.end()) {
-        assignments.push_back({.name = request.property_name, .value = request.property_value});
-    } else {
-        assignment_it->value = request.property_value;
-    }
-
-    return replace_memo_field_value(
-        request.path,
-        request.record_index,
-        "PROPERTIES",
-        serialize_visual_property_blob(assignments));
+    return {.ok = true};
 }
 
 }  // namespace copperfin::vfp

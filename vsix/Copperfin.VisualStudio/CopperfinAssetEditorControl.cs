@@ -536,6 +536,89 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         ApplyHostMode();
     }
 
+    public bool CanHandleUndoCommand()
+    {
+        if (TryFindFocusedUndoTextBox() is not null)
+        {
+            return true;
+        }
+
+        return currentSnapshot?.CommandUndoAvailable == true && !string.IsNullOrWhiteSpace(currentPath);
+    }
+
+    public string GetUndoCommandText()
+    {
+        if (TryFindFocusedUndoTextBox() is not null)
+        {
+            return "Undo";
+        }
+
+        if (currentSnapshot?.CommandUndoAvailable == true)
+        {
+            return string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
+                ? "Undo"
+                : "Undo " + currentSnapshot.CommandUndoLabel;
+        }
+
+        return "Undo";
+    }
+
+    public bool TryHandleUndoCommand()
+    {
+        var focusedUndoTextBox = TryFindFocusedUndoTextBox();
+        if (focusedUndoTextBox is not null)
+        {
+            focusedUndoTextBox.Undo();
+            snapshotStatusLabel.Text = "Executed edit undo.";
+            return true;
+        }
+
+        if (currentSnapshot?.CommandUndoAvailable != true || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var priorLabel = currentSnapshot.CommandUndoLabel;
+        var selectedRecordIndex = (propertyGrid.SelectedObject as CopperfinDesignerSelection)?.RecordIndex ?? TryReadSelectedRecordIndex();
+        snapshotStatusLabel.Text = string.IsNullOrWhiteSpace(priorLabel)
+            ? "Executing command undo..."
+            : "Executing command undo: " + priorLabel;
+
+        var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(currentPath!);
+        if (!undoResult.Success || undoResult.Document is null)
+        {
+            snapshotStatusLabel.Text = "Command undo failed: " + undoResult.Error;
+            return false;
+        }
+
+        currentSnapshot = undoResult.Document;
+        snapshotStatusLabel.Text = string.IsNullOrWhiteSpace(priorLabel)
+            ? $"Undid command. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields."
+            : $"Undid {priorLabel}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
+        PopulateSectionList();
+        PopulateObjectList();
+        LoadSurface();
+        if (selectedRecordIndex >= 0)
+        {
+            designSurface.SelectRecord(selectedRecordIndex);
+            SyncSelectionFromSurface(selectedRecordIndex);
+        }
+
+        return true;
+    }
+
+    private int TryReadSelectedRecordIndex()
+    {
+        if (objectListView.SelectedItems.Count == 0)
+        {
+            return -1;
+        }
+
+        return int.TryParse(objectListView.SelectedItems[0].SubItems[2].Text, out var recordIndex)
+            ? recordIndex
+            : -1;
+    }
+
     public void LoadDocument(string path)
     {
         loadGeneration++;
@@ -603,7 +686,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             currentSnapshot = snapshotResult.Document;
             snapshotStatusLabel.Text =
-                $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes.";
+                $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes." +
+                (currentSnapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
+                    ? $" Undo available: {currentSnapshot.CommandUndoLabel}."
+                    : string.Empty);
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
             UpdateProjectCommandVisibility();
             PopulateSectionList();
@@ -840,12 +926,44 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         currentSnapshot = updateResult.Document;
         snapshotStatusLabel.Text =
-            $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
+            $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields." +
+            (currentSnapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
+                ? $" Undo available: {currentSnapshot.CommandUndoLabel}."
+                : string.Empty);
         PopulateSectionList();
         PopulateObjectList();
         LoadSurface();
         designSurface.SelectRecord(recordIndex);
         SyncSelectionFromSurface(recordIndex);
+    }
+
+    private TextBoxBase? TryFindFocusedUndoTextBox()
+    {
+        return TryFindFocusedUndoTextBox(this);
+    }
+
+    private static TextBoxBase? TryFindFocusedUndoTextBox(Control parent)
+    {
+        if (!parent.ContainsFocus)
+        {
+            return null;
+        }
+
+        if (parent is TextBoxBase textBoxBase && textBoxBase.CanUndo)
+        {
+            return textBoxBase;
+        }
+
+        foreach (Control child in parent.Controls)
+        {
+            var found = TryFindFocusedUndoTextBox(child);
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private void LoadSurface()

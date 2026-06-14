@@ -1,0 +1,30 @@
+if(NOT DEFINED DOTNET_EXECUTABLE OR DOTNET_EXECUTABLE STREQUAL "")
+    message(FATAL_ERROR "DOTNET_EXECUTABLE is required for the managed compile check.")
+endif()
+
+if(NOT DEFINED SOURCE_DIR OR SOURCE_DIR STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required for the managed compile check.")
+endif()
+
+set(test_configuration "${TEST_CONFIGURATION}")
+if(test_configuration STREQUAL "")
+    set(test_configuration "Debug")
+endif()
+
+function(run_managed_build project_relative_path)
+    set(project_path "${SOURCE_DIR}/${project_relative_path}")
+    execute_process(
+        COMMAND "${DOTNET_EXECUTABLE}" build "${project_path}" --configuration "${test_configuration}" --nologo -v minimal
+        WORKING_DIRECTORY "${SOURCE_DIR}"
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE build_result
+    )
+
+    if(NOT build_result EQUAL 0)
+        message(FATAL_ERROR "Managed compile check failed for ${project_relative_path}")
+    endif()
+endfunction()
+
+run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
+run_managed_build("vsix/Copperfin.Studio/Copperfin.Studio.csproj")
+run_managed_build("vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj")

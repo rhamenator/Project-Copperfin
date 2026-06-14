@@ -123,4 +123,19 @@ internal static class CopperfinStudioSnapshotClient
             studioHostPath!,
             CopperfinStudioHostBridge.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
     }
+
+    public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = "Copperfin Studio host was not found."
+            };
+        }
+
+        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildUndoArguments(assetPath));
+    }
 }

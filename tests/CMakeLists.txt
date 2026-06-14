@@ -11,6 +11,18 @@ function(copperfin_add_test TARGET_NAME LINK_LIBS)
     add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
 endfunction()
 
+find_program(DOTNET_EXECUTABLE NAMES dotnet)
+if(DOTNET_EXECUTABLE)
+    add_test(
+        NAME test_managed_compile
+        COMMAND ${CMAKE_COMMAND}
+            -DDOTNET_EXECUTABLE=${DOTNET_EXECUTABLE}
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DTEST_CONFIGURATION=$<CONFIG>
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_managed_compile_check.cmake
+    )
+endif()
+
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )

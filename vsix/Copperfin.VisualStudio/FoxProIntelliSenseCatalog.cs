@@ -327,7 +327,7 @@ internal static class FoxProIntelliSenseCatalog
             return signatures;
         }
 
-        if (invocationName.Contains('.'))
+        if (invocationName.IndexOf('.') >= 0)
         {
             var memberName = invocationName.Split('.').Last();
             if (SignatureLookup.TryGetValue(NormalizeLookupToken(memberName), out signatures))
@@ -711,8 +711,8 @@ internal static class FoxProIntelliSenseCatalog
         var normalized = TrimQuotedToken(operand);
         if (string.IsNullOrWhiteSpace(normalized) ||
             string.Equals(normalized, "IN", StringComparison.OrdinalIgnoreCase) ||
-            normalized.Contains('&', StringComparison.Ordinal) ||
-            normalized.Contains('(', StringComparison.Ordinal))
+            normalized.IndexOf('&') >= 0 ||
+            normalized.IndexOf('(') >= 0)
         {
             return false;
         }
@@ -720,7 +720,7 @@ internal static class FoxProIntelliSenseCatalog
         var hasDirectorySeparator = normalized.Contains(Path.DirectorySeparatorChar) || normalized.Contains(Path.AltDirectorySeparatorChar);
         var extension = Path.GetExtension(normalized);
         if (!hasDirectorySeparator &&
-            normalized.Contains('.', StringComparison.Ordinal) &&
+            normalized.IndexOf('.') >= 0 &&
             !TableExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
         {
             return false;
@@ -1011,7 +1011,7 @@ internal static class FoxProIntelliSenseCatalog
             return true;
         }
 
-        if (!token.Contains('.'))
+        if (token.IndexOf('.') < 0)
         {
             return false;
         }
@@ -1041,7 +1041,7 @@ internal static class FoxProIntelliSenseCatalog
             return signatures;
         }
 
-        if (!invocationName.Contains('.'))
+        if (invocationName.IndexOf('.') < 0)
         {
             return Array.Empty<FoxProSignatureEntry>();
         }

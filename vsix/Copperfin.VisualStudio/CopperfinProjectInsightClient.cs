@@ -76,7 +76,7 @@ internal static class CopperfinProjectInsightClient
                 .Select(symbol => symbol.Name),
             StringComparer.OrdinalIgnoreCase);
         var knownMethodSymbols = knownCallableSymbols
-            .Where(symbol => symbol.Contains('.', StringComparison.Ordinal))
+            .Where(symbol => symbol.IndexOf('.') >= 0)
             .ToList();
 
         foreach (var loadedTextFile in loadedTextFiles)
@@ -328,7 +328,7 @@ internal static class CopperfinProjectInsightClient
 
             insights.RuntimeReferences.Add(new CopperfinProjectCodeSymbol
             {
-                Kind = invocation.Contains('.') ? "call.member" : "call",
+                Kind = invocation.IndexOf('.') >= 0 ? "call.member" : "call",
                 Name = resolvedName,
                 FilePath = path,
                 Line = lineNumber,
@@ -347,7 +347,7 @@ internal static class CopperfinProjectInsightClient
             return invocation;
         }
 
-        if (!invocation.Contains('.'))
+        if (invocation.IndexOf('.') < 0)
         {
             return string.Empty;
         }
@@ -384,7 +384,7 @@ internal static class CopperfinProjectInsightClient
                 .Select(symbol => symbol.Name),
             StringComparer.OrdinalIgnoreCase);
         var knownMethodSymbols = knownCallableSymbols
-            .Where(symbol => symbol.Contains('.', StringComparison.Ordinal))
+            .Where(symbol => symbol.IndexOf('.') >= 0)
             .ToList();
         var resolvedName = ResolveCallableReferenceName(trimmed, knownCallableSymbols, knownMethodSymbols);
         if (!string.IsNullOrWhiteSpace(resolvedName))
@@ -392,7 +392,7 @@ internal static class CopperfinProjectInsightClient
             return resolvedName;
         }
 
-        return trimmed.Contains('.')
+        return trimmed.IndexOf('.') >= 0
             ? trimmed.Split('.').Last()
             : trimmed;
     }

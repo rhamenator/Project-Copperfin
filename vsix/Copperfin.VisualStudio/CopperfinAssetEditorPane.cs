@@ -1,13 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Copperfin.VisualStudio;
 
 [ComVisible(true)]
-internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData
+internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, IOleCommandTarget
 {
     private readonly CopperfinAssetEditorControl control;
     private string documentPath;
@@ -93,6 +94,35 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData
         documentPath = pszDocDataPath;
         control.LoadDocument(documentPath);
         return VSConstants.S_OK;
+    }
+
+    public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
+    {
+        if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97 &&
+            cCmds > 0 &&
+            prgCmds[0].cmdID == (uint)VSConstants.VSStd97CmdID.Undo)
+        {
+            prgCmds[0].cmdf = (uint)OLECMDF.OLECMDF_SUPPORTED;
+            if (control.CanHandleUndoCommand())
+            {
+                prgCmds[0].cmdf |= (uint)OLECMDF.OLECMDF_ENABLED;
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        return VSConstants.E_NOTIMPL;
+    }
+
+    public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+    {
+        if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97 &&
+            nCmdID == (uint)VSConstants.VSStd97CmdID.Undo)
+        {
+            return control.TryHandleUndoCommand() ? VSConstants.S_OK : VSConstants.E_FAIL;
+        }
+
+        return VSConstants.E_NOTIMPL;
     }
 
     protected override void Dispose(bool disposing)

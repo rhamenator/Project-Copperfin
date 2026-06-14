@@ -23,9 +23,16 @@ struct VisualAssetEditResult {
     std::string error;
 };
 
+struct VisualAssetUndoStatus {
+    bool available = false;
+    std::string label;
+};
+
 [[nodiscard]] std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::string& text);
 [[nodiscard]] std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssignment>& properties);
 [[nodiscard]] bool is_property_blob_asset_path(const std::string& path);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
+[[nodiscard]] VisualAssetUndoStatus query_visual_object_undo(const std::string& path);
+VisualAssetEditResult undo_visual_object_property(const std::string& path);
 
 }  // namespace copperfin::vfp
