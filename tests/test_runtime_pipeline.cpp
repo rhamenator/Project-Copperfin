@@ -1136,6 +1136,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared bridge-invocation surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                "library-output wrapper source should declare a bridge-invocation helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
+               "library-output wrapper source should declare a bridge-parameter surface");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
+               "library-output wrapper source should declare a bridge-call surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(") != std::string::npos,
+               "library-output wrapper source should declare a bridge-call helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "library-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -1152,8 +1158,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should preserve InitLibrary bridge metadata");
         expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
                "library-output wrapper source should build a bridge invocation from the descriptor");
+        expect(wrapper_source.find("const auto call = copperfin_build_runtime_bridge_call(") != std::string::npos,
+               "library-output wrapper source should build a bridge call from the invocation");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "library-output wrapper source should encode the export name into the bridge invocation plan");
+        expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
+               "library-output wrapper source should preserve the DLL placeholder argument binding");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
@@ -1723,6 +1733,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared bridge-invocation surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                "fll-output wrapper source should declare a bridge-invocation helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
+               "fll-output wrapper source should declare a bridge-parameter surface");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
+               "fll-output wrapper source should declare a bridge-call surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(") != std::string::npos,
+               "fll-output wrapper source should declare a bridge-call helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "fll-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -1741,8 +1757,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should preserve InitLibrary bridge metadata");
         expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
                "fll-output wrapper source should build a bridge invocation from the descriptor");
+        expect(wrapper_source.find("const auto call = copperfin_build_runtime_bridge_call(") != std::string::npos,
+               "fll-output wrapper source should build a bridge call from the invocation");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "fll-output wrapper source should encode the export name into the bridge invocation plan");
+        expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
+               "fll-output wrapper source should preserve the ParamBlk call-surface binding");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
         expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,

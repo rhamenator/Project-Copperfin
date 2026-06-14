@@ -727,14 +727,24 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared bridge-invocation surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                    "build host DLL wrapper should declare a bridge-invocation helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
+                   "build host DLL wrapper should declare a bridge-parameter surface");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
+                   "build host DLL wrapper should declare a bridge-call surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(") != std::string::npos,
+                   "build host DLL wrapper should declare a bridge-call helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for AddNumbers");
             expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
                    "build host DLL wrapper should build a bridge invocation from the descriptor");
+            expect(wrapper_source.find("const auto call = copperfin_build_runtime_bridge_call(") != std::string::npos,
+                   "build host DLL wrapper should build a bridge call from the invocation");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
+            expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
+                   "build host DLL wrapper should preserve the DLL placeholder argument binding");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -825,6 +835,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared bridge-invocation surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                    "build host FLL wrapper should declare a bridge-invocation helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
+                   "build host FLL wrapper should declare a bridge-parameter surface");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
+                   "build host FLL wrapper should declare a bridge-call surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(") != std::string::npos,
+                   "build host FLL wrapper should declare a bridge-call helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -845,8 +861,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a bridge descriptor for AddNumbers");
             expect(wrapper_source.find("const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);") != std::string::npos,
                    "build host FLL wrapper should build a bridge invocation from the descriptor");
+            expect(wrapper_source.find("const auto call = copperfin_build_runtime_bridge_call(") != std::string::npos,
+                   "build host FLL wrapper should build a bridge call from the invocation");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
+            expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
+                   "build host FLL wrapper should preserve the ParamBlk call-surface binding");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,

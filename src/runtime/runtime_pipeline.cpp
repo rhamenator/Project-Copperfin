@@ -609,6 +609,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "// Generated Copperfin native wrapper scaffold\n";
     stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
+    stream << "#include <cstdint>\n";
     stream << "#include <filesystem>\n";
     stream << "#include <string>\n";
     stream << "#include <vector>\n";
@@ -670,6 +671,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    CopperfinRuntimeBridgeDescriptor descriptor;\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeParameter {\n";
+    stream << "    std::string parameter_name;\n";
+    stream << "    std::string value_representation;\n";
+    stream << "    std::string call_surface;\n";
+    stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeCall {\n";
+    stream << "    CopperfinRuntimeBridgeInvocation invocation;\n";
+    stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -712,6 +722,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "            descriptor.parameter_names,\n";
     stream << "            \"--parameter-count\",\n";
     stream << "            std::to_string(descriptor.parameter_count)}};\n";
+    stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(\n";
+    stream << "    const CopperfinRuntimeBridgeInvocation& invocation,\n";
+    stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters) {\n";
+    stream << "    return CopperfinRuntimeBridgeCall{invocation, std::move(parameters)};\n";
     stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
@@ -770,7 +785,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
                    << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
             stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);\n";
-            stream << "    (void)invocation;\n";
+            stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
+            stream << "        invocation,\n";
+            stream << "        {{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}});\n";
+            stream << "    (void)call;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -857,7 +875,20 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
                    << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
             stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);\n";
-            stream << "    (void)invocation;\n";
+            stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
+            stream << "        invocation,\n";
+            stream << "        {";
+            for (std::size_t index = 0; index < effective_names.size(); ++index) {
+                if (index > 0U) {
+                    stream << ", ";
+                }
+                const std::string parameter_name = effective_names[index];
+                const std::string sanitized_name = sanitize_cpp_identifier(effective_names[index], index);
+                stream << "{\"" << quote_manifest_value(parameter_name) << "\", std::to_string(" << sanitized_name
+                       << "), \"int\"}";
+            }
+            stream << "});\n";
+            stream << "    (void)call;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
