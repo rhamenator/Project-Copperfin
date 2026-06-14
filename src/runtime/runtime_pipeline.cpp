@@ -1057,6 +1057,36 @@ void append_warning_manifest_lines(std::ostringstream& stream, const RuntimePack
     }
 }
 
+void append_feature_flag_line(
+    std::ostringstream& stream,
+    std::string_view name,
+    bool enabled,
+    std::string_view category);
+
+void append_runtime_feature_flag_manifest_lines(
+    std::ostringstream& stream,
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile) {
+    append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
+    append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
+    append_feature_flag_line(stream, "runtime.host.native", is_native_host_output_kind(plan.output_kind), "host_compatibility");
+    append_feature_flag_line(stream, "build.output.ast_contract", true, "build_output");
+    append_feature_flag_line(stream, "build.output.ir_contract", true, "build_output");
+    append_feature_flag_line(stream, "build.output.csharp_transpilation", plan.requested_dotnet_launcher, "build_output");
+    append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
+    append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
+    append_feature_flag_line(stream, "build.output.app_archive_contract", plan.output_kind == BuildOutputKind::app, "build_output");
+    append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
+    append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
+    append_feature_flag_line(
+        stream,
+        "security.native",
+        plan.security_enabled && security_profile.available,
+        "security");
+}
+
 const char* statement_kind_name(const StatementKind kind) {
     switch (kind) {
         case StatementKind::assignment:
@@ -2347,24 +2377,7 @@ std::string build_runtime_manifest_text(
 
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
-    append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
-    append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
-    append_feature_flag_line(stream, "runtime.host.native", is_native_host_output_kind(plan.output_kind), "host_compatibility");
-    append_feature_flag_line(stream, "build.output.ast_contract", true, "build_output");
-    append_feature_flag_line(stream, "build.output.ir_contract", true, "build_output");
-    append_feature_flag_line(stream, "build.output.csharp_transpilation", plan.requested_dotnet_launcher, "build_output");
-    append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
-    append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
-    append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
-    append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
-    append_feature_flag_line(stream, "build.output.app_archive_contract", plan.output_kind == BuildOutputKind::app, "build_output");
-    append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
-    append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
-    append_feature_flag_line(
-        stream,
-        "security.native",
-        plan.security_enabled && security_profile.available,
-        "security");
+    append_runtime_feature_flag_manifest_lines(stream, plan, security_profile);
 
     append_runtime_asset_manifest_lines(stream, plan);
 
@@ -2507,9 +2520,7 @@ std::string build_debug_manifest_text(
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
-    append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
-    append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
-    append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
+    append_runtime_feature_flag_manifest_lines(stream, plan, security_profile);
     for (const auto& digest : plan.compiler_contract_digests) {
         stream << "compiler_contract="
                << quote_manifest_value(digest.path) << "|"

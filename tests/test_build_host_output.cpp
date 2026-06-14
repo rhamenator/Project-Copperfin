@@ -625,6 +625,10 @@ void run_library_build_host_smoke(
         const std::vector<std::string> debug_guardrails = lines_with_prefix(debug_manifest_text, "extensibility_guardrail=");
         expect(debug_guardrails == runtime_guardrails,
                "build host debug manifest should mirror extensibility guardrails for " + extension + " outputs");
+        const std::vector<std::string> runtime_feature_flags = lines_with_prefix(manifest_text, "feature_flag=");
+        const std::vector<std::string> debug_feature_flags = lines_with_prefix(debug_manifest_text, "feature_flag=");
+        expect(debug_feature_flags == runtime_feature_flags,
+               "build host debug manifest should mirror runtime feature-flag lines for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,

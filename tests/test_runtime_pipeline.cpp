@@ -1400,6 +1400,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should mirror AI feature entries");
         expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
                "library-output debug manifest should mirror extensibility guardrails");
+        expect(lines_with_prefix(debug_manifest, "feature_flag=") == lines_with_prefix(runtime_manifest, "feature_flag="),
+               "library-output debug manifest should mirror runtime feature-flag lines");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1512,6 +1514,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
                        "library-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "feature_flag=") == lines_with_prefix(built_runtime_manifest, "feature_flag="),
+                       "library-output runtime pipeline should preserve runtime feature-flag lines in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1997,6 +2001,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should mirror AI feature entries");
         expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
                "fll-output debug manifest should mirror extensibility guardrails");
+        expect(lines_with_prefix(debug_manifest, "feature_flag=") == lines_with_prefix(runtime_manifest, "feature_flag="),
+               "fll-output debug manifest should mirror runtime feature-flag lines");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -2137,6 +2143,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
                        "fll-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "feature_flag=") == lines_with_prefix(built_runtime_manifest, "feature_flag="),
+                       "fll-output runtime pipeline should preserve runtime feature-flag lines in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
