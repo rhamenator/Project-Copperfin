@@ -28,6 +28,7 @@ int main() {
     bool found_debugger = false;
     bool found_build_deploy = false;
     bool found_object_browser = false;
+    bool found_toolbox_task_pane = false;
     std::size_t implemented_count = 0U;
 
     for (const auto& subsystem : subsystems) {
@@ -69,6 +70,10 @@ int main() {
             found_object_browser = true;
             expect(std::string(subsystem.current_status) == "implemented", "object browser should now be marked implemented");
         }
+        if (subsystem.id == "toolbox-task-pane") {
+            found_toolbox_task_pane = true;
+            expect(std::string(subsystem.current_status) == "planned", "toolbox/task pane should remain planned");
+        }
     }
 
     expect(found_report, "registry should include the report designer subsystem");
@@ -77,6 +82,7 @@ int main() {
     expect(found_debugger, "registry should include the debugger subsystem");
     expect(found_build_deploy, "registry should include the build/deploy subsystem");
     expect(found_object_browser, "registry should include the object browser subsystem");
+    expect(found_toolbox_task_pane, "registry should include the toolbox/task pane subsystem");
     expect(implemented_count >= 11U, "registry should now mark the Phase C-equivalent surfaces as implemented");
 
     if (failures != 0) {

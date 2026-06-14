@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #174-#175; #162-#173 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #175-#176; #162-#174 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #174-#175; #162-#173 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #175-#176; #162-#174 shipped)
 
 ### Designers And IDE Parity
 
@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #22-#26: #174-#177
+- active-open native slice queues under #22-#26: #175-#177
 
 ### Future Enhancements
 
@@ -707,6 +707,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-13: E2/#171 builder and context-editor fidelity shipped in `studio_host` + `test_studio_host`. Launch parsing and context-aware document open behavior now preserve the builder contract and editor diagnostics through the host boundary.
 - 2026-06-13: E3/#172 report/label layout fidelity shipped in `report_layout` + `test_report_layout`. Report layout modeling now preserves band grouping, object capture, and expression surfaces through the parsed layout contract.
 - 2026-06-13: E3/#173 report/label property-editing fidelity shipped in `visual_asset_editor` + `test_visual_asset_editor`. Report-field editing now preserves memo-backed property-bag rewrites and direct-field updates through the parsed table contract.
+- 2026-06-13: F1/#174 Visual Studio pane/tool-window parity shipped in `product_subsystems` + `test_product_subsystems`. The subsystem registry now explicitly retains the planned toolbox/task-pane entry alongside the implemented shell and designer surfaces.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
