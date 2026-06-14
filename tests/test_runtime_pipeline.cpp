@@ -430,6 +430,10 @@ std::set<std::string> read_fll_api_declared_symbols(const std::filesystem::path&
             symbols.insert(line.substr(18U));
             continue;
         }
+        if (line.rfind("registration_symbol=", 0U) == 0U) {
+            symbols.insert(line.substr(20U));
+            continue;
+        }
     }
     return symbols;
 }
@@ -880,9 +884,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     fs::create_directories(project_dir);
 
     write_text(project_dir / "librarymain.prg",
-               "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
+               "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -1154,9 +1158,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
     fs::create_directories(project_dir);
 
     write_text(project_dir / "librarymain.prg",
-               "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
+               "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -1256,7 +1260,17 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should scaffold procedure entrypoints");
         expect(wrapper_source.find("int AddNumbers()") != std::string::npos,
                "fll-output wrapper source should scaffold function entrypoints");
-        expect(wrapper_source.find("int FoxInfo()") != std::string::npos,
+        expect(wrapper_source.find("struct CopperfinFoxInfoRecord") != std::string::npos,
+               "fll-output wrapper source should emit FoxInfo registration metadata");
+        expect(wrapper_source.find("struct CopperfinFoxTableRecord") != std::string::npos,
+               "fll-output wrapper source should emit FoxTable registration metadata");
+        expect(wrapper_source.find("const CopperfinFoxTableRecord _FoxTable") != std::string::npos,
+               "fll-output wrapper source should export the FoxTable registration symbol");
+        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, 1U}") != std::string::npos,
+               "fll-output wrapper source should record InitLibrary arity in the FoxInfo table");
+        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, 2U}") != std::string::npos,
+               "fll-output wrapper source should record AddNumbers arity in the FoxInfo table");
+        expect(wrapper_source.find("const CopperfinFoxTableRecord* FoxInfo()") != std::string::npos,
                "fll-output wrapper source should scaffold the FoxInfo entrypoint");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
@@ -1305,6 +1319,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output compiled wrapper should export AddNumbers");
                 expect(exported_symbols.contains("FoxInfo"),
                        "fll-output compiled wrapper should export FoxInfo");
+                expect(exported_symbols.contains("_FoxTable"),
+                       "fll-output compiled wrapper should export the FoxTable registration symbol");
                 expect(exported_symbols == declared_module_symbols,
                        "fll-output compiled wrapper exports should stay synchronized with the module-definition contract");
                 expect(exported_symbols == declared_api_symbols,
@@ -1360,6 +1376,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should declare the FLL output kind");
         expect(api_manifest.find("library_file=LibraryDemo.fll") != std::string::npos,
                "fll-output API manifest should name the requested FLL file");
+        expect(api_manifest.find("registration_model=FoxInfo/FoxTable") != std::string::npos,
+               "fll-output API manifest should declare the FoxInfo/FoxTable registration model");
         expect(api_manifest.find("registration_command=SET LIBRARY TO") != std::string::npos,
                "fll-output API manifest should declare the registration command");
         expect(api_manifest.find("release_command=RELEASE LIBRARY") != std::string::npos,
@@ -1368,10 +1386,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should declare additive loading support");
         expect(api_manifest.find("loader_entrypoint=FoxInfo") != std::string::npos,
                "fll-output API manifest should declare the loader entrypoint");
+        expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
+               "fll-output API manifest should declare the FoxTable registration symbol");
         expect(api_manifest.find("function=InitLibrary") != std::string::npos,
                "fll-output API manifest should list discovered procedure names");
         expect(api_manifest.find("function=AddNumbers") != std::string::npos,
                "fll-output API manifest should list discovered function names");
+        expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
+               "fll-output API manifest should declare InitLibrary arity");
+        expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
+               "fll-output API manifest should declare AddNumbers arity");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -1379,6 +1403,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record FLL output kind");
         expect(runtime_manifest.find("fll_api_manifest_path=" + quote_manifest_value(result.plan.fll_api_manifest_path)) != std::string::npos,
                "fll-output manifest should record the emitted API-manifest path");
+        expect(runtime_manifest.find("fll_loader_entrypoint=FoxInfo") != std::string::npos,
+               "fll-output manifest should record the FLL loader entrypoint");
+        expect(runtime_manifest.find("fll_registration_symbol=_FoxTable") != std::string::npos,
+               "fll-output manifest should record the FoxTable registration symbol");
         expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "fll-output manifest should record the wrapper source path");
         expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
@@ -1395,6 +1423,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should expose the FLL API-contract feature flag");
         expect(debug_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output debug manifest should record FLL output kind");
+        expect(debug_manifest.find("fll_loader_entrypoint=FoxInfo") != std::string::npos,
+               "fll-output debug manifest should record the FLL loader entrypoint");
+        expect(debug_manifest.find("fll_registration_symbol=_FoxTable") != std::string::npos,
+               "fll-output debug manifest should record the FoxTable registration symbol");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "fll-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,

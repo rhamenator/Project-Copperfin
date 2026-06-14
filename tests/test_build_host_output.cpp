@@ -216,6 +216,8 @@ std::set<std::string> read_fll_api_declared_symbols(const std::filesystem::path&
             symbols.insert(line.substr(9U));
         } else if (line.rfind("loader_entrypoint=", 0U) == 0U) {
             symbols.insert(line.substr(18U));
+        } else if (line.rfind("registration_symbol=", 0U) == 0U) {
+            symbols.insert(line.substr(20U));
         }
     }
     return symbols;
@@ -312,8 +314,8 @@ void run_library_build_host_smoke(
     fs::create_directories(project_dir);
     fs::create_directories(output_dir);
 
-    write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
-    write_text(project_dir / "helper.prg", "FUNCTION AddNumbers\nRETURN 1\nENDFUNC\n");
+    write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
+    write_text(project_dir / "helper.prg", "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_synthetic_project(project_path, project_dir, output_dir / ("LibraryDemo." + extension));
 
     const auto process = run_process_capture(
@@ -358,6 +360,13 @@ void run_library_build_host_smoke(
             const std::set<std::string> declared_api_symbols = read_fll_api_declared_symbols(fll_api_manifest_path);
             expect(exported_symbols == declared_api_symbols,
                    "build host should preserve the API-manifest export contract for fll outputs");
+            const std::string api_manifest = read_text(fll_api_manifest_path);
+            expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
+                   "build host FLL manifest should declare the FoxTable registration symbol");
+            expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary arity");
+            expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers arity");
         }
     }
 
