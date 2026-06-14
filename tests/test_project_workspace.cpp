@@ -188,6 +188,31 @@ void test_build_project_workspace_with_fxp_output() {
            "build plan should label .fxp outputs as Visual FoxPro tokenized programs");
 }
 
+void test_build_project_workspace_with_app_output() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\archivedemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "ARCHIVEDEMO"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\archivedemo.app)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "app project workspace should be available");
+    expect(workspace.build_plan.output_kind == "app", "build plan should infer APP output kind from .app output path");
+    expect(workspace.build_plan.build_target == "x64 Visual FoxPro application archive",
+           "build plan should label .app outputs as Visual FoxPro application archives");
+}
+
 }  // namespace
 
 int main() {
@@ -196,6 +221,7 @@ int main() {
     test_build_project_workspace_with_dll_output();
     test_build_project_workspace_with_fll_output();
     test_build_project_workspace_with_fxp_output();
+    test_build_project_workspace_with_app_output();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

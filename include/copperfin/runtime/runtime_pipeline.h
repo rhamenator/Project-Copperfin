@@ -18,6 +18,7 @@ enum class BuildConfiguration {
 
 enum class BuildOutputKind {
     executable,
+    app,
     dll,
     fll,
     fxp,
@@ -67,6 +68,7 @@ struct RuntimePackagePlan {
     std::string module_definition_path;
     std::string fll_api_manifest_path;
     std::string fxp_token_manifest_path;
+    std::string app_archive_manifest_path;
     std::string runtime_host_destination_path;
     std::string startup_item;
     std::string startup_source_path;

@@ -56,6 +56,9 @@ BuildOutputKind parse_build_output_kind(const std::string& value) {
     if (normalized == "dll") {
         return BuildOutputKind::dll;
     }
+    if (normalized == "app") {
+        return BuildOutputKind::app;
+    }
     if (normalized == "fll") {
         return BuildOutputKind::fll;
     }
@@ -145,6 +148,9 @@ BuildOutputKind infer_build_output_kind_from_output_path(const std::string& outp
     const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(output_path).extension().string()));
     if (extension == ".dll") {
         return BuildOutputKind::dll;
+    }
+    if (extension == ".app") {
+        return BuildOutputKind::app;
     }
     if (extension == ".fll") {
         return BuildOutputKind::fll;
@@ -256,6 +262,24 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
         for (const auto& routine_entry : program.routines) {
             append_fxp_statement_lines(stream, routine_entry.first, routine_entry.second.statements);
         }
+    }
+    return stream.str();
+}
+
+std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "manifest_version=1\n";
+    stream << "output_kind=app\n";
+    stream << "archive_contract=staged_content_manifest\n";
+    stream << "primary_output=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
+    stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
+    for (const auto& asset : plan.assets) {
+        stream << "asset="
+               << quote_manifest_value(asset.relative_path) << "|"
+               << quote_manifest_value(asset.type_title) << "|"
+               << (asset.required_for_runtime ? "true" : "false") << "|"
+               << (asset.copied ? "true" : "false") << "\n";
     }
     return stream.str();
 }
@@ -600,6 +624,8 @@ const char* build_output_kind_name(BuildOutputKind output_kind) {
     switch (output_kind) {
         case BuildOutputKind::executable:
             return "executable";
+        case BuildOutputKind::app:
+            return "app";
         case BuildOutputKind::dll:
             return "dll";
         case BuildOutputKind::fll:
@@ -642,6 +668,9 @@ RuntimePackagePlan create_runtime_package_plan(
     if (is_library_output_kind(plan.output_kind)) {
         plan.launcher_mode = "foxpro_library_definition";
         plan.launcher_fallback = "library_binary_generation_pending";
+    } else if (plan.output_kind == BuildOutputKind::app) {
+        plan.launcher_mode = "foxpro_application_archive_contract";
+        plan.launcher_fallback = "app_archive_generation_pending";
     } else if (plan.output_kind == BuildOutputKind::fxp) {
         plan.launcher_mode = "foxpro_tokenized_contract";
         plan.launcher_fallback = "fxp_binary_generation_pending";
@@ -681,6 +710,11 @@ RuntimePackagePlan create_runtime_package_plan(
         std::filesystem::path fxp_token_manifest_file_name = output_file_name;
         fxp_token_manifest_file_name += ".tokens";
         plan.fxp_token_manifest_path = (package_root / fxp_token_manifest_file_name).string();
+    }
+    if (plan.output_kind == BuildOutputKind::app) {
+        std::filesystem::path app_archive_manifest_file_name = output_file_name;
+        app_archive_manifest_file_name += ".contents";
+        plan.app_archive_manifest_path = (package_root / app_archive_manifest_file_name).string();
     }
     plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
     plan.working_directory = content_root.lexically_normal().string();
@@ -772,6 +806,7 @@ std::string build_runtime_manifest_text(
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
+    stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
@@ -814,6 +849,7 @@ std::string build_runtime_manifest_text(
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
+    append_feature_flag_line(stream, "build.output.app_archive_contract", plan.output_kind == BuildOutputKind::app, "build_output");
     append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
     append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
     append_feature_flag_line(
@@ -935,6 +971,10 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
     } else if (plan.output_kind == BuildOutputKind::fxp) {
         if (!write_text_file(plan.fxp_token_manifest_path, build_fxp_token_manifest_source(materialized_plan), error)) {
+            return {.ok = false, .error = error};
+        }
+    } else if (plan.output_kind == BuildOutputKind::app) {
+        if (!write_text_file(plan.app_archive_manifest_path, build_app_archive_manifest_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
         }
     } else {

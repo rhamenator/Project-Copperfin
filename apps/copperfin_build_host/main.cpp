@@ -332,6 +332,7 @@ int main(int argc, char** argv) {
     std::cout << "module.definition: " << materialized.plan.module_definition_path << "\n";
     std::cout << "fll.api.manifest: " << materialized.plan.fll_api_manifest_path << "\n";
     std::cout << "fxp.token.manifest: " << materialized.plan.fxp_token_manifest_path << "\n";
+    std::cout << "app.archive.manifest: " << materialized.plan.app_archive_manifest_path << "\n";
     std::cout << "primary.output.materialized: " << (materialized.plan.primary_output_materialized ? "true" : "false") << "\n";
     std::cout << "security.enabled: " << (materialized.plan.security_enabled ? "true" : "false") << "\n";
     std::cout << "warnings: " << materialized.plan.warnings.size() << "\n";

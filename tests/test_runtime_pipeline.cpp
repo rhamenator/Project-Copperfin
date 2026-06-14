@@ -731,6 +731,122 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_app_output_package_emits_archive_manifest_for_staged_assets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_app_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "DO helper\nRETURN\n");
+    write_text(project_dir / "helper.prg", "WAIT WINDOW 'archived'\nRETURN\n");
+    write_text(project_dir / "config.txt", "mode=demo");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "archivedemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ArchiveDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "ArchiveDemo";
+    workspace.build_plan.output_path = (output_dir / "ArchiveDemo.app").string();
+    workspace.build_plan.output_kind = "app";
+    workspace.build_plan.build_target = "x64 Visual FoxPro application archive";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "helper.prg", .relative_path = "helper.prg", .type_title = "Program"},
+        {.record_index = 3U, .name = "config.txt", .relative_path = "config.txt", .type_title = "Text"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "app-output plan should be created");
+    expect(plan.output_kind == copperfin::runtime::BuildOutputKind::app,
+           "app-output plan should preserve APP output kind");
+    expect(!plan.emit_dotnet_launcher,
+           "app-output plan should not route through .NET launcher emission");
+    expect(plan.launcher_mode == "foxpro_application_archive_contract",
+           "app-output plan should switch to the archive-contract packaging mode");
+    expect(plan.launcher_fallback == "app_archive_generation_pending",
+           "app-output plan should record the honest non-binary fallback state");
+    expect(fs::path(plan.launcher_output_path).filename() == "ArchiveDemo.app",
+           "app-output plan should preserve the requested output filename");
+    expect(fs::path(plan.app_archive_manifest_path).filename() == "ArchiveDemo.app.contents",
+           "app-output plan should derive a matching archive-manifest filename");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "app-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.app_archive_manifest_path),
+               "app-output package should emit an archive manifest");
+        expect(!fs::exists(result.plan.launcher_output_path),
+               "app-output package should not fake an APP binary");
+        expect(!fs::exists(result.plan.runtime_host_destination_path),
+               "app-output package should not bundle an executable runtime host into the APP output slot");
+        expect(!result.plan.primary_output_materialized,
+               "app-output package should report that the primary APP binary is not yet materialized");
+        expect(fs::exists(fs::path(result.plan.content_root) / "main.prg"),
+               "app-output package should still stage the startup program");
+        expect(fs::exists(fs::path(result.plan.content_root) / "helper.prg"),
+               "app-output package should still stage supporting program assets");
+        expect(fs::exists(fs::path(result.plan.content_root) / "config.txt"),
+               "app-output package should still stage non-program assets");
+
+        const std::string archive_manifest = read_text(result.plan.app_archive_manifest_path);
+        expect(archive_manifest.find("output_kind=app") != std::string::npos,
+               "app-output archive manifest should declare the APP output kind");
+        expect(archive_manifest.find("archive_contract=staged_content_manifest") != std::string::npos,
+               "app-output archive manifest should declare the archive-contract mode");
+        expect(archive_manifest.find("primary_output=ArchiveDemo.app") != std::string::npos,
+               "app-output archive manifest should name the requested APP file");
+        expect(archive_manifest.find("startup_item=main.prg") != std::string::npos,
+               "app-output archive manifest should record the startup item");
+        expect(archive_manifest.find("asset=main.prg|Program|true|true") != std::string::npos,
+               "app-output archive manifest should record the staged startup program asset");
+        expect(archive_manifest.find("asset=helper.prg|Program|false|true") != std::string::npos,
+               "app-output archive manifest should record staged supporting program assets");
+        expect(archive_manifest.find("asset=config.txt|Text|false|true") != std::string::npos,
+               "app-output archive manifest should record staged non-program assets");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("output_kind=app") != std::string::npos,
+               "app-output manifest should record APP output kind");
+        expect(runtime_manifest.find("app_archive_manifest_path=" + quote_manifest_value(result.plan.app_archive_manifest_path)) != std::string::npos,
+               "app-output manifest should record the emitted archive-manifest path");
+        expect(runtime_manifest.find("feature_flag=build.output.app_archive_contract|true|build_output") != std::string::npos,
+               "app-output manifest should expose the APP archive-contract feature flag");
+        expect(debug_manifest.find("output_kind=app") != std::string::npos,
+               "app-output debug manifest should record APP output kind");
+        expect(debug_manifest.find("launcher_mode=foxpro_application_archive_contract") != std::string::npos,
+               "app-output debug manifest should record the archive-contract mode");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1273,6 +1389,7 @@ int main() {
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_fxp_output_package_emits_token_manifest_from_prg_statements();
+    test_app_output_package_emits_archive_manifest_for_staged_assets();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

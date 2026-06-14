@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the highest-priority open umbrellas are still `#19` and `#20`. `#210` is now shipped; the next prompt-sized issue in order on that build/debug branch is `#211` under `#41` unless the live blocker tree changes before work starts.
+Next: the highest-priority open umbrellas are still `#19` and `#20`. `#211` is now shipped; the next prompt-sized issue in order on that build/debug branch is `#212` under `#42` unless the live blocker tree changes before work starts.
 
 Language-service queue update:
 
+- 2026-06-14: **`#211` is now shipped.** Project workspaces now infer `.app` outputs as Visual FoxPro application archives, runtime package plans now emit a `.app.contents` contract only for APP targets, and materialized APP packages now record staged content membership plus startup fidelity while honestly recording that the primary APP archive is still not materialized.
 - 2026-06-14: **`#210` is now shipped.** Project workspaces now infer `.fxp` outputs as Visual FoxPro tokenized programs, runtime package plans now emit a `.fxp.tokens` contract only for FXP targets, and materialized FXP packages now capture parsed PRG logical statements by scope/line/text while honestly recording that the primary FXP binary is still not materialized.
 - 2026-06-14: **`#209` is now shipped.** Project workspaces now infer `.fll` outputs as Visual FoxPro libraries, runtime package plans now emit a `.fll.api` contract only for FLL targets, and materialized FLL packages now carry both the `.def` export map and a `SET LIBRARY TO` / `RELEASE LIBRARY`-oriented API manifest populated from discovered PRG `PROCEDURE` / `FUNCTION` names while honestly recording that the primary FLL binary is still not materialized.
 - 2026-06-14: **`#208` is now shipped.** Project workspaces now infer library-style output kinds from non-`.exe` `OUTFILE` targets, runtime package plans now preserve the configured library filename instead of forcing `.exe`, and DLL/FLL/OCX outputs now switch into an explicit `foxpro_library_definition` packaging mode that emits a `.def` export map from discovered PRG `PROCEDURE` / `FUNCTION` names while honestly recording that the primary DLL binary is still not materialized.
@@ -69,6 +70,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#211` is now closed.** APP package planning is now explicitly regression-guarded: `.app` outputs infer the right Visual FoxPro application-archive target kind, emit a dedicated `.app.contents` contract only for APP builds, and materialize staged content membership plus startup fidelity instead of pretending the compiled APP archive already exists.
 - 2026-06-14: **`#210` is now closed.** FXP package planning is now explicitly regression-guarded: `.fxp` outputs infer the right Visual FoxPro tokenized-program target kind, emit a dedicated `.fxp.tokens` contract only for FXP builds, and materialize parsed PRG logical statements by scope/line/text instead of pretending the compiled FXP binary already exists.
 - 2026-06-14: **`#209` is now closed.** FLL package planning is now explicitly regression-guarded: `.fll` outputs infer the right Visual FoxPro target kind, emit a dedicated `.fll.api` contract only for FLL builds, and materialize a `SET LIBRARY TO` / `RELEASE LIBRARY`-oriented API manifest populated from discovered PRG routine exports alongside the honest `.def` contract.
 - 2026-06-14: **`#205` is now closed.** Memo-backed label and menu asset round-trip safety is now explicitly regression-guarded: synthetic `LBX/LBT` and `MNX/MNT` assets survive paired direct/memo edits, remain readable, and fully undo back to their original serialized state without leaving undo residue.

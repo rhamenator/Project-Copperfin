@@ -152,6 +152,9 @@ std::string infer_output_kind(const std::string& output_path) {
     if (extension == ".dll") {
         return "dll";
     }
+    if (extension == ".app") {
+        return "app";
+    }
     if (extension == ".fll") {
         return "fll";
     }
@@ -170,6 +173,9 @@ std::string infer_output_kind(const std::string& output_path) {
 std::string build_target_for_output_kind(const std::string& output_kind) {
     if (output_kind == "dll") {
         return "x64 Windows dynamic-link library";
+    }
+    if (output_kind == "app") {
+        return "x64 Visual FoxPro application archive";
     }
     if (output_kind == "fll") {
         return "x64 Visual FoxPro library";
