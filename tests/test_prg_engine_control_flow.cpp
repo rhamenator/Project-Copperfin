@@ -4943,7 +4943,9 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
     write_text(
         main_path,
         "lYielded = .F.\n"
+        "lEnteredCritical = .F.\n"
         "ENTER CRITICAL\n"
+        "lEnteredCritical = .T.\n"
         "YIELD\n"
         "lYielded = .T.\n"
         "EXIT CRITICAL\n"
@@ -4955,9 +4957,14 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
     expect(state.completed, "ENTER CRITICAL/YIELD regression should complete");
 
     const auto yielded = state.globals.find("lyielded");
+    const auto entered = state.globals.find("lenteredcritical");
     expect(yielded != state.globals.end(), "YIELD should continue after ENTER CRITICAL");
     if (yielded != state.globals.end()) {
         expect(yielded->second.boolean_value, "YIELD should set lYielded after resuming from section");
+    }
+    expect(entered != state.globals.end(), "ENTER CRITICAL body should execute before YIELD");
+    if (entered != state.globals.end()) {
+        expect(entered->second.boolean_value, "CRITICAL body should set entry flag");
     }
 
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
@@ -4967,6 +4974,10 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
         return event.category == "runtime.critical.blocking_violation" &&
                event.detail.find("operation=YIELD") != std::string::npos;
     }), "ENTER CRITICAL + YIELD should remain blocked-policy exception");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD event detail should identify the operation");
 
     fs::remove_all(temp_root, ignored);
 }

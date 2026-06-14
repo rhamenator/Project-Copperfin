@@ -1034,7 +1034,7 @@
 
                 std::this_thread::yield();
                 events.push_back({.category = "runtime.yield",
-                                  .detail = "cooperative",
+                                  .detail = "operation=YIELD cooperative",
                                   .location = statement.location});
                 return {};
             }
