@@ -321,6 +321,10 @@ bool build_native_wrapper_with_script(
 #endif
 }
 
+bool runtime_pipeline_primary_output_build_supported() {
+    return cmake_is_available();
+}
+
 std::set<std::string> read_native_exported_symbols(const std::filesystem::path& binary_path, std::string& error) {
     std::set<std::string> symbols;
 #if defined(_WIN32)
@@ -1068,6 +1072,39 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the wrapper shell build script path");
         expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper PowerShell build script path");
+
+        if (runtime_pipeline_primary_output_build_supported()) {
+            const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+                result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            if (!build_result.ok && !build_result.error.empty()) {
+                std::cerr << "FAIL: " << build_result.error << "\n";
+            }
+            expect(build_result.ok,
+                   "library-output runtime pipeline should build the requested primary output");
+            if (build_result.ok) {
+                expect(build_result.plan.primary_output_materialized,
+                       "library-output runtime pipeline should mark the primary output as materialized");
+                expect(fs::exists(build_result.plan.launcher_output_path),
+                       "library-output runtime pipeline should materialize the requested DLL output");
+                const std::string built_runtime_manifest = read_text(build_result.plan.manifest_path);
+                expect(built_runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
+                       "library-output runtime pipeline should rewrite the manifest with a materialized primary output state");
+                expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
+                       "library-output runtime pipeline should record the built DLL as an extension payload");
+                if (native_symbol_dump_is_available()) {
+                    std::string symbol_error;
+                    const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);
+                    const std::set<std::string> declared_symbols = read_module_definition_exports(build_result.plan.module_definition_path);
+                    if (exported_symbols.empty() && !symbol_error.empty()) {
+                        std::cerr << "FAIL: " << symbol_error << "\n";
+                    }
+                    expect(exported_symbols == declared_symbols,
+                           "library-output runtime pipeline build should preserve the module-definition export contract");
+                }
+            }
+        }
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1333,6 +1370,42 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the wrapper shell build script path");
         expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
                "fll-output debug manifest should record the wrapper PowerShell build script path");
+
+        if (runtime_pipeline_primary_output_build_supported()) {
+            const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+                result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            if (!build_result.ok && !build_result.error.empty()) {
+                std::cerr << "FAIL: " << build_result.error << "\n";
+            }
+            expect(build_result.ok,
+                   "fll-output runtime pipeline should build the requested primary output");
+            if (build_result.ok) {
+                expect(build_result.plan.primary_output_materialized,
+                       "fll-output runtime pipeline should mark the primary output as materialized");
+                expect(fs::exists(build_result.plan.launcher_output_path),
+                       "fll-output runtime pipeline should materialize the requested FLL output");
+                const std::string built_runtime_manifest = read_text(build_result.plan.manifest_path);
+                expect(built_runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
+                       "fll-output runtime pipeline should rewrite the manifest with a materialized primary output state");
+                expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
+                       "fll-output runtime pipeline should record the built FLL as an extension payload");
+                if (native_symbol_dump_is_available()) {
+                    std::string symbol_error;
+                    const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);
+                    const std::set<std::string> declared_module_symbols = read_module_definition_exports(build_result.plan.module_definition_path);
+                    const std::set<std::string> declared_api_symbols = read_fll_api_declared_symbols(build_result.plan.fll_api_manifest_path);
+                    if (exported_symbols.empty() && !symbol_error.empty()) {
+                        std::cerr << "FAIL: " << symbol_error << "\n";
+                    }
+                    expect(exported_symbols == declared_module_symbols,
+                           "fll-output runtime pipeline build should preserve the module-definition export contract");
+                    expect(exported_symbols == declared_api_symbols,
+                           "fll-output runtime pipeline build should preserve the API-manifest export contract");
+                }
+            }
+        }
     }
 
     fs::remove_all(temp_root, ignored);

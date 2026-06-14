@@ -105,6 +105,12 @@ struct RuntimeMaterializeResult {
     std::string error;
 };
 
+struct RuntimeBuildResult {
+    bool ok = false;
+    RuntimePackagePlan plan{};
+    std::string error;
+};
+
 [[nodiscard]] const char* build_configuration_name(BuildConfiguration configuration);
 [[nodiscard]] BuildConfiguration parse_build_configuration(const std::string& value);
 [[nodiscard]] const char* build_output_kind_name(BuildOutputKind output_kind);
@@ -131,5 +137,10 @@ RuntimeMaterializeResult materialize_runtime_package(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path);
+
+RuntimeBuildResult build_runtime_package_primary_output(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile);
 
 }  // namespace copperfin::runtime

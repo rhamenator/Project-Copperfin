@@ -125,6 +125,13 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
     return true;
 }
 
+std::string read_text_file(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    std::ostringstream stream;
+    stream << input.rdbuf();
+    return stream.str();
+}
+
 bool append_runtime_artifact_digest(
     std::vector<RuntimeArtifactDigest>& digests,
     const std::string& path,
@@ -1892,6 +1899,73 @@ RuntimeMaterializeResult materialize_runtime_package(
     }
 
     return {.ok = true, .plan = std::move(materialized_plan), .error = {}};
+}
+
+RuntimeBuildResult build_runtime_package_primary_output(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile) {
+    if (!plan.ok) {
+        return {.ok = false, .error = "Package plan is not valid."};
+    }
+    if (!is_library_output_kind(plan.output_kind)) {
+        return {.ok = false, .error = "Primary-output builds are only supported for library-output packages."};
+    }
+    if (!std::filesystem::exists(plan.native_wrapper_cmake_path)) {
+        return {.ok = false, .error = "Native wrapper CMake metadata is missing."};
+    }
+
+    RuntimePackagePlan built_plan = plan;
+    std::string error;
+    const std::filesystem::path source_root = std::filesystem::path(plan.native_wrapper_cmake_path).parent_path();
+    const std::filesystem::path build_root = source_root / "cmake_pipeline_build";
+    const std::filesystem::path configure_log_path = build_root / "cmake-configure.log";
+    const std::filesystem::path build_log_path = build_root / "cmake-build.log";
+    std::error_code ignored;
+    std::filesystem::remove_all(build_root, ignored);
+    std::filesystem::remove(plan.launcher_output_path, ignored);
+    std::filesystem::create_directories(build_root, ignored);
+    if (ignored) {
+        return {.ok = false, .error = "Unable to create native wrapper build directory."};
+    }
+
+    const std::string configure_command =
+        "cmake -S \"" + source_root.string() + "\" -B \"" + build_root.string() + "\" > \"" +
+        configure_log_path.string() + "\" 2>&1";
+    if (std::system(configure_command.c_str()) != 0) {
+        error = "native wrapper primary-output configure failed";
+        if (std::filesystem::exists(configure_log_path)) {
+            error += ":\n" + read_text_file(configure_log_path);
+        }
+        return {.ok = false, .error = error};
+    }
+
+    const std::string build_command =
+        "cmake --build \"" + build_root.string() + "\" > \"" + build_log_path.string() + "\" 2>&1";
+    if (std::system(build_command.c_str()) != 0) {
+        error = "native wrapper primary-output build failed";
+        if (std::filesystem::exists(build_log_path)) {
+            error += ":\n" + read_text_file(build_log_path);
+        }
+        return {.ok = false, .error = error};
+    }
+
+    if (!std::filesystem::exists(plan.launcher_output_path)) {
+        return {.ok = false, .error = "native wrapper primary-output build did not materialize the requested output path."};
+    }
+
+    built_plan.primary_output_materialized = true;
+    if (!append_runtime_artifact_digest(built_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan), error)) {
+        return {.ok = false, .error = error};
+    }
+
+    return {.ok = true, .plan = std::move(built_plan), .error = {}};
 }
 
 }  // namespace copperfin::runtime
