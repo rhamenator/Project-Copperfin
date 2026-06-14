@@ -484,6 +484,8 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the materialized primary output path for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
+        expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+               "build host debug manifest should record the built primary output as an extension payload for " + extension + " outputs");
         if (extension == "dll") {
             expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
                    "build host DLL debug manifest should record the module-definition path");

@@ -2424,6 +2424,11 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
                << quote_manifest_value(digest.path) << "|"
                << quote_manifest_value(digest.sha256) << "\n";
     }
+    for (const auto& digest : plan.extension_payload_digests) {
+        stream << "extension_payload="
+               << quote_manifest_value(digest.path) << "|"
+               << quote_manifest_value(digest.sha256) << "\n";
+    }
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
