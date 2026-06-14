@@ -53,6 +53,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex ProcedureRegex = new(@"^\s*PROCEDURE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -519,9 +520,49 @@ internal static class FoxProIntelliSenseCatalog
             return;
         }
 
+        string? currentClassName = null;
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             var line = lines[lineIndex];
+
+            var classMatch = DefineClassRegex.Match(line);
+            if (classMatch.Success)
+            {
+                currentClassName = classMatch.Groups[1].Value;
+                index.Classes.Add(currentClassName);
+                TryAddDefinition(index.Definitions, currentClassName, "class", path, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
+                continue;
+            }
+
+            if (currentClassName is not null)
+            {
+                if (EndDefineRegex.IsMatch(line))
+                {
+                    currentClassName = null;
+                    continue;
+                }
+
+                var methodProcedureMatch = ProcedureRegex.Match(line);
+                if (methodProcedureMatch.Success)
+                {
+                    var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
+                    index.Methods.Add(methodName);
+                    TryAddDefinition(index.Definitions, methodName, "method", path, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
+                    continue;
+                }
+
+                var methodFunctionMatch = FunctionRegex.Match(line);
+                if (methodFunctionMatch.Success)
+                {
+                    var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
+                    index.Methods.Add(methodName);
+                    TryAddDefinition(index.Definitions, methodName, "method", path, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
+                    continue;
+                }
+            }
+
             var procedureMatch = ProcedureRegex.Match(line);
             if (procedureMatch.Success)
             {
@@ -544,13 +585,6 @@ internal static class FoxProIntelliSenseCatalog
             AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, path, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
             AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
             AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
-
-            var classMatch = DefineClassRegex.Match(line);
-            if (classMatch.Success)
-            {
-                index.Classes.Add(classMatch.Groups[1].Value);
-                TryAddDefinition(index.Definitions, classMatch.Groups[1].Value, "class", path, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
-            }
         }
     }
 
@@ -877,6 +911,7 @@ internal static class FoxProIntelliSenseCatalog
         public DateTime BuiltAtUtc { get; set; }
         public HashSet<string> Procedures { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Classes { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> Methods { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Defines { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Aliases { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Tables { get; } = new(StringComparer.OrdinalIgnoreCase);

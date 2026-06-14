@@ -19,6 +19,7 @@ internal static class Program
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
+        TestQualifiedProjectMethodSignatureHelpAndDefinition();
 
         if (failures != 0)
         {
@@ -303,6 +304,43 @@ internal static class Program
                     "select context should preserve the context-specific alias description instead of overwriting it with the global symbol entry");
                 Expect(completions.Any(entry => entry.DisplayText == "curProc" && entry.Kind == "symbol"),
                     "select context should still keep global procedure symbols available after the context-ranked alias");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestQualifiedProjectMethodSignatureHelpAndDefinition()
+    {
+        var root = CreateProjectRoot("qualified_method_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId, tlPreview = .F." + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var qualifiedName = "app.customer.editor.SaveOrder";
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, qualifiedName);
+            Expect(signatures.Count == 1, "qualified project methods should surface signature help");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "app.customer.editor.SaveOrder(tcCustomerId, tlPreview = .F.)",
+                    "qualified project method signature help should preserve the full method path and raw parameter text");
+            }
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, qualifiedName, out var definition);
+            Expect(resolved, "qualified project methods should resolve to their method definition");
+            if (resolved)
+            {
+                Expect(definition.Kind == "method", "qualified project methods should resolve as method definitions");
+                Expect(definition.LineNumber == 2, "qualified project methods should resolve to the procedure line inside the class");
             }
         }
         finally
