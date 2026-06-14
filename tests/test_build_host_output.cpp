@@ -550,6 +550,16 @@ void run_library_build_host_smoke(
         const std::string security_mode = manifest_value_for_key(manifest_text, "security_mode");
         const std::string runtime_host_sha256 = manifest_value_for_key(manifest_text, "runtime_host_sha256");
         const std::string security_roles = manifest_value_for_key(manifest_text, "security_roles");
+        const std::string dotnet_enabled = manifest_value_for_key(manifest_text, "dotnet_enabled");
+        const std::string dotnet_story = manifest_value_for_key(manifest_text, "dotnet_story");
+        const std::string dotnet_policy_allowlist = manifest_value_for_key(manifest_text, "dotnet_policy_allowlist");
+        const std::string dotnet_policy_denylist = manifest_value_for_key(manifest_text, "dotnet_policy_denylist");
+        const std::string dotnet_parity_matrix_entries = manifest_value_for_key(manifest_text, "dotnet_parity_matrix_entries");
+        const std::string dotnet_policy_allowlist_items = manifest_value_for_key(manifest_text, "dotnet_policy_allowlist_items");
+        const std::string dotnet_policy_denylist_items = manifest_value_for_key(manifest_text, "dotnet_policy_denylist_items");
+        const std::string dotnet_parity_matrix_count = manifest_value_for_key(manifest_text, "dotnet_parity_matrix_count");
+        const std::string dotnet_gateway_task_primitives = manifest_value_for_key(manifest_text, "dotnet_gateway_task_primitives");
+        const std::string dotnet_gateway_unsafe_reflection = manifest_value_for_key(manifest_text, "dotnet_gateway_unsafe_reflection");
         expect(debug_manifest_text.find("security_role=" + security_role) != std::string::npos,
                "build host debug manifest should mirror the effective security role for " + extension + " outputs");
         expect(debug_manifest_text.find("security_mode=" + security_mode) != std::string::npos,
@@ -558,6 +568,38 @@ void run_library_build_host_smoke(
                "build host debug manifest should mirror the runtime host SHA-256 digest for " + extension + " outputs");
         expect(debug_manifest_text.find("security_roles=" + security_roles) != std::string::npos,
                "build host debug manifest should mirror the security-role count for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_enabled=" + dotnet_enabled) != std::string::npos,
+               "build host debug manifest should mirror the .NET availability flag for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_story=" + dotnet_story) != std::string::npos,
+               "build host debug manifest should mirror the .NET story for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_policy_allowlist=" + dotnet_policy_allowlist) != std::string::npos,
+               "build host debug manifest should mirror the .NET allowlist summary for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_policy_denylist=" + dotnet_policy_denylist) != std::string::npos,
+               "build host debug manifest should mirror the .NET denylist summary for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_parity_matrix_entries=" + dotnet_parity_matrix_entries) != std::string::npos,
+               "build host debug manifest should mirror the .NET parity summary for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_policy_allowlist_items=" + dotnet_policy_allowlist_items) != std::string::npos,
+               "build host debug manifest should mirror the .NET allowlist item count for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_policy_denylist_items=" + dotnet_policy_denylist_items) != std::string::npos,
+               "build host debug manifest should mirror the .NET denylist item count for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_parity_matrix_count=" + dotnet_parity_matrix_count) != std::string::npos,
+               "build host debug manifest should mirror the .NET parity item count for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_gateway_task_primitives=" + dotnet_gateway_task_primitives) != std::string::npos,
+               "build host debug manifest should mirror the .NET gateway allow decision for " + extension + " outputs");
+        expect(debug_manifest_text.find("dotnet_gateway_unsafe_reflection=" + dotnet_gateway_unsafe_reflection) != std::string::npos,
+               "build host debug manifest should mirror the .NET gateway deny decision for " + extension + " outputs");
+        const std::vector<std::string> runtime_allowlist_items = lines_with_prefix(manifest_text, "dotnet_policy_allowlist_item=");
+        const std::vector<std::string> debug_allowlist_items = lines_with_prefix(debug_manifest_text, "dotnet_policy_allowlist_item=");
+        expect(debug_allowlist_items == runtime_allowlist_items,
+               "build host debug manifest should mirror the .NET allowlist items for " + extension + " outputs");
+        const std::vector<std::string> runtime_denylist_items = lines_with_prefix(manifest_text, "dotnet_policy_denylist_item=");
+        const std::vector<std::string> debug_denylist_items = lines_with_prefix(debug_manifest_text, "dotnet_policy_denylist_item=");
+        expect(debug_denylist_items == runtime_denylist_items,
+               "build host debug manifest should mirror the .NET denylist items for " + extension + " outputs");
+        const std::vector<std::string> runtime_parity_items = lines_with_prefix(manifest_text, "dotnet_parity_matrix_item=");
+        const std::vector<std::string> debug_parity_items = lines_with_prefix(debug_manifest_text, "dotnet_parity_matrix_item=");
+        expect(debug_parity_items == runtime_parity_items,
+               "build host debug manifest should mirror the .NET parity entries for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,

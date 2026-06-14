@@ -133,7 +133,8 @@ struct RuntimeBuildResult {
 
 [[nodiscard]] std::string build_debug_manifest_text(
     const RuntimePackagePlan& plan,
-    const security::NativeSecurityProfile& security_profile);
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile);
 
 RuntimeMaterializeResult materialize_runtime_package(
     const RuntimePackagePlan& plan,

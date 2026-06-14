@@ -134,6 +134,21 @@ std::vector<std::string> lines_with_prefix(const std::string& text, const std::s
     return matches;
 }
 
+std::string manifest_value_for_key(const std::string& text, const std::string& key) {
+    std::istringstream input(text);
+    std::string line;
+    const std::string prefix = key + "=";
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            return line.substr(prefix.size());
+        }
+    }
+    return {};
+}
+
 std::string getenv_value(const std::string& name) {
 #if defined(_WIN32)
     char* raw = nullptr;
@@ -1342,6 +1357,30 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the runtime host SHA-256 digest");
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "library-output debug manifest should record the security-role count");
+        const std::vector<std::string> dotnet_summary_keys{
+            "dotnet_enabled",
+            "dotnet_story",
+            "dotnet_policy_allowlist",
+            "dotnet_policy_denylist",
+            "dotnet_parity_matrix_entries",
+            "dotnet_policy_allowlist_items",
+            "dotnet_policy_denylist_items",
+            "dotnet_parity_matrix_count",
+            "dotnet_gateway_task_primitives",
+            "dotnet_gateway_unsafe_reflection"};
+        for (const auto& key : dotnet_summary_keys) {
+            const std::string value = manifest_value_for_key(runtime_manifest, key);
+            expect(!value.empty(),
+                   "library-output runtime manifest should provide " + key + " for debug-manifest mirroring");
+            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
+                   "library-output debug manifest should mirror " + key);
+        }
+        expect(lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item="),
+               "library-output debug manifest should mirror the .NET allowlist items");
+        expect(lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item="),
+               "library-output debug manifest should mirror the .NET denylist items");
+        expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
+               "library-output debug manifest should mirror the .NET parity entries");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1428,6 +1467,19 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                        "library-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
+                for (const auto& key : dotnet_summary_keys) {
+                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
+                    expect(!value.empty(),
+                           "library-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
+                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                           "library-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
+                }
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item="),
+                       "library-output runtime pipeline should preserve the .NET allowlist items in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item="),
+                       "library-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
+                       "library-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1870,6 +1922,30 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the runtime host SHA-256 digest");
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "fll-output debug manifest should record the security-role count");
+        const std::vector<std::string> fll_dotnet_summary_keys{
+            "dotnet_enabled",
+            "dotnet_story",
+            "dotnet_policy_allowlist",
+            "dotnet_policy_denylist",
+            "dotnet_parity_matrix_entries",
+            "dotnet_policy_allowlist_items",
+            "dotnet_policy_denylist_items",
+            "dotnet_parity_matrix_count",
+            "dotnet_gateway_task_primitives",
+            "dotnet_gateway_unsafe_reflection"};
+        for (const auto& key : fll_dotnet_summary_keys) {
+            const std::string value = manifest_value_for_key(runtime_manifest, key);
+            expect(!value.empty(),
+                   "fll-output runtime manifest should provide " + key + " for debug-manifest mirroring");
+            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
+                   "fll-output debug manifest should mirror " + key);
+        }
+        expect(lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item="),
+               "fll-output debug manifest should mirror the .NET allowlist items");
+        expect(lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item="),
+               "fll-output debug manifest should mirror the .NET denylist items");
+        expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
+               "fll-output debug manifest should mirror the .NET parity entries");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1984,6 +2060,19 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                        "fll-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
+                for (const auto& key : fll_dotnet_summary_keys) {
+                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
+                    expect(!value.empty(),
+                           "fll-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
+                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                           "fll-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
+                }
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item="),
+                       "fll-output runtime pipeline should preserve the .NET allowlist items in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item="),
+                       "fll-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
+                expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
+                       "fll-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3401,7 +3490,8 @@ void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
 
     const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
         plan,
-        copperfin::security::default_native_security_profile());
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile());
     const std::string expected_roots_line = "source_roots=" + project_dir.lexically_normal().string();
     expect(debug_manifest.find(expected_roots_line) != std::string::npos,
            "debug manifest should emit a single normalized source_roots entry");
@@ -3459,7 +3549,8 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order() {
 
     const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
         plan,
-        copperfin::security::default_native_security_profile());
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile());
     const std::string expected_roots_line =
         "source_roots=" + source_root.lexically_normal().string() + ";" +
         (output_dir / "DebugRootsOrder" / "content").lexically_normal().string();

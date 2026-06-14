@@ -2393,7 +2393,8 @@ std::string build_runtime_manifest_text(
 
 std::string build_debug_manifest_text(
     const RuntimePackagePlan& plan,
-    const security::NativeSecurityProfile& security_profile) {
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
     stream << "debug_manifest_version=1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
@@ -2439,6 +2440,47 @@ std::string build_debug_manifest_text(
                                        : std::string()) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
+    stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
+    stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
+    stream << "dotnet_policy_allowlist=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
+    stream << "dotnet_policy_denylist=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
+    stream << "dotnet_parity_matrix_entries=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
+    stream << "dotnet_policy_allowlist_items=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
+    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.allowlist) {
+        stream << "dotnet_policy_allowlist_item=" << quote_manifest_value(capability_id) << "\n";
+    }
+    stream << "dotnet_policy_denylist_items=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
+    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.denylist) {
+        stream << "dotnet_policy_denylist_item=" << quote_manifest_value(capability_id) << "\n";
+    }
+    stream << "dotnet_parity_matrix_count=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
+    for (const auto& capability : extensibility_profile.dotnet_output.parity_matrix) {
+        stream << "dotnet_parity_matrix_item="
+               << quote_manifest_value(capability.id) << "|"
+               << quote_manifest_value(capability.title) << "|"
+               << dotnet_parity_tier_name(capability.tier) << "|"
+               << quote_manifest_value(capability.rationale) << "|"
+               << quote_manifest_value(capability.verification_reference) << "\n";
+    }
+    const platform::DotNetInteropCallDecision launcher_decision = platform::evaluate_dotnet_interop_call(
+        extensibility_profile,
+        platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U,
+            .requires_reflection = false,
+            .untrusted_input = false,
+            .security_sensitive = false});
+    stream << "dotnet_gateway_task_primitives=" << quote_manifest_value(launcher_decision.execution_path + ":" + launcher_decision.reason) << "\n";
+
+    const platform::DotNetInteropCallDecision denied_decision = platform::evaluate_dotnet_interop_call(
+        extensibility_profile,
+        platform::DotNetInteropCallRequest{
+            .capability_id = "unsafe-reflection-load",
+            .estimated_latency_ms = 2U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true});
+    stream << "dotnet_gateway_unsafe_reflection=" << quote_manifest_value(denied_decision.execution_path + ":" + denied_decision.reason) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.native_library_wrapper", is_library_output_kind(plan.output_kind), "build_output");
@@ -2664,7 +2706,7 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan, security_profile), error)) {
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
 
@@ -2731,7 +2773,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan, security_profile), error)) {
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
 
