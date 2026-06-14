@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-14: D2/#413 runtime-host single-breakpoint removal is now shipped. `copperfin_runtime_host` now accepts `break:remove:<file:line>` during a live debug session, `PrgRuntimeSession` now exposes an engine-backed `remove_breakpoint()` path using the same normalized breakpoint identity as add/list, and `test_runtime_host_debug_output` now proves removing one breakpoint leaves unrelated breakpoints active and still pauses on the surviving line. Adjacent `test_runtime_host_binding` and `test_xasset_methods` coverage still pass.
 - 2026-06-14: D2/#412 runtime-host breakpoint-management commands are now shipped. `copperfin_runtime_host` now accepts `break:add:<file:line>`, `break:clear`, and `break:list` during a live debug session, the runtime session now exposes deduplicated engine-backed breakpoint inventory through `list_breakpoints()`, and `test_runtime_host_debug_output` now proves add/list/clear plus a managed-breakpoint pause without restarting the host. Adjacent `test_runtime_host_binding` and `test_xasset_methods` coverage still pass.
 - 2026-06-14: D2/#411 xAsset debugger action-identity output is now shipped. `copperfin_runtime_host` now maps paused xAsset bootstrap frames back onto the executable-model action binding and prints `debug.xasset.action_id`, `debug.xasset.record_index`, `debug.xasset.kind`, and `debug.xasset.title` alongside the existing pause metadata. The new `test_runtime_host_debug_output` process-level smoke proves a breakpoint inside a nested SCX action reports the originating designer-facing action identity, and adjacent `test_runtime_host_binding` / `test_xasset_methods` coverage still passes.
 - 2026-06-14: D1/#410 compiler-contract digest manifesting is now shipped. Materialized runtime packages now record deterministic `compiler_contract=` digest lines for generated contract artifacts such as `.ast.json`, `.ir.json`, `.transpiled.cs`, and output-kind-specific contract files when present, so downstream tooling can verify that copied package contents still match the declared compiler/runtime contract. Focused `test_runtime_pipeline` coverage now proves the digest entries for generated AST/IR/C# artifacts end to end.
@@ -1152,7 +1153,7 @@ This phase should build directly on the engine/runtime work, not the other way a
 ### D2. Debugger Completion
 
 - First-pass debugger coverage is now in place through the runtime host, stepping model, breakpoint support, pause-state reporting, and xAsset action dispatch.
-- The runtime host now supports live breakpoint add/clear/list commands backed by the engine’s own breakpoint inventory, reducing restart-driven breakpoint churn during day-to-day debugging.
+- The runtime host now supports live breakpoint add/remove/clear/list commands backed by the engine’s own breakpoint inventory, reducing restart-driven breakpoint churn during day-to-day debugging.
 - Paused xAsset bootstrap frames now also surface the originating action identity and record index through the runtime host, so designer-facing tools can map breakpoint output back to the underlying SCX/VCX/MNX record more directly.
 - Follow-on work should add richer watch tooling, broader pause-output coverage surfaces, and tighter shell integration.
 

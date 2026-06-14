@@ -1804,6 +1804,27 @@ namespace copperfin::runtime
         }
     }
 
+    bool PrgRuntimeSession::remove_breakpoint(const RuntimeBreakpoint &breakpoint)
+    {
+        const RuntimeBreakpoint normalized{
+            .file_path = normalize_path(breakpoint.file_path),
+            .line = breakpoint.line
+        };
+        const auto existing = std::find_if(
+            impl_->breakpoints.begin(),
+            impl_->breakpoints.end(),
+            [&](const RuntimeBreakpoint& candidate) {
+                return candidate.file_path == normalized.file_path &&
+                    candidate.line == normalized.line;
+            });
+        if (existing == impl_->breakpoints.end())
+        {
+            return false;
+        }
+        impl_->breakpoints.erase(existing);
+        return true;
+    }
+
     void PrgRuntimeSession::clear_breakpoints()
     {
         impl_->breakpoints.clear();

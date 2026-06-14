@@ -174,6 +174,7 @@ public:
     ~PrgRuntimeSession();
 
     void add_breakpoint(const RuntimeBreakpoint& breakpoint);
+    [[nodiscard]] bool remove_breakpoint(const RuntimeBreakpoint& breakpoint);
     void clear_breakpoints();
     [[nodiscard]] std::vector<RuntimeBreakpoint> list_breakpoints() const;
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);

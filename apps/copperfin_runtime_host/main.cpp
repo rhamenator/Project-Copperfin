@@ -274,7 +274,7 @@ bool verify_manifest_hashes(
 }
 
 void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:clear|break:list>]\n";
+    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:clear|break:list>]\n";
     std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
 }
 
@@ -795,6 +795,21 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 session.add_breakpoint(*breakpoint);
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
+                continue;
+            } else if (starts_with_insensitive(command, "break:remove:")) {
+                const auto breakpoint = parse_breakpoint(command.substr(13U), effective_startup_source);
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Invalid breakpoint command: " << command << "\n";
+                    return 5;
+                }
+                if (!session.remove_breakpoint(*breakpoint)) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unknown breakpoint: " << breakpoint->file_path << ":" << breakpoint->line << "\n";
+                    return 5;
+                }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
                 print_breakpoint_inventory(session);
                 continue;

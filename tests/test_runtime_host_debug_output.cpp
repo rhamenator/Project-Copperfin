@@ -263,6 +263,74 @@ void test_runtime_host_supports_breakpoint_management_commands(const std::string
     }
 }
 
+void test_runtime_host_supports_single_breakpoint_removal(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_breakpoint_remove_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(
+        startup_path,
+        "LOCAL nValue\n"
+        "nValue = 1\n"
+        "nValue = 2\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=BreakpointRemoveDemo\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--debug-command", "break:add:2",
+            "--debug-command", "break:add:3",
+            "--debug-command", "break:remove:2",
+            "--debug-command", "break:list",
+            "--debug-command", "continue"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "breakpoint remove stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "breakpoint remove stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0, "runtime host single-breakpoint removal smoke should exit successfully");
+    expect(process.stdout_text.find("debug.command[2]: break:remove:2") != std::string::npos,
+           "runtime host should report breakpoint remove commands");
+    expect(process.stdout_text.find("debug.command[3]: break:list") != std::string::npos,
+           "runtime host should report breakpoint list after removal");
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":2") != std::string::npos,
+           "runtime host should initially register the first breakpoint before removal");
+    expect(process.stdout_text.find("debug.breakpoint[1]: " + startup_path.string() + ":3") != std::string::npos,
+           "runtime host should initially register the second breakpoint before removal");
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":3") != std::string::npos,
+           "runtime host should retain the unrelated breakpoint after single removal");
+    expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+           "runtime host should still pause on the remaining breakpoint");
+    expect(process.stdout_text.find("debug.location: " + startup_path.string() + ":3") != std::string::npos,
+           "runtime host should pause on the surviving breakpoint after removing the earlier line");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -367,6 +435,7 @@ int main(int argc, char** argv) {
     }
 
     test_runtime_host_supports_breakpoint_management_commands(argv[1]);
+    test_runtime_host_supports_single_breakpoint_removal(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
 
     if (failures != 0) {
