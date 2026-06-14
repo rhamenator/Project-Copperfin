@@ -2392,6 +2392,8 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "supports_breakpoints=" << (plan.debug_plan.supports_breakpoints ? "true" : "false") << "\n";
     stream << "supports_step_debugging=" << (plan.debug_plan.supports_step_debugging ? "true" : "false") << "\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
+    stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
+    stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
     stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
     stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";

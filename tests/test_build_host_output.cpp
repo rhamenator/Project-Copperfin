@@ -436,10 +436,13 @@ void run_library_build_host_smoke(
            "build host should materialize the requested primary output for " + extension + " outputs");
 
     const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+    const fs::path debug_manifest_path = value_for_key(process.stdout_text, "debug.manifest.path");
     expect(!manifest_path.empty(), "build host should report a manifest path for " + extension + " outputs");
+    expect(!debug_manifest_path.empty(), "build host should report a debug-manifest path for " + extension + " outputs");
     const std::string init_library_source = (project_dir / "librarymain.prg").string();
     const std::string add_numbers_source = (project_dir / "helper.prg").string();
     const std::string manifest_text = manifest_path.empty() ? std::string{} : read_text(manifest_path);
+    const std::string debug_manifest_text = debug_manifest_path.empty() ? std::string{} : read_text(debug_manifest_path);
     if (!manifest_path.empty()) {
         expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host manifest should record a materialized primary output for " + extension + " outputs");
@@ -474,6 +477,24 @@ void run_library_build_host_smoke(
                    "build host manifest should record InitLibrary DLL call surface");
             expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
                    "build host manifest should record AddNumbers DLL call surface");
+        }
+    }
+    if (!debug_manifest_path.empty()) {
+        expect(debug_manifest_text.find("primary_output_path=" + expected_output.string()) != std::string::npos,
+               "build host debug manifest should record the materialized primary output path for " + extension + " outputs");
+        expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
+               "build host debug manifest should record a materialized primary output for " + extension + " outputs");
+        if (extension == "dll") {
+            expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
+                   "build host DLL debug manifest should record the module-definition path");
+            expect(debug_manifest_text.find("library_api_manifest_path=") != std::string::npos,
+                   "build host DLL debug manifest should record the dedicated API-manifest path");
+        }
+        if (extension == "fll") {
+            expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
+                   "build host FLL debug manifest should record the module-definition path");
+            expect(debug_manifest_text.find("fll_api_manifest_path=") != std::string::npos,
+                   "build host FLL debug manifest should record the dedicated API-manifest path");
         }
     }
 
