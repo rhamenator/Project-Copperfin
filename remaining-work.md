@@ -196,15 +196,15 @@ Canonical Phase A critical-path order (all closed as of 2026-06-13):
 11. #93 (closed 2026-06-13)
 12. #94 (closed 2026-06-13)
 
-Phase A critical path is complete. Active adjacent branches (#154-#203) are now unblocked.
+Phase A critical path is complete. Runtime-parity branches (#15-#18) are now closed; adjacent work continues on B1/B2 blocking slices.
 
 ### Runtime Parity Surfaces
 
-- Forms/classes runtime fidelity: #15
-- Reports/labels runtime fidelity: #16
-- Menus runtime fidelity: #17
-- Project startup/build behavior: #18
-- Runtime parity active-open native slice queues under #15-#18: #154-#161
+- Forms/classes runtime fidelity: #15 (closed)
+- Reports/labels runtime fidelity: #16 (closed)
+- Menus runtime fidelity: #17 (closed)
+- Project startup/build behavior: #18 (closed)
+- Runtime parity slice queues under #15-#18 are closed: #154-#161
 
 ### Build, Compiler, And Debug Pipeline
 
