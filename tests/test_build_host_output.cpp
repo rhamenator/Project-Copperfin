@@ -455,6 +455,7 @@ void run_library_build_host_smoke(
     const fs::path expected_ast_manifest = output_dir / "LibraryDemo" / ("LibraryDemo." + extension + ".ast.json");
     const fs::path expected_ir_manifest = output_dir / "LibraryDemo" / ("LibraryDemo." + extension + ".ir.json");
     const fs::path expected_transpiled_csharp = output_dir / "LibraryDemo" / ("LibraryDemo." + extension + ".transpiled.cs");
+    const fs::path expected_audit_log = output_dir / "LibraryDemo" / "security_audit.log";
     expect(!manifest_path.empty(), "build host should report a manifest path for " + extension + " outputs");
     expect(!debug_manifest_path.empty(), "build host should report a debug-manifest path for " + extension + " outputs");
     const std::string init_library_source = (project_dir / "librarymain.prg").string();
@@ -481,6 +482,10 @@ void run_library_build_host_smoke(
                "build host manifest should record the transpiled C# path for " + extension + " outputs");
         expect(manifest_text.find("configuration=debug") != std::string::npos,
                "build host manifest should record the debug build configuration for " + extension + " outputs");
+        expect(manifest_text.find("security_enabled=false") != std::string::npos,
+               "build host manifest should record the disabled security state for " + extension + " outputs");
+        expect(manifest_text.find("audit_log_path=" + expected_audit_log.string()) != std::string::npos,
+               "build host manifest should record the audit log path for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host manifest should record the built primary output as an extension payload for " + extension + " outputs");
         if (extension == "dll") {
@@ -533,6 +538,16 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the transpiled C# path for " + extension + " outputs");
         expect(debug_manifest_text.find("configuration=debug") != std::string::npos,
                "build host debug manifest should record the debug build configuration for " + extension + " outputs");
+        expect(debug_manifest_text.find("security_enabled=false") != std::string::npos,
+               "build host debug manifest should record the disabled security state for " + extension + " outputs");
+        expect(debug_manifest_text.find("audit_log_path=" + expected_audit_log.string()) != std::string::npos,
+               "build host debug manifest should record the audit log path for " + extension + " outputs");
+        const std::string security_role = manifest_value_for_key(manifest_text, "security_role");
+        const std::string security_mode = manifest_value_for_key(manifest_text, "security_mode");
+        expect(debug_manifest_text.find("security_role=" + security_role) != std::string::npos,
+               "build host debug manifest should mirror the effective security role for " + extension + " outputs");
+        expect(debug_manifest_text.find("security_mode=" + security_mode) != std::string::npos,
+               "build host debug manifest should mirror the security mode for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,

@@ -1249,6 +1249,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "library-output manifest should record the debug build configuration");
+        expect(runtime_manifest.find("security_enabled=false") != std::string::npos,
+               "library-output manifest should record the disabled security state");
+        expect(runtime_manifest.find("security_role=" + quote_manifest_value(result.plan.security_role)) != std::string::npos,
+               "library-output manifest should record the effective security role");
+        expect(runtime_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+               "library-output manifest should record the security mode");
+        expect(runtime_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
+               "library-output manifest should record the audit log path");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
         expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
@@ -1318,6 +1326,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the transpiled C# path");
         expect(debug_manifest.find("configuration=debug") != std::string::npos,
                "library-output debug manifest should record the debug build configuration");
+        expect(debug_manifest.find("security_enabled=false") != std::string::npos,
+               "library-output debug manifest should record the disabled security state");
+        expect(debug_manifest.find("security_role=" + quote_manifest_value(result.plan.security_role)) != std::string::npos,
+               "library-output debug manifest should record the effective security role");
+        expect(debug_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+               "library-output debug manifest should record the security mode");
+        expect(debug_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
+               "library-output debug manifest should record the audit log path");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1392,6 +1408,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the transpiled C# path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
                        "library-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_enabled=false") != std::string::npos,
+                       "library-output runtime pipeline should preserve the disabled security state in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_role=" + quote_manifest_value(build_result.plan.security_role)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the effective security role in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the security mode in the rewritten debug manifest");
+                expect(built_debug_manifest.find("audit_log_path=" + quote_manifest_value(build_result.plan.audit_log_path)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1789,6 +1813,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "fll-output manifest should record the debug build configuration");
+        expect(runtime_manifest.find("security_enabled=false") != std::string::npos,
+               "fll-output manifest should record the disabled security state");
+        expect(runtime_manifest.find("security_role=" + quote_manifest_value(result.plan.security_role)) != std::string::npos,
+               "fll-output manifest should record the effective security role");
+        expect(runtime_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+               "fll-output manifest should record the security mode");
+        expect(runtime_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
+               "fll-output manifest should record the audit log path");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
         expect(!runtime_asset_lines.empty(),
                "fll-output manifest should record staged asset inventory");
@@ -1810,6 +1842,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the transpiled C# path");
         expect(debug_manifest.find("configuration=debug") != std::string::npos,
                "fll-output debug manifest should record the debug build configuration");
+        expect(debug_manifest.find("security_enabled=false") != std::string::npos,
+               "fll-output debug manifest should record the disabled security state");
+        expect(debug_manifest.find("security_role=" + quote_manifest_value(result.plan.security_role)) != std::string::npos,
+               "fll-output debug manifest should record the effective security role");
+        expect(debug_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+               "fll-output debug manifest should record the security mode");
+        expect(debug_manifest.find("audit_log_path=" + quote_manifest_value(result.plan.audit_log_path)) != std::string::npos,
+               "fll-output debug manifest should record the audit log path");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1912,6 +1952,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the transpiled C# path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("configuration=debug") != std::string::npos,
                        "fll-output runtime pipeline should preserve the debug build configuration in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_enabled=false") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the disabled security state in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_role=" + quote_manifest_value(build_result.plan.security_role)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the effective security role in the rewritten debug manifest");
+                expect(built_debug_manifest.find("security_mode=" + quote_manifest_value(copperfin::security::default_native_security_profile().mode)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the security mode in the rewritten debug manifest");
+                expect(built_debug_manifest.find("audit_log_path=" + quote_manifest_value(build_result.plan.audit_log_path)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3327,7 +3375,9 @@ void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
     expect(plan.debug_plan.source_roots.size() == 1U,
            "debug source roots should collapse to one unique path when source and content roots match");
 
-    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(plan);
+    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
+        plan,
+        copperfin::security::default_native_security_profile());
     const std::string expected_roots_line = "source_roots=" + project_dir.lexically_normal().string();
     expect(debug_manifest.find(expected_roots_line) != std::string::npos,
            "debug manifest should emit a single normalized source_roots entry");
@@ -3383,7 +3433,9 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order() {
                "debug source roots should keep the packaged content root second");
     }
 
-    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(plan);
+    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
+        plan,
+        copperfin::security::default_native_security_profile());
     const std::string expected_roots_line =
         "source_roots=" + source_root.lexically_normal().string() + ";" +
         (output_dir / "DebugRootsOrder" / "content").lexically_normal().string();

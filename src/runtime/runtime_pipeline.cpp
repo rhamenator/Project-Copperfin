@@ -2391,7 +2391,9 @@ std::string build_runtime_manifest_text(
     return stream.str();
 }
 
-std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
+std::string build_debug_manifest_text(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile) {
     std::ostringstream stream;
     stream << "debug_manifest_version=1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
@@ -2402,6 +2404,10 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "ir_manifest_path=" << quote_manifest_value(plan.ir_manifest_path) << "\n";
     stream << "transpiled_csharp_path=" << quote_manifest_value(plan.transpiled_csharp_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
+    stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
+    stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
+    stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
+    stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.debug_plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.debug_plan.startup_source_path) << "\n";
     stream << "working_directory=" << quote_manifest_value(plan.debug_plan.working_directory) << "\n";
@@ -2656,7 +2662,7 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan), error)) {
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan, security_profile), error)) {
         return {.ok = false, .error = error};
     }
 
@@ -2723,7 +2729,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan), error)) {
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan, security_profile), error)) {
         return {.ok = false, .error = error};
     }
 
