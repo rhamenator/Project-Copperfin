@@ -683,6 +683,150 @@ void test_store_uses_assignment_target_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ascan_macro_expanded_predicate_and_metadata_cleanup() {
+    // #391 (#97 slice): ASCAN() must accept a predicate string that arrives via a
+    // variable reference or a second-hop &macro holder chain, and must restore all
+    // four scan-metadata variables after the scan completes (match and no-match paths).
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_macro_pred";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ascan_macro_pred.prg";
+    write_text(
+        main_path,
+        "DIMENSION aValues[5]\n"
+        "aValues[1] = 2\n"
+        "aValues[2] = 4\n"
+        "aValues[3] = 7\n"
+        "aValues[4] = 9\n"
+        "aValues[5] = 1\n"
+        "* scan 1: variable-reference predicate - predicate string lives in a variable\n"
+        "cVarPred = '{|x| x > 5}'\n"
+        "nVarRef = ASCAN(aValues, cVarPred, -1, -1, -1, 16)\n"
+        "lStep1Value = TYPE('_ASCANVALUE') = 'U'\n"
+        "lStep1Row = TYPE('_ASCANROW') = 'U'\n"
+        "lStep1Column = TYPE('_ASCANCOLUMN') = 'U'\n"
+        "* scan 2: first-hop macro predicate - &cMacroPred expands to cVarPred identifier\n"
+        "* which resolves to the predicate string '{|x| x > 5}'\n"
+        "cMacroPred = 'cVarPred'\n"
+        "nMacroRef = ASCAN(aValues, &cMacroPred, -1, -1, -1, 16)\n"
+        "lStep2Value = TYPE('_ASCANVALUE') = 'U'\n"
+        "lStep2Row = TYPE('_ASCANROW') = 'U'\n"
+        "* scan 3: second-hop holder predicate - &cPredDeepHolder -> cPredExpr -> string\n"
+        "cPredExpr = '{|x| x > 8}'\n"
+        "cPredDeepHolder = 'cPredExpr'\n"
+        "nDeepHolder = ASCAN(aValues, &cPredDeepHolder, -1, -1, -1, 16)\n"
+        "lValueCleared = TYPE('_ASCANVALUE') = 'U'\n"
+        "lIndexCleared = TYPE('_ASCANINDEX') = 'U'\n"
+        "lRowCleared = TYPE('_ASCANROW') = 'U'\n"
+        "lColumnCleared = TYPE('_ASCANCOLUMN') = 'U'\n"
+        "* no-match path must also clean up metadata\n"
+        "nNoMatch = ASCAN(aValues, '{|x| x > 100}', -1, -1, -1, 16)\n"
+        "lNoMatchValueCleared = TYPE('_ASCANVALUE') = 'U'\n"
+        "lNoMatchRowCleared = TYPE('_ASCANROW') = 'U'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#391: macro-predicate ASCAN script should complete");
+
+    const auto n_var_ref = state.globals.find("nvarref");
+    const auto n_macro_ref = state.globals.find("nmacroref");
+    const auto n_deep_holder = state.globals.find("ndeepholder");
+    const auto n_no_match = state.globals.find("nnomatch");
+    const auto l_step1_value = state.globals.find("lstep1value");
+    const auto l_step1_row = state.globals.find("lstep1row");
+    const auto l_step1_column = state.globals.find("lstep1column");
+    const auto l_step2_value = state.globals.find("lstep2value");
+    const auto l_step2_row = state.globals.find("lstep2row");
+    const auto l_value_cleared = state.globals.find("lvaluecleared");
+    const auto l_index_cleared = state.globals.find("lindexcleared");
+    const auto l_row_cleared = state.globals.find("lrowcleared");
+    const auto l_column_cleared = state.globals.find("lcolumncleared");
+    const auto l_no_match_value_cleared = state.globals.find("lnomatchvaluecleared");
+    const auto l_no_match_row_cleared = state.globals.find("lnomatchrowcleared");
+
+    expect(n_var_ref != state.globals.end(), "#391: variable-reference predicate result should be captured");
+    expect(n_macro_ref != state.globals.end(), "#391: first-hop macro predicate result should be captured");
+    expect(n_deep_holder != state.globals.end(), "#391: second-hop holder predicate result should be captured");
+    expect(n_no_match != state.globals.end(), "#391: no-match predicate result should be captured");
+    expect(l_step1_value != state.globals.end(), "#391: post-scan-1 _ASCANVALUE cleanup flag should be captured");
+    expect(l_step2_value != state.globals.end(), "#391: post-scan-2 _ASCANVALUE cleanup flag should be captured");
+    expect(l_value_cleared != state.globals.end(), "#391: post-scan-3 _ASCANVALUE cleanup flag should be captured");
+    expect(l_index_cleared != state.globals.end(), "#391: _ASCANINDEX cleanup flag should be captured");
+    expect(l_row_cleared != state.globals.end(), "#391: _ASCANROW cleanup flag should be captured");
+    expect(l_column_cleared != state.globals.end(), "#391: _ASCANCOLUMN cleanup flag should be captured");
+    expect(l_no_match_value_cleared != state.globals.end(), "#391: no-match _ASCANVALUE cleanup flag should be captured");
+    expect(l_no_match_row_cleared != state.globals.end(), "#391: no-match _ASCANROW cleanup flag should be captured");
+
+    if (n_var_ref != state.globals.end()) {
+        expect(copperfin::runtime::format_value(n_var_ref->second) == "3",
+               "#391: variable-reference predicate should find first element > 5 at index 3");
+    }
+    if (n_macro_ref != state.globals.end()) {
+        expect(copperfin::runtime::format_value(n_macro_ref->second) == "3",
+               "#391: first-hop macro predicate should find the same element at index 3");
+    }
+    if (n_deep_holder != state.globals.end()) {
+        expect(copperfin::runtime::format_value(n_deep_holder->second) == "4",
+               "#391: second-hop holder predicate should find first element > 8 at index 4");
+    }
+    if (n_no_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(n_no_match->second) == "0",
+               "#391: no-match predicate should return 0");
+    }
+    if (l_step1_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_step1_value->second) == "true",
+               "#391: _ASCANVALUE should be restored after scan 1 (variable-reference predicate)");
+    }
+    if (l_step1_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_step1_row->second) == "true",
+               "#391: _ASCANROW should be restored after scan 1");
+    }
+    if (l_step1_column != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_step1_column->second) == "true",
+               "#391: _ASCANCOLUMN should be restored after scan 1");
+    }
+    if (l_step2_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_step2_value->second) == "true",
+               "#391: _ASCANVALUE should be restored after scan 2 (first-hop macro predicate)");
+    }
+    if (l_step2_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_step2_row->second) == "true",
+               "#391: _ASCANROW should be restored after scan 2");
+    }
+    if (l_value_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_value_cleared->second) == "true",
+               "#391: _ASCANVALUE should be restored after scan 3 (second-hop holder)");
+    }
+    if (l_index_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_index_cleared->second) == "true",
+               "#391: _ASCANINDEX should be restored after scan 3");
+    }
+    if (l_row_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_row_cleared->second) == "true",
+               "#391: _ASCANROW should be restored after scan 3");
+    }
+    if (l_column_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_column_cleared->second) == "true",
+               "#391: _ASCANCOLUMN should be restored after scan 3");
+    }
+    if (l_no_match_value_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_no_match_value_cleared->second) == "true",
+               "#391: _ASCANVALUE should be restored after no-match scan");
+    }
+    if (l_no_match_row_cleared != state.globals.end()) {
+        expect(copperfin::runtime::format_value(l_no_match_row_cleared->second) == "true",
+               "#391: _ASCANROW should be restored after no-match scan");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 void test_asessions_returns_at_least_default_session() {
@@ -848,6 +992,7 @@ int main() {
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
     test_store_uses_assignment_target_semantics();
+    test_ascan_macro_expanded_predicate_and_metadata_cleanup();
     test_asessions_returns_at_least_default_session();
     test_afont_returns_non_empty_stub_array();
     test_aprinters_returns_non_empty_array();
