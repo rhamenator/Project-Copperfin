@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 namespace {
 
@@ -13,6 +14,21 @@ void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
+    }
+}
+
+void expect_substring_order(
+    const std::string& source,
+    const std::vector<std::string>& markers,
+    const std::string& message_prefix) {
+    std::size_t cursor = 0;
+    for (const auto& marker : markers) {
+        const auto found = source.find(marker, cursor);
+        if (found == std::string::npos) {
+            expect(false, message_prefix + ": missing marker '" + marker + "'");
+            return;
+        }
+        cursor = found + marker.size();
     }
 }
 
@@ -65,6 +81,8 @@ void test_build_xasset_executable_model() {
     }
     expect(model.startup_routines.size() == 5U, "startup should include data environment, load, init, and activate methods");
     expect(model.shutdown_routines.size() == 2U, "shutdown should include form and data-environment cleanup methods");
+    expect(model.startup_lines.size() == 5U, "form startup lines should mirror startup routine count");
+    expect(model.shutdown_lines.size() == 2U, "form shutdown lines should mirror shutdown routine count");
     if (model.startup_routines.size() == 5U) {
         expect(model.startup_routines[0] == "__cf_Dataenvironment_BeforeOpenTables",
                "form startup should begin with data-environment BeforeOpenTables");
@@ -77,23 +95,55 @@ void test_build_xasset_executable_model() {
         expect(model.startup_routines[4] == "__cf_frmDemo_Activate",
                "form startup should end with Activate");
     }
+    if (model.startup_lines.size() == 5U) {
+        expect(model.startup_lines[0] == "DO __cf_Dataenvironment_BeforeOpenTables",
+               "form startup lines should match runtime-startup order");
+        expect(model.startup_lines[1] == "DO __cf_Dataenvironment_OpenTables",
+               "form startup lines should match OpenTables ordering");
+        expect(model.startup_lines[2] == "DO __cf_frmDemo_Load",
+               "form startup lines should match Load ordering");
+        expect(model.startup_lines[3] == "DO __cf_frmDemo_Init",
+               "form startup lines should match Init ordering");
+        expect(model.startup_lines[4] == "DO __cf_frmDemo_Activate",
+               "form startup lines should match Activate ordering");
+    }
     if (model.shutdown_routines.size() == 2U) {
         expect(model.shutdown_routines[0] == "__cf_frmDemo_Destroy",
                "form shutdown should call Destroy before data-environment cleanup");
         expect(model.shutdown_routines[1] == "__cf_Dataenvironment_CloseTables",
                "form shutdown should end with data-environment CloseTables");
     }
+    if (model.shutdown_lines.size() == 2U) {
+        expect(model.shutdown_lines[0] == "DO __cf_frmDemo_Destroy",
+               "form shutdown lines should match runtime-shutdown order");
+        expect(model.shutdown_lines[1] == "DO __cf_Dataenvironment_CloseTables",
+               "form shutdown lines should match close-tables ordering");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
-    expect(bootstrap.find("DO __cf_Dataenvironment_BeforeOpenTables") != std::string::npos, "bootstrap should call the data environment method");
-    expect(bootstrap.find("DO __cf_Dataenvironment_OpenTables") != std::string::npos, "bootstrap should call the data-environment OpenTables method");
-    expect(bootstrap.find("DO __cf_frmDemo_Load") != std::string::npos, "bootstrap should call the form load method");
-    expect(bootstrap.find("DO __cf_frmDemo_Init") != std::string::npos, "bootstrap should call the form init method");
-    expect(bootstrap.find("DO __cf_frmDemo_Activate") != std::string::npos, "bootstrap should call the form activate method");
+    expect_substring_order(
+        bootstrap,
+        {
+            "DO __cf_Dataenvironment_BeforeOpenTables",
+            "DO __cf_Dataenvironment_OpenTables",
+            "DO __cf_frmDemo_Load",
+            "DO __cf_frmDemo_Init",
+            "DO __cf_frmDemo_Activate"
+        },
+        "form bootstrap should execute startup lifecycle methods in sequence");
     expect(bootstrap.find("PROCEDURE __cf_frmDemo_pgfMain_Page2_Activate") != std::string::npos, "bootstrap should materialize nested object methods");
+    expect_substring_order(
+        bootstrap,
+        {
+            "DO __cf_frmDemo_Activate",
+            "READ EVENTS",
+            "DO __cf_frmDemo_Destroy",
+            "DO __cf_Dataenvironment_CloseTables"
+        },
+        "form bootstrap should sequence active-loop and shutdown");
     expect(bootstrap.find("READ EVENTS") != std::string::npos, "bootstrap should optionally include READ EVENTS");
-    expect(bootstrap.find("DO __cf_frmDemo_Destroy") != std::string::npos, "bootstrap should call the form destroy method after event-loop exit");
-    expect(bootstrap.find("DO __cf_Dataenvironment_CloseTables") != std::string::npos, "bootstrap should call the data-environment close method after event-loop exit");
+    expect(bootstrap.find("DO __cf_frmDemo_Destroy") != std::string::npos, "form bootstrap should call the form destroy method after event-loop exit");
+    expect(bootstrap.find("DO __cf_Dataenvironment_CloseTables") != std::string::npos, "form bootstrap should call the data-environment close method after event-loop exit");
 }
 
 void test_build_class_library_xasset_executable_model() {
@@ -116,21 +166,44 @@ void test_build_class_library_xasset_executable_model() {
     expect(model.root_object_path == "custWidget", "class-library root object path should identify the root class");
     expect(model.startup_routines.size() == 2U, "class-library startup should include load and init");
     expect(model.shutdown_routines.size() == 1U, "class-library shutdown should include destroy");
+    expect(model.startup_lines.size() == 2U, "class-library startup lines should match startup routine count");
+    expect(model.shutdown_lines.size() == 1U, "class-library shutdown lines should match shutdown routine count");
     if (model.startup_routines.size() == 2U) {
         expect(model.startup_routines[0] == "__cf_custWidget_Load",
                "class-library startup should run Load before Init");
         expect(model.startup_routines[1] == "__cf_custWidget_Init",
                "class-library startup should end with Init");
     }
+    if (model.startup_lines.size() == 2U) {
+        expect(model.startup_lines[0] == "DO __cf_custWidget_Load",
+               "class-library startup lines should mirror startup routine order");
+        expect(model.startup_lines[1] == "DO __cf_custWidget_Init",
+               "class-library startup lines should end with Init");
+    }
     if (model.shutdown_routines.size() == 1U) {
         expect(model.shutdown_routines[0] == "__cf_custWidget_Destroy",
                "class-library shutdown should dispatch Destroy");
     }
+    if (model.shutdown_lines.size() == 1U) {
+        expect(model.shutdown_lines[0] == "DO __cf_custWidget_Destroy",
+               "class-library shutdown lines should dispatch Destroy");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    expect_substring_order(
+        bootstrap,
+        {
+            "DO __cf_custWidget_Load",
+            "DO __cf_custWidget_Init",
+            "DO __cf_custWidget_Destroy"
+        },
+        "class-library bootstrap should execute lifecycle calls in order");
     expect(bootstrap.find("DO __cf_custWidget_Load") != std::string::npos, "class-library bootstrap should call the load method");
     expect(bootstrap.find("DO __cf_custWidget_Init") != std::string::npos, "class-library bootstrap should call the init method");
     expect(bootstrap.find("DO __cf_custWidget_Destroy") != std::string::npos, "class-library bootstrap should call the destroy method after event-loop exit");
+    expect(bootstrap.find("READ EVENTS") != std::string::npos, "class-library bootstrap should enter read events");
+    expect(bootstrap.find("READ EVENTS") > bootstrap.find("DO __cf_custWidget_Init"), "class-library bootstrap should enter event loop after startup");
+    expect(bootstrap.find("DO __cf_custWidget_Destroy") > bootstrap.find("READ EVENTS"), "class-library destroy should run after event loop");
 }
 
 void test_form_root_object_path_ignores_comments_and_data_environment() {
