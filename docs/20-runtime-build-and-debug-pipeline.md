@@ -105,6 +105,7 @@ Current behavior:
 - waiting menu runtimes can now dispatch concrete menu-item actions back into the native runtime
 - deeper menu trees now participate in runtime execution because xAsset bootstrapping reads the full `MNX` table instead of the eight-record Studio preview
 - waiting form/class/report/label xAssets now expose extracted methods as dispatchable runtime actions for debugger-driven invocation
+- xAsset-backed breakpoints now surface designer-facing action ids and titles both in explicit breakpoint inventories and in ordinary pause-state breakpoint listings, so debugger clients can identify active SCX/VCX/MNX breakpoints without reverse-mapping generated bootstrap file/line pairs
 - `DO FORM` now resolves quoted/space-containing paths through the same normalized asset-path flow used by other surface-launch commands
 - startup assets that legacy projects mark as excluded are now still staged when they are required for runtime startup
 - packaged xAsset startup paths now carry their memo sidecars forward so the bootstrap runtime can open real designer assets instead of dead table shells

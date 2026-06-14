@@ -307,10 +307,18 @@ copperfin::runtime::DebugResumeAction parse_resume_action(const std::string& val
     return copperfin::runtime::DebugResumeAction::continue_run;
 }
 
+const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
+    const copperfin::runtime::RuntimeBreakpoint& breakpoint,
+    const copperfin::runtime::XAssetExecutableModel& model,
+    const std::string& bootstrap_path,
+    const std::string& bootstrap_source);
+
 void print_pause_state(
     const copperfin::runtime::RuntimePauseState& state,
     const copperfin::runtime::XAssetExecutableModel* xasset_model = nullptr,
-    const std::vector<copperfin::runtime::RuntimeBreakpoint>* breakpoints = nullptr) {
+    const std::vector<copperfin::runtime::RuntimeBreakpoint>* breakpoints = nullptr,
+    const std::string& xasset_bootstrap_path = {},
+    const std::string& xasset_bootstrap_source = {}) {
     std::cout << "debug.reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) << "\n";
     std::cout << "debug.location: " << state.location.file_path << ":" << state.location.line << "\n";
     std::cout << "debug.statement: " << state.statement_text << "\n";
@@ -322,6 +330,16 @@ void print_pause_state(
         for (std::size_t index = 0; index < breakpoints->size(); ++index) {
             const auto& breakpoint = (*breakpoints)[index];
             std::cout << "debug.breakpoint[" << index << "]: " << breakpoint.file_path << ":" << breakpoint.line << "\n";
+            if (xasset_model != nullptr) {
+                if (const auto* action = find_breakpoint_xasset_action(
+                        breakpoint,
+                        *xasset_model,
+                        xasset_bootstrap_path,
+                        xasset_bootstrap_source)) {
+                    std::cout << "debug.breakpoint[" << index << "].xasset.action_id: " << action->action_id << "\n";
+                    std::cout << "debug.breakpoint[" << index << "].xasset.title: " << action->title << "\n";
+                }
+            }
         }
     }
     if (xasset_model != nullptr) {
@@ -376,12 +394,6 @@ void print_pause_state(
         std::cout << "debug.event[" << index << "].location: " << event.location.file_path << ":" << event.location.line << "\n";
     }
 }
-
-const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
-    const copperfin::runtime::RuntimeBreakpoint& breakpoint,
-    const copperfin::runtime::XAssetExecutableModel& model,
-    const std::string& bootstrap_path,
-    const std::string& bootstrap_source);
 
 void print_breakpoint_inventory(
     const copperfin::runtime::PrgRuntimeSession& session,
@@ -837,7 +849,7 @@ int main(int argc, char** argv) {
     } else if (debug_commands.empty()) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         const auto breakpoints = session.list_breakpoints();
-        print_pause_state(state, &xasset_model, &breakpoints);
+        print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
             const std::string& command = debug_commands[index];
@@ -882,7 +894,7 @@ int main(int argc, char** argv) {
                     std::cout << "debug.watch.error: " << watch.message << "\n";
                 }
                 const auto breakpoints = session.list_breakpoints();
-                print_pause_state(state, &xasset_model, &breakpoints);
+                print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (starts_with_insensitive(command, "break:add:")) {
                 const auto breakpoint = parse_breakpoint(command.substr(10U), effective_startup_source);
@@ -968,7 +980,7 @@ int main(int argc, char** argv) {
             }
             std::cout << "debug.command[" << index << "]: " << command << "\n";
             const auto breakpoints = session.list_breakpoints();
-            print_pause_state(state, &xasset_model, &breakpoints);
+            print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
             if (state.completed || state.reason == copperfin::runtime::DebugPauseReason::error) {
                 break;
             }
