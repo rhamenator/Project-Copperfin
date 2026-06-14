@@ -544,6 +544,10 @@ void test_runtime_host_supports_xasset_action_breakpoint_commands(const std::str
            "runtime host should report one active xAsset action breakpoint");
     expect(add_process.stdout_text.find("demo_copperfin_host_bootstrap.prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
            "runtime host should list the resolved bootstrap breakpoint for the xAsset action");
+    expect(add_process.stdout_text.find("debug.breakpoint[0].xasset.action_id: " + page_activate->action_id) != std::string::npos,
+           "runtime host should surface xAsset action ids in breakpoint inventory");
+    expect(add_process.stdout_text.find("debug.breakpoint[0].xasset.title: " + page_activate->title) != std::string::npos,
+           "runtime host should surface xAsset action titles in breakpoint inventory");
     expect(add_process.stdout_text.find("debug.command[3]: select:frmdemo.pgfmain.page2.activate") != std::string::npos,
            "runtime host should report the dispatched xAsset action after add-action");
     expect(add_process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,

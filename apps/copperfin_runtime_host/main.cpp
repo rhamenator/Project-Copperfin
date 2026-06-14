@@ -377,12 +377,32 @@ void print_pause_state(
     }
 }
 
-void print_breakpoint_inventory(const copperfin::runtime::PrgRuntimeSession& session) {
+const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
+    const copperfin::runtime::RuntimeBreakpoint& breakpoint,
+    const copperfin::runtime::XAssetExecutableModel& model,
+    const std::string& bootstrap_path,
+    const std::string& bootstrap_source);
+
+void print_breakpoint_inventory(
+    const copperfin::runtime::PrgRuntimeSession& session,
+    const copperfin::runtime::XAssetExecutableModel* xasset_model = nullptr,
+    const std::string& xasset_bootstrap_path = {},
+    const std::string& xasset_bootstrap_source = {}) {
     const auto breakpoints = session.list_breakpoints();
     std::cout << "debug.breakpoint.count: " << breakpoints.size() << "\n";
     for (std::size_t index = 0; index < breakpoints.size(); ++index) {
         const auto& breakpoint = breakpoints[index];
         std::cout << "debug.breakpoint[" << index << "]: " << breakpoint.file_path << ":" << breakpoint.line << "\n";
+        if (xasset_model != nullptr) {
+            if (const auto* action = find_breakpoint_xasset_action(
+                    breakpoint,
+                    *xasset_model,
+                    xasset_bootstrap_path,
+                    xasset_bootstrap_source)) {
+                std::cout << "debug.breakpoint[" << index << "].xasset.action_id: " << action->action_id << "\n";
+                std::cout << "debug.breakpoint[" << index << "].xasset.title: " << action->title << "\n";
+            }
+        }
     }
 }
 
@@ -504,6 +524,28 @@ std::optional<copperfin::runtime::RuntimeBreakpoint> resolve_action_breakpoint(
     }
 
     return std::nullopt;
+}
+
+const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
+    const copperfin::runtime::RuntimeBreakpoint& breakpoint,
+    const copperfin::runtime::XAssetExecutableModel& model,
+    const std::string& bootstrap_path,
+    const std::string& bootstrap_source) {
+    for (const auto& action : model.actions) {
+        const auto resolved = resolve_action_breakpoint(
+            model,
+            bootstrap_path,
+            bootstrap_source,
+            action.action_id);
+        if (!resolved.has_value()) {
+            continue;
+        }
+        if (resolved->file_path == breakpoint.file_path && resolved->line == breakpoint.line) {
+            return &action;
+        }
+    }
+
+    return nullptr;
 }
 
 std::string resolve_effective_working_directory(
@@ -851,7 +893,7 @@ int main(int argc, char** argv) {
                 }
                 session.add_breakpoint(*breakpoint);
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (starts_with_insensitive(command, "break:remove:")) {
                 const auto breakpoint = parse_breakpoint(command.substr(13U), effective_startup_source);
@@ -866,7 +908,7 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (starts_with_insensitive(command, "break:add-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
@@ -886,7 +928,7 @@ int main(int argc, char** argv) {
                 }
                 session.add_breakpoint(*breakpoint);
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (starts_with_insensitive(command, "break:remove-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
@@ -910,16 +952,16 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (lowercase_copy(trim_copy(command)) == "break:clear") {
                 session.clear_breakpoints();
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else if (lowercase_copy(trim_copy(command)) == "break:list") {
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                print_breakpoint_inventory(session);
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else {
                 state = session.run(parse_resume_action(command));
