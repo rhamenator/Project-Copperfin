@@ -2022,7 +2022,10 @@
                 const std::string for_expression = trim_copy(statement.tertiary_expression).empty()
                                                        ? ".T."
                                                        : statement.tertiary_expression;
-                if (!replace_records(*cursor, assignments, frame, for_expression, statement.quaternary_expression))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return replace_records(*cursor, assignments, frame, for_expression, statement.quaternary_expression);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -2044,7 +2047,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!append_blank_record(*cursor))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return append_blank_record(*cursor);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -2066,7 +2072,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, true))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, true);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -2096,7 +2105,10 @@
                 const std::string where_expression = trim_copy(statement.expression).empty()
                                                          ? ".T."
                                                          : statement.expression;
-                if (!set_deleted_flag(*cursor, frame, where_expression, statement.tertiary_expression, true))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return set_deleted_flag(*cursor, frame, where_expression, statement.tertiary_expression, true);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -2123,7 +2135,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, false))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, false);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -2157,7 +2172,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!insert_record_values(*cursor, frame, statement.expression, statement.secondary_expression))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return insert_record_values(*cursor, frame, statement.expression, statement.secondary_expression);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -3401,25 +3419,28 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                if (!ensure_transaction_backup_for_table(table_path.string()))
-                {
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
+                if (!execute_with_command_undo(table_path.string(), [&]
+                    {
+                        if (!ensure_transaction_backup_for_table(table_path.string()))
+                        {
+                            return false;
+                        }
 
-                const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
-                if (!create_result.ok)
-                {
-                    last_error_message = create_result.error;
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
+                        const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
+                        if (!create_result.ok)
+                        {
+                            last_error_message = create_result.error;
+                            return false;
+                        }
 
-                const std::string alias = normalize_identifier(table_path.stem().string());
-                const auto field_rules = field_rules_from_declarations(declarations);
-                if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules))
+                        const std::string alias = normalize_identifier(table_path.stem().string());
+                        const auto field_rules = field_rules_from_declarations(declarations);
+                        if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules))
+                        {
+                            return false;
+                        }
+                        return true;
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
@@ -3470,105 +3491,107 @@
                     table_path = std::filesystem::path(current_default_directory()) / table_path;
                 }
                 table_path = table_path.lexically_normal();
-
-                if (!ensure_transaction_backup_for_table(table_path.string()))
-                {
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
-
-                vfp::DbfWriteResult add_result;
-                std::optional<TableFieldDeclaration> declaration;
                 std::string affected_field = trim_copy(statement.expression);
-                if (action == "add" || action == "alter")
-                {
-                    declaration = parse_table_field_declaration(statement.expression);
-                    if (!declaration.has_value())
-                    {
-                        last_error_message = action == "add"
-                                                 ? "ALTER TABLE ADD COLUMN requires a supported field declaration"
-                                                 : "ALTER TABLE ALTER COLUMN requires a supported field declaration";
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    affected_field = declaration->descriptor.name;
-                    add_result = action == "add"
-                                     ? vfp::add_dbf_table_field(table_path.string(), declaration->descriptor)
-                                     : vfp::alter_dbf_table_field(table_path.string(), declaration->descriptor);
-                }
-                else
-                {
-                    affected_field = unquote_identifier(affected_field);
-                    add_result = vfp::drop_dbf_table_field(table_path.string(), affected_field);
-                }
-                if (!add_result.ok)
-                {
-                    last_error_message = add_result.error;
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
 
-                if (action == "add" && declaration.has_value() && declaration->has_default)
+                if (!execute_with_command_undo(table_path.string(), [&]
                 {
-                    const vfp::DbfRecordValue synthetic_field{
-                        .field_name = declaration->descriptor.name,
-                        .field_type = declaration->descriptor.type,
-                        .is_null = false,
-                        .display_value = {}};
-                    for (std::size_t record_index = 0U; record_index < add_result.record_count; ++record_index)
+                    if (!ensure_transaction_backup_for_table(table_path.string()))
                     {
-                        const PrgValue default_value = evaluate_expression(declaration->default_expression, frame);
-                        const auto replace_result = vfp::replace_record_field_value(
-                            table_path.string(),
-                            record_index,
-                            declaration->descriptor.name,
-                            serialize_prg_value_for_record_field(synthetic_field, default_value));
-                        if (!replace_result.ok)
-                        {
-                            last_error_message = replace_result.error;
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
-                        }
+                        return false;
                     }
-                }
 
-                for (auto &[_, cursor] : current_session_state().cursors)
-                {
-                    if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string()))
+                    vfp::DbfWriteResult add_result;
+                    std::optional<TableFieldDeclaration> declaration;
+                    if (action == "add" || action == "alter")
                     {
-                        if (action == "add")
+                        declaration = parse_table_field_declaration(statement.expression);
+                        if (!declaration.has_value())
                         {
-                            cursor.field_count += 1U;
+                            last_error_message = action == "add"
+                                                     ? "ALTER TABLE ADD COLUMN requires a supported field declaration"
+                                                     : "ALTER TABLE ALTER COLUMN requires a supported field declaration";
+                            return false;
                         }
-                        else if (action == "drop" && cursor.field_count > 0U)
+                        affected_field = declaration->descriptor.name;
+                        add_result = action == "add"
+                                         ? vfp::add_dbf_table_field(table_path.string(), declaration->descriptor)
+                                         : vfp::alter_dbf_table_field(table_path.string(), declaration->descriptor);
+                    }
+                    else
+                    {
+                        affected_field = unquote_identifier(affected_field);
+                        add_result = vfp::drop_dbf_table_field(table_path.string(), affected_field);
+                    }
+                    if (!add_result.ok)
+                    {
+                        last_error_message = add_result.error;
+                        return false;
+                    }
+
+                    if (action == "add" && declaration.has_value() && declaration->has_default)
+                    {
+                        const vfp::DbfRecordValue synthetic_field{
+                            .field_name = declaration->descriptor.name,
+                            .field_type = declaration->descriptor.type,
+                            .is_null = false,
+                            .display_value = {}};
+                        for (std::size_t record_index = 0U; record_index < add_result.record_count; ++record_index)
                         {
-                            cursor.field_count -= 1U;
-                        }
-                        cursor.record_count = add_result.record_count;
-                        const std::string normalized_field = collapse_identifier(affected_field);
-                        if (action == "drop")
-                        {
-                            cursor.field_rules.erase(normalized_field);
-                        }
-                        else if (declaration.has_value())
-                        {
-                            if (!declaration->nullable || declaration->has_default)
+                            const PrgValue default_value = evaluate_expression(declaration->default_expression, frame);
+                            const auto replace_result = vfp::replace_record_field_value(
+                                table_path.string(),
+                                record_index,
+                                declaration->descriptor.name,
+                                serialize_prg_value_for_record_field(synthetic_field, default_value));
+                            if (!replace_result.ok)
                             {
-                                cursor.field_rules[normalized_field] = CursorState::FieldRule{
-                                    .nullable = declaration->nullable,
-                                    .has_default = declaration->has_default,
-                                    .default_expression = declaration->default_expression};
+                                last_error_message = replace_result.error;
+                                return false;
                             }
-                            else
+                        }
+                    }
+
+                    for (auto &[_, cursor] : current_session_state().cursors)
+                    {
+                        if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string()))
+                        {
+                            if (action == "add")
+                            {
+                                cursor.field_count += 1U;
+                            }
+                            else if (action == "drop" && cursor.field_count > 0U)
+                            {
+                                cursor.field_count -= 1U;
+                            }
+                            cursor.record_count = add_result.record_count;
+                            const std::string normalized_field = collapse_identifier(affected_field);
+                            if (action == "drop")
                             {
                                 cursor.field_rules.erase(normalized_field);
                             }
+                            else if (declaration.has_value())
+                            {
+                                if (!declaration->nullable || declaration->has_default)
+                                {
+                                    cursor.field_rules[normalized_field] = CursorState::FieldRule{
+                                        .nullable = declaration->nullable,
+                                        .has_default = declaration->has_default,
+                                        .default_expression = declaration->default_expression};
+                                }
+                                else
+                                {
+                                    cursor.field_rules.erase(normalized_field);
+                                }
+                            }
                         }
                     }
+
+                    return true;
+                }))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 events.push_back({.category = "runtime.alter_table",

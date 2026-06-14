@@ -1031,6 +1031,199 @@ void test_undo_reverts_latest_replacement_command() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_undo_reverts_latest_append_blank() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_append_blank";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_append_blank.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "APPEND BLANK\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest APPEND BLANK script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.append_blank" && event.detail == "People";
+    }), "APPEND BLANK should emit runtime.append_blank");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "UNDO should expose RECCOUNT after rollback");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "UNDO after APPEND BLANK should restore the original row count");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "APPEND BLANK + UNDO should keep DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+            "UNDO after APPEND BLANK should preserve first row NAME");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO",
+            "UNDO after APPEND BLANK should preserve second row NAME");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_reverts_latest_delete_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_delete";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_delete.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "DELETE\n"
+        "UNDO\n"
+        "nDeleted = DELETED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest DELETE script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.delete" && event.detail == "People";
+    }), "DELETE should emit runtime.delete");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto deleted = state.globals.find("ndeleted");
+    expect(deleted != state.globals.end(), "UNDO after DELETE should expose DELETED()");
+    if (deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted->second) == "false",
+            "UNDO after DELETE should clear the deleted flag");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "DELETE + UNDO should keep DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 1U) {
+        expect(!parse_result.table.records[0].deleted, "UNDO should restore record 1 deletion state");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_reverts_latest_update_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_update";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_update.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "UPDATE SET AGE = AGE + 10\n"
+        "UNDO\n"
+        "GO 1\n"
+        "nAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest UPDATE script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.update";
+    }), "UPDATE should emit runtime.update");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto age = state.globals.find("nage");
+    expect(age != state.globals.end(), "UNDO should expose restored AGE");
+    if (age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age->second) == "10",
+            "UNDO after UPDATE should restore original AGE");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "UPDATE + UNDO should keep DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 1U) {
+        expect(parse_result.table.records[0].values[1].display_value == "10",
+            "UNDO should persist reverted AGE for first row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_reverts_latest_insert_into_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_insert_into";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_insert_into.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "INSERT INTO People (NAME, AGE) VALUES ('DELTA', 40)\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest INSERT INTO script should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.insert_into";
+    }), "INSERT INTO should emit runtime.insert_into");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit runtime.command_undo");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "UNDO after INSERT INTO should expose RECCOUNT");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "UNDO after INSERT INTO should restore original row count");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "INSERT INTO + UNDO should keep DBF readable");
+    expect(parse_result.table.records.size() == 2U,
+        "UNDO after INSERT INTO should remove the appended row");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[1].values[1].display_value == "20",
+            "UNDO after INSERT INTO should preserve second row AGE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_undo_all_reverts_multiple_latest_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_all";
@@ -1559,6 +1752,10 @@ int main() {
     test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
     test_sql_style_for_clauses_accept_macro_expressions();
+    test_undo_reverts_latest_append_blank();
+    test_undo_reverts_latest_delete_command();
+    test_undo_reverts_latest_update_command();
+    test_undo_reverts_latest_insert_into_command();
     test_undo_reverts_latest_replacement_command();
     test_undo_all_reverts_multiple_latest_commands();
     test_undo_without_history_fails_deterministically();
