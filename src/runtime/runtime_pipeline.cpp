@@ -345,6 +345,17 @@ std::map<std::string, std::size_t> collect_library_export_parameter_counts(const
     return parameter_counts;
 }
 
+std::string build_placeholder_int_parameter_list(const std::size_t parameter_count) {
+    std::ostringstream stream;
+    for (std::size_t index = 0; index < parameter_count; ++index) {
+        if (index > 0U) {
+            stream << ", ";
+        }
+        stream << "int arg" << (index + 1U);
+    }
+    return stream.str();
+}
+
 std::string build_module_definition_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const std::string output_stem =
@@ -416,19 +427,28 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     }
 
     if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+        const auto parameter_counts = collect_library_export_parameter_counts(plan);
         stream << "#if defined(_WIN32) && defined(_M_IX86)\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL __stdcall\n";
         stream << "#else\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL\n";
         stream << "#endif\n\n";
+        for (const auto& symbol : plan.exported_symbols) {
+            const auto found = parameter_counts.find(symbol);
+            const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+            stream << "COPPERFIN_EXPORT int COPPERFIN_VFP_DLL_CALL " << symbol << "("
+                   << build_placeholder_int_parameter_list(parameter_count) << ") {\n";
+            for (std::size_t index = 0; index < parameter_count; ++index) {
+                stream << "    (void)arg" << (index + 1U) << ";\n";
+            }
+            stream << "    return -1;\n";
+            stream << "}\n\n";
+        }
+        return stream.str();
     }
 
     for (const auto& symbol : plan.exported_symbols) {
-        stream << "COPPERFIN_EXPORT int ";
-        if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
-            stream << "COPPERFIN_VFP_DLL_CALL ";
-        }
-        stream << symbol << "() {\n";
+        stream << "COPPERFIN_EXPORT int " << symbol << "() {\n";
         stream << "    return -1;\n";
         stream << "}\n\n";
     }
@@ -1884,6 +1904,21 @@ std::string build_runtime_manifest_text(
 
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
+    }
+
+    if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
+        const auto parameter_counts = collect_library_export_parameter_counts(plan);
+        for (const auto& symbol : plan.exported_symbols) {
+            const auto found = parameter_counts.find(symbol);
+            const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
+            stream << "library_function_arity="
+                   << quote_manifest_value(symbol) << "|"
+                   << parameter_count << "\n";
+            stream << "library_function_call_surface="
+                   << quote_manifest_value(symbol) << "|"
+                   << quote_manifest_value(std::string(kVfpLibraryCallableConvention)) << "|"
+                   << quote_manifest_value(build_placeholder_int_parameter_list(parameter_count)) << "\n";
+        }
     }
 
     for (const auto& warning : plan.warnings) {

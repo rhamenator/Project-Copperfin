@@ -984,10 +984,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should use C exports");
         expect(wrapper_source.find("#define COPPERFIN_VFP_DLL_CALL __stdcall") != std::string::npos,
                "library-output wrapper source should declare the VFP DLL calling-convention macro");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary()") != std::string::npos,
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int arg1)") != std::string::npos,
                "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers()") != std::string::npos,
+        expect(wrapper_source.find("(void)arg1;") != std::string::npos,
+               "library-output wrapper source should consume placeholder DLL arguments");
+        expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int arg1, int arg2)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
+        expect(wrapper_source.find("(void)arg2;") != std::string::npos,
+               "library-output wrapper source should consume multiple placeholder DLL arguments");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");
@@ -1093,6 +1097,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the wrapper PowerShell build script path");
         expect(runtime_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output manifest should record the VFP DLL calling convention contract");
+        expect(runtime_manifest.find("library_function_arity=InitLibrary|1") != std::string::npos,
+               "library-output manifest should record InitLibrary arity");
+        expect(runtime_manifest.find("library_function_arity=AddNumbers|2") != std::string::npos,
+               "library-output manifest should record AddNumbers arity");
+        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int arg1") != std::string::npos,
+               "library-output manifest should record InitLibrary call-surface contract");
+        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int arg1, int arg2") != std::string::npos,
+               "library-output manifest should record AddNumbers call-surface contract");
         expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output manifest should record discovered export symbols");
         expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,

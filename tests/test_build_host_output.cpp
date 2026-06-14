@@ -344,6 +344,14 @@ void run_library_build_host_smoke(
         if (extension == "dll") {
             expect(manifest_text.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                    "build host manifest should record the VFP DLL calling convention contract");
+            expect(manifest_text.find("library_function_arity=InitLibrary|1") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL arity");
+            expect(manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL arity");
+            expect(manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int arg1") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL call surface");
+            expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int arg1, int arg2") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL call surface");
         }
     }
 
