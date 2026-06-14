@@ -4610,6 +4610,52 @@ void test_yield_command_emits_runtime_yield_event_and_preserves_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_is_allowed_while_holding_critical_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_critical_regression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_critical_regression.prg";
+    write_text(
+        main_path,
+        "lInCritical = .F.\n"
+        "lYielded = .F.\n"
+        "ENTER CRITICAL shared\n"
+        "lInCritical = .T.\n"
+        "YIELD\n"
+        "lYielded = .T.\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "YIELD inside CRITICAL should complete");
+
+    const auto entered_it = state.globals.find("lincritical");
+    const auto yielded_it = state.globals.find("lyielded");
+    expect(entered_it != state.globals.end(), "CRITICAL body should execute");
+    expect(yielded_it != state.globals.end(), "YIELD should execute inside CRITICAL");
+    if (entered_it != state.globals.end()) {
+        expect(entered_it->second.boolean_value, "CRITICAL section body should run before YIELD");
+    }
+    if (yielded_it != state.globals.end()) {
+        expect(yielded_it->second.boolean_value, "YIELD should run and continue inside CRITICAL");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield";
+    }), "YIELD inside CRITICAL should emit runtime.yield");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD inside CRITICAL should not trigger blocking policy");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_inside_critical_section_is_allowed() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_inside_critical_cmd";
@@ -5697,6 +5743,7 @@ int main() {
     test_critical_section_exit_order_is_enforced();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
+    test_yield_is_allowed_while_holding_critical_section();
     test_yield_inside_critical_section_is_allowed();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
     test_yield_preserves_fault_metadata_when_followed_by_error();
