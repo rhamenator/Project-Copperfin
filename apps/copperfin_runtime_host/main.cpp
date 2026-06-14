@@ -172,7 +172,7 @@ bool verify_manifest_hashes(const ManifestMap& manifest, std::string& error) {
 }
 
 void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|select:<action-id>|invoke:<action-id>>]\n";
+    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>>]\n";
     std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
 }
 
@@ -581,6 +581,23 @@ int main(int argc, char** argv) {
                     return 5;
                 }
                 state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            } else if (starts_with_insensitive(command, "watch:")) {
+                if (!state.paused || state.completed) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Watch evaluation requires an active paused state.\n";
+                    return 5;
+                }
+                const auto watch = session.evaluate_watch_expression(command.substr(6U));
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                std::cout << "debug.watch.expression: " << watch.expression << "\n";
+                std::cout << "debug.watch.ok: " << (watch.ok ? "true" : "false") << "\n";
+                if (watch.ok) {
+                    std::cout << "debug.watch.value: " << copperfin::runtime::format_value(watch.value) << "\n";
+                } else {
+                    std::cout << "debug.watch.error: " << watch.message << "\n";
+                }
+                print_pause_state(state);
+                continue;
             } else {
                 state = session.run(parse_resume_action(command));
             }

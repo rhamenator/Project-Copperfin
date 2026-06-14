@@ -143,6 +143,13 @@ struct RuntimePauseState {
     std::size_t executed_statement_count = 0;
 };
 
+struct RuntimeWatchResult {
+    std::string expression;
+    bool ok = false;
+    PrgValue value{};
+    std::string message;
+};
+
 struct RuntimeSessionOptions {
     std::string startup_path;
     std::string working_directory;
@@ -171,6 +178,7 @@ public:
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);
     [[nodiscard]] bool can_undo_command() const;
     [[nodiscard]] std::string command_undo_label() const;
+    [[nodiscard]] RuntimeWatchResult evaluate_watch_expression(const std::string& expression);
 
     [[nodiscard]] RuntimePauseState run(DebugResumeAction action);
     [[nodiscard]] const RuntimePauseState& state() const noexcept;

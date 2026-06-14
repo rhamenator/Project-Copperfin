@@ -460,6 +460,7 @@ namespace copperfin::runtime
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
         bool dispatch_error_handler();
+        RuntimeWatchResult evaluate_watch_expression(const std::string &expression);
         ExecutionOutcome execute_current_statement();
         RuntimePauseState run(DebugResumeAction action);
     };
@@ -1246,6 +1247,42 @@ namespace copperfin::runtime
         return parser.parse();
     }
 
+    RuntimeWatchResult PrgRuntimeSession::Impl::evaluate_watch_expression(const std::string &expression)
+    {
+        RuntimeWatchResult result;
+        result.expression = trim_copy(expression);
+        if (result.expression.empty())
+        {
+            result.message = "Watch expression is empty.";
+            return result;
+        }
+        if (stack.empty())
+        {
+            result.message = "Watch evaluation requires a paused runtime frame.";
+            return result;
+        }
+
+        try
+        {
+            result.value = evaluate_expression(result.expression, stack.back(), resolve_cursor_target({}));
+            result.ok = true;
+        }
+        catch (const std::bad_alloc &)
+        {
+            result.message = "Watch evaluation ran out of memory.";
+        }
+        catch (const std::exception &ex)
+        {
+            result.message = ex.what();
+        }
+        catch (...)
+        {
+            result.message = "Watch evaluation failed.";
+        }
+
+        return result;
+    }
+
     std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap(
         const std::string &asset_path,
         bool include_read_events)
@@ -1772,6 +1809,11 @@ namespace copperfin::runtime
     std::string PrgRuntimeSession::command_undo_label() const
     {
         return impl_->command_undo_label();
+    }
+
+    RuntimeWatchResult PrgRuntimeSession::evaluate_watch_expression(const std::string &expression)
+    {
+        return impl_->evaluate_watch_expression(expression);
     }
 
     RuntimePauseState PrgRuntimeSession::run(DebugResumeAction action)

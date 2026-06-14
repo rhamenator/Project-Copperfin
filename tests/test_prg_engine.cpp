@@ -427,6 +427,82 @@ void test_step_pause_preserves_selected_cursor_inspection_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_watch_expression_evaluates_locals_globals_and_cursor_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_watch_eval";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "watch_eval.prg";
+    write_text(
+        main_path,
+        "PUBLIC gValue\n"
+        "gValue = 5\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "DO worker\n"
+        "RETURN\n"
+        "PROCEDURE worker\n"
+        "LOCAL nLocal\n"
+        "nLocal = AGE + gValue\n"
+        "x = nLocal\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    session.add_breakpoint({.file_path = main_path.string(), .line = 10});
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "watch-eval test should stop on the worker assignment breakpoint");
+    expect(state.statement_text == "x = nLocal",
+           "watch-eval test should pause on the expected worker assignment");
+
+    const auto local_watch = session.evaluate_watch_expression("nLocal");
+    expect(local_watch.ok, "watch-eval test should resolve LOCAL variables");
+    if (local_watch.ok) {
+        expect(copperfin::runtime::format_value(local_watch.value) == "25",
+               "watch-eval test should report the computed LOCAL value");
+    }
+
+    const auto global_watch = session.evaluate_watch_expression("gValue");
+    expect(global_watch.ok, "watch-eval test should resolve PUBLIC/ global variables");
+    if (global_watch.ok) {
+        expect(copperfin::runtime::format_value(global_watch.value) == "5",
+               "watch-eval test should report the global value");
+    }
+
+    const auto field_watch = session.evaluate_watch_expression("AGE");
+    expect(field_watch.ok, "watch-eval test should resolve selected cursor fields");
+    if (field_watch.ok) {
+        expect(copperfin::runtime::format_value(field_watch.value) == "20",
+               "watch-eval test should report the current record field value");
+    }
+
+    const auto alias_watch = session.evaluate_watch_expression("ALIAS()");
+    expect(alias_watch.ok, "watch-eval test should evaluate runtime-surface functions");
+    if (alias_watch.ok) {
+        expect(copperfin::runtime::format_value(alias_watch.value) == "People",
+               "watch-eval test should preserve selected work-area context during watch evaluation");
+    }
+
+    const auto malformed_watch = session.evaluate_watch_expression("   ");
+    expect(!malformed_watch.ok, "watch-eval test should reject empty watch expressions");
+    expect(!malformed_watch.message.empty(), "watch-eval test should surface a deterministic empty-watch message");
+
+    const auto preserved_state = session.state();
+    expect(preserved_state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "watch-eval test should not resume execution while evaluating watches");
+    expect(preserved_state.statement_text == "x = nLocal",
+           "watch-eval test should preserve the paused statement after watch evaluation");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1588,6 +1664,7 @@ int main() {
     test_step_pause_state_preserves_statement_text_across_step_modes();
     test_breakpoint_pause_preserves_selected_cursor_inspection_state();
     test_step_pause_preserves_selected_cursor_inspection_state();
+    test_watch_expression_evaluates_locals_globals_and_cursor_fields();
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();
