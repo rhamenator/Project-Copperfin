@@ -369,6 +369,8 @@ namespace copperfin::runtime
         std::map<int, int> next_api_handle_by_session;
         std::map<int, int> transaction_level_by_session;
         std::map<int, TransactionJournalState> transaction_journal_by_session;
+        std::map<int, TransactionJournalState> command_undo_journal_by_session;
+        std::map<int, std::vector<TransactionJournalState>> command_undo_stack_by_session;
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;

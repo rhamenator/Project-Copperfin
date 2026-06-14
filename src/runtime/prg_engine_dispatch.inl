@@ -288,6 +288,23 @@
                 return resolved_identifier;
             };
 
+            auto execute_with_command_undo = [&](const std::string &table_path, auto &&operation) -> bool
+            {
+                if (!ensure_command_undo_backup_for_table(table_path))
+                {
+                    return false;
+                }
+
+                if (!operation())
+                {
+                    rollback_active_command_undo_journal();
+                    return false;
+                }
+
+                commit_active_command_undo_journal();
+                return true;
+            };
+
             auto memory_value_type_code = [&](const std::string &name, const PrgValue &value) -> std::string
             {
                 if (find_array(name) != nullptr)
@@ -1811,6 +1828,20 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::undo_command:
+            {
+                const bool is_all = normalize_identifier(statement.secondary_expression) == "all";
+                if (is_all ? !undo_all_command_journals() : !undo_latest_command_journal())
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                events.push_back({.category = "runtime.command_undo",
+                                  .detail = is_all ? "ALL" : "LATEST",
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::doevents_command:
                 // DOEVENTS: Pump pending event queue without blocking indefinitely.
                 // In a GUI app, this allows UI responsiveness during long operations.
@@ -1942,7 +1973,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!replace_records(*cursor, assignments, frame, statement.tertiary_expression, statement.quaternary_expression))
+                if (!execute_with_command_undo(cursor->source_path, [&]
+                    {
+                        return replace_records(*cursor, assignments, frame, statement.tertiary_expression, statement.quaternary_expression);
+                    }))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;

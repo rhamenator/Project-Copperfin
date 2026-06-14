@@ -496,6 +496,11 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::end_transaction;
         } else if (upper == "ROLLBACK" || upper == "ROLLBACK TRANSACTION") {
             statement.kind = StatementKind::rollback_transaction;
+        } else if (upper == "UNDO" || upper == "UNDO ALL") {
+            statement.kind = StatementKind::undo_command;
+            if (upper == "UNDO ALL") {
+                statement.secondary_expression = "all";
+            }
         } else if (upper == "DOEVENTS") {
             statement.kind = StatementKind::doevents_command;
         } else if (starts_with_insensitive(line, "LPARAMETERS ")) {

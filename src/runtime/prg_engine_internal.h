@@ -42,6 +42,7 @@ enum class StatementKind {
     begin_transaction,
     end_transaction,
     rollback_transaction,
+    undo_command,
     seek_command,
     locate_command,
     scan_statement,

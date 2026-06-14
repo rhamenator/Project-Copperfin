@@ -293,6 +293,203 @@
             return output.good();
         }
 
+        std::filesystem::path command_undo_journal_root_directory() const
+        {
+            return runtime_temp_directory / "command_undo";
+        }
+
+        TransactionJournalState &current_command_undo_journal()
+        {
+            auto [iterator, _] = command_undo_journal_by_session.try_emplace(current_data_session);
+            return iterator->second;
+        }
+
+        std::vector<TransactionJournalState> &current_command_undo_stack()
+        {
+            auto [iterator, _] = command_undo_stack_by_session.try_emplace(current_data_session, std::vector<TransactionJournalState>{});
+            return iterator->second;
+        }
+
+        bool begin_command_undo_journal_if_needed()
+        {
+            TransactionJournalState &journal = current_command_undo_journal();
+            if (!journal.journal_path.empty())
+            {
+                return true;
+            }
+
+            const unsigned long long process_id =
+#if defined(_WIN32)
+                static_cast<unsigned long long>(::_getpid());
+#else
+                static_cast<unsigned long long>(::getpid());
+#endif
+            static std::atomic<unsigned long long> command_undo_nonce_counter{0ULL};
+            const auto now_ticks = static_cast<unsigned long long>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count());
+            const unsigned long long nonce_counter = command_undo_nonce_counter.fetch_add(1ULL, std::memory_order_relaxed);
+            const std::string nonce = std::to_string(now_ticks) +
+                                      "_" + std::to_string(process_id) +
+                                      "_" + std::to_string(static_cast<unsigned long long>(current_data_session)) +
+                                      "_" + std::to_string(nonce_counter);
+            journal = {};
+            journal.root_path = command_undo_journal_root_directory() / ("undo_" + nonce);
+            journal.journal_path = journal.root_path / "journal.log";
+            journal.level = 0;
+            if (!write_transaction_journal_file(journal))
+            {
+                last_error_message = "Unable to initialize command undo journal";
+                return false;
+            }
+            return true;
+        }
+
+        bool ensure_command_undo_backup_for_table(const std::string &table_path)
+        {
+            if (!begin_command_undo_journal_if_needed())
+            {
+                return false;
+            }
+
+            TransactionJournalState &journal = current_command_undo_journal();
+            std::error_code ignored;
+            for (const auto &path : transaction_companion_paths(table_path))
+            {
+                const std::string key = normalize_path(path.string());
+                if (journal.tracked_files.contains(key))
+                {
+                    continue;
+                }
+
+                TransactionJournalFileEntry entry;
+                entry.original_path = key;
+                entry.existed_at_start = std::filesystem::exists(path, ignored);
+                if (entry.existed_at_start)
+                {
+                    const std::filesystem::path backup_path = journal.root_path /
+                                                              ("backup_" + std::to_string(journal.tracked_files.size()) +
+                                                               path.extension().string());
+                    std::error_code copy_error;
+                    std::filesystem::create_directories(backup_path.parent_path(), copy_error);
+                    copy_error.clear();
+                    std::filesystem::copy_file(path, backup_path, std::filesystem::copy_options::overwrite_existing, copy_error);
+                    if (copy_error)
+                    {
+                        last_error_message = "Unable to create command undo backup for: " + key;
+                        return false;
+                    }
+                    entry.backup_path = backup_path.string();
+                }
+
+                journal.tracked_files.emplace(key, std::move(entry));
+                if (!write_transaction_journal_file(journal))
+                {
+                    last_error_message = "Unable to persist command undo journal";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        void rollback_active_command_undo_journal()
+        {
+            auto found = command_undo_journal_by_session.find(current_data_session);
+            if (found == command_undo_journal_by_session.end())
+            {
+                return;
+            }
+
+            TransactionJournalState state = std::move(found->second);
+            command_undo_journal_by_session.erase(found);
+            if (!state.tracked_files.empty() && !replay_transaction_journal_state(state))
+            {
+                last_error_message = "Failed to replay command undo journal";
+                return;
+            }
+            std::error_code ignored;
+            if (!state.tracked_files.empty())
+            {
+                refresh_local_cursors_after_transaction_replay();
+            }
+            std::filesystem::remove_all(state.root_path, ignored);
+        }
+
+        void commit_active_command_undo_journal()
+        {
+            auto found = command_undo_journal_by_session.find(current_data_session);
+            if (found == command_undo_journal_by_session.end())
+            {
+                return;
+            }
+
+            if (found->second.tracked_files.empty())
+            {
+                std::error_code ignored;
+                std::filesystem::remove_all(found->second.root_path, ignored);
+            }
+            else
+            {
+                current_command_undo_stack().push_back(std::move(found->second));
+            }
+            command_undo_journal_by_session.erase(found);
+        }
+
+        bool undo_latest_command_journal()
+        {
+            auto found = command_undo_stack_by_session.find(current_data_session);
+            if (found == command_undo_stack_by_session.end() || found->second.empty())
+            {
+                last_error_message = "No command to UNDO";
+                return false;
+            }
+
+            TransactionJournalState state = std::move(found->second.back());
+            found->second.pop_back();
+            if (found->second.empty())
+            {
+                command_undo_stack_by_session.erase(found);
+            }
+
+            if (!replay_transaction_journal_state(state))
+            {
+                last_error_message = "Failed to replay command undo journal";
+                return false;
+            }
+            refresh_local_cursors_after_transaction_replay();
+            std::error_code ignored;
+            std::filesystem::remove_all(state.root_path, ignored);
+            return true;
+        }
+
+        bool undo_all_command_journals()
+        {
+            auto found = command_undo_stack_by_session.find(current_data_session);
+            if (found == command_undo_stack_by_session.end() || found->second.empty())
+            {
+                last_error_message = "No command to UNDO";
+                return false;
+            }
+
+            while (!found->second.empty())
+            {
+                TransactionJournalState state = std::move(found->second.back());
+                found->second.pop_back();
+                if (!replay_transaction_journal_state(state))
+                {
+                    last_error_message = "Failed to replay command undo journal";
+                    return false;
+                }
+                refresh_local_cursors_after_transaction_replay();
+                std::error_code ignored;
+                std::filesystem::remove_all(state.root_path, ignored);
+            }
+            command_undo_stack_by_session.erase(found);
+            return true;
+        }
+
         std::vector<std::filesystem::path> transaction_companion_paths(const std::string &table_path) const
         {
             std::vector<std::filesystem::path> paths;

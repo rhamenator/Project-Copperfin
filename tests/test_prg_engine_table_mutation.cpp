@@ -986,6 +986,148 @@ void test_sql_style_for_clauses_accept_macro_expressions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_undo_reverts_latest_replacement_command() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_latest";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_latest.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'CHANGED'\n"
+        "UNDO\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO latest replace script should complete");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO should emit a runtime.command_undo event");
+
+    const auto name = state.globals.find("cname");
+    expect(name != state.globals.end(), "UNDO should expose restored NAME");
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALPHA",
+            "UNDO should restore the pre-command NAME value");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "UNDO latest should leave DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+            "UNDO latest should persist original first-row NAME");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_all_reverts_multiple_latest_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_all";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_all.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'MUTATED1'\n"
+        "GO 2\n"
+        "REPLACE NAME WITH 'MUTATED2'\n"
+        "UNDO ALL\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "UNDO ALL replace script should complete");
+    expect(has_runtime_event(state.events, "runtime.command_undo", "ALL"),
+        "UNDO ALL should emit a runtime.command_undo event");
+
+    const auto name1 = state.globals.find("cname1");
+    const auto name2 = state.globals.find("cname2");
+    expect(name1 != state.globals.end(), "UNDO ALL should capture first-row NAME");
+    expect(name2 != state.globals.end(), "UNDO ALL should capture second-row NAME");
+    if (name1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name1->second) == "ALPHA",
+            "UNDO ALL should restore first row NAME");
+    }
+    if (name2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name2->second) == "BRAVO",
+            "UNDO ALL should restore second row NAME");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "UNDO ALL should leave DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+            "UNDO ALL should persist original first-row NAME");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO",
+            "UNDO ALL should persist original second-row NAME");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_without_history_fails_deterministically() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_empty";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "undo_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "UNDO\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "empty UNDO stack should pause with an error");
+    expect(state.location.line == 2U, "empty UNDO should report the UNDO line");
+    expect(state.message.find("No command to UNDO") != std::string::npos,
+        "empty UNDO should expose deterministic no-command error");
+
+    const auto name = state.globals.find("cname");
+    expect(name == state.globals.end(), "script should not execute statements after a failed UNDO");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "empty UNDO script should leave DBF readable");
+    if (parse_result.ok && parse_result.table.records.size() >= 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "failed UNDO should not mutate row 1");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO", "failed UNDO should not mutate row 2");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_rollback_transaction_replays_local_dbf_changes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_rollback";
@@ -1417,6 +1559,9 @@ int main() {
     test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
     test_sql_style_for_clauses_accept_macro_expressions();
+    test_undo_reverts_latest_replacement_command();
+    test_undo_all_reverts_multiple_latest_commands();
+    test_undo_without_history_fails_deterministically();
     test_rollback_transaction_replays_local_dbf_changes();
     test_rollback_transaction_replays_append_from_array();
     test_rollback_transaction_prunes_stale_alter_table_field_rules();
