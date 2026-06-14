@@ -148,6 +148,14 @@ bool cmake_is_available() {
 #endif
 }
 
+bool shell_is_available() {
+#if defined(_WIN32)
+    return false;
+#else
+    return std::system("command -v sh >/dev/null 2>&1") == 0;
+#endif
+}
+
 bool compile_native_wrapper_scaffold(
     const std::filesystem::path& source_path,
     std::filesystem::path& output_path,
@@ -246,6 +254,7 @@ bool build_native_wrapper_with_cmake(
     const fs::path build_log_path = build_root / "cmake-build.log";
     std::error_code ignored;
     fs::remove_all(build_root, ignored);
+    fs::remove(expected_output_path, ignored);
     fs::create_directories(build_root);
 
     const std::string configure_command =
@@ -276,6 +285,40 @@ bool build_native_wrapper_with_cmake(
 
     error = "native wrapper CMake build did not produce the expected shared-library artifact";
     return false;
+}
+
+bool build_native_wrapper_with_script(
+    const std::filesystem::path& script_path,
+    const std::filesystem::path& expected_output_path,
+    std::string& error) {
+#if defined(_WIN32)
+    (void)script_path;
+    (void)expected_output_path;
+    error = "native wrapper script execution is not implemented on Windows hosts";
+    return false;
+#else
+    namespace fs = std::filesystem;
+    const fs::path log_path = script_path.parent_path() / "native-wrapper-script-build.log";
+    std::error_code ignored;
+    fs::remove(expected_output_path, ignored);
+    const std::string command =
+        "sh \"" + script_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
+    if (std::system(command.c_str()) != 0) {
+        error = "native wrapper build script failed";
+        if (fs::exists(log_path)) {
+            error += ":\n" + read_text(log_path);
+        }
+        return false;
+    }
+    if (!fs::exists(expected_output_path)) {
+        error = "native wrapper build script did not produce the expected primary output";
+        if (fs::exists(log_path)) {
+            error += ":\n" + read_text(log_path);
+        }
+        return false;
+    }
+    return true;
+#endif
 }
 
 std::set<std::string> read_native_exported_symbols(const std::filesystem::path& binary_path, std::string& error) {
@@ -852,6 +895,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
            "library-output plan should derive a matching native-wrapper source filename");
     expect(fs::path(plan.native_wrapper_cmake_path).filename() == "CMakeLists.txt",
            "library-output plan should derive a native-wrapper CMake filename");
+    expect(fs::path(plan.native_wrapper_build_script_path).filename() == "build_wrapper.sh",
+           "library-output plan should derive a native-wrapper shell build script filename");
+    expect(fs::path(plan.native_wrapper_build_powershell_path).filename() == "build_wrapper.ps1",
+           "library-output plan should derive a native-wrapper PowerShell build script filename");
     expect(plan.exported_symbols.size() == 2U,
            "library-output plan should discover routine exports from PRG assets");
 
@@ -869,6 +916,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output package should emit a native-wrapper source scaffold");
         expect(fs::exists(result.plan.native_wrapper_cmake_path),
                "library-output package should emit native-wrapper build metadata");
+        expect(fs::exists(result.plan.native_wrapper_build_script_path),
+               "library-output package should emit a native-wrapper shell build script");
+        expect(fs::exists(result.plan.native_wrapper_build_powershell_path),
+               "library-output package should emit a native-wrapper PowerShell build script");
         expect(!fs::exists(result.plan.launcher_output_path),
                "library-output package should not fake a DLL binary");
         expect(!fs::exists(result.plan.runtime_host_destination_path),
@@ -905,6 +956,16 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper CMake should route built runtime artifacts to the package root");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "library-output wrapper CMake should forward the module-definition file on MSVC");
+        const std::string wrapper_shell_script = read_text(result.plan.native_wrapper_build_script_path);
+        expect(wrapper_shell_script.find("cmake -S \"$SCRIPT_DIR\" -B \"$SCRIPT_DIR/build\"") != std::string::npos,
+               "library-output wrapper shell script should configure the emitted CMake project");
+        expect(wrapper_shell_script.find("cmake --build \"$SCRIPT_DIR/build\"") != std::string::npos,
+               "library-output wrapper shell script should build the emitted CMake project");
+        const std::string wrapper_powershell_script = read_text(result.plan.native_wrapper_build_powershell_path);
+        expect(wrapper_powershell_script.find("cmake -S $scriptDir -B $buildDir") != std::string::npos,
+               "library-output wrapper PowerShell script should configure the emitted CMake project");
+        expect(wrapper_powershell_script.find("cmake --build $buildDir") != std::string::npos,
+               "library-output wrapper PowerShell script should build the emitted CMake project");
         if (native_cxx_is_available()) {
             fs::path compiled_wrapper_path;
             std::string compile_error;
@@ -931,6 +992,18 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 expect(exported_symbols == declared_symbols,
                        "library-output compiled wrapper exports should stay synchronized with the module-definition contract");
             }
+        }
+        if (cmake_is_available() && shell_is_available()) {
+            std::string script_error;
+            const bool script_built = build_native_wrapper_with_script(
+                result.plan.native_wrapper_build_script_path,
+                result.plan.launcher_output_path,
+                script_error);
+            if (!script_built && !script_error.empty()) {
+                std::cerr << "FAIL: " << script_error << "\n";
+            }
+            expect(script_built,
+                   "library-output wrapper shell script should build the requested primary output");
         }
         if (cmake_is_available()) {
             fs::path cmake_output_path;
@@ -971,6 +1044,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the wrapper source path");
         expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
                "library-output manifest should record the wrapper CMake path");
+        expect(runtime_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
+               "library-output manifest should record the wrapper shell build script path");
+        expect(runtime_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
+               "library-output manifest should record the wrapper PowerShell build script path");
         expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output manifest should record discovered export symbols");
         expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -987,6 +1064,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper CMake path");
+        expect(debug_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
+               "library-output debug manifest should record the wrapper shell build script path");
+        expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
+               "library-output debug manifest should record the wrapper PowerShell build script path");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1055,6 +1136,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
            "fll-output plan should derive a matching native-wrapper source filename");
     expect(fs::path(plan.native_wrapper_cmake_path).filename() == "CMakeLists.txt",
            "fll-output plan should derive a native-wrapper CMake filename");
+    expect(fs::path(plan.native_wrapper_build_script_path).filename() == "build_wrapper.sh",
+           "fll-output plan should derive a native-wrapper shell build script filename");
+    expect(fs::path(plan.native_wrapper_build_powershell_path).filename() == "build_wrapper.ps1",
+           "fll-output plan should derive a native-wrapper PowerShell build script filename");
     expect(fs::path(plan.fll_api_manifest_path).filename() == "LibraryDemo.fll.api",
            "fll-output plan should derive a matching API-manifest filename");
     expect(plan.exported_symbols.size() == 2U,
@@ -1074,6 +1159,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output package should emit a native-wrapper source scaffold");
         expect(fs::exists(result.plan.native_wrapper_cmake_path),
                "fll-output package should emit native-wrapper build metadata");
+        expect(fs::exists(result.plan.native_wrapper_build_script_path),
+               "fll-output package should emit a native-wrapper shell build script");
+        expect(fs::exists(result.plan.native_wrapper_build_powershell_path),
+               "fll-output package should emit a native-wrapper PowerShell build script");
         expect(fs::exists(result.plan.fll_api_manifest_path),
                "fll-output package should emit an API manifest");
         expect(!fs::exists(result.plan.launcher_output_path),
@@ -1110,6 +1199,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper CMake should route built runtime artifacts to the package root");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "fll-output wrapper CMake should forward the module-definition file on MSVC");
+        const std::string wrapper_shell_script = read_text(result.plan.native_wrapper_build_script_path);
+        expect(wrapper_shell_script.find("cmake -S \"$SCRIPT_DIR\" -B \"$SCRIPT_DIR/build\"") != std::string::npos,
+               "fll-output wrapper shell script should configure the emitted CMake project");
+        expect(wrapper_shell_script.find("cmake --build \"$SCRIPT_DIR/build\"") != std::string::npos,
+               "fll-output wrapper shell script should build the emitted CMake project");
+        const std::string wrapper_powershell_script = read_text(result.plan.native_wrapper_build_powershell_path);
+        expect(wrapper_powershell_script.find("cmake -S $scriptDir -B $buildDir") != std::string::npos,
+               "fll-output wrapper PowerShell script should configure the emitted CMake project");
+        expect(wrapper_powershell_script.find("cmake --build $buildDir") != std::string::npos,
+               "fll-output wrapper PowerShell script should build the emitted CMake project");
         if (native_cxx_is_available()) {
             fs::path compiled_wrapper_path;
             std::string compile_error;
@@ -1141,6 +1240,18 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                 expect(exported_symbols == declared_api_symbols,
                        "fll-output compiled wrapper exports should stay synchronized with the API manifest contract");
             }
+        }
+        if (cmake_is_available() && shell_is_available()) {
+            std::string script_error;
+            const bool script_built = build_native_wrapper_with_script(
+                result.plan.native_wrapper_build_script_path,
+                result.plan.launcher_output_path,
+                script_error);
+            if (!script_built && !script_error.empty()) {
+                std::cerr << "FAIL: " << script_error << "\n";
+            }
+            expect(script_built,
+                   "fll-output wrapper shell script should build the requested primary output");
         }
         if (cmake_is_available()) {
             fs::path cmake_output_path;
@@ -1202,6 +1313,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the wrapper source path");
         expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
                "fll-output manifest should record the wrapper CMake path");
+        expect(runtime_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
+               "fll-output manifest should record the wrapper shell build script path");
+        expect(runtime_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
+               "fll-output manifest should record the wrapper PowerShell build script path");
         expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the library-contract feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
@@ -1214,6 +1329,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
                "fll-output debug manifest should record the wrapper CMake path");
+        expect(debug_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
+               "fll-output debug manifest should record the wrapper shell build script path");
+        expect(debug_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
+               "fll-output debug manifest should record the wrapper PowerShell build script path");
     }
 
     fs::remove_all(temp_root, ignored);

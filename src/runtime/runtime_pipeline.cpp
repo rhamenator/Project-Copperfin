@@ -334,6 +334,26 @@ std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+std::string build_native_wrapper_shell_script_source() {
+    std::ostringstream stream;
+    stream << "#!/usr/bin/env sh\n";
+    stream << "set -eu\n";
+    stream << "SCRIPT_DIR=\"$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)\"\n";
+    stream << "cmake -S \"$SCRIPT_DIR\" -B \"$SCRIPT_DIR/build\"\n";
+    stream << "cmake --build \"$SCRIPT_DIR/build\"\n";
+    return stream.str();
+}
+
+std::string build_native_wrapper_powershell_script_source() {
+    std::ostringstream stream;
+    stream << "$ErrorActionPreference = 'Stop'\n";
+    stream << "$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\n";
+    stream << "$buildDir = Join-Path $scriptDir 'build'\n";
+    stream << "cmake -S $scriptDir -B $buildDir\n";
+    stream << "cmake --build $buildDir\n";
+    return stream.str();
+}
+
 std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "manifest_version=1\n";
@@ -1463,6 +1483,8 @@ RuntimePackagePlan create_runtime_package_plan(
         const std::string output_stem = output_file_name.stem().string();
         plan.native_wrapper_source_path = (wrapper_root / (output_stem + "_wrapper.cpp")).string();
         plan.native_wrapper_cmake_path = (wrapper_root / "CMakeLists.txt").string();
+        plan.native_wrapper_build_script_path = (wrapper_root / "build_wrapper.sh").string();
+        plan.native_wrapper_build_powershell_path = (wrapper_root / "build_wrapper.ps1").string();
     }
     if (plan.output_kind == BuildOutputKind::fll) {
         std::filesystem::path fll_api_manifest_file_name = output_file_name;
@@ -1572,6 +1594,8 @@ std::string build_runtime_manifest_text(
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
     stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
     stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
+    stream << "native_wrapper_build_script_path=" << quote_manifest_value(plan.native_wrapper_build_script_path) << "\n";
+    stream << "native_wrapper_build_powershell_path=" << quote_manifest_value(plan.native_wrapper_build_powershell_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
@@ -1676,6 +1700,8 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
     stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
+    stream << "native_wrapper_build_script_path=" << quote_manifest_value(plan.native_wrapper_build_script_path) << "\n";
+    stream << "native_wrapper_build_powershell_path=" << quote_manifest_value(plan.native_wrapper_build_powershell_path) << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
@@ -1761,6 +1787,18 @@ RuntimeMaterializeResult materialize_runtime_package(
             return {.ok = false, .error = error};
         }
         if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_cmake_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!write_text_file(plan.native_wrapper_build_script_path, build_native_wrapper_shell_script_source(), error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_build_script_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!write_text_file(plan.native_wrapper_build_powershell_path, build_native_wrapper_powershell_script_source(), error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_build_powershell_path, error)) {
             return {.ok = false, .error = error};
         }
         if (plan.output_kind == BuildOutputKind::fll) {
