@@ -2396,6 +2396,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "debug_manifest_version=1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
     stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
+    stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.debug_plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.debug_plan.startup_source_path) << "\n";
