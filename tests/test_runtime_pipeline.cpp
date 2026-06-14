@@ -80,6 +80,119 @@ bool dotnet_is_available() {
 #endif
 }
 
+std::string native_cxx_command() {
+    const char* configured = std::getenv("CXX");
+    if (configured != nullptr) {
+        const std::string value(configured);
+        if (!value.empty()) {
+            return value;
+        }
+    }
+#if defined(_WIN32)
+    return "c++";
+#else
+    return "c++";
+#endif
+}
+
+bool native_cxx_is_available() {
+#if defined(_WIN32)
+    std::vector<std::string> args = {native_cxx_command(), "--version"};
+    std::vector<const char*> argv;
+    argv.reserve(args.size() + 1U);
+    for (const auto& arg : args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    return _spawnvp(_P_WAIT, native_cxx_command().c_str(), const_cast<char* const*>(argv.data())) == 0;
+#else
+    return std::system(("command -v " + native_cxx_command() + " >/dev/null 2>&1").c_str()) == 0;
+#endif
+}
+
+bool compile_native_wrapper_scaffold(const std::filesystem::path& source_path, std::string& error) {
+    namespace fs = std::filesystem;
+    const fs::path compile_root = source_path.parent_path() / "native_wrapper_compile_check";
+    const fs::path output_path =
+#if defined(_WIN32)
+        compile_root / "wrapper_smoke.dll";
+#else
+        compile_root / "libwrapper_smoke.so";
+#endif
+    const fs::path build_log_path = compile_root / "native-wrapper-build.log";
+    std::error_code ignored;
+    fs::remove_all(compile_root, ignored);
+    fs::create_directories(compile_root);
+
+    std::vector<std::string> build_args = {
+        native_cxx_command(),
+        "-std=c++20",
+        "-shared",
+#if !defined(_WIN32)
+        "-fPIC",
+#endif
+        source_path.string(),
+        "-o",
+        output_path.string()
+    };
+
+    intptr_t exit_code = -1;
+#if defined(_WIN32)
+    std::vector<const char*> argv;
+    argv.reserve(build_args.size() + 1U);
+    for (const auto& arg : build_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    exit_code = _spawnvp(_P_WAIT, build_args.front().c_str(), const_cast<char* const*>(argv.data()));
+#else
+    const pid_t child = fork();
+    if (child == 0) {
+        ::close(STDOUT_FILENO);
+        ::close(STDERR_FILENO);
+        const int log_fd = ::creat(build_log_path.c_str(), 0644);
+        if (log_fd >= 0) {
+            ::dup2(log_fd, STDOUT_FILENO);
+            ::dup2(log_fd, STDERR_FILENO);
+            ::close(log_fd);
+        }
+
+        std::vector<const char*> argv;
+        argv.reserve(build_args.size() + 1U);
+        for (const auto& arg : build_args) {
+            argv.push_back(arg.c_str());
+        }
+        argv.push_back(nullptr);
+        ::execvp(build_args.front().c_str(), const_cast<char* const*>(argv.data()));
+        _exit(127);
+    }
+    if (child > 0) {
+        int status = 0;
+        if (waitpid(child, &status, 0) == child && WIFEXITED(status)) {
+            exit_code = WEXITSTATUS(status);
+        }
+    }
+#endif
+
+    if (exit_code == -1) {
+        error = "native wrapper compile failed to launch: " + std::error_code(errno, std::generic_category()).message();
+        return false;
+    }
+    if (exit_code != 0) {
+        error = "native wrapper compile failed";
+        if (fs::exists(build_log_path)) {
+            error += ":\n" + read_text(build_log_path);
+        }
+        return false;
+    }
+    if (!fs::exists(output_path)) {
+        error = "native wrapper compile did not produce an output library";
+        return false;
+    }
+
+    return true;
+}
+
 bool compile_csharp_artifact(const std::filesystem::path& source_path, std::string& error) {
     namespace fs = std::filesystem;
     const fs::path compile_root = source_path.parent_path() / "transpiled_compile_check";
@@ -625,6 +738,15 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper CMake should declare a shared library target");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "library-output wrapper CMake should forward the module-definition file on MSVC");
+        if (native_cxx_is_available()) {
+            std::string compile_error;
+            const bool compiled = compile_native_wrapper_scaffold(result.plan.native_wrapper_source_path, compile_error);
+            if (!compiled && !compile_error.empty()) {
+                std::cerr << "FAIL: " << compile_error << "\n";
+            }
+            expect(compiled,
+                   "library-output wrapper scaffold should compile under the host C++ toolchain");
+        }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -769,6 +891,15 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper CMake should declare a shared library target");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "fll-output wrapper CMake should forward the module-definition file on MSVC");
+        if (native_cxx_is_available()) {
+            std::string compile_error;
+            const bool compiled = compile_native_wrapper_scaffold(result.plan.native_wrapper_source_path, compile_error);
+            if (!compiled && !compile_error.empty()) {
+                std::cerr << "FAIL: " << compile_error << "\n";
+            }
+            expect(compiled,
+                   "fll-output wrapper scaffold should compile under the host C++ toolchain");
+        }
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
         expect(api_manifest.find("output_kind=fll") != std::string::npos,
