@@ -1237,6 +1237,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the project title");
         expect(runtime_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                "library-output manifest should record the project path");
+        expect(runtime_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
+               "library-output manifest should record the package root");
         expect(runtime_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "library-output manifest should record the content root");
         expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
@@ -1304,6 +1306,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the project title");
         expect(debug_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                "library-output debug manifest should record the project path");
+        expect(debug_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
+               "library-output debug manifest should record the package root");
         expect(debug_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "library-output debug manifest should record the content root");
         expect(debug_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
@@ -1376,6 +1380,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the project title in the rewritten debug manifest");
                 expect(built_debug_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                        "library-output runtime pipeline should preserve the project path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("package_root=" + quote_manifest_value(build_result.plan.package_root)) != std::string::npos,
+                       "library-output runtime pipeline should preserve the package root in the rewritten debug manifest");
                 expect(built_debug_manifest.find("content_root=" + quote_manifest_value(build_result.plan.content_root)) != std::string::npos,
                        "library-output runtime pipeline should preserve the content root in the rewritten debug manifest");
                 expect(built_debug_manifest.find("ast_manifest_path=" + quote_manifest_value(build_result.plan.ast_manifest_path)) != std::string::npos,
@@ -1771,6 +1777,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the project title");
         expect(runtime_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                "fll-output manifest should record the project path");
+        expect(runtime_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
+               "fll-output manifest should record the package root");
         expect(runtime_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "fll-output manifest should record the content root");
         expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
@@ -1790,6 +1798,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the project title");
         expect(debug_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                "fll-output debug manifest should record the project path");
+        expect(debug_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
+               "fll-output debug manifest should record the package root");
         expect(debug_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "fll-output debug manifest should record the content root");
         expect(debug_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
@@ -1890,6 +1900,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the project title in the rewritten debug manifest");
                 expect(built_debug_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
                        "fll-output runtime pipeline should preserve the project path in the rewritten debug manifest");
+                expect(built_debug_manifest.find("package_root=" + quote_manifest_value(build_result.plan.package_root)) != std::string::npos,
+                       "fll-output runtime pipeline should preserve the package root in the rewritten debug manifest");
                 expect(built_debug_manifest.find("content_root=" + quote_manifest_value(build_result.plan.content_root)) != std::string::npos,
                        "fll-output runtime pipeline should preserve the content root in the rewritten debug manifest");
                 expect(built_debug_manifest.find("ast_manifest_path=" + quote_manifest_value(build_result.plan.ast_manifest_path)) != std::string::npos,

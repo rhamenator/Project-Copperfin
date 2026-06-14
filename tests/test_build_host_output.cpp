@@ -469,6 +469,8 @@ void run_library_build_host_smoke(
                "build host manifest should record the project title for " + extension + " outputs");
         expect(manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
                "build host manifest should record the project path for " + extension + " outputs");
+        expect(manifest_text.find("package_root=" + (output_dir / "LibraryDemo").string()) != std::string::npos,
+               "build host manifest should record the package root for " + extension + " outputs");
         expect(manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
                "build host manifest should record the content root for " + extension + " outputs");
         expect(manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
@@ -519,6 +521,8 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the project title for " + extension + " outputs");
         expect(debug_manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
                "build host debug manifest should record the project path for " + extension + " outputs");
+        expect(debug_manifest_text.find("package_root=" + (output_dir / "LibraryDemo").string()) != std::string::npos,
+               "build host debug manifest should record the package root for " + extension + " outputs");
         expect(debug_manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
                "build host debug manifest should record the content root for " + extension + " outputs");
         expect(debug_manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
