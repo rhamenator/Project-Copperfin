@@ -4835,6 +4835,51 @@ void test_yield_is_allowed_in_default_critical_section_is_policy_exception() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_enter_critical_yield_policy_exception_is_small_regression() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_enter_critical_small_regression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_enter_critical_small_regression_test.prg";
+    write_text(
+        main_path,
+        "lEntered = .F.\n"
+        "lAfterYield = .F.\n"
+        "ENTER CRITICAL\n"
+        "lEntered = .T.\n"
+        "YIELD\n"
+        "lAfterYield = .T.\n"
+        "EXIT CRITICAL\n"
+        "RETURN\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ENTER CRITICAL + YIELD should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield";
+    }), "ENTER CRITICAL + YIELD should emit runtime.yield");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "ENTER CRITICAL + YIELD should stay in policy exception");
+
+    const auto entered = state.globals.find("lentered");
+    const auto after_yield = state.globals.find("lafteryield");
+    expect(entered != state.globals.end(), "ENTER CRITICAL body should run");
+    expect(after_yield != state.globals.end(), "YIELD should continue execution");
+    if (entered != state.globals.end()) {
+        expect(entered->second.boolean_value, "ENTER CRITICAL flag should be true");
+    }
+    if (after_yield != state.globals.end()) {
+        expect(after_yield->second.boolean_value, "Execution should resume after YIELD");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_is_allowed_in_critical_section_is_policy_exception() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_critical_policy_exception";
@@ -6032,6 +6077,7 @@ int main() {
     test_yield_inside_critical_section_is_allowed();
     test_yield_allowed_in_enter_critical_is_small_regression();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
+    test_enter_critical_yield_policy_exception_is_small_regression();
     test_yield_preserves_fault_metadata_when_followed_by_error();
     test_on_error_resume_restores_fault_session_and_cursor_state();
     test_retry_reexecutes_faulting_statement();
