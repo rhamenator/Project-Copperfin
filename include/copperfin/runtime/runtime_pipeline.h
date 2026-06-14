@@ -64,7 +64,10 @@ struct RuntimePackagePlan {
     std::string runtime_host_sha256;
     BuildConfiguration configuration = BuildConfiguration::debug;
     bool security_enabled = false;
+    bool requested_dotnet_launcher = false;
     bool emit_dotnet_launcher = true;
+    std::string launcher_mode;
+    std::string launcher_fallback;
     std::vector<RuntimePackageAsset> assets;
     std::vector<RuntimeArtifactDigest> extension_payload_digests;
     RuntimeDebugLaunchPlan debug_plan{};

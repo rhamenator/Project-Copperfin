@@ -116,11 +116,21 @@ void test_materialize_runtime_package() {
         expect(runtime_manifest.find("runtime_host_sha256=") != std::string::npos, "runtime manifest should include a runtime host SHA-256 digest");
         expect(runtime_manifest.find("security_role=") != std::string::npos, "runtime manifest should include the effective security role");
         expect(runtime_manifest.find("audit_log_path=") != std::string::npos, "runtime manifest should include the audit log path");
+        expect(runtime_manifest.find("launcher_mode=dotnet_launcher") != std::string::npos, "runtime manifest should record the effective .NET launcher mode");
+        expect(runtime_manifest.find("launcher_fallback=none") != std::string::npos, "runtime manifest should record the absence of launcher fallback");
         expect(runtime_manifest.find("dotnet_policy_allowlist=") != std::string::npos, "runtime manifest should include .NET policy allowlist metadata");
         expect(runtime_manifest.find("dotnet_policy_denylist=") != std::string::npos, "runtime manifest should include .NET policy denylist metadata");
         expect(runtime_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos, "runtime manifest should include .NET parity matrix metadata");
         expect(runtime_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos, "runtime manifest should include .NET gateway allow decision diagnostics");
         expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos, "runtime manifest should include .NET gateway deny decision diagnostics");
+        expect(runtime_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
+               "runtime manifest should expose the requested .NET launcher feature flag");
+        expect(runtime_manifest.find("feature_flag=launcher.dotnet.active|true|host_compatibility") != std::string::npos,
+               "runtime manifest should expose the active .NET launcher feature flag");
+        expect(debug_manifest.find("launcher_mode=dotnet_launcher") != std::string::npos,
+               "debug manifest should record the effective launcher mode");
+        expect(debug_manifest.find("launcher_fallback=none") != std::string::npos,
+               "debug manifest should record the launcher fallback state");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -254,6 +264,87 @@ void test_materialize_excluded_xasset_startup_package() {
     if (result.ok) {
         expect(fs::exists(fs::path(result.plan.content_root) / "startup.scx"), "packaged xasset startup should be staged even if excluded");
         expect(fs::exists(fs::path(result.plan.content_root) / "startup.sct"), "packaged xasset memo sidecar should be staged");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dotnet_fallback";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "dotnet_fallback.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DotNetFallback";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "DotNetFallback";
+    workspace.build_plan.output_path = (output_dir / "DotNetFallback.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    extensibility_profile.dotnet_output.available = false;
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        extensibility_profile,
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "dotnet-fallback plan should be created");
+    expect(plan.requested_dotnet_launcher, "dotnet-fallback plan should record the requested .NET launcher");
+    expect(!plan.emit_dotnet_launcher, "dotnet-fallback plan should disable .NET launcher emission when unavailable");
+    expect(plan.launcher_mode == "native_runtime_host", "dotnet-fallback plan should resolve to native runtime host mode");
+    expect(plan.launcher_fallback == "dotnet_output_unavailable", "dotnet-fallback plan should record the fallback reason");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        extensibility_profile,
+        runtime_host.string());
+
+    expect(result.ok, "dotnet-fallback package should materialize");
+    if (result.ok) {
+        expect(!fs::exists(result.plan.launcher_project_path),
+               "dotnet-fallback package should not emit a launcher project when .NET output is unavailable");
+        expect(!fs::exists(result.plan.launcher_source_path),
+               "dotnet-fallback package should not emit launcher source when .NET output is unavailable");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("launcher_mode=native_runtime_host") != std::string::npos,
+               "dotnet-fallback manifest should record the native runtime host mode");
+        expect(runtime_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
+               "dotnet-fallback manifest should record the .NET-unavailable fallback reason");
+        expect(runtime_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
+               "dotnet-fallback manifest should preserve the requested .NET launcher feature flag");
+        expect(runtime_manifest.find("feature_flag=launcher.dotnet.active|false|host_compatibility") != std::string::npos,
+               "dotnet-fallback manifest should record the inactive .NET launcher feature flag");
+        expect(debug_manifest.find("launcher_mode=native_runtime_host") != std::string::npos,
+               "dotnet-fallback debug manifest should record the native runtime host mode");
+        expect(debug_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
+               "dotnet-fallback debug manifest should record the fallback reason");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -797,6 +888,7 @@ int main() {
     test_materialize_runtime_package();
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
+    test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

@@ -340,6 +340,17 @@ bool is_prg_path(const std::string& value) {
     return lowercase_copy(trim_copy(std::filesystem::path(value).extension().string())) == ".prg";
 }
 
+void append_feature_flag_line(
+    std::ostringstream& stream,
+    std::string_view name,
+    bool enabled,
+    std::string_view category) {
+    stream << "feature_flag="
+           << name << "|"
+           << (enabled ? "true" : "false") << "|"
+           << category << "\n";
+}
+
 bool is_xasset_path(const std::string& value) {
     const std::string extension = trim_copy(std::filesystem::path(value).extension().string());
     return extension == ".scx" ||
@@ -441,7 +452,13 @@ RuntimePackagePlan create_runtime_package_plan(
         : workspace.project_title;
     plan.configuration = configuration;
     plan.security_enabled = enable_security;
-    plan.emit_dotnet_launcher = emit_dotnet_launcher;
+    plan.requested_dotnet_launcher = emit_dotnet_launcher;
+    plan.emit_dotnet_launcher = emit_dotnet_launcher && extensibility_profile.dotnet_output.available;
+    plan.launcher_mode = plan.emit_dotnet_launcher ? "dotnet_launcher" : "native_runtime_host";
+    plan.launcher_fallback =
+        (plan.requested_dotnet_launcher && !plan.emit_dotnet_launcher)
+            ? "dotnet_output_unavailable"
+            : "none";
 
     if (!workspace.available) {
         plan.warnings.push_back("Project workspace is not available.");
@@ -535,6 +552,8 @@ std::string build_runtime_manifest_text(
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
     stream << "security_roles=" << security_profile.roles.size() << "\n";
+    stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
+    stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
     stream << "dotnet_policy_allowlist=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
@@ -563,6 +582,16 @@ std::string build_runtime_manifest_text(
 
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
+    append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
+    append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
+    append_feature_flag_line(stream, "runtime.host.native", true, "host_compatibility");
+    append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
+    append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
+    append_feature_flag_line(
+        stream,
+        "security.native",
+        plan.security_enabled && security_profile.available,
+        "security");
 
     for (const auto& asset : plan.assets) {
         stream << "asset="
@@ -597,6 +626,8 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "working_directory=" << quote_manifest_value(plan.debug_plan.working_directory) << "\n";
     stream << "supports_breakpoints=" << (plan.debug_plan.supports_breakpoints ? "true" : "false") << "\n";
     stream << "supports_step_debugging=" << (plan.debug_plan.supports_step_debugging ? "true" : "false") << "\n";
+    stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
+    stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
     return stream.str();
 }
@@ -689,7 +720,7 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
 
-    return {.ok = true, .plan = std::move(materialized_plan)};
+    return {.ok = true, .plan = std::move(materialized_plan), .error = {}};
 }
 
 }  // namespace copperfin::runtime
