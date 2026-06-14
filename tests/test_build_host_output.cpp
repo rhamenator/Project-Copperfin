@@ -231,14 +231,18 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     std::istringstream input(read_text(log_path));
     std::string line;
     while (std::getline(input, line)) {
-        const std::size_t name_pos = line.find_last_of(" \t");
-        if (name_pos == std::string::npos || name_pos + 1U >= line.size()) {
+        std::istringstream line_input(line);
+        std::string address;
+        char symbol_type = '\0';
+        std::string symbol;
+        if (!(line_input >> address >> symbol_type >> symbol)) {
             continue;
         }
-        const std::string symbol = line.substr(name_pos + 1U);
-        if (!symbol.empty()) {
-            symbols.insert(symbol);
+        const unsigned char normalized_type = static_cast<unsigned char>(symbol_type);
+        if (!std::isupper(normalized_type) || symbol_type == 'V' || symbol_type == 'W') {
+            continue;
         }
+        symbols.insert(symbol);
     }
     return symbols;
 #endif
@@ -701,10 +705,26 @@ void run_library_build_host_smoke(
             expect(exported_symbols == declared_api_symbols,
                    "build host should preserve the dedicated DLL API-manifest export contract");
             const std::string api_manifest = read_text(library_api_manifest_path);
+            const fs::path wrapper_source_path = manifest_value_for_key(manifest_text, "native_wrapper_source_path");
+            const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
+            const fs::path wrapper_cmake_path = manifest_value_for_key(manifest_text, "native_wrapper_cmake_path");
+            const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("output_kind=dll") != std::string::npos,
                    "build host DLL API manifest should declare the DLL output kind");
             expect(api_manifest.find("callable_convention=vfp_declare_default") != std::string::npos,
                    "build host DLL API manifest should declare the VFP DLL calling convention");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address)") != std::string::npos,
+                   "build host DLL wrapper should derive its loaded module path");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address)") != std::string::npos,
+                   "build host DLL wrapper should derive a sibling manifest path");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,
+                   "build host DLL wrapper should derive a sibling runtime-host path");
+            expect(wrapper_source.find("(void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&InitLibrary));") != std::string::npos,
+                   "build host DLL wrapper should wire InitLibrary to the packaged manifest helper");
+            expect(wrapper_source.find("(void)copperfin_runtime_host_path(reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
+                   "build host DLL wrapper should wire AddNumbers to the packaged runtime-host helper");
+            expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
+                   "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
 
         if (extension == "fll") {
@@ -771,12 +791,20 @@ void run_library_build_host_smoke(
             const std::string api_manifest = read_text(fll_api_manifest_path);
             const fs::path wrapper_source_path = manifest_value_for_key(manifest_text, "native_wrapper_source_path");
             const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
+            const fs::path wrapper_cmake_path = manifest_value_for_key(manifest_text, "native_wrapper_cmake_path");
+            const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
                    "build host FLL manifest should declare the FoxTable registration symbol");
             expect(api_manifest.find("callable_signature=ParamBlk*") != std::string::npos,
                    "build host FLL manifest should declare the ParamBlk callable signature");
             expect(api_manifest.find("default_return_helper=_RetInt") != std::string::npos,
                    "build host FLL manifest should declare the default return helper");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address)") != std::string::npos,
+                   "build host FLL wrapper should derive its loaded module path");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address)") != std::string::npos,
+                   "build host FLL wrapper should derive a sibling manifest path");
+            expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,
+                   "build host FLL wrapper should derive a sibling runtime-host path");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -791,6 +819,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record InitLibrary metadata in the FoxInfo table");
             expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                    "build host FLL wrapper should record AddNumbers metadata in the FoxInfo table");
+            expect(wrapper_source.find("(void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&InitLibrary));") != std::string::npos,
+                   "build host FLL wrapper should wire InitLibrary to the packaged manifest helper");
+            expect(wrapper_source.find("(void)copperfin_runtime_host_path(reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
+                   "build host FLL wrapper should wire AddNumbers to the packaged runtime-host helper");
+            expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
+                   "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary arity");
             expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,

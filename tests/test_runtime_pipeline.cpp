@@ -301,11 +301,16 @@ bool compile_native_wrapper_scaffold(
         "-shared",
 #if !defined(_WIN32)
         "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
 #endif
         source_path.string(),
         "-o",
         output_path.string()
     };
+#if !defined(_WIN32) && !defined(__APPLE__)
+    build_args.push_back("-ldl");
+#endif
 
     intptr_t exit_code = -1;
 #if defined(_WIN32)
@@ -469,14 +474,18 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     std::istringstream input(read_text(log_path));
     std::string line;
     while (std::getline(input, line)) {
-        const std::size_t name_pos = line.find_last_of(" \t");
-        if (name_pos == std::string::npos || name_pos + 1U >= line.size()) {
+        std::istringstream line_input(line);
+        std::string address;
+        char symbol_type = '\0';
+        std::string symbol;
+        if (!(line_input >> address >> symbol_type >> symbol)) {
             continue;
         }
-        const std::string symbol = line.substr(name_pos + 1U);
-        if (!symbol.empty()) {
-            symbols.insert(symbol);
+        const unsigned char normalized_type = static_cast<unsigned char>(symbol_type);
+        if (!std::isupper(normalized_type) || symbol_type == 'V' || symbol_type == 'W') {
+            continue;
         }
+        symbols.insert(symbol);
     }
     return symbols;
 #endif
@@ -1113,19 +1122,35 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should identify the generated scaffold");
         expect(wrapper_source.find("extern \"C\"") != std::string::npos,
                "library-output wrapper source should use C exports");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address)") != std::string::npos,
+               "library-output wrapper source should derive its loaded module path");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address)") != std::string::npos,
+               "library-output wrapper source should derive a sibling manifest path");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,
+               "library-output wrapper source should derive a sibling runtime-host path");
+        expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
+               "library-output wrapper source should target the packaged manifest filename");
+        expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
+               "library-output wrapper source should target the packaged runtime-host filename");
         expect(wrapper_source.find("#define COPPERFIN_VFP_DLL_CALL __stdcall") != std::string::npos,
                "library-output wrapper source should declare the VFP DLL calling-convention macro");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int tcMode)") != std::string::npos,
                "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tcMode;") != std::string::npos,
                "library-output wrapper source should consume placeholder DLL arguments");
+        expect(wrapper_source.find("(void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&InitLibrary));") != std::string::npos,
+               "library-output wrapper source should wire InitLibrary to the packaged manifest helper");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
                "library-output wrapper source should consume multiple placeholder DLL arguments");
+        expect(wrapper_source.find("(void)copperfin_runtime_host_path(reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
+               "library-output wrapper source should wire AddNumbers to the packaged runtime-host helper");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "library-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
+               "library-output wrapper CMake should link dl on supported Unix hosts for module-path discovery");
         expect(wrapper_cmake.find("PREFIX \"\" SUFFIX \".dll\"") != std::string::npos,
                "library-output wrapper CMake should preserve the requested DLL filename shape");
         expect(wrapper_cmake.find("LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
@@ -1668,6 +1693,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         const std::string wrapper_source = read_text(result.plan.native_wrapper_source_path);
         expect(wrapper_source.find("Generated Copperfin native wrapper scaffold") != std::string::npos,
                "fll-output wrapper source should identify the generated scaffold");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address)") != std::string::npos,
+               "fll-output wrapper source should derive its loaded module path");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address)") != std::string::npos,
+               "fll-output wrapper source should derive a sibling manifest path");
+        expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,
+               "fll-output wrapper source should derive a sibling runtime-host path");
+        expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
+               "fll-output wrapper source should target the packaged manifest filename");
+        expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
+               "fll-output wrapper source should target the packaged runtime-host filename");
         expect(wrapper_source.find("struct ParamBlk") != std::string::npos,
                "fll-output wrapper source should declare a ParamBlk-shaped callable surface");
         expect(wrapper_source.find("static int _RetInt(int value)") != std::string::npos,
@@ -1676,6 +1711,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should scaffold ParamBlk procedure entrypoints");
         expect(wrapper_source.find("int AddNumbers(ParamBlk* parm)") != std::string::npos,
                "fll-output wrapper source should scaffold ParamBlk function entrypoints");
+        expect(wrapper_source.find("(void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&InitLibrary));") != std::string::npos,
+               "fll-output wrapper source should wire InitLibrary to the packaged manifest helper");
+        expect(wrapper_source.find("(void)copperfin_runtime_host_path(reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
+               "fll-output wrapper source should wire AddNumbers to the packaged runtime-host helper");
         expect(wrapper_source.find("return _RetInt(-1);") != std::string::npos,
                "fll-output wrapper source should route stub returns through the default return helper");
         expect(wrapper_source.find("struct CopperfinFoxInfoRecord") != std::string::npos,
@@ -1703,6 +1742,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
                "fll-output wrapper CMake should declare a shared library target");
+        expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
+               "fll-output wrapper CMake should link dl on supported Unix hosts for module-path discovery");
         expect(wrapper_cmake.find("PREFIX \"\" SUFFIX \".fll\"") != std::string::npos,
                "fll-output wrapper CMake should preserve the requested FLL filename shape");
         expect(wrapper_cmake.find("LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,

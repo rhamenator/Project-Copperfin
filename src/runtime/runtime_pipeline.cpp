@@ -609,11 +609,51 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "// Generated Copperfin native wrapper scaffold\n";
     stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
+    stream << "#include <filesystem>\n";
+    stream << "#include <string>\n";
     stream << "#if defined(_WIN32)\n";
+    stream << "#include <windows.h>\n";
     stream << "#define COPPERFIN_EXPORT extern \"C\" __declspec(dllexport)\n";
     stream << "#else\n";
-    stream << "#define COPPERFIN_EXPORT extern \"C\"\n";
+    stream << "#include <dlfcn.h>\n";
+    stream << "#define COPPERFIN_EXPORT extern \"C\" __attribute__((visibility(\"default\")))\n";
     stream << "#endif\n\n";
+    stream << "static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address) {\n";
+    stream << "#if defined(_WIN32)\n";
+    stream << "    HMODULE module = nullptr;\n";
+    stream << "    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,\n";
+    stream << "                            reinterpret_cast<LPCSTR>(symbol_address),\n";
+    stream << "                            &module) || module == nullptr) {\n";
+    stream << "        return {};\n";
+    stream << "    }\n";
+    stream << "    char buffer[MAX_PATH] = {};\n";
+    stream << "    const DWORD length = GetModuleFileNameA(module, buffer, MAX_PATH);\n";
+    stream << "    if (length == 0U) {\n";
+    stream << "        return {};\n";
+    stream << "    }\n";
+    stream << "    return std::filesystem::path(std::string(buffer, buffer + length)).lexically_normal();\n";
+    stream << "#else\n";
+    stream << "    Dl_info info{};\n";
+    stream << "    if (dladdr(symbol_address, &info) == 0 || info.dli_fname == nullptr) {\n";
+    stream << "        return {};\n";
+    stream << "    }\n";
+    stream << "    return std::filesystem::path(info.dli_fname).lexically_normal();\n";
+    stream << "#endif\n";
+    stream << "}\n\n";
+    stream << "static std::filesystem::path copperfin_wrapper_module_directory(void* symbol_address) {\n";
+    stream << "    const auto module_path = copperfin_wrapper_module_path(symbol_address);\n";
+    stream << "    return module_path.empty() ? std::filesystem::path{} : module_path.parent_path();\n";
+    stream << "}\n\n";
+    stream << "static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address) {\n";
+    stream << "    return copperfin_wrapper_module_directory(symbol_address) / \"app.cfmanifest\";\n";
+    stream << "}\n\n";
+    stream << "static std::filesystem::path copperfin_runtime_host_path(void* symbol_address) {\n";
+    stream << "#if defined(_WIN32)\n";
+    stream << "    return copperfin_wrapper_module_directory(symbol_address) / \"copperfin_runtime_host.exe\";\n";
+    stream << "#else\n";
+    stream << "    return copperfin_wrapper_module_directory(symbol_address) / \"copperfin_runtime_host\";\n";
+    stream << "#endif\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -646,6 +686,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         for (const auto& symbol : plan.exported_symbols) {
             stream << "COPPERFIN_EXPORT int " << symbol << "(ParamBlk* parm) {\n";
             stream << "    (void)parm;\n";
+            stream << "    (void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    (void)copperfin_runtime_host_path(reinterpret_cast<void*>(&" << symbol << "));\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -710,6 +752,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             for (std::size_t index = 0; index < effective_names.size(); ++index) {
                 stream << "    (void)" << sanitize_cpp_identifier(effective_names[index], index) << ";\n";
             }
+            stream << "    (void)copperfin_runtime_manifest_path(reinterpret_cast<void*>(&" << symbol << "));\n";
+            stream << "    (void)copperfin_runtime_host_path(reinterpret_cast<void*>(&" << symbol << "));\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
@@ -741,6 +785,11 @@ std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
     stream << "project(" << output_stem << "Wrapper LANGUAGES CXX)\n\n";
     stream << "add_library(" << output_stem << " SHARED " << wrapper_file_name << ")\n";
     stream << "target_compile_features(" << output_stem << " PRIVATE cxx_std_20)\n";
+    stream << "set_target_properties(" << output_stem
+           << " PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES)\n";
+    stream << "if(UNIX AND NOT APPLE)\n";
+    stream << "  target_link_libraries(" << output_stem << " PRIVATE dl)\n";
+    stream << "endif()\n";
     stream << "set_target_properties(" << output_stem
            << " PROPERTIES OUTPUT_NAME \"" << output_stem
            << "\" PREFIX \"\" SUFFIX \"" << output_extension

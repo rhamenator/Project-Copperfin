@@ -57,6 +57,7 @@ Current local CHM snapshot from the installed VFP help set:
 The native runtime/parser currently has first-pass support for these command families:
 
 - Runtime-host packaging/security notes — security-enabled package startup now preserves recorded extension-payload relative-path fidelity during digest verification, so same-named files at the package root cannot satisfy nested payload hashes outside the recorded package location
+- Native-wrapper scaffold notes — generated DLL/FLL native-wrapper scaffolds now derive sibling `app.cfmanifest` and `copperfin_runtime_host(.exe)` paths from the loaded module location, the host-toolchain compile check now matches the emitted CMake visibility policy, and export-contract validation ignores weak toolchain leakage so wrapper build checks track only the deliberate callable/data export surface
 - Runtime-host AI/MCP policy notes — AI-assisted federation planning now requires the native `ai.mcp` role permission through `COPPERFIN_SECURITY_ROLE` (defaulting to `developer`), so optional AI planner requests do not bypass the existing security profile
 - FLL registration notes — generated `FoxInfo` metadata now also carries pipe-separated parameter-name metadata (`tcMode`, `tnLeft|tnRight`, and so on) beside routine kind, source provenance, and arity in the honest wrapper scaffold
 - Exported routine metadata notes — DLL/FLL callable contracts now also preserve whether each exported routine used `PARAMETERS` or `LPARAMETERS`, and the FLL `FoxInfo` scaffold carries that declaration-style metadata too
