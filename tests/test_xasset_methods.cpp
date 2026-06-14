@@ -32,6 +32,14 @@ void expect_substring_order(
     }
 }
 
+bool has_action_id(
+    const std::vector<copperfin::runtime::XAssetActionBinding>& actions,
+    const std::string& expected_action_id) {
+    return std::any_of(actions.begin(), actions.end(), [&](const auto& action) {
+        return action.action_id == expected_action_id;
+    });
+}
+
 copperfin::vfp::DbfRecord make_record(
     std::size_t record_index,
     std::initializer_list<copperfin::vfp::DbfRecordValue> values) {
@@ -245,13 +253,37 @@ void test_form_root_object_path_ignores_comments_and_data_environment() {
            "root form selection should ignore comment/data-environment records and choose top-level form object");
     expect(model.actions.size() >= 4U,
            "form executable model should include actions for data-environment, root form, and nested child object methods");
-    const bool has_nested_action = std::any_of(
-        model.actions.begin(),
-        model.actions.end(),
-        [](const copperfin::runtime::XAssetActionBinding& action) {
-            return action.action_id == "frmprimary.txtname.valid";
-        });
-    expect(has_nested_action, "nested object methods should retain full object-graph action ids");
+    expect(model.startup_routines.size() == 3U,
+           "data-environment and root form methods should both participate in form startup");
+    expect(model.startup_lines.size() == 3U, "startup lines should expose the startup event-order seam");
+    if (model.startup_lines.size() == 3U) {
+        expect(model.startup_lines[0] == "DO __cf_Dataenvironment_OpenTables",
+               "data-environment OpenTables should start form startup");
+        expect(model.startup_lines[1] == "DO __cf_frmPrimary_Load",
+               "root form Load should follow data-environment startup");
+        expect(model.startup_lines[2] == "DO __cf_frmPrimary_Init",
+               "root form Init should follow Load");
+    }
+    expect(model.shutdown_lines.empty(), "no form/class shutdown methods should be generated for this asset");
+
+    expect(has_action_id(model.actions, "dataenvironment.opentables"), "data-environment methods should remain dispatchable");
+    expect(has_action_id(model.actions, "frmprimary.load"), "root form load should remain dispatchable");
+    expect(has_action_id(model.actions, "frmprimary.init"), "root form init should remain dispatchable");
+    expect(has_action_id(model.actions, "frmprimary.txtname.valid"), "nested object methods should retain full object-graph action ids");
+
+    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    expect(bootstrap.find("DO __cf_Dataenvironment_OpenTables") != std::string::npos, "bootstrap should dispatch data-environment OpenTables");
+    expect(bootstrap.find("DO __cf_frmPrimary_Load") != std::string::npos, "bootstrap should dispatch root form Load");
+    expect(bootstrap.find("DO __cf_frmPrimary_Init") != std::string::npos, "bootstrap should dispatch root form Init");
+    expect_substring_order(
+        bootstrap,
+        {
+            "DO __cf_Dataenvironment_OpenTables",
+            "DO __cf_frmPrimary_Load",
+            "DO __cf_frmPrimary_Init",
+            "READ EVENTS"
+        },
+        "bootstrap should sequence data-environment startup into form startup");
 }
 
 void test_build_menu_xasset_executable_model() {
