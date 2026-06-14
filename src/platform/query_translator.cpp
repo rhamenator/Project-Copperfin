@@ -48,6 +48,224 @@ std::size_t find_keyword(const std::string& upper_sql, const std::string& keywor
     return std::string::npos;
 }
 
+std::size_t find_top_level_keyword(
+    const std::string& upper_sql,
+    std::size_t start_pos,
+    const std::string& keyword) {
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+    int parentheses_depth = 0;
+
+    for (std::size_t index = start_pos; index < upper_sql.size(); ++index) {
+        const char ch = upper_sql[index];
+        if (in_single_quote)
+        {
+            if (ch == '\'' && (index + 1U) < upper_sql.size() && upper_sql[index + 1U] == '\'')
+            {
+                ++index;
+                continue;
+            }
+            if (ch == '\'')
+            {
+                in_single_quote = false;
+            }
+            continue;
+        }
+        if (in_double_quote)
+        {
+            if (ch == '"')
+            {
+                in_double_quote = false;
+            }
+            continue;
+        }
+        if (ch == '\'')
+        {
+            in_single_quote = true;
+            continue;
+        }
+        if (ch == '"')
+        {
+            in_double_quote = true;
+            continue;
+        }
+
+        if (ch == '(')
+        {
+            ++parentheses_depth;
+            continue;
+        }
+        if (ch == ')')
+        {
+            if (parentheses_depth > 0)
+            {
+                --parentheses_depth;
+            }
+            continue;
+        }
+        if (parentheses_depth != 0)
+        {
+            continue;
+        }
+        if (index + keyword.size() <= upper_sql.size() &&
+            upper_sql.compare(index, keyword.size(), keyword) == 0)
+        {
+            const std::size_t keyword_end = index + keyword.size();
+            const bool before_ok = (index == 0U) || !is_word_char(upper_sql[index - 1U]);
+            const bool after_ok = (keyword_end >= upper_sql.size()) || !is_word_char(upper_sql[keyword_end]);
+            if (before_ok && after_ok)
+            {
+                return index;
+            }
+        }
+    }
+    return std::string::npos;
+}
+
+bool is_projection_identifier(std::string_view value) {
+    if (value.empty())
+    {
+        return false;
+    }
+    if (!(std::isalpha(static_cast<unsigned char>(value.front())) != 0 || value.front() == '_'))
+    {
+        return false;
+    }
+    return std::all_of(value.begin(), value.end(), [](char ch) {
+        return std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_';
+    });
+}
+
+std::vector<QueryProjectionField> extract_projection_fields_from_sql(std::string_view translated_sql) {
+    std::vector<QueryProjectionField> projection_fields;
+
+    const std::string upper_sql = uppercase_copy(std::string(translated_sql));
+    const std::size_t select_pos = find_keyword(upper_sql, "SELECT");
+    if (select_pos == std::string::npos)
+    {
+        return projection_fields;
+    }
+
+    const std::size_t projection_start = select_pos + 6U;
+    const std::size_t from_pos = find_top_level_keyword(upper_sql, projection_start, "FROM");
+    const std::size_t projection_end = (from_pos == std::string::npos) ? translated_sql.size() : from_pos;
+
+    if (projection_end <= projection_start)
+    {
+        return projection_fields;
+    }
+
+    std::string_view projection_clause = translated_sql.substr(projection_start, projection_end - projection_start);
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+    int parentheses_depth = 0;
+    std::size_t field_start = 0U;
+    for (std::size_t index = 0U; index <= projection_clause.size(); ++index)
+    {
+        const bool at_end = (index >= projection_clause.size());
+        const char ch = at_end ? ',' : projection_clause[index];
+        if (in_single_quote)
+        {
+            if (!at_end && ch == '\'' && (index + 1U) < projection_clause.size() && projection_clause[index + 1U] == '\'')
+            {
+                ++index;
+                continue;
+            }
+            if (!at_end && ch == '\'')
+            {
+                in_single_quote = false;
+            }
+            continue;
+        }
+        if (in_double_quote)
+        {
+            if (!at_end && ch == '"')
+            {
+                in_double_quote = false;
+            }
+            continue;
+        }
+        if (!at_end && ch == '\'')
+        {
+            in_single_quote = true;
+            continue;
+        }
+        if (!at_end && ch == '"')
+        {
+            in_double_quote = true;
+            continue;
+        }
+        if (ch == '(')
+        {
+            ++parentheses_depth;
+            continue;
+        }
+        if (ch == ')')
+        {
+            if (parentheses_depth > 0)
+            {
+                --parentheses_depth;
+            }
+            continue;
+        }
+
+        if ((at_end || ch == ',') && parentheses_depth == 0) {
+            const std::string_view raw_field = projection_clause.substr(field_start, index - field_start);
+            std::string field_text = trim_copy(raw_field);
+            field_start = index + 1U;
+            if (field_text.empty())
+            {
+                continue;
+            }
+
+            if (field_text == "*")
+            {
+                projection_fields.push_back({.expression = "*", .alias = "", .wildcard = true});
+                continue;
+            }
+
+            const std::string upper_field = uppercase_copy(field_text);
+            const std::size_t as_pos = find_top_level_keyword(upper_field, 0U, "AS");
+            QueryProjectionField field;
+            if (as_pos != std::string::npos)
+            {
+                field.expression = trim_copy(field_text.substr(0U, as_pos));
+                field.alias = trim_copy(field_text.substr(as_pos + 2U));
+            }
+            else
+            {
+                std::size_t alias_end = field_text.size();
+                while (alias_end > 0U && std::isspace(static_cast<unsigned char>(field_text[alias_end - 1U])) != 0)
+                {
+                    --alias_end;
+                }
+                std::size_t alias_start = alias_end;
+                while (alias_start > 0U && (std::isalnum(static_cast<unsigned char>(field_text[alias_start - 1U])) != 0 ||
+                                           field_text[alias_start - 1U] == '_'))
+                {
+                    --alias_start;
+                }
+
+                if (alias_start > 0U && alias_end > alias_start &&
+                    std::isspace(static_cast<unsigned char>(field_text[alias_start - 1U])) != 0 &&
+                    is_projection_identifier(field_text.substr(alias_start, alias_end - alias_start)))
+                {
+                    field.alias = trim_copy(field_text.substr(alias_start, alias_end - alias_start));
+                    field.expression = trim_copy(field_text.substr(0U, alias_start));
+                }
+                else
+                {
+                    field.expression = field_text;
+                }
+            }
+
+            projection_fields.push_back(std::move(field));
+        }
+    }
+
+    return projection_fields;
+}
+
 bool equal_ignore_case(std::string_view left, std::string_view right) {
     return left.size() == right.size() &&
            std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char lhs, char rhs) {
@@ -445,14 +663,21 @@ QueryTranslationResult translate_fox_sql_to_backend(
     FederationBackend backend,
     const std::string& fox_sql) {
     if (!looks_like_select(fox_sql)) {
-        return {.ok = false, .translated_sql = {}, .error = "Only first-pass SELECT...FROM SQL translation is supported."};
+        return {.ok = false,
+                .translated_sql = {},
+                .projection_fields = {},
+                .error = "Only first-pass SELECT...FROM SQL translation is supported."};
     }
 
     std::string translated = fox_sql;
     replace_all_literals(translated, backend);
     replace_fox_sql_dialect(translated, backend);
 
-    return {.ok = true, .translated_sql = translated, .error = {}};
+    QueryTranslationResult result;
+    result.ok = true;
+    result.translated_sql = std::move(translated);
+    result.projection_fields = extract_projection_fields_from_sql(result.translated_sql);
+    return result;
 }
 
 }  // namespace copperfin::platform

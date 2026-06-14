@@ -174,6 +174,53 @@ void test_boolean_literals_are_dialect_sensitive() {
     }
 }
 
+void test_projection_fields_are_extracted() {
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "SELECT id, name AS customer_name, score + 1 AS projected_score FROM customer");
+
+    expect(translated.ok, "projection extraction should preserve supported SELECT syntax");
+    if (!translated.ok) {
+        return;
+    }
+
+    expect(translated.projection_fields.size() == 3U, "projection extraction should return three fields");
+    if (translated.projection_fields.size() == 3U) {
+        expect(translated.projection_fields[0].expression == "id",
+               "first projection should preserve raw expression for plain field");
+        expect(translated.projection_fields[0].alias.empty(), "plain projected field should have no alias");
+        expect(!translated.projection_fields[0].wildcard, "plain field projection should not be wildcard");
+
+        expect(translated.projection_fields[1].expression == "name",
+               "explicit AS projection expression should remain expression only");
+        expect(translated.projection_fields[1].alias == "customer_name",
+               "AS projection alias should be preserved");
+
+        expect(translated.projection_fields[2].expression == "score + 1",
+               "inline expression should remain the projection expression");
+        expect(translated.projection_fields[2].alias == "projected_score",
+               "inline alias should be preserved");
+        expect(!translated.projection_fields[2].wildcard, "computed projection should not be wildcard");
+    }
+}
+
+void test_projection_metadata_handles_wildcard() {
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "SELECT * FROM customer");
+
+    expect(translated.ok, "wildcard projection should still translate");
+    if (!translated.ok) {
+        return;
+    }
+
+    expect(translated.projection_fields.size() == 1U, "wildcard query should emit one projection field");
+    if (translated.projection_fields.size() == 1U) {
+        expect(translated.projection_fields[0].wildcard, "wildcard query should set wildcard flag");
+        expect(translated.projection_fields[0].alias.empty(), "wildcard projection should have empty alias");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -184,6 +231,8 @@ int main() {
     test_literals_and_functions_are_not_rewritten_in_string_literals();
     test_legacy_function_compatibility_across_backends();
     test_boolean_literals_are_dialect_sensitive();
+    test_projection_fields_are_extracted();
+    test_projection_metadata_handles_wildcard();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

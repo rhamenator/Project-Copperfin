@@ -114,6 +114,22 @@ void test_plan_tracks_policy_audit_toggle() {
     expect(plan.planning_policy_audit_enabled == false, "planning policy audit flag should be preserved in the plan");
 }
 
+void test_plan_exposes_projection_fields() {
+    const auto plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::postgresql,
+        .fox_sql = "SELECT id, name AS customer_name, score + 1 AS projected_score FROM customer",
+        .target = "analytics"
+    });
+
+    expect(plan.ok, "execution plan should succeed and expose projection metadata");
+    if (plan.ok) {
+        expect(plan.projection_fields.size() == 3U, "execution plan should expose three projection entries");
+        expect(plan.projection_fields[1].alias == "customer_name", "execution plan should preserve AS alias");
+        expect(plan.projection_fields[2].alias == "projected_score", "execution plan should preserve computed alias");
+        expect(!plan.projection_fields[0].wildcard, "plain projected field should not be wildcard");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -124,6 +140,7 @@ int main() {
     test_plan_allows_ai_fallback_metadata();
     test_plan_requires_ai_fallback_metadata();
     test_plan_tracks_policy_audit_toggle();
+    test_plan_exposes_projection_fields();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

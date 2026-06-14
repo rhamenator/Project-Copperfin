@@ -26,6 +26,7 @@ struct FederationExecutionPlan {
     std::string connector;
     std::string target;
     std::string translated_sql;
+    std::vector<QueryProjectionField> projection_fields;
     std::string planning_mode;
     std::string execution_command;
     bool ai_assisted = false;

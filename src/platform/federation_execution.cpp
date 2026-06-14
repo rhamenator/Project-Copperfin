@@ -161,6 +161,7 @@ FederationExecutionPlan build_federation_execution_plan(const FederationExecutio
     plan.ai_assisted = false;
     plan.deterministic_translation_succeeded = true;
     plan.translated_sql = translated_sql;
+    plan.projection_fields = translation.projection_fields;
     plan.execution_command = format_federation_command(plan.connector, plan.target, translated_sql);
     return plan;
 }

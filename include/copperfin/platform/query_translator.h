@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 
 namespace copperfin::platform {
@@ -11,9 +12,16 @@ enum class FederationBackend {
     oracle
 };
 
+struct QueryProjectionField {
+    std::string expression;
+    std::string alias;
+    bool wildcard = false;
+};
+
 struct QueryTranslationResult {
     bool ok = false;
     std::string translated_sql;
+    std::vector<QueryProjectionField> projection_fields;
     std::string error;
 };
 
