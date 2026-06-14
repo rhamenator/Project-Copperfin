@@ -156,6 +156,7 @@ enum class RoutineKind {
 struct Routine {
     std::string name;
     RoutineKind kind = RoutineKind::main;
+    SourceLocation declaration_location{};
     std::vector<Statement> statements;
 };
 

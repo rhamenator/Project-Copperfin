@@ -301,6 +301,7 @@ Program parse_program(const std::string& path) {
             routine.kind = starts_with_insensitive(line, "FUNCTION ")
                 ? RoutineKind::function
                 : RoutineKind::procedure;
+            routine.declaration_location = {.file_path = normalize_path(path), .line = line_number};
             current = &program.routines[normalize_identifier(routine.name)];
             *current = std::move(routine);
             continue;

@@ -472,6 +472,38 @@ std::map<std::string, std::string> collect_library_export_routine_kinds(const Ru
     return routine_kinds;
 }
 
+std::map<std::string, SourceLocation> collect_library_export_routine_locations(const RuntimePackagePlan& plan) {
+    std::map<std::string, SourceLocation> routine_locations;
+    std::unordered_set<std::string> seen;
+    for (const auto& asset : plan.assets) {
+        if (!asset.exists || asset.excluded) {
+            continue;
+        }
+
+        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+        if (extension != ".prg") {
+            continue;
+        }
+
+        const Program program = parse_program(asset.source_path);
+        for (const auto& [_, routine] : program.routines) {
+            const std::string export_name = normalize_export_symbol(routine.name);
+            if (export_name.empty()) {
+                continue;
+            }
+
+            const std::string normalized = lowercase_copy(export_name);
+            if (!seen.insert(normalized).second) {
+                continue;
+            }
+
+            routine_locations.emplace(export_name, routine.declaration_location);
+        }
+    }
+
+    return routine_locations;
+}
+
 std::string build_placeholder_int_parameter_list(const std::vector<std::string>& parameter_names) {
     std::ostringstream stream;
     for (std::size_t index = 0; index < parameter_names.size(); ++index) {
@@ -491,6 +523,12 @@ std::string build_manifest_parameter_names(const std::vector<std::string>& param
         }
         stream << quote_manifest_value(parameter_names[index]);
     }
+    return stream.str();
+}
+
+std::string build_manifest_source_location(const SourceLocation& location) {
+    std::ostringstream stream;
+    stream << quote_manifest_value(location.file_path) << "|" << location.line;
     return stream.str();
 }
 
@@ -654,6 +692,7 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
     const auto parameter_names = collect_library_export_parameter_names(plan);
     const auto routine_kinds = collect_library_export_routine_kinds(plan);
+    const auto routine_locations = collect_library_export_routine_locations(plan);
     stream << "manifest_version=1\n";
     stream << "output_kind=fll\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
@@ -668,9 +707,16 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     for (const auto& symbol : plan.exported_symbols) {
         stream << "function=" << quote_manifest_value(symbol) << "\n";
         const auto kind_found = routine_kinds.find(symbol);
+        const auto location_found = routine_locations.find(symbol);
         stream << "function_kind="
                << quote_manifest_value(symbol) << "|"
                << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
+        stream << "function_source="
+               << quote_manifest_value(symbol) << "|"
+               << (location_found == routine_locations.end()
+                       ? std::string{}
+                       : build_manifest_source_location(location_found->second))
+               << "\n";
         const auto found = parameter_counts.find(symbol);
         const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
         const auto names_found = parameter_names.find(symbol);
@@ -693,6 +739,7 @@ std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
     const auto parameter_names = collect_library_export_parameter_names(plan);
     const auto routine_kinds = collect_library_export_routine_kinds(plan);
+    const auto routine_locations = collect_library_export_routine_locations(plan);
     stream << "manifest_version=1\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
@@ -702,10 +749,17 @@ std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
         const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
         const auto names_found = parameter_names.find(symbol);
         const auto kind_found = routine_kinds.find(symbol);
+        const auto location_found = routine_locations.find(symbol);
         stream << "function=" << quote_manifest_value(symbol) << "\n";
         stream << "function_kind="
                << quote_manifest_value(symbol) << "|"
                << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
+        stream << "function_source="
+               << quote_manifest_value(symbol) << "|"
+               << (location_found == routine_locations.end()
+                       ? std::string{}
+                       : build_manifest_source_location(location_found->second))
+               << "\n";
         stream << "function_arity="
                << quote_manifest_value(symbol) << "|"
                << parameter_count << "\n";
@@ -2106,14 +2160,22 @@ std::string build_runtime_manifest_text(
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
         const auto parameter_names = collect_library_export_parameter_names(plan);
         const auto routine_kinds = collect_library_export_routine_kinds(plan);
+        const auto routine_locations = collect_library_export_routine_locations(plan);
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
             const auto names_found = parameter_names.find(symbol);
             const auto kind_found = routine_kinds.find(symbol);
+            const auto location_found = routine_locations.find(symbol);
             stream << "library_function_kind="
                    << quote_manifest_value(symbol) << "|"
                    << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
+            stream << "library_function_source="
+                   << quote_manifest_value(symbol) << "|"
+                   << (location_found == routine_locations.end()
+                           ? std::string{}
+                           : build_manifest_source_location(location_found->second))
+                   << "\n";
             stream << "library_function_arity="
                    << quote_manifest_value(symbol) << "|"
                    << parameter_count << "\n";

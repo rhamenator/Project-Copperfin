@@ -350,6 +350,8 @@ void run_library_build_host_smoke(
 
     const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
     expect(!manifest_path.empty(), "build host should report a manifest path for " + extension + " outputs");
+    const std::string init_library_source = (project_dir / "librarymain.prg").string();
+    const std::string add_numbers_source = (project_dir / "helper.prg").string();
     if (!manifest_path.empty()) {
         const std::string manifest_text = read_text(manifest_path);
         expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
@@ -369,6 +371,10 @@ void run_library_build_host_smoke(
                    "build host manifest should record InitLibrary DLL routine kind");
             expect(manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
                    "build host manifest should record AddNumbers DLL routine kind");
+            expect(manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL source provenance");
+            expect(manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL source provenance");
             expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host manifest should record InitLibrary DLL parameter names");
             expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
@@ -424,6 +430,10 @@ void run_library_build_host_smoke(
                    "build host FLL manifest should declare InitLibrary routine kind");
             expect(api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers routine kind");
+            expect(api_manifest.find("function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary source provenance");
+            expect(api_manifest.find("function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers source provenance");
             expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary parameter names");
             expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
