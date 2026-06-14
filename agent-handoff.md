@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the active safety/diagnostics queue is back to umbrella-only state after `#402`. If continuing `#14`, create the next prompt-sized child issue before coding; otherwise choose the highest-value open child issue from the remaining queue.
+Next: the highest-priority open umbrellas are now `#19` and `#20`. Create the next prompt-sized child issue under that build/debug pipeline branch before coding.
 
 Language-service queue update:
 
+- 2026-06-14: **`#403` is now shipped.** The generated .NET launcher now preserves ordinary application arguments instead of dropping everything except `--debug`, while keeping the manifest injection and debug-flag normalization contract intact. Focused `test_runtime_pipeline` coverage locks that launcher source contract down directly.
 - 2026-06-14: **`#402` is now shipped.** `ENTER CRITICAL` now enforces ascending normalized lock ordering for nested acquisitions, and shipped blocking wait surfaces now reject blocking while a critical section is held (`AWAIT`, positive-duration `SLEEP`, and lock-retry/backoff under contention). Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic `runtime.critical.order_violation` / `runtime.critical.blocking_violation` diagnostics instead of deadlock-prone hangs.
 - 2026-06-14: **`#271` is now shipped.** `SET('REPROCESS')` now defaults to `AUTOMATIC`, lock acquisition honors per-session retry budgets across explicit lock commands plus shipped local mutation paths, and contention now emits deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics instead of busy-spinning. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove cross-session contention, retry counts, timeout errors, and session isolation/restoration.
 - 2026-06-14: **`#273` is now shipped.** The Visual Studio asset editor pane now routes `Undo` through edit-level text-box undo or host-backed command undo as appropriate, `copperfin_studio_host` now reports command-undo availability/labels and executes `--undo-mode command`, and the native CTest suite now includes `test_managed_compile` so `Copperfin.LanguageServiceTests`, `Copperfin.Studio`, and `Copperfin.DesignerSmokeTests` all compile in routine validation.
@@ -55,6 +56,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#403` is now closed.** Generated .NET launchers now preserve ordinary application arguments while still injecting the manifest path and normalizing debug flags, and focused `test_runtime_pipeline` coverage now proves the launcher source contract directly.
 - 2026-06-14: **`#402` is now closed.** The runtime now has an explicit in-memory critical-section policy: nested acquisitions must follow ascending normalized section-name order, and blocking wait surfaces are rejected while a critical section is held. Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic diagnostics for order violations and lock/wait blocking violations.
 - 2026-06-14: **`#271` is now closed.** The lock/reprocess lane now defaults `SET('REPROCESS')` to `AUTOMATIC`, preserves data-session isolation of that state, and applies bounded retry/timeout behavior to explicit lock commands plus shipped local mutation paths. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove contention retries, timeout diagnostics, and non-busy-spin behavior.
 - 2026-06-13: **`#7` and `#8` are now closed.** All active lane issues (#92-#101) complete. A3 (Command/Expression Surface) is done at ~98%.

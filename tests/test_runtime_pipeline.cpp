@@ -186,6 +186,9 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("string.Equals(arg, \"/debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos,
             "generated launcher should preserve debug command-line forwarding");
         expect(
+            launcher_source.find("forwarded.Add(Quote(arg));") != std::string::npos,
+            "generated launcher should preserve ordinary application arguments instead of dropping them");
+        expect(
             launcher_source.find("WorkingDirectory = baseDir") != std::string::npos,
             "generated launcher should run the runtime host from the package directory");
         expect(
