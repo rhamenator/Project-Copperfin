@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
+#include <future>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -20,6 +21,7 @@
 #endif
 #include <sstream>
 #include <system_error>
+#include <thread>
 #include <vector>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -4560,6 +4562,93 @@ void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_critical_sections_release_on_task_fault_without_deadlock() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_fault_release";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_fault_release_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE bad_worker\n"
+        "    ENTER CRITICAL shared\n"
+        "    1 / 0\n"
+        "ENDPROC\n"
+        "PROCEDURE good_worker\n"
+        "    ENTER CRITICAL shared\n"
+        "    nGoodEntered = .T.\n"
+        "    EXIT CRITICAL shared\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN bad_worker TO nBad\n"
+        "SPAWN good_worker TO nGood\n"
+        "AWAIT nBad TO lBadDone\n"
+        "AWAIT nGood TO lGoodDone\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    std::promise<copperfin::runtime::RuntimePauseState> run_promise;
+    auto run_future = run_promise.get_future();
+    std::thread run_thread([session = std::move(session), run_promise = std::move(run_promise)]() mutable {
+        try
+        {
+            run_promise.set_value(session.run(copperfin::runtime::DebugResumeAction::continue_run));
+        }
+        catch (...)
+        {
+            run_promise.set_exception(std::current_exception());
+        }
+    });
+
+    const bool finished = run_future.wait_for(std::chrono::seconds(3)) == std::future_status::ready;
+    if (!finished)
+    {
+        run_thread.detach();
+        expect(false, "faulted worker in shared CRITICAL should not deadlock later tasks");
+        return;
+    }
+
+    run_thread.join();
+    const auto state = run_future.get();
+    expect(state.completed,
+           "critical-section fault-recovery script should complete after faulted worker exits");
+
+    const auto bad_done = state.globals.find("lbaddone");
+    const auto good_done = state.globals.find("lgooddone");
+    expect(bad_done != state.globals.end(), "script should report bad-worker await result");
+    expect(good_done != state.globals.end(), "script should report good-worker await result");
+    if (bad_done != state.globals.end())
+    {
+        expect(!bad_done->second.boolean_value,
+               "bad worker should report failed completion because of fault");
+    }
+    if (good_done != state.globals.end())
+    {
+        expect(good_done->second.boolean_value, "good worker should complete after bad worker fault");
+    }
+
+    const auto critical_enter_events = std::count_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event) {
+            return event.category == "runtime.critical.enter";
+        });
+    expect(critical_enter_events >= 2U,
+           "good worker should still enter CRITICAL after bad worker fault");
+
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event) {
+               return event.category == "runtime.critical.blocking_violation" &&
+                      event.detail.find("operation=AWAIT") != std::string::npos;
+           }),
+           "fault-recovery scenario should not emit unrelated AWAIT blocking violation");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_command_emits_runtime_yield_event_and_preserves_state() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_cmd";
@@ -5743,6 +5832,7 @@ int main() {
     test_critical_section_exit_order_is_enforced();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
+    test_critical_sections_release_on_task_fault_without_deadlock();
     test_yield_is_allowed_while_holding_critical_section();
     test_yield_inside_critical_section_is_allowed();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
