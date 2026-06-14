@@ -4689,6 +4689,43 @@ void test_yield_is_explicit_policy_exception_in_enter_critical() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_allowed_in_enter_critical_regression_minimal() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_enter_critical_minimal_regression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_enter_critical_minimal_regression_test.prg";
+    write_text(
+        main_path,
+        "entered = .F.\n"
+        "yielded = .F.\n"
+        "ENTER CRITICAL\n"
+        "entered = .T.\n"
+        "YIELD\n"
+        "yielded = .T.\n"
+        "EXIT CRITICAL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ENTER CRITICAL/YIELD minimal regression should complete");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.enter";
+    }), "ENTER CRITICAL should emit runtime.critical.enter");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield" && event.detail.find("operation=YIELD") != std::string::npos;
+    }), "ENTER CRITICAL + YIELD should emit operation-tagged runtime.yield");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD in ENTER CRITICAL remains the intentional policy exception");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_in_enter_critical_has_no_blocking_violation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_enter_critical_locking_regression";
@@ -6428,6 +6465,7 @@ int main() {
     test_critical_section_reentrant_enter_same_section_is_allowed();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
+    test_yield_allowed_in_enter_critical_regression_minimal();
     test_yield_is_explicit_policy_exception_in_enter_critical();
     test_yield_in_enter_critical_has_no_blocking_violation();
     test_yield_in_enter_critical_is_explicit_policy_exception_regression();
