@@ -80,7 +80,7 @@ For every prompt-sized child issue, complete all applicable checklist items befo
 | Lane/Family | Required Evidence |
 | --- | --- |
 | `#92`-`#101` (runtime semantics/commands) | requirement statement, compatibility source reference, focused regression tests in `tests/test_prg_engine_*.cpp`, and pass evidence from native CTest |
-| `#13`, `#14` (runtime safety/diagnostics) | explicit fault model and expected fail-safe behavior, negative tests, and captured fault metadata expectations |
+| `#14` (runtime safety/diagnostics) | explicit fault model and expected fail-safe behavior, negative tests, and captured fault metadata expectations |
 | `#15`-`#18` (runtime parity surfaces) | executable scenario definition (startup/event/lifecycle), parity boundaries, and runtime-host evidence artifact from smoke/debug runs |
 | `#19`-`#21`, `#38`-`#43` (build/debug/compiler) | deterministic build/run contract, artifact manifest expectations, and workflow pass evidence (`native-validation`, `windows-deep-validation` when relevant) |
 | `#22`-`#26` (designers and IDE parity) | user-visible behavior acceptance criteria, automated smoke validation where available, and explicit unsupported-state notes |
@@ -177,9 +177,10 @@ If direct commits continue, close a child issue only when:
 - A3 historical-closed prompt-sized slice issues in the current H3 batch: #257-#268, #391-#393
 - A3 historical native slice ranges in this lane: `#115`-`#130` plus `#146`-`#149` under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
-- Runtime safety and diagnostics: #13, #14
-- Runtime safety active-open prompt-sized slice issues: #272, #273
-- Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145, #150, #151, #152, #153, #269, #270
+- Runtime safety and diagnostics: #14
+- Runtime safety closed lane issues: #13 (2026-06-14)
+- Runtime safety active-open prompt-sized slice issues: #273
+- Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145, #150, #151, #152, #153, #269, #270, #272
 
 Canonical Phase A critical-path order (all closed as of 2026-06-13):
 
@@ -349,7 +350,7 @@ flowchart LR
 
     subgraph SB[Phase B]
         direction TB
-        SB1["B1 Fault Isolation<br/>~72%<br/>#13"]
+        SB1["B1 Fault Isolation<br/>closed<br/>#13"]
         SB2["B2 Debug Metadata / Diagnostics<br/>~66%<br/>#14"]
     end
 
@@ -1043,7 +1044,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 
 ### A4. Automation And Interop Semantics
 
-- Treat A4 automation containment as closed for Phase A and drive the next safety/debug residuals through `#13` and `#14` instead.
+- Treat A4 automation containment as closed for Phase A and drive the remaining safety/debug residuals through `#14` instead.
 - Preserve host stability and post-fault diagnostic quality as the Phase B runtime-safety priority.
 
 ## Phase B: Runtime Safety, Fault Tolerance, And Crash Containment
