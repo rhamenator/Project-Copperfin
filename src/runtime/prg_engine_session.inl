@@ -743,6 +743,13 @@
             return critical_section;
         }
 
+        // Engine critical-section policy (see docs/25-engine-concurrency-policy.md):
+        // - critical-section names are normalized, with an implicit "default" section when omitted
+        // - nested acquires across different section names must follow ascending normalized-name order
+        // - while any critical section is held, runtime surfaces must not block on external progress,
+        //   time, or lock contention; new wait/retry paths must call this helper before blocking
+        // These rules keep Copperfin's in-memory coordination deterministic and prevent deadlock-prone
+        // interactions between spawned workers, waits, and lock-retry backoff behavior.
         bool ensure_non_blocking_critical_section_policy(const std::string &operation,
                                                          const SourceLocation &location,
                                                          const std::string &detail = {})

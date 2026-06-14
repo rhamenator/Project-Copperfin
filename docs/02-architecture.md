@@ -336,6 +336,7 @@ Design rule:
 - Report rendering should be independent from the IDE shell.
 - Visual designer behavior should be independent from any single IDE host.
 - Security policy should wrap runtime capabilities instead of being hardcoded into business logic.
+- Runtime coordination invariants such as critical-section ordering and blocking rules should stay centralized and documented; see `docs/25-engine-concurrency-policy.md`.
 - Importers should produce normalized metadata, not opaque binary passthrough blobs.
 - .NET hosting and wrapper generation should sit behind a stable interop boundary rather than leaking managed assumptions into the native core.
 

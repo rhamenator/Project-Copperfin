@@ -1,0 +1,105 @@
+# Engine Concurrency Policy
+
+This document defines the runtime invariants for Copperfin's in-memory coordination surface:
+
+- `SPAWN`
+- `AWAIT`
+- `YIELD`
+- `ENTER CRITICAL`
+- `EXIT CRITICAL`
+- lock retry/backoff under record or file-lock contention
+
+The goal is deterministic runtime behavior with explicit deadlock avoidance, while staying compatible with the practical coordination expectations FoxPro/VFP developers bring to Copperfin.
+
+## Scope
+
+This policy applies to the native execution engine and to any runtime surface that:
+
+- acquires a named critical section
+- waits for another task to complete
+- sleeps for time-based backoff
+- retries a lock acquisition after contention
+- introduces any new blocking behavior in engine code
+
+## Canonical Rules
+
+### 1. Critical sections are named, normalized, and in-memory
+
+- `ENTER CRITICAL <name>` acquires an engine-managed in-memory mutex identified by the normalized section name.
+- `ENTER CRITICAL` without a name uses the implicit `default` section.
+- Re-entering the same normalized section from the same worker is allowed.
+
+These sections are an engine coordination construct. They are not exposed as bitwise monitor primitives and they are not intended to mirror .NET's low-level synchronization API shape.
+
+### 2. Nested cross-section acquires must follow ascending normalized-name order
+
+- If a worker already holds section `alpha`, it may then enter `beta`.
+- If a worker already holds section `beta`, it must not then enter `alpha`.
+- Violations must fail fast with deterministic diagnostics instead of waiting indefinitely.
+
+Engine diagnostic contract:
+
+- event category: `runtime.critical.order_violation`
+- fault text includes the held section and requested section
+
+This single total-order rule prevents circular wait between workers that would otherwise deadlock on opposing nested acquire orders.
+
+### 3. No blocking while any critical section is held
+
+Once a worker holds at least one critical section, it must not perform an operation that can block on:
+
+- another task's completion
+- time-based sleep/backoff
+- lock contention retry/backoff
+- any future engine wait surface with equivalent semantics
+
+Current enforced examples:
+
+- `AWAIT`
+- positive-duration `SLEEP`
+- lock retry/backoff reached from `RLOCK()`, `FLOCK()`, `LOCK()`, or mutation paths such as `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL` when contention would otherwise trigger retry waits
+
+Engine diagnostic contract:
+
+- event category: `runtime.critical.blocking_violation`
+- fault text includes the rejected blocking operation and held section name
+
+Fast failure is intentional. The engine must not convert a critical section into a hidden wait state, because that would make deadlocks dependent on scheduling order and external contention timing.
+
+### 4. Non-blocking cooperative operations remain allowed
+
+- `YIELD` is allowed while a critical section is held because it does not wait on external completion, time, or lock ownership.
+- Pure computation, local state updates, and other non-blocking operations are allowed.
+
+The policy is specifically about blocking behavior, not about banning all coordination-aware statements inside critical sections.
+
+## Implementation Obligations
+
+Any new or refactored engine path that can block must:
+
+1. detect whether a critical section is currently held
+2. fail before entering the blocking wait or retry loop
+3. emit deterministic diagnostics through the shared runtime event stream
+4. add focused regression coverage proving the fast-fail behavior
+
+In code, blocking paths should route through the shared critical-section policy helper rather than open-coding ad hoc checks.
+
+## Compatibility Position
+
+FoxPro/VFP does not define this exact engine coordination surface, so Copperfin must choose deterministic rules where legacy behavior is silent.
+
+The compatibility objective is therefore:
+
+- preserve practical developer expectations for named in-memory coordination
+- avoid surprising managed-runtime-only synchronization idioms
+- make deadlock prevention explicit and testable
+- keep runtime diagnostics stable enough for debugger and host tooling
+
+## Deadlock Prevention Summary
+
+Copperfin prevents critical-section deadlocks with two hard rules:
+
+1. all nested section acquires use one global name order
+2. no worker may block while holding a section
+
+If both rules continue to hold, the engine avoids the classic circular-wait pattern that causes deadlocks in multi-worker code.

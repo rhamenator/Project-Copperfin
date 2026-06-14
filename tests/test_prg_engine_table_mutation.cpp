@@ -766,6 +766,76 @@ void test_lock_retry_blocking_is_rejected_inside_critical_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_rlock_retry_blocking_is_rejected_inside_critical_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rlock_critical_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "rlock_critical_policy.prg";
+    write_text(
+        main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "GO 1\n"
+        "lHeldLock = RLOCK()\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "GO 1\n"
+        "SET REPROCESS TO 2\n"
+        "ENTER CRITICAL shared\n"
+        "lSecondLock = RLOCK()\n"
+        "IF lSecondLock\n"
+        "    lPolicyBlocked = .F.\n"
+        "ELSE\n"
+        "    lPolicyBlocked = .T.\n"
+        "ENDIF\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section RLOCK policy script should complete: " + state.message);
+
+    const auto held_lock = state.globals.find("lheldlock");
+    const auto second_lock = state.globals.find("lsecondlock");
+    const auto policy_blocked = state.globals.find("lpolicyblocked");
+    expect(held_lock != state.globals.end(), "RLOCK policy script should capture the first-session held lock");
+    expect(second_lock != state.globals.end(), "RLOCK policy script should capture the contested second lock result");
+    expect(policy_blocked != state.globals.end(), "RLOCK policy script should capture the policy-block result");
+    if (held_lock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(held_lock->second) == "true",
+               "RLOCK policy script should hold the first-session record lock");
+    }
+    if (second_lock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_lock->second) == "false",
+               "RLOCK under contention inside a critical section should return false");
+    }
+    if (policy_blocked != state.globals.end()) {
+        expect(copperfin::runtime::format_value(policy_blocked->second) == "true",
+               "RLOCK under contention inside a critical section should be rejected");
+    }
+
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_retry" &&
+               event.detail.find("PeopleTwo RLOCK") != std::string::npos;
+    }), "RLOCK inside a critical section should fail before emitting retry backoff events");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=LOCK RETRY") != std::string::npos &&
+               event.detail.find("PeopleTwo RLOCK") != std::string::npos;
+    }), "RLOCK contention inside a critical section should emit a runtime.critical.blocking_violation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_and_delete_from_local_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
@@ -2103,6 +2173,7 @@ int main() {
     test_lock_functions_and_unlock_command_track_session_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_lock_retry_blocking_is_rejected_inside_critical_section();
+    test_rlock_retry_blocking_is_rejected_inside_critical_section();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
