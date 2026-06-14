@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the highest-priority open umbrellas are still `#19` and `#20`. `#215` is now shipped; the `#43` child queue is currently exhausted, so re-audit umbrella `#43` for closure before opening any further build/debug child slice there.
+Next: the highest-priority open umbrellas are still `#19` and `#20`. `#43` is now closed, so resume blocker-tree work under those still-open umbrellas unless the live issue tree changes before implementation starts.
 
 Language-service queue update:
 

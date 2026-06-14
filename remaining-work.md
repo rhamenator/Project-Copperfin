@@ -104,7 +104,7 @@ For every prompt-sized child issue, complete all applicable checklist items befo
 | `#92`-`#101` (runtime semantics/commands) | requirement statement, compatibility source reference, focused regression tests in `tests/test_prg_engine_*.cpp`, and pass evidence from native CTest |
 | `#14` (runtime safety/diagnostics) | explicit fault model and expected fail-safe behavior, negative tests, and captured fault metadata expectations |
 | `#15`-`#18` (runtime parity surfaces) | executable scenario definition (startup/event/lifecycle), parity boundaries, and runtime-host evidence artifact from smoke/debug runs |
-| `#19`-`#21`, `#38`-`#43` (build/debug/compiler) | deterministic build/run contract, artifact manifest expectations, and workflow pass evidence (`native-validation`, `windows-deep-validation` when relevant) |
+| `#19`-`#21`, `#38`-`#42` (build/debug/compiler) | deterministic build/run contract, artifact manifest expectations, and workflow pass evidence (`native-validation`, `windows-deep-validation` when relevant) |
 | `#22`-`#26` (designers and IDE parity) | user-visible behavior acceptance criteria, automated smoke validation where available, and explicit unsupported-state notes |
 | `#27`-`#29` (language service) | symbol/analysis behavior requirement, reproducible fixture, and deterministic expected output/assertions |
 | `#30`-`#32`, `#57`, `#91` (federation/interop) | connector/translation contract statement, deterministic fallback behavior, and connector-targeted regression tests |
@@ -234,7 +234,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
 - Build/run/deploy workflow tightening: #21 (prompt-sized slice queue currently closed on this branch; #162-#177 shipped)
-- AST/IR and transpilation outputs: #42, #43
+- AST/IR outputs: #42
 - Build artifact breadth and round-trip safety: #38, #39, #40, #41 (no prompt-sized child queue currently open on this branch; #162-#177 shipped in the build/debug lane)
 
 ### Designers And IDE Parity
@@ -312,7 +312,7 @@ flowchart TD
 
     subgraph PC[Phase C - Build, Designers, And IDE]
         direction TB
-        C1["Build/Package/Debug Pipeline<br/>48%<br/>#19-#21,#42,#43"]
+        C1["Build/Package/Debug Pipeline<br/>48%<br/>#19-#21,#42"]
         C2["Shared Designers<br/>43%<br/>#22-#24"]
         C3["Visual Studio Integration<br/>37%<br/>#25"]
         C4["Standalone Copperfin IDE<br/>32%<br/>#26"]
@@ -386,7 +386,7 @@ flowchart LR
 
     subgraph SD[Phase D]
         direction TB
-        SD1["D1 Compiler / Package Model<br/>~50%<br/>#19,#42,#43"]
+        SD1["D1 Compiler / Package Model<br/>~50%<br/>#19,#42"]
         SD2["D2 Debugger Completion<br/>~46%<br/>#20"]
         SD3["D3 Build / Run / Deploy Workflow<br/>~49%<br/>#21,#38-#41"]
     end
