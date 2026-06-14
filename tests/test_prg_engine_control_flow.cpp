@@ -5427,6 +5427,72 @@ void test_yield_allowed_in_reentrant_enter_critical_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_in_enter_critical_is_explicit_policy_exception_small() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_enter_critical_policy_exception_small";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_enter_critical_policy_exception_small.prg";
+    write_text(
+        main_path,
+        "entered = .F.\n"
+        "yielded = .F.\n"
+        "ENTER CRITICAL\n"
+        "entered = .T.\n"
+        "YIELD\n"
+        "yielded = .T.\n"
+        "EXIT CRITICAL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ENTER CRITICAL should allow YIELD as a policy exception");
+
+    const auto entered = state.globals.find("entered");
+    const auto yielded = state.globals.find("yielded");
+    expect(entered != state.globals.end(), "ENTER CRITICAL body should execute");
+    expect(yielded != state.globals.end(), "YIELD should execute inside ENTER CRITICAL");
+    if (entered != state.globals.end()) {
+        expect(entered->second.boolean_value, "CRITICAL body should run before YIELD");
+    }
+    if (yielded != state.globals.end()) {
+        expect(yielded->second.boolean_value, "YIELD should complete inside CRITICAL");
+    }
+
+    const auto yield_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.yield" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    });
+    const auto enter_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.critical.enter";
+    });
+    const auto exit_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.critical.exit";
+    });
+    expect(yield_event != state.events.end(), "YIELD in ENTER CRITICAL should emit runtime.yield");
+    expect(enter_event != state.events.end(), "ENTER CRITICAL should emit runtime.critical.enter");
+    expect(exit_event != state.events.end(), "EXIT CRITICAL should emit runtime.critical.exit");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD should remain an explicit policy exception while critical section is held");
+
+    if (yield_event != state.events.end() && enter_event != state.events.end() &&
+        exit_event != state.events.end()) {
+        expect(std::distance(state.events.begin(), enter_event) <
+               std::distance(state.events.begin(), yield_event),
+               "YIELD should occur after ENTER CRITICAL");
+        expect(std::distance(state.events.begin(), yield_event) <
+               std::distance(state.events.begin(), exit_event),
+               "YIELD should occur before EXIT CRITICAL");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_preserves_fault_metadata_when_followed_by_error() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_fault_cmd";
@@ -6476,6 +6542,7 @@ int main() {
     test_yield_is_allowed_in_default_critical_section_is_policy_exception();
     test_yield_is_allowed_in_critical_section_is_policy_exception();
     test_yield_inside_critical_section_is_allowed();
+    test_yield_in_enter_critical_is_explicit_policy_exception_small();
     test_yield_allowed_in_enter_critical_is_small_regression();
     test_yield_allowed_in_reentrant_enter_critical_section();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
