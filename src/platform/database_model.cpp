@@ -2,6 +2,28 @@
 
 namespace copperfin::platform {
 
+const QueryTranslationPath* query_translation_path_by_id(
+    const DatabaseFederationProfile& profile,
+    const std::string& path_id) {
+    for (const auto& path : profile.query_paths) {
+        if (path.id == path_id) {
+            return &path;
+        }
+    }
+    return nullptr;
+}
+
+const DatabaseConnectorProfile* database_connector_by_id(
+    const DatabaseFederationProfile& profile,
+    const std::string& connector_id) {
+    for (const auto& connector : profile.connectors) {
+        if (connector.id == connector_id) {
+            return &connector;
+        }
+    }
+    return nullptr;
+}
+
 DatabaseFederationProfile default_database_federation_profile() {
     DatabaseFederationProfile profile;
     profile.available = true;

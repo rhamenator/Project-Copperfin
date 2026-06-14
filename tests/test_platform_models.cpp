@@ -130,6 +130,51 @@ void test_default_database_profile() {
     }
 }
 
+void test_document_and_vector_mapping_paths() {
+    const auto profile = copperfin::platform::default_database_federation_profile();
+
+    const auto mongo = copperfin::platform::database_connector_by_id(profile, "mongodb");
+    expect(mongo != nullptr, "connector lookup by id should resolve mongodb");
+    if (mongo != nullptr) {
+        expect(mongo->family == "document", "mongodb should remain in the document connector family");
+        expect(!mongo->translation_story.empty(), "document connectors should define a translation story");
+    }
+
+    const auto json_api = copperfin::platform::database_connector_by_id(profile, "json-api");
+    expect(json_api != nullptr, "connector lookup by id should resolve json-api");
+
+    const auto vector = copperfin::platform::database_connector_by_id(profile, "vector");
+    expect(vector != nullptr, "connector lookup by id should resolve vector");
+    if (vector != nullptr) {
+        expect(vector->family == "vector", "vector connector should remain in the vector family");
+        expect(vector->ai_query_planning_optional, "vector connectors should keep optional AI planning enabled");
+    }
+
+    const auto foxsql_doc = copperfin::platform::query_translation_path_by_id(profile, "foxsql-document");
+    expect(foxsql_doc != nullptr, "query path lookup should resolve foxsql-document");
+    if (foxsql_doc != nullptr) {
+        expect(foxsql_doc->deterministic_first, "foxsql-document translation should stay deterministic-first");
+        expect(foxsql_doc->ai_optional, "foxsql-document translation should keep optional AI planning");
+        expect(foxsql_doc->source_shape == "FoxPro-style SQL", "foxsql-document source-shape should remain FoxPro SQL");
+    }
+
+    const auto foxsql_vector = copperfin::platform::query_translation_path_by_id(profile, "foxsql-vector");
+    expect(foxsql_vector != nullptr, "query path lookup should resolve foxsql-vector");
+    if (foxsql_vector != nullptr) {
+        expect(foxsql_vector->deterministic_first, "foxsql-vector translation should stay deterministic-first");
+        expect(foxsql_vector->ai_optional, "foxsql-vector translation should keep optional AI planning");
+        expect(foxsql_vector->source_shape == "FoxPro-style SQL plus semantic operators",
+               "foxsql-vector source-shape should remain semantic-aware");
+    }
+
+    const auto browse_doc = copperfin::platform::query_translation_path_by_id(profile, "xbase-browse-document");
+    expect(browse_doc != nullptr, "query path lookup should resolve xbase-browse-document");
+    if (browse_doc != nullptr) {
+        expect(browse_doc->deterministic_first, "document browse intent mapping should stay deterministic-first");
+        expect(!browse_doc->target_shape.empty(), "document browse intent mapping should expose a target shape");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -137,6 +182,7 @@ int main() {
     test_default_extensibility_profile();
     test_dotnet_interop_policy_gateway();
     test_default_database_profile();
+    test_document_and_vector_mapping_paths();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

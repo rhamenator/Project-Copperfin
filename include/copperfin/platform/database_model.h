@@ -36,5 +36,11 @@ struct DatabaseFederationProfile {
 };
 
 [[nodiscard]] DatabaseFederationProfile default_database_federation_profile();
+const QueryTranslationPath* query_translation_path_by_id(
+    const DatabaseFederationProfile& profile,
+    const std::string& path_id);
+const DatabaseConnectorProfile* database_connector_by_id(
+    const DatabaseFederationProfile& profile,
+    const std::string& connector_id);
 
 }  // namespace copperfin::platform
