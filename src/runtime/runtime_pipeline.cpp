@@ -680,6 +680,14 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    CopperfinRuntimeBridgeInvocation invocation;\n";
     stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeReturn {\n";
+    stream << "    std::string value_representation;\n";
+    stream << "    std::string return_surface;\n";
+    stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeResult {\n";
+    stream << "    CopperfinRuntimeBridgeCall call;\n";
+    stream << "    CopperfinRuntimeBridgeReturn return_binding;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -727,6 +735,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const CopperfinRuntimeBridgeInvocation& invocation,\n";
     stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters) {\n";
     stream << "    return CopperfinRuntimeBridgeCall{invocation, std::move(parameters)};\n";
+    stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeResult copperfin_build_runtime_bridge_result(\n";
+    stream << "    CopperfinRuntimeBridgeCall call,\n";
+    stream << "    CopperfinRuntimeBridgeReturn return_binding) {\n";
+    stream << "    return CopperfinRuntimeBridgeResult{std::move(call), std::move(return_binding)};\n";
     stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
@@ -788,7 +801,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
             stream << "        invocation,\n";
             stream << "        {{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}});\n";
-            stream << "    (void)call;\n";
+            stream << "    const auto result = copperfin_build_runtime_bridge_result(\n";
+            stream << "        call,\n";
+            stream << "        {std::to_string(-1), \"" << kFllDefaultReturnHelper << "(int)\"});\n";
+            stream << "    (void)result;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -888,7 +904,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                        << "), \"int\"}";
             }
             stream << "});\n";
-            stream << "    (void)call;\n";
+            stream << "    const auto result = copperfin_build_runtime_bridge_result(call, {std::to_string(-1), \"int\"});\n";
+            stream << "    (void)result;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
