@@ -34,6 +34,7 @@ Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the
 
 Language-service queue update:
 
+- 2026-06-14: **`#398` is now shipped.** `FoxProIntelliSenseCatalog` now follows `#INCLUDE` edges with cycle protection and resolves `#DEFINE` symbols from included headers even when the header lives outside the project root.
 - 2026-06-14: **`#397` is now shipped.** `FoxProIntelliSenseCatalog` now falls back from instance-style tokens such as `oEditor.SaveOrder` to a unique project method with the same trailing name, while still refusing ambiguous duplicate matches across classes.
 - 2026-06-14: **`#396` is now shipped.** `FoxProIntelliSenseCatalog` now surfaces project-defined class methods as `member` completions in dotted/member-access contexts and ranks them ahead of the generic fallback member catalog while preserving the originating class path in the description.
 - 2026-06-14: **`#395` is now shipped.** `FoxProIntelliSenseCatalog` now indexes class-scoped `PROCEDURE` / `FUNCTION` members under their fully-qualified class path, so exact tokens such as `app.customer.editor.SaveOrder` resolve to the method definition and surface method-specific signature help.
@@ -43,7 +44,7 @@ Language-service queue update:
 - 2026-06-14: **`#180` is now shipped.** `CopperfinProjectInsightClient` now performs a definition pass before collecting references, so project-defined procedures/functions surface reference-navigation entries from direct and dotted call sites such as `SaveOrder(...)` and `oToolbar.SaveOrder(...)`.
 - 2026-06-14: **`#179` is now shipped.** `FoxProIntelliSenseCatalog` now derives project procedure/function signature help from nearby `LPARAMETERS` / `PARAMETERS` declarations and reuses it for dotted invocation fallback such as `oToolbar.SaveOrder`.
 - 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
-- The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, and `#397` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
+- The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, `#397`, and `#398` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
 
 Current shipped highlights worth remembering:
 

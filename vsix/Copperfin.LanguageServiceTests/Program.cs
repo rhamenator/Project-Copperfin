@@ -23,6 +23,7 @@ internal static class Program
         TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
         TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
+        TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
 
         if (failures != 0)
         {
@@ -443,6 +444,41 @@ internal static class Program
         finally
         {
             TryDelete(root);
+        }
+    }
+
+    private static void TestIncludedHeaderOutsideProjectRootFeedsDefineResolution()
+    {
+        var root = CreateProjectRoot("include_define_resolution");
+        var externalRoot = Path.Combine(Path.GetTempPath(), "copperfin_language_service_external_includes", Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(externalRoot);
+            var headerPath = Path.Combine(externalRoot, "shareddefs.h");
+            File.WriteAllText(headerPath, "#DEFINE ORDER_STATUS_READY" + Environment.NewLine);
+
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                $"#INCLUDE \"{headerPath.Replace("\\", "\\\\")}\"" + Environment.NewLine +
+                "? ORDER_STATUS_READY" + Environment.NewLine);
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "ORDER_STATUS_READY", out var definition);
+            Expect(resolved, "included headers outside the project root should feed define resolution");
+            if (resolved)
+            {
+                Expect(definition.FilePath == headerPath, "define resolution should point to the included external header path");
+                Expect(definition.LineNumber == 1, "define resolution should point to the defining line inside the included header");
+            }
+
+            var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "ORDER_STATUS_READY");
+            Expect(string.Equals(description, "Project preprocessor symbol.", StringComparison.Ordinal),
+                "included external header defines should participate in token description lookup");
+        }
+        finally
+        {
+            TryDelete(root);
+            TryDelete(externalRoot);
         }
     }
 

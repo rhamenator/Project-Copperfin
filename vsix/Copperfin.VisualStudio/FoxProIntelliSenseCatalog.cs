@@ -55,6 +55,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+[\""<]([^\"">]+)[\"">]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -493,6 +494,7 @@ internal static class FoxProIntelliSenseCatalog
             Root = root,
             BuiltAtUtc = DateTime.UtcNow
         };
+        var scannedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var file in EnumerateProjectFiles(root))
         {
@@ -527,18 +529,33 @@ internal static class FoxProIntelliSenseCatalog
                 continue;
             }
 
-            ScanTextFile(file, index);
+            ScanTextFile(file, root, index, scannedFiles);
         }
 
         return index;
     }
 
-    private static void ScanTextFile(string path, ProjectSymbolIndex index)
+    private static void ScanTextFile(string path, string root, ProjectSymbolIndex index, ISet<string> scannedFiles)
     {
+        string normalizedPath;
+        try
+        {
+            normalizedPath = Path.GetFullPath(path);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (!scannedFiles.Add(normalizedPath))
+        {
+            return;
+        }
+
         string[] lines;
         try
         {
-            lines = File.ReadAllLines(path);
+            lines = File.ReadAllLines(normalizedPath);
         }
         catch
         {
@@ -555,7 +572,7 @@ internal static class FoxProIntelliSenseCatalog
             {
                 currentClassName = classMatch.Groups[1].Value;
                 index.Classes.Add(currentClassName);
-                TryAddDefinition(index.Definitions, currentClassName, "class", path, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
+                TryAddDefinition(index.Definitions, currentClassName, "class", normalizedPath, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
                 continue;
             }
 
@@ -572,7 +589,7 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
-                    TryAddDefinition(index.Definitions, methodName, "method", path, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
+                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
                     TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
                     continue;
                 }
@@ -582,7 +599,7 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
-                    TryAddDefinition(index.Definitions, methodName, "method", path, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
+                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
                     TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
                     continue;
                 }
@@ -593,7 +610,7 @@ internal static class FoxProIntelliSenseCatalog
             {
                 var name = procedureMatch.Groups[1].Value;
                 index.Procedures.Add(name);
-                TryAddDefinition(index.Definitions, name, "procedure", path, lineIndex + 1, procedureMatch.Groups[1].Index + 1, "Project procedure symbol.");
+                TryAddDefinition(index.Definitions, name, "procedure", normalizedPath, lineIndex + 1, procedureMatch.Groups[1].Index + 1, "Project procedure symbol.");
                 TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project procedure signature discovered in source.");
             }
 
@@ -602,14 +619,54 @@ internal static class FoxProIntelliSenseCatalog
             {
                 var name = functionMatch.Groups[1].Value;
                 index.Procedures.Add(name);
-                TryAddDefinition(index.Definitions, name, "function", path, lineIndex + 1, functionMatch.Groups[1].Index + 1, "Project function symbol.");
+                TryAddDefinition(index.Definitions, name, "function", normalizedPath, lineIndex + 1, functionMatch.Groups[1].Index + 1, "Project function symbol.");
                 TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project function signature discovered in source.");
             }
 
-            AddMatch(index.Defines, index.Definitions, DefineRegex, line, path, lineIndex + 1, "define", "Project preprocessor symbol.");
-            AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, path, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
-            AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
-            AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, path, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
+            AddMatch(index.Defines, index.Definitions, DefineRegex, line, normalizedPath, lineIndex + 1, "define", "Project preprocessor symbol.");
+            AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, normalizedPath, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
+            AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
+            AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
+
+            var includeMatch = IncludeRegex.Match(line);
+            if (includeMatch.Success)
+            {
+                var includePath = ResolveIncludePath(normalizedPath, root, includeMatch.Groups[1].Value);
+                if (!string.IsNullOrWhiteSpace(includePath) &&
+                    TextExtensions.Contains(Path.GetExtension(includePath), StringComparer.OrdinalIgnoreCase))
+                {
+                    ScanTextFile(includePath, root, index, scannedFiles);
+                }
+            }
+        }
+    }
+
+    private static string ResolveIncludePath(string sourcePath, string root, string includePath)
+    {
+        if (string.IsNullOrWhiteSpace(includePath))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            if (Path.IsPathRooted(includePath))
+            {
+                return File.Exists(includePath) ? Path.GetFullPath(includePath) : string.Empty;
+            }
+
+            var sourceRelative = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourcePath) ?? string.Empty, includePath));
+            if (File.Exists(sourceRelative))
+            {
+                return sourceRelative;
+            }
+
+            var rootRelative = Path.GetFullPath(Path.Combine(root, includePath));
+            return File.Exists(rootRelative) ? rootRelative : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
         }
     }
 
