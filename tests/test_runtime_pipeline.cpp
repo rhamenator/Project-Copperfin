@@ -1268,6 +1268,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should expose the native-wrapper feature flag");
         expect(debug_manifest.find("output_kind=dll") != std::string::npos,
                "library-output debug manifest should record DLL output kind");
+        expect(debug_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
+               "library-output debug manifest should record the module-definition path");
         expect(debug_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
                "library-output debug manifest should record the dedicated DLL API-manifest path");
         expect(debug_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
@@ -1661,6 +1663,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should expose the FLL API-contract feature flag");
         expect(debug_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output debug manifest should record FLL output kind");
+        expect(debug_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
+               "fll-output debug manifest should record the module-definition path");
+        expect(debug_manifest.find("fll_api_manifest_path=" + quote_manifest_value(result.plan.fll_api_manifest_path)) != std::string::npos,
+               "fll-output debug manifest should record the emitted API-manifest path");
         expect(debug_manifest.find("fll_loader_entrypoint=FoxInfo") != std::string::npos,
                "fll-output debug manifest should record the FLL loader entrypoint");
         expect(debug_manifest.find("fll_registration_symbol=_FoxTable") != std::string::npos,
