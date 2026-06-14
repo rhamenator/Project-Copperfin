@@ -126,6 +126,23 @@ void test_secret_provider_missing_env_var_returns_not_ok() {
     expect(!result.error.empty(), "resolve_secret_reference should provide an error message for a missing variable");
 }
 
+void test_secret_provider_rejects_malformed_env_var_names() {
+    const auto whitespace = copperfin::security::resolve_secret_reference("env:COPPERFIN BAD SECRET");
+    expect(!whitespace.ok, "resolve_secret_reference should reject whitespace in environment variable names");
+    expect(whitespace.error.find("invalid characters") != std::string::npos,
+           "malformed secret reference should report invalid-character diagnostics");
+
+    const auto equals = copperfin::security::resolve_secret_reference("env:COPPERFIN=BAD");
+    expect(!equals.ok, "resolve_secret_reference should reject '=' in environment variable names");
+    expect(equals.error.find("invalid characters") != std::string::npos,
+           "equals-sign secret reference should report invalid-character diagnostics");
+
+    const auto control = copperfin::security::resolve_secret_reference(std::string("env:COPPERFIN\tBAD"));
+    expect(!control.ok, "resolve_secret_reference should reject control characters in environment variable names");
+    expect(control.error.find("invalid characters") != std::string::npos,
+           "control-character secret reference should report invalid-character diagnostics");
+}
+
 // #248 [gap-06d]
 void test_audit_stream_tamper_detection() {
     namespace fs = std::filesystem;
@@ -281,6 +298,7 @@ int main() {
     test_authorization_unknown_role_returns_false();
     test_authorization_empty_permission_returns_false();
     test_secret_provider_missing_env_var_returns_not_ok();
+    test_secret_provider_rejects_malformed_env_var_names();
     test_audit_stream_tamper_detection();
     test_audit_stream_chain_verification();
     test_audit_stream_append_to_readonly_path_fails_gracefully();

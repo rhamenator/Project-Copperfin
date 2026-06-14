@@ -1,8 +1,24 @@
 #include "copperfin/security/secret_provider.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 
 namespace copperfin::security {
+
+namespace {
+
+bool is_valid_secret_variable_name(const std::string& value) {
+    if (value.empty()) {
+        return false;
+    }
+
+    return std::none_of(value.begin(), value.end(), [](unsigned char ch) {
+        return std::isspace(ch) != 0 || std::iscntrl(ch) != 0 || ch == '=';
+    });
+}
+
+}  // namespace
 
 SecretResolveResult resolve_secret_reference(const std::string& reference) {
     constexpr const char* kEnvPrefix = "env:";
@@ -13,6 +29,9 @@ SecretResolveResult resolve_secret_reference(const std::string& reference) {
     const std::string variable_name = reference.substr(4U);
     if (variable_name.empty()) {
         return {.ok = false, .error = "Secret reference variable name is empty."};
+    }
+    if (!is_valid_secret_variable_name(variable_name)) {
+        return {.ok = false, .error = "Secret reference variable name contains invalid characters."};
     }
 
     std::string value;

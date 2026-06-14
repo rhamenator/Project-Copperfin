@@ -3,6 +3,7 @@
 This file is the working guide for the remaining Copperfin implementation effort.
 
 - 2026-06-14: H2/#187 planning-policy integration fidelity is now shipped. `FederationExecutionRequest` now carries `enable_ai_assistance`, `require_ai_assistance`, and `policy_audit_enabled`; planning output now emits `planning_mode`, `ai_assisted`, `deterministic_translation_succeeded`, `planning_policy_allows_ai`, and `planning_policy_audit_enabled` metadata. `copperfin_runtime_host` now exposes `--federation-planning-enable`, `--federation-planning-require`, and `--federation-planning-audit`, and focused federation coverage now includes `test_plan_rejects_with_ai_policy_disabled`, `test_plan_allows_ai_fallback_metadata`, `test_plan_requires_ai_fallback_metadata`, and `test_plan_tracks_policy_audit_toggle` in `tests/test_federation_execution.cpp`.
+- 2026-06-14: I1/#190 runtime/project policy and secret-handling fidelity is now shipped. `resolve_secret_reference()` now rejects malformed `env:` variable names containing whitespace, control characters, or `=`, so secret references fail deterministically as invalid input instead of falling through as ambiguous missing-variable lookups. Focused `tests/test_security_controls.cpp` coverage now adds `test_secret_provider_rejects_malformed_env_var_names()` and `test_security_controls` passes from `build/`.
 - 2026-06-14: H3/#203 runtime interop data/state marshaling fidelity is now shipped. Declared-DLL invocation now preserves caller-side bare `@var` references through expression parsing, native Windows `DECLARE` calls now keep non-by-ref string buffers alive across the call boundary, and native `STRING @` / numeric by-ref arguments now write back into Copperfin variables after the DLL returns when both the declaration and callsite opt into by-reference semantics. Focused `tests/test_prg_engine_seek_index.cpp` coverage now adds `test_declared_dll_string_byref_argument_writeback()` to prove `DECLARE INTEGER lstrcpyA(STRING @, STRING)` mutates `@cBuffer` end to end.
 - 2026-06-14: H3/#188 host-integration portability seam shipped. `copperfin_build_host` now resolves `copperfin_runtime_host` from the same executable directory when no override/env path is present (with `.exe` fallbacks) and now accepts a portable executable-path argument, and focused `tests/test_build_host_output` coverage now includes `run_default_runtime_host_resolution_smoke()` to prove executable packaging still succeeds when `COPPERFIN_RUNTIME_HOST_PATH` is intentionally unset.
 - 2026-06-14: H3/#189 MCP/AI and sidecar workflow fidelity shipped. `build_runtime_manifest_text()` now emits explicit MCP/AI/sidecar metadata for language integrations, AI features, `.NET` policy allow/deny items, parity matrix entries, and guardrails, and `tests/test_runtime_pipeline` coverage in `test_materialize_runtime_package()` now asserts those fields are visible for manifest consumers.
@@ -313,7 +314,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Runtime/project security depth: #33
 - Extension/host/AI policy hardening: #34
-- active-open native slice queues under #33-#34: #190-#193
+- active-open native slice queues under #33-#34: #191-#193
 
 ### Portability
 
