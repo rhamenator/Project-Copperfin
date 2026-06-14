@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
-#include <regex>
 #include <string_view>
 #include <vector>
 
@@ -49,13 +48,178 @@ std::size_t find_keyword(const std::string& upper_sql, const std::string& keywor
     return std::string::npos;
 }
 
-void replace_case_insensitive(std::string& text, const std::string& pattern, const std::string& replacement) {
-    const std::regex token_regex(pattern, std::regex_constants::icase);
-    text = std::regex_replace(text, token_regex, replacement);
+bool equal_ignore_case(std::string_view left, std::string_view right) {
+    return left.size() == right.size() &&
+           std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char lhs, char rhs) {
+               return std::toupper(static_cast<unsigned char>(lhs)) == std::toupper(static_cast<unsigned char>(rhs));
+           });
 }
 
-void replace_function(std::string& text, const std::string& function_name, const std::string& replacement) {
-    replace_case_insensitive(text, "\\b" + function_name + "\\s*\\(", replacement + "(");
+bool starts_with_ignore_case(std::string_view text, std::size_t offset, std::string_view needle) {
+    return equal_ignore_case(text.substr(offset, needle.size()), needle);
+}
+
+bool is_identifier_boundary(char ch) {
+    return !std::isalnum(static_cast<unsigned char>(ch)) && ch != '_' && ch != '.';
+}
+
+bool match_identifier_at(std::string_view text, std::size_t offset, std::string_view identifier) {
+    if (offset + identifier.size() > text.size())
+    {
+        return false;
+    }
+    if (!equal_ignore_case(text.substr(offset, identifier.size()), identifier))
+    {
+        return false;
+    }
+    if (offset != 0U && !is_identifier_boundary(text[offset - 1U]))
+    {
+        return false;
+    }
+    const std::size_t after = offset + identifier.size();
+    if (after != text.size() && !is_identifier_boundary(text[after]))
+    {
+        return false;
+    }
+    return true;
+}
+
+void replace_keyword_in_sql(std::string& text, std::string_view keyword, std::string_view replacement, bool strict_word) {
+    std::string output;
+    output.reserve(text.size());
+
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+
+    for (std::size_t index = 0U; index < text.size();) {
+        const char ch = text[index];
+        if (in_single_quote)
+        {
+            output.push_back(ch);
+            if (ch == '\'' && (index + 1U) < text.size() && text[index + 1U] == '\'')
+            {
+                output.push_back('\'');
+                ++index;
+            }
+            else if (ch == '\'')
+            {
+                in_single_quote = false;
+            }
+            ++index;
+            continue;
+        }
+        if (in_double_quote)
+        {
+            output.push_back(ch);
+            if (ch == '"')
+            {
+                in_double_quote = false;
+            }
+            ++index;
+            continue;
+        }
+
+        if (ch == '\'')
+        {
+            in_single_quote = true;
+            output.push_back(ch);
+            ++index;
+            continue;
+        }
+        if (ch == '"')
+        {
+            in_double_quote = true;
+            output.push_back(ch);
+            ++index;
+            continue;
+        }
+
+        if ((strict_word && match_identifier_at(text, index, keyword)) ||
+            (!strict_word && starts_with_ignore_case(text, index, keyword)))
+        {
+            output.append(replacement);
+            index += keyword.size();
+            continue;
+        }
+
+        output.push_back(ch);
+        ++index;
+    }
+
+    text = std::move(output);
+}
+
+void replace_keyword_function_in_sql(std::string& text, std::string_view function_name, std::string_view replacement) {
+    std::string output;
+    output.reserve(text.size());
+
+    bool in_single_quote = false;
+    bool in_double_quote = false;
+
+    for (std::size_t index = 0U; index < text.size();) {
+        const char ch = text[index];
+        if (in_single_quote)
+        {
+            output.push_back(ch);
+            if (ch == '\'' && (index + 1U) < text.size() && text[index + 1U] == '\'')
+            {
+                output.push_back('\'');
+                ++index;
+            }
+            else if (ch == '\'')
+            {
+                in_single_quote = false;
+            }
+            ++index;
+            continue;
+        }
+        if (in_double_quote)
+        {
+            output.push_back(ch);
+            if (ch == '"')
+            {
+                in_double_quote = false;
+            }
+            ++index;
+            continue;
+        }
+
+        if (ch == '\'')
+        {
+            in_single_quote = true;
+            output.push_back(ch);
+            ++index;
+            continue;
+        }
+        if (ch == '"')
+        {
+            in_double_quote = true;
+            output.push_back(ch);
+            ++index;
+            continue;
+        }
+
+        if (match_identifier_at(text, index, function_name))
+        {
+            std::size_t open = index + function_name.size();
+            while (open < text.size() && std::isspace(static_cast<unsigned char>(text[open])))
+            {
+                ++open;
+            }
+            if (open < text.size() && text[open] == '(')
+            {
+                output.append(replacement);
+                output.push_back('(');
+                index = open + 1U;
+                continue;
+            }
+        }
+
+        output.push_back(ch);
+        ++index;
+    }
+
+    text = std::move(output);
 }
 
 std::string to_case_when(std::string_view condition, std::string_view true_value, std::string_view false_value) {
@@ -229,9 +393,9 @@ void replace_iif_calls(std::string& text) {
 }
 
 void replace_all_literals(std::string& text) {
-    replace_case_insensitive(text, "\\.T\\.", "TRUE");
-    replace_case_insensitive(text, "\\.F\\.", "FALSE");
-    replace_function(text, "ALLTRIM", "TRIM");
+    replace_keyword_in_sql(text, ".T.", "TRUE", false);
+    replace_keyword_in_sql(text, ".F.", "FALSE", false);
+    replace_keyword_function_in_sql(text, "ALLTRIM", "TRIM");
 }
 
 void replace_fox_sql_dialect(std::string& text, FederationBackend backend) {
@@ -240,13 +404,13 @@ void replace_fox_sql_dialect(std::string& text, FederationBackend backend) {
         case FederationBackend::sqlite:
             break;
         case FederationBackend::postgresql:
-            replace_function(text, "NVL", "COALESCE");
+            replace_keyword_function_in_sql(text, "NVL", "COALESCE");
             break;
         case FederationBackend::sqlserver:
-            replace_function(text, "SUBSTR", "SUBSTRING");
+            replace_keyword_function_in_sql(text, "SUBSTR", "SUBSTRING");
             break;
         case FederationBackend::oracle:
-            replace_function(text, "IFNULL", "NVL");
+            replace_keyword_function_in_sql(text, "IFNULL", "NVL");
             break;
     }
 }

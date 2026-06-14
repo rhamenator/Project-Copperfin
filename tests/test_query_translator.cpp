@@ -87,6 +87,27 @@ void test_nested_iif_is_translated_recursively() {
     }
 }
 
+void test_literals_and_functions_are_not_rewritten_in_string_literals() {
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::postgresql,
+        "SELECT IIF(active = .T., ALLTRIM(name), \"quoted .T. text\") AS status, 'ALLTRIM(' || notes || ')' AS note FROM customer WHERE note = '.F.' AND COALESCE(name, '') = ''");
+
+    expect(translated.ok, "quoted-token regression SQL should translate");
+    if (!translated.ok)
+    {
+        return;
+    }
+
+    expect(translated.translated_sql.find("CASE WHEN active = TRUE THEN TRIM(name) ELSE \"quoted .T. text\" END AS status") != std::string::npos,
+           "outside quotes should still rewrite IIF and ALLTRIM");
+    expect(translated.translated_sql.find("note = '.F.'") != std::string::npos,
+           "quoted .F. inside single-quoted literal should be preserved");
+    expect(translated.translated_sql.find("\"quoted .T. text\"") != std::string::npos,
+           "quoted .T. inside double-quoted literal should be preserved");
+    expect(translated.translated_sql.find("'ALLTRIM(' || notes || ')'") != std::string::npos,
+           "quoted ALLTRIM token inside single quotes should be preserved");
+}
+
 }  // namespace
 
 int main() {
@@ -94,6 +115,7 @@ int main() {
     test_case_variants_and_whitespace_variants();
     test_iif_is_translated_to_case_when();
     test_nested_iif_is_translated_recursively();
+    test_literals_and_functions_are_not_rewritten_in_string_literals();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
