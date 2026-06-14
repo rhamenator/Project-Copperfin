@@ -1278,6 +1278,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the dedicated DLL API-manifest path");
         expect(debug_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output debug manifest should record the VFP DLL calling convention contract");
+        expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
+               "library-output debug manifest should record discovered DLL export symbols");
+        expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
+               "library-output debug manifest should record all DLL export symbols");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
@@ -1312,6 +1316,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should rewrite the debug manifest with the materialized DLL output path");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
+                expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
+                       "library-output runtime pipeline should preserve DLL export symbols in the rewritten debug manifest");
+                expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
+                       "library-output runtime pipeline should preserve all DLL export symbols in the rewritten debug manifest");
                 if (native_symbol_dump_is_available()) {
                     std::string symbol_error;
                     const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);
@@ -1688,6 +1696,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the ParamBlk callable signature");
         expect(debug_manifest.find("fll_default_return_helper=_RetInt") != std::string::npos,
                "fll-output debug manifest should record the default return helper");
+        expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
+               "fll-output debug manifest should record discovered FLL routine export symbols");
+        expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
+               "fll-output debug manifest should record all FLL export symbols");
         expect(debug_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
                "fll-output debug manifest should mirror InitLibrary routine kind");
         expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
@@ -1742,6 +1754,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should rewrite the debug manifest with the materialized FLL output path");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
+                expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
+                       "fll-output runtime pipeline should preserve discovered FLL routine export symbols in the rewritten debug manifest");
+                expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
+                       "fll-output runtime pipeline should preserve all FLL export symbols in the rewritten debug manifest");
                 if (native_symbol_dump_is_available()) {
                     std::string symbol_error;
                     const std::set<std::string> exported_symbols = read_native_exported_symbols(build_result.plan.launcher_output_path, symbol_error);

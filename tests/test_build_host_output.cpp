@@ -489,12 +489,20 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record the module-definition path");
             expect(debug_manifest_text.find("library_api_manifest_path=") != std::string::npos,
                    "build host DLL debug manifest should record the dedicated API-manifest path");
+            expect(debug_manifest_text.find("export_symbol=InitLibrary") != std::string::npos,
+                   "build host DLL debug manifest should record discovered export symbols");
+            expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
+                   "build host DLL debug manifest should record all export symbols");
         }
         if (extension == "fll") {
             expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
                    "build host FLL debug manifest should record the module-definition path");
             expect(debug_manifest_text.find("fll_api_manifest_path=") != std::string::npos,
                    "build host FLL debug manifest should record the dedicated API-manifest path");
+            expect(debug_manifest_text.find("export_symbol=InitLibrary") != std::string::npos,
+                   "build host FLL debug manifest should record discovered routine export symbols");
+            expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
+                   "build host FLL debug manifest should record all routine export symbols");
         }
     }
 

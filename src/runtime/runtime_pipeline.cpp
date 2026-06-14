@@ -2416,6 +2416,9 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "source_roots=" << quote_manifest_value(join_strings(plan.debug_plan.source_roots)) << "\n";
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
+    }
     append_library_function_manifest_lines(stream, plan);
     return stream.str();
 }
