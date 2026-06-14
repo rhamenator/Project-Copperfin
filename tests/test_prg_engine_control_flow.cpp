@@ -4696,6 +4696,71 @@ void test_yield_in_enter_critical_has_no_blocking_violation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_in_enter_critical_is_explicit_policy_exception_regression() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_enter_critical_policy_exception_regression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_enter_critical_policy_exception_regression_test.prg";
+    write_text(
+        main_path,
+        "lEnteredCritical = .F.\n"
+        "lYieldedInCritical = .F.\n"
+        "ENTER CRITICAL\n"
+        "lEnteredCritical = .T.\n"
+        "YIELD\n"
+        "lYieldedInCritical = .T.\n"
+        "EXIT CRITICAL\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ENTER CRITICAL/YIELD policy-exception regression should complete");
+
+    const auto entered = state.globals.find("lenteredcritical");
+    const auto yielded = state.globals.find("lyieldedincritical");
+    expect(entered != state.globals.end(), "policy exception should execute CRITICAL body");
+    expect(yielded != state.globals.end(), "YIELD should execute inside ENTER CRITICAL");
+    if (entered != state.globals.end()) {
+        expect(entered->second.boolean_value, "policy exception requires CRITICAL body before yield");
+    }
+    if (yielded != state.globals.end()) {
+        expect(yielded->second.boolean_value, "yield should continue inside policy exception path");
+    }
+
+    const auto yield_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield" && event.detail.find("operation=YIELD") != std::string::npos;
+    });
+    expect(yield_event != state.events.end(), "policy exception should emit operation-tagged runtime.yield");
+
+    const auto critical_enter = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.enter";
+    });
+    const auto critical_exit = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.exit";
+    });
+    expect(critical_enter != state.events.end(), "ENTER CRITICAL should emit runtime.critical.enter");
+    expect(critical_exit != state.events.end(), "EXIT CRITICAL should emit runtime.critical.exit");
+    if (critical_enter != state.events.end() && critical_exit != state.events.end() && yield_event != state.events.end()) {
+        expect(std::distance(state.events.begin(), critical_enter) <
+               std::distance(state.events.begin(), yield_event),
+               "runtime.yield should occur after ENTER CRITICAL");
+        expect(std::distance(state.events.begin(), yield_event) <
+               std::distance(state.events.begin(), critical_exit),
+               "runtime.yield should occur before EXIT CRITICAL");
+    }
+
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "policy exception should not emit blocking violation for YIELD");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_critical_sections_release_on_task_fault_without_deadlock() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_fault_release";
@@ -6239,6 +6304,7 @@ int main() {
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_yield_in_enter_critical_has_no_blocking_violation();
+    test_yield_in_enter_critical_is_explicit_policy_exception_regression();
     test_critical_sections_release_on_task_fault_without_deadlock();
     test_yield_is_allowed_while_holding_critical_section();
     test_yield_in_critical_section_keeps_section_semantics();
