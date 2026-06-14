@@ -1278,6 +1278,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the dedicated DLL API-manifest path");
         expect(debug_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output debug manifest should record the VFP DLL calling convention contract");
+        expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.module_definition_path) + "|") != std::string::npos,
+               "library-output debug manifest should record the module-definition compiler-contract digest");
+        expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.library_api_manifest_path) + "|") != std::string::npos,
+               "library-output debug manifest should record the DLL API-manifest compiler-contract digest");
         expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "library-output debug manifest should record discovered DLL export symbols");
         expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1316,6 +1320,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should rewrite the debug manifest with the materialized DLL output path");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
+                expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.module_definition_path) + "|") != std::string::npos,
+                       "library-output runtime pipeline should preserve the module-definition compiler-contract digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.library_api_manifest_path) + "|") != std::string::npos,
+                       "library-output runtime pipeline should preserve the DLL API-manifest compiler-contract digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                        "library-output runtime pipeline should preserve DLL export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1696,6 +1704,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the ParamBlk callable signature");
         expect(debug_manifest.find("fll_default_return_helper=_RetInt") != std::string::npos,
                "fll-output debug manifest should record the default return helper");
+        expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.module_definition_path) + "|") != std::string::npos,
+               "fll-output debug manifest should record the module-definition compiler-contract digest");
+        expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(result.plan.fll_api_manifest_path) + "|") != std::string::npos,
+               "fll-output debug manifest should record the API-manifest compiler-contract digest");
         expect(debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                "fll-output debug manifest should record discovered FLL routine export symbols");
         expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -1754,6 +1766,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should rewrite the debug manifest with the materialized FLL output path");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
+                expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.module_definition_path) + "|") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the module-definition compiler-contract digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("compiler_contract=" + quote_manifest_value(build_result.plan.fll_api_manifest_path) + "|") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the API-manifest compiler-contract digest in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=InitLibrary") != std::string::npos,
                        "fll-output runtime pipeline should preserve discovered FLL routine export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
@@ -2515,9 +2531,12 @@ void test_runtime_manifest_records_generated_compiler_contract_digests() {
                "compiler-contract digests should include the transpiled C# artifact");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         for (const auto& digest : result.plan.compiler_contract_digests) {
             expect(runtime_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) != std::string::npos,
                    "runtime manifest should record each generated compiler-contract digest");
+            expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) != std::string::npos,
+                   "debug manifest should record each generated compiler-contract digest");
         }
     }
 

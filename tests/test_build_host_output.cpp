@@ -489,6 +489,12 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record the module-definition path");
             expect(debug_manifest_text.find("library_api_manifest_path=") != std::string::npos,
                    "build host DLL debug manifest should record the dedicated API-manifest path");
+            const fs::path module_definition_path = value_for_key(process.stdout_text, "module.definition");
+            const fs::path library_api_manifest_path = value_for_key(process.stdout_text, "library.api.manifest");
+            expect(debug_manifest_text.find("compiler_contract=" + module_definition_path.string() + "|") != std::string::npos,
+                   "build host DLL debug manifest should record the module-definition compiler-contract digest");
+            expect(debug_manifest_text.find("compiler_contract=" + library_api_manifest_path.string() + "|") != std::string::npos,
+                   "build host DLL debug manifest should record the API-manifest compiler-contract digest");
             expect(debug_manifest_text.find("export_symbol=InitLibrary") != std::string::npos,
                    "build host DLL debug manifest should record discovered export symbols");
             expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
@@ -499,6 +505,12 @@ void run_library_build_host_smoke(
                    "build host FLL debug manifest should record the module-definition path");
             expect(debug_manifest_text.find("fll_api_manifest_path=") != std::string::npos,
                    "build host FLL debug manifest should record the dedicated API-manifest path");
+            const fs::path module_definition_path = value_for_key(process.stdout_text, "module.definition");
+            const fs::path fll_api_manifest_path = value_for_key(process.stdout_text, "fll.api.manifest");
+            expect(debug_manifest_text.find("compiler_contract=" + module_definition_path.string() + "|") != std::string::npos,
+                   "build host FLL debug manifest should record the module-definition compiler-contract digest");
+            expect(debug_manifest_text.find("compiler_contract=" + fll_api_manifest_path.string() + "|") != std::string::npos,
+                   "build host FLL debug manifest should record the API-manifest compiler-contract digest");
             expect(debug_manifest_text.find("export_symbol=InitLibrary") != std::string::npos,
                    "build host FLL debug manifest should record discovered routine export symbols");
             expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
