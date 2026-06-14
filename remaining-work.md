@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-14: D2/#411 xAsset debugger action-identity output is now shipped. `copperfin_runtime_host` now maps paused xAsset bootstrap frames back onto the executable-model action binding and prints `debug.xasset.action_id`, `debug.xasset.record_index`, `debug.xasset.kind`, and `debug.xasset.title` alongside the existing pause metadata. The new `test_runtime_host_debug_output` process-level smoke proves a breakpoint inside a nested SCX action reports the originating designer-facing action identity, and adjacent `test_runtime_host_binding` / `test_xasset_methods` coverage still passes.
 - 2026-06-14: D1/#410 compiler-contract digest manifesting is now shipped. Materialized runtime packages now record deterministic `compiler_contract=` digest lines for generated contract artifacts such as `.ast.json`, `.ir.json`, `.transpiled.cs`, and output-kind-specific contract files when present, so downstream tooling can verify that copied package contents still match the declared compiler/runtime contract. Focused `test_runtime_pipeline` coverage now proves the digest entries for generated AST/IR/C# artifacts end to end.
 - 2026-06-14: D1/#215 C# xAsset class/object scaffold generation is now shipped. The transpilation artifact now also emits compileable C# scaffolding for VCX/SCX-style class/object assets using the existing xAsset executable model, root-object lifecycle methods and nested object methods now surface as deterministic C# members with ordered `RunStartup()` / `RunShutdown()` wrappers, untranslated xAsset bodies stay honest via explicit manual-port exceptions, and focused `test_runtime_pipeline` coverage now proves both the emitted class/object scaffold and a direct `dotnet build` compile check for the generated artifact.
 - 2026-06-14: D1/#214 C# transpilation artifact generation is now shipped. Runtime packages now emit a target-specific `.transpiled.cs` artifact whenever `.NET`-oriented output is requested, the generated source now maps first-pass procedural PRG constructs (`LOCAL`, assignment, `DO`, `WAIT WINDOW`, and `RETURN`) into deterministic C# scaffolding with stable routine naming, the runtime manifest now records that artifact path and `build.output.csharp_transpilation` feature flag, and focused `test_runtime_pipeline` coverage now proves both the emitted source contract and a direct `dotnet build` compile check for the generated artifact.
@@ -1150,8 +1151,8 @@ This phase should build directly on the engine/runtime work, not the other way a
 ### D2. Debugger Completion
 
 - First-pass debugger coverage is now in place through the runtime host, stepping model, breakpoint support, pause-state reporting, and xAsset action dispatch.
-- Follow-on work should add richer watch tooling, coverage surfaces, and tighter shell integration.
-- Improve linkage between debugger state and source/design surfaces as a refinement pass rather than a blocker.
+- Paused xAsset bootstrap frames now also surface the originating action identity and record index through the runtime host, so designer-facing tools can map breakpoint output back to the underlying SCX/VCX/MNX record more directly.
+- Follow-on work should add richer watch tooling, broader pause-output coverage surfaces, and tighter shell integration.
 
 ### D3. Build/Run/Deploy Workflow
 

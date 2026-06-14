@@ -50,6 +50,30 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
     return true;
 }
 
+const copperfin::runtime::XAssetActionBinding* find_pause_xasset_action(
+    const copperfin::runtime::RuntimePauseState& state,
+    const copperfin::runtime::XAssetExecutableModel& model) {
+    if (model.actions.empty()) {
+        return nullptr;
+    }
+
+    for (const auto& frame : state.call_stack) {
+        const std::string normalized_routine_name = lowercase_copy(trim_copy(frame.routine_name));
+        if (normalized_routine_name.empty()) {
+            continue;
+        }
+
+        const auto found = std::find_if(model.actions.begin(), model.actions.end(), [&](const copperfin::runtime::XAssetActionBinding& action) {
+            return lowercase_copy(action.routine_name) == normalized_routine_name;
+        });
+        if (found != model.actions.end()) {
+            return &(*found);
+        }
+    }
+
+    return nullptr;
+}
+
 bool parse_bool(const std::string& value) {
     const std::string normalized = lowercase_copy(trim_copy(value));
     return normalized == "1" || normalized == "true" || normalized == "yes";
@@ -283,13 +307,23 @@ copperfin::runtime::DebugResumeAction parse_resume_action(const std::string& val
     return copperfin::runtime::DebugResumeAction::continue_run;
 }
 
-void print_pause_state(const copperfin::runtime::RuntimePauseState& state) {
+void print_pause_state(
+    const copperfin::runtime::RuntimePauseState& state,
+    const copperfin::runtime::XAssetExecutableModel* xasset_model = nullptr) {
     std::cout << "debug.reason: " << copperfin::runtime::debug_pause_reason_name(state.reason) << "\n";
     std::cout << "debug.location: " << state.location.file_path << ":" << state.location.line << "\n";
     std::cout << "debug.statement: " << state.statement_text << "\n";
     std::cout << "debug.message: " << state.message << "\n";
     std::cout << "debug.stack.depth: " << state.call_stack.size() << "\n";
     std::cout << "debug.executed.statements: " << state.executed_statement_count << "\n";
+    if (xasset_model != nullptr) {
+        if (const auto* xasset_action = find_pause_xasset_action(state, *xasset_model)) {
+            std::cout << "debug.xasset.action_id: " << xasset_action->action_id << "\n";
+            std::cout << "debug.xasset.record_index: " << xasset_action->record_index << "\n";
+            std::cout << "debug.xasset.kind: " << xasset_action->kind << "\n";
+            std::cout << "debug.xasset.title: " << xasset_action->title << "\n";
+        }
+    }
     std::cout << "debug.workarea.selected: " << state.work_area.selected << "\n";
     std::cout << "debug.datasession.current: " << state.work_area.data_session << "\n";
     for (const auto& [area, alias] : state.work_area.aliases) {
@@ -345,11 +379,11 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_source,
     bool include_read_events) {
     XAssetBootstrapResult result;
-    const auto open_result = copperfin::studio::open_document({
-        .path = startup_source,
-        .read_only = true,
-        .load_full_table = true
-    });
+    copperfin::studio::StudioOpenRequest request{};
+    request.path = startup_source;
+    request.read_only = true;
+    request.load_full_table = true;
+    const auto open_result = copperfin::studio::open_document(request);
     if (!open_result.ok) {
         result.error = open_result.error;
         return result;
@@ -659,11 +693,11 @@ int main(int argc, char** argv) {
         runtime_mode = "xasset-bootstrap";
     }
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create({
-        .startup_path = effective_startup_source,
-        .working_directory = working_directory,
-        .stop_on_entry = false,
-        .quit_confirm_callback = []() -> bool {
+    copperfin::runtime::RuntimeSessionOptions session_options{};
+    session_options.startup_path = effective_startup_source;
+    session_options.working_directory = working_directory;
+    session_options.stop_on_entry = false;
+    session_options.quit_confirm_callback = []() -> bool {
             std::cerr << "\nDo you want to quit this application? [y/N]: ";
             std::cerr.flush();
             std::string answer;
@@ -671,8 +705,8 @@ int main(int argc, char** argv) {
                 return true;  // EOF or non-interactive stdin — allow quit
             }
             return !answer.empty() && (answer[0] == 'y' || answer[0] == 'Y');
-        }
-    });
+        };
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
     for (const auto& breakpoint_arg : breakpoint_args) {
         if (const auto breakpoint = parse_breakpoint(breakpoint_arg, effective_startup_source)) {
             session.add_breakpoint(*breakpoint);
@@ -688,7 +722,7 @@ int main(int argc, char** argv) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     } else if (debug_commands.empty()) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-        print_pause_state(state);
+        print_pause_state(state, &xasset_model);
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
             const std::string& command = debug_commands[index];
@@ -732,13 +766,13 @@ int main(int argc, char** argv) {
                 } else {
                     std::cout << "debug.watch.error: " << watch.message << "\n";
                 }
-                print_pause_state(state);
+                print_pause_state(state, &xasset_model);
                 continue;
             } else {
                 state = session.run(parse_resume_action(command));
             }
             std::cout << "debug.command[" << index << "]: " << command << "\n";
-            print_pause_state(state);
+            print_pause_state(state, &xasset_model);
             if (state.completed || state.reason == copperfin::runtime::DebugPauseReason::error) {
                 break;
             }
