@@ -321,11 +321,120 @@ void test_update_visual_object_property_rewrites_direct_fields() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_property_round_trips_added_vcx_property() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_vcx_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "sample.vcx";
+    const fs::path memo_path = temp_dir / "sample.vct";
+
+    std::vector<std::uint8_t> table_bytes(110U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 13U);
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "PROPERTIES", 'M', 5U, 4U);
+    table_bytes[96] = 0x0DU;
+
+    table_bytes[97] = 0x20U;
+    write_le_u32(table_bytes, 98U, 1U);
+    write_le_u32(table_bytes, 102U, 2U);
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    std::vector<std::uint8_t> memo_bytes(2048U, 0U);
+    write_be_u32(memo_bytes, 0U, 3U);
+    write_be_u16(memo_bytes, 6U, 512U);
+
+    memo_bytes[512 + 3] = 1U;
+    write_be_u32(memo_bytes, 512 + 4, 11U);
+    write_ascii(memo_bytes, 520U, "clsCustomer");
+
+    const std::string properties =
+        "Name = \"clsCustomer\"\r\n"
+        "Class = \"Custom\"\r\n";
+    memo_bytes[1024 + 3] = 1U;
+    write_be_u32(memo_bytes, 1024 + 4, static_cast<std::uint32_t>(properties.size()));
+    write_ascii(memo_bytes, 1032U, properties);
+
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .property_name = "Caption",
+        .property_value = "\"Customer Class\""
+    });
+    expect(update_result.ok, "adding a new VCX property should succeed");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok, "updated synthetic VCX/VCT should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto& record = parse_result.table.records[0];
+        bool found_properties = false;
+        for (const auto& value : record.values) {
+            if (value.field_name == "PROPERTIES") {
+                found_properties = true;
+                expect(value.display_value.find("Name = \"clsCustomer\"") != std::string::npos,
+                    "VCX round-trip should preserve existing serialized properties");
+                expect(value.display_value.find("Caption = \"Customer Class\"") != std::string::npos,
+                    "VCX round-trip should append the new serialized property");
+            }
+        }
+        expect(found_properties, "updated VCX record should still expose the PROPERTIES field");
+    }
+
+    const auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_status.available, "VCX property addition should create an undo entry");
+    expect(undo_status.label.find("Caption") != std::string::npos,
+        "VCX undo label should name the added property");
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "undo should remove an added VCX property cleanly");
+
+    const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(reverted_parse_result.ok, "reverted synthetic VCX/VCT should remain readable");
+    if (reverted_parse_result.ok && reverted_parse_result.table.records.size() == 1U) {
+        const auto& record = reverted_parse_result.table.records[0];
+        for (const auto& value : record.values) {
+            if (value.field_name == "PROPERTIES") {
+                expect(value.display_value.find("Caption = \"Customer Class\"") == std::string::npos,
+                    "VCX undo should remove the added property from the serialized blob");
+                expect(value.display_value.find("Name = \"clsCustomer\"") != std::string::npos,
+                    "VCX undo should preserve pre-existing serialized properties");
+            }
+        }
+    }
+
+    const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(!empty_undo_status.available, "VCX undo journal should be empty after undoing the only added property");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_property_rewrites_direct_fields();
+    test_update_visual_object_property_round_trips_added_vcx_property();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

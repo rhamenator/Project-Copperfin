@@ -34,6 +34,7 @@ Next: the highest-priority open umbrellas are still `#19` and `#20`. Create the 
 
 Language-service queue update:
 
+- 2026-06-14: **`#204` is now shipped.** Focused `test_visual_asset_editor` coverage now proves a synthetic `VCX/VCT` class library remains readable after adding a new serialized property, preserves its pre-existing serialized properties, and cleanly undoes the added property without leaving undo residue, locking class-library round-trip safety down beside the existing `SCX` regression.
 - 2026-06-14: **`#408` is now shipped.** `PrgRuntimeSession` now exposes watch-expression evaluation against the current paused frame/global/cursor context, `copperfin_runtime_host` now accepts `--debug-command watch:<expr>` without resuming execution, focused `test_prg_engine` coverage proves local/global/cursor-field watch evaluation plus deterministic empty-watch handling, and a direct runtime-host smoke invocation confirms `watch:nLocal` reports the paused worker-frame value.
 - 2026-06-14: **`#278` is now shipped.** Runtime/debug manifests now record the effective launcher mode plus fallback reason, emit explicit feature-flag lines for rollout/host-compatibility/debug/security gates, and requested `.NET` launcher emission now falls back deterministically to the native runtime host when `.NET` output is unavailable. Focused `test_runtime_pipeline` coverage proves both the `.NET` route and native-fallback route, and `test_managed_compile` passes.
 - 2026-06-14: **`#407` is now shipped.** Focused `test_prg_engine` coverage now proves `step_into`, `step_over`, and `step_out` preserve the selected work area, alias map, and open-cursor inspection state alongside the existing statement-text and frame-routing contract across a simple `DO worker` flow.
@@ -62,6 +63,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#204` is now closed.** Class-library round-trip serialization is now explicitly regression-guarded: synthetic `VCX/VCT` assets survive added-property writes, preserve existing serialized blob content, and undo the addition cleanly without leaving the asset unreadable.
 - 2026-06-14: **`#408` is now closed.** The debugger now has an explicit paused-session watch evaluation surface: watch expressions resolve against the live frame/global/cursor context without resuming execution, the runtime host exposes that through `watch:<expr>`, and focused PRG coverage plus a direct host smoke run guard the contract.
 - 2026-06-14: **`#278` is now closed.** The runtime package contract now records requested-vs-effective launcher routing explicitly, including deterministic native-host fallback when `.NET` output is unavailable, with feature-flag diagnostics carried in the runtime/debug manifests and validated by focused pipeline plus managed compile coverage.
 - 2026-06-14: **`#407` is now closed.** Step pauses now have explicit regression coverage for selected work-area and open-cursor inspection fidelity, including alias/work-area identity plus current record position across `step_into`, `step_over`, and `step_out`.
