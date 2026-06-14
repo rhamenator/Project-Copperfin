@@ -2235,6 +2235,26 @@ void test_foxtools_registration_and_call_bridge() {
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.regfn"; }) &&
         std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "interop.callfn"; }),
         "Foxtools bridge should emit library, registration, and call events");
+    const auto regfn_getpid_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "interop.regfn" && event.detail.find("GetCurrentProcessId") != std::string::npos &&
+               event.detail.find("returns I") != std::string::npos && event.detail.find("args=void") != std::string::npos;
+    });
+    const auto regfn_strlen_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "interop.regfn" && event.detail.find("lstrlenA") != std::string::npos &&
+               event.detail.find("returns I") != std::string::npos && event.detail.find("args=C") != std::string::npos;
+    });
+    const auto callpid_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "interop.callfn" && event.detail.find("GetCurrentProcessId#1") != std::string::npos &&
+               event.detail.find("expects") != std::string::npos;
+    });
+    const auto callstr_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "interop.callfn" && event.detail.find("lstrlenA#2") != std::string::npos &&
+               event.detail.find("expects") != std::string::npos;
+    });
+    expect(regfn_getpid_event != state.events.end(), "interop.regfn should include GetCurrentProcessId contract detail");
+    expect(regfn_strlen_event != state.events.end(), "interop.regfn should include lstrlenA contract detail");
+    expect(callpid_event != state.events.end(), "interop.callfn should include handle-scoped function contract detail for GetCurrentProcessId");
+    expect(callstr_event != state.events.end(), "interop.callfn should include handle-scoped function contract detail for lstrlenA");
 
     fs::remove_all(temp_root, ignored);
 }

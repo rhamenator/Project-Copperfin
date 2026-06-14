@@ -28,8 +28,14 @@
                                                                    .argument_types = argument_types,
                                                                    .return_type = return_type,
                                                                    .dll_name = dll_name});
+            const std::string normalized_argument_types = trim_copy(argument_types);
+            const std::string arg_summary = normalized_argument_types.empty() ? "void" : normalized_argument_types;
+            const std::string normalized_return_type = trim_copy(return_type);
             events.push_back({.category = "interop.regfn",
-                              .detail = variant + ":" + function_name + "@" + dll_name + " -> " + std::to_string(handle),
+                              .detail = variant + ":" + function_name + "@" + dll_name +
+                                        " -> " + std::to_string(handle) + " returns " +
+                                        (normalized_return_type.empty() ? "ANY" : normalized_return_type) +
+                                        " args=" + arg_summary,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             return handle;
         }
@@ -46,7 +52,10 @@
 
             const RegisteredApiFunction &function = found->second;
             events.push_back({.category = "interop.callfn",
-                              .detail = function.function_name + " (" + std::to_string(arguments.size()) + " args)",
+                              .detail = function.function_name + "#" + std::to_string(function.handle) + " "
+                                        "(" + std::to_string(arguments.size()) + " args)" +
+                                        " expects " + function.argument_types +
+                                        " returns " + function.return_type,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
 
             const std::string normalized_name = normalize_identifier(function.function_name);
@@ -608,4 +617,3 @@
             return make_empty_value();
 #endif
         }
-
