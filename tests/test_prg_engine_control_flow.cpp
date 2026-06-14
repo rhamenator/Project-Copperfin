@@ -4550,6 +4550,56 @@ void test_yield_command_emits_runtime_yield_event_and_preserves_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_yield_inside_critical_section_is_allowed() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_inside_critical_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "yield_inside_critical_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 1\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "lYieldedInCritical = .F.\n"
+        "SPAWN worker TO nTask\n"
+        "ENTER CRITICAL shared\n"
+        "YIELD\n"
+        "lYieldedInCritical = .T.\n"
+        "EXIT CRITICAL shared\n"
+        "AWAIT nTask TO lDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "YIELD inside critical-section test should complete");
+
+    const auto yield_in_critical = state.globals.find("lyieldedincritical");
+    const auto await_done = state.globals.find("ldone");
+    expect(yield_in_critical != state.globals.end(), "YIELD inside CRITICAL should execute and set lYieldedInCritical");
+    expect(await_done != state.globals.end(), "post-YIELD await should still complete");
+    if (yield_in_critical != state.globals.end()) {
+        expect(yield_in_critical->second.boolean_value, "YIELD inside CRITICAL should complete without entering CATCH path");
+    }
+    if (await_done != state.globals.end()) {
+        expect(await_done->second.boolean_value, "AWAIT after CRITICAL/YIELD should report completed task");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.yield";
+    }), "YIELD inside CRITICAL should emit a runtime.yield event");
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=YIELD") != std::string::npos;
+    }), "YIELD inside CRITICAL should remain allowed and not trigger blocking policy");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_preserves_fault_metadata_when_followed_by_error() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_yield_fault_cmd";
@@ -5586,6 +5636,7 @@ int main() {
     test_critical_section_order_policy_rejects_descending_nested_acquire();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
+    test_yield_inside_critical_section_is_allowed();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
     test_yield_preserves_fault_metadata_when_followed_by_error();
     test_on_error_resume_restores_fault_session_and_cursor_state();
