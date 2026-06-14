@@ -92,7 +92,10 @@
         // invoke_declared_dll_function
         // Called from ExpressionParser when declared_dll_invoke_callback_ is set.
         // ---------------------------------------------------------------------------
-        PrgValue invoke_declared_dll_function(const std::string &fn_key, const std::vector<PrgValue> &args)
+        PrgValue invoke_declared_dll_function(
+            const std::string &fn_key,
+            const std::vector<PrgValue> &args,
+            const std::vector<std::optional<std::string>> &argument_references)
         {
             const std::string key = normalize_identifier(fn_key);
             const auto found = declared_dll_functions.find(key);
@@ -101,25 +104,48 @@
             const DeclaredDllFunction &declfn = found->second;
 
 #if defined(_WIN32)
-            // Split comma-separated param_types string into a vector for indexed access
-            std::vector<std::string> param_type_list;
+            // Split comma-separated param_types string into a vector for indexed access.
+            struct DeclaredDllParamType
+            {
+                std::string type;
+                bool by_ref = false;
+            };
+            const auto parse_declared_param_type = [](const std::string &raw_type)
+            {
+                std::string token = trim_copy(raw_type);
+                bool by_ref = false;
+                if (!token.empty() && token.back() == '@')
+                {
+                    by_ref = true;
+                    token = trim_copy(token.substr(0U, token.size() - 1U));
+                }
+
+                const std::size_t marker = token.find('(');
+                if (marker != std::string::npos)
+                {
+                    token = trim_copy(token.substr(0U, marker));
+                }
+
+                return DeclaredDllParamType{normalize_identifier(token), by_ref};
+            };
+
+            std::vector<decltype(parse_declared_param_type(std::string{}))> declared_param_types;
             {
                 std::istringstream ss(declfn.param_types);
-                std::string tok;
-                while (std::getline(ss, tok, ','))
+                std::string token;
+                while (std::getline(ss, token, ','))
                 {
-                    while (!tok.empty() && tok.front() == ' ')
-                        tok.erase(tok.begin());
-                    while (!tok.empty() && tok.back() == ' ')
-                        tok.pop_back();
-                    if (!tok.empty())
-                        param_type_list.push_back(tok);
+                    declared_param_types.push_back(parse_declared_param_type(token));
                 }
             }
 
             auto param_type_at = [&](std::size_t i) -> std::string
             {
-                return i < param_type_list.size() ? param_type_list[i] : std::string("integer");
+                return i < declared_param_types.size() ? declared_param_types[i].type : std::string("integer");
+            };
+            auto param_is_by_ref = [&](std::size_t i) -> bool
+            {
+                return i < declared_param_types.size() && declared_param_types[i].by_ref;
             };
 
             // Helper: convert PrgValue → VARIANT
@@ -127,10 +153,7 @@
             {
                 VARIANT var;
                 VariantInit(&var);
-                const std::string pt = normalize_identifier(ptype);
-                // by-ref marker stripped for marshalling
-                const bool by_ref = !pt.empty() && pt.back() == '@';
-                const std::string base = by_ref ? pt.substr(0, pt.size() - 1) : pt;
+                const std::string base = normalize_identifier(ptype);
                 if (base == "string" || base == "c")
                 {
                     std::string s = value_as_string(v);
@@ -423,39 +446,116 @@
 
                 // Convert args to a flat array of 64-bit values (integers/pointers)
                 // and a parallel doubles array.
-                std::vector<std::string> string_buffers; // keep alive through the call
+                struct ByRefBinding
+                {
+                    std::optional<std::string> reference_name;
+                    std::string base_type;
+                    bool by_ref = false;
+                    bool is_double = false;
+                    bool is_string = false;
+                    std::string string_buffer;
+                    std::int64_t int_value = 0;
+                    double double_value = 0.0;
+                };
+
+                std::vector<ByRefBinding> byref_bindings(args.size());
+                std::vector<std::string> string_buffers;
+                string_buffers.reserve(args.size());
                 struct Arg64
                 {
-                    __int64 i;
-                    double d;
-                    bool is_double;
+                    __int64 i = 0;
+                    double d = 0.0;
+                    bool is_double = false;
                 };
                 std::vector<Arg64> flat;
                 flat.reserve(args.size());
                 for (std::size_t idx = 0; idx < args.size(); ++idx)
                 {
                     const std::string ptype = normalize_identifier(param_type_at(idx));
-                    const std::string base_pt = (!ptype.empty() && ptype.back() == '@')
-                                                    ? ptype.substr(0, ptype.size() - 1)
-                                                    : ptype;
+                    const bool by_ref_param = param_is_by_ref(idx) &&
+                                             idx < argument_references.size() &&
+                                             argument_references[idx].has_value();
+                    const std::string base_pt = ptype;
+                    ByRefBinding &binding = byref_bindings[idx];
+                    binding.base_type = base_pt;
+                    binding.reference_name = by_ref_param ? argument_references[idx] : std::nullopt;
+                    binding.by_ref = by_ref_param;
+
                     Arg64 a{};
                     if (base_pt == "double" || base_pt == "d" || base_pt == "f")
                     {
-                        a.d = value_as_number(args[idx]);
-                        a.is_double = true;
+                        if (binding.by_ref)
+                        {
+                            binding.is_double = true;
+                            binding.double_value = value_as_number(args[idx]);
+                            a.i = reinterpret_cast<__int64>(&binding.double_value);
+                        }
+                        else
+                        {
+                            a.d = value_as_number(args[idx]);
+                            a.is_double = true;
+                        }
                     }
                     else if (base_pt == "string" || base_pt == "c")
                     {
-                        std::string s = value_as_string(args[idx]);
-                        string_buffers.push_back(std::move(s));
-                        a.i = reinterpret_cast<__int64>(string_buffers.back().c_str());
+                        if (binding.by_ref)
+                        {
+                            binding.is_string = true;
+                            binding.string_buffer = value_as_string(args[idx]);
+                            binding.string_buffer.push_back('\0');
+                            a.i = reinterpret_cast<__int64>(binding.string_buffer.data());
+                        }
+                        else
+                        {
+                            string_buffers.push_back(value_as_string(args[idx]));
+                            a.i = reinterpret_cast<__int64>(string_buffers.back().c_str());
+                        }
                     }
                     else
                     {
                         a.i = static_cast<__int64>(value_as_number(args[idx]));
+                        if (binding.by_ref)
+                        {
+                            binding.int_value = a.i;
+                            a.i = reinterpret_cast<__int64>(&binding.int_value);
+                        }
                     }
                     flat.push_back(a);
                 }
+
+                const auto sync_byref_bindings = [&]()
+                {
+                    if (stack.empty())
+                    {
+                        return;
+                    }
+                    for (std::size_t idx = 0; idx < std::min(flat.size(), byref_bindings.size()); ++idx)
+                    {
+                        const auto &binding = byref_bindings[idx];
+                        if (!binding.by_ref || !binding.reference_name.has_value())
+                        {
+                            continue;
+                        }
+                        if (binding.reference_name.value().empty())
+                        {
+                            continue;
+                        }
+                        PrgValue value;
+                        if (binding.is_string)
+                        {
+                            value = make_string_value(binding.string_buffer.c_str());
+                        }
+                        else if (binding.is_double)
+                        {
+                            value = make_number_value(binding.double_value);
+                        }
+                        else
+                        {
+                            value = make_number_value(static_cast<double>(binding.int_value));
+                        }
+                        assign_variable(stack.back(), binding.reference_name.value(), value);
+                    }
+                };
 
                 // Extract all args as __int64 (works for int, ptr, and bitcast of double)
                 auto iarg = [&](std::size_t i) -> __int64
@@ -474,6 +574,21 @@
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
                 const std::size_t nargs = flat.size();
+                const auto finalize_integer_result = [&](const auto result) -> PrgValue
+                {
+                    sync_byref_bindings();
+                    if (ret_string)
+                    {
+                        const char *p = reinterpret_cast<const char *>(result);
+                        return make_string_value(p ? std::string(p) : std::string{});
+                    }
+                    return make_number_value(static_cast<double>(result));
+                };
+                const auto finalize_double_result = [&](double result) -> PrgValue
+                {
+                    sync_byref_bindings();
+                    return make_number_value(result);
+                };
 
 #if defined(_WIN64)
                 // On x64 Windows, calling convention is unified.
@@ -515,7 +630,7 @@
                         dret = reinterpret_cast<FnD_4>(fn)(iarg(0), iarg(1), iarg(2), iarg(3));
                         break;
                     }
-                    return make_number_value(dret);
+                    return finalize_double_result(dret);
                 }
                 else
                 {
@@ -549,12 +664,7 @@
                         iret = reinterpret_cast<FnI_8>(fn)(iarg(0), iarg(1), iarg(2), iarg(3), iarg(4), iarg(5), iarg(6), iarg(7));
                         break;
                     }
-                    if (ret_string)
-                    {
-                        const char *p = reinterpret_cast<const char *>(iret);
-                        return make_string_value(p ? std::string(p) : std::string{});
-                    }
-                    return make_number_value(static_cast<double>(iret));
+                    return finalize_integer_result(iret);
                 }
 #else
                 // x86: use __stdcall by default (VFP DECLARE default)
@@ -603,17 +713,13 @@
                     iret = reinterpret_cast<FnSI_8>(fn)(i32(0), i32(1), i32(2), i32(3), i32(4), i32(5), i32(6), i32(7));
                     break;
                 }
-                if (ret_string)
-                {
-                    const char *p = reinterpret_cast<const char *>(iret);
-                    return make_string_value(p ? std::string(p) : std::string{});
-                }
-                return make_number_value(static_cast<double>(iret));
+                return finalize_integer_result(iret);
 #endif
             }
 #else
             (void)declfn;
             (void)args;
+            (void)argument_references;
             return make_empty_value();
 #endif
         }

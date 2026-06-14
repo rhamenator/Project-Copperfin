@@ -2323,6 +2323,57 @@ void test_foxtools_registration_is_scoped_by_data_session() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_declared_dll_string_byref_argument_writeback() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_byref";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "declared_dll_byref.prg";
+    write_text(
+        main_path,
+        "DECLARE INTEGER lstrcpyA(STRING @, STRING) IN 'kernel32.dll'\n"
+        "cBuffer = SPACE(32)\n"
+        "nResult = lstrcpyA(@cBuffer, 'Copperfin')\n"
+        "cCopied = cBuffer\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "declared DLL by-ref script should complete");
+
+    const auto result = state.globals.find("nresult");
+    const auto buffer = state.globals.find("cbuffer");
+    const auto copied = state.globals.find("ccopied");
+
+    expect(result != state.globals.end(), "declared DLL call result should be captured");
+    expect(buffer != state.globals.end(), "declared DLL by-ref target should be captured");
+    expect(copied != state.globals.end(), "copied by-ref value should be captured");
+
+    if (result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(result->second) != "0", "lstrcpyA should return a non-null destination pointer");
+    }
+    if (buffer != state.globals.end()) {
+        expect(copperfin::runtime::format_value(buffer->second) == "Copperfin", "STRING @ arguments should write back the mutated buffer");
+    }
+    if (copied != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied->second) == "Copperfin", "subsequent reads should observe the by-ref writeback");
+    }
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("lstrcpyA") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(), "declared DLL by-ref script should emit the DECLARE event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_set_exact_affects_comparisons_and_seek() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_exact";
@@ -2891,6 +2942,7 @@ int main() {
     test_set_near_is_scoped_by_data_session();
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
+    test_declared_dll_string_byref_argument_writeback();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
     test_use_again_without_in_allocates_new_area_and_preserves_alias_selection();

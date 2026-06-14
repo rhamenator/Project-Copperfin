@@ -1240,9 +1240,12 @@ namespace copperfin::runtime
                 const auto found = memowidth_by_session.find(current_data_session);
                 return found != memowidth_by_session.end() ? found->second : 50U;
             },
-            [this](const std::string &fn_key, const std::vector<PrgValue> &fn_args) -> PrgValue
+            [this](
+                const std::string &fn_key,
+                const std::vector<PrgValue> &fn_args,
+                const std::vector<std::optional<std::string>> &fn_argument_references) -> PrgValue
             {
-                return invoke_declared_dll_function(fn_key, fn_args);
+                return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
             });
         return parser.parse();
     }

@@ -121,7 +121,7 @@
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::size_t()> memowidth_callback,
-                std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback)
+                std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
                   resolve_work_area_callback_(std::move(resolve_work_area_callback)),
@@ -194,7 +194,7 @@
             {
             }
 
-            PrgValue parse()
+        PrgValue parse()
             {
                 position_ = 0;
                 PrgValue value = parse_comparison();
@@ -467,15 +467,60 @@
                 {
                     std::vector<PrgValue> arguments;
                     std::vector<std::string> raw_arguments;
+                    std::vector<std::optional<std::string>> argument_references;
                     skip_whitespace();
                     if (!match(")"))
                     {
                         while (true)
                         {
                             const std::size_t argument_start = position_;
-                            arguments.push_back(parse_comparison());
+                            std::size_t argument_end = argument_start;
+                            std::optional<std::string> argument_reference;
 
-                            std::size_t argument_end = position_;
+                            if (peek() == '@')
+                            {
+                                const std::size_t at_start = position_;
+                                ++position_;
+                                skip_whitespace();
+                                const std::string reference_name = parse_identifier();
+                                if (!reference_name.empty())
+                                {
+                                    const std::size_t candidate_end = position_;
+                                    std::size_t lookahead = candidate_end;
+                                    while (lookahead < text_.size() &&
+                                           std::isspace(static_cast<unsigned char>(text_[lookahead])) != 0)
+                                    {
+                                        ++lookahead;
+                                    }
+                                    const char delimiter = lookahead < text_.size() ? text_[lookahead] : '\0';
+                                    if (is_bare_identifier_text(reference_name) && (delimiter == ',' || delimiter == ')' || delimiter == '\0'))
+                                    {
+                                        argument_reference = reference_name;
+                                        argument_end = candidate_end;
+                                        position_ = candidate_end;
+                                        arguments.push_back(resolve_identifier(reference_name));
+                                        raw_arguments.push_back(
+                                            trim_copy(text_.substr(argument_start, argument_end - argument_start)));
+                                        argument_references.push_back(std::move(argument_reference));
+                                        skip_whitespace();
+                                        if (match(")"))
+                                        {
+                                            break;
+                                        }
+                                        match(",");
+                                        continue;
+                                    }
+                                }
+                                position_ = at_start;
+                            }
+
+                            arguments.push_back(parse_comparison());
+                            argument_end = position_;
+                            if (argument_end == argument_start)
+                            {
+                                throw std::runtime_error("Expected function argument");
+                            }
+
                             skip_whitespace();
                             if (normalize_identifier(identifier) == "cast" && arguments.size() == 1U)
                             {
@@ -503,6 +548,7 @@
                                     position_ = as_start;
                                 }
                             }
+                            argument_references.push_back(std::nullopt);
                             raw_arguments.push_back(
                                 trim_copy(text_.substr(argument_start, argument_end - argument_start)));
                             skip_whitespace();
@@ -542,7 +588,7 @@
                                                        : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
                         return array_value_callback_(identifier, row, column);
                     }
-                    return evaluate_function(identifier, arguments, raw_arguments);
+                    return evaluate_function(identifier, arguments, raw_arguments, argument_references);
                 }
 
                 return resolve_identifier(identifier);
@@ -551,7 +597,8 @@
             PrgValue evaluate_function(
                 const std::string &identifier,
                 const std::vector<PrgValue> &arguments,
-                const std::vector<std::string> &raw_arguments)
+                const std::vector<std::string> &raw_arguments,
+                const std::vector<std::optional<std::string>> &argument_references)
             {
                 const std::string function = normalize_identifier(identifier);
                 const auto member_separator = function.find('.');
@@ -1225,7 +1272,7 @@
                 // --- Declared DLL function invocation ---
                 if (declared_dll_invoke_callback_)
                 {
-                    PrgValue dll_result = declared_dll_invoke_callback_(function, arguments);
+                    PrgValue dll_result = declared_dll_invoke_callback_(function, arguments, argument_references);
                     if (dll_result.kind != PrgValueKind::empty)
                     {
                         return dll_result;
@@ -1880,7 +1927,7 @@
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::size_t()> memowidth_callback_;
-            std::function<PrgValue(const std::string &, const std::vector<PrgValue> &)> declared_dll_invoke_callback_;
+            std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;
