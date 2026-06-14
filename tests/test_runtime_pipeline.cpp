@@ -491,6 +491,130 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_fll_output_package_emits_api_manifest_from_prg_routines() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_fll_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "librarymain.prg",
+               "PROCEDURE InitLibrary\nRETURN\nENDPROC\n");
+    write_text(project_dir / "helper.prg",
+               "FUNCTION AddNumbers\nRETURN 1\nENDFUNC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "librarydemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LibraryDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "LibraryDemo";
+    workspace.build_plan.output_path = (output_dir / "LibraryDemo.fll").string();
+    workspace.build_plan.output_kind = "fll";
+    workspace.build_plan.build_target = "x64 Visual FoxPro library";
+    workspace.build_plan.startup_item = "librarymain.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "librarymain.prg", .relative_path = "librarymain.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "helper.prg", .relative_path = "helper.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "fll-output plan should be created");
+    expect(plan.output_kind == copperfin::runtime::BuildOutputKind::fll,
+           "fll-output plan should preserve FLL output kind");
+    expect(!plan.emit_dotnet_launcher,
+           "fll-output plan should not route through .NET launcher emission");
+    expect(plan.launcher_mode == "foxpro_library_definition",
+           "fll-output plan should switch to the library-definition packaging mode");
+    expect(plan.launcher_fallback == "library_binary_generation_pending",
+           "fll-output plan should record the honest non-binary fallback state");
+    expect(fs::path(plan.launcher_output_path).filename() == "LibraryDemo.fll",
+           "fll-output plan should preserve the requested output filename");
+    expect(fs::path(plan.module_definition_path).filename() == "LibraryDemo.def",
+           "fll-output plan should derive a matching module-definition filename");
+    expect(fs::path(plan.fll_api_manifest_path).filename() == "LibraryDemo.fll.api",
+           "fll-output plan should derive a matching API-manifest filename");
+    expect(plan.exported_symbols.size() == 2U,
+           "fll-output plan should discover routine exports from PRG assets");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "fll-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.module_definition_path),
+               "fll-output package should emit a module-definition file");
+        expect(fs::exists(result.plan.fll_api_manifest_path),
+               "fll-output package should emit an API manifest");
+        expect(!fs::exists(result.plan.launcher_output_path),
+               "fll-output package should not fake an FLL binary");
+        expect(!fs::exists(result.plan.runtime_host_destination_path),
+               "fll-output package should not bundle an executable runtime host into the FLL output slot");
+        expect(!result.plan.primary_output_materialized,
+               "fll-output package should report that the primary FLL binary is not yet materialized");
+
+        const std::string module_definition = read_text(result.plan.module_definition_path);
+        expect(module_definition.find("LIBRARY LibraryDemo") != std::string::npos,
+               "fll-output module-definition file should declare the library name");
+        expect(module_definition.find("InitLibrary") != std::string::npos,
+               "fll-output module-definition file should export discovered procedure names");
+        expect(module_definition.find("AddNumbers") != std::string::npos,
+               "fll-output module-definition file should export discovered function names");
+
+        const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
+        expect(api_manifest.find("output_kind=fll") != std::string::npos,
+               "fll-output API manifest should declare the FLL output kind");
+        expect(api_manifest.find("library_file=LibraryDemo.fll") != std::string::npos,
+               "fll-output API manifest should name the requested FLL file");
+        expect(api_manifest.find("registration_command=SET LIBRARY TO") != std::string::npos,
+               "fll-output API manifest should declare the registration command");
+        expect(api_manifest.find("release_command=RELEASE LIBRARY") != std::string::npos,
+               "fll-output API manifest should declare the release command");
+        expect(api_manifest.find("additive_supported=true") != std::string::npos,
+               "fll-output API manifest should declare additive loading support");
+        expect(api_manifest.find("function=InitLibrary") != std::string::npos,
+               "fll-output API manifest should list discovered procedure names");
+        expect(api_manifest.find("function=AddNumbers") != std::string::npos,
+               "fll-output API manifest should list discovered function names");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("output_kind=fll") != std::string::npos,
+               "fll-output manifest should record FLL output kind");
+        expect(runtime_manifest.find("fll_api_manifest_path=" + quote_manifest_value(result.plan.fll_api_manifest_path)) != std::string::npos,
+               "fll-output manifest should record the emitted API-manifest path");
+        expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
+               "fll-output manifest should expose the library-contract feature flag");
+        expect(runtime_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
+               "fll-output manifest should expose the FLL API-contract feature flag");
+        expect(debug_manifest.find("output_kind=fll") != std::string::npos,
+               "fll-output debug manifest should record FLL output kind");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1031,6 +1155,7 @@ int main() {
     test_materialize_excluded_xasset_startup_package();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_library_output_package_emits_module_definition_from_prg_routines();
+    test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

@@ -138,12 +138,38 @@ void test_build_project_workspace_with_dll_output() {
            "build plan should label .dll outputs as Windows dynamic-link libraries");
 }
 
+void test_build_project_workspace_with_fll_output() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\librarydemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LIBRARYDEMO"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\librarydemo.fll)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "librarymain.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "fll project workspace should be available");
+    expect(workspace.build_plan.output_kind == "fll", "build plan should infer FLL output kind from .fll output path");
+    expect(workspace.build_plan.build_target == "x64 Visual FoxPro library",
+           "build plan should label .fll outputs as Visual FoxPro libraries");
+}
+
 }  // namespace
 
 int main() {
     test_build_project_workspace();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_with_dll_output();
+    test_build_project_workspace_with_fll_output();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

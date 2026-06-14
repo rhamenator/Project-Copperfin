@@ -202,6 +202,20 @@ std::string build_module_definition_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "manifest_version=1\n";
+    stream << "output_kind=fll\n";
+    stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "registration_command=SET LIBRARY TO\n";
+    stream << "release_command=RELEASE LIBRARY\n";
+    stream << "additive_supported=true\n";
+    for (const auto& symbol : plan.exported_symbols) {
+        stream << "function=" << quote_manifest_value(symbol) << "\n";
+    }
+    return stream.str();
+}
+
 std::string build_launcher_program_source(const RuntimePackagePlan&) {
     std::ostringstream stream;
     stream << "using System;\n";
@@ -609,6 +623,11 @@ RuntimePackagePlan create_runtime_package_plan(
     module_definition_file_name.replace_extension(".def");
     plan.launcher_output_path = (package_root / output_file_name).string();
     plan.module_definition_path = (package_root / module_definition_file_name).string();
+    if (plan.output_kind == BuildOutputKind::fll) {
+        std::filesystem::path fll_api_manifest_file_name = output_file_name;
+        fll_api_manifest_file_name += ".api";
+        plan.fll_api_manifest_path = (package_root / fll_api_manifest_file_name).string();
+    }
     plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
@@ -690,6 +709,7 @@ std::string build_runtime_manifest_text(
     stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
     stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
+    stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
@@ -730,6 +750,7 @@ std::string build_runtime_manifest_text(
     append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
     append_feature_flag_line(stream, "runtime.host.native", !is_library_output_kind(plan.output_kind), "host_compatibility");
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
+    append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     append_feature_flag_line(stream, "debug.breakpoints", plan.debug_plan.supports_breakpoints, "debug");
     append_feature_flag_line(stream, "debug.step_debugging", plan.debug_plan.supports_step_debugging, "debug");
     append_feature_flag_line(
@@ -843,6 +864,11 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (is_library_output_kind(plan.output_kind)) {
         if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
+        }
+        if (plan.output_kind == BuildOutputKind::fll) {
+            if (!write_text_file(plan.fll_api_manifest_path, build_fll_api_manifest_source(materialized_plan), error)) {
+                return {.ok = false, .error = error};
+            }
         }
     } else {
         if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
