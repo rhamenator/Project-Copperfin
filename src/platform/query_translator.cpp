@@ -402,15 +402,23 @@ void replace_fox_sql_dialect(std::string& text, FederationBackend backend) {
     replace_iif_calls(text);
     switch (backend) {
         case FederationBackend::sqlite:
+            replace_keyword_function_in_sql(text, "LEN", "LENGTH");
+            replace_keyword_function_in_sql(text, "IFNULL", "COALESCE");
             break;
         case FederationBackend::postgresql:
             replace_keyword_function_in_sql(text, "NVL", "COALESCE");
+            replace_keyword_function_in_sql(text, "IFNULL", "COALESCE");
+            replace_keyword_function_in_sql(text, "ISNULL", "COALESCE");
+            replace_keyword_function_in_sql(text, "LEN", "LENGTH");
             break;
         case FederationBackend::sqlserver:
             replace_keyword_function_in_sql(text, "SUBSTR", "SUBSTRING");
+            replace_keyword_function_in_sql(text, "NVL", "ISNULL");
+            replace_keyword_function_in_sql(text, "IFNULL", "ISNULL");
             break;
         case FederationBackend::oracle:
             replace_keyword_function_in_sql(text, "IFNULL", "NVL");
+            replace_keyword_function_in_sql(text, "LEN", "LENGTH");
             break;
     }
 }
