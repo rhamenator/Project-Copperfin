@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <system_error>
@@ -110,10 +111,21 @@ bool native_cxx_is_available() {
 #endif
 }
 
-bool compile_native_wrapper_scaffold(const std::filesystem::path& source_path, std::string& error) {
+bool native_symbol_dump_is_available() {
+#if defined(_WIN32)
+    return false;
+#else
+    return std::system("command -v nm >/dev/null 2>&1") == 0;
+#endif
+}
+
+bool compile_native_wrapper_scaffold(
+    const std::filesystem::path& source_path,
+    std::filesystem::path& output_path,
+    std::string& error) {
     namespace fs = std::filesystem;
     const fs::path compile_root = source_path.parent_path() / "native_wrapper_compile_check";
-    const fs::path output_path =
+    output_path =
 #if defined(_WIN32)
         compile_root / "wrapper_smoke.dll";
 #else
@@ -191,6 +203,41 @@ bool compile_native_wrapper_scaffold(const std::filesystem::path& source_path, s
     }
 
     return true;
+}
+
+std::set<std::string> read_native_exported_symbols(const std::filesystem::path& binary_path, std::string& error) {
+    std::set<std::string> symbols;
+#if defined(_WIN32)
+    (void)binary_path;
+    error = "native symbol inspection is not implemented on Windows hosts";
+    return symbols;
+#else
+    namespace fs = std::filesystem;
+    const fs::path log_path = binary_path.parent_path() / "native-wrapper-symbols.log";
+    const std::string command =
+        "nm -D --defined-only \"" + binary_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
+    if (std::system(command.c_str()) != 0) {
+        error = "native wrapper symbol inspection failed";
+        if (fs::exists(log_path)) {
+            error += ":\n" + read_text(log_path);
+        }
+        return symbols;
+    }
+
+    std::istringstream input(read_text(log_path));
+    std::string line;
+    while (std::getline(input, line)) {
+        const std::size_t name_pos = line.find_last_of(" \t");
+        if (name_pos == std::string::npos || name_pos + 1U >= line.size()) {
+            continue;
+        }
+        const std::string symbol = line.substr(name_pos + 1U);
+        if (!symbol.empty()) {
+            symbols.insert(symbol);
+        }
+    }
+    return symbols;
+#endif
 }
 
 bool compile_csharp_artifact(const std::filesystem::path& source_path, std::string& error) {
@@ -739,13 +786,28 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "library-output wrapper CMake should forward the module-definition file on MSVC");
         if (native_cxx_is_available()) {
+            fs::path compiled_wrapper_path;
             std::string compile_error;
-            const bool compiled = compile_native_wrapper_scaffold(result.plan.native_wrapper_source_path, compile_error);
+            const bool compiled = compile_native_wrapper_scaffold(
+                result.plan.native_wrapper_source_path,
+                compiled_wrapper_path,
+                compile_error);
             if (!compiled && !compile_error.empty()) {
                 std::cerr << "FAIL: " << compile_error << "\n";
             }
             expect(compiled,
                    "library-output wrapper scaffold should compile under the host C++ toolchain");
+            if (compiled && native_symbol_dump_is_available()) {
+                std::string symbol_error;
+                const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);
+                if (exported_symbols.empty() && !symbol_error.empty()) {
+                    std::cerr << "FAIL: " << symbol_error << "\n";
+                }
+                expect(exported_symbols.contains("InitLibrary"),
+                       "library-output compiled wrapper should export InitLibrary");
+                expect(exported_symbols.contains("AddNumbers"),
+                       "library-output compiled wrapper should export AddNumbers");
+            }
         }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -892,13 +954,30 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "fll-output wrapper CMake should forward the module-definition file on MSVC");
         if (native_cxx_is_available()) {
+            fs::path compiled_wrapper_path;
             std::string compile_error;
-            const bool compiled = compile_native_wrapper_scaffold(result.plan.native_wrapper_source_path, compile_error);
+            const bool compiled = compile_native_wrapper_scaffold(
+                result.plan.native_wrapper_source_path,
+                compiled_wrapper_path,
+                compile_error);
             if (!compiled && !compile_error.empty()) {
                 std::cerr << "FAIL: " << compile_error << "\n";
             }
             expect(compiled,
                    "fll-output wrapper scaffold should compile under the host C++ toolchain");
+            if (compiled && native_symbol_dump_is_available()) {
+                std::string symbol_error;
+                const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);
+                if (exported_symbols.empty() && !symbol_error.empty()) {
+                    std::cerr << "FAIL: " << symbol_error << "\n";
+                }
+                expect(exported_symbols.contains("InitLibrary"),
+                       "fll-output compiled wrapper should export InitLibrary");
+                expect(exported_symbols.contains("AddNumbers"),
+                       "fll-output compiled wrapper should export AddNumbers");
+                expect(exported_symbols.contains("FoxInfo"),
+                       "fll-output compiled wrapper should export FoxInfo");
+            }
         }
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
