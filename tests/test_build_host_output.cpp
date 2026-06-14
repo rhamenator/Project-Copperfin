@@ -517,9 +517,11 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record source-path fields in the FoxInfo table");
             expect(wrapper_source.find("unsigned int source_line;") != std::string::npos,
                    "build host FLL wrapper should record source-line fields in the FoxInfo table");
-            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, 1U}") != std::string::npos,
+            expect(wrapper_source.find("const char* parameter_names;") != std::string::npos,
+                   "build host FLL wrapper should record parameter-name fields in the FoxInfo table");
+            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, \"tcMode\", 1U}") != std::string::npos,
                    "build host FLL wrapper should record InitLibrary metadata in the FoxInfo table");
-            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, 2U}") != std::string::npos,
+            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, \"tnLeft|tnRight\", 2U}") != std::string::npos,
                    "build host FLL wrapper should record AddNumbers metadata in the FoxInfo table");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary arity");
