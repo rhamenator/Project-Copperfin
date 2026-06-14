@@ -63,6 +63,7 @@ struct RuntimePackagePlan {
     std::string manifest_path;
     std::string debug_manifest_path;
     std::string ast_manifest_path;
+    std::string ir_manifest_path;
     std::string launcher_project_path;
     std::string launcher_source_path;
     std::string launcher_output_path;
