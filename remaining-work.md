@@ -211,9 +211,9 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 
 - Compiler/runtime contract and package model: #19
 - Debugger completion: #20
-- Build/run/deploy workflow tightening: #21 (native slice queues: #171-#172; #162-#170 shipped)
+- Build/run/deploy workflow tightening: #21 (native slice queues: #172-#173; #162-#171 shipped)
 - AST/IR and transpilation outputs: #42, #43
-- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #171-#172; #162-#170 shipped)
+- Build artifact breadth and round-trip safety: #38, #39, #40, #41 (active-open native slice visibility on this branch is #172-#173; #162-#171 shipped)
 
 ### Designers And IDE Parity
 
@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #22-#26: #171-#177
+- active-open native slice queues under #22-#26: #172-#177
 
 ### Future Enhancements
 
@@ -704,6 +704,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-13: E1/#168 normalized design-model fidelity shipped in `project_workspace` + `test_project_workspace`. The normalized workspace model now rounds up project header, grouping, startup selection, and fallback output-path behavior with focused regression coverage.
 - 2026-06-13: E1/#169 memo-heavy round-trip preservation shipped in `dbf_table` + `test_dbf_table`. SCX/SCT memo sidecar repair now preserves the updated memo payload through a full round-trip, with focused regression coverage around the repaired asset state.
 - 2026-06-13: E2/#170 designer interaction fidelity shipped in `visual_asset_editor` + `test_visual_asset_editor`. Visual asset editing now preserves memo-backed property bags and direct field updates through the parsed table contract.
+- 2026-06-13: E2/#171 builder and context-editor fidelity shipped in `studio_host` + `test_studio_host`. Launch parsing and context-aware document open behavior now preserve the builder contract and editor diagnostics through the host boundary.
 
 - 2026-04-27: Fix SET('PATH') test expectations (88d1d4b). Codex f700a50 correctly changed SET('PATH') not-found readback to return "" (VFP-accurate). Two assertions in `tests/test_prg_engine.cpp` updated to use `.empty()` instead of `== "OFF"`. 29/29 green.
 
