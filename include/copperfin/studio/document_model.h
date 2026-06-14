@@ -24,6 +24,12 @@ enum class StudioAssetKind {
     header
 };
 
+enum class StudioUndoMode {
+    unspecified,
+    edit,
+    command
+};
+
 struct StudioOpenRequest {
     std::string path;
     std::string symbol;
@@ -36,6 +42,8 @@ struct StudioOpenRequest {
     bool read_only = false;
     bool load_full_table = false;
     bool apply_property_update = false;
+    StudioUndoMode undo_mode = StudioUndoMode::unspecified;
+    std::string undo_label;
 };
 
 struct StudioDocumentModel {

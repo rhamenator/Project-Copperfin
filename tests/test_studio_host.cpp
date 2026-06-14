@@ -48,7 +48,9 @@ void test_parse_launch_arguments() {
         "--property-value", "25",
         "--line", "25",
         "--column", "7",
-        "--symbol", "cmdSave.Click"
+        "--symbol", "cmdSave.Click",
+        "--undo-mode", "command",
+        "--undo-label", "Bulk Undo"
     });
 
     expect(result.ok, "launch contract should parse a complete Visual Studio launch request");
@@ -63,11 +65,21 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
+    expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
+    expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
+}
+
+void test_parse_launch_arguments_rejects_unknown_undo_mode() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--undo-mode", "mystery"
+    });
+    expect(!result.ok, "launch contract should reject unknown undo modes");
 }
 
 void test_open_document_infers_form_sidecar() {
@@ -362,6 +374,7 @@ void test_open_document_includes_prg_static_diagnostics() {
 int main() {
     test_parse_launch_arguments();
     test_parse_launch_arguments_rejects_unknown_switch();
+    test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();

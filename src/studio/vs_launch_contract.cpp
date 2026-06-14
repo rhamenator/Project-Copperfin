@@ -1,6 +1,8 @@
 #include "copperfin/studio/vs_launch_contract.h"
 
+#include <algorithm>
 #include <charconv>
+#include <cctype>
 
 namespace copperfin::studio {
 
@@ -112,6 +114,33 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "The --column value must be an unsigned integer."};
             }
             result.request.column = column;
+            continue;
+        }
+
+        if (argument == "--undo-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --undo-mode."};
+            }
+            std::string mode = args[++index];
+            std::transform(mode.begin(), mode.end(), mode.begin(), [](unsigned char ch) {
+                return static_cast<char>(std::tolower(ch));
+            });
+            if (mode == "edit") {
+                result.request.undo_mode = StudioUndoMode::edit;
+                continue;
+            }
+            if (mode == "command") {
+                result.request.undo_mode = StudioUndoMode::command;
+                continue;
+            }
+            return {.ok = false, .error = "The --undo-mode value must be edit or command."};
+        }
+
+        if (argument == "--undo-label") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --undo-label."};
+            }
+            result.request.undo_label = args[++index];
             continue;
         }
 
