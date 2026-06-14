@@ -1653,6 +1653,57 @@ void test_scatter_memo_clause_controls_memo_field_inclusion() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_memvar_blank_on_empty_table_succeeds() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_blank_empty";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {});
+    expect(create_result.ok, "SCATTER BLANK empty-table fixture should be created with no records");
+
+    const fs::path main_path = temp_root / "scatter_blank_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "SCATTER MEMVAR BLANK\n"
+        "cNameType = VARTYPE(m.NAME)\n"
+        "cAgeType = VARTYPE(m.AGE)\n"
+        "cActiveType = VARTYPE(m.ACTIVE)\n"
+        "nBlankAge = m.AGE\n"
+        "lBlankActive = m.ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER MEMVAR BLANK on empty table should complete: " + state.message);
+
+    const auto chk = [&](const std::string &var, const std::string &expected, const std::string &msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected, msg + " (got '" + copperfin::runtime::format_value(it->second) + "')");
+        }
+    };
+
+    chk("cnametype", "C", "SCATTER BLANK on empty table should produce character memvar for NAME");
+    chk("cagetype", "N", "SCATTER BLANK on empty table should produce numeric memvar for AGE");
+    chk("cactivetype", "L", "SCATTER BLANK on empty table should produce logical memvar for ACTIVE");
+    chk("nblankage", "0", "SCATTER BLANK numeric memvar should be zero");
+    chk("lblankactive", "false", "SCATTER BLANK logical memvar should be false");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_array_mutator_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_mutators";
@@ -5916,6 +5967,7 @@ int main() {
     test_scatter_gather_predeclared_2d_array_row_one_semantics();
     test_scatter_gather_two_column_name_value_array_semantics();
     test_scatter_memo_clause_controls_memo_field_inclusion();
+    test_scatter_memvar_blank_on_empty_table_succeeds();
     test_runtime_array_mutator_functions();
     test_save_to_writes_variables_to_file();
     test_restore_from_loads_variables_from_file();

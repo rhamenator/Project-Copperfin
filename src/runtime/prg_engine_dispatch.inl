@@ -5671,7 +5671,7 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 const auto rec = current_record(*cursor);
-                if (!rec.has_value())
+                if (!rec.has_value() && !blank)
                 {
                     last_error_message = "SCATTER: no current record";
                     last_fault_location = statement.location;
@@ -5679,11 +5679,43 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                // For BLANK mode on an empty table, build synthetic field list from schema.
+                std::vector<vfp::DbfRecordValue> blank_field_list;
+                if (!rec.has_value() && blank)
+                {
+                    if (cursor->remote)
+                    {
+                        for (const auto &fd : cursor->remote_fields)
+                        {
+                            vfp::DbfRecordValue rv;
+                            rv.field_name = fd.name;
+                            rv.field_type = fd.type;
+                            blank_field_list.push_back(rv);
+                        }
+                    }
+                    else if (!cursor->source_path.empty())
+                    {
+                        const auto schema = vfp::parse_dbf_table_from_file(cursor->source_path, 0U);
+                        if (schema.ok)
+                        {
+                            for (const auto &fd : schema.table.fields)
+                            {
+                                vfp::DbfRecordValue rv;
+                                rv.field_name = fd.name;
+                                rv.field_type = fd.type;
+                                blank_field_list.push_back(rv);
+                            }
+                        }
+                    }
+                }
+                const std::vector<vfp::DbfRecordValue> &field_source =
+                    rec.has_value() ? rec->values : blank_field_list;
+
                 std::vector<PrgValue> scattered_values;
                 std::vector<std::string> scattered_field_names;
                 std::string array_name;
                 std::size_t matched_field_count = 0U;
-                for (const auto &field : rec->values)
+                for (const auto &field : field_source)
                 {
                     if (!field_matches_filter(field.field_name, field_filter))
                     {

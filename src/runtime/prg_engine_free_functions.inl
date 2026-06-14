@@ -1491,7 +1491,7 @@
             {
                 return make_number_value(0.0);
             }
-            if (field_type == 'D' || field_type == 'T')
+            if (field_type == 'C' || field_type == 'V' || field_type == 'D' || field_type == 'T')
             {
                 return make_string_value("");
             }
