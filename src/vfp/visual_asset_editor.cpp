@@ -133,6 +133,9 @@ std::string infer_memo_sidecar_path(const std::string& path) {
     if (ext == ".pjx") {
         return file_path.replace_extension(".pjt").string();
     }
+    if (ext == ".dbc") {
+        return file_path.replace_extension(".dct").string();
+    }
     return {};
 }
 
