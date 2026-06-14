@@ -11,6 +11,9 @@
 
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightClient.cs" Link="Shared\CopperfinProjectInsightClient.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightModels.cs" Link="Shared\CopperfinProjectInsightModels.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioSnapshotModels.cs" Link="Shared\CopperfinStudioSnapshotModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\FoxProIntelliSenseCatalog.cs" Link="Shared\FoxProIntelliSenseCatalog.cs" />
   </ItemGroup>
 </Project>

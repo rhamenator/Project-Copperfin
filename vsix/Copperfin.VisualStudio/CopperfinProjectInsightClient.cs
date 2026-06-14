@@ -17,6 +17,7 @@ internal static class CopperfinProjectInsightClient
     private static readonly Regex ReportFormRegex = new(@"^\s*REPORT\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex LabelFormRegex = new(@"^\s*LABEL\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DoRegex = new(@"^\s*DO\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex InvocationRegex = new(@"(?<![A-Za-z0-9_#])([A-Za-z_][A-Za-z0-9_\.]*)\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".prg", ".h", ".hpp", ".ch", ".qpr", ".mpr", ".spr", ".ini", ".xml", ".txt"
@@ -32,6 +33,7 @@ internal static class CopperfinProjectInsightClient
             return insights;
         }
 
+        var loadedTextFiles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
         var projectRoot = ResolveProjectRoot(snapshot);
         insights.ProjectRoot = projectRoot;
         foreach (var entry in workspace.Entries)
@@ -56,7 +58,26 @@ internal static class CopperfinProjectInsightClient
                 continue;
             }
 
-            ScanTextFile(resolvedPath, insights);
+            var lines = TryReadTextFile(resolvedPath, insights);
+            if (lines is null)
+            {
+                continue;
+            }
+
+            loadedTextFiles[resolvedPath] = lines;
+            CollectTaskItemsAndDefinitions(resolvedPath, lines, insights);
+        }
+
+        var knownCallableSymbols = new HashSet<string>(
+            insights.DefinedSymbols
+                .Where(symbol => string.Equals(symbol.Kind, "procedure", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(symbol.Kind, "function", StringComparison.OrdinalIgnoreCase))
+                .Select(symbol => symbol.Name),
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var loadedTextFile in loadedTextFiles)
+        {
+            CollectRuntimeReferences(loadedTextFile.Key, loadedTextFile.Value, knownCallableSymbols, insights);
         }
 
         return insights;
@@ -97,30 +118,32 @@ internal static class CopperfinProjectInsightClient
         }
     }
 
-    private static void ScanTextFile(string path, CopperfinProjectInsights insights)
+    private static string[]? TryReadTextFile(string path, CopperfinProjectInsights insights)
     {
-        string[] lines;
         try
         {
-            lines = File.ReadAllLines(path);
+            return File.ReadAllLines(path);
         }
         catch (IOException)
         {
             insights.Warnings.Add($"Could not read project file: {path}");
-            return;
+            return null;
         }
         catch (UnauthorizedAccessException)
         {
             insights.Warnings.Add($"Access denied while reading project file: {path}");
-            return;
+            return null;
         }
+    }
 
-        for (var index = 0; index < lines.Length; index++)
+    private static void CollectTaskItemsAndDefinitions(string path, IReadOnlyList<string> lines, CopperfinProjectInsights insights)
+    {
+        for (var index = 0; index < lines.Count; index++)
         {
             var line = lines[index];
             var lineNumber = index + 1;
             CollectTaskItems(path, lineNumber, line, insights);
-            CollectSymbols(path, lineNumber, line, insights);
+            CollectDefinitions(path, lineNumber, line, insights);
         }
     }
 
@@ -145,7 +168,7 @@ internal static class CopperfinProjectInsightClient
         }
     }
 
-    private static void CollectSymbols(string path, int lineNumber, string line, CopperfinProjectInsights insights)
+    private static void CollectDefinitions(string path, int lineNumber, string line, CopperfinProjectInsights insights)
     {
         AddDefinitionIfMatch(path, lineNumber, line, ProcedureRegex, "procedure", insights);
         AddDefinitionIfMatch(path, lineNumber, line, FunctionRegex, "function", insights);
@@ -171,24 +194,90 @@ internal static class CopperfinProjectInsightClient
                 Detail = "AS " + classMatch.Groups[2].Value
             });
         }
+    }
 
-        AddReferenceIfMatch(path, lineNumber, line, DoFormRegex, "do form", insights);
-        AddReferenceIfMatch(path, lineNumber, line, ReportFormRegex, "report form", insights);
-        AddReferenceIfMatch(path, lineNumber, line, LabelFormRegex, "label form", insights);
-
-        var doMatch = DoRegex.Match(line);
-        if (doMatch.Success &&
-            line.IndexOf("DO FORM", StringComparison.OrdinalIgnoreCase) < 0)
+    private static void CollectRuntimeReferences(
+        string path,
+        IReadOnlyList<string> lines,
+        ISet<string> knownCallableSymbols,
+        CopperfinProjectInsights insights)
+    {
+        for (var index = 0; index < lines.Count; index++)
         {
+            var line = lines[index];
+            var lineNumber = index + 1;
+
+            AddReferenceIfMatch(path, lineNumber, line, DoFormRegex, "do form", insights);
+            AddReferenceIfMatch(path, lineNumber, line, ReportFormRegex, "report form", insights);
+            AddReferenceIfMatch(path, lineNumber, line, LabelFormRegex, "label form", insights);
+
+            var doMatch = DoRegex.Match(line);
+            if (doMatch.Success &&
+                line.IndexOf("DO FORM", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                insights.RuntimeReferences.Add(new CopperfinProjectCodeSymbol
+                {
+                    Kind = "do",
+                    Name = doMatch.Groups[1].Value,
+                    FilePath = path,
+                    Line = lineNumber,
+                    Detail = line.Trim()
+                });
+            }
+
+            CollectCallableReferences(path, lineNumber, line, knownCallableSymbols, insights);
+        }
+    }
+
+    private static void CollectCallableReferences(
+        string path,
+        int lineNumber,
+        string line,
+        ISet<string> knownCallableSymbols,
+        CopperfinProjectInsights insights)
+    {
+        if (knownCallableSymbols.Count == 0 ||
+            ProcedureRegex.IsMatch(line) ||
+            FunctionRegex.IsMatch(line) ||
+            DefineClassRegex.IsMatch(line))
+        {
+            return;
+        }
+
+        foreach (Match match in InvocationRegex.Matches(line))
+        {
+            var invocation = match.Groups[1].Value;
+            var resolvedName = ResolveCallableReferenceName(invocation, knownCallableSymbols);
+            if (string.IsNullOrWhiteSpace(resolvedName))
+            {
+                continue;
+            }
+
             insights.RuntimeReferences.Add(new CopperfinProjectCodeSymbol
             {
-                Kind = "do",
-                Name = doMatch.Groups[1].Value,
+                Kind = invocation.Contains('.') ? "call.member" : "call",
+                Name = resolvedName,
                 FilePath = path,
                 Line = lineNumber,
                 Detail = line.Trim()
             });
         }
+    }
+
+    private static string ResolveCallableReferenceName(string invocation, ISet<string> knownCallableSymbols)
+    {
+        if (knownCallableSymbols.Contains(invocation))
+        {
+            return invocation;
+        }
+
+        if (!invocation.Contains('.'))
+        {
+            return string.Empty;
+        }
+
+        var memberName = invocation.Split('.').Last();
+        return knownCallableSymbols.Contains(memberName) ? memberName : string.Empty;
     }
 
     private static void AddDefinitionIfMatch(string path, int lineNumber, string line, Regex regex, string kind, CopperfinProjectInsights insights)

@@ -14,6 +14,7 @@ internal static class Program
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
+        TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
 
         if (failures != 0)
         {
@@ -145,6 +146,53 @@ internal static class Program
             {
                 Expect(signatures[0].Content == "SaveOrder(tcCustomerId)", "dotted invocation signature help should fall back to the trailing procedure symbol");
             }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectInsightsCollectDirectAndDottedProcedureCallReferences()
+    {
+        var root = CreateProjectRoot("call_reference_navigation");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "? SaveOrder('ALFKI')" + Environment.NewLine +
+                "? oToolbar.SaveOrder('ANTON')" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "main.prg",
+                            RelativePath = "main.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            var references = insights.RuntimeReferences.FindAll(reference => reference.Name == "SaveOrder");
+            Expect(references.Count == 2, "project insights should collect direct and dotted procedure call references");
+            Expect(references.Exists(reference => reference.Kind == "call" && reference.Detail.Contains("SaveOrder('ALFKI')", StringComparison.Ordinal)),
+                "project insights should keep direct procedure call detail");
+            Expect(references.Exists(reference => reference.Kind == "call.member" && reference.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
+                "project insights should keep dotted procedure call detail");
         }
         finally
         {

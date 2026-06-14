@@ -34,9 +34,10 @@ Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the
 
 Language-service queue update:
 
+- 2026-06-14: **`#180` is now shipped.** `CopperfinProjectInsightClient` now performs a definition pass before collecting references, so project-defined procedures/functions surface reference-navigation entries from direct and dotted call sites such as `SaveOrder(...)` and `oToolbar.SaveOrder(...)`.
 - 2026-06-14: **`#179` is now shipped.** `FoxProIntelliSenseCatalog` now derives project procedure/function signature help from nearby `LPARAMETERS` / `PARAMETERS` declarations and reuses it for dotted invocation fallback such as `oToolbar.SaveOrder`.
 - 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
-- Next language-service slice: `#180` (definition/reference navigation fidelity).
+- Next language-service slice: `#181` (rename/refactoring fidelity).
 
 Current shipped highlights worth remembering:
 
