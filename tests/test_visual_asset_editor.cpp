@@ -79,6 +79,51 @@ void write_field_descriptor(
     bytes[offset + 16U] = field_length;
 }
 
+void write_synthetic_direct_and_memo_asset(
+    const std::filesystem::path& table_path,
+    const std::filesystem::path& memo_path,
+    const std::string& direct_field_name,
+    const std::string& direct_field_value,
+    const std::string& memo_field_name,
+    const std::string& memo_field_value) {
+    std::vector<std::uint8_t> table_bytes(122U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 25U);
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, direct_field_name, 'C', 1U, 20U);
+    write_field_descriptor(table_bytes, 64U, memo_field_name, 'M', 21U, 4U);
+    table_bytes[96] = 0x0DU;
+
+    table_bytes[97] = 0x20U;
+    std::fill_n(table_bytes.begin() + 98U, 20U, static_cast<std::uint8_t>(' '));
+    write_ascii(table_bytes, 98U, direct_field_value);
+    write_le_u32(table_bytes, 118U, 1U);
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+    write_be_u32(memo_bytes, 0U, 2U);
+    write_be_u16(memo_bytes, 6U, 512U);
+    memo_bytes[512 + 3] = 1U;
+    write_be_u32(memo_bytes, 512 + 4, static_cast<std::uint32_t>(memo_field_value.size()));
+    write_ascii(memo_bytes, 520U, memo_field_value);
+
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+}
+
 void test_update_visual_object_property_rewrites_properties_memo() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -429,12 +474,98 @@ void test_update_visual_object_property_round_trips_added_vcx_property() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_property_round_trips_label_and_menu_assets() {
+    namespace fs = std::filesystem;
+    const auto exercise_asset = [&](const std::string& stem,
+                                    const std::string& table_extension,
+                                    const std::string& memo_extension,
+                                    const std::string& asset_label) {
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_" + stem + "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / ("sample" + table_extension);
+        const fs::path memo_path = temp_dir / ("sample" + memo_extension);
+        write_synthetic_direct_and_memo_asset(
+            table_path,
+            memo_path,
+            "TITLE",
+            asset_label + "Title",
+            "EXPR",
+            asset_label + "Expr");
+
+        auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .property_name = "TITLE",
+            .property_value = asset_label + "Updated"
+        });
+        expect(update_result.ok, asset_label + " direct-field update should succeed");
+
+        update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .property_name = "EXPR",
+            .property_value = "\"" + asset_label + "MemoUpdated\""
+        });
+        expect(update_result.ok, asset_label + " memo-field update should succeed");
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(parse_result.ok, asset_label + " asset should remain readable after updates");
+        if (parse_result.ok && parse_result.table.records.size() == 1U) {
+            const auto& record = parse_result.table.records[0];
+            for (const auto& value : record.values) {
+                if (value.field_name == "TITLE") {
+                    expect(value.display_value == asset_label + "Updated",
+                        asset_label + " direct-field value should round-trip");
+                }
+                if (value.field_name == "EXPR") {
+                    expect(value.display_value == "\"" + asset_label + "MemoUpdated\"",
+                        asset_label + " memo-field value should round-trip");
+                }
+            }
+        }
+
+        auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " first undo should restore the memo field");
+        undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " second undo should restore the direct field");
+
+        const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(reverted_parse_result.ok, asset_label + " asset should remain readable after undo");
+        if (reverted_parse_result.ok && reverted_parse_result.table.records.size() == 1U) {
+            const auto& record = reverted_parse_result.table.records[0];
+            for (const auto& value : record.values) {
+                if (value.field_name == "TITLE") {
+                    expect(value.display_value == asset_label + "Title",
+                        asset_label + " undo should restore the original direct-field value");
+                }
+                if (value.field_name == "EXPR") {
+                    expect(value.display_value == asset_label + "Expr",
+                        asset_label + " undo should restore the original memo-field value");
+                }
+            }
+        }
+
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+        expect(!undo_status.available, asset_label + " undo journal should be empty after both undos");
+
+        fs::remove_all(temp_dir, ignored);
+    };
+
+    exercise_asset("lbx", ".lbx", ".lbt", "Label");
+    exercise_asset("mnx", ".mnx", ".mnt", "Menu");
+}
+
 }  // namespace
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_property_rewrites_direct_fields();
     test_update_visual_object_property_round_trips_added_vcx_property();
+    test_update_visual_object_property_round_trips_label_and_menu_assets();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
