@@ -1051,6 +1051,12 @@ void append_runtime_asset_manifest_lines(std::ostringstream& stream, const Runti
     }
 }
 
+void append_warning_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
+    for (const auto& warning : plan.warnings) {
+        stream << "warning=" << quote_manifest_value(warning) << "\n";
+    }
+}
+
 const char* statement_kind_name(const StatementKind kind) {
     switch (kind) {
         case StatementKind::assignment:
@@ -2380,9 +2386,7 @@ std::string build_runtime_manifest_text(
 
     append_library_function_manifest_lines(stream, plan);
 
-    for (const auto& warning : plan.warnings) {
-        stream << "warning=" << quote_manifest_value(warning) << "\n";
-    }
+    append_warning_manifest_lines(stream, plan);
 
     return stream.str();
 }
@@ -2437,6 +2441,7 @@ std::string build_debug_manifest_text(const RuntimePackagePlan& plan) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
     append_runtime_asset_manifest_lines(stream, plan);
+    append_warning_manifest_lines(stream, plan);
     append_library_function_manifest_lines(stream, plan);
     return stream.str();
 }

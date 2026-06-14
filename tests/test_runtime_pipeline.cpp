@@ -1995,6 +1995,78 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     fs::remove_all(temp_root, ignored);
 }
 
+void run_library_output_warning_debug_manifest_smoke(const std::string& output_kind, const std::string& extension) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / ("copperfin_runtime_pipeline_library_warning_" + extension);
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / ("library_warning_" + extension + ".pjx")).string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LibraryWarning";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "LibraryWarning";
+    workspace.build_plan.output_path = (output_dir / ("LibraryWarning." + extension)).string();
+    workspace.build_plan.output_kind = output_kind;
+    workspace.build_plan.build_target = "warning-path regression";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "library warning-path plan should be created for " + extension + " outputs");
+    const std::string export_warning = "No PRG routine exports were discovered for the library output contract.";
+    expect(std::find(plan.warnings.begin(), plan.warnings.end(), export_warning) != plan.warnings.end(),
+           "library warning-path plan should surface the no-export warning for " + extension + " outputs");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "library warning-path package should materialize for " + extension + " outputs");
+    if (result.ok) {
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        const std::string warning_line = "warning=" + quote_manifest_value(export_warning);
+        expect(runtime_manifest.find(warning_line) != std::string::npos,
+               "library warning-path runtime manifest should record the no-export warning for " + extension + " outputs");
+        expect(debug_manifest.find(warning_line) != std::string::npos,
+               "library warning-path debug manifest should mirror the no-export warning for " + extension + " outputs");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_library_output_warning_lines_are_mirrored_into_debug_manifest() {
+    run_library_output_warning_debug_manifest_smoke("dll", "dll");
+    run_library_output_warning_debug_manifest_smoke("fll", "fll");
+}
+
 void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_app_contract";
@@ -3234,6 +3306,7 @@ int main() {
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
+    test_library_output_warning_lines_are_mirrored_into_debug_manifest();
     test_fxp_output_package_emits_token_manifest_from_prg_statements();
     test_app_output_package_emits_archive_manifest_for_staged_assets();
     test_runtime_package_emits_ast_manifest_for_prg_sources();
