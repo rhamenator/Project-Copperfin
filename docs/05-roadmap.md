@@ -59,7 +59,7 @@ Goal:
 Current state:
 
 - baseline shipped
-- active-open follow-on queue exists (`#176`-`#177`; `#162`-`#175` shipped)
+- active-open follow-on queue exists (`#177`; `#162`-`#176` shipped)
 
 ## Phase E: Designers And IDE Parity
 
