@@ -33,6 +33,7 @@ Current inspector behavior:
 - Direct inspection recognizes `CDX`, `DCX`, `IDX`, `NDX`, and `MDX`.
 - DBF/DBC-family inspection now reports structured validation findings when expected structural companion indexes are missing or when present companion indexes fail to parse.
 - The runtime order loader now preserves additive normalization/collation hints through `SET ORDER` and temporary `SEEK ... TAG` overrides, and emits those hints in `runtime.order` / `runtime.seek` event detail for verification.
+- The runtime locate/scan path now emits `runtime.rushmore` diagnostics for index-seek decisions while restoring the caller's active order after temporary optimization probes.
 - Table inspection looks for same-base companion indexes:
   - `table.cdx`
   - `table.idx`

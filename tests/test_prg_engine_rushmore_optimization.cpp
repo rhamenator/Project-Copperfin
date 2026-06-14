@@ -1,0 +1,155 @@
+#include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
+#include "prg_engine_test_support.h"
+
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+#include <system_error>
+
+namespace {
+
+using namespace copperfin::test_support;
+
+bool has_rushmore_event_with_detail_fragment(
+    const std::vector<copperfin::runtime::RuntimeEvent>& events,
+    const std::string& fragment) {
+    return std::any_of(events.begin(), events.end(), [&](const copperfin::runtime::RuntimeEvent& event) {
+        return event.category == "runtime.rushmore" && event.detail.find(fragment) != std::string::npos;
+    });
+}
+
+void test_locate_uses_rushmore_seek_and_restores_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rushmore_locate";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "rushmore_locate.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cOrderBefore = ORDER()\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "cOrderAfter = ORDER()\n"
+        "lFound = FOUND()\n"
+        "nRecno = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Rushmore LOCATE script should complete");
+
+    const auto order_before = state.globals.find("corderbefore");
+    const auto order_after = state.globals.find("corderafter");
+    const auto found = state.globals.find("lfound");
+    const auto recno = state.globals.find("nrecno");
+
+    expect(order_before != state.globals.end(), "ORDER() before LOCATE should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after LOCATE should be captured");
+    expect(found != state.globals.end(), "FOUND() after LOCATE should be captured");
+    expect(recno != state.globals.end(), "RECNO() after LOCATE should be captured");
+
+    if (order_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_before->second).empty(),
+            "LOCATE should start without a permanent active order");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(),
+            "Rushmore LOCATE should restore the original active order after optimization");
+    }
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true",
+            "Rushmore LOCATE should still find the matching record");
+    }
+    if (recno != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno->second) == "2",
+            "Rushmore LOCATE should position the cursor on the matching row");
+    }
+
+    expect(
+        has_rushmore_event_with_detail_fragment(state.events, "NAME = 'BRAVO'") &&
+        has_rushmore_event_with_detail_fragment(state.events, "index_seek via NAME"),
+        "Rushmore LOCATE should emit a diagnostics event showing the optimized seek path");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scan_uses_rushmore_seek_and_restores_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rushmore_scan";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "rushmore_scan.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "cOrderBefore = ORDER()\n"
+        "SCAN FOR NAME = 'BRAVO'\n"
+        "cScanName = NAME\n"
+        "ENDSCAN\n"
+        "cOrderAfter = ORDER()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Rushmore SCAN script should complete");
+
+    const auto order_before = state.globals.find("corderbefore");
+    const auto order_after = state.globals.find("corderafter");
+    const auto scan_name = state.globals.find("cscanname");
+
+    expect(order_before != state.globals.end(), "ORDER() before SCAN should be captured");
+    expect(order_after != state.globals.end(), "ORDER() after SCAN should be captured");
+    expect(scan_name != state.globals.end(), "SCAN body should capture the matching NAME");
+
+    if (order_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_before->second).empty(),
+            "SCAN should start without a permanent active order");
+    }
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(),
+            "Rushmore SCAN should restore the original active order after optimization");
+    }
+    if (scan_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_name->second) == "BRAVO",
+            "Rushmore SCAN should execute the matching body on the located row");
+    }
+
+    expect(
+        has_rushmore_event_with_detail_fragment(state.events, "NAME = 'BRAVO'") &&
+        has_rushmore_event_with_detail_fragment(state.events, "index_seek via NAME"),
+        "Rushmore SCAN should emit a diagnostics event showing the optimized seek path");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+}  // namespace
+
+int main() {
+    test_locate_uses_rushmore_seek_and_restores_order();
+    test_scan_uses_rushmore_seek_and_restores_order();
+    const int failures = copperfin::test_support::test_failures();
+    if (failures != 0) {
+        std::cerr << failures << " test(s) failed\n";
+        return 1;
+    }
+    return 0;
+}

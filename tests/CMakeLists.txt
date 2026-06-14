@@ -79,6 +79,11 @@ copperfin_add_test(test_prg_engine_index_seek_optimization cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_rushmore_optimization cf_xbase_runtime
+    test_prg_engine_rushmore_optimization.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow.cpp
     prg_engine_test_support.cpp

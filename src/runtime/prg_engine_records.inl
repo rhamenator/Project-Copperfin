@@ -323,10 +323,11 @@
                 return false;
             }
 
-            // Try index seek optimization if we have a FOR clause and available indexes
+            const std::string locate_detail = for_expression.empty() ? std::string{"ALL"} : for_expression;
+            std::string rushmore_detail = locate_detail + " -> linear_scan";
+
             if (!for_expression.empty() && !cursor.orders.empty())
             {
-                // Check cache first
                 auto cached_pattern = index_pattern_cache.find(for_expression);
                 IndexExpressionPattern pattern;
                 if (cached_pattern != index_pattern_cache.end())
@@ -335,21 +336,18 @@
                 }
                 else
                 {
-                    // Analyze the FOR expression for optimization patterns
                     std::vector<std::string> available_fields;
                     for (const auto &field : cursor.remote_fields)
                     {
                         available_fields.push_back(field.name);
                     }
-                    
+
                     pattern = analyze_filter_expression(for_expression, available_fields);
                     index_pattern_cache[for_expression] = pattern;
                 }
-                
-                // If pattern is recognized, try to create an optimization plan
+
                 if (pattern.confidence != OptimizationConfidence::not_applicable)
                 {
-                    // Build list of available orders for matching
                     std::vector<IndexOrderCandidate> available_orders;
                     for (const auto &order : cursor.orders)
                     {
@@ -364,38 +362,43 @@
                             .is_descending = order.descending
                         });
                     }
-                    
-                    // Create optimization plan
+
                     auto plan = create_index_seek_plan(pattern, available_orders, cursor.active_order_name);
-                    
-                    // If we can optimize and have a selected order, try index seek first
-                    if (plan.can_optimize && plan.selected_order)
+
+                    if (!plan.decision_rationale.empty())
                     {
-                        // Try to use SEEK on the selected order
-                        // Extract the search value from the pattern
-                        if (!pattern.operands.empty() && !pattern.operands[1].raw_text.empty())
+                        rushmore_detail = locate_detail + " -> linear_scan (" + plan.decision_rationale + ")";
+                    }
+
+                    if (plan.can_optimize && plan.selected_order && start_recno <= 1U)
+                    {
+                        if (pattern.operands.size() > 1U && !pattern.operands[1].raw_text.empty())
                         {
                             const std::string search_key_text = pattern.operands[1].raw_text;
                             const auto search_value = evaluate_expression(search_key_text, frame);
                             const std::string search_key = value_as_string(search_value);
-                            
-                            // Temporarily switch to the optimized order and try SEEK
-                            std::string saved_order_name = cursor.active_order_name;
-                            std::string saved_order_expression = cursor.active_order_expression;
-                            std::string saved_order_for_expression = cursor.active_order_for_expression;
-                            std::string saved_order_path = cursor.active_order_path;
-                            std::string saved_order_normalization_hint = cursor.active_order_normalization_hint;
-                            std::string saved_order_collation_hint = cursor.active_order_collation_hint;
-                            std::string saved_order_key_domain_hint = cursor.active_order_key_domain_hint;
-                            bool saved_order_descending = cursor.active_order_descending;
-                            long long saved_recno = cursor.recno;
-                            bool saved_found = cursor.found;
-                            bool saved_bof = cursor.bof;
-                            bool saved_eof = cursor.eof;
-                            
+
+                            const CursorPositionSnapshot saved_cursor = capture_cursor_snapshot(cursor);
+                            const auto restore_order_metadata = [&]() {
+                                cursor.active_order_name = saved_cursor.active_order_name;
+                                cursor.active_order_expression = saved_cursor.active_order_expression;
+                                cursor.active_order_for_expression = saved_cursor.active_order_for_expression;
+                                cursor.active_order_path = saved_cursor.active_order_path;
+                                cursor.active_order_normalization_hint = saved_cursor.active_order_normalization_hint;
+                                cursor.active_order_collation_hint = saved_cursor.active_order_collation_hint;
+                                cursor.active_order_key_domain_hint = saved_cursor.active_order_key_domain_hint;
+                                cursor.active_order_descending = saved_cursor.active_order_descending;
+                            };
+                            const auto restore_full_state = [&]() {
+                                restore_order_metadata();
+                                cursor.recno = saved_cursor.recno;
+                                cursor.found = saved_cursor.found;
+                                cursor.bof = saved_cursor.bof;
+                                cursor.eof = saved_cursor.eof;
+                            };
+
                             try
                             {
-                                // Activate the optimized order
                                 cursor.active_order_name = plan.selected_order->order_name;
                                 cursor.active_order_expression = plan.selected_order->order_expression;
                                 cursor.active_order_for_expression = plan.selected_order->order_for_expression;
@@ -408,54 +411,32 @@
                                 cursor.bof = (start_recno <= 1U);
                                 cursor.eof = (start_recno > cursor.record_count);
                                 cursor.found = false;
-                                
-                                // Try SEEK
+
                                 if (seek_in_cursor(cursor, search_key))
                                 {
-                                    // SEEK found a match; verify it also matches any WHILE clause
                                     if (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor))
                                     {
+                                        restore_order_metadata();
                                         cursor.found = true;
+                                        rushmore_detail = locate_detail + " -> index_seek via " + plan.selected_order->order_name +
+                                                          " (" + plan.decision_rationale + ")";
+                                        events.push_back({.category = "runtime.rushmore", .detail = rushmore_detail});
                                         return true;  // Index seek optimization succeeded
                                     }
                                 }
                             }
                             catch (...)
                             {
-                                // Restore original state if something goes wrong
-                                cursor.active_order_name = saved_order_name;
-                                cursor.active_order_expression = saved_order_expression;
-                                cursor.active_order_for_expression = saved_order_for_expression;
-                                cursor.active_order_path = saved_order_path;
-                                cursor.active_order_normalization_hint = saved_order_normalization_hint;
-                                cursor.active_order_collation_hint = saved_order_collation_hint;
-                                cursor.active_order_key_domain_hint = saved_order_key_domain_hint;
-                                cursor.active_order_descending = saved_order_descending;
-                                cursor.recno = saved_recno;
-                                cursor.found = saved_found;
-                                cursor.bof = saved_bof;
-                                cursor.eof = saved_eof;
                             }
-                            
-                            // Restore original order state for fallback
-                            cursor.active_order_name = saved_order_name;
-                            cursor.active_order_expression = saved_order_expression;
-                            cursor.active_order_for_expression = saved_order_for_expression;
-                            cursor.active_order_path = saved_order_path;
-                            cursor.active_order_normalization_hint = saved_order_normalization_hint;
-                            cursor.active_order_collation_hint = saved_order_collation_hint;
-                            cursor.active_order_key_domain_hint = saved_order_key_domain_hint;
-                            cursor.active_order_descending = saved_order_descending;
-                            cursor.recno = saved_recno;
-                            cursor.found = saved_found;
-                            cursor.bof = saved_bof;
-                            cursor.eof = saved_eof;
+
+                            restore_full_state();
+                            rushmore_detail = locate_detail + " -> linear_scan after index_seek via " + plan.selected_order->order_name +
+                                              " (" + plan.decision_rationale + ")";
                         }
                     }
                 }
             }
 
-            // Fallback to linear scan (default behavior)
             const bool found = seek_visible_record(
                 cursor,
                 frame,
@@ -465,6 +446,7 @@
                 while_expression,
                 false);
             cursor.found = found;
+            events.push_back({.category = "runtime.rushmore", .detail = rushmore_detail});
             return true;
         }
 
