@@ -1048,6 +1048,81 @@ void test_rollback_transaction_replays_local_dbf_changes() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_cancel_rolls_back_active_transaction() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cancel_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "cancel_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nInitial = RECCOUNT()\n"
+        "BEGIN TRANSACTION\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'TEMP'\n"
+        "REPLACE AGE WITH 99\n"
+        "CANCEL\n"
+        "cShouldNotRun = 'yes'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CANCEL should complete program flow after rolling back active transaction");
+    const auto initial_count = state.globals.find("ninitial");
+    const auto canceled_marker = state.globals.find("cshouldnotrun");
+    if (initial_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(initial_count->second) == "2", "initial RECCOUNT should be captured before transaction");
+    }
+    expect(canceled_marker == state.globals.end(),
+           "CANCEL should prevent statements after it from executing");
+
+    const auto has_cancel = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &event) { return event.category == "runtime.cancel"; });
+    const auto has_txn_rollback = std::any_of(state.events.begin(), state.events.end(),
+        [](const auto &event) {
+            return event.category == "runtime.transaction.rollback" && event.detail == "0";
+        });
+    expect(has_cancel, "CANCEL should emit runtime.cancel event");
+    expect(has_txn_rollback, "CANCEL inside transaction should emit runtime.transaction.rollback event");
+
+    const fs::path transaction_root = temp_root / "runtime-temp" / "transactions";
+    if (std::filesystem::exists(transaction_root, ignored))
+    {
+        bool found_pending_journal = false;
+        for (const auto &entry : std::filesystem::directory_iterator(transaction_root, ignored))
+        {
+            if (!entry.is_directory(ignored))
+            {
+                continue;
+            }
+            const std::filesystem::path journal_path = entry.path() / "journal.log";
+            if (std::filesystem::exists(journal_path, ignored))
+            {
+                found_pending_journal = true;
+                break;
+            }
+        }
+        expect(!found_pending_journal, "CANCEL should leave no active transaction journal artifacts");
+    }
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(parse_result.ok, "CANCEL rollback should leave DBF readable");
+        expect(parse_result.table.records.size() == 2U, "CANCEL rollback should restore original row count");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA", "CANCEL rollback should preserve first row NAME");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO", "CANCEL rollback should preserve second row NAME");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_rollback_transaction_replays_append_from_array() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_transaction_append_array";
@@ -1339,6 +1414,7 @@ int main() {
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
     test_append_blank_supports_opaque_field_layouts_at_runtime();
+    test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
     test_sql_style_for_clauses_accept_macro_expressions();
     test_rollback_transaction_replays_local_dbf_changes();

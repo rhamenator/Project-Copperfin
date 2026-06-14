@@ -6801,6 +6801,20 @@
                 events.push_back({.category = "runtime.cancel",
                                   .detail = "CANCEL",
                                   .location = statement.location});
+                int &level = current_transaction_level();
+                if (level > 0)
+                {
+                    if (!rollback_active_transaction_journal())
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    level = 0;
+                    events.push_back({.category = "runtime.transaction.rollback",
+                                      .detail = "0",
+                                      .location = statement.location});
+                }
                 // Unwind entire call stack
                 while (stack.size() > 1U)
                 {
