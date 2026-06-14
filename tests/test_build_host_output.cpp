@@ -417,7 +417,7 @@ void run_library_build_host_smoke(
     fs::create_directories(output_dir);
 
     write_text(project_dir / "librarymain.prg", "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
-    write_text(project_dir / "helper.prg", "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
+    write_text(project_dir / "helper.prg", "FUNCTION AddNumbers\nPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_synthetic_project(project_path, project_dir, output_dir / ("LibraryDemo." + extension));
 
     const auto process = run_process_capture(
@@ -466,6 +466,10 @@ void run_library_build_host_smoke(
                    "build host manifest should record InitLibrary DLL parameter names");
             expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
                    "build host manifest should record AddNumbers DLL parameter names");
+            expect(manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+                   "build host manifest should record InitLibrary DLL parameter declaration style");
+            expect(manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+                   "build host manifest should record AddNumbers DLL parameter declaration style");
             expect(manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
                    "build host manifest should record InitLibrary DLL call surface");
             expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
@@ -517,11 +521,13 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record source-path fields in the FoxInfo table");
             expect(wrapper_source.find("unsigned int source_line;") != std::string::npos,
                    "build host FLL wrapper should record source-line fields in the FoxInfo table");
+            expect(wrapper_source.find("const char* parameter_declaration_kind;") != std::string::npos,
+                   "build host FLL wrapper should record parameter-declaration fields in the FoxInfo table");
             expect(wrapper_source.find("const char* parameter_names;") != std::string::npos,
                    "build host FLL wrapper should record parameter-name fields in the FoxInfo table");
-            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, \"tcMode\", 1U}") != std::string::npos,
+            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
                    "build host FLL wrapper should record InitLibrary metadata in the FoxInfo table");
-            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, \"tnLeft|tnRight\", 2U}") != std::string::npos,
+            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                    "build host FLL wrapper should record AddNumbers metadata in the FoxInfo table");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary arity");
@@ -539,6 +545,10 @@ void run_library_build_host_smoke(
                    "build host FLL manifest should declare InitLibrary parameter names");
             expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers parameter names");
+            expect(api_manifest.find("function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+                   "build host FLL manifest should declare InitLibrary parameter declaration style");
+            expect(api_manifest.find("function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+                   "build host FLL manifest should declare AddNumbers parameter declaration style");
             expect(api_manifest.find("function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary callable surface");
             expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,

@@ -983,7 +983,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
     write_text(project_dir / "librarymain.prg",
                "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -1209,6 +1209,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL API manifest should record InitLibrary parameter names");
         expect(library_api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
                "library-output DLL API manifest should record AddNumbers parameter names");
+        expect(library_api_manifest.find("function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "library-output DLL API manifest should record InitLibrary parameter declaration style");
+        expect(library_api_manifest.find("function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "library-output DLL API manifest should record AddNumbers parameter declaration style");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -1244,6 +1248,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record InitLibrary parameter names");
         expect(runtime_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
                "library-output manifest should record AddNumbers parameter names");
+        expect(runtime_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "library-output manifest should record InitLibrary parameter declaration style");
+        expect(runtime_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "library-output manifest should record AddNumbers parameter declaration style");
         expect(runtime_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
                "library-output manifest should record InitLibrary call-surface contract");
         expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
@@ -1326,7 +1334,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
     write_text(project_dir / "librarymain.prg",
                "PROCEDURE InitLibrary\nLPARAMETERS tcMode\nRETURN\nENDPROC\n");
     write_text(project_dir / "helper.prg",
-               "FUNCTION AddNumbers\nLPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
+               "FUNCTION AddNumbers\nPARAMETERS tnLeft, tnRight\nRETURN 1\nENDFUNC\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -1442,13 +1450,15 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record source-path fields in the FoxInfo table");
         expect(wrapper_source.find("unsigned int source_line;") != std::string::npos,
                "fll-output wrapper source should record source-line fields in the FoxInfo table");
+        expect(wrapper_source.find("const char* parameter_declaration_kind;") != std::string::npos,
+               "fll-output wrapper source should record parameter-declaration fields in the FoxInfo table");
         expect(wrapper_source.find("const char* parameter_names;") != std::string::npos,
                "fll-output wrapper source should record parameter-name fields in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord _FoxTable") != std::string::npos,
                "fll-output wrapper source should export the FoxTable registration symbol");
-        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + (project_dir / "librarymain.prg").string() + "\", 1U, \"tcMode\", 1U}") != std::string::npos,
+        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + (project_dir / "librarymain.prg").string() + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
                "fll-output wrapper source should record InitLibrary metadata in the FoxInfo table");
-        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + (project_dir / "helper.prg").string() + "\", 1U, \"tnLeft|tnRight\", 2U}") != std::string::npos,
+        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + (project_dir / "helper.prg").string() + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                "fll-output wrapper source should record AddNumbers metadata in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord* FoxInfo()") != std::string::npos,
                "fll-output wrapper source should scaffold the FoxInfo entrypoint");
@@ -1592,6 +1602,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should record InitLibrary parameter names");
         expect(api_manifest.find("function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
                "fll-output API manifest should record AddNumbers parameter names");
+        expect(api_manifest.find("function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "fll-output API manifest should record InitLibrary parameter declaration style");
+        expect(api_manifest.find("function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "fll-output API manifest should record AddNumbers parameter declaration style");
         expect(api_manifest.find("function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
                "fll-output API manifest should declare InitLibrary callable surface");
         expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
