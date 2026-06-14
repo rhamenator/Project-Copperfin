@@ -745,6 +745,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a launch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a launch-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeObservationPlan") != std::string::npos,
+                   "build host DLL wrapper should declare an observation-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeObservationPlan copperfin_build_runtime_bridge_observation_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare an observation-plan helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -757,6 +761,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a bridge result from the call");
             expect(wrapper_source.find("const auto launch_plan = copperfin_build_runtime_bridge_launch_plan(result);") != std::string::npos,
                    "build host DLL wrapper should build a launch plan from the result");
+            expect(wrapper_source.find("const auto observation_plan = copperfin_build_runtime_bridge_observation_plan(launch_plan);") != std::string::npos,
+                   "build host DLL wrapper should build an observation plan from the launch plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -765,6 +771,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should preserve the DLL placeholder return binding");
             expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
                    "build host DLL wrapper should preserve launch environment export metadata");
+            expect(wrapper_source.find("std::string(export_name) + \".stdout.log\"") != std::string::npos,
+                   "build host DLL wrapper should derive stdout observation paths");
+            expect(wrapper_source.find("std::string(export_name) + \".stderr.log\"") != std::string::npos,
+                   "build host DLL wrapper should derive stderr observation paths");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -873,6 +883,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a launch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a launch-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeObservationPlan") != std::string::npos,
+                   "build host FLL wrapper should declare an observation-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeObservationPlan copperfin_build_runtime_bridge_observation_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare an observation-plan helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -899,6 +913,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a bridge result from the call");
             expect(wrapper_source.find("const auto launch_plan = copperfin_build_runtime_bridge_launch_plan(result);") != std::string::npos,
                    "build host FLL wrapper should build a launch plan from the result");
+            expect(wrapper_source.find("const auto observation_plan = copperfin_build_runtime_bridge_observation_plan(launch_plan);") != std::string::npos,
+                   "build host FLL wrapper should build an observation plan from the launch plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -907,6 +923,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should preserve the FLL placeholder return binding");
             expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
                    "build host FLL wrapper should preserve launch environment export metadata");
+            expect(wrapper_source.find("std::string(export_name) + \".stdout.log\"") != std::string::npos,
+                   "build host FLL wrapper should derive stdout observation paths");
+            expect(wrapper_source.find("std::string(export_name) + \".stderr.log\"") != std::string::npos,
+                   "build host FLL wrapper should derive stderr observation paths");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,

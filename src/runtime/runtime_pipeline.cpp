@@ -697,6 +697,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::filesystem::path working_directory;\n";
     stream << "    std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeObservationPlan {\n";
+    stream << "    CopperfinRuntimeBridgeLaunchPlan launch_plan;\n";
+    stream << "    std::filesystem::path stdout_log_path;\n";
+    stream << "    std::filesystem::path stderr_log_path;\n";
+    stream << "    int expected_exit_code = 0;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -760,6 +766,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "            {\"COPPERFIN_ROUTINE_KIND\", result.call.invocation.descriptor.routine_kind},\n";
     stream << "            {\"COPPERFIN_SOURCE_PATH\", result.call.invocation.descriptor.source_path},\n";
     stream << "            {\"COPPERFIN_PARAMETER_COUNT\", std::to_string(result.call.invocation.descriptor.parameter_count)}}};\n";
+    stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeObservationPlan copperfin_build_runtime_bridge_observation_plan(\n";
+    stream << "    CopperfinRuntimeBridgeLaunchPlan launch_plan) {\n";
+    stream << "    const auto export_name = launch_plan.result.call.invocation.descriptor.export_name;\n";
+    stream << "    const auto base_directory = launch_plan.working_directory;\n";
+    stream << "    return CopperfinRuntimeBridgeObservationPlan{\n";
+    stream << "        std::move(launch_plan),\n";
+    stream << "        base_directory / (std::string(export_name) + \".stdout.log\"),\n";
+    stream << "        base_directory / (std::string(export_name) + \".stderr.log\"),\n";
+    stream << "        0};\n";
     stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
@@ -825,7 +841,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        call,\n";
             stream << "        {std::to_string(-1), \"" << kFllDefaultReturnHelper << "(int)\"});\n";
             stream << "    const auto launch_plan = copperfin_build_runtime_bridge_launch_plan(result);\n";
-            stream << "    (void)launch_plan;\n";
+            stream << "    const auto observation_plan = copperfin_build_runtime_bridge_observation_plan(launch_plan);\n";
+            stream << "    (void)observation_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -927,7 +944,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "});\n";
             stream << "    const auto result = copperfin_build_runtime_bridge_result(call, {std::to_string(-1), \"int\"});\n";
             stream << "    const auto launch_plan = copperfin_build_runtime_bridge_launch_plan(result);\n";
-            stream << "    (void)launch_plan;\n";
+            stream << "    const auto observation_plan = copperfin_build_runtime_bridge_observation_plan(launch_plan);\n";
+            stream << "    (void)observation_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
