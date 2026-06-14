@@ -452,6 +452,8 @@ void run_library_build_host_smoke(
 
     const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
     const fs::path debug_manifest_path = value_for_key(process.stdout_text, "debug.manifest.path");
+    const fs::path expected_ast_manifest = output_dir / "LibraryDemo" / ("LibraryDemo." + extension + ".ast.json");
+    const fs::path expected_ir_manifest = output_dir / "LibraryDemo" / ("LibraryDemo." + extension + ".ir.json");
     expect(!manifest_path.empty(), "build host should report a manifest path for " + extension + " outputs");
     expect(!debug_manifest_path.empty(), "build host should report a debug-manifest path for " + extension + " outputs");
     const std::string init_library_source = (project_dir / "librarymain.prg").string();
@@ -468,6 +470,10 @@ void run_library_build_host_smoke(
                "build host manifest should record the project path for " + extension + " outputs");
         expect(manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
                "build host manifest should record the content root for " + extension + " outputs");
+        expect(manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
+               "build host manifest should record the AST manifest path for " + extension + " outputs");
+        expect(manifest_text.find("ir_manifest_path=" + expected_ir_manifest.string()) != std::string::npos,
+               "build host manifest should record the IR manifest path for " + extension + " outputs");
         expect(manifest_text.find("configuration=debug") != std::string::npos,
                "build host manifest should record the debug build configuration for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
@@ -512,6 +518,10 @@ void run_library_build_host_smoke(
                "build host debug manifest should record the project path for " + extension + " outputs");
         expect(debug_manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
                "build host debug manifest should record the content root for " + extension + " outputs");
+        expect(debug_manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
+               "build host debug manifest should record the AST manifest path for " + extension + " outputs");
+        expect(debug_manifest_text.find("ir_manifest_path=" + expected_ir_manifest.string()) != std::string::npos,
+               "build host debug manifest should record the IR manifest path for " + extension + " outputs");
         expect(debug_manifest_text.find("configuration=debug") != std::string::npos,
                "build host debug manifest should record the debug build configuration for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
