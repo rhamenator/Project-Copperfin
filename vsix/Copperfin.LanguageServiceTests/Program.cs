@@ -17,6 +17,8 @@ internal static class Program
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
+        TestProjectInsightsCollectQualifiedAndInstanceStyleMethodCallReferences();
+        TestRenamePreviewCollectsProjectMethodDefinitionAndReferences();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
         TestCompletionCatalogIngestsImplicitUseAndSqlExecAliases();
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
@@ -253,6 +255,107 @@ internal static class Program
                 "rename preview should include direct call references");
             Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
                 "rename preview should include dotted call references");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectInsightsCollectQualifiedAndInstanceStyleMethodCallReferences()
+    {
+        var root = CreateProjectRoot("method_call_reference_navigation");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "? app.customer.editor.SaveOrder('ALFKI')" + Environment.NewLine +
+                "? oToolbar.SaveOrder('ANTON')" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "classes.prg",
+                            RelativePath = "classes.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            var references = insights.RuntimeReferences.FindAll(reference => reference.Name == "app.customer.editor.SaveOrder");
+            Expect(references.Count == 2, "project insights should collect qualified and instance-style method call references against the method symbol");
+            Expect(references.Exists(reference => reference.Kind == "call.member" && reference.Detail.Contains("app.customer.editor.SaveOrder('ALFKI')", StringComparison.Ordinal)),
+                "project insights should keep fully-qualified method calls in the method reference set");
+            Expect(references.Exists(reference => reference.Kind == "call.member" && reference.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
+                "project insights should normalize instance-style method calls onto the project method symbol");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestRenamePreviewCollectsProjectMethodDefinitionAndReferences()
+    {
+        var root = CreateProjectRoot("method_rename_preview");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "? app.customer.editor.SaveOrder('ALFKI')" + Environment.NewLine +
+                "? oToolbar.SaveOrder('ANTON')" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "classes.prg",
+                            RelativePath = "classes.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var preview = CopperfinProjectInsightClient.BuildRenamePreview(snapshot, "oToolbar.SaveOrder");
+            Expect(preview.SymbolName == "app.customer.editor.SaveOrder",
+                "rename preview should normalize instance-style method names to the unique fully-qualified project method");
+            Expect(preview.Occurrences.Count == 3, "rename preview should include the method definition and both collected method call references");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "definition" && occurrence.Detail.Contains("PROCEDURE SaveOrder", StringComparison.Ordinal)),
+                "rename preview should include the defining method");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("app.customer.editor.SaveOrder('ALFKI')", StringComparison.Ordinal)),
+                "rename preview should include fully-qualified method call references");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
+                "rename preview should include normalized instance-style method call references");
         }
         finally
         {

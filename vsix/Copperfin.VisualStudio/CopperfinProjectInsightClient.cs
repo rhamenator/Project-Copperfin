@@ -71,13 +71,17 @@ internal static class CopperfinProjectInsightClient
         var knownCallableSymbols = new HashSet<string>(
             insights.DefinedSymbols
                 .Where(symbol => string.Equals(symbol.Kind, "procedure", StringComparison.OrdinalIgnoreCase) ||
-                                 string.Equals(symbol.Kind, "function", StringComparison.OrdinalIgnoreCase))
+                                 string.Equals(symbol.Kind, "function", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(symbol.Kind, "method", StringComparison.OrdinalIgnoreCase))
                 .Select(symbol => symbol.Name),
             StringComparer.OrdinalIgnoreCase);
+        var knownMethodSymbols = knownCallableSymbols
+            .Where(symbol => symbol.Contains('.', StringComparison.Ordinal))
+            .ToList();
 
         foreach (var loadedTextFile in loadedTextFiles)
         {
-            CollectRuntimeReferences(loadedTextFile.Key, loadedTextFile.Value, knownCallableSymbols, insights);
+            CollectRuntimeReferences(loadedTextFile.Key, loadedTextFile.Value, knownCallableSymbols, knownMethodSymbols, insights);
         }
 
         return insights;
@@ -85,17 +89,18 @@ internal static class CopperfinProjectInsightClient
 
     public static CopperfinProjectRenamePreview BuildRenamePreview(CopperfinStudioSnapshotDocument snapshot, string symbolName)
     {
+        var insights = BuildInsights(snapshot);
         var preview = new CopperfinProjectRenamePreview
         {
-            SymbolName = NormalizeRenameSymbol(symbolName)
+            SymbolName = NormalizeRenameSymbol(symbolName, insights)
         };
 
         if (string.IsNullOrWhiteSpace(preview.SymbolName))
         {
+            preview.Warnings.AddRange(insights.Warnings);
             return preview;
         }
 
-        var insights = BuildInsights(snapshot);
         preview.Warnings.AddRange(insights.Warnings);
 
         foreach (var definition in insights.DefinedSymbols
@@ -184,12 +189,13 @@ internal static class CopperfinProjectInsightClient
 
     private static void CollectTaskItemsAndDefinitions(string path, IReadOnlyList<string> lines, CopperfinProjectInsights insights)
     {
+        string? currentClassName = null;
         for (var index = 0; index < lines.Count; index++)
         {
             var line = lines[index];
             var lineNumber = index + 1;
             CollectTaskItems(path, lineNumber, line, insights);
-            CollectDefinitions(path, lineNumber, line, insights);
+            CollectDefinitions(path, lineNumber, line, ref currentClassName, insights);
         }
     }
 
@@ -214,15 +220,12 @@ internal static class CopperfinProjectInsightClient
         }
     }
 
-    private static void CollectDefinitions(string path, int lineNumber, string line, CopperfinProjectInsights insights)
+    private static void CollectDefinitions(string path, int lineNumber, string line, ref string? currentClassName, CopperfinProjectInsights insights)
     {
-        AddDefinitionIfMatch(path, lineNumber, line, ProcedureRegex, "procedure", insights);
-        AddDefinitionIfMatch(path, lineNumber, line, FunctionRegex, "function", insights);
-        AddDefinitionIfMatch(path, lineNumber, line, DefineRegex, "define", insights);
-
         var classMatch = DefineClassRegex.Match(line);
         if (classMatch.Success)
         {
+            currentClassName = classMatch.Groups[1].Value;
             insights.DefinedSymbols.Add(new CopperfinProjectCodeSymbol
             {
                 Kind = "class",
@@ -239,13 +242,35 @@ internal static class CopperfinProjectInsightClient
                 FilePath = path,
                 Detail = "AS " + classMatch.Groups[2].Value
             });
+
+            return;
         }
+
+        if (currentClassName is not null)
+        {
+            if (line.TrimStart().StartsWith("ENDDEFINE", StringComparison.OrdinalIgnoreCase))
+            {
+                currentClassName = null;
+                return;
+            }
+
+            if (AddScopedMethodDefinitionIfMatch(path, lineNumber, line, ProcedureRegex, currentClassName, insights) ||
+                AddScopedMethodDefinitionIfMatch(path, lineNumber, line, FunctionRegex, currentClassName, insights))
+            {
+                return;
+            }
+        }
+
+        AddDefinitionIfMatch(path, lineNumber, line, ProcedureRegex, "procedure", insights);
+        AddDefinitionIfMatch(path, lineNumber, line, FunctionRegex, "function", insights);
+        AddDefinitionIfMatch(path, lineNumber, line, DefineRegex, "define", insights);
     }
 
     private static void CollectRuntimeReferences(
         string path,
         IReadOnlyList<string> lines,
         ISet<string> knownCallableSymbols,
+        IReadOnlyList<string> knownMethodSymbols,
         CopperfinProjectInsights insights)
     {
         for (var index = 0; index < lines.Count; index++)
@@ -271,7 +296,7 @@ internal static class CopperfinProjectInsightClient
                 });
             }
 
-            CollectCallableReferences(path, lineNumber, line, knownCallableSymbols, insights);
+            CollectCallableReferences(path, lineNumber, line, knownCallableSymbols, knownMethodSymbols, insights);
         }
     }
 
@@ -280,12 +305,14 @@ internal static class CopperfinProjectInsightClient
         int lineNumber,
         string line,
         ISet<string> knownCallableSymbols,
+        IReadOnlyList<string> knownMethodSymbols,
         CopperfinProjectInsights insights)
     {
         if (knownCallableSymbols.Count == 0 ||
             ProcedureRegex.IsMatch(line) ||
             FunctionRegex.IsMatch(line) ||
-            DefineClassRegex.IsMatch(line))
+            DefineClassRegex.IsMatch(line) ||
+            line.TrimStart().StartsWith("ENDDEFINE", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -293,7 +320,7 @@ internal static class CopperfinProjectInsightClient
         foreach (Match match in InvocationRegex.Matches(line))
         {
             var invocation = match.Groups[1].Value;
-            var resolvedName = ResolveCallableReferenceName(invocation, knownCallableSymbols);
+            var resolvedName = ResolveCallableReferenceName(invocation, knownCallableSymbols, knownMethodSymbols);
             if (string.IsNullOrWhiteSpace(resolvedName))
             {
                 continue;
@@ -310,7 +337,10 @@ internal static class CopperfinProjectInsightClient
         }
     }
 
-    private static string ResolveCallableReferenceName(string invocation, ISet<string> knownCallableSymbols)
+    private static string ResolveCallableReferenceName(
+        string invocation,
+        ISet<string> knownCallableSymbols,
+        IReadOnlyList<string> knownMethodSymbols)
     {
         if (knownCallableSymbols.Contains(invocation))
         {
@@ -323,15 +353,43 @@ internal static class CopperfinProjectInsightClient
         }
 
         var memberName = invocation.Split('.').Last();
-        return knownCallableSymbols.Contains(memberName) ? memberName : string.Empty;
+        if (knownCallableSymbols.Contains(memberName))
+        {
+            return memberName;
+        }
+
+        return TryResolveUniqueProjectMethodName(memberName, knownMethodSymbols, out var resolvedMethodName)
+            ? resolvedMethodName
+            : string.Empty;
     }
 
-    private static string NormalizeRenameSymbol(string symbolName)
+    private static string NormalizeRenameSymbol(string symbolName, CopperfinProjectInsights insights)
     {
         var trimmed = symbolName.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
         {
             return string.Empty;
+        }
+
+        if (insights.DefinedSymbols.Exists(symbol => string.Equals(symbol.Name, trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            return trimmed;
+        }
+
+        var knownCallableSymbols = new HashSet<string>(
+            insights.DefinedSymbols
+                .Where(symbol => string.Equals(symbol.Kind, "procedure", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(symbol.Kind, "function", StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(symbol.Kind, "method", StringComparison.OrdinalIgnoreCase))
+                .Select(symbol => symbol.Name),
+            StringComparer.OrdinalIgnoreCase);
+        var knownMethodSymbols = knownCallableSymbols
+            .Where(symbol => symbol.Contains('.', StringComparison.Ordinal))
+            .ToList();
+        var resolvedName = ResolveCallableReferenceName(trimmed, knownCallableSymbols, knownMethodSymbols);
+        if (!string.IsNullOrWhiteSpace(resolvedName))
+        {
+            return resolvedName;
         }
 
         return trimmed.Contains('.')
@@ -365,6 +423,41 @@ internal static class CopperfinProjectInsightClient
         });
     }
 
+    private static bool AddScopedMethodDefinitionIfMatch(
+        string path,
+        int lineNumber,
+        string line,
+        Regex regex,
+        string currentClassName,
+        CopperfinProjectInsights insights)
+    {
+        var match = regex.Match(line);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var qualifiedMethodName = currentClassName + "." + match.Groups[1].Value;
+        insights.DefinedSymbols.Add(new CopperfinProjectCodeSymbol
+        {
+            Kind = "method",
+            Name = qualifiedMethodName,
+            FilePath = path,
+            Line = lineNumber,
+            Detail = line.Trim()
+        });
+
+        insights.ObjectNodes.Add(new CopperfinProjectObjectNode
+        {
+            Kind = "method",
+            Title = qualifiedMethodName,
+            FilePath = path,
+            Detail = line.Trim()
+        });
+
+        return true;
+    }
+
     private static void AddReferenceIfMatch(string path, int lineNumber, string line, Regex regex, string kind, CopperfinProjectInsights insights)
     {
         var match = regex.Match(line);
@@ -381,6 +474,25 @@ internal static class CopperfinProjectInsightClient
             Line = lineNumber,
             Detail = line.Trim()
         });
+    }
+
+    private static bool TryResolveUniqueProjectMethodName(
+        string methodName,
+        IReadOnlyList<string> knownMethodSymbols,
+        out string resolvedMethodName)
+    {
+        resolvedMethodName = string.Empty;
+        var matches = knownMethodSymbols
+            .Where(symbol => string.Equals(symbol.Split('.').Last(), methodName, StringComparison.OrdinalIgnoreCase))
+            .Take(2)
+            .ToList();
+        if (matches.Count != 1)
+        {
+            return false;
+        }
+
+        resolvedMethodName = matches[0];
+        return true;
     }
 
     private static string ResolveProjectRoot(CopperfinStudioSnapshotDocument snapshot)
