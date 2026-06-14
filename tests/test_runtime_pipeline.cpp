@@ -256,6 +256,73 @@ void test_materialize_excluded_xasset_startup_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_startup_dbf_companion_assets_are_staged() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "startup.dbf", "synthetic dbf");
+    write_text(project_dir / "startup.fpt", "synthetic memo");
+    write_text(project_dir / "startup.cdx", "synthetic index");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "companion_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DbfCompanionDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "DbfCompanionDemo";
+    workspace.build_plan.output_path = (output_dir / "DbfCompanionDemo.exe").string();
+    workspace.build_plan.startup_item = "startup.dbf";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.dbf", .relative_path = "startup.dbf", .type_title = "Table", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "dbf companion runtime package plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "dbf companion runtime package should materialize");
+    if (result.ok) {
+        const std::filesystem::path content_root(result.plan.content_root);
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        expect(fs::exists(content_root / "startup.dbf"), "startup DBF should be staged even when marked excluded");
+        expect(fs::exists(content_root / "startup.fpt"), "startup DBF memo companion should be staged");
+        expect(fs::exists(content_root / "startup.cdx"), "startup DBF index companion should be staged");
+        expect(
+            runtime_manifest.find("asset=1|startup.dbf|") != std::string::npos &&
+            runtime_manifest.find("asset=1|startup.dbf|") < runtime_manifest.find("|true|true|") &&
+            runtime_manifest.find("|true|true|", runtime_manifest.find("asset=1|startup.dbf|")) != std::string::npos,
+            "runtime manifest should report the startup DBF asset as copied");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_security_enabled_runtime_host_name_validation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_security_tests";
@@ -669,6 +736,7 @@ int main() {
     test_materialize_runtime_package();
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
+    test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
     test_startup_prg_extension_matching_is_case_insensitive();
