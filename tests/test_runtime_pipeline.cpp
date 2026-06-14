@@ -119,6 +119,65 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
+std::string getenv_value(const std::string& name) {
+#if defined(_WIN32)
+    char* raw = nullptr;
+    std::size_t length = 0;
+    if (_dupenv_s(&raw, &length, name.c_str()) != 0 || raw == nullptr) {
+        return {};
+    }
+    const std::string value = raw;
+    std::free(raw);
+    return value;
+#else
+    const char* raw = std::getenv(name.c_str());
+    if (raw == nullptr) {
+        return {};
+    }
+    return raw;
+#endif
+}
+
+void set_env_variable(const std::string& name, const std::string& value, bool has_value) {
+#if defined(_WIN32)
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s((name + "=").c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentVariable {
+    std::string name;
+    std::string original;
+    bool had_original = false;
+
+    explicit ScopedEnvironmentVariable(const std::string& var_name, const std::string& value)
+        : name(var_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_variable(name, value, true);
+    }
+
+    explicit ScopedEnvironmentVariable(const std::string& var_name)
+        : name(var_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_variable(name, "", false);
+    }
+
+    ~ScopedEnvironmentVariable() {
+        set_env_variable(name, original, had_original);
+    }
+};
+
 bool dotnet_is_available() {
 #if defined(_WIN32)
     const char* argv[] = {"dotnet", "--version", nullptr};
@@ -2475,6 +2534,89 @@ void test_security_enabled_runtime_host_name_validation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_security_role_environment_fidelity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_security_role_fidelity";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "security_role_fidelity.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "SecurityRoleFidelity";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "SecurityRoleFidelity";
+    workspace.build_plan.output_path = (output_dir / "SecurityRoleFidelity.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    {
+        ScopedEnvironmentVariable valid_role("COPPERFIN_SECURITY_ROLE", "security-admin");
+        const auto plan = copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            true,
+            true);
+
+        expect(plan.security_role == "security-admin", "security role should accept explicit valid role from environment");
+        expect(std::find(plan.warnings.begin(), plan.warnings.end(), plan.security_role) == plan.warnings.end() &&
+               std::none_of(plan.warnings.begin(), plan.warnings.end(), [](const std::string& warning) {
+                   return warning.find("Unknown security role requested") != std::string::npos;
+               }),
+               "security plan should not emit unknown-role warning for valid role");
+    }
+
+    {
+        ScopedEnvironmentVariable invalid_role("COPPERFIN_SECURITY_ROLE", "not-a-real-role");
+        const auto invalid_plan = copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            true,
+            true);
+        expect(invalid_plan.security_role == "developer", "invalid security role should fallback to default developer role");
+        expect(std::any_of(invalid_plan.warnings.begin(), invalid_plan.warnings.end(), [](const std::string& warning) {
+                   return warning.find("Unknown security role requested") != std::string::npos;
+               }),
+               "invalid security role should emit explicit unknown-role warning");
+
+        const auto materialize_invalid = copperfin::runtime::materialize_runtime_package(
+            invalid_plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            runtime_host.string());
+        expect(materialize_invalid.ok, "package materialization should proceed with defaulted security role");
+        if (materialize_invalid.ok) {
+            const std::string runtime_manifest = read_text(materialize_invalid.plan.manifest_path);
+            expect(runtime_manifest.find("security_role=developer") != std::string::npos,
+                   "runtime manifest should record fallback security role after invalid role request");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_failfast_invalid_host";
@@ -2894,6 +3036,7 @@ int main() {
     test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
+    test_runtime_security_role_environment_fidelity();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
     test_startup_prg_extension_matching_is_case_insensitive();
     test_startup_asset_is_staged_even_when_marked_excluded();

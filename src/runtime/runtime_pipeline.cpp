@@ -1753,6 +1753,14 @@ bool is_extension_payload_path(const std::filesystem::path& path) {
     return extension == ".dll" || extension == ".exe" || extension == ".vsix";
 }
 
+bool is_recognized_security_role(
+    const security::NativeSecurityProfile& profile,
+    const std::string& role_id) {
+    return std::find_if(profile.roles.begin(), profile.roles.end(), [&](const security::NativeRole& role) {
+               return role.id == role_id;
+           }) != profile.roles.end();
+}
+
 std::string join_strings(const std::vector<std::string>& values) {
     std::ostringstream stream;
     for (std::size_t index = 0; index < values.size(); ++index) {
@@ -1980,6 +1988,14 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
     plan.security_role = resolve_security_role(enable_security);
+    if (enable_security && !is_recognized_security_role(security_profile, plan.security_role)) {
+        const std::string requested_role = plan.security_role;
+        plan.security_role = "developer";
+        if (!requested_role.empty()) {
+            plan.warnings.push_back(
+                "Unknown security role requested: " + requested_role + "; defaulting to developer.");
+        }
+    }
     plan.audit_log_path = (package_root / "security_audit.log").string();
     const std::string source_working_directory = resolve_working_directory(document, workspace);
 
