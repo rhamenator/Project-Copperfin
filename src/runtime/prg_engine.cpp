@@ -26,7 +26,10 @@
 #include <fstream>
 #include <functional>
 #include <iomanip>
+#include <future>
 #include <map>
+#include <iterator>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <set>
@@ -297,6 +300,25 @@ namespace copperfin::runtime
             std::map<std::string, TransactionJournalFileEntry> tracked_files;
         };
 
+        struct AsyncTaskState
+        {
+            int handle = 0;
+            std::string routine_name;
+            std::string source_path;
+            std::shared_ptr<std::atomic<bool>> cancel_requested;
+            std::shared_future<RuntimePauseState> future;
+            bool finished = false;
+            RuntimePauseState result{};
+        };
+
+        struct RuntimeConcurrencyState
+        {
+            std::mutex mutex;
+            std::map<int, std::map<int, std::shared_ptr<AsyncTaskState>>> async_tasks_by_session;
+            std::map<int, int> next_async_task_handle_by_session;
+            std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_sections;
+        };
+
 #include "prg_engine_free_functions.inl"
     } // namespace
 
@@ -310,6 +332,8 @@ namespace copperfin::runtime
             max_loop_iterations = std::max<std::size_t>(1U, options.max_loop_iterations);
             scheduler_yield_statement_interval = std::max<std::size_t>(1U, options.scheduler_yield_statement_interval);
             scheduler_yield_sleep_ms = options.scheduler_yield_sleep_ms;
+            task_cancel_requested = std::make_shared<std::atomic<bool>>(false);
+            concurrency_state = std::make_shared<RuntimeConcurrencyState>();
             runtime_temp_directory = choose_runtime_temp_directory(options);
         }
 
@@ -371,6 +395,7 @@ namespace copperfin::runtime
         std::map<int, TransactionJournalState> transaction_journal_by_session;
         std::map<int, TransactionJournalState> command_undo_journal_by_session;
         std::map<int, std::vector<TransactionJournalState>> command_undo_stack_by_session;
+        std::shared_ptr<RuntimeConcurrencyState> concurrency_state;
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;
@@ -402,6 +427,10 @@ namespace copperfin::runtime
         std::filesystem::path runtime_temp_directory;
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
+        std::shared_ptr<std::atomic<bool>> task_cancel_requested;
+        std::vector<std::string> critical_section_stack;
+        std::map<std::string, std::size_t> critical_section_depth_by_name;
+        std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_section_mutexes_by_name;
 
         // Index seek optimizer - pattern cache
         std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
@@ -1382,15 +1411,24 @@ namespace copperfin::runtime
 
     RuntimePauseState PrgRuntimeSession::Impl::run(DebugResumeAction action)
     {
+        const auto finalize_pause_state = [this](DebugPauseReason reason, std::string message)
+        {
+            if (reason == DebugPauseReason::completed || reason == DebugPauseReason::error)
+            {
+                release_all_critical_sections();
+            }
+            return build_pause_state(reason, std::move(message));
+        };
+
         if (entry_pause_pending)
         {
             entry_pause_pending = false;
-            return build_pause_state(DebugPauseReason::entry, "Stopped on entry.");
+            return finalize_pause_state(DebugPauseReason::entry, "Stopped on entry.");
         }
 
         if (waiting_for_events)
         {
-            return build_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+            return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
         }
 
         const std::size_t base_depth = stack.size();
@@ -1399,6 +1437,17 @@ namespace copperfin::runtime
         {
             while (true)
             {
+                if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                {
+                    ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+                    last_error_message = "Async task cancelled.";
+                    events.push_back({.category = "runtime.task.cancelled",
+                                      .detail = "cancelled",
+                                      .location = last_fault_location});
+                    rollback_active_transaction_journal();
+                    rollback_active_command_undo_journal();
+                    return finalize_pause_state(DebugPauseReason::error, last_error_message);
+                }
                 while (!stack.empty() &&
                        (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size()))
                 {
@@ -1411,7 +1460,7 @@ namespace copperfin::runtime
                     {
                         restore_event_loop_after_dispatch = false;
                         waiting_for_events = true;
-                        return build_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+                        return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
                     }
                     restore_event_loop_after_dispatch = false;
                 }
@@ -1441,7 +1490,7 @@ namespace copperfin::runtime
                 }
                 if (stack.empty())
                 {
-                    return build_pause_state(DebugPauseReason::completed, "Execution completed.");
+                    return finalize_pause_state(DebugPauseReason::completed, "Execution completed.");
                 }
 
                 const Statement *next = current_statement();
@@ -1459,7 +1508,7 @@ namespace copperfin::runtime
                     events.push_back({.category = "runtime.error",
                                       .detail = last_error_message,
                                       .location = next->location});
-                    return build_pause_state(DebugPauseReason::error, last_error_message);
+                    return finalize_pause_state(DebugPauseReason::error, last_error_message);
                 }
 
                 if (breakpoint_matches(next->location))
@@ -1473,7 +1522,7 @@ namespace copperfin::runtime
                     else
                     {
                         resume_skip_breakpoint_location = next->location;
-                        return build_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
+                        return finalize_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
                     }
                 }
                 else
@@ -1525,16 +1574,16 @@ namespace copperfin::runtime
                     {
                         continue;
                     }
-                    return build_pause_state(DebugPauseReason::error, outcome.message);
+                    return finalize_pause_state(DebugPauseReason::error, outcome.message);
                 }
                 if (outcome.waiting_for_events)
                 {
-                    return build_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+                    return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
                 }
 
                 if (stack.empty())
                 {
-                    return build_pause_state(DebugPauseReason::completed, "Execution completed.");
+                    return finalize_pause_state(DebugPauseReason::completed, "Execution completed.");
                 }
 
                 switch (action)
@@ -1554,17 +1603,17 @@ namespace copperfin::runtime
                     }
                     break;
                 case DebugResumeAction::step_into:
-                    return build_pause_state(DebugPauseReason::step, "Step completed.");
+                    return finalize_pause_state(DebugPauseReason::step, "Step completed.");
                 case DebugResumeAction::step_over:
                     if (stack.size() <= base_depth)
                     {
-                        return build_pause_state(DebugPauseReason::step, "Step-over completed.");
+                        return finalize_pause_state(DebugPauseReason::step, "Step-over completed.");
                     }
                     break;
                 case DebugResumeAction::step_out:
                     if (stack.size() < base_depth)
                     {
-                        return build_pause_state(DebugPauseReason::step, "Step-out completed.");
+                        return finalize_pause_state(DebugPauseReason::step, "Step-out completed.");
                     }
                     break;
                 }
@@ -1586,7 +1635,7 @@ namespace copperfin::runtime
                 fault_pc_valid = true;
             }
             error_metadata_stack.push_back(snapshot_current_error_metadata());
-            return build_pause_state(DebugPauseReason::error, last_error_message);
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::filesystem::filesystem_error &error)
         {
@@ -1604,7 +1653,7 @@ namespace copperfin::runtime
                 fault_pc_valid = true;
             }
             error_metadata_stack.push_back(snapshot_current_error_metadata());
-            return build_pause_state(DebugPauseReason::error, last_error_message);
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::system_error &error)
         {
@@ -1622,7 +1671,7 @@ namespace copperfin::runtime
                 fault_pc_valid = true;
             }
             error_metadata_stack.push_back(snapshot_current_error_metadata());
-            return build_pause_state(DebugPauseReason::error, last_error_message);
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::exception &error)
         {
@@ -1640,7 +1689,7 @@ namespace copperfin::runtime
                 fault_pc_valid = true;
             }
             error_metadata_stack.push_back(snapshot_current_error_metadata());
-            return build_pause_state(DebugPauseReason::error, last_error_message);
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (...)
         {
@@ -1658,7 +1707,7 @@ namespace copperfin::runtime
                 fault_pc_valid = true;
             }
             error_metadata_stack.push_back(snapshot_current_error_metadata());
-            return build_pause_state(DebugPauseReason::error, last_error_message);
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
     }
 

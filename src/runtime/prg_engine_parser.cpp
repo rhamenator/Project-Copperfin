@@ -466,6 +466,39 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::cancel_statement;
         } else if (upper == "QUIT") {
             statement.kind = StatementKind::quit_statement;
+        } else if (starts_with_insensitive(line, "ENTER CRITICAL") || upper == "ENTER CRITICAL") {
+            statement.kind = StatementKind::enter_critical_command;
+            statement.identifier = upper == "ENTER CRITICAL" ? std::string{} : trim_copy(line.substr(14U));
+        } else if (starts_with_insensitive(line, "EXIT CRITICAL") || upper == "EXIT CRITICAL") {
+            statement.kind = StatementKind::exit_critical_command;
+            statement.identifier = upper == "EXIT CRITICAL" ? std::string{} : trim_copy(line.substr(13U));
+        } else if (starts_with_insensitive(line, "SPAWN ") || upper == "SPAWN" || starts_with_insensitive(line, "ASYNC ") || upper == "ASYNC") {
+            statement.kind = StatementKind::spawn_command;
+            const std::string body = trim_copy(line.substr(upper == "SPAWN" ? 5U : upper == "ASYNC" ? 5U : 6U));
+            const std::size_t to_position = find_keyword_top_level(body, "TO");
+            const std::string launch_part = to_position == std::string::npos ? body : trim_copy(body.substr(0U, to_position));
+            const std::string target_part = to_position == std::string::npos ? std::string{} : trim_copy(body.substr(to_position + 2U));
+            const std::size_t with_position = find_keyword_top_level(launch_part, "WITH");
+            if (with_position == std::string::npos) {
+                statement.identifier = launch_part;
+            } else {
+                statement.identifier = trim_copy(launch_part.substr(0U, with_position));
+                statement.expression = trim_copy(launch_part.substr(with_position + 4U));
+            }
+            if (!target_part.empty()) {
+                statement.names.push_back(target_part);
+            }
+        } else if (starts_with_insensitive(line, "AWAIT ") || upper == "AWAIT") {
+            statement.kind = StatementKind::await_command;
+            const std::string body = trim_copy(line.substr(upper == "AWAIT" ? 5U : 6U));
+            const std::size_t to_position = find_keyword_top_level(body, "TO");
+            statement.expression = to_position == std::string::npos ? body : trim_copy(body.substr(0U, to_position));
+            if (to_position != std::string::npos) {
+                const std::string target_part = trim_copy(body.substr(to_position + 2U));
+                if (!target_part.empty()) {
+                    statement.names.push_back(target_part);
+                }
+            }
         } else if (starts_with_insensitive(line, "DO ")) {
             statement.kind = StatementKind::do_command;
             const std::string body = trim_copy(line.substr(3U));

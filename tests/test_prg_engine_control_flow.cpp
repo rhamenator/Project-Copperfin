@@ -3,6 +3,7 @@
 #include "../src/runtime/prg_engine_command_helpers.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
+#include <chrono>
 #include <cerrno>
 #include <cctype>
 #include <cstdlib>
@@ -4185,6 +4186,166 @@ void test_sleep_command_emits_runtime_sleep_event() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_and_await_command_runs_task_to_completion() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_await_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_await_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 1\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        "AWAIT nTask TO lDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SPAWN/AWAIT test should complete");
+
+    const auto spawn_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.task.spawn"; });
+    const auto await_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.task.await"; });
+    expect(spawn_event != state.events.end(), "SPAWN should emit a task-spawn event");
+    expect(await_event != state.events.end(), "AWAIT should emit a task-await event");
+    if (spawn_event != state.events.end()) {
+        expect(spawn_event->detail.find("handle=") != std::string::npos,
+            "SPAWN event should report a task handle");
+    }
+    if (await_event != state.events.end()) {
+        expect(await_event->detail.find("state=completed") != std::string::npos,
+            "AWAIT event should report completed task state");
+    }
+
+    const auto handle_it = state.globals.find("ntask");
+    const auto done_it = state.globals.find("ldone");
+    expect(handle_it != state.globals.end(), "SPAWN should assign the task handle");
+    expect(done_it != state.globals.end(), "AWAIT should assign the completion flag");
+    if (handle_it != state.globals.end()) {
+        expect(handle_it->second.number_value > 0.0, "SPAWN should return a positive task handle");
+    }
+    if (done_it != state.globals.end()) {
+        expect(done_it->second.boolean_value, "AWAIT should report a completed task");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_spawn_cancellation_propagates_to_sibling_tasks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_cancel_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_cancel_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 50\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE canceler\n"
+        "    SLEEP 1\n"
+        "    CANCEL\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nWorker\n"
+        "SPAWN canceler TO nCancel\n"
+        "AWAIT nCancel TO lCancelDone\n"
+        "AWAIT nWorker TO lWorkerDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "spawn cancellation test should complete");
+
+    const auto cancelled_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.task.cancelled"; });
+    const auto cancel_await_event = std::find_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.task.await" && event.detail.find("handle=") != std::string::npos && event.detail.find("state=error") != std::string::npos; });
+    expect(cancelled_event != state.events.end(), "cancellation should emit a runtime.task.cancelled event");
+    expect(cancel_await_event != state.events.end(), "awaiting a cancelled task should report an error state");
+
+    const auto cancel_done = state.globals.find("lcanceldone");
+    const auto worker_done = state.globals.find("lworkerdone");
+    expect(cancel_done != state.globals.end(), "canceler completion flag should be captured");
+    expect(worker_done != state.globals.end(), "worker completion flag should be captured");
+    if (cancel_done != state.globals.end()) {
+        expect(!cancel_done->second.boolean_value, "canceler task should not report completed after CANCEL");
+    }
+    if (worker_done != state.globals.end()) {
+        expect(!worker_done->second.boolean_value, "worker task should be marked incomplete after cancellation");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_spawn_critical_section_serializes_workers() {
+    namespace fs = std::filesystem;
+    using clock = std::chrono::steady_clock;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_critical_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "spawn_critical_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    ENTER CRITICAL shared\n"
+        "    SLEEP 25\n"
+        "    EXIT CRITICAL shared\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nFirst\n"
+        "SPAWN worker TO nSecond\n"
+        "AWAIT nFirst TO lFirstDone\n"
+        "AWAIT nSecond TO lSecondDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto start = clock::now();
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - start).count();
+    expect(state.completed, "critical-section spawn test should complete");
+    expect(elapsed_ms >= 40, "shared critical sections should serialize spawned workers");
+
+    const auto enter_count = std::count_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.critical.enter"; });
+    const auto exit_count = std::count_if(
+        state.events.begin(), state.events.end(),
+        [](const auto& event) { return event.category == "runtime.critical.exit"; });
+    expect(enter_count == 2, "both workers should enter the critical section");
+    expect(exit_count == 2, "both workers should exit the critical section");
+
+    const auto first_done = state.globals.find("lfirstdone");
+    const auto second_done = state.globals.find("lseconddone");
+    expect(first_done != state.globals.end(), "first worker completion flag should be captured");
+    expect(second_done != state.globals.end(), "second worker completion flag should be captured");
+    if (first_done != state.globals.end()) {
+        expect(first_done->second.boolean_value, "first worker should complete successfully");
+    }
+    if (second_done != state.globals.end()) {
+        expect(second_done->second.boolean_value, "second worker should complete successfully");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_on_error_resume_restores_fault_session_and_cursor_state() {
     // #150: RESUME should restore the captured fault-side data session/work area
     // even when the handler changes its own session and cursor selection.
@@ -5180,6 +5341,9 @@ int main() {
     test_doevents_pumps_event_queue();
     test_doevents_in_responsive_loop();
     test_sleep_command_emits_runtime_sleep_event();
+    test_spawn_and_await_command_runs_task_to_completion();
+    test_spawn_cancellation_propagates_to_sibling_tasks();
+    test_spawn_critical_section_serializes_workers();
     test_on_error_resume_restores_fault_session_and_cursor_state();
     test_retry_reexecutes_faulting_statement();
     test_resume_next_continues_after_fault();

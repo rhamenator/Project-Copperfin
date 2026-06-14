@@ -989,9 +989,242 @@
                     std::move(call_argument_references));
                 return {};
             }
-                case StatementKind::call_command:
+            case StatementKind::enter_critical_command:
+            {
+                const std::string section_name = trim_copy(statement.identifier);
+                enter_critical_section(section_name);
+                std::string detail = "section=" + normalize_identifier(section_name.empty() ? std::string{"default"} : section_name);
+                detail += " depth=" + std::to_string(critical_section_depth_by_name[normalize_identifier(section_name.empty() ? std::string{"default"} : section_name)]);
+                events.push_back({.category = "runtime.critical.enter",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::exit_critical_command:
+            {
+                const std::string section_name = trim_copy(statement.identifier);
+                if (!exit_critical_section(section_name))
                 {
-                    std::string target = trim_copy(statement.identifier);
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                std::string detail = "section=" + normalize_identifier(section_name.empty() ? std::string{"default"} : section_name);
+                events.push_back({.category = "runtime.critical.exit",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::spawn_command:
+            {
+                std::string target = trim_copy(statement.identifier);
+                if (!target.empty() && target.front() == '&')
+                {
+                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                    if (!expanded_target.empty())
+                    {
+                        target = expanded_target;
+                    }
+                }
+                if (target.empty())
+                {
+                    last_error_message = "SPAWN requires a target routine or file";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::vector<PrgValue> call_arguments;
+                std::vector<std::optional<std::string>> call_argument_references;
+                if (!trim_copy(statement.expression).empty())
+                {
+                    for (const std::string &raw_argument : split_csv_like(statement.expression))
+                    {
+                        const std::string argument_expression = trim_copy(raw_argument);
+                        if (!argument_expression.empty())
+                        {
+                            if (argument_expression.front() == '@')
+                            {
+                                const std::string reference_name = trim_copy(argument_expression.substr(1U));
+                                if (is_bare_identifier_text(reference_name))
+                                {
+                                    call_arguments.push_back(lookup_variable(frame, reference_name));
+                                    call_argument_references.push_back(reference_name);
+                                    continue;
+                                }
+                            }
+                            call_arguments.push_back(evaluate_expression(argument_expression, frame));
+                            call_argument_references.push_back(std::nullopt);
+                        }
+                    }
+                }
+
+                Program &program = load_program(frame.file_path);
+                std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);
+                child->stack.clear();
+                child->breakpoints.clear();
+                child->resume_skip_breakpoint_location.reset();
+                child->events.clear();
+                child->last_error_message.clear();
+                child->last_fault_location = {};
+                child->last_fault_statement.clear();
+                child->last_error_code = 0;
+                child->last_error_work_area = 0;
+                child->last_error_procedure.clear();
+                child->last_error_compatibility = {};
+                child->error_metadata_stack.clear();
+                child->handling_error = false;
+                child->handling_shutdown = false;
+                child->entry_pause_pending = false;
+                child->waiting_for_events = false;
+                child->quit_pending_after_shutdown = false;
+                child->fault_frame_file_path.clear();
+                child->fault_frame_routine_name.clear();
+                child->fault_statement_index = 0U;
+                child->fault_pc_valid = false;
+                child->event_dispatch_return_depth.reset();
+                child->restore_event_loop_after_dispatch = false;
+                child->task_cancel_requested = std::make_shared<std::atomic<bool>>(false);
+                child->critical_section_stack.clear();
+                child->critical_section_depth_by_name.clear();
+                child->critical_section_mutexes_by_name.clear();
+                child->transaction_level_by_session.clear();
+                child->transaction_journal_by_session.clear();
+                child->command_undo_journal_by_session.clear();
+                child->command_undo_stack_by_session.clear();
+                child->current_data_session = current_data_session;
+                std::string task_source_path = program.path;
+                if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
+                {
+                    if (!can_push_frame())
+                    {
+                        last_error_message = call_depth_limit_message();
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    child->push_routine_frame(
+                        program.path,
+                        routine->second,
+                        std::move(call_arguments),
+                        std::move(call_argument_references));
+                }
+                else
+                {
+                    std::filesystem::path target_path(target);
+                    if (target_path.extension().empty())
+                    {
+                        target_path += ".prg";
+                    }
+                    if (target_path.is_relative())
+                    {
+                        target_path = std::filesystem::path(current_default_directory()) / target_path;
+                    }
+                    if (!std::filesystem::exists(target_path))
+                    {
+                        last_error_message = "Unable to resolve SPAWN target: " + target;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    task_source_path = target_path.string();
+                    child->push_main_frame(
+                        target_path.string(),
+                        std::move(call_arguments),
+                        std::move(call_argument_references));
+                }
+
+                const int handle = allocate_async_task_handle();
+                auto task = std::make_shared<AsyncTaskState>();
+                task->handle = handle;
+                task->routine_name = target;
+                task->source_path = task_source_path;
+                task->cancel_requested = child->task_cancel_requested;
+                task->future = std::async(std::launch::async, [child]() mutable
+                {
+                    return child->run(DebugResumeAction::continue_run);
+                }).share();
+                register_async_task(task);
+
+                std::string detail = "handle=" + std::to_string(handle) + " target=" + target;
+                if (!statement.expression.empty())
+                {
+                    detail += " args=" + std::to_string(split_csv_like(statement.expression).size());
+                }
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    ExecutionOutcome outcome = assign_runtime_target_value(statement.names.front(), make_number_value(static_cast<double>(handle)));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                    detail += " assigned=" + statement.names.front();
+                }
+                events.push_back({.category = "runtime.task.spawn",
+                                  .detail = detail,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::await_command:
+            {
+                const std::string handle_text = trim_copy(statement.expression);
+                if (handle_text.empty())
+                {
+                    last_error_message = "AWAIT requires a task handle";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const int handle = static_cast<int>(std::llround(value_as_number(evaluate_expression(handle_text, frame))));
+                const std::shared_ptr<AsyncTaskState> task = find_async_task(handle);
+                if (task == nullptr)
+                {
+                    last_error_message = "Unknown task handle: " + std::to_string(handle);
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                task->future.wait();
+                task->result = task->future.get();
+                task->finished = true;
+
+                if (!task->result.events.empty())
+                {
+                    events.insert(events.end(), task->result.events.begin(), task->result.events.end());
+                }
+
+                std::string detail = "handle=" + std::to_string(handle) +
+                                     " state=" + debug_pause_reason_name(task->result.reason) +
+                                     " message=" + task->result.message;
+                if (!statement.names.empty() && !statement.names.front().empty())
+                {
+                    const bool completed = task->result.reason == DebugPauseReason::completed;
+                    ExecutionOutcome outcome = assign_runtime_target_value(
+                        statement.names.front(),
+                        make_boolean_value(completed));
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                    detail += " assigned=" + statement.names.front();
+                }
+
+                if (task->result.reason != DebugPauseReason::completed && !task->result.message.empty())
+                {
+                    detail += " error=" + task->result.message;
+                }
+
+                events.push_back({.category = "runtime.task.await",
+                                  .detail = detail,
+                                  .location = statement.location});
+                erase_async_task(handle);
+                return {};
+            }
+            case StatementKind::call_command:
+            {
+                std::string target = trim_copy(statement.identifier);
                     if (!target.empty() && target.front() == '&')
                     {
                         const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
@@ -6493,7 +6726,17 @@
                 }
                 else
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_duration_ms));
+                    for (std::size_t elapsed = 0U; elapsed < sleep_duration_ms; ++elapsed)
+                    {
+                        if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                        {
+                            last_error_message = "SLEEP cancelled.";
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1U));
+                    }
                 }
 
                 std::string detail = "duration=" + std::to_string(sleep_duration_ms) + "ms";
@@ -6897,6 +7140,7 @@
                 events.push_back({.category = "runtime.cancel",
                                   .detail = "CANCEL",
                                   .location = statement.location});
+                cancel_all_async_tasks();
                 int &level = current_transaction_level();
                 if (level > 0)
                 {

@@ -490,6 +490,158 @@
             return true;
         }
 
+        int allocate_async_task_handle()
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            int &handle = concurrency_state->next_async_task_handle_by_session[current_data_session];
+            handle = std::max(1, handle);
+            return handle++;
+        }
+
+        void register_async_task(const std::shared_ptr<AsyncTaskState> &task)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            concurrency_state->async_tasks_by_session[current_data_session][task->handle] = task;
+        }
+
+        std::shared_ptr<AsyncTaskState> find_async_task(int handle)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            const auto session_found = concurrency_state->async_tasks_by_session.find(current_data_session);
+            if (session_found == concurrency_state->async_tasks_by_session.end())
+            {
+                return nullptr;
+            }
+
+            const auto task_found = session_found->second.find(handle);
+            if (task_found == session_found->second.end())
+            {
+                return nullptr;
+            }
+
+            return task_found->second;
+        }
+
+        void erase_async_task(int handle)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            const auto session_found = concurrency_state->async_tasks_by_session.find(current_data_session);
+            if (session_found == concurrency_state->async_tasks_by_session.end())
+            {
+                return;
+            }
+
+            session_found->second.erase(handle);
+            if (session_found->second.empty())
+            {
+                concurrency_state->async_tasks_by_session.erase(session_found);
+            }
+        }
+
+        void cancel_all_async_tasks()
+        {
+            std::vector<std::shared_ptr<std::atomic<bool>>> cancellation_tokens;
+            {
+                std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+                const auto session_found = concurrency_state->async_tasks_by_session.find(current_data_session);
+                if (session_found == concurrency_state->async_tasks_by_session.end())
+                {
+                    return;
+                }
+
+                for (const auto &[_, task] : session_found->second)
+                {
+                    if (task != nullptr && task->cancel_requested != nullptr)
+                    {
+                        cancellation_tokens.push_back(task->cancel_requested);
+                    }
+                }
+            }
+
+            for (const auto &token : cancellation_tokens)
+            {
+                token->store(true, std::memory_order_relaxed);
+            }
+        }
+
+        std::shared_ptr<std::recursive_mutex> critical_section_mutex(const std::string &name)
+        {
+            std::lock_guard<std::mutex> lock(concurrency_state->mutex);
+            auto &critical_section = concurrency_state->critical_sections[name];
+            if (critical_section == nullptr)
+            {
+                critical_section = std::make_shared<std::recursive_mutex>();
+            }
+            return critical_section;
+        }
+
+        void enter_critical_section(const std::string &name)
+        {
+            const std::string section_name = normalize_identifier(name.empty() ? std::string{"default"} : name);
+            auto mutex = critical_section_mutex(section_name);
+            mutex->lock();
+            critical_section_mutexes_by_name[section_name] = std::move(mutex);
+            critical_section_stack.push_back(section_name);
+            ++critical_section_depth_by_name[section_name];
+        }
+
+        bool exit_critical_section(const std::string &name)
+        {
+            const std::string section_name = normalize_identifier(name.empty() ? std::string{"default"} : name);
+            auto depth_found = critical_section_depth_by_name.find(section_name);
+            if (depth_found == critical_section_depth_by_name.end() || depth_found->second == 0U)
+            {
+                last_error_message = "Unknown critical section: " + section_name;
+                return false;
+            }
+
+            auto mutex_found = critical_section_mutexes_by_name.find(section_name);
+            if (mutex_found == critical_section_mutexes_by_name.end() || mutex_found->second == nullptr)
+            {
+                last_error_message = "Critical section mutex not found: " + section_name;
+                return false;
+            }
+
+            mutex_found->second->unlock();
+            if (--depth_found->second == 0U)
+            {
+                critical_section_depth_by_name.erase(depth_found);
+                critical_section_mutexes_by_name.erase(mutex_found);
+            }
+
+            const auto stack_found = std::find(critical_section_stack.rbegin(), critical_section_stack.rend(), section_name);
+            if (stack_found != critical_section_stack.rend())
+            {
+                critical_section_stack.erase(std::next(stack_found).base());
+            }
+            return true;
+        }
+
+        void release_all_critical_sections()
+        {
+            while (!critical_section_stack.empty())
+            {
+                const std::string section_name = critical_section_stack.back();
+                auto depth_found = critical_section_depth_by_name.find(section_name);
+                auto mutex_found = critical_section_mutexes_by_name.find(section_name);
+                if (depth_found == critical_section_depth_by_name.end() ||
+                    mutex_found == critical_section_mutexes_by_name.end() ||
+                    mutex_found->second == nullptr)
+                {
+                    critical_section_stack.pop_back();
+                    continue;
+                }
+
+                mutex_found->second->unlock();
+                critical_section_stack.pop_back();
+                if (--depth_found->second == 0U)
+                {
+                    critical_section_depth_by_name.erase(depth_found);
+                    critical_section_mutexes_by_name.erase(mutex_found);
+                }
+            }
+        }
+
         std::vector<std::filesystem::path> transaction_companion_paths(const std::string &table_path) const
         {
             std::vector<std::filesystem::path> paths;
