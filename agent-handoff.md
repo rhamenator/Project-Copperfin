@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: the highest-priority open umbrellas are still `#19` and `#21`. `#14`, `#20`, `#38`, and `#42` are now closed, and `#410`, `#411`, `#412`, `#413`, `#414`, `#415`, and `#416` are now shipped under the recently closed `#20` debugger lane. Choose the next prompt-sized child under the live blocker tree instead of reopening the closed transpilation/debugger slices. Within `#19`, the remaining open family issues are `#40` and `#41`.
+Next: the highest-priority open umbrella at the head of the build/debug branch is now `#19`. `#14`, `#20`, `#21`, `#38`, and `#42` are now closed, and `#410`, `#411`, `#412`, `#413`, `#414`, `#415`, and `#416` are now shipped under the recently closed debugger lane. Choose the next prompt-sized child under the live blocker tree instead of reopening the closed transpilation/debugger slices. Within `#19`, the remaining open family issues are `#40` and `#41`.
 
 Language-service queue update:
 
+- 2026-06-14: **`#21` is now closed.** The dedicated D3 child queue is exhausted after `#166` and `#167`, and the shipped follow-on workflow slices `#206`, `#207`, `#278`, and `#403` now cover native entrypoint packaging, deployed-package rebinding, launcher routing/reporting, and argument-forwarding fidelity across the current workflow baseline.
 - 2026-06-14: **`#20` is now closed.** The dedicated debugger child queue is exhausted after `#164`, `#165`, `#404`, `#405`, `#406`, `#407`, `#408`, `#411`, `#412`, `#413`, `#414`, `#415`, and `#416`, covering watch evaluation, locals/pause metadata, breakpoint management, richer stepping, cursor/runtime inspection, and xAsset-to-debugger linkage.
 - 2026-06-14: **`#38` is now closed.** The dedicated round-trip child queue is exhausted after `#204`, `#205`, and `#417`, covering SCX/VCX, FRX/LBX/MNX, and PJX/PJT plus DBC/DCT reopenability and undo fidelity through focused visual-asset regression coverage.
 - 2026-06-14: **`#417` is now shipped.** `visual_asset_editor` now infers `.dct` memo sidecars for `.dbc` assets alongside the existing `.pjt` project pairing, and focused `test_visual_asset_editor` coverage now proves representative direct-field plus memo-backed edits on synthetic `PJX/PJT` and `DBC/DCT` fixtures remain readable and fully undo back to their original serialized values.
@@ -87,6 +88,7 @@ Language-service queue update:
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#21` is now closed.** Build/run/debug/deploy workflow tightening is now considered complete at the umbrella level: runtime package materialization, migration-report diagnostics, native entrypoint packaging, deployed-package rebinding, launcher routing, and launcher argument forwarding all have focused workflow coverage across the current baseline.
 - 2026-06-14: **`#20` is now closed.** Debugger completion is now considered complete at the umbrella level: the runtime host exposes watch evaluation, live breakpoint management, xAsset-aware breakpoint identity, and richer step/breakpoint pause inspection with focused regression coverage across both engine and host paths.
 - 2026-06-14: **`#38` is now closed.** IDE-safe round-trip coverage for modified FoxPro/VFP assets now spans the core memo-backed families the current editor path touches: screens/classes, reports/labels/menus, projects, and database containers all have focused reopenability plus undo-fidelity regression coverage.
 - 2026-06-14: **`#417` is now closed.** Project and database-container round-trip coverage now extends the visual-asset editor beyond the earlier SCX/VCX/FRX/LBX/MNX families: synthetic `PJX/PJT` and `DBC/DCT` assets survive paired direct/memo edits, remain readable, and fully undo back to their original serialized state.
