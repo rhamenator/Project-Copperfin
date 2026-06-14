@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace copperfin::security {
 
@@ -52,6 +53,25 @@ std::string read_last_hash(const std::string& log_path) {
     return last_line.substr(last_delimiter + 1U);
 }
 
+std::vector<std::string> split_audit_line(const std::string& line) {
+    std::vector<std::string> tokens;
+    std::istringstream stream(line);
+    std::string token;
+    while (std::getline(stream, token, '|')) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+std::string compute_entry_hash(const std::string& timestamp,
+                              const std::string& event_name,
+                              const std::string& detail,
+                              const std::string& previous_hash) {
+    const std::string payload = timestamp + "|" + event_name + "|" + detail + "|" + previous_hash;
+    const auto hash = sha256_hex_for_text(payload);
+    return hash.ok ? hash.hex_digest : std::string{};
+}
+
 }  // namespace
 
 AuditAppendResult append_immutable_audit_event(
@@ -61,7 +81,7 @@ AuditAppendResult append_immutable_audit_event(
     std::error_code error;
     std::filesystem::create_directories(std::filesystem::path(log_path).parent_path(), error);
     if (error) {
-        return {.ok = false, .error = "Unable to create audit log directory."};
+        return {.ok = false, .error = "Unable to create audit log directory.", .entry_hash = {}};
     }
 
     const std::string previous_hash = read_last_hash(log_path);
@@ -72,20 +92,69 @@ AuditAppendResult append_immutable_audit_event(
     const std::string signed_payload = timestamp + "|" + safe_event + "|" + safe_detail + "|" + previous_hash;
     const auto hash = sha256_hex_for_text(signed_payload);
     if (!hash.ok) {
-        return {.ok = false, .error = hash.error};
+        return {.ok = false, .error = hash.error, .entry_hash = {}};
     }
 
     std::ofstream output(log_path, std::ios::app | std::ios::binary);
     if (!output) {
-        return {.ok = false, .error = "Unable to open audit log for append."};
+        return {.ok = false, .error = "Unable to open audit log for append.", .entry_hash = {}};
     }
 
     output << signed_payload << "|" << hash.hex_digest << "\n";
     if (!output.good()) {
-        return {.ok = false, .error = "Unable to append audit log entry."};
+        return {.ok = false, .error = "Unable to append audit log entry.", .entry_hash = {}};
     }
 
-    return {.ok = true, .entry_hash = hash.hex_digest};
+    return {.ok = true, .error = {}, .entry_hash = hash.hex_digest};
+}
+
+AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path) {
+    std::ifstream input(log_path, std::ios::binary);
+    if (!input) {
+        return {.ok = true, .error = {}, .entries = 0U};
+    }
+
+    std::string line;
+    std::size_t line_number = 0U;
+    std::string previous_hash = "GENESIS";
+    std::size_t verified = 0U;
+    while (std::getline(input, line)) {
+        if (line.empty()) {
+            continue;
+        }
+        ++line_number;
+
+        const auto fields = split_audit_line(line);
+        if (fields.size() != 5U) {
+            return {.ok = false, .error = "Malformed audit line " + std::to_string(line_number), .entries = verified};
+        }
+
+        const auto& timestamp = fields[0];
+        const auto& event_name = fields[1];
+        const auto& detail = fields[2];
+        const auto& expected_previous_hash = fields[3];
+        const auto& observed_hash = fields[4];
+        if (expected_previous_hash != previous_hash) {
+            return {.ok = false,
+                    .error = "Audit chain broken at line " + std::to_string(line_number) + " (previous hash mismatch)",
+                    .entries = verified};
+        }
+
+        const auto calculated_hash = compute_entry_hash(timestamp, event_name, detail, expected_previous_hash);
+        if (calculated_hash.empty()) {
+            return {.ok = false, .error = "Unable to compute hash at line " + std::to_string(line_number), .entries = verified};
+        }
+        if (calculated_hash != observed_hash) {
+            return {.ok = false,
+                    .error = "Audit hash mismatch at line " + std::to_string(line_number),
+                    .entries = verified};
+        }
+
+        previous_hash = observed_hash;
+        ++verified;
+    }
+
+    return {.ok = true, .error = {}, .entries = verified};
 }
 
 }  // namespace copperfin::security

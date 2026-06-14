@@ -180,6 +180,71 @@ void test_audit_stream_tamper_detection() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_audit_stream_chain_verification() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_audit_verify_tests";
+    const fs::path good_log = temp_root / "good" / "events.log";
+    const fs::path tampered_log = temp_root / "tampered" / "events.log";
+    const fs::path deleted_line_log = temp_root / "deleted" / "events.log";
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+
+    const auto one = copperfin::security::append_immutable_audit_event(good_log.string(), "runtime.start", "good-one");
+    const auto two = copperfin::security::append_immutable_audit_event(good_log.string(), "runtime.middle", "good-two");
+    const auto three = copperfin::security::append_immutable_audit_event(good_log.string(), "runtime.finish", "good-three");
+    expect(one.ok && two.ok && three.ok, "good audit chain append operations should succeed");
+    if (one.ok && two.ok && three.ok) {
+        const auto verify_good = copperfin::security::verify_immutable_audit_chain(good_log.string());
+        expect(verify_good.ok, "verify_immutable_audit_chain should validate a clean log");
+        expect(verify_good.entries == 3U, "verify_immutable_audit_chain should report all three entries");
+    }
+
+    const auto t1 = copperfin::security::append_immutable_audit_event(tampered_log.string(), "runtime.start", "tamper-one");
+    expect(t1.ok, "tampered log first append should succeed");
+    if (t1.ok) {
+        const auto t2 = copperfin::security::append_immutable_audit_event(tampered_log.string(), "runtime.middle", "tamper-two");
+        expect(t2.ok, "tampered log second append should succeed");
+        if (t2.ok) {
+            std::ifstream source(tampered_log, std::ios::binary);
+            std::string text((std::istreambuf_iterator<char>(source)), std::istreambuf_iterator<char>());
+            const auto hash_pos = text.rfind("tamper-two");
+            if (hash_pos != std::string::npos) {
+                // Corrupt the visible detail text; hash validation should fail.
+                text[hash_pos] = 'x';
+            }
+            std::ofstream target(tampered_log, std::ios::trunc | std::ios::binary);
+            target << text;
+        }
+
+        const auto verify_tampered = copperfin::security::verify_immutable_audit_chain(tampered_log.string());
+        expect(!verify_tampered.ok, "verify_immutable_audit_chain should fail on tampered detail/hash input");
+        expect(!verify_tampered.error.empty(), "audit verification error should be reported for tampered log");
+    }
+
+    const auto d1 = copperfin::security::append_immutable_audit_event(deleted_line_log.string(), "runtime.start", "delete-one");
+    expect(d1.ok, "deleted-line test first append should succeed");
+    if (d1.ok) {
+        const auto d2 = copperfin::security::append_immutable_audit_event(deleted_line_log.string(), "runtime.middle", "delete-two");
+        expect(d2.ok, "deleted-line test second append should succeed");
+    }
+    {
+        std::ifstream source(deleted_line_log, std::ios::binary);
+        std::string contents((std::istreambuf_iterator<char>(source)), std::istreambuf_iterator<char>());
+        const auto line_break = contents.find('\n');
+        if (line_break != std::string::npos) {
+            contents.erase(0, line_break + 1U);
+        }
+        std::ofstream target(deleted_line_log, std::ios::trunc | std::ios::binary);
+        target << contents;
+    }
+    const auto verify_deleted = copperfin::security::verify_immutable_audit_chain(deleted_line_log.string());
+    expect(!verify_deleted.ok, "verify should fail when a middle audit line is removed");
+    expect(!verify_deleted.error.empty(), "audit verification should report chain break for deleted line");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 // #252 [gap-06e]
 void test_audit_stream_append_to_readonly_path_fails_gracefully() {
     namespace fs = std::filesystem;
@@ -217,6 +282,7 @@ int main() {
     test_authorization_empty_permission_returns_false();
     test_secret_provider_missing_env_var_returns_not_ok();
     test_audit_stream_tamper_detection();
+    test_audit_stream_chain_verification();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
 
     if (failures != 0) {
