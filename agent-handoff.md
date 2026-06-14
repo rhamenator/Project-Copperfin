@@ -30,10 +30,11 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-Next: adjacent open queue branches (`#155`-`#203`) are now unblocked. Choose the highest-value open branch from `remaining-work.md` or the gap tracking issues.
+Next: the active safety/diagnostics queue is back to umbrella-only state after `#402`. If continuing `#14`, create the next prompt-sized child issue before coding; otherwise choose the highest-value open child issue from the remaining queue.
 
 Language-service queue update:
 
+- 2026-06-14: **`#402` is now shipped.** `ENTER CRITICAL` now enforces ascending normalized lock ordering for nested acquisitions, and shipped blocking wait surfaces now reject blocking while a critical section is held (`AWAIT`, positive-duration `SLEEP`, and lock-retry/backoff under contention). Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic `runtime.critical.order_violation` / `runtime.critical.blocking_violation` diagnostics instead of deadlock-prone hangs.
 - 2026-06-14: **`#271` is now shipped.** `SET('REPROCESS')` now defaults to `AUTOMATIC`, lock acquisition honors per-session retry budgets across explicit lock commands plus shipped local mutation paths, and contention now emits deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics instead of busy-spinning. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove cross-session contention, retry counts, timeout errors, and session isolation/restoration.
 - 2026-06-14: **`#273` is now shipped.** The Visual Studio asset editor pane now routes `Undo` through edit-level text-box undo or host-backed command undo as appropriate, `copperfin_studio_host` now reports command-undo availability/labels and executes `--undo-mode command`, and the native CTest suite now includes `test_managed_compile` so `Copperfin.LanguageServiceTests`, `Copperfin.Studio`, and `Copperfin.DesignerSmokeTests` all compile in routine validation.
 - 2026-06-14: **`#401` is now shipped.** `CopperfinProjectInsightClient` now records class-scoped methods under their fully qualified symbol name and maps qualified plus instance-style method calls back to that symbol for reference collection and rename preview.
@@ -50,10 +51,11 @@ Language-service queue update:
 - 2026-06-14: **`#179` is now shipped.** `FoxProIntelliSenseCatalog` now derives project procedure/function signature help from nearby `LPARAMETERS` / `PARAMETERS` declarations and reuses it for dotted invocation fallback such as `oToolbar.SaveOrder`.
 - 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
 - The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, `#400`, and `#401` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
-- The current prompt-sized runtime-safety child queue is also closed (`#142`-`#145`, `#150`-`#153`, `#269`, `#270`, `#271`, `#272`, and `#273` shipped). Choose the next slice from the adjacent open branch queue instead of reopening `#14` without a new child issue.
+- The current prompt-sized runtime-safety child queue is also closed (`#142`-`#145`, `#150`-`#153`, `#269`, `#270`, `#271`, `#272`, `#273`, and `#402` shipped). Create a new `#14` child issue before taking more safety/diagnostics work.
 
 Current shipped highlights worth remembering:
 
+- 2026-06-14: **`#402` is now closed.** The runtime now has an explicit in-memory critical-section policy: nested acquisitions must follow ascending normalized section-name order, and blocking wait surfaces are rejected while a critical section is held. Focused `test_prg_engine_control_flow` and `test_prg_engine_table_mutation` coverage prove deterministic diagnostics for order violations and lock/wait blocking violations.
 - 2026-06-14: **`#271` is now closed.** The lock/reprocess lane now defaults `SET('REPROCESS')` to `AUTOMATIC`, preserves data-session isolation of that state, and applies bounded retry/timeout behavior to explicit lock commands plus shipped local mutation paths. Focused `test_prg_engine_table_mutation` and `test_prg_engine_work_areas` coverage prove contention retries, timeout diagnostics, and non-busy-spin behavior.
 - 2026-06-13: **`#7` and `#8` are now closed.** All active lane issues (#92-#101) complete. A3 (Command/Expression Surface) is done at ~98%.
 - 2026-06-13: **`#100` is now closed.** Child slice #393 fixed `SCATTER BLANK` on zero-record tables (schema-fallback path) and `blank_value_for_field` for character/varchar fields. G12 (Field Projection/Data Transfer) complete.

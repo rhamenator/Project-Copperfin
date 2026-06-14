@@ -454,6 +454,11 @@
                                   const SourceLocation &location,
                                   std::size_t attempt_number)
         {
+            if (!ensure_non_blocking_critical_section_policy("LOCK RETRY", location, detail))
+            {
+                return false;
+            }
+
             std::size_t sleep_duration_ms = 0U;
             if (scheduler_yield_sleep_ms != 0U)
             {

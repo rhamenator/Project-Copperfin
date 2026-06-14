@@ -994,7 +994,12 @@
             case StatementKind::enter_critical_command:
             {
                 const std::string section_name = trim_copy(statement.identifier);
-                enter_critical_section(section_name);
+                if (!enter_critical_section(section_name, statement.location))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 std::string detail = "section=" + normalize_identifier(section_name.empty() ? std::string{"default"} : section_name);
                 detail += " depth=" + std::to_string(critical_section_depth_by_name[normalize_identifier(section_name.empty() ? std::string{"default"} : section_name)]);
                 events.push_back({.category = "runtime.critical.enter",
@@ -1191,6 +1196,13 @@
                 if (handle_text.empty())
                 {
                     last_error_message = "AWAIT requires a task handle";
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                if (!ensure_non_blocking_critical_section_policy("AWAIT", statement.location))
+                {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6751,6 +6763,15 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     sleep_duration_ms = static_cast<std::size_t>(std::llround(evaluated_delay));
+                }
+
+                if (sleep_duration_ms != 0U &&
+                    !ensure_non_blocking_critical_section_policy("SLEEP", statement.location,
+                                                                 "duration=" + std::to_string(sleep_duration_ms) + "ms"))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
 
                 if (sleep_duration_ms == 0U)

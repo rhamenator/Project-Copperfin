@@ -743,14 +743,52 @@
             return critical_section;
         }
 
-        void enter_critical_section(const std::string &name)
+        bool ensure_non_blocking_critical_section_policy(const std::string &operation,
+                                                         const SourceLocation &location,
+                                                         const std::string &detail = {})
+        {
+            if (critical_section_stack.empty())
+            {
+                return true;
+            }
+
+            const std::string section_name = critical_section_stack.back();
+            last_error_message = "Blocking operation " + operation +
+                                 " is not allowed while holding CRITICAL section " + section_name;
+            std::string event_detail = "operation=" + operation + " section=" + section_name;
+            if (!detail.empty())
+            {
+                event_detail += " detail=" + detail;
+            }
+            events.push_back({.category = "runtime.critical.blocking_violation",
+                              .detail = event_detail,
+                              .location = location});
+            return false;
+        }
+
+        bool enter_critical_section(const std::string &name, const SourceLocation &location)
         {
             const std::string section_name = normalize_identifier(name.empty() ? std::string{"default"} : name);
+            if (!critical_section_stack.empty())
+            {
+                const std::string &held_section = critical_section_stack.back();
+                if (section_name != held_section && section_name < held_section)
+                {
+                    last_error_message = "Critical sections must be entered in ascending normalized name order: held " +
+                                         held_section + " before " + section_name;
+                    events.push_back({.category = "runtime.critical.order_violation",
+                                      .detail = "held=" + held_section + " requested=" + section_name,
+                                      .location = location});
+                    return false;
+                }
+            }
+
             auto mutex = critical_section_mutex(section_name);
             mutex->lock();
             critical_section_mutexes_by_name[section_name] = std::move(mutex);
             critical_section_stack.push_back(section_name);
             ++critical_section_depth_by_name[section_name];
+            return true;
         }
 
         bool exit_critical_section(const std::string &name)

@@ -3,6 +3,7 @@
 This file is the working guide for the remaining Copperfin implementation effort.
 
 - 2026-06-14: A3/#271 REPROCESS contention semantics are now shipped. `SET('REPROCESS')` defaults to `AUTOMATIC`, local lock acquisition now honors per-session retry budgets across `RLOCK()`, `FLOCK()` / `LOCK()`, `REPLACE`, `APPEND BLANK`, `DELETE`, and `RECALL`, conflicting attempts emit deterministic `runtime.lock_retry` / `runtime.lock_timeout` diagnostics instead of busy-spinning, and focused `test_prg_engine_table_mutation` plus `test_prg_engine_work_areas` coverage now proves cross-session contention, explicit retry overrides, timeout errors, and session isolation/restoration.
+- 2026-06-14: B2/#402 critical-section policy enforcement is now shipped. Nested `ENTER CRITICAL` acquisitions now require ascending normalized section-name order, shipped blocking wait surfaces now reject blocking while a critical section is held (`AWAIT`, positive-duration `SLEEP`, and lock-retry/backoff paths under contention), and focused `test_prg_engine_control_flow` plus `test_prg_engine_table_mutation` coverage now proves deterministic `runtime.critical.order_violation` / `runtime.critical.blocking_violation` diagnostics instead of deadlock-prone hangs.
 
 It is intentionally ordered by dependency depth:
 

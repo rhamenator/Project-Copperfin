@@ -701,6 +701,71 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_lock_retry_blocking_is_rejected_inside_critical_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lock_retry_critical_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "lock_retry_critical_policy.prg";
+    write_text(
+        main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "GO 1\n"
+        "lHeldLock = RLOCK()\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "GO 1\n"
+        "TRY\n"
+        "    ENTER CRITICAL shared\n"
+        "    REPLACE NAME WITH 'BLOCKED'\n"
+        "    lPolicyBlocked = .F.\n"
+        "CATCH TO err_text\n"
+        "    lPolicyBlocked = .T.\n"
+        "    cPolicyError = err_text\n"
+        "ENDTRY\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section lock-retry policy script should complete: " + state.message);
+
+    const auto held_lock = state.globals.find("lheldlock");
+    const auto policy_blocked = state.globals.find("lpolicyblocked");
+    const auto policy_error = state.globals.find("cpolicyerror");
+    expect(held_lock != state.globals.end(), "lock-retry policy script should capture the first-session held lock");
+    expect(policy_blocked != state.globals.end(), "lock-retry policy script should capture the policy-block result");
+    expect(policy_error != state.globals.end(), "lock-retry policy script should capture the policy-block message");
+    if (held_lock != state.globals.end()) {
+        expect(copperfin::runtime::format_value(held_lock->second) == "true",
+               "lock-retry policy script should hold the first-session record lock");
+    }
+    if (policy_blocked != state.globals.end()) {
+        expect(copperfin::runtime::format_value(policy_blocked->second) == "true",
+               "REPLACE under contention inside a critical section should be rejected");
+    }
+    if (policy_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(policy_error->second).find("Blocking operation LOCK RETRY") != std::string::npos,
+               "lock-retry policy error should mention the rejected blocking retry path");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=LOCK RETRY") != std::string::npos;
+    }), "lock-retry contention inside a critical section should emit a runtime.critical.blocking_violation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_and_delete_from_local_table() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_delete_from";
@@ -2037,6 +2102,7 @@ int main() {
     test_set_exclusive_controls_table_maintenance_guards();
     test_lock_functions_and_unlock_command_track_session_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
+    test_lock_retry_blocking_is_rejected_inside_critical_section();
     test_insert_into_and_delete_from_local_table();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();

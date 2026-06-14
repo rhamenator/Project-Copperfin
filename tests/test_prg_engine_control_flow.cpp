@@ -4294,7 +4294,6 @@ void test_spawn_cancellation_propagates_to_sibling_tasks() {
 
 void test_spawn_critical_section_serializes_workers() {
     namespace fs = std::filesystem;
-    using clock = std::chrono::steady_clock;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_critical_cmd";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
@@ -4305,7 +4304,9 @@ void test_spawn_critical_section_serializes_workers() {
         main_path,
         "PROCEDURE worker\n"
         "    ENTER CRITICAL shared\n"
-        "    SLEEP 25\n"
+        "    FOR nSpin = 1 TO 50\n"
+        "        YIELD\n"
+        "    ENDFOR\n"
         "    EXIT CRITICAL shared\n"
         "    RETURN\n"
         "ENDPROC\n"
@@ -4317,11 +4318,8 @@ void test_spawn_critical_section_serializes_workers() {
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
-    const auto start = clock::now();
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(clock::now() - start).count();
     expect(state.completed, "critical-section spawn test should complete");
-    expect(elapsed_ms >= 40, "shared critical sections should serialize spawned workers");
 
     const auto enter_count = std::count_if(
         state.events.begin(), state.events.end(),
@@ -4342,6 +4340,162 @@ void test_spawn_critical_section_serializes_workers() {
     if (second_done != state.globals.end()) {
         expect(second_done->second.boolean_value, "second worker should complete successfully");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_critical_section_order_policy_rejects_descending_nested_acquire() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_order_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_order_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE workergood\n"
+        "    ENTER CRITICAL alpha\n"
+        "    ENTER CRITICAL beta\n"
+        "    EXIT CRITICAL beta\n"
+        "    EXIT CRITICAL alpha\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE workerbad\n"
+        "    ENTER CRITICAL beta\n"
+        "    ENTER CRITICAL alpha\n"
+        "    EXIT CRITICAL beta\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN workergood TO nGood\n"
+        "SPAWN workerbad TO nBad\n"
+        "AWAIT nGood TO lGoodDone\n"
+        "AWAIT nBad TO lBadDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section order-policy script should complete");
+
+    const auto good_done = state.globals.find("lgooddone");
+    const auto bad_done = state.globals.find("lbaddone");
+    expect(good_done != state.globals.end(), "good worker completion flag should be captured");
+    expect(bad_done != state.globals.end(), "bad worker completion flag should be captured");
+    if (good_done != state.globals.end()) {
+        expect(good_done->second.boolean_value, "ascending nested critical-section order should succeed");
+    }
+    if (bad_done != state.globals.end()) {
+        expect(!bad_done->second.boolean_value, "descending nested critical-section order should fail deterministically");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.order_violation" &&
+               event.detail.find("held=beta requested=alpha") != std::string::npos;
+    }), "descending nested critical-section order should emit a runtime.critical.order_violation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_critical_section_blocking_policy_rejects_await_inside_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_await_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_await_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 1\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTask\n"
+        "TRY\n"
+        "    ENTER CRITICAL shared\n"
+        "    AWAIT nTask TO lDone\n"
+        "    lAwaitBlocked = .F.\n"
+        "CATCH TO err_text\n"
+        "    lAwaitBlocked = .T.\n"
+        "    cAwaitError = err_text\n"
+        "ENDTRY\n"
+        "EXIT CRITICAL shared\n"
+        "AWAIT nTask TO lDoneAfterExit\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section AWAIT policy script should complete");
+
+    const auto await_blocked = state.globals.find("lawaitblocked");
+    const auto await_error = state.globals.find("cawaiterror");
+    const auto done_after_exit = state.globals.find("ldoneafterexit");
+    expect(await_blocked != state.globals.end(), "AWAIT policy script should capture the blocking-policy result");
+    expect(await_error != state.globals.end(), "AWAIT policy script should capture the blocking-policy message");
+    expect(done_after_exit != state.globals.end(), "AWAIT policy script should still await successfully after leaving the critical section");
+    if (await_blocked != state.globals.end()) {
+        expect(await_blocked->second.boolean_value, "AWAIT inside a critical section should be rejected");
+    }
+    if (await_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(await_error->second).find("Blocking operation AWAIT") != std::string::npos,
+               "AWAIT policy error should mention the blocking AWAIT operation");
+    }
+    if (done_after_exit != state.globals.end()) {
+        expect(done_after_exit->second.boolean_value, "AWAIT should succeed once the critical section is exited");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=AWAIT") != std::string::npos;
+    }), "AWAIT inside a critical section should emit a runtime.critical.blocking_violation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_critical_sleep_policy";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "critical_sleep_test.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "    ENTER CRITICAL shared\n"
+        "    SLEEP 5\n"
+        "    lSleepBlocked = .F.\n"
+        "CATCH TO err_text\n"
+        "    lSleepBlocked = .T.\n"
+        "    cSleepError = err_text\n"
+        "ENDTRY\n"
+        "EXIT CRITICAL shared\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "critical-section SLEEP policy script should complete");
+
+    const auto sleep_blocked = state.globals.find("lsleepblocked");
+    const auto sleep_error = state.globals.find("csleeperror");
+    expect(sleep_blocked != state.globals.end(), "SLEEP policy script should capture the blocking-policy result");
+    expect(sleep_error != state.globals.end(), "SLEEP policy script should capture the blocking-policy message");
+    if (sleep_blocked != state.globals.end()) {
+        expect(sleep_blocked->second.boolean_value, "SLEEP inside a critical section should be rejected");
+    }
+    if (sleep_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(sleep_error->second).find("Blocking operation SLEEP") != std::string::npos,
+               "SLEEP policy error should mention the blocking SLEEP operation");
+    }
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.critical.blocking_violation" &&
+               event.detail.find("operation=SLEEP") != std::string::npos;
+    }), "SLEEP inside a critical section should emit a runtime.critical.blocking_violation event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -5429,6 +5583,9 @@ int main() {
     test_spawn_and_await_command_runs_task_to_completion();
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_spawn_critical_section_serializes_workers();
+    test_critical_section_order_policy_rejects_descending_nested_acquire();
+    test_critical_section_blocking_policy_rejects_await_inside_section();
+    test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_yield_command_emits_runtime_yield_event_and_preserves_state();
     test_yield_preserves_fault_metadata_when_followed_by_error();
     test_on_error_resume_restores_fault_session_and_cursor_state();
