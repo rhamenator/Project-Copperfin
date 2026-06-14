@@ -149,6 +149,44 @@ std::size_t find_breakpoint_line_for_routine_statement(
     return 0U;
 }
 
+std::size_t find_first_breakpoint_line_for_routine(
+    const std::string& source,
+    const std::string& routine_name) {
+    std::size_t current_line = 0;
+    std::string line;
+    std::size_t line_start = 0;
+    bool in_target_routine = false;
+
+    while (line_start <= source.size()) {
+        const std::size_t line_end = source.find('\n', line_start);
+        line = source.substr(
+            line_start,
+            line_end == std::string::npos ? std::string::npos : line_end - line_start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        ++current_line;
+        if (line == "PROCEDURE " + routine_name) {
+            in_target_routine = true;
+        } else if (in_target_routine) {
+            if (line == "ENDPROC") {
+                break;
+            }
+            if (!line.empty() && line[0] != '*') {
+                return current_line;
+            }
+        }
+
+        if (line_end == std::string::npos) {
+            break;
+        }
+        line_start = line_end + 1U;
+    }
+
+    return 0U;
+}
+
 void write_synthetic_form_asset(const std::filesystem::path& table_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "PLATFORM", .type = 'C', .length = 16U},
@@ -426,6 +464,125 @@ void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_
     }
 }
 
+void test_runtime_host_supports_xasset_action_breakpoint_commands(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_xasset_breakpoint_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "demo.scx";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_synthetic_form_asset(table_path);
+
+    copperfin::studio::StudioOpenRequest request{};
+    request.path = table_path.string();
+    request.read_only = true;
+    request.load_full_table = true;
+    const auto open_result = copperfin::studio::open_document(request);
+    expect(open_result.ok, "xAsset action-breakpoint fixture should reopen as a full SCX document");
+    if (!open_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(open_result.document);
+    expect(model.ok, "xAsset action-breakpoint fixture should yield an executable model");
+    const auto page_activate = find_action(model, "frmdemo.pgfmain.page2.activate");
+    const auto root_activate = find_action(model, "frmdemo.activate");
+    expect(page_activate.has_value(), "xAsset action-breakpoint fixture should expose the nested page action");
+    expect(root_activate.has_value(), "xAsset action-breakpoint fixture should expose the root form activate action");
+    if (!model.ok || !page_activate.has_value() || !root_activate.has_value()) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    const std::size_t first_breakpoint_line =
+        find_first_breakpoint_line_for_routine(bootstrap, page_activate->routine_name);
+    expect(first_breakpoint_line != 0U, "xAsset action-breakpoint fixture should resolve the first executable line");
+    if (first_breakpoint_line == 0U) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=DemoFormBreakpoint\n"
+        "startup_item=demo.scx\n"
+        "startup_source=" + table_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto add_process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--debug-command", "continue",
+            "--debug-command", "break:add-action:frmdemo.pgfmain.page2.activate",
+            "--debug-command", "break:list",
+            "--debug-command", "select:frmdemo.pgfmain.page2.activate"
+        },
+        temp_root);
+
+    if (add_process.exit_code != 0) {
+        std::cerr << "xasset add-action stdout:\n" << add_process.stdout_text << "\n";
+        std::cerr << "xasset add-action stderr:\n" << add_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(add_process.exit_code == 0, "runtime host xAsset add-action breakpoint smoke should exit successfully");
+    expect(add_process.stdout_text.find("debug.command[1]: break:add-action:frmdemo.pgfmain.page2.activate") != std::string::npos,
+           "runtime host should report xAsset add-action commands");
+    expect(add_process.stdout_text.find("debug.breakpoint.count: 1") != std::string::npos,
+           "runtime host should report one active xAsset action breakpoint");
+    expect(add_process.stdout_text.find("demo_copperfin_host_bootstrap.prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
+           "runtime host should list the resolved bootstrap breakpoint for the xAsset action");
+    expect(add_process.stdout_text.find("debug.command[3]: select:frmdemo.pgfmain.page2.activate") != std::string::npos,
+           "runtime host should report the dispatched xAsset action after add-action");
+    expect(add_process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+           "runtime host should pause on the xAsset action breakpoint added by action id");
+
+    const auto remove_process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--debug-command", "continue",
+            "--debug-command", "break:add-action:frmdemo.activate",
+            "--debug-command", "break:remove-action:frmdemo.activate",
+            "--debug-command", "break:list",
+            "--debug-command", "select:frmdemo.activate"
+        },
+        temp_root);
+
+    if (remove_process.exit_code != 0) {
+        std::cerr << "xasset remove-action stdout:\n" << remove_process.stdout_text << "\n";
+        std::cerr << "xasset remove-action stderr:\n" << remove_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(remove_process.exit_code == 0, "runtime host xAsset remove-action breakpoint smoke should exit successfully");
+    expect(remove_process.stdout_text.find("debug.command[2]: break:remove-action:frmdemo.activate") != std::string::npos,
+           "runtime host should report xAsset remove-action commands");
+    expect(remove_process.stdout_text.find("debug.breakpoint.count: 0") != std::string::npos,
+           "runtime host should report an empty inventory after removing the xAsset action breakpoint");
+    expect(remove_process.stdout_text.find("debug.command[4]: select:frmdemo.activate") != std::string::npos,
+           "runtime host should still dispatch the xAsset action after remove-action");
+    expect(remove_process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+           "runtime host should return to the event loop instead of breaking after removing the xAsset action breakpoint");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -437,6 +594,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_breakpoint_management_commands(argv[1]);
     test_runtime_host_supports_single_breakpoint_removal(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
+    test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

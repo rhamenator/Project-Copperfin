@@ -79,6 +79,7 @@ E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
   --manifest "E:\Project-Copperfin\artifacts\xasset-debug-smoke\app.cfmanifest" `
   --debug `
   --debug-command continue `
+  --debug-command break:add-action:frmbooks.release `
   --debug-command invoke:frmbooks.release
 ```
 

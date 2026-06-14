@@ -274,7 +274,7 @@ bool verify_manifest_hashes(
 }
 
 void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:clear|break:list>]\n";
+    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>]\n";
     std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
 }
 
@@ -388,6 +388,7 @@ void print_breakpoint_inventory(const copperfin::runtime::PrgRuntimeSession& ses
 
 struct XAssetBootstrapResult {
     std::optional<std::string> bootstrap_path;
+    std::string bootstrap_source;
     copperfin::runtime::XAssetExecutableModel model;
     std::string error;
 };
@@ -418,9 +419,11 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::filesystem::path bootstrap_path =
         std::filesystem::temp_directory_path() /
         (startup_path.stem().string() + "_copperfin_host_bootstrap.prg");
+    result.bootstrap_source =
+        copperfin::runtime::build_xasset_bootstrap_source(result.model, include_read_events);
 
     std::ofstream output(bootstrap_path, std::ios::binary);
-    output << copperfin::runtime::build_xasset_bootstrap_source(result.model, include_read_events);
+    output << result.bootstrap_source;
     output.close();
     if (!output.good()) {
         result.error = "Unable to materialize xAsset bootstrap.";
@@ -451,6 +454,56 @@ std::optional<std::string> resolve_action_routine_name(
         return std::nullopt;
     }
     return found->routine_name;
+}
+
+std::optional<copperfin::runtime::RuntimeBreakpoint> resolve_action_breakpoint(
+    const copperfin::runtime::XAssetExecutableModel& model,
+    const std::string& bootstrap_path,
+    const std::string& bootstrap_source,
+    const std::string& action_id) {
+    const std::string normalized_action_id = lowercase_copy(trim_copy(action_id));
+    const auto found = std::find_if(model.actions.begin(), model.actions.end(), [&](const copperfin::runtime::XAssetActionBinding& action) {
+        return lowercase_copy(action.action_id) == normalized_action_id;
+    });
+    if (found == model.actions.end()) {
+        return std::nullopt;
+    }
+
+    std::size_t current_line = 0;
+    bool in_target_routine = false;
+    std::size_t line_start = 0;
+    while (line_start <= bootstrap_source.size()) {
+        const std::size_t line_end = bootstrap_source.find('\n', line_start);
+        std::string line = bootstrap_source.substr(
+            line_start,
+            line_end == std::string::npos ? std::string::npos : line_end - line_start);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        ++current_line;
+        if (line == "PROCEDURE " + found->routine_name) {
+            in_target_routine = true;
+        } else if (in_target_routine) {
+            const std::string trimmed = trim_copy(line);
+            if (starts_with_insensitive(trimmed, "ENDPROC")) {
+                return std::nullopt;
+            }
+            if (!trimmed.empty() && trimmed[0] != '*') {
+                return copperfin::runtime::RuntimeBreakpoint{
+                    .file_path = bootstrap_path,
+                    .line = current_line
+                };
+            }
+        }
+
+        if (line_end == std::string::npos) {
+            break;
+        }
+        line_start = line_end + 1U;
+    }
+
+    return std::nullopt;
 }
 
 std::string resolve_effective_working_directory(
@@ -695,6 +748,7 @@ int main(int argc, char** argv) {
 
     std::string effective_startup_source = startup_source;
     std::string runtime_mode = "prg-engine";
+    std::string xasset_bootstrap_source;
     if (!prg_startup) {
         const auto bootstrap = materialize_xasset_bootstrap(startup_source, true);
         xasset_model = bootstrap.model;
@@ -707,6 +761,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         effective_startup_source = *bootstrap.bootstrap_path;
+        xasset_bootstrap_source = bootstrap.bootstrap_source;
         runtime_mode = "xasset-bootstrap";
     }
 
@@ -808,6 +863,50 @@ int main(int argc, char** argv) {
                 if (!session.remove_breakpoint(*breakpoint)) {
                     std::cout << "status: error\n";
                     std::cout << "error: Unknown breakpoint: " << breakpoint->file_path << ":" << breakpoint->line << "\n";
+                    return 5;
+                }
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
+                continue;
+            } else if (starts_with_insensitive(command, "break:add-action:")) {
+                if (runtime_mode != "xasset-bootstrap") {
+                    std::cout << "status: error\n";
+                    std::cout << "error: xAsset action breakpoints require xasset-bootstrap mode.\n";
+                    return 5;
+                }
+                const auto breakpoint = resolve_action_breakpoint(
+                    xasset_model,
+                    effective_startup_source,
+                    xasset_bootstrap_source,
+                    command.substr(17U));
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unknown or non-breakpointable xAsset action: " << trim_copy(command.substr(17U)) << "\n";
+                    return 5;
+                }
+                session.add_breakpoint(*breakpoint);
+                std::cout << "debug.command[" << index << "]: " << command << "\n";
+                print_breakpoint_inventory(session);
+                continue;
+            } else if (starts_with_insensitive(command, "break:remove-action:")) {
+                if (runtime_mode != "xasset-bootstrap") {
+                    std::cout << "status: error\n";
+                    std::cout << "error: xAsset action breakpoints require xasset-bootstrap mode.\n";
+                    return 5;
+                }
+                const auto breakpoint = resolve_action_breakpoint(
+                    xasset_model,
+                    effective_startup_source,
+                    xasset_bootstrap_source,
+                    command.substr(20U));
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unknown or non-breakpointable xAsset action: " << trim_copy(command.substr(20U)) << "\n";
+                    return 5;
+                }
+                if (!session.remove_breakpoint(*breakpoint)) {
+                    std::cout << "status: error\n";
+                    std::cout << "error: Unknown breakpoint for xAsset action: " << trim_copy(command.substr(20U)) << "\n";
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
