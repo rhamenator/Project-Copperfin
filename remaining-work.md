@@ -307,7 +307,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Document/vector translation and AI planning policy: #31
 - .NET outputs and integration hooks: #32
 - Interop/compiler LINQ and runtime bridge contracts: #57, #91
-- active-open native slice queues under #30-#32, #57, #91: #201-#202
+- active-open native slice queues under #30-#32, #57, #91: none (`#200`-`#203` shipped)
 
 ### Security And Policy
 
