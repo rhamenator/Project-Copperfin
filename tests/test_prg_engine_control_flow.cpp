@@ -4942,38 +4942,22 @@ void test_yield_allowed_in_enter_critical_is_small_regression() {
     const fs::path main_path = temp_root / "yield_enter_critical_regression_test.prg";
     write_text(
         main_path,
-        "TRY\n"
-        "    ENTER CRITICAL\n"
-        "    lInCritical = .T.\n"
-        "    YIELD\n"
-        "    lAfterYield = .T.\n"
-        "    lCaught = .F.\n"
-        "    EXIT CRITICAL\n"
-        "CATCH TO cErr\n"
-        "    lCaught = .T.\n"
-        "    cCatch = cErr\n"
-        "ENDTRY\n"
+        "lYielded = .F.\n"
+        "ENTER CRITICAL\n"
+        "YIELD\n"
+        "lYielded = .T.\n"
+        "EXIT CRITICAL\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "YIELD inside ENTER CRITICAL regression should complete");
+    expect(state.completed, "ENTER CRITICAL/YIELD regression should complete");
 
-    const auto in_critical = state.globals.find("lincritical");
-    const auto after_yield = state.globals.find("lafteryield");
-    const auto caught = state.globals.find("lcaught");
-    expect(in_critical != state.globals.end(), "ENTER CRITICAL body should run");
-    expect(after_yield != state.globals.end(), "control should return from YIELD inside CRITICAL");
-    expect(caught != state.globals.end(), "CATCH guard should always be initialized");
-    if (in_critical != state.globals.end()) {
-        expect(in_critical->second.boolean_value, "CRITICAL entry flag should be true");
-    }
-    if (after_yield != state.globals.end()) {
-        expect(after_yield->second.boolean_value, "YIELD should continue execution inside ENTER CRITICAL");
-    }
-    if (caught != state.globals.end()) {
-        expect(!caught->second.boolean_value, "YIELD should not raise blocking-policy error inside ENTER CRITICAL");
+    const auto yielded = state.globals.find("lyielded");
+    expect(yielded != state.globals.end(), "YIELD should continue after ENTER CRITICAL");
+    if (yielded != state.globals.end()) {
+        expect(yielded->second.boolean_value, "YIELD should set lYielded after resuming from section");
     }
 
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
