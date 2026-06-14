@@ -1483,13 +1483,41 @@ namespace copperfin::runtime
                 if (!outcome.ok)
                 {
                     resume_skip_breakpoint_location.reset();
+                    bool handled_by_try = false;
                     if (!stack.empty())
                     {
                         capture_last_error_context(stack.back(), *next);
-                        if (dispatch_try_handler(stack.back(), *next))
+                        handled_by_try = dispatch_try_handler(stack.back(), *next);
+                    }
+                    if (!handled_by_try)
+                    {
+                        // Walk parent frames: TRY/CATCH in a caller should catch
+                        // faults that propagate through nested DO calls.
+                        const std::size_t depth_at_fault = stack.size();
+                        for (std::size_t i = 1U; i < depth_at_fault && !handled_by_try; ++i)
                         {
-                            continue;
+                            Frame &parent = stack[depth_at_fault - 1U - i];
+                            const bool has_open_try = std::any_of(
+                                parent.tries.begin(), parent.tries.end(),
+                                [](const TryState &t) { return !t.handling_error; });
+                            if (has_open_try)
+                            {
+                                // Pop intermediate frames back to this parent.
+                                while (stack.size() > depth_at_fault - i)
+                                {
+                                    pop_frame();
+                                }
+                                if (!stack.empty())
+                                {
+                                    handled_by_try = dispatch_try_handler(stack.back(), *next);
+                                }
+                                break;
+                            }
                         }
+                    }
+                    if (handled_by_try)
+                    {
+                        continue;
                     }
                     if (dispatch_error_handler())
                     {
