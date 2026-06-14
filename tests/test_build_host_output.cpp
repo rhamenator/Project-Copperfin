@@ -250,6 +250,21 @@ std::string value_for_key(const std::string& text, const std::string& key) {
     return {};
 }
 
+std::string manifest_value_for_key(const std::string& text, const std::string& key) {
+    std::istringstream input(text);
+    std::string line;
+    const std::string prefix = key + "=";
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            return line.substr(prefix.size());
+        }
+    }
+    return {};
+}
+
 void write_synthetic_project(
     const std::filesystem::path& project_path,
     const std::filesystem::path& project_dir,
@@ -352,8 +367,8 @@ void run_library_build_host_smoke(
     expect(!manifest_path.empty(), "build host should report a manifest path for " + extension + " outputs");
     const std::string init_library_source = (project_dir / "librarymain.prg").string();
     const std::string add_numbers_source = (project_dir / "helper.prg").string();
+    const std::string manifest_text = manifest_path.empty() ? std::string{} : read_text(manifest_path);
     if (!manifest_path.empty()) {
-        const std::string manifest_text = read_text(manifest_path);
         expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host manifest should record a materialized primary output for " + extension + " outputs");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
@@ -416,12 +431,24 @@ void run_library_build_host_smoke(
             expect(exported_symbols == declared_api_symbols,
                    "build host should preserve the API-manifest export contract for fll outputs");
             const std::string api_manifest = read_text(fll_api_manifest_path);
+            const fs::path wrapper_source_path = manifest_value_for_key(manifest_text, "native_wrapper_source_path");
+            const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
             expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
                    "build host FLL manifest should declare the FoxTable registration symbol");
             expect(api_manifest.find("callable_signature=ParamBlk*") != std::string::npos,
                    "build host FLL manifest should declare the ParamBlk callable signature");
             expect(api_manifest.find("default_return_helper=_RetInt") != std::string::npos,
                    "build host FLL manifest should declare the default return helper");
+            expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
+                   "build host FLL wrapper should record routine kind fields in the FoxInfo table");
+            expect(wrapper_source.find("const char* source_path;") != std::string::npos,
+                   "build host FLL wrapper should record source-path fields in the FoxInfo table");
+            expect(wrapper_source.find("unsigned int source_line;") != std::string::npos,
+                   "build host FLL wrapper should record source-line fields in the FoxInfo table");
+            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, 1U}") != std::string::npos,
+                   "build host FLL wrapper should record InitLibrary metadata in the FoxInfo table");
+            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, 2U}") != std::string::npos,
+                   "build host FLL wrapper should record AddNumbers metadata in the FoxInfo table");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary arity");
             expect(api_manifest.find("function_arity=AddNumbers|2") != std::string::npos,

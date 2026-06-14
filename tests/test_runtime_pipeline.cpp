@@ -1352,12 +1352,18 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should emit FoxInfo registration metadata");
         expect(wrapper_source.find("struct CopperfinFoxTableRecord") != std::string::npos,
                "fll-output wrapper source should emit FoxTable registration metadata");
+        expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
+               "fll-output wrapper source should record routine kind fields in the FoxInfo table");
+        expect(wrapper_source.find("const char* source_path;") != std::string::npos,
+               "fll-output wrapper source should record source-path fields in the FoxInfo table");
+        expect(wrapper_source.find("unsigned int source_line;") != std::string::npos,
+               "fll-output wrapper source should record source-line fields in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord _FoxTable") != std::string::npos,
                "fll-output wrapper source should export the FoxTable registration symbol");
-        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, 1U}") != std::string::npos,
-               "fll-output wrapper source should record InitLibrary arity in the FoxInfo table");
-        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, 2U}") != std::string::npos,
-               "fll-output wrapper source should record AddNumbers arity in the FoxInfo table");
+        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + (project_dir / "librarymain.prg").string() + "\", 1U, 1U}") != std::string::npos,
+               "fll-output wrapper source should record InitLibrary metadata in the FoxInfo table");
+        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + (project_dir / "helper.prg").string() + "\", 1U, 2U}") != std::string::npos,
+               "fll-output wrapper source should record AddNumbers metadata in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord* FoxInfo()") != std::string::npos,
                "fll-output wrapper source should scaffold the FoxInfo entrypoint");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);

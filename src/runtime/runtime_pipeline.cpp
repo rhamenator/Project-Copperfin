@@ -560,6 +560,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
+        const auto routine_kinds = collect_library_export_routine_kinds(plan);
+        const auto routine_locations = collect_library_export_routine_locations(plan);
         stream << "struct ParamBlk {\n";
         stream << "    int reserved = 0;\n";
         stream << "};\n\n";
@@ -570,6 +572,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "struct CopperfinFoxInfoRecord {\n";
         stream << "    const char* function_name;\n";
         stream << "    CopperfinFllEntryPoint entrypoint;\n";
+        stream << "    const char* routine_kind;\n";
+        stream << "    const char* source_path;\n";
+        stream << "    unsigned int source_line;\n";
         stream << "    unsigned int parameter_count;\n";
         stream << "};\n\n";
         stream << "struct CopperfinFoxTableRecord {\n";
@@ -587,8 +592,17 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
-            stream << "    {\"" << symbol << "\", &" << symbol << ", "
-                   << parameter_count << "U},\n";
+            const auto kind_found = routine_kinds.find(symbol);
+            const auto location_found = routine_locations.find(symbol);
+            const std::string routine_kind =
+                kind_found == routine_kinds.end() ? std::string("function") : kind_found->second;
+            const SourceLocation location =
+                location_found == routine_locations.end() ? SourceLocation{} : location_found->second;
+            stream << "    {\"" << symbol << "\", &" << symbol
+                   << ", \"" << routine_kind << "\""
+                   << ", \"" << quote_manifest_value(location.file_path) << "\""
+                   << ", " << location.line << "U"
+                   << ", " << parameter_count << "U},\n";
         }
         stream << "};\n\n";
         stream << "COPPERFIN_EXPORT const CopperfinFoxTableRecord " << kFllRegistrationSymbol << " = {\n";
