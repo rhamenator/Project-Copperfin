@@ -6,6 +6,7 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 
 ## 2026-06-13
 
+- D2/#20 child slice `#164` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies debug source roots preserve source-first ordering when source and content roots differ, keeping watch/locals lookup roots deterministic.
 - D1/#19 child slice `#163` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies startup DBF companion assets are staged along with the required startup asset, while the manifest still reports the startup asset as copied.
 - D1/#19 child slice `#162` advanced with focused runtime-pipeline coverage: `test_runtime_pipeline` now verifies the generated launcher contract itself, including manifest forwarding, `--debug` propagation, package-directory working directory, and the sanitized assembly-name contract in the emitted launcher project.
 

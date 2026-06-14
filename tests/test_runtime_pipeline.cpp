@@ -730,6 +730,64 @@ void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_debug_source_roots_preserve_source_first_and_content_second_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_debug_roots_order";
+    const fs::path source_root = temp_root / "source";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_root);
+
+    write_text(source_root / "main.prg", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (source_root / "debug_roots_order.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DebugRootsOrder";
+    workspace.home_directory = source_root.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "DebugRootsOrder";
+    workspace.build_plan.output_path = (output_dir / "DebugRootsOrder.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "ordered debug source-root plan should be created");
+    expect(plan.debug_plan.source_roots.size() == 2U,
+           "ordered debug source-root plan should preserve both source and content roots");
+    if (plan.debug_plan.source_roots.size() == 2U) {
+        expect(plan.debug_plan.source_roots.front() == source_root.lexically_normal().string(),
+               "debug source roots should keep the source-side working directory first");
+        expect(plan.debug_plan.source_roots.back() == (output_dir / "DebugRootsOrder" / "content").lexically_normal().string(),
+               "debug source roots should keep the packaged content root second");
+    }
+
+    const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(plan);
+    const std::string expected_roots_line =
+        "source_roots=" + source_root.lexically_normal().string() + ";" +
+        (output_dir / "DebugRootsOrder" / "content").lexically_normal().string();
+    expect(debug_manifest.find(expected_roots_line) != std::string::npos,
+           "debug manifest should preserve source-first source_roots ordering");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -744,6 +802,7 @@ int main() {
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
     test_manifest_asset_lines_include_copy_state_contract();
     test_debug_source_roots_are_unique_when_source_and_content_paths_match();
+    test_debug_source_roots_preserve_source_first_and_content_second_order();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
