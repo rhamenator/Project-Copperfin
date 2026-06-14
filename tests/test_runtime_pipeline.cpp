@@ -1501,7 +1501,7 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
            "fxp-output plan should not route through .NET launcher emission");
     expect(plan.launcher_mode == "foxpro_tokenized_contract",
            "fxp-output plan should switch to the tokenized-contract packaging mode");
-    expect(plan.launcher_fallback == "fxp_binary_generation_pending",
+    expect(plan.launcher_fallback == "foxpro_fxp_binary_generation_pending",
            "fxp-output plan should record the honest non-binary fallback state");
     expect(fs::path(plan.launcher_output_path).filename() == "CompileDemo.fxp",
            "fxp-output plan should preserve the requested output filename");
@@ -1518,12 +1518,12 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     if (result.ok) {
         expect(fs::exists(result.plan.fxp_token_manifest_path),
                "fxp-output package should emit a token manifest");
-        expect(!fs::exists(result.plan.launcher_output_path),
-               "fxp-output package should not fake an FXP binary");
+        expect(fs::exists(result.plan.launcher_output_path),
+               "fxp-output package should materialize an honest FXP contract file");
         expect(!fs::exists(result.plan.runtime_host_destination_path),
                "fxp-output package should not bundle an executable runtime host into the FXP output slot");
-        expect(!result.plan.primary_output_materialized,
-               "fxp-output package should report that the primary FXP binary is not yet materialized");
+        expect(result.plan.primary_output_materialized,
+               "fxp-output package should report that the FXP contract file is materialized");
 
         const std::string token_manifest = read_text(result.plan.fxp_token_manifest_path);
         expect(token_manifest.find("output_kind=fxp") != std::string::npos,
@@ -1543,12 +1543,30 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
         expect(token_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
                "fxp-output token manifest should preserve routine statement text");
 
+        const std::string fxp_contract = read_text(result.plan.launcher_output_path);
+        expect(fxp_contract.find("copperfin_fxp_contract_version=1") != std::string::npos,
+               "fxp-output primary output should identify the Copperfin FXP contract format");
+        expect(fxp_contract.find("token_contract=copperfin_logical_statement_contract_v1") != std::string::npos,
+               "fxp-output primary output should declare the Copperfin FXP contract");
+        expect(fxp_contract.find("token_manifest=" + quote_manifest_value(result.plan.fxp_token_manifest_path)) != std::string::npos,
+               "fxp-output primary output should point back to the token manifest");
+        expect(fxp_contract.find("output_kind=fxp") != std::string::npos,
+               "fxp-output primary output should embed the FXP token-manifest content");
+        expect(fxp_contract.find("statement=MAIN|") != std::string::npos,
+               "fxp-output primary output should preserve main-scope logical statements");
+        expect(fxp_contract.find("statement=worker|") != std::string::npos,
+               "fxp-output primary output should preserve routine-scope logical statements");
+
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output manifest should record FXP output kind");
         expect(runtime_manifest.find("fxp_token_manifest_path=" + quote_manifest_value(result.plan.fxp_token_manifest_path)) != std::string::npos,
                "fxp-output manifest should record the emitted token-manifest path");
+        expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
+               "fxp-output manifest should record the materialized FXP contract file");
+        expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
+               "fxp-output manifest should record the emitted FXP contract as an extension payload");
         expect(runtime_manifest.find("feature_flag=build.output.fxp_token_contract|true|build_output") != std::string::npos,
                "fxp-output manifest should expose the FXP token-contract feature flag");
         expect(debug_manifest.find("output_kind=fxp") != std::string::npos,

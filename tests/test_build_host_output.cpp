@@ -276,6 +276,26 @@ void write_synthetic_app_project(
     expect(create_result.ok, "synthetic APP PJX fixture should be created");
 }
 
+void write_synthetic_fxp_project(
+    const std::filesystem::path& project_path,
+    const std::filesystem::path& project_dir,
+    const std::filesystem::path& output_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 1U},
+        {.name = "KEY", .type = 'C', .length = 32U},
+        {.name = "HOMEDIR", .type = 'C', .length = 200U},
+        {.name = "OUTFILE", .type = 'C', .length = 200U},
+        {.name = "NAME", .type = 'C', .length = 200U},
+        {.name = "MAINPROG", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"H", "CompileDemo", project_dir.string(), output_path.string(), "", "false"},
+        {"K", "", "", "", "main.prg", "true"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(project_path.string(), fields, records);
+    expect(create_result.ok, "synthetic FXP PJX fixture should be created");
+}
+
 void run_library_build_host_smoke(
     const std::string& build_host_path,
     const std::string& extension) {
@@ -416,6 +436,73 @@ void run_app_build_host_smoke(const std::string& build_host_path) {
     fs::remove_all(temp_root, ignored);
 }
 
+void run_fxp_build_host_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running the FXP smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_fxp_smoke";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path project_path = project_dir / "compiledemo.pjx";
+    const fs::path expected_output = output_dir / "CompileDemo" / "CompileDemo.fxp";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+
+    write_text(project_dir / "main.prg",
+               "LOCAL nValue\n"
+               "nValue = 1\n"
+               "DO worker\n"
+               "RETURN\n"
+               "PROCEDURE worker\n"
+               "WAIT WINDOW 'hello'\n"
+               "RETURN\n"
+               "ENDPROC\n");
+    write_synthetic_fxp_project(project_path, project_dir, expected_output);
+
+    const auto process = run_process_capture(
+        build_host_path,
+        {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+        temp_root);
+
+    expect(process.exit_code == 0, "build host should succeed for FXP outputs");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "build host should report success for FXP outputs");
+    expect(process.stdout_text.find("output.kind: fxp") != std::string::npos,
+           "build host should report the correct output kind for FXP outputs");
+    expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+           "build host should report a materialized primary output for FXP outputs");
+    expect(fs::exists(expected_output),
+           "build host should materialize the requested FXP primary output");
+
+    const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+    expect(!manifest_path.empty(), "build host should report a manifest path for FXP outputs");
+    if (!manifest_path.empty()) {
+        const std::string manifest_text = read_text(manifest_path);
+        expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
+               "build host manifest should record a materialized FXP primary output");
+        expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+               "build host manifest should record the FXP contract as an extension payload");
+    }
+
+    const std::string fxp_contract = read_text(expected_output);
+    expect(fxp_contract.find("copperfin_fxp_contract_version=1") != std::string::npos,
+           "build host FXP output should identify the Copperfin FXP contract format");
+    expect(fxp_contract.find("token_contract=copperfin_logical_statement_contract_v1") != std::string::npos,
+           "build host FXP output should declare the Copperfin FXP contract");
+    expect(fxp_contract.find("output_kind=fxp") != std::string::npos,
+           "build host FXP output should embed the FXP token-manifest content");
+    expect(fxp_contract.find("statement=MAIN|") != std::string::npos,
+           "build host FXP output should preserve main-scope logical statements");
+    expect(fxp_contract.find("statement=worker|") != std::string::npos,
+           "build host FXP output should preserve routine-scope logical statements");
+    expect(fxp_contract.find("WAIT WINDOW 'hello'") != std::string::npos,
+           "build host FXP output should preserve statement text");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -427,6 +514,7 @@ int main(int argc, char** argv) {
     run_library_build_host_smoke(argv[1], "dll");
     run_library_build_host_smoke(argv[1], "fll");
     run_app_build_host_smoke(argv[1]);
+    run_fxp_build_host_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

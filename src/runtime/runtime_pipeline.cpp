@@ -432,6 +432,20 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
+bool write_fxp_primary_output_contract(
+    const RuntimePackagePlan& plan,
+    const std::string& token_manifest_text,
+    std::string& error) {
+    std::ostringstream stream;
+    stream << "copperfin_fxp_contract_version=1\n";
+    stream << "token_contract=copperfin_logical_statement_contract_v1\n";
+    stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
+    stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
+    stream << "token_manifest=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
+    stream << token_manifest_text;
+    return write_text_file(plan.launcher_output_path, stream.str(), error);
+}
+
 std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     stream << "manifest_version=1\n";
@@ -1510,7 +1524,7 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.launcher_fallback = "foxpro_app_binary_generation_pending";
     } else if (plan.output_kind == BuildOutputKind::fxp) {
         plan.launcher_mode = "foxpro_tokenized_contract";
-        plan.launcher_fallback = "fxp_binary_generation_pending";
+        plan.launcher_fallback = "foxpro_fxp_binary_generation_pending";
     } else {
         plan.launcher_mode = plan.emit_dotnet_launcher ? "dotnet_launcher" : "native_runtime_host";
         plan.launcher_fallback =
@@ -1873,12 +1887,20 @@ RuntimeMaterializeResult materialize_runtime_package(
             }
         }
     } else if (plan.output_kind == BuildOutputKind::fxp) {
-        if (!write_text_file(plan.fxp_token_manifest_path, build_fxp_token_manifest_source(materialized_plan), error)) {
+        const std::string fxp_token_manifest = build_fxp_token_manifest_source(materialized_plan);
+        if (!write_text_file(plan.fxp_token_manifest_path, fxp_token_manifest, error)) {
             return {.ok = false, .error = error};
         }
         if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.fxp_token_manifest_path, error)) {
             return {.ok = false, .error = error};
         }
+        if (!write_fxp_primary_output_contract(materialized_plan, fxp_token_manifest, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        materialized_plan.primary_output_materialized = true;
     } else if (plan.output_kind == BuildOutputKind::app) {
         if (!write_text_file(plan.app_archive_manifest_path, build_app_archive_manifest_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
