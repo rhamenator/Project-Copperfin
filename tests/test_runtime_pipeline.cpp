@@ -847,6 +847,99 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_emits_ast_manifest_for_prg_sources() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_ast_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+               "LOCAL nValue\n"
+               "nValue = 1\n"
+               "DO worker\n"
+               "RETURN\n"
+               "PROCEDURE worker\n"
+               "WAIT WINDOW 'ast'\n"
+               "RETURN\n"
+               "ENDPROC\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "astdemo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "AstDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "AstDemo";
+    workspace.build_plan.output_path = (output_dir / "AstDemo.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "ast-output plan should be created");
+    expect(fs::path(plan.ast_manifest_path).filename() == "AstDemo.exe.ast.json",
+           "ast-output plan should derive a target-specific AST manifest filename");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "ast-output package should materialize");
+    if (result.ok) {
+        expect(fs::exists(result.plan.ast_manifest_path),
+               "ast-output package should emit an AST manifest");
+
+        const std::string ast_manifest = read_text(result.plan.ast_manifest_path);
+        expect(ast_manifest.find("\"schema_version\": 1") != std::string::npos,
+               "ast manifest should declare the schema version");
+        expect(ast_manifest.find("\"project_title\": \"AstDemo\"") != std::string::npos,
+               "ast manifest should record the project title");
+        expect(ast_manifest.find("\"output_kind\": \"executable\"") != std::string::npos,
+               "ast manifest should record the selected output kind");
+        expect(ast_manifest.find("\"relative_path\": \"main.prg\"") != std::string::npos,
+               "ast manifest should record the source-relative program path");
+        expect(ast_manifest.find("\"name\": \"MAIN\"") != std::string::npos,
+               "ast manifest should emit the MAIN routine");
+        expect(ast_manifest.find("\"text\": \"DO worker\"") != std::string::npos,
+               "ast manifest should preserve main-scope statement text");
+        expect(ast_manifest.find("\"name\": \"worker\"") != std::string::npos,
+               "ast manifest should emit named routines");
+        expect(ast_manifest.find("\"text\": \"WAIT WINDOW 'ast'\"") != std::string::npos,
+               "ast manifest should preserve routine statement text");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
+               "runtime manifest should record the AST-manifest path");
+        expect(runtime_manifest.find("feature_flag=build.output.ast_contract|true|build_output") != std::string::npos,
+               "runtime manifest should expose the AST-contract feature flag");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";
@@ -1390,6 +1483,7 @@ int main() {
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_fxp_output_package_emits_token_manifest_from_prg_statements();
     test_app_output_package_emits_archive_manifest_for_staged_assets();
+    test_runtime_package_emits_ast_manifest_for_prg_sources();
     test_startup_dbf_companion_assets_are_staged();
     test_security_enabled_runtime_host_name_validation();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

@@ -325,6 +325,7 @@ int main(int argc, char** argv) {
     std::cout << "package.root: " << materialized.plan.package_root << "\n";
     std::cout << "manifest.path: " << materialized.plan.manifest_path << "\n";
     std::cout << "debug.manifest.path: " << materialized.plan.debug_manifest_path << "\n";
+    std::cout << "ast.manifest.path: " << materialized.plan.ast_manifest_path << "\n";
     std::cout << "startup.item: " << materialized.plan.startup_item << "\n";
     std::cout << "startup.source: " << materialized.plan.startup_source_path << "\n";
     std::cout << "output.kind: " << copperfin::runtime::build_output_kind_name(materialized.plan.output_kind) << "\n";

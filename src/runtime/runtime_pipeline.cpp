@@ -176,6 +176,34 @@ std::string normalize_export_symbol(std::string value) {
     return value;
 }
 
+std::string json_escape(std::string_view value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const char ch : value) {
+        switch (ch) {
+            case '\\':
+                escaped += "\\\\";
+                break;
+            case '"':
+                escaped += "\\\"";
+                break;
+            case '\n':
+                escaped += "\\n";
+                break;
+            case '\r':
+                escaped += "\\r";
+                break;
+            case '\t':
+                escaped += "\\t";
+                break;
+            default:
+                escaped.push_back(ch);
+                break;
+        }
+    }
+    return escaped;
+}
+
 std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan) {
     std::vector<std::string> exported_symbols;
     std::unordered_set<std::string> seen;
@@ -281,6 +309,65 @@ std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
                << (asset.required_for_runtime ? "true" : "false") << "|"
                << (asset.copied ? "true" : "false") << "\n";
     }
+    return stream.str();
+}
+
+void append_ast_routine_json(
+    std::ostringstream& stream,
+    const std::string& routine_name,
+    const std::vector<Statement>& statements) {
+    stream << "        {\n";
+    stream << "          \"name\": \"" << json_escape(routine_name) << "\",\n";
+    stream << "          \"statements\": [\n";
+    for (std::size_t index = 0; index < statements.size(); ++index) {
+        const auto& statement = statements[index];
+        stream << "            {\"line\": " << statement.location.line
+               << ", \"text\": \"" << json_escape(statement.text) << "\""
+               << ", \"identifier\": \"" << json_escape(statement.identifier) << "\""
+               << ", \"expression\": \"" << json_escape(statement.expression) << "\"}";
+        if (index + 1U != statements.size()) {
+            stream << ",";
+        }
+        stream << "\n";
+    }
+    stream << "          ]\n";
+    stream << "        }";
+}
+
+std::string build_ast_manifest_source(const RuntimePackagePlan& plan) {
+    std::ostringstream stream;
+    stream << "{\n";
+    stream << "  \"schema_version\": 1,\n";
+    stream << "  \"project_title\": \"" << json_escape(plan.project_title) << "\",\n";
+    stream << "  \"output_kind\": \"" << json_escape(build_output_kind_name(plan.output_kind)) << "\",\n";
+    stream << "  \"files\": [\n";
+
+    bool first_file = true;
+    for (const auto& asset : plan.assets) {
+        if (lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            continue;
+        }
+        const Program program = parse_program(asset.source_path);
+        if (!first_file) {
+            stream << ",\n";
+        }
+        first_file = false;
+        stream << "    {\n";
+        stream << "      \"relative_path\": \"" << json_escape(asset.relative_path) << "\",\n";
+        stream << "      \"routines\": [\n";
+        append_ast_routine_json(stream, "MAIN", program.main.statements);
+        for (const auto& routine_entry : program.routines) {
+            stream << ",\n";
+            append_ast_routine_json(stream, routine_entry.first, routine_entry.second.statements);
+        }
+        stream << "\n";
+        stream << "      ]\n";
+        stream << "    }";
+    }
+
+    stream << "\n";
+    stream << "  ]\n";
+    stream << "}\n";
     return stream.str();
 }
 
@@ -697,6 +784,7 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.launcher_project_path = (package_root / "launcher" / "Copperfin.GeneratedLauncher.csproj").string();
     plan.launcher_source_path = (package_root / "launcher" / "Program.cs").string();
     const std::filesystem::path output_file_name(resolve_output_file_name(workspace, plan.project_title));
+    plan.ast_manifest_path = (package_root / (output_file_name.string() + ".ast.json")).string();
     std::filesystem::path module_definition_file_name = output_file_name;
     module_definition_file_name.replace_extension(".def");
     plan.launcher_output_path = (package_root / output_file_name).string();
@@ -797,6 +885,7 @@ std::string build_runtime_manifest_text(
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
     stream << "working_directory=" << quote_manifest_value(plan.working_directory) << "\n";
+    stream << "ast_manifest_path=" << quote_manifest_value(plan.ast_manifest_path) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
@@ -846,6 +935,7 @@ std::string build_runtime_manifest_text(
     append_feature_flag_line(stream, "launcher.dotnet.requested", plan.requested_dotnet_launcher, "rollout");
     append_feature_flag_line(stream, "launcher.dotnet.active", plan.emit_dotnet_launcher, "host_compatibility");
     append_feature_flag_line(stream, "runtime.host.native", is_native_host_output_kind(plan.output_kind), "host_compatibility");
+    append_feature_flag_line(stream, "build.output.ast_contract", true, "build_output");
     append_feature_flag_line(stream, "build.output.library_contract", is_library_output_kind(plan.output_kind), "build_output");
     append_feature_flag_line(stream, "build.output.fll_api_contract", plan.output_kind == BuildOutputKind::fll, "build_output");
     append_feature_flag_line(stream, "build.output.fxp_token_contract", plan.output_kind == BuildOutputKind::fxp, "build_output");
@@ -1018,6 +1108,9 @@ RuntimeMaterializeResult materialize_runtime_package(
         }
     }
 
+    if (!write_text_file(plan.ast_manifest_path, build_ast_manifest_source(materialized_plan), error)) {
+        return {.ok = false, .error = error};
+    }
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
