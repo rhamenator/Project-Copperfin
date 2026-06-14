@@ -57,10 +57,13 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+[\""<]([^\"">]+)[\"">]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex UseStatementRegex = new(@"^\s*USE\s+(""[^""]+""|'[^']+'|[^\s]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex SqlExecInvocationRegex = new(@"\bSQLEXEC\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex ParametersRegex = new(@"^\s*(?:L?PARAMETERS)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex AliasIdentifierRegex = new(@"^[A-Za-z_][A-Za-z0-9_\.]*$", RegexOptions.Compiled);
 
     private static readonly (string Name, string Description)[] Keywords =
     {
@@ -625,8 +628,10 @@ internal static class FoxProIntelliSenseCatalog
 
             AddMatch(index.Defines, index.Definitions, DefineRegex, line, normalizedPath, lineIndex + 1, "define", "Project preprocessor symbol.");
             AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, normalizedPath, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
+            TryAddImplicitUseAlias(index, line, normalizedPath, lineIndex + 1);
             AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
             AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
+            TryAddSqlExecCursorAlias(index, line, normalizedPath, lineIndex + 1);
 
             var includeMatch = IncludeRegex.Match(line);
             if (includeMatch.Success)
@@ -639,6 +644,201 @@ internal static class FoxProIntelliSenseCatalog
                 }
             }
         }
+    }
+
+    private static void TryAddImplicitUseAlias(ProjectSymbolIndex index, string line, string path, int lineNumber)
+    {
+        if (UseAliasRegex.IsMatch(line))
+        {
+            return;
+        }
+
+        var match = UseStatementRegex.Match(line);
+        if (!match.Success)
+        {
+            return;
+        }
+
+        if (!TryInferAliasFromUseOperand(match.Groups[1].Value, out var alias))
+        {
+            return;
+        }
+
+        index.Aliases.Add(alias);
+        TryAddDefinition(
+            index.Definitions,
+            alias,
+            "alias",
+            path,
+            lineNumber,
+            match.Groups[1].Index + 1,
+            "Known work-area alias discovered in project source.");
+    }
+
+    private static void TryAddSqlExecCursorAlias(ProjectSymbolIndex index, string line, string path, int lineNumber)
+    {
+        var match = SqlExecInvocationRegex.Match(line);
+        if (!match.Success)
+        {
+            return;
+        }
+
+        var openParenIndex = line.IndexOf('(', match.Index);
+        if (openParenIndex < 0 || !TryReadInvocationArguments(line, openParenIndex, out var arguments) || arguments.Count < 3)
+        {
+            return;
+        }
+
+        if (!TryParseQuotedAlias(arguments[2].Text, out var alias))
+        {
+            return;
+        }
+
+        index.Aliases.Add(alias);
+        TryAddDefinition(
+            index.Definitions,
+            alias,
+            "alias",
+            path,
+            lineNumber,
+            arguments[2].ColumnNumber,
+            "Known cursor alias discovered in project source.");
+    }
+
+    private static bool TryInferAliasFromUseOperand(string operand, out string alias)
+    {
+        alias = string.Empty;
+        var normalized = TrimQuotedToken(operand);
+        if (string.IsNullOrWhiteSpace(normalized) ||
+            string.Equals(normalized, "IN", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains('&', StringComparison.Ordinal) ||
+            normalized.Contains('(', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var hasDirectorySeparator = normalized.Contains(Path.DirectorySeparatorChar) || normalized.Contains(Path.AltDirectorySeparatorChar);
+        var extension = Path.GetExtension(normalized);
+        if (!hasDirectorySeparator &&
+            normalized.Contains('.', StringComparison.Ordinal) &&
+            !TableExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var inferred = Path.GetFileNameWithoutExtension(normalized);
+        if (string.IsNullOrWhiteSpace(inferred))
+        {
+            inferred = Path.GetFileName(normalized);
+        }
+
+        if (!AliasIdentifierRegex.IsMatch(inferred))
+        {
+            return false;
+        }
+
+        alias = inferred;
+        return true;
+    }
+
+    private static bool TryParseQuotedAlias(string token, out string alias)
+    {
+        alias = string.Empty;
+        var normalized = TrimQuotedToken(token);
+        if (string.IsNullOrWhiteSpace(normalized) || string.Equals(normalized, token, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (!AliasIdentifierRegex.IsMatch(normalized))
+        {
+            return false;
+        }
+
+        alias = normalized;
+        return true;
+    }
+
+    private static string TrimQuotedToken(string token)
+    {
+        var trimmed = token.Trim();
+        if (trimmed.Length >= 2)
+        {
+            if ((trimmed[0] == '"' && trimmed[^1] == '"') || (trimmed[0] == '\'' && trimmed[^1] == '\''))
+            {
+                return trimmed[1..^1];
+            }
+        }
+
+        return trimmed;
+    }
+
+    private static bool TryReadInvocationArguments(string line, int openParenIndex, out List<InvocationArgument> arguments)
+    {
+        arguments = new List<InvocationArgument>();
+        var depth = 0;
+        char quote = '\0';
+        var argumentStart = openParenIndex + 1;
+
+        for (var index = openParenIndex; index < line.Length; index++)
+        {
+            var current = line[index];
+            if (quote != '\0')
+            {
+                if (current == quote)
+                {
+                    quote = '\0';
+                }
+
+                continue;
+            }
+
+            if (current == '"' || current == '\'')
+            {
+                quote = current;
+                continue;
+            }
+
+            if (current == '(')
+            {
+                depth++;
+                continue;
+            }
+
+            if (current == ')')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    AddInvocationArgument(arguments, line, argumentStart, index);
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (current == ',' && depth == 1)
+            {
+                AddInvocationArgument(arguments, line, argumentStart, index);
+                argumentStart = index + 1;
+            }
+        }
+
+        return false;
+    }
+
+    private static void AddInvocationArgument(List<InvocationArgument> arguments, string line, int startIndex, int endIndex)
+    {
+        if (endIndex <= startIndex)
+        {
+            arguments.Add(new InvocationArgument(string.Empty, Math.Max(1, startIndex + 1)));
+            return;
+        }
+
+        var raw = line[startIndex..endIndex];
+        var trimmed = raw.Trim();
+        var leadingWhitespace = raw.Length - raw.TrimStart().Length;
+        arguments.Add(new InvocationArgument(trimmed, startIndex + leadingWhitespace + 1));
     }
 
     private static string ResolveIncludePath(string sourcePath, string root, string includePath)
@@ -1058,4 +1258,6 @@ internal static class FoxProIntelliSenseCatalog
 
         public bool ShouldRefresh => (DateTime.UtcNow - BuiltAtUtc) > TimeSpan.FromSeconds(15);
     }
+
+    private readonly record struct InvocationArgument(string Text, int ColumnNumber);
 }

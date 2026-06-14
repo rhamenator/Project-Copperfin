@@ -18,6 +18,7 @@ internal static class Program
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
+        TestCompletionCatalogIngestsImplicitUseAndSqlExecAliases();
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
         TestQualifiedProjectMethodSignatureHelpAndDefinition();
         TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
@@ -280,6 +281,39 @@ internal static class Program
             Expect(
                 string.Equals(description, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
                 "described cursor aliases should reuse the alias metadata description");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestCompletionCatalogIngestsImplicitUseAndSqlExecAliases()
+    {
+        var root = CreateProjectRoot("source_derived_alias_ingestion");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "USE data/orderslive.dbf IN 0 SHARED" + Environment.NewLine +
+                "nResult = SQLEXEC(nConn, \"SELECT id, company FROM customer\", \"sqlorders\")" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "SELECT ", string.Empty);
+            Expect(completions.Any(entry => entry.DisplayText == "orderslive" && entry.Kind == "alias"),
+                "completion catalog should infer the default alias from USE path opens");
+            Expect(completions.Any(entry => entry.DisplayText == "sqlorders" && entry.Kind == "alias"),
+                "completion catalog should ingest literal SQLEXEC target cursor aliases");
+
+            var useDescription = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "orderslive");
+            Expect(
+                string.Equals(useDescription, "Known work-area alias discovered in project source.", StringComparison.Ordinal),
+                "implicit USE aliases should reuse the work-area alias description");
+
+            var sqlDescription = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "sqlorders");
+            Expect(
+                string.Equals(sqlDescription, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
+                "SQLEXEC target aliases should reuse the cursor alias description");
         }
         finally
         {

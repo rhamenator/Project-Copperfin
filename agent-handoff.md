@@ -34,6 +34,7 @@ Next: adjacent open queue branches (`#154`-`#203`) are now unblocked. Choose the
 
 Language-service queue update:
 
+- 2026-06-14: **`#400` is now shipped.** `FoxProIntelliSenseCatalog` now infers default work-area aliases from plain `USE <path>` opens and ingests literal `SQLEXEC(..., ..., "alias")` target cursors, so those source-derived cursor names surface in completion and description flows.
 - 2026-06-14: **`#399` is now shipped.** `Copperfin.LanguageServiceTests` now proves a procedure defined in one project file resolves from a sibling project file and surfaces signature help through the shared project-root symbol index.
 - 2026-06-14: **`#398` is now shipped.** `FoxProIntelliSenseCatalog` now follows `#INCLUDE` edges with cycle protection and resolves `#DEFINE` symbols from included headers even when the header lives outside the project root.
 - 2026-06-14: **`#397` is now shipped.** `FoxProIntelliSenseCatalog` now falls back from instance-style tokens such as `oEditor.SaveOrder` to a unique project method with the same trailing name, while still refusing ambiguous duplicate matches across classes.
@@ -45,7 +46,7 @@ Language-service queue update:
 - 2026-06-14: **`#180` is now shipped.** `CopperfinProjectInsightClient` now performs a definition pass before collecting references, so project-defined procedures/functions surface reference-navigation entries from direct and dotted call sites such as `SaveOrder(...)` and `oToolbar.SaveOrder(...)`.
 - 2026-06-14: **`#179` is now shipped.** `FoxProIntelliSenseCatalog` now derives project procedure/function signature help from nearby `LPARAMETERS` / `PARAMETERS` declarations and reuses it for dotted invocation fallback such as `oToolbar.SaveOrder`.
 - 2026-06-14: **`#178` is now shipped.** `FoxProIntelliSenseCatalog` now resolves dotted/member tokens through the longest matching project-symbol prefix before trailing-member fallback, and `Copperfin.LanguageServiceTests` proves dotted class-prefix navigation plus quick-info description reuse.
-- The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, and `#399` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
+- The current prompt-sized language-service child queue is closed (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, and `#400` shipped). Re-audit umbrella issues `#27`, `#28`, and `#29` against their broader remaining scope before opening more child slices.
 
 Current shipped highlights worth remembering:
 

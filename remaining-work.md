@@ -221,7 +221,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Designer interaction/builder/editor completion: #23, #24
 - Visual Studio extension parity: #25
 - Standalone IDE parity: #26
-- active-open native slice queues under #27-#29: none (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, and `#399` shipped)
+- active-open native slice queues under #27-#29: none (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, and `#400` shipped)
 
 ### Future Enhancements
 
@@ -232,7 +232,7 @@ Phase A critical path is complete. Runtime-parity branches (#15-#18) are now clo
 - Editor semantics and completions: #27
 - Navigation/refactoring depth: #28
 - IntelliSense metadata inputs: #29
-- active-open native slice queues under #27-#29: none (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, and `#399` shipped)
+- active-open native slice queues under #27-#29: none (`#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, and `#400` shipped)
 
 ### Federation, Interop, And Modern Platform
 
@@ -608,6 +608,7 @@ This is the deepest layer and should continue to absorb the most effort until it
 - 2026-06-14: G1/#398 include-driven define resolution fidelity shipped in `FoxProIntelliSenseCatalog`. The project symbol index now follows `#INCLUDE` edges with cycle protection and resolves `#DEFINE` symbols from included headers even when those headers live outside the project root, so include-driven preprocessor symbols participate in definition navigation and quick-info description lookup instead of being limited to directly scanned project files. Focused `Copperfin.LanguageServiceTests` coverage validates external-header `#DEFINE` navigation and description lookup.
 - 2026-06-14: G1/#399 cross-file project-boundary resolution fidelity shipped in `Copperfin.LanguageServiceTests`. Focused coverage now proves a procedure defined in one project file resolves from a sibling project file and surfaces signature help through the shared project-root symbol index, making that cross-file boundary contract explicit.
 - 2026-06-14: G3/#396 project method member-completion metadata shipped in `FoxProIntelliSenseCatalog`. Dotted/member-access completion contexts now surface project-defined class methods as `member` candidates and rank them ahead of the generic fallback member catalog, while the description retains the originating class path for each method completion. Focused `Copperfin.LanguageServiceTests` coverage validates `oEditor.` completion ranking and metadata.
+- 2026-06-14: G3/#400 source-derived open-cursor alias ingestion shipped in `FoxProIntelliSenseCatalog`. The project symbol index now infers default work-area aliases from plain `USE <path>` opens and ingests literal `SQLEXEC(..., ..., "alias")` cursor targets, so source-derived open-cursor names surface in completion and description flows instead of requiring explicit `ALIAS` or `INTO CURSOR` syntax. Focused `Copperfin.LanguageServiceTests` coverage validates both alias sources.
 - 2026-06-14: G2/#180 definition/reference-navigation fidelity shipped in `CopperfinProjectInsightClient`. Project insight scanning now collects definitions before reference extraction so project-defined procedures/functions remain discoverable from ordinary call expressions, and direct plus dotted invocation forms such as `SaveOrder(...)` and `oToolbar.SaveOrder(...)` now register as runtime references against the shared project symbol. Focused `Copperfin.LanguageServiceTests` coverage validates both call shapes.
 - 2026-06-14: G2/#181 rename/refactoring fidelity shipped in `CopperfinProjectInsightClient`. The project insight layer now builds a first rename preview over the shared definition/reference index, normalizing dotted invocation tokens such as `oToolbar.SaveOrder` back to `SaveOrder` and returning the defining declaration plus all collected call references for that symbol. Focused `Copperfin.LanguageServiceTests` coverage validates normalized rename preview assembly over direct and dotted call sites.
 - 2026-06-14: G3/#182 IntelliSense metadata-ingestion fidelity shipped in `FoxProIntelliSenseCatalog`. The project symbol index now ingests aliases created by `CREATE CURSOR` and `SELECT ... INTO CURSOR` in addition to `USE ... ALIAS`, so metadata-driven completion and description flows surface source-created cursor names consistently. Focused `Copperfin.LanguageServiceTests` coverage validates both cursor-alias ingestion paths.
