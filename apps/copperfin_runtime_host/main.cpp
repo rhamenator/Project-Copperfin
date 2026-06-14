@@ -352,6 +352,28 @@ std::string resolve_startup_source(const ManifestMap& manifest) {
     return startup_source;
 }
 
+std::string resolve_implicit_manifest_path(const char* argv0) {
+    if (argv0 == nullptr || *argv0 == '\0') {
+        return {};
+    }
+
+    std::error_code path_error;
+    std::filesystem::path executable_path(argv0);
+    if (executable_path.is_relative()) {
+        executable_path = std::filesystem::absolute(executable_path, path_error);
+        if (path_error) {
+            return {};
+        }
+    }
+
+    const std::filesystem::path manifest_path =
+        executable_path.parent_path() / "app.cfmanifest";
+    if (!std::filesystem::exists(manifest_path)) {
+        return {};
+    }
+    return manifest_path.lexically_normal().string();
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -431,8 +453,11 @@ int main(int argc, char** argv) {
     }
 
     if (manifest_path.empty()) {
-        print_usage();
-        return 2;
+        manifest_path = resolve_implicit_manifest_path(argc > 0 ? argv[0] : nullptr);
+        if (manifest_path.empty()) {
+            print_usage();
+            return 2;
+        }
     }
 
     if (!std::filesystem::exists(manifest_path)) {

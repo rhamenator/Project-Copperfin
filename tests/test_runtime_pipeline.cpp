@@ -41,6 +41,23 @@ std::string read_text(const std::filesystem::path& path) {
     return stream.str();
 }
 
+std::string quote_manifest_value(const std::string& value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const char ch : value) {
+        if (ch == '\\') {
+            escaped += "\\\\";
+        } else if (ch == '\n') {
+            escaped += "\\n";
+        } else if (ch == '\r') {
+            escaped += "\\r";
+        } else {
+            escaped.push_back(ch);
+        }
+    }
+    return escaped;
+}
+
 void test_materialize_runtime_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_tests";
@@ -330,6 +347,18 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
                "dotnet-fallback package should not emit a launcher project when .NET output is unavailable");
         expect(!fs::exists(result.plan.launcher_source_path),
                "dotnet-fallback package should not emit launcher source when .NET output is unavailable");
+        expect(fs::exists(result.plan.launcher_output_path),
+               "dotnet-fallback package should materialize a project-named native entrypoint");
+        expect(read_text(result.plan.launcher_output_path) == "runtime-host",
+               "dotnet-fallback native entrypoint should package the runtime host payload bytes");
+        expect(
+            std::any_of(
+                result.plan.extension_payload_digests.begin(),
+                result.plan.extension_payload_digests.end(),
+                [&](const copperfin::runtime::RuntimeArtifactDigest& digest) {
+                    return digest.path == result.plan.launcher_output_path;
+                }),
+            "dotnet-fallback package should record the native entrypoint in extension payload digests");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -345,6 +374,8 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
                "dotnet-fallback debug manifest should record the native runtime host mode");
         expect(debug_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
                "dotnet-fallback debug manifest should record the fallback reason");
+        expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
+               "dotnet-fallback manifest should include the native entrypoint payload digest");
     }
 
     fs::remove_all(temp_root, ignored);

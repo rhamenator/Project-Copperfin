@@ -704,6 +704,21 @@ RuntimeMaterializeResult materialize_runtime_package(
         .sha256 = runtime_host_digest.hex_digest
     });
 
+    if (!plan.emit_dotnet_launcher) {
+        if (!copy_file_if_exists(plan.runtime_host_destination_path, plan.launcher_output_path, error)) {
+            return {.ok = false, .error = error};
+        }
+
+        const auto native_entrypoint_digest = security::sha256_hex_for_file(plan.launcher_output_path);
+        if (!native_entrypoint_digest.ok) {
+            return {.ok = false, .error = native_entrypoint_digest.error};
+        }
+        materialized_plan.extension_payload_digests.push_back({
+            .path = plan.launcher_output_path,
+            .sha256 = native_entrypoint_digest.hex_digest
+        });
+    }
+
     if (plan.emit_dotnet_launcher) {
         if (!write_text_file(plan.launcher_project_path, build_launcher_project_source(plan), error)) {
             return {.ok = false, .error = error};
