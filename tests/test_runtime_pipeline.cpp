@@ -1528,6 +1528,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record the wrapper return surface.");
         expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
                "library-output wrapper source should record the native return surface.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_comparator_token()") != std::string::npos,
+               "library-output wrapper source should declare a shared success-comparator helper.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_fallback_comparator_token()") != std::string::npos,
+               "library-output wrapper source should declare a shared fallback-comparator helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_success_comparator_token()") != std::string::npos,
+               "library-output wrapper source should route the success comparator through the shared helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_fallback_comparator_token()") != std::string::npos,
+               "library-output wrapper source should route the fallback comparator through the shared helper.");
         expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
                "library-output wrapper source should record the outcome success condition.");
         expect(wrapper_source.find("std::string success_return_statement;") != std::string::npos,
@@ -2499,6 +2507,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record the wrapper return surface.");
         expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
                "fll-output wrapper source should record the native return surface.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_comparator_token()") != std::string::npos,
+               "fll-output wrapper source should declare a shared success-comparator helper.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_fallback_comparator_token()") != std::string::npos,
+               "fll-output wrapper source should declare a shared fallback-comparator helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_success_comparator_token()") != std::string::npos,
+               "fll-output wrapper source should route the success comparator through the shared helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_fallback_comparator_token()") != std::string::npos,
+               "fll-output wrapper source should route the fallback comparator through the shared helper.");
         expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
                "fll-output wrapper source should record the outcome success condition.");
         expect(wrapper_source.find("std::string success_return_statement;") != std::string::npos,
