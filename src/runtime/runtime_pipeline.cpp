@@ -1264,12 +1264,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(fallback_condition),\n";
     stream << "        response_parse_plan.diagnostics_field};\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_native_int_return_surface() {\n";
+    stream << "    return \"int\";\n";
+    stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_return_statement(\n";
     stream << "    const std::string& native_return_surface,\n";
     stream << "    int int_value,\n";
     stream << "    const std::string& value_representation) {\n";
     stream << "    const auto int_value_representation = std::to_string(int_value);\n";
-    stream << "    if (native_return_surface == \"int\") {\n";
+    stream << "    if (native_return_surface == copperfin_build_runtime_bridge_native_int_return_surface()) {\n";
     stream << "        return \"return \" + int_value_representation + \";\";\n";
     stream << "    }\n";
     stream << "    const auto placeholder_index = native_return_surface.find(\"(int)\");\n";
