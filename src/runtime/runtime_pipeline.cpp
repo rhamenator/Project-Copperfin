@@ -1230,6 +1230,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "static int " << kFllDefaultReturnHelper << "(int value) {\n";
         stream << "    return value;\n";
         stream << "}\n\n";
+        stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
+        stream << "    const CopperfinRuntimeBridgeStubReturnPlan& stub_return_plan) {\n";
+        stream << "    (void)stub_return_plan;\n";
+        stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
+        stream << "}\n\n";
         stream << "using CopperfinFllEntryPoint = int (*)(ParamBlk*);\n\n";
         stream << "struct CopperfinFoxInfoRecord {\n";
         stream << "    const char* function_name;\n";
@@ -1323,8 +1328,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
             stream << "        return_activation_plan);\n";
-            stream << "    (void)stub_return_plan;\n";
-            stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return(stub_return_plan);\n";
             stream << "}\n\n";
         }
         stream << "static const CopperfinFoxInfoRecord kCopperfinFoxInfo[] = {\n";
@@ -1378,6 +1382,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "#else\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL\n";
         stream << "#endif\n\n";
+        stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
+        stream << "    const CopperfinRuntimeBridgeStubReturnPlan& stub_return_plan) {\n";
+        stream << "    (void)stub_return_plan;\n";
+        stream << "    return -1;\n";
+        stream << "}\n\n";
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
             const std::size_t parameter_count = found == parameter_counts.end() ? 0U : found->second;
@@ -1467,8 +1476,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
             stream << "        return_activation_plan);\n";
-            stream << "    (void)stub_return_plan;\n";
-            stream << "    return -1;\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return(stub_return_plan);\n";
             stream << "}\n\n";
         }
         return stream.str();
