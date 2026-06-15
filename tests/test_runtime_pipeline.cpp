@@ -1340,6 +1340,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "library-output wrapper source should declare an outcome-selection-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelection copperfin_runtime_bridge_execute_outcome_selection(") != std::string::npos,
+               "library-output wrapper source should declare a shared outcome-selection execution helper.");
+        expect(wrapper_source.find("native_return.matched_success_status") != std::string::npos,
+               "library-output wrapper source should stage outcome selection through the shared execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnMaterializationPlan") != std::string::npos,
                "library-output wrapper source should declare a return-materialization-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
@@ -2491,6 +2495,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "fll-output wrapper source should declare an outcome-selection-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelection copperfin_runtime_bridge_execute_outcome_selection(") != std::string::npos,
+               "fll-output wrapper source should declare a shared outcome-selection execution helper.");
+        expect(wrapper_source.find("native_return.matched_success_status") != std::string::npos,
+               "fll-output wrapper source should stage outcome selection through the shared execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnMaterializationPlan") != std::string::npos,
                "fll-output wrapper source should declare a return-materialization-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
