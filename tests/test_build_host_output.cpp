@@ -827,6 +827,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
+                   "build host DLL wrapper should declare a return-activation-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnActivationPlan copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare a return-activation-plan helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -879,6 +883,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a return emission plan from the return materialization plan");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host DLL wrapper should build a final return adoption plan from the return emission plan");
+            expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
+                   "build host DLL wrapper should build a return activation plan from the final return adoption plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -961,6 +967,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record the emitted return block.");
             expect(wrapper_source.find("std::string placeholder_return_statement;") != std::string::npos,
                    "build host DLL wrapper should record the placeholder return statement.");
+            expect(wrapper_source.find("bool activates_adopted_return = false;") != std::string::npos,
+                   "build host DLL wrapper should record the inactive return-activation flag.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -1151,6 +1159,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
+                   "build host FLL wrapper should declare a return-activation-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnActivationPlan copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare a return-activation-plan helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -1217,6 +1229,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a return emission plan from the return materialization plan");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host FLL wrapper should build a final return adoption plan from the return emission plan");
+            expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
+                   "build host FLL wrapper should build a return activation plan from the final return adoption plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -1299,6 +1313,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record the emitted return block.");
             expect(wrapper_source.find("std::string placeholder_return_statement;") != std::string::npos,
                    "build host FLL wrapper should record the placeholder return statement.");
+            expect(wrapper_source.find("bool activates_adopted_return = false;") != std::string::npos,
+                   "build host FLL wrapper should record the inactive return-activation flag.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
