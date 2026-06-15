@@ -837,6 +837,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    CopperfinRuntimeBridgeStubReturnPlan stub_return_plan;\n";
     stream << "    bool emits_placeholder_return = true;\n";
     stream << "    std::string emitted_return_statement;\n";
+    stream << "    std::string deferred_return_block;\n";
     stream << "    int fallback_int_value = -1;\n";
     stream << "    std::string fallback_value_representation;\n";
     stream << "};\n\n";
@@ -1255,6 +1256,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(stub_return_plan),\n";
     stream << "        stub_return_plan.emits_placeholder_return,\n";
     stream << "        stub_return_plan.emitted_return_statement,\n";
+    stream << "        stub_return_plan.deferred_return_block,\n";
     stream << "        stub_return_plan.placeholder_fallback_int_value,\n";
     stream << "        stub_return_plan.placeholder_fallback_value_representation};\n";
     stream << "}\n\n";
@@ -1274,6 +1276,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
         stream << "    (void)placeholder_return_value_plan.emitted_return_statement;\n";
+        stream << "    (void)placeholder_return_value_plan.deferred_return_block;\n";
         stream << "    if (!placeholder_return_value_plan.emits_placeholder_return) {\n";
         stream << "        return " << kFllDefaultReturnHelper << "(placeholder_return_value_plan.fallback_int_value);\n";
         stream << "    }\n";
@@ -1431,6 +1434,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
         stream << "    (void)placeholder_return_value_plan.emitted_return_statement;\n";
+        stream << "    (void)placeholder_return_value_plan.deferred_return_block;\n";
         stream << "    if (!placeholder_return_value_plan.emits_placeholder_return) {\n";
         stream << "        return placeholder_return_value_plan.fallback_int_value;\n";
         stream << "    }\n";

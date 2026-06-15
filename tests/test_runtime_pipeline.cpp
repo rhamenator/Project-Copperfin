@@ -1332,16 +1332,22 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record placeholder-emission flags in the placeholder-return-value plan");
         expect(wrapper_source.find("std::string emitted_return_statement;") != std::string::npos,
                "library-output wrapper source should record placeholder emitted-return statements in the placeholder-return-value plan");
+        expect(wrapper_source.find("std::string deferred_return_block;") != std::string::npos,
+               "library-output wrapper source should record deferred return blocks in the placeholder-return-value plan");
         expect(wrapper_source.find("stub_return_plan.emits_placeholder_return,") != std::string::npos,
                "library-output wrapper source should feed placeholder-emission flags from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.emitted_return_statement,") != std::string::npos,
                "library-output wrapper source should feed emitted placeholder-return statements from stub-return metadata");
+        expect(wrapper_source.find("stub_return_plan.deferred_return_block,") != std::string::npos,
+               "library-output wrapper source should feed deferred return blocks from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
                "library-output wrapper source should feed placeholder fallback integers from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
                "library-output wrapper source should feed placeholder fallback representations from stub-return metadata");
         expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
                "library-output wrapper source should have the helper consume the placeholder emitted-return statement contract");
+        expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
+               "library-output wrapper source should have the helper consume the deferred return-block contract");
         expect(wrapper_source.find("if (!placeholder_return_value_plan.emits_placeholder_return) {") != std::string::npos,
                "library-output wrapper source should have the helper consume the placeholder-emission flag contract");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -2219,16 +2225,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record placeholder-emission flags in the placeholder-return-value plan");
         expect(wrapper_source.find("std::string emitted_return_statement;") != std::string::npos,
                "fll-output wrapper source should record placeholder emitted-return statements in the placeholder-return-value plan");
+        expect(wrapper_source.find("std::string deferred_return_block;") != std::string::npos,
+               "fll-output wrapper source should record deferred return blocks in the placeholder-return-value plan");
         expect(wrapper_source.find("stub_return_plan.emits_placeholder_return,") != std::string::npos,
                "fll-output wrapper source should feed placeholder-emission flags from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.emitted_return_statement,") != std::string::npos,
                "fll-output wrapper source should feed emitted placeholder-return statements from stub-return metadata");
+        expect(wrapper_source.find("stub_return_plan.deferred_return_block,") != std::string::npos,
+               "fll-output wrapper source should feed deferred return blocks from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
                "fll-output wrapper source should feed placeholder fallback integers from stub-return metadata");
         expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
                "fll-output wrapper source should feed placeholder fallback representations from stub-return metadata");
         expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
                "fll-output wrapper source should have the helper consume the placeholder emitted-return statement contract");
+        expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
+               "fll-output wrapper source should have the helper consume the deferred return-block contract");
         expect(wrapper_source.find("if (!placeholder_return_value_plan.emits_placeholder_return) {") != std::string::npos,
                "fll-output wrapper source should have the helper consume the placeholder-emission flag contract");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
