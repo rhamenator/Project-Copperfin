@@ -773,6 +773,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare an interpretation-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretationPlan copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                    "build host DLL wrapper should declare an interpretation-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeFailurePolicyPlan") != std::string::npos,
+                   "build host DLL wrapper should declare a failure-policy surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare a failure-policy helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -799,6 +803,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                    "build host DLL wrapper should build an interpretation plan from the payload plan");
+            expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
+                   "build host DLL wrapper should build a failure policy from the interpretation plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -849,6 +855,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare the response diagnostics field mapping");
             expect(wrapper_source.find("        \"int\");") != std::string::npos,
                    "build host DLL wrapper should preserve the DLL wrapper return surface");
+            expect(wrapper_source.find("\"runtime_host_failure\"") != std::string::npos,
+                   "build host DLL wrapper should declare the diagnostics fallback policy");
+            expect(wrapper_source.find("std::to_string(-1)") != std::string::npos,
+                   "build host DLL wrapper should declare the fallback return value policy");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -985,6 +995,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare an interpretation-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretationPlan copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                    "build host FLL wrapper should declare an interpretation-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeFailurePolicyPlan") != std::string::npos,
+                   "build host FLL wrapper should declare a failure-policy surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare a failure-policy helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -1025,6 +1039,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                    "build host FLL wrapper should build an interpretation plan from the payload plan");
+            expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
+                   "build host FLL wrapper should build a failure policy from the interpretation plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -1075,6 +1091,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare the response diagnostics field mapping");
             expect(wrapper_source.find("\"_RetInt(int)\");") != std::string::npos,
                    "build host FLL wrapper should preserve the FLL wrapper return surface");
+            expect(wrapper_source.find("\"runtime_host_failure\"") != std::string::npos,
+                   "build host FLL wrapper should declare the diagnostics fallback policy");
+            expect(wrapper_source.find("std::to_string(-1)") != std::string::npos,
+                   "build host FLL wrapper should declare the fallback return value policy");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,

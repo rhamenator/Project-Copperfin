@@ -739,6 +739,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string diagnostics_field;\n";
     stream << "    std::string wrapper_return_surface;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeFailurePolicyPlan {\n";
+    stream << "    CopperfinRuntimeBridgeInterpretationPlan interpretation_plan;\n";
+    stream << "    bool fail_on_nonzero_exit = true;\n";
+    stream << "    bool fail_on_missing_response = true;\n";
+    stream << "    std::string diagnostics_fallback;\n";
+    stream << "    std::string fallback_return_value;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -875,6 +882,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"diagnostics\",\n";
     stream << "        std::move(wrapper_return_surface)};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(\n";
+    stream << "    CopperfinRuntimeBridgeInterpretationPlan interpretation_plan,\n";
+    stream << "    std::string fallback_return_value) {\n";
+    stream << "    return CopperfinRuntimeBridgeFailurePolicyPlan{\n";
+    stream << "        std::move(interpretation_plan),\n";
+    stream << "        true,\n";
+    stream << "        true,\n";
+    stream << "        \"runtime_host_failure\",\n";
+    stream << "        std::move(fallback_return_value)};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -948,7 +965,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(\n";
             stream << "        payload_plan,\n";
             stream << "        \"" << kFllDefaultReturnHelper << "(int)\");\n";
-            stream << "    (void)interpretation_plan;\n";
+            stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
+            stream << "        interpretation_plan,\n";
+            stream << "        std::to_string(-1));\n";
+            stream << "    (void)failure_policy;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1059,7 +1079,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(\n";
             stream << "        payload_plan,\n";
             stream << "        \"int\");\n";
-            stream << "    (void)interpretation_plan;\n";
+            stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
+            stream << "        interpretation_plan,\n";
+            stream << "        std::to_string(-1));\n";
+            stream << "    (void)failure_policy;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
