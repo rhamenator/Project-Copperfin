@@ -901,6 +901,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record an explicit fallback else-branch statement");
             expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
                    "build host DLL wrapper should compose the emitted return block from the explicit branch statements");
+            expect(wrapper_source.find("const auto active_return_block = final_return_adoption_plan.adopted_return_block;") != std::string::npos,
+                   "build host DLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host DLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
@@ -1287,6 +1289,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record an explicit fallback else-branch statement");
             expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
                    "build host FLL wrapper should compose the emitted return block from the explicit branch statements");
+            expect(wrapper_source.find("const auto active_return_block = final_return_adoption_plan.adopted_return_block;") != std::string::npos,
+                   "build host FLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host FLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,

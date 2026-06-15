@@ -1218,11 +1218,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeReturnActivationPlan copperfin_build_runtime_bridge_return_activation_plan(\n";
     stream << "    CopperfinRuntimeBridgeFinalReturnAdoptionPlan final_return_adoption_plan) {\n";
+    stream << "    const auto active_return_block = final_return_adoption_plan.adopted_return_block;\n";
     stream << "    return CopperfinRuntimeBridgeReturnActivationPlan{\n";
     stream << "        std::move(final_return_adoption_plan),\n";
     stream << "        false,\n";
     stream << "        \"planned_activation_pending\",\n";
-    stream << "        \"\"};\n";
+    stream << "        active_return_block};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeStubReturnPlan copperfin_build_runtime_bridge_stub_return_plan(\n";
     stream << "    CopperfinRuntimeBridgeReturnActivationPlan return_activation_plan) {\n";
