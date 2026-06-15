@@ -611,6 +611,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
     stream << "#include <cstdint>\n";
     stream << "#include <filesystem>\n";
+    stream << "#include <fstream>\n";
     stream << "#include <sstream>\n";
     stream << "#include <string>\n";
     stream << "#include <vector>\n";
@@ -1259,6 +1260,18 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        target_path,\n";
     stream << "        write_mode,\n";
     stream << "        copperfin_runtime_bridge_ensure_parent_directory_policy()};\n";
+    stream << "}\n\n";
+    stream << "static bool copperfin_runtime_bridge_execute_write_request(\n";
+    stream << "    const CopperfinRuntimeBridgeRequestWritePlan& plan) {\n";
+    stream << "    if (plan.ensure_parent_directory) {\n";
+    stream << "        std::filesystem::create_directories(plan.target_path.parent_path());\n";
+    stream << "    }\n";
+    stream << "    std::ofstream out(plan.target_path);\n";
+    stream << "    if (!out) {\n";
+    stream << "        return false;\n";
+    stream << "    }\n";
+    stream << "    out << plan.request_artifact.request_document;\n";
+    stream << "    return out.good();\n";
     stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_response_read_mode() {\n";
     stream << "    return \"read_text\";\n";

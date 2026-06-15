@@ -1290,6 +1290,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a request-write-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestWritePlan copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
                "library-output wrapper source should declare a request-write-plan helper");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_execute_write_request(") != std::string::npos,
+               "library-output wrapper source should declare a shared request-write execution helper.");
+        expect(wrapper_source.find("out << plan.request_artifact.request_document;") != std::string::npos,
+               "library-output wrapper source should stage request-document writes through the shared request-write execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseReadPlan") != std::string::npos,
                "library-output wrapper source should declare a response-read-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
@@ -2421,6 +2425,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a request-write-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestWritePlan copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
                "fll-output wrapper source should declare a request-write-plan helper");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_execute_write_request(") != std::string::npos,
+               "fll-output wrapper source should declare a shared request-write execution helper.");
+        expect(wrapper_source.find("out << plan.request_artifact.request_document;") != std::string::npos,
+               "fll-output wrapper source should stage request-document writes through the shared request-write execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseReadPlan") != std::string::npos,
                "fll-output wrapper source should declare a response-read-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
