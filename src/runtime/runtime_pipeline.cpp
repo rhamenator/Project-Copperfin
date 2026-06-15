@@ -1051,6 +1051,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"diagnostics\",\n";
     stream << "        std::move(wrapper_return_surface)};\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_failure_diagnostics_value() {\n";
+    stream << "    return \"runtime_host_failure\";\n";
+    stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_success_status_value() {\n";
+    stream << "    return \"ok\";\n";
+    stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(\n";
     stream << "    CopperfinRuntimeBridgeInterpretationPlan interpretation_plan,\n";
     stream << "    std::string fallback_return_value) {\n";
@@ -1058,7 +1064,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(interpretation_plan),\n";
     stream << "        true,\n";
     stream << "        true,\n";
-    stream << "        \"runtime_host_failure\",\n";
+    stream << "        copperfin_build_runtime_bridge_failure_diagnostics_value(),\n";
     stream << "        std::move(fallback_return_value)};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeResponseValidationPlan copperfin_build_runtime_bridge_response_validation_plan(\n";
@@ -1074,7 +1080,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        expected_response_media_type,\n";
     stream << "        expected_schema_version,\n";
     stream << "        required_response_fields,\n";
-    stream << "        \"ok\"};\n";
+    stream << "        copperfin_build_runtime_bridge_success_status_value()};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeRequestArtifact copperfin_build_runtime_bridge_request_artifact(\n";
     stream << "    CopperfinRuntimeBridgeResponseValidationPlan response_validation_plan) {\n";
