@@ -1194,6 +1194,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared response-value field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
                "library-output wrapper source should declare a shared response-diagnostics field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared request payload-shape helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response payload-shape helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "library-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -1444,10 +1448,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare the response-media-type dispatch argument");
         expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
                "library-output wrapper source should declare the schema-version dispatch argument");
-        expect(wrapper_source.find("\"bridge_request_v1\"") != std::string::npos,
-               "library-output wrapper source should declare the request payload shape");
-        expect(wrapper_source.find("\"bridge_response_v1\"") != std::string::npos,
-               "library-output wrapper source should declare the response payload shape");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
+               "library-output wrapper source should route the request payload shape through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
+               "library-output wrapper source should route the response payload shape through the shared helper");
         expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                "library-output wrapper source should declare request payload field names");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
@@ -2127,6 +2131,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared response-value field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
                "fll-output wrapper source should declare a shared response-diagnostics field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared request payload-shape helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response payload-shape helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -2371,10 +2379,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare the response-media-type dispatch argument");
         expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
                "fll-output wrapper source should declare the schema-version dispatch argument");
-        expect(wrapper_source.find("\"bridge_request_v1\"") != std::string::npos,
-               "fll-output wrapper source should declare the request payload shape");
-        expect(wrapper_source.find("\"bridge_response_v1\"") != std::string::npos,
-               "fll-output wrapper source should declare the response payload shape");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
+               "fll-output wrapper source should route the request payload shape through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
+               "fll-output wrapper source should route the response payload shape through the shared helper");
         expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                "fll-output wrapper source should declare request payload field names");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
