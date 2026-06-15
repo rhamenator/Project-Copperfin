@@ -1274,6 +1274,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const std::string& value_expression) {\n";
     stream << "    return \"return \" + value_expression + \";\";\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_typed_native_return_expression(\n";
+    stream << "    const std::string& native_return_surface,\n";
+    stream << "    const std::string& int_value_representation) {\n";
+    stream << "    const auto prefix = native_return_surface.substr(\n";
+    stream << "        0U, native_return_surface.find(copperfin_build_runtime_bridge_native_int_placeholder_signature_token()));\n";
+    stream << "    return prefix + \"(\" + int_value_representation + \")\";\n";
+    stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_return_statement(\n";
     stream << "    const std::string& native_return_surface,\n";
     stream << "    int int_value,\n";
@@ -1284,11 +1291,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    }\n";
     stream << "    const auto placeholder_index = native_return_surface.find(copperfin_build_runtime_bridge_native_int_placeholder_signature_token());\n";
     stream << "    if (placeholder_index != std::string::npos) {\n";
-    stream << "        std::string value_expression = native_return_surface.substr(0U, placeholder_index);\n";
-    stream << "        value_expression += \"(\";\n";
-    stream << "        value_expression += int_value_representation;\n";
-    stream << "        value_expression += \")\";\n";
-    stream << "        return copperfin_build_runtime_bridge_return_statement_from_expression(value_expression);\n";
+    stream << "        return copperfin_build_runtime_bridge_return_statement_from_expression(\n";
+    stream << "            copperfin_build_runtime_bridge_typed_native_return_expression(native_return_surface, int_value_representation));\n";
     stream << "    }\n";
     stream << "    return copperfin_build_runtime_bridge_return_statement_from_expression(value_representation);\n";
     stream << "}\n\n";
