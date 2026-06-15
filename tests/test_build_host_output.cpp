@@ -1057,6 +1057,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared placeholder-return-value execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
                    "build host DLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
+            expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared placeholder-return-int execution helper.");
+            expect(wrapper_source.find("return copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value);") != std::string::npos,
+                   "build host DLL wrapper should route DLL stub emission through the shared placeholder-return-int helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host DLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
@@ -1739,6 +1743,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared placeholder-return-value execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
                    "build host FLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
+            expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared placeholder-return-int execution helper.");
+            expect(wrapper_source.find("return _RetInt(copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value));") != std::string::npos,
+                   "build host FLL wrapper should route FLL stub emission through the shared placeholder-return-int helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host FLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,

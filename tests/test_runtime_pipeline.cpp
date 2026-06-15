@@ -1466,6 +1466,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared placeholder-return-value execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
                "library-output wrapper source should stage placeholder-return-value handling through the shared execution helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
+               "library-output wrapper source should declare a shared placeholder-return-int execution helper.");
+        expect(wrapper_source.find("return copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value);") != std::string::npos,
+               "library-output wrapper source should route DLL stub emission through the shared placeholder-return-int helper.");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                "library-output wrapper source should declare a stub-return execution helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
@@ -2645,6 +2649,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared placeholder-return-value execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
                "fll-output wrapper source should stage placeholder-return-value handling through the shared execution helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
+               "fll-output wrapper source should declare a shared placeholder-return-int execution helper.");
+        expect(wrapper_source.find("return _RetInt(copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value));") != std::string::npos,
+               "fll-output wrapper source should route FLL stub emission through the shared placeholder-return-int helper.");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                "fll-output wrapper source should declare a stub-return execution helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
