@@ -911,6 +911,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a response-parse-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParsePlan copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a response-parse-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParseAdmission copperfin_runtime_bridge_admit_response_parse(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-parse admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeParsedResponse copperfin_runtime_bridge_execute_parse_response(") != std::string::npos,
                    "build host DLL wrapper should declare a shared response-parse execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
@@ -1145,6 +1147,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a response artifact from the response read plan");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host DLL wrapper should build a response parse plan from the response artifact");
+            expect(wrapper_source.find("const auto response_parse_admission =") != std::string::npos,
+                   "build host DLL wrapper should admit staged response parsing from the response-validation evaluation and parse plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);") != std::string::npos,
+                   "build host DLL wrapper should route response-validation evaluation through the shared response-parse admission helper.");
+            expect(wrapper_source.find("(void)response_parse_admission;") != std::string::npos,
+                   "build host DLL wrapper should explicitly keep the scaffold-only response-parse admission result unused.");
             expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                    "build host DLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
@@ -1633,6 +1641,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a response-parse-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParsePlan copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a response-parse-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParseAdmission copperfin_runtime_bridge_admit_response_parse(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-parse admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeParsedResponse copperfin_runtime_bridge_execute_parse_response(") != std::string::npos,
                    "build host FLL wrapper should declare a shared response-parse execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
@@ -1883,6 +1893,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a response artifact from the response read plan");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host FLL wrapper should build a response parse plan from the response artifact");
+            expect(wrapper_source.find("const auto response_parse_admission =") != std::string::npos,
+                   "build host FLL wrapper should admit staged response parsing from the response-validation evaluation and parse plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);") != std::string::npos,
+                   "build host FLL wrapper should route response-validation evaluation through the shared response-parse admission helper.");
+            expect(wrapper_source.find("(void)response_parse_admission;") != std::string::npos,
+                   "build host FLL wrapper should explicitly keep the scaffold-only response-parse admission result unused.");
             expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                    "build host FLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
