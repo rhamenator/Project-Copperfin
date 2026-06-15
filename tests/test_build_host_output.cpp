@@ -1027,6 +1027,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared final-return-adoption execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
+                   "build host DLL wrapper should stage final-return adoption through the shared execution helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_placeholder_return_statement(") != std::string::npos,
                    "build host DLL wrapper should declare a shared placeholder return-statement helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
@@ -1107,7 +1111,7 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record an explicit fallback else-branch statement");
             expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
                    "build host DLL wrapper should compose the emitted return block from the explicit branch statements");
-            expect(wrapper_source.find("const auto active_return_block = final_return_adoption_plan.adopted_return_block;") != std::string::npos,
+            expect(wrapper_source.find("const auto active_return_block = final_return_adoption.adopted_return_block;") != std::string::npos,
                    "build host DLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find(": return_activation_plan.active_return_block;") != std::string::npos,
                    "build host DLL wrapper should route the deferred stub-return block through the activation metadata");
@@ -1693,6 +1697,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared final-return-adoption execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
+                   "build host FLL wrapper should stage final-return adoption through the shared execution helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_placeholder_return_statement(") != std::string::npos,
                    "build host FLL wrapper should declare a shared placeholder return-statement helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
@@ -1789,7 +1797,7 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record an explicit fallback else-branch statement");
             expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
                    "build host FLL wrapper should compose the emitted return block from the explicit branch statements");
-            expect(wrapper_source.find("const auto active_return_block = final_return_adoption_plan.adopted_return_block;") != std::string::npos,
+            expect(wrapper_source.find("const auto active_return_block = final_return_adoption.adopted_return_block;") != std::string::npos,
                    "build host FLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find(": return_activation_plan.active_return_block;") != std::string::npos,
                    "build host FLL wrapper should route the deferred stub-return block through the activation metadata");
