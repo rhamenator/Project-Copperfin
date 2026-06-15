@@ -1091,12 +1091,18 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared placeholder-return-int admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmission copperfin_runtime_bridge_execute_stub_emission(") != std::string::npos,
                    "build host DLL wrapper should declare a shared stub-emission execution helper.");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmissionReturnSurface copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared stub-emission return-surface helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
                    "build host DLL wrapper should declare a shared placeholder-return-int execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value)};") != std::string::npos,
                    "build host DLL wrapper should route placeholder-return-int execution through the shared stub-emission helper.");
-            expect(wrapper_source.find("return stub_emission.emitted_int_value;") != std::string::npos,
-                   "build host DLL wrapper should route DLL stub emission through the shared stub-emission helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host DLL wrapper should route shared stub-emission output through the shared return-surface helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface());") != std::string::npos,
+                   "build host DLL wrapper should build the DLL stub-emission return surface from the native int return-surface contract.");
+            expect(wrapper_source.find("return stub_emission_return_surface.emitted_int_value;") != std::string::npos,
+                   "build host DLL wrapper should route DLL stub emission through the shared stub-emission return-surface helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host DLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
@@ -1907,12 +1913,18 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared stub-emission admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmission copperfin_runtime_bridge_execute_stub_emission(") != std::string::npos,
                    "build host FLL wrapper should declare a shared stub-emission execution helper.");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmissionReturnSurface copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared stub-emission return-surface helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
                    "build host FLL wrapper should declare a shared placeholder-return-int execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value)};") != std::string::npos,
                    "build host FLL wrapper should route placeholder-return-int execution through the shared stub-emission helper.");
-            expect(wrapper_source.find("return _RetInt(stub_emission.emitted_int_value);") != std::string::npos,
-                   "build host FLL wrapper should route FLL stub emission through the shared stub-emission helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host FLL wrapper should route shared stub-emission output through the shared return-surface helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_fll_int_return_surface());") != std::string::npos,
+                   "build host FLL wrapper should build the FLL stub-emission return surface from the FLL int return-surface contract.");
+            expect(wrapper_source.find("return _RetInt(stub_emission_return_surface.emitted_int_value);") != std::string::npos,
+                   "build host FLL wrapper should route FLL stub emission through the shared stub-emission return-surface helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host FLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
