@@ -1188,6 +1188,22 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a launch-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
                "library-output wrapper source should declare a launch-plan helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_library_export_env_var()") != std::string::npos,
+               "library-output wrapper source should declare library-export env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_library_export_env_var()") != std::string::npos,
+               "library-output wrapper source should route library-export env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_routine_kind_env_var()") != std::string::npos,
+               "library-output wrapper source should declare routine-kind env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_routine_kind_env_var()") != std::string::npos,
+               "library-output wrapper source should route routine-kind env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_path_env_var()") != std::string::npos,
+               "library-output wrapper source should declare source-path env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_path_env_var()") != std::string::npos,
+               "library-output wrapper source should route source-path env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_count_env_var()") != std::string::npos,
+               "library-output wrapper source should declare parameter-count env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_count_env_var()") != std::string::npos,
+               "library-output wrapper source should route parameter-count env-var through helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeObservationPlan") != std::string::npos,
                "library-output wrapper source should declare an observation-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeObservationPlan copperfin_build_runtime_bridge_observation_plan(") != std::string::npos,
@@ -1536,7 +1552,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should preserve the DLL placeholder argument binding");
         expect(wrapper_source.find("placeholder_return_binding);") != std::string::npos,
                "library-output wrapper source should feed the bridge result from the shared placeholder return binding");
-        expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
+        expect(wrapper_source.find("{copperfin_runtime_bridge_library_export_env_var(), result.call.invocation.descriptor.export_name}") != std::string::npos,
                "library-output wrapper source should preserve launch environment export metadata");
         expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
                "library-output wrapper source should derive stdout observation paths");
@@ -2285,6 +2301,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a launch-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
                "fll-output wrapper source should declare a launch-plan helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_library_export_env_var()") != std::string::npos,
+               "fll-output wrapper source should declare library-export env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_library_export_env_var()") != std::string::npos,
+               "fll-output wrapper source should route library-export env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_routine_kind_env_var()") != std::string::npos,
+               "fll-output wrapper source should declare routine-kind env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_routine_kind_env_var()") != std::string::npos,
+               "fll-output wrapper source should route routine-kind env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_path_env_var()") != std::string::npos,
+               "fll-output wrapper source should declare source-path env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_path_env_var()") != std::string::npos,
+               "fll-output wrapper source should route source-path env-var through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_count_env_var()") != std::string::npos,
+               "fll-output wrapper source should declare parameter-count env-var helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_count_env_var()") != std::string::npos,
+               "fll-output wrapper source should route parameter-count env-var through helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeObservationPlan") != std::string::npos,
                "fll-output wrapper source should declare an observation-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeObservationPlan copperfin_build_runtime_bridge_observation_plan(") != std::string::npos,
@@ -2627,7 +2659,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should preserve the ParamBlk call-surface binding");
         expect(wrapper_source.find("placeholder_return_binding);") != std::string::npos,
                "fll-output wrapper source should feed the bridge result from the shared placeholder return binding");
-        expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
+        expect(wrapper_source.find("{copperfin_runtime_bridge_library_export_env_var(), result.call.invocation.descriptor.export_name}") != std::string::npos,
                "fll-output wrapper source should preserve launch environment export metadata");
         expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
                "fll-output wrapper source should derive stdout observation paths");
