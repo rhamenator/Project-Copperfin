@@ -823,6 +823,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string activation_mode;\n";
     stream << "    std::string active_return_block;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeStubReturnPlan {\n";
+    stream << "    CopperfinRuntimeBridgeReturnActivationPlan return_activation_plan;\n";
+    stream << "    std::string emitted_return_statement;\n";
+    stream << "    std::string deferred_return_block;\n";
+    stream << "    bool emits_placeholder_return = true;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1195,6 +1201,22 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"planned_activation_pending\",\n";
     stream << "        \"\"};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeStubReturnPlan copperfin_build_runtime_bridge_stub_return_plan(\n";
+    stream << "    CopperfinRuntimeBridgeReturnActivationPlan return_activation_plan) {\n";
+    stream << "    const auto& final_return_adoption_plan = return_activation_plan.final_return_adoption_plan;\n";
+    stream << "    const auto emitted_return_statement = return_activation_plan.activates_adopted_return\n";
+    stream << "        ? return_activation_plan.active_return_block\n";
+    stream << "        : final_return_adoption_plan.placeholder_return_statement;\n";
+    stream << "    const auto deferred_return_block = return_activation_plan.activates_adopted_return\n";
+    stream << "        ? final_return_adoption_plan.placeholder_return_statement\n";
+    stream << "        : final_return_adoption_plan.adopted_return_block;\n";
+    stream << "    const bool emits_placeholder_return = !return_activation_plan.activates_adopted_return;\n";
+    stream << "    return CopperfinRuntimeBridgeStubReturnPlan{\n";
+    stream << "        std::move(return_activation_plan),\n";
+    stream << "        emitted_return_statement,\n";
+    stream << "        deferred_return_block,\n";
+    stream << "        emits_placeholder_return};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1299,7 +1321,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        \"return " << kFllDefaultReturnHelper << "(-1);\");\n";
             stream << "    const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n";
             stream << "        final_return_adoption_plan);\n";
-            stream << "    (void)return_activation_plan;\n";
+            stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
+            stream << "        return_activation_plan);\n";
+            stream << "    (void)stub_return_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1441,7 +1465,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        \"return -1;\");\n";
             stream << "    const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n";
             stream << "        final_return_adoption_plan);\n";
-            stream << "    (void)return_activation_plan;\n";
+            stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
+            stream << "        return_activation_plan);\n";
+            stream << "    (void)stub_return_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
