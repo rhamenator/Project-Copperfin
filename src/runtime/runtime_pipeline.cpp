@@ -832,6 +832,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    bool emits_placeholder_return = true;\n";
     stream << "    std::string activation_mode;\n";
     stream << "    std::string adoption_mode;\n";
+    stream << "    bool keeps_placeholder_return_active = true;\n";
+    stream << "    bool adopts_placeholder_replacement = true;\n";
     stream << "    int placeholder_fallback_int_value = -1;\n";
     stream << "    std::string placeholder_fallback_value_representation;\n";
     stream << "};\n\n";
@@ -842,6 +844,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string deferred_return_block;\n";
     stream << "    std::string activation_mode;\n";
     stream << "    std::string adoption_mode;\n";
+    stream << "    bool keeps_placeholder_return_active = true;\n";
+    stream << "    bool adopts_placeholder_replacement = true;\n";
     stream << "    int fallback_int_value = -1;\n";
     stream << "    std::string fallback_value_representation;\n";
     stream << "};\n\n";
@@ -1248,6 +1252,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const bool emits_placeholder_return = !return_activation_plan.activates_adopted_return;\n";
     stream << "    const auto activation_mode = return_activation_plan.activation_mode;\n";
     stream << "    const auto adoption_mode = final_return_adoption_plan.adoption_mode;\n";
+    stream << "    const bool keeps_placeholder_return_active =\n";
+    stream << "        emits_placeholder_return || activation_mode == \"planned_activation_pending\";\n";
+    stream << "    const bool adopts_placeholder_replacement =\n";
+    stream << "        adoption_mode == \"replace_placeholder_return\";\n";
     stream << "    return CopperfinRuntimeBridgeStubReturnPlan{\n";
     stream << "        std::move(return_activation_plan),\n";
     stream << "        emitted_return_statement,\n";
@@ -1255,6 +1263,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        emits_placeholder_return,\n";
     stream << "        activation_mode,\n";
     stream << "        adoption_mode,\n";
+    stream << "        keeps_placeholder_return_active,\n";
+    stream << "        adopts_placeholder_replacement,\n";
     stream << "        native_return_plan.fallback_int_value,\n";
     stream << "        native_return_plan.fallback_value_representation};\n";
     stream << "}\n\n";
@@ -1267,6 +1277,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        stub_return_plan.deferred_return_block,\n";
     stream << "        stub_return_plan.activation_mode,\n";
     stream << "        stub_return_plan.adoption_mode,\n";
+    stream << "        stub_return_plan.keeps_placeholder_return_active,\n";
+    stream << "        stub_return_plan.adopts_placeholder_replacement,\n";
     stream << "        stub_return_plan.placeholder_fallback_int_value,\n";
     stream << "        stub_return_plan.placeholder_fallback_value_representation};\n";
     stream << "}\n\n";
@@ -1287,12 +1299,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
         stream << "    (void)placeholder_return_value_plan.emitted_return_statement;\n";
         stream << "    (void)placeholder_return_value_plan.deferred_return_block;\n";
-        stream << "    const bool keeps_placeholder_return_active =\n";
-        stream << "        placeholder_return_value_plan.emits_placeholder_return\n";
-        stream << "        || placeholder_return_value_plan.activation_mode == \"planned_activation_pending\";\n";
-        stream << "    const bool adopts_placeholder_replacement =\n";
-        stream << "        placeholder_return_value_plan.adoption_mode == \"replace_placeholder_return\";\n";
-        stream << "    if (!keeps_placeholder_return_active && adopts_placeholder_replacement) {\n";
+        stream << "    if (!placeholder_return_value_plan.keeps_placeholder_return_active\n";
+        stream << "        && placeholder_return_value_plan.adopts_placeholder_replacement) {\n";
         stream << "        return " << kFllDefaultReturnHelper << "(placeholder_return_value_plan.fallback_int_value);\n";
         stream << "    }\n";
         stream << "    return " << kFllDefaultReturnHelper << "(placeholder_return_value_plan.fallback_int_value);\n";
@@ -1450,12 +1458,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
         stream << "    (void)placeholder_return_value_plan.emitted_return_statement;\n";
         stream << "    (void)placeholder_return_value_plan.deferred_return_block;\n";
-        stream << "    const bool keeps_placeholder_return_active =\n";
-        stream << "        placeholder_return_value_plan.emits_placeholder_return\n";
-        stream << "        || placeholder_return_value_plan.activation_mode == \"planned_activation_pending\";\n";
-        stream << "    const bool adopts_placeholder_replacement =\n";
-        stream << "        placeholder_return_value_plan.adoption_mode == \"replace_placeholder_return\";\n";
-        stream << "    if (!keeps_placeholder_return_active && adopts_placeholder_replacement) {\n";
+        stream << "    if (!placeholder_return_value_plan.keeps_placeholder_return_active\n";
+        stream << "        && placeholder_return_value_plan.adopts_placeholder_replacement) {\n";
         stream << "        return placeholder_return_value_plan.fallback_int_value;\n";
         stream << "    }\n";
         stream << "    return placeholder_return_value_plan.fallback_int_value;\n";
