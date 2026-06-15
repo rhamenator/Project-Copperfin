@@ -811,6 +811,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string fallback_branch_statement;\n";
     stream << "    std::string emitted_return_block;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeFinalReturnAdoptionPlan {\n";
+    stream << "    CopperfinRuntimeBridgeReturnEmissionPlan return_emission_plan;\n";
+    stream << "    std::string placeholder_return_statement;\n";
+    stream << "    std::string adopted_return_block;\n";
+    stream << "    std::string adoption_mode;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1165,6 +1171,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(fallback_branch_statement),\n";
     stream << "        std::move(emitted_return_block)};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
+    stream << "    CopperfinRuntimeBridgeReturnEmissionPlan return_emission_plan,\n";
+    stream << "    std::string placeholder_return_statement) {\n";
+    stream << "    const auto adopted_return_block = return_emission_plan.emitted_return_block;\n";
+    stream << "    return CopperfinRuntimeBridgeFinalReturnAdoptionPlan{\n";
+    stream << "        std::move(return_emission_plan),\n";
+    stream << "        std::move(placeholder_return_statement),\n";
+    stream << "        adopted_return_block,\n";
+    stream << "        \"replace_placeholder_return\"};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1264,7 +1280,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        outcome_selection_plan);\n";
             stream << "    const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n";
             stream << "        return_materialization_plan);\n";
-            stream << "    (void)return_emission_plan;\n";
+            stream << "    const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
+            stream << "        return_emission_plan,\n";
+            stream << "        \"return " << kFllDefaultReturnHelper << "(-1);\");\n";
+            stream << "    (void)final_return_adoption_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1401,7 +1420,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        outcome_selection_plan);\n";
             stream << "    const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n";
             stream << "        return_materialization_plan);\n";
-            stream << "    (void)return_emission_plan;\n";
+            stream << "    const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
+            stream << "        return_emission_plan,\n";
+            stream << "        \"return -1;\");\n";
+            stream << "    (void)final_return_adoption_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
