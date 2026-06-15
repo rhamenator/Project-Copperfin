@@ -790,6 +790,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "struct CopperfinRuntimeBridgeNativeReturnPlan {\n";
     stream << "    CopperfinRuntimeBridgeInterpretedResultPlan interpreted_result_plan;\n";
     stream << "    std::string success_value_representation;\n";
+    stream << "    int success_int_value = -1;\n";
     stream << "    std::string fallback_value_representation;\n";
     stream << "    int fallback_int_value = -1;\n";
     stream << "    std::string native_return_surface;\n";
@@ -1126,12 +1127,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(\n";
     stream << "    const CopperfinRuntimeBridgeResult& result,\n";
     stream << "    CopperfinRuntimeBridgeInterpretedResultPlan interpreted_result_plan) {\n";
+    stream << "    const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n";
+    stream << "        result.return_binding.value_representation);\n";
     stream << "    const auto fallback_value_representation = interpreted_result_plan.fallback_return_value;\n";
     stream << "    const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n";
     stream << "        fallback_value_representation);\n";
     stream << "    return CopperfinRuntimeBridgeNativeReturnPlan{\n";
     stream << "        std::move(interpreted_result_plan),\n";
     stream << "        result.return_binding.value_representation,\n";
+    stream << "        success_int_value,\n";
     stream << "        fallback_value_representation,\n";
     stream << "        fallback_int_value,\n";
     stream << "        result.return_binding.return_surface};\n";

@@ -887,6 +887,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host DLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
+                   "build host DLL wrapper should parse the typed success integer value from the success representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host DLL wrapper should parse the typed fallback integer value from the fallback representation");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -995,6 +997,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record the placeholder-emission flag.");
             expect(wrapper_source.find("int fallback_int_value = -1;") != std::string::npos,
                    "build host DLL wrapper should record the placeholder fallback integer value.");
+            expect(wrapper_source.find("int success_int_value = -1;") != std::string::npos,
+                   "build host DLL wrapper should record the typed native success integer value.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -1259,6 +1263,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host FLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
+                   "build host FLL wrapper should parse the typed success integer value from the success representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host FLL wrapper should parse the typed fallback integer value from the fallback representation");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -1367,6 +1373,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record the placeholder-emission flag.");
             expect(wrapper_source.find("int fallback_int_value = -1;") != std::string::npos,
                    "build host FLL wrapper should record the placeholder fallback integer value.");
+            expect(wrapper_source.find("int success_int_value = -1;") != std::string::npos,
+                   "build host FLL wrapper should record the typed native success integer value.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,

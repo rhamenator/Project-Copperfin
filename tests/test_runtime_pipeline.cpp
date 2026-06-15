@@ -1306,6 +1306,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build an interpreted result plan from the response parse plan");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "library-output wrapper source should build a native return plan from the interpreted result plan");
+        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
+               "library-output wrapper source should parse the typed success integer value from the success representation");
         expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "library-output wrapper source should parse the typed fallback integer value from the fallback representation");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -1414,6 +1416,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record the placeholder-emission flag.");
         expect(wrapper_source.find("int fallback_int_value = -1;") != std::string::npos,
                "library-output wrapper source should record the placeholder fallback integer value.");
+        expect(wrapper_source.find("int success_int_value = -1;") != std::string::npos,
+               "library-output wrapper source should record the typed native success integer value.");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
@@ -2155,6 +2159,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build an interpreted result plan from the response parse plan");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "fll-output wrapper source should build a native return plan from the interpreted result plan");
+        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
+               "fll-output wrapper source should parse the typed success integer value from the success representation");
         expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "fll-output wrapper source should parse the typed fallback integer value from the fallback representation");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -2263,6 +2269,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record the placeholder-emission flag.");
         expect(wrapper_source.find("int fallback_int_value = -1;") != std::string::npos,
                "fll-output wrapper source should record the placeholder fallback integer value.");
+        expect(wrapper_source.find("int success_int_value = -1;") != std::string::npos,
+               "fll-output wrapper source should record the typed native success integer value.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
         expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
