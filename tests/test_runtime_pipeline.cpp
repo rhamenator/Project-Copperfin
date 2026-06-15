@@ -1448,6 +1448,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a return-emission-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "library-output wrapper source should declare a return-emission-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionAdmission copperfin_runtime_bridge_admit_return_emission(") != std::string::npos,
+               "library-output wrapper source should declare a shared return-emission admission helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmission copperfin_runtime_bridge_execute_return_emission(") != std::string::npos,
                "library-output wrapper source should declare a shared return-emission execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_materialization(plan.return_materialization_plan)") != std::string::npos,
@@ -1680,6 +1682,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should explicitly keep the scaffold-only return-materialization admission result unused.");
         expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "library-output wrapper source should build a return emission plan from the return materialization plan");
+        expect(wrapper_source.find("const auto return_emission_admission =") != std::string::npos,
+               "library-output wrapper source should admit staged return emission from the return-materialization admission and return-emission plan.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_emission(return_materialization_admission, return_emission_plan);") != std::string::npos,
+               "library-output wrapper source should route return-materialization admission through the shared return-emission admission helper.");
+        expect(wrapper_source.find("(void)return_emission_admission;") != std::string::npos,
+               "library-output wrapper source should explicitly keep the scaffold-only return-emission admission result unused.");
         expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                "library-output wrapper source should build a final return adoption plan from the return emission plan");
         expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
@@ -2707,6 +2715,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a return-emission-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "fll-output wrapper source should declare a return-emission-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionAdmission copperfin_runtime_bridge_admit_return_emission(") != std::string::npos,
+               "fll-output wrapper source should declare a shared return-emission admission helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmission copperfin_runtime_bridge_execute_return_emission(") != std::string::npos,
                "fll-output wrapper source should declare a shared return-emission execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_materialization(plan.return_materialization_plan)") != std::string::npos,
@@ -2935,6 +2945,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should explicitly keep the scaffold-only return-materialization admission result unused.");
         expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "fll-output wrapper source should build a return emission plan from the return materialization plan");
+        expect(wrapper_source.find("const auto return_emission_admission =") != std::string::npos,
+               "fll-output wrapper source should admit staged return emission from the return-materialization admission and return-emission plan.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_emission(return_materialization_admission, return_emission_plan);") != std::string::npos,
+               "fll-output wrapper source should route return-materialization admission through the shared return-emission admission helper.");
+        expect(wrapper_source.find("(void)return_emission_admission;") != std::string::npos,
+               "fll-output wrapper source should explicitly keep the scaffold-only return-emission admission result unused.");
         expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                "fll-output wrapper source should build a final return adoption plan from the return emission plan");
         expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
