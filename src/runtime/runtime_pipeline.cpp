@@ -1336,6 +1336,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(fallback_branch_statement),\n";
     stream << "        std::move(emitted_return_block)};\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_replace_placeholder_return_mode() {\n";
+    stream << "    return \"replace_placeholder_return\";\n";
+    stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_planned_activation_pending_mode() {\n";
+    stream << "    return \"planned_activation_pending\";\n";
+    stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
     stream << "    CopperfinRuntimeBridgeReturnEmissionPlan return_emission_plan,\n";
     stream << "    std::string placeholder_return_statement) {\n";
@@ -1344,7 +1350,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(return_emission_plan),\n";
     stream << "        std::move(placeholder_return_statement),\n";
     stream << "        adopted_return_block,\n";
-    stream << "        \"replace_placeholder_return\"};\n";
+    stream << "        copperfin_build_runtime_bridge_replace_placeholder_return_mode()};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeReturnActivationPlan copperfin_build_runtime_bridge_return_activation_plan(\n";
     stream << "    CopperfinRuntimeBridgeFinalReturnAdoptionPlan final_return_adoption_plan) {\n";
@@ -1352,7 +1358,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return CopperfinRuntimeBridgeReturnActivationPlan{\n";
     stream << "        std::move(final_return_adoption_plan),\n";
     stream << "        false,\n";
-    stream << "        \"planned_activation_pending\",\n";
+    stream << "        copperfin_build_runtime_bridge_planned_activation_pending_mode(),\n";
     stream << "        active_return_block};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeStubReturnPlan copperfin_build_runtime_bridge_stub_return_plan(\n";
@@ -1370,9 +1376,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const auto activation_mode = return_activation_plan.activation_mode;\n";
     stream << "    const auto adoption_mode = final_return_adoption_plan.adoption_mode;\n";
     stream << "    const bool keeps_placeholder_return_active =\n";
-    stream << "        emits_placeholder_return || activation_mode == \"planned_activation_pending\";\n";
+    stream << "        emits_placeholder_return || activation_mode == copperfin_build_runtime_bridge_planned_activation_pending_mode();\n";
     stream << "    const bool adopts_placeholder_replacement =\n";
-    stream << "        adoption_mode == \"replace_placeholder_return\";\n";
+    stream << "        adoption_mode == copperfin_build_runtime_bridge_replace_placeholder_return_mode();\n";
     stream << "    return CopperfinRuntimeBridgeStubReturnPlan{\n";
     stream << "        std::move(return_activation_plan),\n";
     stream << "        emitted_return_statement,\n";

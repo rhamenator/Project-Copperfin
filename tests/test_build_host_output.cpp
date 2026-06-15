@@ -867,6 +867,14 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host DLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared replace-placeholder-return adoption-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
+                   "build host DLL wrapper should route replace-placeholder-return mode token through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_planned_activation_pending_mode()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared planned-activation-pending activation-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_planned_activation_pending_mode()") != std::string::npos,
+                   "build host DLL wrapper should route planned-activation-pending mode token through the shared helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnEmissionPlan") != std::string::npos,
                    "build host DLL wrapper should declare a return-emission-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
@@ -1379,6 +1387,14 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host FLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared replace-placeholder-return adoption-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
+                   "build host FLL wrapper should route replace-placeholder-return mode token through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_planned_activation_pending_mode()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared planned-activation-pending activation-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_planned_activation_pending_mode()") != std::string::npos,
+                   "build host FLL wrapper should route planned-activation-pending mode token through the shared helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnEmissionPlan") != std::string::npos,
                    "build host FLL wrapper should declare a return-emission-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
