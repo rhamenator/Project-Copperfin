@@ -889,6 +889,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a response-read-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a response-read-plan helper");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-read execution helper.");
+            expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
+                   "build host DLL wrapper should stage response-document reads through the shared response-read execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
                    "build host DLL wrapper should declare a response-artifact surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
@@ -1527,6 +1531,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a response-read-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a response-read-plan helper");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-read execution helper.");
+            expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
+                   "build host FLL wrapper should stage response-document reads through the shared response-read execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
                    "build host FLL wrapper should declare a response-artifact surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,

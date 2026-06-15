@@ -1298,6 +1298,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a response-read-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "library-output wrapper source should declare a response-read-plan helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
+               "library-output wrapper source should declare a shared response-read execution helper.");
+        expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
+               "library-output wrapper source should stage response-document reads through the shared response-read execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
                "library-output wrapper source should declare a response-artifact surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
@@ -2433,6 +2437,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a response-read-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "fll-output wrapper source should declare a response-read-plan helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-read execution helper.");
+        expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
+               "fll-output wrapper source should stage response-document reads through the shared response-read execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
                "fll-output wrapper source should declare a response-artifact surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
