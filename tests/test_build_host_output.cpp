@@ -899,6 +899,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a stub return plan from the return activation plan");
             expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host DLL wrapper should build a placeholder-return-value plan from the stub return plan");
+            expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
+                   "build host DLL wrapper should propagate the typed native fallback integer value downstream");
             expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);") != std::string::npos,
                    "build host DLL wrapper should route the placeholder return through the plan-backed stub-return helper");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
@@ -1265,6 +1267,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a stub return plan from the return activation plan");
             expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host FLL wrapper should build a placeholder-return-value plan from the stub return plan");
+            expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
+                   "build host FLL wrapper should propagate the typed native fallback integer value downstream");
             expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);") != std::string::npos,
                    "build host FLL wrapper should route the placeholder return through the plan-backed stub-return helper");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,

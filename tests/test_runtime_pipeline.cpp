@@ -1318,6 +1318,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build a stub return plan from the return activation plan");
         expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                "library-output wrapper source should build a placeholder-return-value plan from the stub return plan");
+        expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
+               "library-output wrapper source should propagate the typed native fallback integer value downstream");
         expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);") != std::string::npos,
                "library-output wrapper source should route the placeholder return through the plan-backed stub-return helper");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
@@ -2161,6 +2163,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build a stub return plan from the return activation plan");
         expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                "fll-output wrapper source should build a placeholder-return-value plan from the stub return plan");
+        expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
+               "fll-output wrapper source should propagate the typed native fallback integer value downstream");
         expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);") != std::string::npos,
                "fll-output wrapper source should route the placeholder return through the plan-backed stub-return helper");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
