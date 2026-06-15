@@ -1248,6 +1248,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a native-return-plan helper");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "library-output wrapper source should declare an integer return-representation parser");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
+               "library-output wrapper source should declare a shared parsed-int default sentinel helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_default_int_value()") != std::string::npos,
+               "library-output wrapper source should route the parsed-int default sentinel through the shared helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeOutcomeSelectionPlan") != std::string::npos,
                "library-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
@@ -2233,6 +2237,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a native-return-plan helper");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "fll-output wrapper source should declare an integer return-representation parser");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
+               "fll-output wrapper source should declare a shared parsed-int default sentinel helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_default_int_value()") != std::string::npos,
+               "fll-output wrapper source should route the parsed-int default sentinel through the shared helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeOutcomeSelectionPlan") != std::string::npos,
                "fll-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,

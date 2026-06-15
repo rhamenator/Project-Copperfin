@@ -1212,10 +1212,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        failure_policy_plan.interpretation_plan.wrapper_return_surface,\n";
     stream << "        failure_policy_plan.fallback_return_value};\n";
     stream << "}\n\n";
+    stream << "static int copperfin_runtime_bridge_default_int_value() {\n";
+    stream << "    return -1;\n";
+    stream << "}\n\n";
     stream << "static int copperfin_parse_runtime_bridge_int_value_representation(\n";
     stream << "    const std::string& value_representation) {\n";
     stream << "    std::istringstream value_stream(value_representation);\n";
-    stream << "    int parsed_value = -1;\n";
+    stream << "    int parsed_value = copperfin_runtime_bridge_default_int_value();\n";
     stream << "    value_stream >> parsed_value;\n";
     stream << "    return parsed_value;\n";
     stream << "}\n\n";
