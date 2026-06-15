@@ -764,6 +764,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string write_mode;\n";
     stream << "    bool ensure_parent_directory = true;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeResponseReadPlan {\n";
+    stream << "    CopperfinRuntimeBridgeRequestWritePlan request_write_plan;\n";
+    stream << "    std::filesystem::path source_path;\n";
+    stream << "    std::string read_mode;\n";
+    stream << "    bool require_existing_response = true;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1007,6 +1013,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"overwrite\",\n";
     stream << "        true};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(\n";
+    stream << "    CopperfinRuntimeBridgeRequestWritePlan request_write_plan) {\n";
+    stream << "    const auto source_path =\n";
+    stream << "        request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.response_path;\n";
+    stream << "    return CopperfinRuntimeBridgeResponseReadPlan{\n";
+    stream << "        std::move(request_write_plan),\n";
+    stream << "        source_path,\n";
+    stream << "        \"read_text\",\n";
+    stream << "        true};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1089,7 +1105,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_validation);\n";
             stream << "    const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(\n";
             stream << "        request_artifact);\n";
-            stream << "    (void)request_write_plan;\n";
+            stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
+            stream << "        request_write_plan);\n";
+            stream << "    (void)response_read_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1209,7 +1227,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_validation);\n";
             stream << "    const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(\n";
             stream << "        request_artifact);\n";
-            stream << "    (void)request_write_plan;\n";
+            stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
+            stream << "        request_write_plan);\n";
+            stream << "    (void)response_read_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
