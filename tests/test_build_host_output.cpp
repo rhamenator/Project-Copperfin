@@ -787,6 +787,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a request-document helper");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestArtifact copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
                    "build host DLL wrapper should declare a request-artifact helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeRequestWritePlan") != std::string::npos,
+                   "build host DLL wrapper should declare a request-write-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestWritePlan copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare a request-write-plan helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -819,6 +823,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a response-validation plan from the failure policy");
             expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
                    "build host DLL wrapper should build a request artifact from the response validation plan");
+            expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
+                   "build host DLL wrapper should build a request write plan from the request artifact");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -877,6 +883,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare the success-status expectation");
             expect(wrapper_source.find("std::string request_document;") != std::string::npos,
                    "build host DLL wrapper should record the request document payload.");
+            expect(wrapper_source.find("std::filesystem::path target_path;") != std::string::npos,
+                   "build host DLL wrapper should record the request write target path.");
+            expect(wrapper_source.find("\"overwrite\"") != std::string::npos,
+                   "build host DLL wrapper should record the request write mode.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -1027,6 +1037,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a request-document helper");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestArtifact copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
                    "build host FLL wrapper should declare a request-artifact helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeRequestWritePlan") != std::string::npos,
+                   "build host FLL wrapper should declare a request-write-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeRequestWritePlan copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare a request-write-plan helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -1073,6 +1087,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a response-validation plan from the failure policy");
             expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
                    "build host FLL wrapper should build a request artifact from the response validation plan");
+            expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
+                   "build host FLL wrapper should build a request write plan from the request artifact");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -1131,6 +1147,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare the success-status expectation");
             expect(wrapper_source.find("std::string request_document;") != std::string::npos,
                    "build host FLL wrapper should record the request document payload.");
+            expect(wrapper_source.find("std::filesystem::path target_path;") != std::string::npos,
+                   "build host FLL wrapper should record the request write target path.");
+            expect(wrapper_source.find("\"overwrite\"") != std::string::npos,
+                   "build host FLL wrapper should record the request write mode.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
