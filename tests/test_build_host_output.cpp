@@ -1097,6 +1097,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the response read mode through the shared helper.");
             expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                    "build host DLL wrapper should record the response document payload.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared empty response-document helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+                   "build host DLL wrapper should route the empty response-document token through the shared helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
                    "build host DLL wrapper should declare a shared response parse-kind helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
@@ -1603,6 +1607,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should route the response read mode through the shared helper.");
             expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                    "build host FLL wrapper should record the response document payload.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared empty response-document helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+                   "build host FLL wrapper should route the empty response-document token through the shared helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
                    "build host FLL wrapper should declare a shared response parse-kind helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,

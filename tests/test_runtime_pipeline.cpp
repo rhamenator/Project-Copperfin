@@ -1524,6 +1524,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should route the response read mode through the shared helper.");
         expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                "library-output wrapper source should record the response document payload.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+               "library-output wrapper source should declare a shared empty response-document helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+               "library-output wrapper source should route the empty response-document token through the shared helper.");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
                "library-output wrapper source should declare a shared response parse-kind helper.");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
@@ -2507,6 +2511,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route the response read mode through the shared helper.");
         expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                "fll-output wrapper source should record the response document payload.");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+               "fll-output wrapper source should declare a shared empty response-document helper.");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_empty_response_document()") != std::string::npos,
+               "fll-output wrapper source should route the empty response-document token through the shared helper.");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
                "fll-output wrapper source should declare a shared response parse-kind helper.");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,

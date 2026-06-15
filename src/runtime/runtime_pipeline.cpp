@@ -1180,11 +1180,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        read_mode,\n";
     stream << "        true};\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_empty_response_document() {\n";
+    stream << "    return \"\";\n";
+    stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(\n";
     stream << "    CopperfinRuntimeBridgeResponseReadPlan response_read_plan) {\n";
+    stream << "    const auto response_document = copperfin_build_runtime_bridge_empty_response_document();\n";
     stream << "    return CopperfinRuntimeBridgeResponseArtifact{\n";
     stream << "        std::move(response_read_plan),\n";
-    stream << "        \"\"};\n";
+    stream << "        response_document};\n";
     stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_response_parse_kind() {\n";
     stream << "    return \"json_field_map\";\n";
