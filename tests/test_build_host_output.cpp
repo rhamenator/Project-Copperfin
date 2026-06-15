@@ -815,6 +815,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a dispatch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchPlan copperfin_build_runtime_bridge_dispatch_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a dispatch-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchExecution copperfin_runtime_bridge_execute_dispatch(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                    "build host DLL wrapper should declare a payload-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1089,6 +1091,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a serialization plan from the transport plan");
             expect(wrapper_source.find("const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);") != std::string::npos,
                    "build host DLL wrapper should build a dispatch plan from the serialization plan");
+            expect(wrapper_source.find("const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);") != std::string::npos,
+                   "build host DLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
+            expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
+                   "build host DLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
             expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
                    "build host DLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
@@ -1501,6 +1507,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a dispatch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchPlan copperfin_build_runtime_bridge_dispatch_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a dispatch-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchExecution copperfin_runtime_bridge_execute_dispatch(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                    "build host FLL wrapper should declare a payload-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1793,6 +1801,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a serialization plan from the transport plan");
             expect(wrapper_source.find("const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);") != std::string::npos,
                    "build host FLL wrapper should build a dispatch plan from the serialization plan");
+            expect(wrapper_source.find("const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);") != std::string::npos,
+                   "build host FLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
+            expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
+                   "build host FLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
             expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
                    "build host FLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
