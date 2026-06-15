@@ -1064,6 +1064,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string diagnostics_value;\n";
     stream << "    int emitted_int_value = -1;\n";
     stream << "};\n\n";
+    stream << "using CopperfinRuntimeBridgeIntReturnAdapter = int (*)(int);\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -2169,6 +2170,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        stub_emission.diagnostics_value,\n";
     stream << "        stub_emission.emitted_int_value};\n";
     stream << "}\n\n";
+    stream << "static int copperfin_runtime_bridge_apply_stub_emission_output(\n";
+    stream << "    const CopperfinRuntimeBridgeStubEmissionReturnSurface& stub_emission_return_surface,\n";
+    stream << "    CopperfinRuntimeBridgeIntReturnAdapter return_adapter) {\n";
+    stream << "    return return_adapter(stub_emission_return_surface.emitted_int_value);\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -2193,8 +2199,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
         stream << "            stub_emission,\n";
         stream << "            copperfin_build_runtime_bridge_fll_int_return_surface());\n";
-        stream << "    return " << kFllDefaultReturnHelper
-               << "(stub_emission_return_surface.emitted_int_value);\n";
+        stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
+        stream << "        stub_emission_return_surface,\n";
+        stream << "        " << kFllDefaultReturnHelper << ");\n";
         stream << "}\n\n";
         stream << "using CopperfinFllEntryPoint = int (*)(ParamBlk*);\n\n";
         stream << "struct CopperfinFoxInfoRecord {\n";
@@ -2397,6 +2404,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "#else\n";
         stream << "#define COPPERFIN_VFP_DLL_CALL\n";
         stream << "#endif\n\n";
+        stream << "static int copperfin_runtime_bridge_return_native_int(int value) {\n";
+        stream << "    return value;\n";
+        stream << "}\n\n";
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
         stream << "    const auto stub_emission =\n";
@@ -2405,7 +2415,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
         stream << "            stub_emission,\n";
         stream << "            copperfin_build_runtime_bridge_native_int_return_surface());\n";
-        stream << "    return stub_emission_return_surface.emitted_int_value;\n";
+        stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
+        stream << "        stub_emission_return_surface,\n";
+        stream << "        copperfin_runtime_bridge_return_native_int);\n";
         stream << "}\n\n";
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
