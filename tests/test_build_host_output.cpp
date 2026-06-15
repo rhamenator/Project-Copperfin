@@ -921,15 +921,25 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should feed emitted placeholder-return statements from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.deferred_return_block,") != std::string::npos,
                    "build host DLL wrapper should feed deferred return blocks from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.activation_mode,") != std::string::npos,
+                   "build host DLL wrapper should feed activation modes from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.adoption_mode,") != std::string::npos,
+                   "build host DLL wrapper should feed adoption modes from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
                    "build host DLL wrapper should feed placeholder fallback integers from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
                    "build host DLL wrapper should feed placeholder fallback representations from stub-return metadata");
+            expect(wrapper_source.find("const bool keeps_placeholder_return_active =") != std::string::npos,
+                   "build host DLL wrapper should have the helper derive placeholder activation from the routed mode contract");
+            expect(wrapper_source.find("placeholder_return_value_plan.activation_mode == \"planned_activation_pending\";") != std::string::npos,
+                   "build host DLL wrapper should have the helper consume the activation-mode contract");
+            expect(wrapper_source.find("placeholder_return_value_plan.adoption_mode == \"replace_placeholder_return\";") != std::string::npos,
+                   "build host DLL wrapper should have the helper consume the adoption-mode contract");
             expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the placeholder emitted-return statement contract");
             expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the deferred return-block contract");
-            expect(wrapper_source.find("if (!placeholder_return_value_plan.emits_placeholder_return) {") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value_plan.emits_placeholder_return") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the placeholder-emission flag contract");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host DLL wrapper should build an outcome selection plan from the native return plan");
@@ -1337,15 +1347,25 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should feed emitted placeholder-return statements from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.deferred_return_block,") != std::string::npos,
                    "build host FLL wrapper should feed deferred return blocks from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.activation_mode,") != std::string::npos,
+                   "build host FLL wrapper should feed activation modes from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.adoption_mode,") != std::string::npos,
+                   "build host FLL wrapper should feed adoption modes from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
                    "build host FLL wrapper should feed placeholder fallback integers from stub-return metadata");
             expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
                    "build host FLL wrapper should feed placeholder fallback representations from stub-return metadata");
+            expect(wrapper_source.find("const bool keeps_placeholder_return_active =") != std::string::npos,
+                   "build host FLL wrapper should have the helper derive placeholder activation from the routed mode contract");
+            expect(wrapper_source.find("placeholder_return_value_plan.activation_mode == \"planned_activation_pending\";") != std::string::npos,
+                   "build host FLL wrapper should have the helper consume the activation-mode contract");
+            expect(wrapper_source.find("placeholder_return_value_plan.adoption_mode == \"replace_placeholder_return\";") != std::string::npos,
+                   "build host FLL wrapper should have the helper consume the adoption-mode contract");
             expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the placeholder emitted-return statement contract");
             expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the deferred return-block contract");
-            expect(wrapper_source.find("if (!placeholder_return_value_plan.emits_placeholder_return) {") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value_plan.emits_placeholder_return") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the placeholder-emission flag contract");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host FLL wrapper should build an outcome selection plan from the native return plan");
