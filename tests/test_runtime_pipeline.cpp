@@ -1228,6 +1228,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "library-output wrapper source should declare a shared process-launch helper.");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
+               "library-output wrapper source should declare a shared host-failure evaluation helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                "library-output wrapper source should declare a payload-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1528,6 +1530,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL stub should route wrapper-return-surface through native-int return-surface helper");
         expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                "library-output wrapper source should build a failure policy from the interpretation plan");
+        expect(wrapper_source.find("const auto host_failure =") != std::string::npos,
+               "library-output wrapper source should evaluate staged host failure from the process-launch helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);") != std::string::npos,
+               "library-output wrapper source should route process-launch output through the shared host-failure evaluation helper.");
+        expect(wrapper_source.find("(void)host_failure;") != std::string::npos,
+               "library-output wrapper source should explicitly keep the scaffold-only host-failure evaluation result unused.");
         expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
                "library-output wrapper source should build a response-validation plan from the failure policy");
         expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
@@ -2423,6 +2431,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "fll-output wrapper source should declare a shared process-launch helper.");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
+               "fll-output wrapper source should declare a shared host-failure evaluation helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                "fll-output wrapper source should declare a payload-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -2727,6 +2737,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build an interpretation plan from the payload plan");
         expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                "fll-output wrapper source should build a failure policy from the interpretation plan");
+        expect(wrapper_source.find("const auto host_failure =") != std::string::npos,
+               "fll-output wrapper source should evaluate staged host failure from the process-launch helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);") != std::string::npos,
+               "fll-output wrapper source should route process-launch output through the shared host-failure evaluation helper.");
+        expect(wrapper_source.find("(void)host_failure;") != std::string::npos,
+               "fll-output wrapper source should explicitly keep the scaffold-only host-failure evaluation result unused.");
         expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
                "fll-output wrapper source should build a response-validation plan from the failure policy");
         expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
