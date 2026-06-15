@@ -3319,6 +3319,9 @@
             case StatementKind::on_shutdown:
                 shutdown_handler = statement.expression;
                 return {};
+            case StatementKind::on_shutdown_statement:
+                shutdown_handler = statement.expression;
+                return {};
             case StatementKind::public_declaration:
                 for (const auto &name : statement.names)
                 {

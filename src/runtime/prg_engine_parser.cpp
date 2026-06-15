@@ -12,9 +12,9 @@ namespace {
 
 struct LogicalLine {
     std::size_t line_number = 0;
-    std::string text;
+    std::string text{};
     bool is_text_block = false;
-    std::string block_text;
+    std::string block_text{};
 };
 
 std::string strip_inline_comment(const std::string& line) {

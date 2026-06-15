@@ -85,13 +85,13 @@ namespace copperfin::runtime
         {
             std::size_t for_statement_index = 0;
             std::size_t endfor_statement_index = 0;
-            std::string variable_name;
+            std::string variable_name{};
             double end_value = 0.0;
             double step_value = 1.0;
             std::size_t iteration_count = 0;
             // FOR EACH support
             bool is_for_each = false;
-            std::vector<PrgValue> each_values; // snapshot of collection at entry
+            std::vector<PrgValue> each_values{}; // snapshot of collection at entry
             std::size_t each_index = 0;
         };
 

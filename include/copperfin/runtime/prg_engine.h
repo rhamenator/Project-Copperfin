@@ -103,26 +103,26 @@ struct RuntimeCursorState {
 
 struct RuntimeSqlConnectionState {
     int handle = 0;
-    std::string target;
-    std::string provider;
-    std::string last_cursor_alias;
+    std::string target{};
+    std::string provider{};
+    std::string last_cursor_alias{};
     std::size_t last_result_count = 0;
-    std::string prepared_command;
-    std::string last_sql_action;
+    std::string prepared_command{};
+    std::string last_sql_action{};
     bool transaction_dirty = false;
     bool cancel_requested = false;
-    std::map<std::string, std::string> properties;
+    std::map<std::string, std::string> properties{};
 };
 
 struct RuntimeOleObjectState {
     int handle = 0;
-    std::string prog_id;
-    std::string source;
-    std::string last_action;
+    std::string prog_id{};
+    std::string source{};
+    std::string last_action{};
     int action_count = 0;
-    std::map<std::string, PrgValue> properties;
-    std::vector<std::string> methods;
-    std::vector<std::string> events;
+    std::map<std::string, PrgValue> properties{};
+    std::vector<std::string> methods{};
+    std::vector<std::string> events{};
 };
 
 struct RuntimePauseState {

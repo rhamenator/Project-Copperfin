@@ -68,18 +68,18 @@ struct IndexExpressionPattern {
 };
 
 struct IndexOrderCandidate {
-    std::string order_name;
-    std::string order_expression;
-    std::string order_for_expression;
-    std::string order_path;
-    std::string normalization_hint;
-    std::string collation_hint;
-    std::string key_domain_hint;
+    std::string order_name{};
+    std::string order_expression{};
+    std::string order_for_expression{};
+    std::string order_path{};
+    std::string normalization_hint{};
+    std::string collation_hint{};
+    std::string key_domain_hint{};
     bool is_descending = false;
     
     int match_score = 0;                         // 0-100, higher is better
     OptimizationConfidence optimization_confidence = OptimizationConfidence::not_applicable;
-    std::string match_reason;
+    std::string match_reason{};
 };
 
 struct IndexSeekPlan {

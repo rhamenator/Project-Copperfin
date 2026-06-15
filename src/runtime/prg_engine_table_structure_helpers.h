@@ -12,7 +12,7 @@ struct TableFieldDeclaration {
     vfp::DbfFieldDescriptor descriptor;
     bool nullable = true;
     bool has_default = false;
-    std::string default_expression;
+    std::string default_expression{};
 };
 
 std::optional<TableFieldDeclaration> parse_table_field_declaration(std::string text);

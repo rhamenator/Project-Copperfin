@@ -285,6 +285,7 @@
                         }
                     }
                 };
+                const std::size_t array_columns = array->columns;
                 const auto predicate_value_matches = [&](const PrgValue &value, std::size_t linear_index)
                 {
                     if (!predicate_search)
@@ -296,8 +297,8 @@
                         return false;
                     }
                     Frame &frame = stack.back();
-                    const std::size_t row = array->columns > 0U ? (linear_index / array->columns) + 1U : linear_index + 1U;
-                    const std::size_t column = array->columns > 0U ? (linear_index % array->columns) + 1U : 1U;
+                    const std::size_t row = array_columns > 0U ? (linear_index / array_columns) + 1U : linear_index + 1U;
+                    const std::size_t column = array_columns > 0U ? (linear_index % array_columns) + 1U : 1U;
                     assign_variable(frame, "_ASCANVALUE", value);
                     assign_variable(frame, "_ASCANINDEX", make_number_value(static_cast<double>(linear_index + 1U)));
                     assign_variable(frame, "_ASCANROW", make_number_value(static_cast<double>(row)));

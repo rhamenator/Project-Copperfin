@@ -10,37 +10,37 @@ namespace copperfin::studio {
 
 struct StudioProjectEntry {
     std::size_t record_index = 0;
-    std::string name;
-    std::string relative_path;
-    std::string type_code;
-    std::string type_title;
-    std::string group_id;
-    std::string group_title;
-    std::string key;
-    std::string comments;
+    std::string name{};
+    std::string relative_path{};
+    std::string type_code{};
+    std::string type_title{};
+    std::string group_id{};
+    std::string group_title{};
+    std::string key{};
+    std::string comments{};
     bool excluded = false;
     bool main_program = false;
     bool local = false;
 };
 
 struct StudioProjectGroup {
-    std::string id;
-    std::string title;
+    std::string id{};
+    std::string title{};
     std::size_t item_count = 0;
     std::size_t excluded_count = 0;
-    std::vector<std::size_t> record_indexes;
+    std::vector<std::size_t> record_indexes{};
 };
 
 struct StudioProjectBuildPlan {
     bool available = false;
     bool can_build = false;
-    std::string project_title;
-    std::string project_key;
-    std::string home_directory;
-    std::string output_path;
-    std::string output_kind;
-    std::string build_target;
-    std::string startup_item;
+    std::string project_title{};
+    std::string project_key{};
+    std::string home_directory{};
+    std::string output_path{};
+    std::string output_kind{};
+    std::string build_target{};
+    std::string startup_item{};
     std::size_t startup_record_index = 0;
     std::size_t total_items = 0;
     std::size_t excluded_items = 0;
@@ -52,12 +52,12 @@ struct StudioProjectBuildPlan {
 
 struct StudioProjectWorkspace {
     bool available = false;
-    std::string project_title;
-    std::string project_key;
-    std::string home_directory;
-    std::string output_path;
-    std::vector<StudioProjectGroup> groups;
-    std::vector<StudioProjectEntry> entries;
+    std::string project_title{};
+    std::string project_key{};
+    std::string home_directory{};
+    std::string output_path{};
+    std::vector<StudioProjectGroup> groups{};
+    std::vector<StudioProjectEntry> entries{};
     StudioProjectBuildPlan build_plan{};
 };
 
