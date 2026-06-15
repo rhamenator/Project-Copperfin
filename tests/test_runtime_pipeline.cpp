@@ -1256,6 +1256,22 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared request-media-type field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
                "library-output wrapper source should declare a shared response-media-type field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared payload-shape field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
+               "library-output wrapper source should route payload-shape field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_name_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared parameter-name field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_name_field_name()") != std::string::npos,
+               "library-output wrapper source should route parameter-name field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_value_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared parameter-value field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_value_field_name()") != std::string::npos,
+               "library-output wrapper source should route parameter-value field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_surface_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared parameter-surface field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_surface_field_name()") != std::string::npos,
+               "library-output wrapper source should route parameter-surface field through helper in request document");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "library-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -2369,6 +2385,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared request-media-type field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
                "fll-output wrapper source should declare a shared response-media-type field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared payload-shape field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
+               "fll-output wrapper source should route payload-shape field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_name_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared parameter-name field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_name_field_name()") != std::string::npos,
+               "fll-output wrapper source should route parameter-name field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_value_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared parameter-value field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_value_field_name()") != std::string::npos,
+               "fll-output wrapper source should route parameter-value field through helper in request document");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_parameter_surface_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared parameter-surface field helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_parameter_surface_field_name()") != std::string::npos,
+               "fll-output wrapper source should route parameter-surface field through helper in request document");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
