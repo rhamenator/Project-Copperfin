@@ -1326,6 +1326,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a native-return-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "library-output wrapper source should declare a native-return-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturn copperfin_runtime_bridge_execute_native_return(") != std::string::npos,
+               "library-output wrapper source should declare a shared native-return execution helper.");
+        expect(wrapper_source.find("interpreted_result.matched_success_status") != std::string::npos,
+               "library-output wrapper source should stage native-return selection through the shared execution helper.");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "library-output wrapper source should declare an integer return-representation parser");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
@@ -2473,6 +2477,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a native-return-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "fll-output wrapper source should declare a native-return-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturn copperfin_runtime_bridge_execute_native_return(") != std::string::npos,
+               "fll-output wrapper source should declare a shared native-return execution helper.");
+        expect(wrapper_source.find("interpreted_result.matched_success_status") != std::string::npos,
+               "fll-output wrapper source should stage native-return selection through the shared execution helper.");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "fll-output wrapper source should declare an integer return-representation parser");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
