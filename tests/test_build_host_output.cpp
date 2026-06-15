@@ -1049,6 +1049,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionAdmission copperfin_runtime_bridge_admit_final_return_adoption(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared final-return-adoption admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
                    "build host DLL wrapper should declare a shared final-return-adoption execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
@@ -1263,6 +1265,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only return-emission admission result unused.");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host DLL wrapper should build a final return adoption plan from the return emission plan");
+            expect(wrapper_source.find("const auto final_return_adoption_admission =") != std::string::npos,
+                   "build host DLL wrapper should admit staged final return adoption from the return-emission admission and final-return-adoption plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_final_return_adoption(return_emission_admission, final_return_adoption_plan);") != std::string::npos,
+                   "build host DLL wrapper should route return-emission admission through the shared final-return-adoption admission helper.");
+            expect(wrapper_source.find("(void)final_return_adoption_admission;") != std::string::npos,
+                   "build host DLL wrapper should explicitly keep the scaffold-only final-return-adoption admission result unused.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
                    "build host DLL wrapper should build a return activation plan from the final return adoption plan");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(") != std::string::npos,
@@ -1819,6 +1827,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a final-return-adoption-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a final-return-adoption-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionAdmission copperfin_runtime_bridge_admit_final_return_adoption(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared final-return-adoption admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
                    "build host FLL wrapper should declare a shared final-return-adoption execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
@@ -2049,6 +2059,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should explicitly keep the scaffold-only return-emission admission result unused.");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
                    "build host FLL wrapper should build a final return adoption plan from the return emission plan");
+            expect(wrapper_source.find("const auto final_return_adoption_admission =") != std::string::npos,
+                   "build host FLL wrapper should admit staged final return adoption from the return-emission admission and final-return-adoption plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_final_return_adoption(return_emission_admission, final_return_adoption_plan);") != std::string::npos,
+                   "build host FLL wrapper should route return-emission admission through the shared final-return-adoption admission helper.");
+            expect(wrapper_source.find("(void)final_return_adoption_admission;") != std::string::npos,
+                   "build host FLL wrapper should explicitly keep the scaffold-only final-return-adoption admission result unused.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
                    "build host FLL wrapper should build a return activation plan from the final return adoption plan");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(") != std::string::npos,
