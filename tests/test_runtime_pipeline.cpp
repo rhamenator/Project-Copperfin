@@ -1226,6 +1226,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a dispatch-plan helper");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchExecution copperfin_runtime_bridge_execute_dispatch(") != std::string::npos,
                "library-output wrapper source should declare a shared dispatch-execution helper.");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
+               "library-output wrapper source should declare a shared process-launch helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                "library-output wrapper source should declare a payload-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1514,6 +1516,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should route the dispatch plan through the shared dispatch-execution helper.");
         expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
                "library-output wrapper source should explicitly keep the scaffold-only dispatch-execution result unused.");
+        expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
+               "library-output wrapper source should route dispatch execution through the shared process-launch helper.");
+        expect(wrapper_source.find("(void)process_launch;") != std::string::npos,
+               "library-output wrapper source should explicitly keep the scaffold-only process-launch result unused.");
         expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
                "library-output wrapper source should build a payload plan from the dispatch plan");
         expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
@@ -2415,6 +2421,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a dispatch-plan helper");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchExecution copperfin_runtime_bridge_execute_dispatch(") != std::string::npos,
                "fll-output wrapper source should declare a shared dispatch-execution helper.");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
+               "fll-output wrapper source should declare a shared process-launch helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                "fll-output wrapper source should declare a payload-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -2709,6 +2717,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route the dispatch plan through the shared dispatch-execution helper.");
         expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
                "fll-output wrapper source should explicitly keep the scaffold-only dispatch-execution result unused.");
+        expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
+               "fll-output wrapper source should route dispatch execution through the shared process-launch helper.");
+        expect(wrapper_source.find("(void)process_launch;") != std::string::npos,
+               "fll-output wrapper source should explicitly keep the scaffold-only process-launch result unused.");
         expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
                "fll-output wrapper source should build a payload plan from the dispatch plan");
         expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
