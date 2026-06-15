@@ -746,6 +746,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string diagnostics_fallback;\n";
     stream << "    std::string fallback_return_value;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeResponseValidationPlan {\n";
+    stream << "    CopperfinRuntimeBridgeFailurePolicyPlan failure_policy_plan;\n";
+    stream << "    std::string expected_response_media_type;\n";
+    stream << "    std::string expected_schema_version;\n";
+    stream << "    std::vector<std::string> required_response_fields;\n";
+    stream << "    std::string success_status_value;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -892,6 +899,21 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"runtime_host_failure\",\n";
     stream << "        std::move(fallback_return_value)};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeResponseValidationPlan copperfin_build_runtime_bridge_response_validation_plan(\n";
+    stream << "    CopperfinRuntimeBridgeFailurePolicyPlan failure_policy_plan) {\n";
+    stream << "    const auto expected_response_media_type =\n";
+    stream << "        failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.response_media_type;\n";
+    stream << "    const auto expected_schema_version =\n";
+    stream << "        failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.schema_version;\n";
+    stream << "    const auto required_response_fields =\n";
+    stream << "        failure_policy_plan.interpretation_plan.payload_plan.response_fields;\n";
+    stream << "    return CopperfinRuntimeBridgeResponseValidationPlan{\n";
+    stream << "        std::move(failure_policy_plan),\n";
+    stream << "        expected_response_media_type,\n";
+    stream << "        expected_schema_version,\n";
+    stream << "        required_response_fields,\n";
+    stream << "        \"ok\"};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -968,7 +990,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
             stream << "        interpretation_plan,\n";
             stream << "        std::to_string(-1));\n";
-            stream << "    (void)failure_policy;\n";
+            stream << "    const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(\n";
+            stream << "        failure_policy);\n";
+            stream << "    (void)response_validation;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1082,7 +1106,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
             stream << "        interpretation_plan,\n";
             stream << "        std::to_string(-1));\n";
-            stream << "    (void)failure_policy;\n";
+            stream << "    const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(\n";
+            stream << "        failure_policy);\n";
+            stream << "    (void)response_validation;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
