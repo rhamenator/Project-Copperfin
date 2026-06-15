@@ -1448,22 +1448,32 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared response serialization media-type helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
                "library-output wrapper source should declare a shared serialization schema-version helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_path_argument_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared request-path dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_path_argument_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response-path dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_argument_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared request-media-type dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_argument_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response-media-type dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_argument_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared schema-version dispatch helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                "library-output wrapper source should route the request serialization media type through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                "library-output wrapper source should route the response serialization media type through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
                "library-output wrapper source should route the serialization schema version through the shared helper");
-        expect(wrapper_source.find("\"--request-path\"") != std::string::npos,
-               "library-output wrapper source should declare the request-path dispatch argument");
-        expect(wrapper_source.find("\"--response-path\"") != std::string::npos,
-               "library-output wrapper source should declare the response-path dispatch argument");
-        expect(wrapper_source.find("\"--request-media-type\"") != std::string::npos,
-               "library-output wrapper source should declare the request-media-type dispatch argument");
-        expect(wrapper_source.find("\"--response-media-type\"") != std::string::npos,
-               "library-output wrapper source should declare the response-media-type dispatch argument");
-        expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
-               "library-output wrapper source should declare the schema-version dispatch argument");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_path_argument_name()") != std::string::npos,
+               "library-output wrapper source should route the request-path dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_path_argument_name()") != std::string::npos,
+               "library-output wrapper source should route the response-path dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_argument_name()") != std::string::npos,
+               "library-output wrapper source should route the request-media-type dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_argument_name()") != std::string::npos,
+               "library-output wrapper source should route the response-media-type dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_argument_name()") != std::string::npos,
+               "library-output wrapper source should route the schema-version dispatch argument through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
                "library-output wrapper source should route the request payload shape through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
@@ -2403,22 +2413,32 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared response serialization media-type helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared serialization schema-version helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_path_argument_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared request-path dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_path_argument_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-path dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_argument_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared request-media-type dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_argument_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-media-type dispatch helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_argument_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared schema-version dispatch helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                "fll-output wrapper source should route the request serialization media type through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                "fll-output wrapper source should route the response serialization media type through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
                "fll-output wrapper source should route the serialization schema version through the shared helper");
-        expect(wrapper_source.find("\"--request-path\"") != std::string::npos,
-               "fll-output wrapper source should declare the request-path dispatch argument");
-        expect(wrapper_source.find("\"--response-path\"") != std::string::npos,
-               "fll-output wrapper source should declare the response-path dispatch argument");
-        expect(wrapper_source.find("\"--request-media-type\"") != std::string::npos,
-               "fll-output wrapper source should declare the request-media-type dispatch argument");
-        expect(wrapper_source.find("\"--response-media-type\"") != std::string::npos,
-               "fll-output wrapper source should declare the response-media-type dispatch argument");
-        expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
-               "fll-output wrapper source should declare the schema-version dispatch argument");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_path_argument_name()") != std::string::npos,
+               "fll-output wrapper source should route the request-path dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_path_argument_name()") != std::string::npos,
+               "fll-output wrapper source should route the response-path dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_argument_name()") != std::string::npos,
+               "fll-output wrapper source should route the request-media-type dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_argument_name()") != std::string::npos,
+               "fll-output wrapper source should route the response-media-type dispatch argument through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_argument_name()") != std::string::npos,
+               "fll-output wrapper source should route the schema-version dispatch argument through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_request_payload_shape_name()") != std::string::npos,
                "fll-output wrapper source should route the request payload shape through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_response_payload_shape_name()") != std::string::npos,
