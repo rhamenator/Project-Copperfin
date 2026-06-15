@@ -867,6 +867,30 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host DLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared capture-stdout policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
+                   "build host DLL wrapper should route capture-stdout policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stderr_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared capture-stderr policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_capture_stderr_policy()") != std::string::npos,
+                   "build host DLL wrapper should route capture-stderr policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_fail_on_nonzero_exit_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared fail-on-nonzero-exit policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_fail_on_nonzero_exit_policy()") != std::string::npos,
+                   "build host DLL wrapper should route fail-on-nonzero-exit policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_fail_on_missing_response_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared fail-on-missing-response policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_fail_on_missing_response_policy()") != std::string::npos,
+                   "build host DLL wrapper should route fail-on-missing-response policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_ensure_parent_directory_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared ensure-parent-directory policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_ensure_parent_directory_policy()") != std::string::npos,
+                   "build host DLL wrapper should route ensure-parent-directory policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared require-existing-response policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
+                   "build host DLL wrapper should route require-existing-response policy through the shared helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
                    "build host DLL wrapper should declare a shared replace-placeholder-return adoption-mode helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
@@ -1387,6 +1411,30 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host FLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared capture-stdout policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
+                   "build host FLL wrapper should route capture-stdout policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stderr_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared capture-stderr policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_capture_stderr_policy()") != std::string::npos,
+                   "build host FLL wrapper should route capture-stderr policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_fail_on_nonzero_exit_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared fail-on-nonzero-exit policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_fail_on_nonzero_exit_policy()") != std::string::npos,
+                   "build host FLL wrapper should route fail-on-nonzero-exit policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_fail_on_missing_response_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared fail-on-missing-response policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_fail_on_missing_response_policy()") != std::string::npos,
+                   "build host FLL wrapper should route fail-on-missing-response policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_ensure_parent_directory_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared ensure-parent-directory policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_ensure_parent_directory_policy()") != std::string::npos,
+                   "build host FLL wrapper should route ensure-parent-directory policy through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared require-existing-response policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
+                   "build host FLL wrapper should route require-existing-response policy through the shared helper.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
                    "build host FLL wrapper should declare a shared replace-placeholder-return adoption-mode helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_replace_placeholder_return_mode()") != std::string::npos,
