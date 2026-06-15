@@ -779,6 +779,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a failure-policy surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a failure-policy helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-status field helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-value field helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-diagnostics field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                    "build host DLL wrapper should declare a shared failure-diagnostics token helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -1017,12 +1023,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare the response payload shape");
             expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                    "build host DLL wrapper should declare request payload field names");
-            expect(wrapper_source.find("\"return_value\"") != std::string::npos,
-                   "build host DLL wrapper should declare response payload field names");
-            expect(wrapper_source.find("\"status\"") != std::string::npos,
-                   "build host DLL wrapper should declare the response status field mapping");
-            expect(wrapper_source.find("\"diagnostics\"") != std::string::npos,
-                   "build host DLL wrapper should declare the response diagnostics field mapping");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+                   "build host DLL wrapper should route the response value field through the shared helper");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+                   "build host DLL wrapper should route the response status field through the shared helper");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+                   "build host DLL wrapper should route the response diagnostics field through the shared helper");
             expect(wrapper_source.find("        \"int\");") != std::string::npos,
                    "build host DLL wrapper should preserve the DLL wrapper return surface");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
@@ -1209,6 +1215,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a failure-policy surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a failure-policy helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-status field helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-value field helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-diagnostics field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                    "build host FLL wrapper should declare a shared failure-diagnostics token helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -1461,12 +1473,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare the response payload shape");
             expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                    "build host FLL wrapper should declare request payload field names");
-            expect(wrapper_source.find("\"return_value\"") != std::string::npos,
-                   "build host FLL wrapper should declare response payload field names");
-            expect(wrapper_source.find("\"status\"") != std::string::npos,
-                   "build host FLL wrapper should declare the response status field mapping");
-            expect(wrapper_source.find("\"diagnostics\"") != std::string::npos,
-                   "build host FLL wrapper should declare the response diagnostics field mapping");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+                   "build host FLL wrapper should route the response value field through the shared helper");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+                   "build host FLL wrapper should route the response status field through the shared helper");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+                   "build host FLL wrapper should route the response diagnostics field through the shared helper");
             expect(wrapper_source.find("\"_RetInt(int)\");") != std::string::npos,
                    "build host FLL wrapper should preserve the FLL wrapper return surface");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,

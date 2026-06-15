@@ -1188,6 +1188,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a failure-policy surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                "library-output wrapper source should declare a failure-policy helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response-status field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response-value field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+               "library-output wrapper source should declare a shared response-diagnostics field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "library-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -1444,12 +1450,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare the response payload shape");
         expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                "library-output wrapper source should declare request payload field names");
-        expect(wrapper_source.find("\"return_value\"") != std::string::npos,
-               "library-output wrapper source should declare response payload field names");
-        expect(wrapper_source.find("\"status\"") != std::string::npos,
-               "library-output wrapper source should declare the response status field mapping");
-        expect(wrapper_source.find("\"diagnostics\"") != std::string::npos,
-               "library-output wrapper source should declare the response diagnostics field mapping");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+               "library-output wrapper source should route the response value field through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+               "library-output wrapper source should route the response status field through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+               "library-output wrapper source should route the response diagnostics field through the shared helper");
         expect(wrapper_source.find("        \"int\");") != std::string::npos,
                "library-output wrapper source should preserve the DLL wrapper return surface");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
@@ -2115,6 +2121,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a failure-policy surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeFailurePolicyPlan copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                "fll-output wrapper source should declare a failure-policy helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-status field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-value field helper");
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response-diagnostics field helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared failure-diagnostics token helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_success_status_value()") != std::string::npos,
@@ -2365,12 +2377,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare the response payload shape");
         expect(wrapper_source.find("\"export_name\"") != std::string::npos,
                "fll-output wrapper source should declare request payload field names");
-        expect(wrapper_source.find("\"return_value\"") != std::string::npos,
-               "fll-output wrapper source should declare response payload field names");
-        expect(wrapper_source.find("\"status\"") != std::string::npos,
-               "fll-output wrapper source should declare the response status field mapping");
-        expect(wrapper_source.find("\"diagnostics\"") != std::string::npos,
-               "fll-output wrapper source should declare the response diagnostics field mapping");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
+               "fll-output wrapper source should route the response value field through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_status_field_name()") != std::string::npos,
+               "fll-output wrapper source should route the response status field through the shared helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
+               "fll-output wrapper source should route the response diagnostics field through the shared helper");
         expect(wrapper_source.find("\"_RetInt(int)\");") != std::string::npos,
                "fll-output wrapper source should preserve the FLL wrapper return surface");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
