@@ -1041,6 +1041,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                    "build host DLL wrapper should build an interpretation plan from the payload plan");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface());") != std::string::npos,
+                   "build host DLL wrapper stub should route wrapper-return-surface through native-int return-surface helper");
             expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                    "build host DLL wrapper should build a failure policy from the interpretation plan");
             expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
@@ -1207,7 +1209,7 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the response status field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
                    "build host DLL wrapper should route the response diagnostics field through the shared helper");
-            expect(wrapper_source.find("        \"int\");") != std::string::npos,
+            expect(wrapper_source.find("        copperfin_build_runtime_bridge_native_int_return_surface());") != std::string::npos,
                    "build host DLL wrapper should preserve the DLL wrapper return surface");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                    "build host DLL wrapper should declare the diagnostics fallback policy through the shared token helper");

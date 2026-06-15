@@ -1460,6 +1460,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build a payload plan from the dispatch plan");
         expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
                "library-output wrapper source should build an interpretation plan from the payload plan");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface());") != std::string::npos,
+               "library-output DLL stub should route wrapper-return-surface through native-int return-surface helper");
         expect(wrapper_source.find("const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(") != std::string::npos,
                "library-output wrapper source should build a failure policy from the interpretation plan");
         expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
@@ -1634,7 +1636,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should route the response status field through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
                "library-output wrapper source should route the response diagnostics field through the shared helper");
-        expect(wrapper_source.find("        \"int\");") != std::string::npos,
+        expect(wrapper_source.find("        copperfin_build_runtime_bridge_native_int_return_surface());") != std::string::npos,
                "library-output wrapper source should preserve the DLL wrapper return surface");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "library-output wrapper source should declare the diagnostics fallback policy through the shared token helper");

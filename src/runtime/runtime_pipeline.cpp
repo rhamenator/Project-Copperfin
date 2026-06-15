@@ -1747,7 +1747,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);\n";
             stream << "    const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(\n";
             stream << "        payload_plan,\n";
-            stream << "        \"int\");\n";
+            stream << "        copperfin_build_runtime_bridge_native_int_return_surface());\n";
             stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
             stream << "        interpretation_plan,\n";
             stream << "        placeholder_return_binding.value_representation);\n";
