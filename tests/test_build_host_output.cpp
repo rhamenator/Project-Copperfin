@@ -1081,16 +1081,22 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record the request document payload.");
             expect(wrapper_source.find("std::filesystem::path target_path;") != std::string::npos,
                    "build host DLL wrapper should record the request write target path.");
-            expect(wrapper_source.find("\"overwrite\"") != std::string::npos,
-                   "build host DLL wrapper should record the request write mode.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_write_mode()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared request write-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_request_write_mode()") != std::string::npos,
+                   "build host DLL wrapper should route the request write mode through the shared helper.");
             expect(wrapper_source.find("std::filesystem::path source_path;") != std::string::npos,
                    "build host DLL wrapper should record the response read source path.");
-            expect(wrapper_source.find("\"read_text\"") != std::string::npos,
-                   "build host DLL wrapper should record the response read mode.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_read_mode()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response read-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_read_mode()") != std::string::npos,
+                   "build host DLL wrapper should route the response read mode through the shared helper.");
             expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                    "build host DLL wrapper should record the response document payload.");
-            expect(wrapper_source.find("\"json_field_map\"") != std::string::npos,
-                   "build host DLL wrapper should record the response parse kind.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response parse-kind helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
+                   "build host DLL wrapper should route the response parse kind through the shared helper.");
             expect(wrapper_source.find("std::string wrapper_return_surface;") != std::string::npos,
                    "build host DLL wrapper should record the wrapper return surface.");
             expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
@@ -1569,16 +1575,22 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record the request document payload.");
             expect(wrapper_source.find("std::filesystem::path target_path;") != std::string::npos,
                    "build host FLL wrapper should record the request write target path.");
-            expect(wrapper_source.find("\"overwrite\"") != std::string::npos,
-                   "build host FLL wrapper should record the request write mode.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_write_mode()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared request write-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_request_write_mode()") != std::string::npos,
+                   "build host FLL wrapper should route the request write mode through the shared helper.");
             expect(wrapper_source.find("std::filesystem::path source_path;") != std::string::npos,
                    "build host FLL wrapper should record the response read source path.");
-            expect(wrapper_source.find("\"read_text\"") != std::string::npos,
-                   "build host FLL wrapper should record the response read mode.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_read_mode()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response read-mode helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_read_mode()") != std::string::npos,
+                   "build host FLL wrapper should route the response read mode through the shared helper.");
             expect(wrapper_source.find("std::string response_document;") != std::string::npos,
                    "build host FLL wrapper should record the response document payload.");
-            expect(wrapper_source.find("\"json_field_map\"") != std::string::npos,
-                   "build host FLL wrapper should record the response parse kind.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response parse-kind helper.");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_parse_kind()") != std::string::npos,
+                   "build host FLL wrapper should route the response parse kind through the shared helper.");
             expect(wrapper_source.find("std::string wrapper_return_surface;") != std::string::npos,
                    "build host FLL wrapper should record the wrapper return surface.");
             expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
