@@ -901,6 +901,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a response-parse-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParsePlan copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a response-parse-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeParsedResponse copperfin_runtime_bridge_execute_parse_response(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-parse execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
+                   "build host DLL wrapper should stage response field extraction through the shared response-parse execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeInterpretedResultPlan") != std::string::npos,
                    "build host DLL wrapper should declare an interpreted-result-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
@@ -1543,6 +1547,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a response-parse-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseParsePlan copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a response-parse-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeParsedResponse copperfin_runtime_bridge_execute_parse_response(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-parse execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
+                   "build host FLL wrapper should stage response field extraction through the shared response-parse execution helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeInterpretedResultPlan") != std::string::npos,
                    "build host FLL wrapper should declare an interpreted-result-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
