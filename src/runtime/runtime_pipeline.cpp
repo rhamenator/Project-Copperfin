@@ -830,6 +830,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string emitted_return_statement;\n";
     stream << "    std::string deferred_return_block;\n";
     stream << "    bool emits_placeholder_return = true;\n";
+    stream << "    int placeholder_fallback_int_value = -1;\n";
+    stream << "    std::string placeholder_fallback_value_representation;\n";
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgePlaceholderReturnValuePlan {\n";
     stream << "    CopperfinRuntimeBridgeStubReturnPlan stub_return_plan;\n";
@@ -1228,6 +1230,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "static CopperfinRuntimeBridgeStubReturnPlan copperfin_build_runtime_bridge_stub_return_plan(\n";
     stream << "    CopperfinRuntimeBridgeReturnActivationPlan return_activation_plan) {\n";
     stream << "    const auto& final_return_adoption_plan = return_activation_plan.final_return_adoption_plan;\n";
+    stream << "    const auto& native_return_plan = final_return_adoption_plan.return_emission_plan.return_materialization_plan\n";
+    stream << "        .outcome_selection_plan.native_return_plan;\n";
     stream << "    const auto emitted_return_statement = return_activation_plan.activates_adopted_return\n";
     stream << "        ? return_activation_plan.active_return_block\n";
     stream << "        : final_return_adoption_plan.placeholder_return_statement;\n";
@@ -1239,17 +1243,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(return_activation_plan),\n";
     stream << "        emitted_return_statement,\n";
     stream << "        deferred_return_block,\n";
-    stream << "        emits_placeholder_return};\n";
+    stream << "        emits_placeholder_return,\n";
+    stream << "        native_return_plan.fallback_int_value,\n";
+    stream << "        native_return_plan.fallback_value_representation};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
     stream << "    CopperfinRuntimeBridgeStubReturnPlan stub_return_plan) {\n";
-    stream << "    const auto& native_return_plan = stub_return_plan.return_activation_plan\n";
-    stream << "        .final_return_adoption_plan.return_emission_plan.return_materialization_plan\n";
-    stream << "        .outcome_selection_plan.native_return_plan;\n";
     stream << "    return CopperfinRuntimeBridgePlaceholderReturnValuePlan{\n";
     stream << "        std::move(stub_return_plan),\n";
-    stream << "        native_return_plan.fallback_int_value,\n";
-    stream << "        native_return_plan.fallback_value_representation};\n";
+    stream << "        stub_return_plan.placeholder_fallback_int_value,\n";
+    stream << "        stub_return_plan.placeholder_fallback_value_representation};\n";
     stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {

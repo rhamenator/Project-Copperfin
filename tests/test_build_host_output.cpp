@@ -905,6 +905,14 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find(": return_activation_plan.active_return_block;") != std::string::npos,
                    "build host DLL wrapper should route the deferred stub-return block through the activation metadata");
+            expect(wrapper_source.find("int placeholder_fallback_int_value = -1;") != std::string::npos,
+                   "build host DLL wrapper should record placeholder fallback integers in the stub-return plan");
+            expect(wrapper_source.find("std::string placeholder_fallback_value_representation;") != std::string::npos,
+                   "build host DLL wrapper should record placeholder fallback representations in the stub-return plan");
+            expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
+                   "build host DLL wrapper should feed placeholder fallback integers from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
+                   "build host DLL wrapper should feed placeholder fallback representations from stub-return metadata");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host DLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
@@ -1295,6 +1303,14 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should seed the inactive active-return block from the adopted return block");
             expect(wrapper_source.find(": return_activation_plan.active_return_block;") != std::string::npos,
                    "build host FLL wrapper should route the deferred stub-return block through the activation metadata");
+            expect(wrapper_source.find("int placeholder_fallback_int_value = -1;") != std::string::npos,
+                   "build host FLL wrapper should record placeholder fallback integers in the stub-return plan");
+            expect(wrapper_source.find("std::string placeholder_fallback_value_representation;") != std::string::npos,
+                   "build host FLL wrapper should record placeholder fallback representations in the stub-return plan");
+            expect(wrapper_source.find("stub_return_plan.placeholder_fallback_int_value,") != std::string::npos,
+                   "build host FLL wrapper should feed placeholder fallback integers from stub-return metadata");
+            expect(wrapper_source.find("stub_return_plan.placeholder_fallback_value_representation};") != std::string::npos,
+                   "build host FLL wrapper should feed placeholder fallback representations from stub-return metadata");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host FLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
