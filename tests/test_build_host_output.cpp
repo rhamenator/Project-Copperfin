@@ -855,6 +855,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared native-int return-surface helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
                    "build host DLL wrapper should route native-int return-surface comparisons through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_native_int_placeholder_signature_token()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared native-int placeholder-signature helper.");
+            expect(wrapper_source.find("find(copperfin_build_runtime_bridge_native_int_placeholder_signature_token())") != std::string::npos,
+                   "build host DLL wrapper should route native-int placeholder-signature matching through the shared helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnEmissionPlan") != std::string::npos,
                    "build host DLL wrapper should declare a return-emission-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
@@ -1355,6 +1359,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared native-int return-surface helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
                    "build host FLL wrapper should route native-int return-surface comparisons through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_native_int_placeholder_signature_token()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared native-int placeholder-signature helper.");
+            expect(wrapper_source.find("find(copperfin_build_runtime_bridge_native_int_placeholder_signature_token())") != std::string::npos,
+                   "build host FLL wrapper should route native-int placeholder-signature matching through the shared helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnEmissionPlan") != std::string::npos,
                    "build host FLL wrapper should declare a return-emission-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,

@@ -1267,6 +1267,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "static std::string copperfin_build_runtime_bridge_native_int_return_surface() {\n";
     stream << "    return \"int\";\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_native_int_placeholder_signature_token() {\n";
+    stream << "    return \"(int)\";\n";
+    stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_return_statement(\n";
     stream << "    const std::string& native_return_surface,\n";
     stream << "    int int_value,\n";
@@ -1275,7 +1278,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    if (native_return_surface == copperfin_build_runtime_bridge_native_int_return_surface()) {\n";
     stream << "        return \"return \" + int_value_representation + \";\";\n";
     stream << "    }\n";
-    stream << "    const auto placeholder_index = native_return_surface.find(\"(int)\");\n";
+    stream << "    const auto placeholder_index = native_return_surface.find(copperfin_build_runtime_bridge_native_int_placeholder_signature_token());\n";
     stream << "    if (placeholder_index != std::string::npos) {\n";
     stream << "        std::string statement = \"return \";\n";
     stream << "        statement += native_return_surface.substr(0U, placeholder_index);\n";
