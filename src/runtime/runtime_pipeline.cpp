@@ -2175,6 +2175,20 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    CopperfinRuntimeBridgeIntReturnAdapter return_adapter) {\n";
     stream << "    return return_adapter(stub_emission_return_surface.emitted_int_value);\n";
     stream << "}\n\n";
+    stream << "static int copperfin_runtime_bridge_emit_stub_return_shared(\n";
+    stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan,\n";
+    stream << "    const std::string& native_return_surface,\n";
+    stream << "    CopperfinRuntimeBridgeIntReturnAdapter return_adapter) {\n";
+    stream << "    const auto stub_emission =\n";
+    stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan);\n";
+    stream << "    const auto stub_emission_return_surface =\n";
+    stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
+    stream << "            stub_emission,\n";
+    stream << "            native_return_surface);\n";
+    stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
+    stream << "        stub_emission_return_surface,\n";
+    stream << "        return_adapter);\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -2193,14 +2207,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "}\n\n";
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
-        stream << "    const auto stub_emission =\n";
-        stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan);\n";
-        stream << "    const auto stub_emission_return_surface =\n";
-        stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
-        stream << "            stub_emission,\n";
-        stream << "            copperfin_build_runtime_bridge_fll_int_return_surface());\n";
-        stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
-        stream << "        stub_emission_return_surface,\n";
+        stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(\n";
+        stream << "        placeholder_return_value_plan,\n";
+        stream << "        copperfin_build_runtime_bridge_fll_int_return_surface(),\n";
         stream << "        " << kFllDefaultReturnHelper << ");\n";
         stream << "}\n\n";
         stream << "using CopperfinFllEntryPoint = int (*)(ParamBlk*);\n\n";
@@ -2409,14 +2418,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "}\n\n";
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
         stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
-        stream << "    const auto stub_emission =\n";
-        stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan);\n";
-        stream << "    const auto stub_emission_return_surface =\n";
-        stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
-        stream << "            stub_emission,\n";
-        stream << "            copperfin_build_runtime_bridge_native_int_return_surface());\n";
-        stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
-        stream << "        stub_emission_return_surface,\n";
+        stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(\n";
+        stream << "        placeholder_return_value_plan,\n";
+        stream << "        copperfin_build_runtime_bridge_native_int_return_surface(),\n";
         stream << "        copperfin_runtime_bridge_return_native_int);\n";
         stream << "}\n\n";
         for (const auto& symbol : plan.exported_symbols) {
