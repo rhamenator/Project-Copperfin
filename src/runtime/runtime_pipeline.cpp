@@ -1197,10 +1197,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        \"if (\" + outcome_selection_plan.success_condition + \") { \"\n";
     stream << "        + return_materialization_plan.success_return_statement + \" }\";\n";
     stream << "    const auto fallback_branch_statement =\n";
-    stream << "        \"if (\" + outcome_selection_plan.fallback_condition + \") { \"\n";
-    stream << "        + return_materialization_plan.fallback_return_statement + \" }\";\n";
+    stream << "        \"else { \" + return_materialization_plan.fallback_return_statement + \" }\";\n";
     stream << "    const auto emitted_return_block =\n";
-    stream << "        success_branch_statement + \" else { \" + return_materialization_plan.fallback_return_statement + \" }\";\n";
+    stream << "        success_branch_statement + \" \" + fallback_branch_statement;\n";
     stream << "    return CopperfinRuntimeBridgeReturnEmissionPlan{\n";
     stream << "        std::move(return_materialization_plan),\n";
     stream << "        std::move(success_branch_statement),\n";

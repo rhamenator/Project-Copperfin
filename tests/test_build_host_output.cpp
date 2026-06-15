@@ -897,6 +897,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should materialize success returns from the parsed success integer value");
             expect(wrapper_source.find("native_return_plan.fallback_int_value,") != std::string::npos,
                    "build host DLL wrapper should materialize fallback returns from the parsed fallback integer value");
+            expect(wrapper_source.find("\"else { \" + return_materialization_plan.fallback_return_statement + \" }\";") != std::string::npos,
+                   "build host DLL wrapper should record an explicit fallback else-branch statement");
+            expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
+                   "build host DLL wrapper should compose the emitted return block from the explicit branch statements");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host DLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
@@ -1279,6 +1283,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should materialize success returns from the parsed success integer value");
             expect(wrapper_source.find("native_return_plan.fallback_int_value,") != std::string::npos,
                    "build host FLL wrapper should materialize fallback returns from the parsed fallback integer value");
+            expect(wrapper_source.find("\"else { \" + return_materialization_plan.fallback_return_statement + \" }\";") != std::string::npos,
+                   "build host FLL wrapper should record an explicit fallback else-branch statement");
+            expect(wrapper_source.find("success_branch_statement + \" \" + fallback_branch_statement;") != std::string::npos,
+                   "build host FLL wrapper should compose the emitted return block from the explicit branch statements");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host FLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
