@@ -821,6 +821,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared process-launch helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                    "build host DLL wrapper should declare a shared host-failure evaluation helper.");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared missing-response evaluation helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                    "build host DLL wrapper should declare a payload-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1125,6 +1127,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a request write plan from the request artifact");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host DLL wrapper should build a response read plan from the request write plan");
+            expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
+                   "build host DLL wrapper should evaluate staged missing-response policy from the host-failure and response-read helpers.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);") != std::string::npos,
+                   "build host DLL wrapper should route host-failure output through the shared missing-response evaluation helper.");
+            expect(wrapper_source.find("(void)missing_response;") != std::string::npos,
+                   "build host DLL wrapper should explicitly keep the scaffold-only missing-response evaluation result unused.");
             expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
                    "build host DLL wrapper should build a response artifact from the response read plan");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
@@ -1527,6 +1535,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared process-launch helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                    "build host FLL wrapper should declare a shared host-failure evaluation helper.");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared missing-response evaluation helper.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
                    "build host FLL wrapper should declare a payload-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
@@ -1847,6 +1857,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a request write plan from the request artifact");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host FLL wrapper should build a response read plan from the request write plan");
+            expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
+                   "build host FLL wrapper should evaluate staged missing-response policy from the host-failure and response-read helpers.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);") != std::string::npos,
+                   "build host FLL wrapper should route host-failure output through the shared missing-response evaluation helper.");
+            expect(wrapper_source.find("(void)missing_response;") != std::string::npos,
+                   "build host FLL wrapper should explicitly keep the scaffold-only missing-response evaluation result unused.");
             expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
                    "build host FLL wrapper should build a response artifact from the response read plan");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
