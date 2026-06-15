@@ -1428,6 +1428,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a return-emission-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "library-output wrapper source should declare a return-emission-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmission copperfin_runtime_bridge_execute_return_emission(") != std::string::npos,
+               "library-output wrapper source should declare a shared return-emission execution helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_materialization(plan.return_materialization_plan)") != std::string::npos,
+               "library-output wrapper source should stage return emission through the shared execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeFinalReturnAdoptionPlan") != std::string::npos,
                "library-output wrapper source should declare a final-return-adoption-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
@@ -2587,6 +2591,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a return-emission-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                "fll-output wrapper source should declare a return-emission-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnEmission copperfin_runtime_bridge_execute_return_emission(") != std::string::npos,
+               "fll-output wrapper source should declare a shared return-emission execution helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_materialization(plan.return_materialization_plan)") != std::string::npos,
+               "fll-output wrapper source should stage return emission through the shared execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeFinalReturnAdoptionPlan") != std::string::npos,
                "fll-output wrapper source should declare a final-return-adoption-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoptionPlan copperfin_build_runtime_bridge_final_return_adoption_plan(") != std::string::npos,
