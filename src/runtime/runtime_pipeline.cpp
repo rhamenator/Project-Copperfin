@@ -829,6 +829,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string deferred_return_block;\n";
     stream << "    bool emits_placeholder_return = true;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgePlaceholderReturnValuePlan {\n";
+    stream << "    CopperfinRuntimeBridgeStubReturnPlan stub_return_plan;\n";
+    stream << "    int fallback_int_value = -1;\n";
+    stream << "    std::string fallback_value_representation;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1217,6 +1222,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        deferred_return_block,\n";
     stream << "        emits_placeholder_return};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
+    stream << "    CopperfinRuntimeBridgeStubReturnPlan stub_return_plan) {\n";
+    stream << "    const auto& native_return_plan = stub_return_plan.return_activation_plan\n";
+    stream << "        .final_return_adoption_plan.return_emission_plan.return_materialization_plan\n";
+    stream << "        .outcome_selection_plan.native_return_plan;\n";
+    stream << "    return CopperfinRuntimeBridgePlaceholderReturnValuePlan{\n";
+    stream << "        std::move(stub_return_plan),\n";
+    stream << "        -1,\n";
+    stream << "        native_return_plan.fallback_value_representation};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1231,9 +1246,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "    return value;\n";
         stream << "}\n\n";
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
-        stream << "    const CopperfinRuntimeBridgeStubReturnPlan& stub_return_plan) {\n";
-        stream << "    (void)stub_return_plan;\n";
-        stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
+        stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
+        stream << "    return " << kFllDefaultReturnHelper << "(placeholder_return_value_plan.fallback_int_value);\n";
         stream << "}\n\n";
         stream << "using CopperfinFllEntryPoint = int (*)(ParamBlk*);\n\n";
         stream << "struct CopperfinFoxInfoRecord {\n";
@@ -1328,7 +1342,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
             stream << "        return_activation_plan);\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return(stub_return_plan);\n";
+            stream << "    const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
+            stream << "        stub_return_plan);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);\n";
             stream << "}\n\n";
         }
         stream << "static const CopperfinFoxInfoRecord kCopperfinFoxInfo[] = {\n";
@@ -1383,9 +1399,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "#define COPPERFIN_VFP_DLL_CALL\n";
         stream << "#endif\n\n";
         stream << "static int copperfin_runtime_bridge_emit_stub_return(\n";
-        stream << "    const CopperfinRuntimeBridgeStubReturnPlan& stub_return_plan) {\n";
-        stream << "    (void)stub_return_plan;\n";
-        stream << "    return -1;\n";
+        stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
+        stream << "    return placeholder_return_value_plan.fallback_int_value;\n";
         stream << "}\n\n";
         for (const auto& symbol : plan.exported_symbols) {
             const auto found = parameter_counts.find(symbol);
@@ -1476,7 +1491,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
             stream << "        return_activation_plan);\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return(stub_return_plan);\n";
+            stream << "    const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
+            stream << "        stub_return_plan);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);\n";
             stream << "}\n\n";
         }
         return stream.str();
