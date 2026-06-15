@@ -867,6 +867,30 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host DLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared stdout log-file suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+                   "build host DLL wrapper should route stdout log-file suffix through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared stderr log-file suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+                   "build host DLL wrapper should route stderr log-file suffix through the shared helper.");
+            expect(wrapper_source.find("static int copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared expected-exit-code helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+                   "build host DLL wrapper should route expected-exit-code through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared request artifact suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+                   "build host DLL wrapper should route request artifact suffix through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response artifact suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+                   "build host DLL wrapper should route response artifact suffix through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared activates-adopted-return policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+                   "build host DLL wrapper should route activates-adopted-return policy through the shared helper.");
             expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
                    "build host DLL wrapper should declare a shared capture-stdout policy helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
@@ -1411,6 +1435,30 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared typed native return-expression helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                    "build host FLL wrapper should route typed native return-expression construction through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared stdout log-file suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+                   "build host FLL wrapper should route stdout log-file suffix through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared stderr log-file suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+                   "build host FLL wrapper should route stderr log-file suffix through the shared helper.");
+            expect(wrapper_source.find("static int copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared expected-exit-code helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+                   "build host FLL wrapper should route expected-exit-code through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared request artifact suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+                   "build host FLL wrapper should route request artifact suffix through the shared helper.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response artifact suffix helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+                   "build host FLL wrapper should route response artifact suffix through the shared helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared activates-adopted-return policy helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+                   "build host FLL wrapper should route activates-adopted-return policy through the shared helper.");
             expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
                    "build host FLL wrapper should declare a shared capture-stdout policy helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,

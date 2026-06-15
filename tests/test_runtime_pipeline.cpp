@@ -1276,6 +1276,30 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared typed native return-expression helper.");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                "library-output wrapper source should route typed native return-expression construction through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+               "library-output wrapper source should declare a shared stdout log-file suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+               "library-output wrapper source should route stdout log-file suffix through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+               "library-output wrapper source should declare a shared stderr log-file suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+               "library-output wrapper source should route stderr log-file suffix through the shared helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+               "library-output wrapper source should declare a shared expected-exit-code helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+               "library-output wrapper source should route expected-exit-code through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+               "library-output wrapper source should declare a shared request artifact suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+               "library-output wrapper source should route request artifact suffix through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+               "library-output wrapper source should declare a shared response artifact suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+               "library-output wrapper source should route response artifact suffix through the shared helper.");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+               "library-output wrapper source should declare a shared activates-adopted-return policy helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+               "library-output wrapper source should route activates-adopted-return policy through the shared helper.");
         expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
                "library-output wrapper source should declare a shared capture-stdout policy helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
@@ -1482,17 +1506,17 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should feed the bridge result from the shared placeholder return binding");
         expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
                "library-output wrapper source should preserve launch environment export metadata");
-        expect(wrapper_source.find("std::string(export_name) + \".stdout.log\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
                "library-output wrapper source should derive stdout observation paths");
-        expect(wrapper_source.find("std::string(export_name) + \".stderr.log\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
                "library-output wrapper source should derive stderr observation paths");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.descriptor.runtime_host_path") != std::string::npos,
                "library-output wrapper source should preserve the runtime-host executable path in the execution plan");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                "library-output wrapper source should preserve the bridge invocation arguments in the execution plan");
-        expect(wrapper_source.find("std::string(export_name) + \".request.json\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
                "library-output wrapper source should derive request transport paths");
-        expect(wrapper_source.find("std::string(export_name) + \".response.json\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
                "library-output wrapper source should derive response transport paths");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                "library-output wrapper source should declare a shared request serialization media-type helper");
@@ -2317,6 +2341,30 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared typed native return-expression helper.");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_typed_native_return_expression(") != std::string::npos,
                "fll-output wrapper source should route typed native return-expression construction through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should declare a shared stdout log-file suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should route stdout log-file suffix through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should declare a shared stderr log-file suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should route stderr log-file suffix through the shared helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+               "fll-output wrapper source should declare a shared expected-exit-code helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_expected_exit_code()") != std::string::npos,
+               "fll-output wrapper source should route expected-exit-code through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should declare a shared request artifact suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should route request artifact suffix through the shared helper.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should declare a shared response artifact suffix helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should route response artifact suffix through the shared helper.");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+               "fll-output wrapper source should declare a shared activates-adopted-return policy helper.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_activates_adopted_return_policy()") != std::string::npos,
+               "fll-output wrapper source should route activates-adopted-return policy through the shared helper.");
         expect(wrapper_source.find("static bool copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
                "fll-output wrapper source should declare a shared capture-stdout policy helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_capture_stdout_policy()") != std::string::npos,
@@ -2517,17 +2565,17 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should feed the bridge result from the shared placeholder return binding");
         expect(wrapper_source.find("{\"COPPERFIN_LIBRARY_EXPORT\", result.call.invocation.descriptor.export_name}") != std::string::npos,
                "fll-output wrapper source should preserve launch environment export metadata");
-        expect(wrapper_source.find("std::string(export_name) + \".stdout.log\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
                "fll-output wrapper source should derive stdout observation paths");
-        expect(wrapper_source.find("std::string(export_name) + \".stderr.log\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
                "fll-output wrapper source should derive stderr observation paths");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.descriptor.runtime_host_path") != std::string::npos,
                "fll-output wrapper source should preserve the runtime-host executable path in the execution plan");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                "fll-output wrapper source should preserve the bridge invocation arguments in the execution plan");
-        expect(wrapper_source.find("std::string(export_name) + \".request.json\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
                "fll-output wrapper source should derive request transport paths");
-        expect(wrapper_source.find("std::string(export_name) + \".response.json\"") != std::string::npos,
+        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
                "fll-output wrapper source should derive response transport paths");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared request serialization media-type helper");
