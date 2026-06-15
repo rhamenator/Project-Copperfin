@@ -1136,6 +1136,38 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared bridge-invocation surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                "library-output wrapper source should declare a bridge-invocation helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_manifest_flag()") != std::string::npos,
+               "library-output wrapper source should declare manifest flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_manifest_flag()") != std::string::npos,
+               "library-output wrapper source should route manifest flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_library_export_flag()") != std::string::npos,
+               "library-output wrapper source should declare library-export flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_library_export_flag()") != std::string::npos,
+               "library-output wrapper source should route library-export flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_routine_kind_flag()") != std::string::npos,
+               "library-output wrapper source should declare routine-kind flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_routine_kind_flag()") != std::string::npos,
+               "library-output wrapper source should route routine-kind flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_path_flag()") != std::string::npos,
+               "library-output wrapper source should declare source-path flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_path_flag()") != std::string::npos,
+               "library-output wrapper source should route source-path flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_line_flag()") != std::string::npos,
+               "library-output wrapper source should declare source-line flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_line_flag()") != std::string::npos,
+               "library-output wrapper source should route source-line flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_declaration_flag()") != std::string::npos,
+               "library-output wrapper source should declare parameter-declaration flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_declaration_flag()") != std::string::npos,
+               "library-output wrapper source should route parameter-declaration flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_names_flag()") != std::string::npos,
+               "library-output wrapper source should declare parameter-names flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_names_flag()") != std::string::npos,
+               "library-output wrapper source should route parameter-names flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_count_flag()") != std::string::npos,
+               "library-output wrapper source should declare parameter-count flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_count_flag()") != std::string::npos,
+               "library-output wrapper source should route parameter-count flag through helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
                "library-output wrapper source should declare a bridge-parameter surface");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
@@ -2201,6 +2233,38 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared bridge-invocation surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(") != std::string::npos,
                "fll-output wrapper source should declare a bridge-invocation helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_manifest_flag()") != std::string::npos,
+               "fll-output wrapper source should declare manifest flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_manifest_flag()") != std::string::npos,
+               "fll-output wrapper source should route manifest flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_library_export_flag()") != std::string::npos,
+               "fll-output wrapper source should declare library-export flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_library_export_flag()") != std::string::npos,
+               "fll-output wrapper source should route library-export flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_routine_kind_flag()") != std::string::npos,
+               "fll-output wrapper source should declare routine-kind flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_routine_kind_flag()") != std::string::npos,
+               "fll-output wrapper source should route routine-kind flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_path_flag()") != std::string::npos,
+               "fll-output wrapper source should declare source-path flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_path_flag()") != std::string::npos,
+               "fll-output wrapper source should route source-path flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_source_line_flag()") != std::string::npos,
+               "fll-output wrapper source should declare source-line flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_source_line_flag()") != std::string::npos,
+               "fll-output wrapper source should route source-line flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_declaration_flag()") != std::string::npos,
+               "fll-output wrapper source should declare parameter-declaration flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_declaration_flag()") != std::string::npos,
+               "fll-output wrapper source should route parameter-declaration flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_names_flag()") != std::string::npos,
+               "fll-output wrapper source should declare parameter-names flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_names_flag()") != std::string::npos,
+               "fll-output wrapper source should route parameter-names flag through helper");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_parameter_count_flag()") != std::string::npos,
+               "fll-output wrapper source should declare parameter-count flag helper");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parameter_count_flag()") != std::string::npos,
+               "fll-output wrapper source should route parameter-count flag through helper");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeParameter") != std::string::npos,
                "fll-output wrapper source should declare a bridge-parameter surface");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeCall") != std::string::npos,
