@@ -753,6 +753,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare an execution-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeExecutionPlan copperfin_build_runtime_bridge_execution_plan(") != std::string::npos,
                    "build host DLL wrapper should declare an execution-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeTransportPlan") != std::string::npos,
+                   "build host DLL wrapper should declare a transport-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeTransportPlan copperfin_build_runtime_bridge_transport_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare a transport-plan helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -769,6 +773,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build an observation plan from the launch plan");
             expect(wrapper_source.find("const auto execution_plan = copperfin_build_runtime_bridge_execution_plan(observation_plan);") != std::string::npos,
                    "build host DLL wrapper should build an execution plan from the observation plan");
+            expect(wrapper_source.find("const auto transport_plan = copperfin_build_runtime_bridge_transport_plan(execution_plan);") != std::string::npos,
+                   "build host DLL wrapper should build a transport plan from the execution plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -785,6 +791,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should preserve the runtime-host executable path in the execution plan");
             expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                    "build host DLL wrapper should preserve the bridge invocation arguments in the execution plan");
+            expect(wrapper_source.find("std::string(export_name) + \".request.json\"") != std::string::npos,
+                   "build host DLL wrapper should derive request transport paths");
+            expect(wrapper_source.find("std::string(export_name) + \".response.json\"") != std::string::npos,
+                   "build host DLL wrapper should derive response transport paths");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -901,6 +911,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare an execution-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeExecutionPlan copperfin_build_runtime_bridge_execution_plan(") != std::string::npos,
                    "build host FLL wrapper should declare an execution-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeTransportPlan") != std::string::npos,
+                   "build host FLL wrapper should declare a transport-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeTransportPlan copperfin_build_runtime_bridge_transport_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare a transport-plan helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -931,6 +945,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build an observation plan from the launch plan");
             expect(wrapper_source.find("const auto execution_plan = copperfin_build_runtime_bridge_execution_plan(observation_plan);") != std::string::npos,
                    "build host FLL wrapper should build an execution plan from the observation plan");
+            expect(wrapper_source.find("const auto transport_plan = copperfin_build_runtime_bridge_transport_plan(execution_plan);") != std::string::npos,
+                   "build host FLL wrapper should build a transport plan from the execution plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -947,6 +963,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should preserve the runtime-host executable path in the execution plan");
             expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                    "build host FLL wrapper should preserve the bridge invocation arguments in the execution plan");
+            expect(wrapper_source.find("std::string(export_name) + \".request.json\"") != std::string::npos,
+                   "build host FLL wrapper should derive request transport paths");
+            expect(wrapper_source.find("std::string(export_name) + \".response.json\"") != std::string::npos,
+                   "build host FLL wrapper should derive response transport paths");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
