@@ -931,6 +931,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a native-return-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a native-return-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnAdmission copperfin_runtime_bridge_admit_native_return(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared native-return admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturn copperfin_runtime_bridge_execute_native_return(") != std::string::npos,
                    "build host DLL wrapper should declare a shared native-return execution helper.");
             expect(wrapper_source.find("interpreted_result.matched_success_status") != std::string::npos,
@@ -1165,6 +1167,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only interpreted-result admission result unused.");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host DLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const auto native_return_admission =") != std::string::npos,
+                   "build host DLL wrapper should admit staged native-return selection from the interpreted-result admission and native-return plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_native_return(interpreted_result_admission, native_return_plan);") != std::string::npos,
+                   "build host DLL wrapper should route interpreted-result admission through the shared native-return admission helper.");
+            expect(wrapper_source.find("(void)native_return_admission;") != std::string::npos,
+                   "build host DLL wrapper should explicitly keep the scaffold-only native-return admission result unused.");
             expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host DLL wrapper should parse the typed success integer value from the success representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
@@ -1669,6 +1677,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a native-return-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a native-return-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnAdmission copperfin_runtime_bridge_admit_native_return(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared native-return admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturn copperfin_runtime_bridge_execute_native_return(") != std::string::npos,
                    "build host FLL wrapper should declare a shared native-return execution helper.");
             expect(wrapper_source.find("interpreted_result.matched_success_status") != std::string::npos,
@@ -1919,6 +1929,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should explicitly keep the scaffold-only interpreted-result admission result unused.");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host FLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const auto native_return_admission =") != std::string::npos,
+                   "build host FLL wrapper should admit staged native-return selection from the interpreted-result admission and native-return plan.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_native_return(interpreted_result_admission, native_return_plan);") != std::string::npos,
+                   "build host FLL wrapper should route interpreted-result admission through the shared native-return admission helper.");
+            expect(wrapper_source.find("(void)native_return_admission;") != std::string::npos,
+                   "build host FLL wrapper should explicitly keep the scaffold-only native-return admission result unused.");
             expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host FLL wrapper should parse the typed success integer value from the success representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
