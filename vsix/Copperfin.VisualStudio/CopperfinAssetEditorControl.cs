@@ -144,7 +144,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = "Build Copperfin Project",
             Visible = false
         };
-        buildButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Build);
+        buildButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Build));
 
         runButton = new Button
         {
@@ -152,7 +152,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = "Run Copperfin Project",
             Visible = false
         };
-        runButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Run);
+        runButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Run));
 
         debugButton = new Button
         {
@@ -160,42 +160,42 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = "Debug Copperfin Project",
             Visible = false
         };
-        debugButton.Click += async (_, _) => await RunProjectWorkflowAsync(CopperfinProjectOperation.Debug);
+        debugButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Debug));
 
         debugRestartButton = new Button
         {
             AutoSize = true,
             Text = "Start Session"
         };
-        debugRestartButton.Click += async (_, _) => await StartDebugSessionAsync();
+        debugRestartButton.Click += (_, _) => QueueUiAction(StartDebugSessionAsync);
 
         debugContinueButton = new Button
         {
             AutoSize = true,
             Text = "Continue"
         };
-        debugContinueButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.ContinueAsync);
+        debugContinueButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.ContinueAsync));
 
         debugStepButton = new Button
         {
             AutoSize = true,
             Text = "Step"
         };
-        debugStepButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepIntoAsync);
+        debugStepButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepIntoAsync));
 
         debugNextButton = new Button
         {
             AutoSize = true,
             Text = "Next"
         };
-        debugNextButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOverAsync);
+        debugNextButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOverAsync));
 
         debugOutButton = new Button
         {
             AutoSize = true,
             Text = "Out"
         };
-        debugOutButton.Click += async (_, _) => await AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOutAsync);
+        debugOutButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOutAsync));
 
         snapshotStatusLabel = new Label
         {
@@ -1088,6 +1088,38 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         subtitleLabel.Text = embeddedStudioShell
             ? "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack."
             : "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.";
+    }
+
+    private void QueueUiAction(Func<Task> action)
+    {
+        _ = QueueUiActionAsync(action);
+    }
+
+    private async Task QueueUiActionAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+        }
+        catch (Exception ex)
+        {
+            if (IsDisposed || Disposing || snapshotStatusLabel.IsDisposed)
+            {
+                return;
+            }
+
+            snapshotStatusLabel.Text = ex.Message;
+            MessageBox.Show(this, ex.Message, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private async Task RunProjectWorkflowAsync(CopperfinProjectOperation operation)
