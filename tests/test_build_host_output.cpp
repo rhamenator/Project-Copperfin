@@ -1009,12 +1009,14 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared request serialization media-type helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                    "build host DLL wrapper should declare a shared response serialization media-type helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared serialization schema-version helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                    "build host DLL wrapper should route the request serialization media type through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                    "build host DLL wrapper should route the response serialization media type through the shared helper");
-            expect(wrapper_source.find("\"v1\"") != std::string::npos,
-                   "build host DLL wrapper should declare the serialization schema version");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
+                   "build host DLL wrapper should route the serialization schema version through the shared helper");
             expect(wrapper_source.find("\"--request-path\"") != std::string::npos,
                    "build host DLL wrapper should declare the request-path dispatch argument");
             expect(wrapper_source.find("\"--response-path\"") != std::string::npos,
@@ -1467,12 +1469,14 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared request serialization media-type helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                    "build host FLL wrapper should declare a shared response serialization media-type helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared serialization schema-version helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                    "build host FLL wrapper should route the request serialization media type through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
                    "build host FLL wrapper should route the response serialization media type through the shared helper");
-            expect(wrapper_source.find("\"v1\"") != std::string::npos,
-                   "build host FLL wrapper should declare the serialization schema version");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_schema_version_value()") != std::string::npos,
+                   "build host FLL wrapper should route the serialization schema version through the shared helper");
             expect(wrapper_source.find("\"--request-path\"") != std::string::npos,
                    "build host FLL wrapper should declare the request-path dispatch argument");
             expect(wrapper_source.find("\"--response-path\"") != std::string::npos,

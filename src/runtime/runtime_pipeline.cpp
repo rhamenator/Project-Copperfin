@@ -1015,13 +1015,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "static std::string copperfin_build_runtime_bridge_response_media_type_value() {\n";
     stream << "    return \"application/vnd.copperfin.runtime-bridge-response+json\";\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_schema_version_value() {\n";
+    stream << "    return \"v1\";\n";
+    stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeSerializationPlan copperfin_build_runtime_bridge_serialization_plan(\n";
     stream << "    CopperfinRuntimeBridgeTransportPlan transport_plan) {\n";
     stream << "    return CopperfinRuntimeBridgeSerializationPlan{\n";
     stream << "        std::move(transport_plan),\n";
     stream << "        copperfin_build_runtime_bridge_request_media_type_value(),\n";
     stream << "        copperfin_build_runtime_bridge_response_media_type_value(),\n";
-    stream << "        \"v1\"};\n";
+    stream << "        copperfin_build_runtime_bridge_schema_version_value()};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeDispatchPlan copperfin_build_runtime_bridge_dispatch_plan(\n";
     stream << "    CopperfinRuntimeBridgeSerializationPlan serialization_plan) {\n";
