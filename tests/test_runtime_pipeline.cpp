@@ -1330,6 +1330,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare an interpreted-result-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                "library-output wrapper source should declare an interpreted-result-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultAdmission copperfin_runtime_bridge_admit_interpreted_result(") != std::string::npos,
+               "library-output wrapper source should declare a shared interpreted-result admission helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResult copperfin_runtime_bridge_execute_interpreted_result(") != std::string::npos,
                "library-output wrapper source should declare a shared interpreted-result execution helper.");
         expect(wrapper_source.find("parsed_response.status_value == plan.success_status_value") != std::string::npos,
@@ -1574,6 +1576,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should explicitly keep the scaffold-only response-parse admission result unused.");
         expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                "library-output wrapper source should build an interpreted result plan from the response parse plan");
+        expect(wrapper_source.find("const auto interpreted_result_admission =") != std::string::npos,
+               "library-output wrapper source should admit staged interpreted-result selection from the response-parse admission and interpreted-result plan.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_admit_interpreted_result(response_parse_admission, interpreted_result_plan);") != std::string::npos,
+               "library-output wrapper source should route response-parse admission through the shared interpreted-result admission helper.");
+        expect(wrapper_source.find("(void)interpreted_result_admission;") != std::string::npos,
+               "library-output wrapper source should explicitly keep the scaffold-only interpreted-result admission result unused.");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "library-output wrapper source should build a native return plan from the interpreted result plan");
         expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
@@ -2557,6 +2565,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare an interpreted-result-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                "fll-output wrapper source should declare an interpreted-result-plan helper");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultAdmission copperfin_runtime_bridge_admit_interpreted_result(") != std::string::npos,
+               "fll-output wrapper source should declare a shared interpreted-result admission helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResult copperfin_runtime_bridge_execute_interpreted_result(") != std::string::npos,
                "fll-output wrapper source should declare a shared interpreted-result execution helper.");
         expect(wrapper_source.find("parsed_response.status_value == plan.success_status_value") != std::string::npos,
@@ -2805,6 +2815,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should explicitly keep the scaffold-only response-parse admission result unused.");
         expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
                "fll-output wrapper source should build an interpreted result plan from the response parse plan");
+        expect(wrapper_source.find("const auto interpreted_result_admission =") != std::string::npos,
+               "fll-output wrapper source should admit staged interpreted-result selection from the response-parse admission and interpreted-result plan.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_admit_interpreted_result(response_parse_admission, interpreted_result_plan);") != std::string::npos,
+               "fll-output wrapper source should route response-parse admission through the shared interpreted-result admission helper.");
+        expect(wrapper_source.find("(void)interpreted_result_admission;") != std::string::npos,
+               "fll-output wrapper source should explicitly keep the scaffold-only interpreted-result admission result unused.");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                "fll-output wrapper source should build a native return plan from the interpreted result plan");
         expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
