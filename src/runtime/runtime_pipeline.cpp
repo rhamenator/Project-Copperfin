@@ -787,6 +787,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string wrapper_return_surface;\n";
     stream << "    std::string fallback_return_value;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeNativeReturnPlan {\n";
+    stream << "    CopperfinRuntimeBridgeInterpretedResultPlan interpreted_result_plan;\n";
+    stream << "    std::string success_value_representation;\n";
+    stream << "    std::string fallback_value_representation;\n";
+    stream << "    std::string native_return_surface;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1068,6 +1074,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        failure_policy_plan.interpretation_plan.wrapper_return_surface,\n";
     stream << "        failure_policy_plan.fallback_return_value};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(\n";
+    stream << "    const CopperfinRuntimeBridgeResult& result,\n";
+    stream << "    CopperfinRuntimeBridgeInterpretedResultPlan interpreted_result_plan) {\n";
+    stream << "    const auto fallback_value_representation = interpreted_result_plan.fallback_return_value;\n";
+    stream << "    return CopperfinRuntimeBridgeNativeReturnPlan{\n";
+    stream << "        std::move(interpreted_result_plan),\n";
+    stream << "        result.return_binding.value_representation,\n";
+    stream << "        fallback_value_representation,\n";
+    stream << "        result.return_binding.return_surface};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1158,7 +1174,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_artifact);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
             stream << "        response_parse_plan);\n";
-            stream << "    (void)interpreted_result_plan;\n";
+            stream << "    const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n";
+            stream << "        result,\n";
+            stream << "        interpreted_result_plan);\n";
+            stream << "    (void)native_return_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1286,7 +1305,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_artifact);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
             stream << "        response_parse_plan);\n";
-            stream << "    (void)interpreted_result_plan;\n";
+            stream << "    const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n";
+            stream << "        result,\n";
+            stream << "        interpreted_result_plan);\n";
+            stream << "    (void)native_return_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
