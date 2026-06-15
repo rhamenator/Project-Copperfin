@@ -725,6 +725,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    CopperfinRuntimeBridgeSerializationPlan serialization_plan;\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgePayloadPlan {\n";
+    stream << "    CopperfinRuntimeBridgeDispatchPlan dispatch_plan;\n";
+    stream << "    std::string request_payload_shape;\n";
+    stream << "    std::string response_payload_shape;\n";
+    stream << "    std::vector<std::string> request_fields;\n";
+    stream << "    std::vector<std::string> response_fields;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -842,6 +849,15 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    arguments.push_back(serialization_plan.schema_version);\n";
     stream << "    return CopperfinRuntimeBridgeDispatchPlan{std::move(serialization_plan), std::move(arguments)};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(\n";
+    stream << "    CopperfinRuntimeBridgeDispatchPlan dispatch_plan) {\n";
+    stream << "    return CopperfinRuntimeBridgePayloadPlan{\n";
+    stream << "        std::move(dispatch_plan),\n";
+    stream << "        \"bridge_request_v1\",\n";
+    stream << "        \"bridge_response_v1\",\n";
+    stream << "        {\"export_name\", \"parameter_count\", \"parameters\", \"request_media_type\"},\n";
+    stream << "        {\"status\", \"return_value\", \"response_media_type\", \"diagnostics\"}};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -911,7 +927,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto transport_plan = copperfin_build_runtime_bridge_transport_plan(execution_plan);\n";
             stream << "    const auto serialization_plan = copperfin_build_runtime_bridge_serialization_plan(transport_plan);\n";
             stream << "    const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);\n";
-            stream << "    (void)dispatch_plan;\n";
+            stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);\n";
+            stream << "    (void)payload_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1018,7 +1035,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto transport_plan = copperfin_build_runtime_bridge_transport_plan(execution_plan);\n";
             stream << "    const auto serialization_plan = copperfin_build_runtime_bridge_serialization_plan(transport_plan);\n";
             stream << "    const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);\n";
-            stream << "    (void)dispatch_plan;\n";
+            stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);\n";
+            stream << "    (void)payload_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }

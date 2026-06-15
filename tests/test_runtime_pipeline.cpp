@@ -1174,6 +1174,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a dispatch-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchPlan copperfin_build_runtime_bridge_dispatch_plan(") != std::string::npos,
                "library-output wrapper source should declare a dispatch-plan helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
+               "library-output wrapper source should declare a payload-plan surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
+               "library-output wrapper source should declare a payload-plan helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "library-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -1206,6 +1210,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build a serialization plan from the transport plan");
         expect(wrapper_source.find("const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);") != std::string::npos,
                "library-output wrapper source should build a dispatch plan from the serialization plan");
+        expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
+               "library-output wrapper source should build a payload plan from the dispatch plan");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "library-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -1242,6 +1248,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare the response-media-type dispatch argument");
         expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
                "library-output wrapper source should declare the schema-version dispatch argument");
+        expect(wrapper_source.find("\"bridge_request_v1\"") != std::string::npos,
+               "library-output wrapper source should declare the request payload shape");
+        expect(wrapper_source.find("\"bridge_response_v1\"") != std::string::npos,
+               "library-output wrapper source should declare the response payload shape");
+        expect(wrapper_source.find("\"export_name\"") != std::string::npos,
+               "library-output wrapper source should declare request payload field names");
+        expect(wrapper_source.find("\"return_value\"") != std::string::npos,
+               "library-output wrapper source should declare response payload field names");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
@@ -1849,6 +1863,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a dispatch-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDispatchPlan copperfin_build_runtime_bridge_dispatch_plan(") != std::string::npos,
                "fll-output wrapper source should declare a dispatch-plan helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgePayloadPlan") != std::string::npos,
+               "fll-output wrapper source should declare a payload-plan surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgePayloadPlan copperfin_build_runtime_bridge_payload_plan(") != std::string::npos,
+               "fll-output wrapper source should declare a payload-plan helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "fll-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -1883,6 +1901,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build a serialization plan from the transport plan");
         expect(wrapper_source.find("const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(serialization_plan);") != std::string::npos,
                "fll-output wrapper source should build a dispatch plan from the serialization plan");
+        expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);") != std::string::npos,
+               "fll-output wrapper source should build a payload plan from the dispatch plan");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "fll-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -1919,6 +1939,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare the response-media-type dispatch argument");
         expect(wrapper_source.find("\"--schema-version\"") != std::string::npos,
                "fll-output wrapper source should declare the schema-version dispatch argument");
+        expect(wrapper_source.find("\"bridge_request_v1\"") != std::string::npos,
+               "fll-output wrapper source should declare the request payload shape");
+        expect(wrapper_source.find("\"bridge_response_v1\"") != std::string::npos,
+               "fll-output wrapper source should declare the response payload shape");
+        expect(wrapper_source.find("\"export_name\"") != std::string::npos,
+               "fll-output wrapper source should declare request payload field names");
+        expect(wrapper_source.find("\"return_value\"") != std::string::npos,
+               "fll-output wrapper source should declare response payload field names");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
         expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
