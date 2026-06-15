@@ -1233,7 +1233,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        : final_return_adoption_plan.placeholder_return_statement;\n";
     stream << "    const auto deferred_return_block = return_activation_plan.activates_adopted_return\n";
     stream << "        ? final_return_adoption_plan.placeholder_return_statement\n";
-    stream << "        : final_return_adoption_plan.adopted_return_block;\n";
+    stream << "        : return_activation_plan.active_return_block;\n";
     stream << "    const bool emits_placeholder_return = !return_activation_plan.activates_adopted_return;\n";
     stream << "    return CopperfinRuntimeBridgeStubReturnPlan{\n";
     stream << "        std::move(return_activation_plan),\n";
