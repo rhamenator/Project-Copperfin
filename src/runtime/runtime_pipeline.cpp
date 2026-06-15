@@ -793,6 +793,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string fallback_value_representation;\n";
     stream << "    std::string native_return_surface;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeOutcomeSelectionPlan {\n";
+    stream << "    CopperfinRuntimeBridgeNativeReturnPlan native_return_plan;\n";
+    stream << "    std::string success_condition;\n";
+    stream << "    std::string fallback_condition;\n";
+    stream << "    std::string diagnostics_field;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1084,6 +1090,20 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        fallback_value_representation,\n";
     stream << "        result.return_binding.return_surface};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(\n";
+    stream << "    CopperfinRuntimeBridgeNativeReturnPlan native_return_plan) {\n";
+    stream << "    const auto& interpreted_result_plan = native_return_plan.interpreted_result_plan;\n";
+    stream << "    const auto& response_parse_plan = interpreted_result_plan.response_parse_plan;\n";
+    stream << "    const auto success_condition =\n";
+    stream << "        response_parse_plan.status_field + \" == \" + interpreted_result_plan.success_status_value;\n";
+    stream << "    const auto fallback_condition =\n";
+    stream << "        response_parse_plan.status_field + \" != \" + interpreted_result_plan.success_status_value;\n";
+    stream << "    return CopperfinRuntimeBridgeOutcomeSelectionPlan{\n";
+    stream << "        std::move(native_return_plan),\n";
+    stream << "        std::move(success_condition),\n";
+    stream << "        std::move(fallback_condition),\n";
+    stream << "        response_parse_plan.diagnostics_field};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1177,7 +1197,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n";
             stream << "        result,\n";
             stream << "        interpreted_result_plan);\n";
-            stream << "    (void)native_return_plan;\n";
+            stream << "    const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n";
+            stream << "        native_return_plan);\n";
+            stream << "    (void)outcome_selection_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1308,7 +1330,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n";
             stream << "        result,\n";
             stream << "        interpreted_result_plan);\n";
-            stream << "    (void)native_return_plan;\n";
+            stream << "    const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n";
+            stream << "        native_return_plan);\n";
+            stream << "    (void)outcome_selection_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }

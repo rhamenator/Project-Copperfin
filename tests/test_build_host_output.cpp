@@ -811,6 +811,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a native-return-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a native-return-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeOutcomeSelectionPlan") != std::string::npos,
+                   "build host DLL wrapper should declare an outcome-selection-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
+                   "build host DLL wrapper should declare an outcome-selection-plan helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host DLL wrapper should build a bridge descriptor for InitLibrary");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
@@ -855,6 +859,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host DLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
+                   "build host DLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -929,6 +935,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should record the wrapper return surface.");
             expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
                    "build host DLL wrapper should record the native return surface.");
+            expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
+                   "build host DLL wrapper should record the outcome success condition.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host DLL wrapper CMake should link dl on supported Unix hosts");
         }
@@ -1103,6 +1111,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a native-return-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeNativeReturnPlan copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a native-return-plan helper");
+            expect(wrapper_source.find("struct CopperfinRuntimeBridgeOutcomeSelectionPlan") != std::string::npos,
+                   "build host FLL wrapper should declare an outcome-selection-plan surface");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
+                   "build host FLL wrapper should declare an outcome-selection-plan helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
                    "build host FLL wrapper should record routine kind fields in the FoxInfo table");
             expect(wrapper_source.find("const char* source_path;") != std::string::npos,
@@ -1161,6 +1173,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build an interpreted result plan from the response parse plan");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(") != std::string::npos,
                    "build host FLL wrapper should build a native return plan from the interpreted result plan");
+            expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
+                   "build host FLL wrapper should build an outcome selection plan from the native return plan");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -1235,6 +1249,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record the wrapper return surface.");
             expect(wrapper_source.find("std::string native_return_surface;") != std::string::npos,
                    "build host FLL wrapper should record the native return surface.");
+            expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
+                   "build host FLL wrapper should record the outcome success condition.");
             expect(wrapper_cmake.find("target_link_libraries(LibraryDemo PRIVATE dl)") != std::string::npos,
                    "build host FLL wrapper CMake should link dl on supported Unix hosts");
             expect(api_manifest.find("function_arity=InitLibrary|1") != std::string::npos,
