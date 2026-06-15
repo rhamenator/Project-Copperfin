@@ -799,6 +799,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string fallback_condition;\n";
     stream << "    std::string diagnostics_field;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeReturnMaterializationPlan {\n";
+    stream << "    CopperfinRuntimeBridgeOutcomeSelectionPlan outcome_selection_plan;\n";
+    stream << "    std::string success_return_statement;\n";
+    stream << "    std::string fallback_return_statement;\n";
+    stream << "    std::string native_return_surface;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1104,6 +1110,38 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(fallback_condition),\n";
     stream << "        response_parse_plan.diagnostics_field};\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_return_statement(\n";
+    stream << "    const std::string& native_return_surface,\n";
+    stream << "    const std::string& value_representation) {\n";
+    stream << "    if (native_return_surface == \"int\") {\n";
+    stream << "        return \"return \" + value_representation + \";\";\n";
+    stream << "    }\n";
+    stream << "    const auto placeholder_index = native_return_surface.find(\"(int)\");\n";
+    stream << "    if (placeholder_index != std::string::npos) {\n";
+    stream << "        std::string statement = \"return \";\n";
+    stream << "        statement += native_return_surface.substr(0U, placeholder_index);\n";
+    stream << "        statement += \"(\";\n";
+    stream << "        statement += value_representation;\n";
+    stream << "        statement += \");\";\n";
+    stream << "        return statement;\n";
+    stream << "    }\n";
+    stream << "    return \"return \" + value_representation + \";\";\n";
+    stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(\n";
+    stream << "    CopperfinRuntimeBridgeOutcomeSelectionPlan outcome_selection_plan) {\n";
+    stream << "    const auto& native_return_plan = outcome_selection_plan.native_return_plan;\n";
+    stream << "    const auto success_return_statement = copperfin_build_runtime_bridge_return_statement(\n";
+    stream << "        native_return_plan.native_return_surface,\n";
+    stream << "        native_return_plan.success_value_representation);\n";
+    stream << "    const auto fallback_return_statement = copperfin_build_runtime_bridge_return_statement(\n";
+    stream << "        native_return_plan.native_return_surface,\n";
+    stream << "        native_return_plan.fallback_value_representation);\n";
+    stream << "    return CopperfinRuntimeBridgeReturnMaterializationPlan{\n";
+    stream << "        std::move(outcome_selection_plan),\n";
+    stream << "        std::move(success_return_statement),\n";
+    stream << "        std::move(fallback_return_statement),\n";
+    stream << "        native_return_plan.native_return_surface};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1199,7 +1237,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        interpreted_result_plan);\n";
             stream << "    const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n";
             stream << "        native_return_plan);\n";
-            stream << "    (void)outcome_selection_plan;\n";
+            stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
+            stream << "        outcome_selection_plan);\n";
+            stream << "    (void)return_materialization_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1332,7 +1372,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        interpreted_result_plan);\n";
             stream << "    const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n";
             stream << "        native_return_plan);\n";
-            stream << "    (void)outcome_selection_plan;\n";
+            stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
+            stream << "        outcome_selection_plan);\n";
+            stream << "    (void)return_materialization_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }

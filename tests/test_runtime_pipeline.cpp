@@ -1224,6 +1224,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "library-output wrapper source should declare an outcome-selection-plan helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnMaterializationPlan") != std::string::npos,
+               "library-output wrapper source should declare a return-materialization-plan surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
+               "library-output wrapper source should declare a return-materialization-plan helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "library-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -1280,6 +1284,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build a native return plan from the interpreted result plan");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "library-output wrapper source should build an outcome selection plan from the native return plan");
+        expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
+               "library-output wrapper source should build a return materialization plan from the outcome selection plan");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "library-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -1356,6 +1362,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record the native return surface.");
         expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
                "library-output wrapper source should record the outcome success condition.");
+        expect(wrapper_source.find("std::string success_return_statement;") != std::string::npos,
+               "library-output wrapper source should record the success return statement.");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
         expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
@@ -2013,6 +2021,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare an outcome-selection-plan surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeOutcomeSelectionPlan copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "fll-output wrapper source should declare an outcome-selection-plan helper");
+        expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnMaterializationPlan") != std::string::npos,
+               "fll-output wrapper source should declare a return-materialization-plan surface");
+        expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
+               "fll-output wrapper source should declare a return-materialization-plan helper");
         expect(wrapper_source.find("app.cfmanifest") != std::string::npos,
                "fll-output wrapper source should target the packaged manifest filename");
         expect(wrapper_source.find("copperfin_runtime_host") != std::string::npos,
@@ -2071,6 +2083,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build a native return plan from the interpreted result plan");
         expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                "fll-output wrapper source should build an outcome selection plan from the native return plan");
+        expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
+               "fll-output wrapper source should build a return materialization plan from the outcome selection plan");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "fll-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
@@ -2147,6 +2161,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record the native return surface.");
         expect(wrapper_source.find("std::string success_condition;") != std::string::npos,
                "fll-output wrapper source should record the outcome success condition.");
+        expect(wrapper_source.find("std::string success_return_statement;") != std::string::npos,
+               "fll-output wrapper source should record the success return statement.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
         expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers));") != std::string::npos,
