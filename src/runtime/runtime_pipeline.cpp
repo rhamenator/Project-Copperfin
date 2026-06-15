@@ -805,6 +805,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::string fallback_return_statement;\n";
     stream << "    std::string native_return_surface;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgeReturnEmissionPlan {\n";
+    stream << "    CopperfinRuntimeBridgeReturnMaterializationPlan return_materialization_plan;\n";
+    stream << "    std::string success_branch_statement;\n";
+    stream << "    std::string fallback_branch_statement;\n";
+    stream << "    std::string emitted_return_block;\n";
+    stream << "};\n\n";
     stream << "static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(\n";
     stream << "    const char* export_name,\n";
     stream << "    const char* routine_kind,\n";
@@ -1142,6 +1148,23 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        std::move(fallback_return_statement),\n";
     stream << "        native_return_plan.native_return_surface};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgeReturnEmissionPlan copperfin_build_runtime_bridge_return_emission_plan(\n";
+    stream << "    CopperfinRuntimeBridgeReturnMaterializationPlan return_materialization_plan) {\n";
+    stream << "    const auto& outcome_selection_plan = return_materialization_plan.outcome_selection_plan;\n";
+    stream << "    const auto success_branch_statement =\n";
+    stream << "        \"if (\" + outcome_selection_plan.success_condition + \") { \"\n";
+    stream << "        + return_materialization_plan.success_return_statement + \" }\";\n";
+    stream << "    const auto fallback_branch_statement =\n";
+    stream << "        \"if (\" + outcome_selection_plan.fallback_condition + \") { \"\n";
+    stream << "        + return_materialization_plan.fallback_return_statement + \" }\";\n";
+    stream << "    const auto emitted_return_block =\n";
+    stream << "        success_branch_statement + \" else { \" + return_materialization_plan.fallback_return_statement + \" }\";\n";
+    stream << "    return CopperfinRuntimeBridgeReturnEmissionPlan{\n";
+    stream << "        std::move(return_materialization_plan),\n";
+    stream << "        std::move(success_branch_statement),\n";
+    stream << "        std::move(fallback_branch_statement),\n";
+    stream << "        std::move(emitted_return_block)};\n";
+    stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
         const auto parameter_counts = collect_library_export_parameter_counts(plan);
@@ -1239,7 +1262,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        native_return_plan);\n";
             stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
             stream << "        outcome_selection_plan);\n";
-            stream << "    (void)return_materialization_plan;\n";
+            stream << "    const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n";
+            stream << "        return_materialization_plan);\n";
+            stream << "    (void)return_emission_plan;\n";
             stream << "    return " << kFllDefaultReturnHelper << "(-1);\n";
             stream << "}\n\n";
         }
@@ -1374,7 +1399,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        native_return_plan);\n";
             stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
             stream << "        outcome_selection_plan);\n";
-            stream << "    (void)return_materialization_plan;\n";
+            stream << "    const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n";
+            stream << "        return_materialization_plan);\n";
+            stream << "    (void)return_emission_plan;\n";
             stream << "    return -1;\n";
             stream << "}\n\n";
         }
