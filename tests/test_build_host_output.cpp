@@ -1053,6 +1053,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a placeholder-return-value-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host DLL wrapper should declare a placeholder-return-value-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValue copperfin_runtime_bridge_execute_placeholder_return_value(") != std::string::npos,
+                   "build host DLL wrapper should declare a shared placeholder-return-value execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
+                   "build host DLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host DLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
@@ -1155,13 +1159,13 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should derive placeholder-helper active-policy booleans upstream");
             expect(wrapper_source.find("const bool adopts_placeholder_replacement =") != std::string::npos,
                    "build host DLL wrapper should derive placeholder-helper replacement-policy booleans upstream");
-            expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
+            expect(wrapper_source.find("(void)placeholder_return_value.emitted_return_statement;") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the placeholder emitted-return statement contract");
-            expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
+            expect(wrapper_source.find("(void)placeholder_return_value.deferred_return_block;") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the deferred return-block contract");
-            expect(wrapper_source.find("placeholder_return_value_plan.keeps_placeholder_return_active") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value.keeps_placeholder_return_active") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the routed active-policy boolean");
-            expect(wrapper_source.find("placeholder_return_value_plan.adopts_placeholder_replacement") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value.adopts_placeholder_replacement") != std::string::npos,
                    "build host DLL wrapper should have the helper consume the routed replacement-policy boolean");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host DLL wrapper should build an outcome selection plan from the native return plan");
@@ -1731,6 +1735,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a placeholder-return-value-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host FLL wrapper should declare a placeholder-return-value-plan helper");
+            expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValue copperfin_runtime_bridge_execute_placeholder_return_value(") != std::string::npos,
+                   "build host FLL wrapper should declare a shared placeholder-return-value execution helper.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
+                   "build host FLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(") != std::string::npos,
                    "build host FLL wrapper should declare a stub-return execution helper");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
@@ -1849,13 +1857,13 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should derive placeholder-helper active-policy booleans upstream");
             expect(wrapper_source.find("const bool adopts_placeholder_replacement =") != std::string::npos,
                    "build host FLL wrapper should derive placeholder-helper replacement-policy booleans upstream");
-            expect(wrapper_source.find("(void)placeholder_return_value_plan.emitted_return_statement;") != std::string::npos,
+            expect(wrapper_source.find("(void)placeholder_return_value.emitted_return_statement;") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the placeholder emitted-return statement contract");
-            expect(wrapper_source.find("(void)placeholder_return_value_plan.deferred_return_block;") != std::string::npos,
+            expect(wrapper_source.find("(void)placeholder_return_value.deferred_return_block;") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the deferred return-block contract");
-            expect(wrapper_source.find("placeholder_return_value_plan.keeps_placeholder_return_active") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value.keeps_placeholder_return_active") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the routed active-policy boolean");
-            expect(wrapper_source.find("placeholder_return_value_plan.adopts_placeholder_replacement") != std::string::npos,
+            expect(wrapper_source.find("placeholder_return_value.adopts_placeholder_replacement") != std::string::npos,
                    "build host FLL wrapper should have the helper consume the routed replacement-policy boolean");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(") != std::string::npos,
                    "build host FLL wrapper should build an outcome selection plan from the native return plan");
