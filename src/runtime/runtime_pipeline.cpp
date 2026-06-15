@@ -1022,6 +1022,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    int fallback_int_value = -1;\n";
     stream << "    std::string fallback_value_representation;\n";
     stream << "};\n\n";
+    stream << "struct CopperfinRuntimeBridgePlaceholderReturnValueAdmission {\n";
+    stream << "    bool should_emit_placeholder_return = true;\n";
+    stream << "    bool should_keep_deferred_return = true;\n";
+    stream << "    std::string diagnostics_value;\n";
+    stream << "    std::string selected_return_statement;\n";
+    stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgePlaceholderReturnValue {\n";
     stream << "    bool matched_success_status = false;\n";
     stream << "    std::string selected_condition;\n";
@@ -2068,6 +2074,19 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        stub_return.placeholder_fallback_int_value,\n";
     stream << "        stub_return.placeholder_fallback_value_representation};\n";
     stream << "}\n\n";
+    stream << "static CopperfinRuntimeBridgePlaceholderReturnValueAdmission copperfin_runtime_bridge_admit_placeholder_return_value(\n";
+    stream << "    const CopperfinRuntimeBridgeStubReturnAdmission& stub_return_admission,\n";
+    stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan) {\n";
+    stream << "    const bool should_emit_placeholder_return = placeholder_return_value_plan.emits_placeholder_return;\n";
+    stream << "    const bool should_keep_deferred_return = !should_emit_placeholder_return;\n";
+    stream << "    return CopperfinRuntimeBridgePlaceholderReturnValueAdmission{\n";
+    stream << "        should_emit_placeholder_return,\n";
+    stream << "        should_keep_deferred_return,\n";
+    stream << "        stub_return_admission.diagnostics_value,\n";
+    stream << "        should_emit_placeholder_return\n";
+    stream << "            ? placeholder_return_value_plan.emitted_return_statement\n";
+    stream << "            : placeholder_return_value_plan.deferred_return_block};\n";
+    stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgePlaceholderReturnValue copperfin_runtime_bridge_execute_placeholder_return_value(\n";
     stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& plan) {\n";
     stream << "    const auto stub_return = copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan);\n";
@@ -2257,6 +2276,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)stub_return_admission;\n";
             stream << "    const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
             stream << "        stub_return_plan);\n";
+            stream << "    const auto placeholder_return_value_admission =\n";
+            stream << "        copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);\n";
+            stream << "    (void)placeholder_return_value_admission;\n";
             stream << "    return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);\n";
             stream << "}\n\n";
         }
@@ -2450,6 +2472,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)stub_return_admission;\n";
             stream << "    const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n";
             stream << "        stub_return_plan);\n";
+            stream << "    const auto placeholder_return_value_admission =\n";
+            stream << "        copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);\n";
+            stream << "    (void)placeholder_return_value_admission;\n";
             stream << "    return copperfin_runtime_bridge_emit_stub_return(placeholder_return_value_plan);\n";
             stream << "}\n\n";
         }
