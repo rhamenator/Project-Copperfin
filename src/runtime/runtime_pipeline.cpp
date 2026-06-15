@@ -1515,6 +1515,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
         stream << "struct ParamBlk {\n";
         stream << "    int reserved = 0;\n";
         stream << "};\n\n";
+        stream << "static std::string copperfin_build_runtime_bridge_fll_int_return_surface() {\n";
+        stream << "    return \"" << kFllDefaultReturnHelper << "(int)\";\n";
+        stream << "}\n\n";
         stream << "static int " << kFllDefaultReturnHelper << "(int value) {\n";
         stream << "    return value;\n";
         stream << "}\n\n";
@@ -1576,8 +1579,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        invocation,\n";
             stream << "        {{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}});\n";
             stream << "    const auto placeholder_return_binding =\n";
-            stream << "        copperfin_build_runtime_bridge_placeholder_return_binding(\""
-                   << kFllDefaultReturnHelper << "(int)\");\n";
+            stream << "        copperfin_build_runtime_bridge_placeholder_return_binding(\n";
+            stream << "            copperfin_build_runtime_bridge_fll_int_return_surface());\n";
             stream << "    const auto result = copperfin_build_runtime_bridge_result(\n";
             stream << "        call,\n";
             stream << "        placeholder_return_binding);\n";
@@ -1590,7 +1593,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(dispatch_plan);\n";
             stream << "    const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(\n";
             stream << "        payload_plan,\n";
-            stream << "        \"" << kFllDefaultReturnHelper << "(int)\");\n";
+            stream << "        copperfin_build_runtime_bridge_fll_int_return_surface());\n";
             stream << "    const auto failure_policy = copperfin_build_runtime_bridge_failure_policy_plan(\n";
             stream << "        interpretation_plan,\n";
             stream << "        placeholder_return_binding.value_representation);\n";

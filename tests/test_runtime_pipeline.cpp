@@ -2575,7 +2575,11 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build a bridge result from the call");
         expect(wrapper_source.find("const auto placeholder_return_binding =") != std::string::npos,
                "fll-output wrapper source should build a shared placeholder return binding before building the result");
-        expect(wrapper_source.find("copperfin_build_runtime_bridge_placeholder_return_binding(\"_RetInt(int)\")") != std::string::npos,
+        expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_fll_int_return_surface()") != std::string::npos,
+               "fll-output wrapper source should declare a shared FLL int return-surface helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_fll_int_return_surface()") != std::string::npos,
+               "fll-output wrapper source should route FLL return surface through helper");
+        expect(wrapper_source.find("copperfin_build_runtime_bridge_placeholder_return_binding(\n            copperfin_build_runtime_bridge_fll_int_return_surface())") != std::string::npos,
                "fll-output wrapper source should build the FLL placeholder return binding through the shared helper");
         expect(wrapper_source.find("const auto launch_plan = copperfin_build_runtime_bridge_launch_plan(result);") != std::string::npos,
                "fll-output wrapper source should build a launch plan from the result");
@@ -2759,7 +2763,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route the response status field through the shared helper");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_diagnostics_field_name()") != std::string::npos,
                "fll-output wrapper source should route the response diagnostics field through the shared helper");
-        expect(wrapper_source.find("\"_RetInt(int)\");") != std::string::npos,
+        expect(wrapper_source.find("        copperfin_build_runtime_bridge_fll_int_return_surface());") != std::string::npos,
                "fll-output wrapper source should preserve the FLL wrapper return surface");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_failure_diagnostics_value()") != std::string::npos,
                "fll-output wrapper source should declare the diagnostics fallback policy through the shared token helper");
