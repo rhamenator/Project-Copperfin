@@ -26,6 +26,11 @@ const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_
     return nullptr;
 }
 
+struct FieldSelection {
+    std::string value{};
+    std::size_t field_index = StudioObjectMissingFieldIndex;
+};
+
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     if (value == nullptr) {
@@ -45,6 +50,16 @@ std::optional<std::size_t> find_field_index(const vfp::DbfRecord& record, std::s
 
 std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_view field_name) {
     return find_field_index(record, field_name).value_or(StudioObjectMissingFieldIndex);
+}
+
+FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
+    for (const auto field_name : field_names) {
+        const auto* value = find_value(record, field_name);
+        if (value != nullptr && !value->display_value.empty()) {
+            return {.value = value->display_value, .field_index = field_index_or_missing(record, field_name)};
+        }
+    }
+    return {};
 }
 
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
@@ -224,11 +239,21 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         snapshot.objcode_field_index = field_index_or_missing(record, "OBJCODE");
         snapshot.platform = first_non_empty(record, {"PLATFORM"});
         snapshot.platform_field_index = field_index_or_missing(record, "PLATFORM");
-        snapshot.object_name = first_non_empty(record, {"OBJNAME", "NAME"});
-        snapshot.unique_id = first_non_empty(record, {"UNIQUEID"});
-        snapshot.parent_name = first_non_empty(record, {"PARENT", "PARENTID"});
-        snapshot.class_name = first_non_empty(record, {"CLASS"});
-        snapshot.baseclass_name = first_non_empty(record, {"BASECLASS"});
+        const FieldSelection object_name = first_non_empty_selection(record, {"OBJNAME", "NAME"});
+        snapshot.object_name = object_name.value;
+        snapshot.object_name_field_index = object_name.field_index;
+        const FieldSelection unique_id = first_non_empty_selection(record, {"UNIQUEID"});
+        snapshot.unique_id = unique_id.value;
+        snapshot.unique_id_field_index = unique_id.field_index;
+        const FieldSelection parent_name = first_non_empty_selection(record, {"PARENT", "PARENTID"});
+        snapshot.parent_name = parent_name.value;
+        snapshot.parent_name_field_index = parent_name.field_index;
+        const FieldSelection class_name = first_non_empty_selection(record, {"CLASS"});
+        snapshot.class_name = class_name.value;
+        snapshot.class_name_field_index = class_name.field_index;
+        const FieldSelection baseclass_name = first_non_empty_selection(record, {"BASECLASS"});
+        snapshot.baseclass_name = baseclass_name.value;
+        snapshot.baseclass_name_field_index = baseclass_name.field_index;
         if (document.kind == StudioAssetKind::menu) {
             snapshot.menu_prompt = first_non_empty(record, {"PROMPT"});
             snapshot.menu_prompt_field_index = field_index_or_missing(record, "PROMPT");

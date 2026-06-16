@@ -163,10 +163,15 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         expect(objects[0].platform == "WINDOWS", "#667: object snapshots should expose raw PLATFORM metadata");
         expect(objects[0].platform_field_index == 3U, "#671: raw PLATFORM metadata should retain DBF field provenance");
         expect(objects[0].object_name == "cmdSave", "#660: object snapshots should expose the design object name");
+        expect(objects[0].object_name_field_index == 0U, "#672: object name metadata should retain DBF field provenance");
         expect(objects[0].unique_id == "cmd-save-1", "#660: object snapshots should expose stable UNIQUEID metadata");
+        expect(objects[0].unique_id_field_index == 8U, "#672: UNIQUEID metadata should retain DBF field provenance");
         expect(objects[0].parent_name == "frmCustomer", "#660: object snapshots should expose parent hierarchy metadata");
+        expect(objects[0].parent_name_field_index == 4U, "#672: parent hierarchy metadata should retain DBF field provenance");
         expect(objects[0].class_name == "commandbutton", "#660: object snapshots should expose CLASS metadata");
+        expect(objects[0].class_name_field_index == 9U, "#672: CLASS metadata should retain DBF field provenance");
         expect(objects[0].baseclass_name == "commandbutton", "#660: object snapshots should expose BASECLASS metadata");
+        expect(objects[0].baseclass_name_field_index == 10U, "#672: BASECLASS metadata should retain DBF field provenance");
         const auto parent = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
             return property.name == "PARENT";
         });
@@ -228,7 +233,9 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
             .values = {
                 {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "TOOLS"},
                 {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Tools"},
-                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO tools"}
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO tools"},
+                {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "tools_menu"},
+                {.field_name = "PARENTID", .field_type = 'C', .is_null = false, .display_value = "main_menu"}
             }
         }
     };
@@ -252,6 +259,16 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
     if (objects.size() >= 2U) {
         expect(objects[1].menu_prompt == "Tools", "#668: menu snapshots should expose PROMPT metadata when it is not field zero");
         expect(objects[1].menu_prompt_field_index == 1U, "#670: present menu fields should keep their actual DBF ordinal");
+        expect(objects[1].object_name == "tools_menu", "#672: object name metadata should fall back to NAME");
+        expect(objects[1].object_name_field_index == 3U, "#672: object name fallback should retain selected NAME field provenance");
+        expect(objects[1].parent_name == "main_menu", "#672: parent metadata should fall back to PARENTID");
+        expect(objects[1].parent_name_field_index == 4U, "#672: parent fallback should retain selected PARENTID field provenance");
+        expect(objects[1].unique_id_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#672: missing UNIQUEID provenance should use the object missing-field sentinel");
+        expect(objects[1].class_name_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#672: missing CLASS provenance should use the object missing-field sentinel");
+        expect(objects[1].baseclass_name_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#672: missing BASECLASS provenance should use the object missing-field sentinel");
         expect(objects[1].menu_message.empty(), "#670: missing menu MESSAGE values should remain empty");
         expect(objects[1].menu_message_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#670: missing menu MESSAGE provenance should not masquerade as field zero");

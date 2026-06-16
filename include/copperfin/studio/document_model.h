@@ -81,10 +81,15 @@ struct StudioObjectSnapshot {
     std::string platform{};
     std::size_t platform_field_index = StudioObjectMissingFieldIndex;
     std::string object_name{};
+    std::size_t object_name_field_index = StudioObjectMissingFieldIndex;
     std::string unique_id{};
+    std::size_t unique_id_field_index = StudioObjectMissingFieldIndex;
     std::string parent_name{};
+    std::size_t parent_name_field_index = StudioObjectMissingFieldIndex;
     std::string class_name{};
+    std::size_t class_name_field_index = StudioObjectMissingFieldIndex;
     std::string baseclass_name{};
+    std::size_t baseclass_name_field_index = StudioObjectMissingFieldIndex;
     std::string menu_prompt{};
     std::size_t menu_prompt_field_index = StudioObjectMissingFieldIndex;
     std::string menu_level_name{};
