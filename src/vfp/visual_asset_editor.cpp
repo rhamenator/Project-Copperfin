@@ -5564,6 +5564,20 @@ VisualAssetEditResult set_visual_object_back_color(
         std::to_string(request.back_color));
 }
 
+VisualAssetEditResult set_visual_object_fore_color(
+    const VisualObjectForeColorRequest& request) {
+    if (request.fore_color < 0) {
+        return {.ok = false, .error = "ForeColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ForeColor",
+        "fore-color",
+        std::to_string(request.fore_color));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

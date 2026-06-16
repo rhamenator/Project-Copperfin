@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#826 selected visual object fore-color assignment shipped: designer commands can assign caller-provided numeric `ForeColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#825 selected visual object back-color assignment shipped: designer commands can assign caller-provided numeric `BackColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#824 selected visual object highlight fore-color assignment shipped: combo/list designer commands can assign caller-provided numeric `HighlightForeColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#823 selected visual object highlight back-color assignment shipped: combo/list designer commands can assign caller-provided numeric `HighlightBackColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
