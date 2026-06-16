@@ -18,12 +18,18 @@ struct StudioNamedValue {
 struct StudioLayoutObjectSnapshot {
     std::size_t record_index = 0;
     std::string object_kind{};
+    std::size_t objtype_field_index = 0;
     std::string title{};
     std::string expression{};
+    std::size_t expression_field_index = 0;
     int left = 0;
+    std::size_t left_field_index = 0;
     int top = 0;
+    std::size_t top_field_index = 0;
     int width = 0;
+    std::size_t width_field_index = 0;
     int height = 0;
+    std::size_t height_field_index = 0;
     std::vector<StudioNamedValue> highlights{};
 };
 

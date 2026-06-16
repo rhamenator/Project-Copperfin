@@ -170,12 +170,18 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     StudioLayoutObjectSnapshot object;
     object.record_index = record.record_index;
     object.object_kind = object_kind_name(parse_scaled_int_or_default(record, "OBJTYPE"));
+    object.objtype_field_index = find_field_index(record, "OBJTYPE").value_or(0U);
     object.title = first_non_empty(record, {"NAME", "EXPR", "UNIQUEID"});
     object.expression = first_non_empty(record, {"EXPR"});
+    object.expression_field_index = find_field_index(record, "EXPR").value_or(0U);
     object.left = parse_scaled_int_or_default(record, "HPOS");
+    object.left_field_index = find_field_index(record, "HPOS").value_or(0U);
     object.top = parse_scaled_int_or_default(record, "VPOS");
+    object.top_field_index = find_field_index(record, "VPOS").value_or(0U);
     object.width = std::max(0, parse_scaled_int_or_default(record, "WIDTH"));
+    object.width_field_index = find_field_index(record, "WIDTH").value_or(0U);
     object.height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
+    object.height_field_index = find_field_index(record, "HEIGHT").value_or(0U);
 
     if (object.title.empty()) {
         object.title = "Record " + std::to_string(record.record_index);
