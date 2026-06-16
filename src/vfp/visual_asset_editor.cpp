@@ -5431,6 +5431,15 @@ VisualAssetEditResult set_visual_object_dynamic_font_underline(const VisualObjec
         request.dynamic_font_underline);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_font_strikethru(const VisualObjectDynamicFontStrikethruRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicFontStrikethru",
+        "dynamic font strikethru",
+        request.dynamic_font_strikethru);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
