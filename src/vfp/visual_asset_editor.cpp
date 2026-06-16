@@ -5328,6 +5328,15 @@ VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOn
         request.always_on_top ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_always_on_bottom(const VisualObjectAlwaysOnBottomRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AlwaysOnBottom",
+        "always-on-bottom",
+        request.always_on_bottom ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

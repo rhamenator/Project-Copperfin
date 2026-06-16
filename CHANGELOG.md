@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#855 selected visual object always-on-bottom assignment shipped: designer commands can assign caller-provided logical `AlwaysOnBottom` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#854 selected visual object always-on-top assignment shipped: designer commands can assign caller-provided logical `AlwaysOnTop` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#853 selected visual object add-line-feeds assignment shipped: designer commands can assign caller-provided logical `AddLineFeeds` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#852 selected visual object sparse-state assignment shipped: designer commands can assign caller-provided logical `Sparse` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

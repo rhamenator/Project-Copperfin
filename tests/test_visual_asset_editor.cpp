@@ -10776,6 +10776,24 @@ void test_set_visual_object_always_on_top_assigns_logical_state() {
                 .path = path,
                 .objects = objects,
                 .always_on_top = value
+                });
+        });
+}
+
+void test_set_visual_object_always_on_bottom_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#855",
+        "always_on_bottom",
+        "AlwaysOnBottom",
+        "ALWAYSONBOTTOM",
+        "always-on-bottom",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_always_on_bottom({
+                .path = path,
+                .objects = objects,
+                .always_on_bottom = value
             });
         });
 }
@@ -21764,6 +21782,7 @@ int main() {
     test_set_visual_object_sparse_assigns_logical_state();
     test_set_visual_object_add_line_feeds_assigns_logical_state();
     test_set_visual_object_always_on_top_assigns_logical_state();
+    test_set_visual_object_always_on_bottom_assigns_logical_state();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();
