@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#666 report raw type-code preservation shipped: report/label section and layout-object snapshots now retain raw `OBJTYPE`/`OBJCODE` numeric values alongside derived UI labels for round-trip-safe designer workflows.
 - E1/#665 report-object provenance shipped: report/label layout object snapshots now preserve source field ordinals for `OBJTYPE`, `EXPR`, `HPOS`, `VPOS`, `WIDTH`, and `HEIGHT`, supporting round-trip-safe object expression and geometry edits.
 - E1/#664 report-section provenance shipped: report/label section snapshots now preserve source field ordinals for `OBJCODE`, `VPOS`, and `HEIGHT`, supporting round-trip-safe section geometry edits.
 - E1/#663 project build-plan provenance shipped: normalized PJX build plans now preserve header field ordinals for project key, home directory, output path, and build flags, including explicit missing-field metadata.

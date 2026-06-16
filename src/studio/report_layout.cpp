@@ -169,8 +169,11 @@ std::string first_non_empty(const DbfRecord& record, std::initializer_list<std::
 StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     StudioLayoutObjectSnapshot object;
     object.record_index = record.record_index;
-    object.object_kind = object_kind_name(parse_scaled_int_or_default(record, "OBJTYPE"));
+    object.objtype_code = parse_scaled_int_or_default(record, "OBJTYPE");
+    object.objcode_code = parse_scaled_int_or_default(record, "OBJCODE");
+    object.object_kind = object_kind_name(object.objtype_code);
     object.objtype_field_index = find_field_index(record, "OBJTYPE").value_or(0U);
+    object.objcode_field_index = find_field_index(record, "OBJCODE").value_or(0U);
     object.title = first_non_empty(record, {"NAME", "EXPR", "UNIQUEID"});
     object.expression = first_non_empty(record, {"EXPR"});
     object.expression_field_index = find_field_index(record, "EXPR").value_or(0U);
@@ -322,6 +325,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
                 .title = band_title(objcode),
                 .band_kind = band_kind_name(objcode),
                 .record_index = record.record_index,
+                .objcode_code = objcode,
                 .objcode_field_index = find_field_index(record, "OBJCODE").value_or(0U),
                 .top = parse_scaled_int_or_default(record, "VPOS"),
                 .top_field_index = find_field_index(record, "VPOS").value_or(0U),

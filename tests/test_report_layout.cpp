@@ -68,6 +68,7 @@ void test_build_report_layout_groups_band_objects() {
             .deleted = false,
             .values = {
                 value("OBJTYPE", "8"),
+                value("OBJCODE", "0"),
                 value("EXPR", "customer.company"),
                 value("HPOS", "1200.000"),
                 value("VPOS", "2600.000"),
@@ -98,19 +99,23 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
+    expect(layout.sections[0].objcode_code == 1, "#666: report sections should preserve raw OBJCODE values");
     expect(layout.sections[0].objcode_field_index == 1U, "#664: report section should preserve OBJCODE field provenance");
     expect(layout.sections[0].top_field_index == 2U, "#664: report section should preserve VPOS field provenance");
     expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
+    expect(layout.sections[1].objects[0].objtype_code == 8, "#666: layout objects should preserve raw OBJTYPE values");
+    expect(layout.sections[1].objects[0].objcode_code == 0, "#666: layout objects should preserve raw OBJCODE values");
     expect(layout.sections[1].objects[0].expression == "customer.company", "detail object should surface its expression");
     expect(layout.sections[1].objects[0].objtype_field_index == 0U, "#665: layout objects should preserve OBJTYPE field provenance");
-    expect(layout.sections[1].objects[0].expression_field_index == 1U, "#665: layout objects should preserve EXPR field provenance");
-    expect(layout.sections[1].objects[0].left_field_index == 2U, "#665: layout objects should preserve HPOS field provenance");
-    expect(layout.sections[1].objects[0].top_field_index == 3U, "#665: layout objects should preserve VPOS field provenance");
-    expect(layout.sections[1].objects[0].width_field_index == 4U, "#665: layout objects should preserve WIDTH field provenance");
-    expect(layout.sections[1].objects[0].height_field_index == 5U, "#665: layout objects should preserve HEIGHT field provenance");
+    expect(layout.sections[1].objects[0].objcode_field_index == 1U, "#666: layout objects should preserve OBJCODE field provenance");
+    expect(layout.sections[1].objects[0].expression_field_index == 2U, "#665: layout objects should preserve EXPR field provenance");
+    expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
+    expect(layout.sections[1].objects[0].top_field_index == 4U, "#665: layout objects should preserve VPOS field provenance");
+    expect(layout.sections[1].objects[0].width_field_index == 5U, "#665: layout objects should preserve WIDTH field provenance");
+    expect(layout.sections[1].objects[0].height_field_index == 6U, "#665: layout objects should preserve HEIGHT field provenance");
     const auto orientation = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "ORIENTATION";
     });
@@ -136,7 +141,7 @@ void test_build_report_layout_groups_band_objects() {
     expect(fontface != layout.sections[1].objects[0].highlights.end(), "#661: layout highlights should include FONTFACE");
     if (fontface != layout.sections[1].objects[0].highlights.end()) {
         expect(fontface->record_index == 3U, "#661: layout highlights should retain source record index");
-        expect(fontface->field_index == 6U, "#661: layout highlights should retain DBF field ordinal");
+        expect(fontface->field_index == 7U, "#661: layout highlights should retain DBF field ordinal");
     }
 }
 
