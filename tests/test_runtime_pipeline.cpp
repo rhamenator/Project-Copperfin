@@ -1558,8 +1558,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should execute the interpreted-result plan before building the native-return plan.");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n        result,\n        interpreted_result_plan,\n        interpreted_result);") != std::string::npos,
                "library-output wrapper source should build the native-return plan from the interpreted-result plan and interpreted result.");
-        expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan);") != std::string::npos,
-               "library-output wrapper source should build the outcome-selection plan directly from the native-return plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto native_return =\n        copperfin_runtime_bridge_execute_native_return(native_return_plan);") != std::string::npos,
+               "library-output wrapper source should execute the native-return plan before building the outcome-selection plan.");
+        expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan,\n        native_return);") != std::string::npos,
+               "library-output wrapper source should build the outcome-selection plan from the native-return plan and native return.");
         expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan);") != std::string::npos,
                "library-output wrapper source should build the return-materialization plan directly from the outcome-selection plan once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan);") != std::string::npos,
@@ -2943,8 +2945,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should execute the interpreted-result plan before building the native-return plan.");
         expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n        result,\n        interpreted_result_plan,\n        interpreted_result);") != std::string::npos,
                "fll-output wrapper source should build the native-return plan from the interpreted-result plan and interpreted result.");
-        expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan);") != std::string::npos,
-               "fll-output wrapper source should build the outcome-selection plan directly from the native-return plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto native_return =\n        copperfin_runtime_bridge_execute_native_return(native_return_plan);") != std::string::npos,
+               "fll-output wrapper source should execute the native-return plan before building the outcome-selection plan.");
+        expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan,\n        native_return);") != std::string::npos,
+               "fll-output wrapper source should build the outcome-selection plan from the native-return plan and native return.");
         expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan);") != std::string::npos,
                "fll-output wrapper source should build the return-materialization plan directly from the outcome-selection plan once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan);") != std::string::npos,
