@@ -1788,8 +1788,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should admit staged final return adoption from the return-emission admission and final-return-adoption plan.");
         expect(wrapper_source.find("copperfin_runtime_bridge_admit_final_return_adoption(return_emission_admission, final_return_adoption_plan);") != std::string::npos,
                "library-output wrapper source should route return-emission admission through the shared final-return-adoption admission helper.");
-        expect(wrapper_source.find("(void)final_return_adoption_admission;") != std::string::npos,
-               "library-output wrapper source should explicitly keep the scaffold-only final-return-adoption admission result unused.");
+        expect(wrapper_source.find("(void)final_return_adoption_admission;") == std::string::npos,
+               "library-output wrapper source should consume final-return-adoption admission when admitting return activation.");
         expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
                "library-output wrapper source should build a return activation plan from the final return adoption plan");
         expect(wrapper_source.find("const auto return_activation_admission =") != std::string::npos,
@@ -3191,8 +3191,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should admit staged final return adoption from the return-emission admission and final-return-adoption plan.");
         expect(wrapper_source.find("copperfin_runtime_bridge_admit_final_return_adoption(return_emission_admission, final_return_adoption_plan);") != std::string::npos,
                "fll-output wrapper source should route return-emission admission through the shared final-return-adoption admission helper.");
-        expect(wrapper_source.find("(void)final_return_adoption_admission;") != std::string::npos,
-               "fll-output wrapper source should explicitly keep the scaffold-only final-return-adoption admission result unused.");
+        expect(wrapper_source.find("(void)final_return_adoption_admission;") == std::string::npos,
+               "fll-output wrapper source should consume final-return-adoption admission when admitting return activation.");
         expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(") != std::string::npos,
                "fll-output wrapper source should build a return activation plan from the final return adoption plan");
         expect(wrapper_source.find("const auto return_activation_admission =") != std::string::npos,
