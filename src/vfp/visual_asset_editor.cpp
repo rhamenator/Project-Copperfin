@@ -5430,6 +5430,19 @@ VisualAssetEditResult set_visual_object_ole_drop_mode(const VisualObjectOleDropM
         std::to_string(request.ole_drop_mode));
 }
 
+VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDropEffectsRequest& request) {
+    if (request.ole_drop_effects < 0) {
+        return {.ok = false, .error = "OLEDropEffects must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "OLEDropEffects",
+        "OLE drop-effects",
+        std::to_string(request.ole_drop_effects));
+}
+
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
         return {.ok = false, .error = "BackStyle must not be negative."};
