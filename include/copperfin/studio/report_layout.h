@@ -28,8 +28,11 @@ struct StudioLayoutObjectSnapshot {
     int objcode_code = 0;
     std::string object_kind{};
     std::size_t object_kind_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t object_kind_memo_block_number = 0;
     std::size_t objtype_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t objtype_memo_block_number = 0;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t objcode_memo_block_number = 0;
     std::string title{};
     std::size_t title_field_index = StudioReportMissingFieldIndex;
     std::uint32_t title_memo_block_number = 0;
@@ -38,12 +41,16 @@ struct StudioLayoutObjectSnapshot {
     std::uint32_t expression_memo_block_number = 0;
     int left = 0;
     std::size_t left_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t left_memo_block_number = 0;
     int top = 0;
     std::size_t top_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t top_memo_block_number = 0;
     int width = 0;
     std::size_t width_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t width_memo_block_number = 0;
     int height = 0;
     std::size_t height_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t height_memo_block_number = 0;
     std::vector<StudioNamedValue> highlights{};
 };
 

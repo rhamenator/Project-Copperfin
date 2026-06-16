@@ -210,8 +210,11 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.objcode_code = parse_scaled_int_or_default(record, "OBJCODE");
     object.object_kind = object_kind_name(object.objtype_code);
     object.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
+    object.objtype_memo_block_number = memo_block_number_or_zero(record, "OBJTYPE");
     object.object_kind_field_index = object.objtype_field_index;
+    object.object_kind_memo_block_number = object.objtype_memo_block_number;
     object.objcode_field_index = field_index_or_missing(record, "OBJCODE");
+    object.objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
     const FieldSelection title = first_non_empty_selection(record, {"NAME", "EXPR", "UNIQUEID"});
     object.title = title.value;
     object.title_field_index = title.field_index;
@@ -221,12 +224,16 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.expression_memo_block_number = memo_block_number_or_zero(record, "EXPR");
     object.left = parse_scaled_int_or_default(record, "HPOS");
     object.left_field_index = field_index_or_missing(record, "HPOS");
+    object.left_memo_block_number = memo_block_number_or_zero(record, "HPOS");
     object.top = parse_scaled_int_or_default(record, "VPOS");
     object.top_field_index = field_index_or_missing(record, "VPOS");
+    object.top_memo_block_number = memo_block_number_or_zero(record, "VPOS");
     object.width = std::max(0, parse_scaled_int_or_default(record, "WIDTH"));
     object.width_field_index = field_index_or_missing(record, "WIDTH");
+    object.width_memo_block_number = memo_block_number_or_zero(record, "WIDTH");
     object.height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     object.height_field_index = field_index_or_missing(record, "HEIGHT");
+    object.height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT");
 
     if (object.title.empty()) {
         object.title = "Record " + std::to_string(record.record_index);

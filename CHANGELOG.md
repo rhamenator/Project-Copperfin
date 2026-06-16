@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#723 report object geometry memo block provenance shipped: report/label layout objects now expose source memo block numbers for object kind, raw OBJTYPE/OBJCODE, and HPOS/VPOS/WIDTH/HEIGHT metadata, including missing-field and deleted-object cases.
 - E1/#722 report section memo block provenance shipped: report/label section snapshots now expose source memo block numbers for band title/kind, raw OBJCODE, VPOS, and HEIGHT metadata, including deleted sections.
 - E1/#721 xAsset lifecycle memo block provenance shipped: startup/shutdown lifecycle steps now expose source memo block numbers for method-backed form/menu steps while synthetic activation and preview steps report block zero.
 - E1/#720 xAsset action memo block provenance shipped: action bindings now expose memo block provenance for title sources and executable routine sources, including form method actions, menu command/procedure actions, and synthetic submenu actions.

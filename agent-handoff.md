@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 is COMPLETE as of 2026-06-16.** The live blocker path has moved to E1/#22. Latest slice: `#722`, preserving report section memo block provenance for band title/kind, raw OBJCODE, VPOS, and HEIGHT metadata including deleted sections while grouping and geometry values remain unchanged; after closing it, continue `#22` by opening the next prompt-sized shared design-model child.
+**D1/#19 is COMPLETE as of 2026-06-16.** The live blocker path has moved to E1/#22. Latest slice: `#723`, preserving report object memo block provenance for object kind, raw OBJTYPE/OBJCODE, and HPOS/VPOS/WIDTH/HEIGHT metadata including missing-field and deleted-object cases while grouping and geometry values remain unchanged; after closing it, continue `#22` by opening the next prompt-sized shared design-model child.
 
 Next: the highest-priority open umbrella at the head of the live blocker path is `#22`. Continue by creating or selecting the next prompt-sized shared design-model child under `#22`; do not reopen closed D1/#19, native-wrapper, transpilation, or debugger slices.
 
