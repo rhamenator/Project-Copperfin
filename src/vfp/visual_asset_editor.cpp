@@ -4317,6 +4317,79 @@ VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& req
     });
 }
 
+VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .container_record_index = 0U};
+    }
+    if (request.container_field_values.empty()) {
+        return {.ok = false, .error = "No group container field values were provided.", .container_record_index = 0U};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for grouping.", .container_record_index = 0U};
+    }
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
+    if (original_table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table.", .container_record_index = 0U};
+    }
+    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
+        ? std::vector<std::uint8_t>{}
+        : read_binary_file(memo_path);
+
+    const auto restore_original_asset = [&]() {
+        write_binary_file(request.path, original_table_bytes);
+        if (!memo_path.empty() && !original_memo_bytes.empty()) {
+            write_binary_file(memo_path, original_memo_bytes);
+        }
+    };
+
+    const auto create_result = create_visual_object({
+        .path = request.path,
+        .field_values = request.container_field_values
+    });
+    if (!create_result.ok) {
+        restore_original_asset();
+        return {.ok = false, .error = create_result.error, .container_record_index = 0U};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, create_result.record_index + 1U);
+    if (!table_result.ok || create_result.record_index >= table_result.table.records.size()) {
+        restore_original_asset();
+        return {.ok = false, .error = table_result.ok ? "The created group container is not available." : table_result.error, .container_record_index = 0U};
+    }
+
+    const std::string container_name = visual_object_record_name(table_result.table.records[create_result.record_index]);
+    if (container_name.empty()) {
+        restore_original_asset();
+        return {.ok = false, .error = "The group container does not expose an object name.", .container_record_index = 0U};
+    }
+
+    std::vector<VisualObjectReparentBatchItem> reparent_items;
+    reparent_items.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        reparent_items.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .parent_object_name = container_name,
+            .parent_unique_id = {},
+            .clear_parent = false
+        });
+    }
+
+    const auto reparent_result = reparent_visual_objects({
+        .path = request.path,
+        .objects = reparent_items
+    });
+    if (!reparent_result.ok) {
+        restore_original_asset();
+        return {.ok = false, .error = reparent_result.error, .container_record_index = 0U};
+    }
+
+    return {.ok = true, .error = {}, .container_record_index = create_result.record_index};
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

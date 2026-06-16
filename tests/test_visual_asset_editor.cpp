@@ -8013,6 +8013,170 @@ void test_resize_visual_objects_to_anchor_geometry() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_group_visual_objects_creates_container_and_rolls_back_failures() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_group_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "group.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmMain", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cmdSave", "saveButton", "save-guid", "frmMain", "commandbutton", "commandbutton", "Caption = \"Save\"\r\n"},
+        {"txtName", "nameBox", "name-guid", "frmMain", "textbox", "textbox", "Caption = \"Name\"\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "frmMain", "label", "label", "Caption = \"Status\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#788: grouping fixture should be writable");
+
+    const auto object_count = [&]() {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#788: grouping fixture should remain listable");
+        return list_result.objects.size();
+    };
+    const auto parent_value = [&](const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "PARENT"
+        });
+        expect(result.ok && result.exists, "#788: grouping parent property should be readable");
+        return result.value;
+    };
+
+    auto group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {
+            {.property_name = "OBJNAME", .property_value = "cntGroup"},
+            {.property_name = "NAME", .property_value = "groupContainer"},
+            {.property_name = "UNIQUEID", .property_value = "group-guid"},
+            {.property_name = "PARENT", .property_value = "frmMain"},
+            {.property_name = "CLASS", .property_value = "container"},
+            {.property_name = "BASECLASS", .property_value = "container"},
+            {.property_name = "PROPERTIES", .property_value = "Caption = \"Group\"\r\n"}
+        },
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdSave", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        }
+    });
+    expect(group_result.ok && group_result.container_record_index == 4U,
+        "#788: grouping should append a container and return its record index");
+    expect(object_count() == 5U,
+        "#788: grouping should append exactly one group container");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 5U,
+        "#788: grouped asset should remain listable");
+    if (list_result.ok && list_result.objects.size() == 5U) {
+        expect(list_result.objects[4].object_name == "cntGroup" &&
+                list_result.objects[4].unique_id == "group-guid" &&
+                list_result.objects[4].parent_name == "frmMain" &&
+                list_result.objects[4].class_name == "container" &&
+                list_result.objects[4].caption == "\"Group\"",
+            "#788: grouping should expose the appended container metadata");
+    }
+    expect(parent_value("save-guid") == "cntGroup" &&
+            parent_value("name-guid") == "cntGroup" &&
+            parent_value("status-guid") == "frmMain",
+        "#788: grouping should reparent selected objects and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#788: first successful grouping reparent should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#788: second successful grouping reparent should remain undo-backed");
+    expect(parent_value("save-guid") == "frmMain" &&
+            parent_value("name-guid") == "frmMain" &&
+            object_count() == 5U,
+        "#788: grouping undo should restore parents while leaving the created container row");
+
+    const auto committed_count = object_count();
+    group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {
+            {.property_name = "OBJNAME", .property_value = "cntTemp"},
+            {.property_name = "NAME", .property_value = "tempContainer"},
+            {.property_name = "UNIQUEID", .property_value = "temp-guid"},
+            {.property_name = "PARENT", .property_value = "frmMain"}
+        },
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        }
+    });
+    expect(!group_result.ok, "#788: grouping should reject missing selected objects");
+    expect(object_count() == committed_count &&
+            parent_value("save-guid") == "frmMain" &&
+            parent_value("name-guid") == "frmMain",
+        "#788: missing-selection grouping failures should remove the container and roll back parents");
+
+    group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {
+            {.property_name = "OBJNAME", .property_value = "cntNoName"},
+            {.property_name = "UNIQUEID", .property_value = "group-guid"}
+        },
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
+        }
+    });
+    expect(!group_result.ok, "#788: grouping should reject invalid container identities");
+    expect(object_count() == committed_count,
+        "#788: invalid-container failures should not append rows");
+
+    group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {
+            {.property_name = "CLASS", .property_value = "container"},
+            {.property_name = "UNIQUEID", .property_value = "nameless-guid"}
+        },
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
+        }
+    });
+    expect(!group_result.ok, "#788: grouping should reject containers without OBJNAME or fallback NAME");
+    expect(object_count() == committed_count,
+        "#788: nameless-container failures should remove the created row");
+
+    group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {},
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
+        }
+    });
+    expect(!group_result.ok, "#788: grouping should reject empty container field values");
+    expect(object_count() == committed_count,
+        "#788: empty-container-field failures should not append rows");
+
+    group_result = copperfin::vfp::group_visual_objects({
+        .path = table_path.string(),
+        .container_field_values = {
+            {.property_name = "OBJNAME", .property_value = "cntEmpty"},
+            {.property_name = "UNIQUEID", .property_value = "empty-guid"}
+        },
+        .objects = {}
+    });
+    expect(!group_result.ok, "#788: grouping should reject empty selections");
+    expect(object_count() == committed_count,
+        "#788: empty-selection failures should not append rows");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -10302,6 +10466,7 @@ int main() {
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_align_visual_objects_to_anchor_geometry();
     test_resize_visual_objects_to_anchor_geometry();
+    test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
     test_rename_visual_objects_rolls_back_failed_batches();

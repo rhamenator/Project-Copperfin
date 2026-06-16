@@ -598,6 +598,18 @@ struct VisualObjectResizeRequest {
     std::string mode;
 };
 
+struct VisualObjectGroupRequest {
+    std::string path;
+    std::vector<VisualObjectPropertyChange> container_field_values;
+    std::vector<VisualObjectAlignmentTarget> objects;
+};
+
+struct VisualObjectGroupResult {
+    bool ok = false;
+    std::string error;
+    std::size_t container_record_index = 0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -715,6 +727,7 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request);
 VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request);
 VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& request);
+VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
