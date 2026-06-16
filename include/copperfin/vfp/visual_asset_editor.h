@@ -778,6 +778,12 @@ struct VisualObjectStyleRequest {
     int style = 0;
 };
 
+struct VisualObjectListIndexRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int list_index = 0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -922,6 +928,7 @@ VisualAssetEditResult set_visual_object_integral_height(const VisualObjectIntegr
 VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectIncrementalSearchRequest& request);
 VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSelectRequest& request);
 VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& request);
+VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

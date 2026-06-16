@@ -5416,6 +5416,19 @@ VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& re
         std::to_string(request.style));
 }
 
+VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRequest& request) {
+    if (request.list_index < 0) {
+        return {.ok = false, .error = "ListIndex must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ListIndex",
+        "list-index",
+        std::to_string(request.list_index));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

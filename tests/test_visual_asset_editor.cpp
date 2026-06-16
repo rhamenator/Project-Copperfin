@@ -12567,6 +12567,200 @@ void test_set_visual_object_style_assigns_numeric_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_list_index_assigns_numeric_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_list_index_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "list_index.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "LISTINDEX", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", "0"},
+        {"lstOrders", "ordersList", "orders-guid", "1"},
+        {"cboOther", "otherCombo", "other-guid", "2"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#815: list-index fixture should be writable");
+
+    const auto list_index_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ListIndex"
+        });
+        expect(result.ok && result.exists, "#815: list-index fixture property should be readable");
+        return result.value;
+    };
+    const auto list_index = [&](const std::string& unique_id) {
+        return list_index_for(table_path.string(), unique_id);
+    };
+    const auto list_index_state = [&]() {
+        return list_index("customer-guid") + "," +
+            list_index("orders-guid") + "," +
+            list_index("other-guid");
+    };
+
+    auto index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .list_index = 3
+    });
+    expect(index_result.ok, "#815: list-index assignment should support object-name and record-index selectors");
+    expect(list_index("customer-guid") == "3" &&
+            list_index("orders-guid") == "3" &&
+            list_index("other-guid") == "2",
+        "#815: direct list-index assignment should write raw numeric text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#815: first list-index write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#815: second list-index write should remain undo-backed");
+    expect(list_index_state() == "0,1,2", "#815: list-index undo should restore original direct values");
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .list_index = 0
+    });
+    expect(index_result.ok, "#815: list-index assignment should support UNIQUEID selectors");
+    expect(list_index("customer-guid") == "0" &&
+            list_index("orders-guid") == "0",
+        "#815: direct list-index assignment should store zero as an unquoted numeric value");
+
+    const std::string committed_state = list_index_state();
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {},
+        .list_index = 1
+    });
+    expect(!index_result.ok, "#815: list-index assignment should reject empty selections");
+    expect(list_index_state() == committed_state, "#815: empty-selection failures should not mutate list indexes");
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"}
+        },
+        .list_index = -1
+    });
+    expect(!index_result.ok, "#815: list-index assignment should reject negative values");
+    expect(list_index_state() == committed_state, "#815: negative-value failures should not mutate list indexes");
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .list_index = 1
+    });
+    expect(!index_result.ok, "#815: list-index assignment should reject missing selected objects");
+    expect(list_index_state() == committed_state, "#815: missing-object failures should not mutate list indexes");
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .list_index = 1
+    });
+    expect(!index_result.ok, "#815: list-index assignment should reject duplicate selected objects");
+    expect(list_index_state() == committed_state, "#815: duplicate-selection failures should not mutate list indexes");
+
+    const fs::path blob_path = temp_dir / "list_index_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "ListIndex = 0\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoIndex", "no-index-guid", "Caption = \"No index\"\r\n"},
+        {"cboOther", "other-guid", "ListIndex = 2\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#815: list-index property-blob fixture should be writable");
+
+    const auto blob_list_index_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ListIndex"
+        });
+    };
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoIndex", .unique_id = {}}
+        },
+        .list_index = 4
+    });
+    expect(index_result.ok, "#815: list-index assignment should support existing and absent serialized properties");
+    auto blob_index = blob_list_index_state("blob-guid");
+    auto appended_index = blob_list_index_state("no-index-guid");
+    auto other_index = blob_list_index_state("other-guid");
+    expect(blob_index.ok && blob_index.exists && blob_index.value == "4" &&
+            appended_index.ok && appended_index.exists && appended_index.value == "4" &&
+            other_index.ok && other_index.exists && other_index.value == "2",
+        "#815: serialized list-index assignment should write unquoted numeric values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#815: appended serialized list-index write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#815: existing serialized list-index write should remain undo-backed");
+    blob_index = blob_list_index_state("blob-guid");
+    appended_index = blob_list_index_state("no-index-guid");
+    expect(blob_index.ok && blob_index.exists && blob_index.value == "0" &&
+            appended_index.ok && !appended_index.exists,
+        "#815: serialized list-index undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_listindex.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#815: missing-ListIndex fixture should be writable");
+
+    index_result = copperfin::vfp::set_visual_object_list_index({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .list_index = 1
+    });
+    expect(!index_result.ok, "#815: list-index assignment should reject objects without a writable ListIndex carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -15173,6 +15367,7 @@ int main() {
     test_set_visual_object_incremental_search_assigns_logical_state();
     test_set_visual_object_multi_select_assigns_logical_state();
     test_set_visual_object_style_assigns_numeric_value();
+    test_set_visual_object_list_index_assigns_numeric_value();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
