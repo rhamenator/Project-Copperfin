@@ -11637,6 +11637,190 @@ void test_set_visual_object_column_widths_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_column_lines_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_column_lines_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "column_lines.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "COLUMNLINES", .type = 'C', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", ".F."},
+        {"lstOrders", "ordersList", "orders-guid", ".F."},
+        {"cboOther", "otherCombo", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#810: column-lines fixture should be writable");
+
+    const auto column_lines_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnLines"
+        });
+        expect(result.ok && result.exists, "#810: column-lines fixture property should be readable");
+        return result.value;
+    };
+    const auto column_lines = [&](const std::string& unique_id) {
+        return column_lines_for(table_path.string(), unique_id);
+    };
+    const auto column_lines_state = [&]() {
+        return column_lines("customer-guid") + "," +
+            column_lines("orders-guid") + "," +
+            column_lines("other-guid");
+    };
+
+    auto lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .column_lines = true
+    });
+    expect(lines_result.ok, "#810: column-lines assignment should support object-name and record-index selectors");
+    expect(column_lines("customer-guid") == ".T." &&
+            column_lines("orders-guid") == ".T." &&
+            column_lines("other-guid") == ".T.",
+        "#810: direct column-lines assignment should write FoxPro logical text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#810: first column-lines write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#810: second column-lines write should remain undo-backed");
+    expect(column_lines_state() == ".F.,.F.,.T.", "#810: column-lines undo should restore original direct values");
+
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .column_lines = false
+    });
+    expect(lines_result.ok, "#810: column-lines assignment should support UNIQUEID selectors");
+    expect(column_lines("customer-guid") == ".F." &&
+            column_lines("orders-guid") == ".F.",
+        "#810: direct column-lines assignment should store false FoxPro logical values");
+
+    const std::string committed_state = column_lines_state();
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = table_path.string(),
+        .objects = {},
+        .column_lines = true
+    });
+    expect(!lines_result.ok, "#810: column-lines assignment should reject empty selections");
+    expect(column_lines_state() == committed_state, "#810: empty-selection failures should not mutate column lines");
+
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .column_lines = true
+    });
+    expect(!lines_result.ok, "#810: column-lines assignment should reject missing selected objects");
+    expect(column_lines_state() == committed_state, "#810: missing-object failures should not mutate column lines");
+
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .column_lines = true
+    });
+    expect(!lines_result.ok, "#810: column-lines assignment should reject duplicate selected objects");
+    expect(column_lines_state() == committed_state, "#810: duplicate-selection failures should not mutate column lines");
+
+    const fs::path blob_path = temp_dir / "column_lines_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "ColumnLines = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoLines", "no-lines-guid", "Caption = \"No lines\"\r\n"},
+        {"cboOther", "other-guid", "ColumnLines = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#810: column-lines property-blob fixture should be writable");
+
+    const auto blob_column_lines_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnLines"
+        });
+    };
+
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoLines", .unique_id = {}}
+        },
+        .column_lines = true
+    });
+    expect(lines_result.ok, "#810: column-lines assignment should support existing and absent serialized properties");
+    auto blob_lines = blob_column_lines_state("blob-guid");
+    auto appended_lines = blob_column_lines_state("no-lines-guid");
+    auto other_lines = blob_column_lines_state("other-guid");
+    expect(blob_lines.ok && blob_lines.exists && blob_lines.value == ".T." &&
+            appended_lines.ok && appended_lines.exists && appended_lines.value == ".T." &&
+            other_lines.ok && other_lines.exists && other_lines.value == ".T.",
+        "#810: serialized column-lines assignment should write FoxPro logical values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#810: appended serialized column-lines write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#810: existing serialized column-lines write should remain undo-backed");
+    blob_lines = blob_column_lines_state("blob-guid");
+    appended_lines = blob_column_lines_state("no-lines-guid");
+    expect(blob_lines.ok && blob_lines.exists && blob_lines.value == ".F." &&
+            appended_lines.ok && !appended_lines.exists,
+        "#810: serialized column-lines undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_columnlines.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#810: missing-ColumnLines fixture should be writable");
+
+    lines_result = copperfin::vfp::set_visual_object_column_lines({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .column_lines = true
+    });
+    expect(!lines_result.ok, "#810: column-lines assignment should reject objects without a writable ColumnLines carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -14238,6 +14422,7 @@ int main() {
     test_set_visual_object_bound_column_assigns_numeric_value();
     test_set_visual_object_column_count_assigns_numeric_value();
     test_set_visual_object_column_widths_assigns_text();
+    test_set_visual_object_column_lines_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

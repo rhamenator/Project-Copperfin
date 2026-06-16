@@ -5367,6 +5367,15 @@ VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWi
         request.column_widths);
 }
 
+VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLinesRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ColumnLines",
+        "column-lines",
+        request.column_lines ? ".T." : ".F.");
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

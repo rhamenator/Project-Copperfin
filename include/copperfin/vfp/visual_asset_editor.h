@@ -748,6 +748,12 @@ struct VisualObjectColumnWidthsRequest {
     std::string column_widths;
 };
 
+struct VisualObjectColumnLinesRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool column_lines = false;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -887,6 +893,7 @@ VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSou
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
 VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCountRequest& request);
 VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWidthsRequest& request);
+VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLinesRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
