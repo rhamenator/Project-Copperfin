@@ -1399,8 +1399,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only placeholder-return-int admission result unused.");
             expect(wrapper_source.find("const auto placeholder_return_int =\n        copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value);") != std::string::npos,
                    "build host DLL wrapper should execute placeholder-return-int routing at the generated call-site before stub emission.");
-            expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value, placeholder_return_int);") != std::string::npos,
-                   "build host DLL wrapper should execute stub emission from explicit placeholder-return-int output.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_stub_emission(placeholder_return_int_admission, placeholder_return_int);") != std::string::npos,
+                   "build host DLL wrapper should route explicit placeholder-return-int output through the shared stub-emission admission helper.");
+            expect(wrapper_source.find("(void)stub_emission_admission;") == std::string::npos,
+                   "build host DLL wrapper should consume stub-emission admission when executing stub emission.");
+            expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(stub_emission_admission);") != std::string::npos,
+                   "build host DLL wrapper should execute stub emission from explicit admission output.");
             expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
                    "build host DLL wrapper should build the stub-emission return surface before direct output application.");
             expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
@@ -2321,12 +2325,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should execute placeholder-return-int routing at the generated call-site before stub emission.");
             expect(wrapper_source.find("const auto stub_emission_admission =") != std::string::npos,
                    "build host FLL wrapper should admit staged stub emission from the placeholder-return-int admission.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_admit_stub_emission(placeholder_return_int_admission);") != std::string::npos,
-                   "build host FLL wrapper should route placeholder-return-int admission through the shared stub-emission admission helper.");
-            expect(wrapper_source.find("(void)stub_emission_admission;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only stub-emission admission result unused.");
-            expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value, placeholder_return_int);") != std::string::npos,
-                   "build host FLL wrapper should execute stub emission from explicit placeholder-return-int output.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_admit_stub_emission(placeholder_return_int_admission, placeholder_return_int);") != std::string::npos,
+                   "build host FLL wrapper should route explicit placeholder-return-int output through the shared stub-emission admission helper.");
+            expect(wrapper_source.find("(void)stub_emission_admission;") == std::string::npos,
+                   "build host FLL wrapper should consume stub-emission admission when executing stub emission.");
+            expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(stub_emission_admission);") != std::string::npos,
+                   "build host FLL wrapper should execute stub emission from explicit admission output.");
             expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
                    "build host FLL wrapper should build the stub-emission return surface before direct output application.");
             expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
