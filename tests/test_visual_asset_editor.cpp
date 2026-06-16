@@ -7334,6 +7334,222 @@ void test_rename_visual_object_updates_identity_safely() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_objects_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_rename_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "rename_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "frmMain"},
+        {"txtName", "nameBox", "name-guid", "frmMain"},
+        {"lblStatus", "statusLabel", "status-guid", "frmMain"},
+        {"oldDeleted", "deletedName", "deleted-guid", "frmMain"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#782: rename-batch fixture should be writable");
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "deleted-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#782: rename-batch fixture should support deleted-row collision setup");
+
+    const auto property_value = [&](const std::string& unique_id, const std::string& property_name) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, "#782: identity property should remain queryable");
+        return result.value;
+    };
+
+    auto batch_result = copperfin::vfp::rename_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .update_object_name = true,
+                .new_object_name = "cmdCommit",
+                .update_name = true,
+                .new_name = "commitButton",
+                .update_unique_id = true,
+                .new_unique_id = "commit-guid"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = true,
+                .new_name = "nameEntry",
+                .update_unique_id = true,
+                .new_unique_id = "name-entry-guid"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .update_object_name = true,
+                .new_object_name = "lblState",
+                .update_name = false,
+                .new_name = {},
+                .update_unique_id = false,
+                .new_unique_id = {}
+            }
+        }
+    });
+    expect(batch_result.ok, "#782: batch rename should support mixed selectors and OBJNAME/NAME/UNIQUEID updates");
+    expect(property_value("commit-guid", "OBJNAME") == "cmdCommit" &&
+            property_value("commit-guid", "NAME") == "commitButton" &&
+            property_value("name-entry-guid", "NAME") == "nameEntry" &&
+            property_value("status-guid", "OBJNAME") == "lblState",
+        "#782: batch rename should persist requested identity updates");
+    expect(property_value("deleted-guid", "OBJNAME") == "oldDeleted",
+        "#782: batch rename should preserve unrelated deleted-row identity");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#782: successful batch renames should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::rename_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "commit-guid",
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = true,
+                .new_name = "temporaryCommit",
+                .update_unique_id = false,
+                .new_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "name-entry-guid",
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = false,
+                .new_name = {},
+                .update_unique_id = true,
+                .new_unique_id = "deleted-guid"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#782: batch rename should reject identity collisions with deleted rows");
+    expect(property_value("commit-guid", "NAME") == "commitButton" &&
+            property_value("name-entry-guid", "UNIQUEID") == "name-entry-guid",
+        "#782: collision failures should roll back earlier identity writes");
+
+    batch_result = copperfin::vfp::rename_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "commit-guid",
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = true,
+                .new_name = "temporaryCommit",
+                .update_unique_id = false,
+                .new_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "missing-guid",
+                .update_object_name = true,
+                .new_object_name = "missingObj",
+                .update_name = false,
+                .new_name = {},
+                .update_unique_id = false,
+                .new_unique_id = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#782: batch rename should reject missing source selectors");
+    expect(property_value("commit-guid", "NAME") == "commitButton",
+        "#782: missing-source failures should roll back earlier identity writes");
+
+    batch_result = copperfin::vfp::rename_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "commit-guid",
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = true,
+                .new_name = "temporaryCommit",
+                .update_unique_id = false,
+                .new_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "name-entry-guid",
+                .update_object_name = false,
+                .new_object_name = {},
+                .update_name = false,
+                .new_name = {},
+                .update_unique_id = false,
+                .new_unique_id = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#782: batch rename should reject items without requested identity fields");
+    expect(property_value("commit-guid", "NAME") == "commitButton",
+        "#782: empty-item failures should roll back earlier identity writes");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#782: failed batch rename rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::rename_visual_objects({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#782: empty batch rename requests should fail explicitly");
+
+    for (int index = 0; index < 6; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#782: undo should restore each successful batch identity write");
+    }
+
+    expect(property_value("save-guid", "OBJNAME") == "cmdSave" &&
+            property_value("save-guid", "NAME") == "saveButton" &&
+            property_value("name-guid", "NAME") == "nameBox" &&
+            property_value("status-guid", "OBJNAME") == "lblStatus" &&
+            property_value("deleted-guid", "OBJNAME") == "oldDeleted",
+        "#782: successful batch rename undo should restore original identity state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_reorder_visual_object_updates_z_order() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -8953,6 +9169,7 @@ int main() {
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
+    test_rename_visual_objects_rolls_back_failed_batches();
     test_reorder_visual_object_updates_z_order();
     test_list_visual_object_children_filters_immediate_children();
     test_list_visual_object_descendants_walks_container_tree();

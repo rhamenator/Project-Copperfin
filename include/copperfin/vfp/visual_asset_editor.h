@@ -576,6 +576,23 @@ struct VisualObjectRenameRequest {
     std::string new_unique_id;
 };
 
+struct VisualObjectRenameBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    bool update_object_name = false;
+    std::string new_object_name;
+    bool update_name = false;
+    std::string new_name;
+    bool update_unique_id = false;
+    std::string new_unique_id;
+};
+
+struct VisualObjectRenameBatchRequest {
+    std::string path;
+    std::vector<VisualObjectRenameBatchItem> objects;
+};
+
 struct VisualObjectReorderRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -624,6 +641,7 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
+VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest& request);
 VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request);
