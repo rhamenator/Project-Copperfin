@@ -713,6 +713,17 @@ void test_build_report_xasset_executable_model() {
     expect(model.shutdown_lines.empty(), "report executable model should not emit shutdown lines for preview-only startup");
     expect(model.startup_lines.size() == 1U, "report startup should be a direct preview command");
     expect(model.startup_lines[0].find("REPORT FORM") != std::string::npos, "report startup should preview the report");
+    expect(model.startup_steps.size() == 1U, "#710: report startup should expose one structured preview lifecycle step");
+    if (!model.startup_steps.empty()) {
+        expect(model.startup_steps[0].kind == "preview", "#710: report lifecycle step should be tagged as preview");
+        expect(model.startup_steps[0].command_text == model.startup_lines[0],
+               "#710: report lifecycle step command should mirror the legacy startup line");
+        expect(model.startup_steps[0].routine_name.empty(), "#710: report preview lifecycle step should not masquerade as a routine");
+        expect(model.startup_steps[0].source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#710: report preview lifecycle step should use the missing source-field sentinel");
+        expect(model.startup_steps[0].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#710: report preview lifecycle step should use the missing source-line sentinel");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("REPORT FORM 'E:\\Project-Copperfin\\samples\\invoice.frx' PREVIEW") != std::string::npos, "bootstrap should preview the report asset directly");
@@ -740,6 +751,17 @@ void test_build_label_xasset_executable_model() {
     expect(model.shutdown_lines.empty(), "label executable model should not emit shutdown lines for preview-only startup");
     expect(model.startup_lines.size() == 1U, "label startup should be a direct preview command");
     expect(model.startup_lines[0].find("LABEL FORM") != std::string::npos, "label startup should preview the label");
+    expect(model.startup_steps.size() == 1U, "#710: label startup should expose one structured preview lifecycle step");
+    if (!model.startup_steps.empty()) {
+        expect(model.startup_steps[0].kind == "preview", "#710: label lifecycle step should be tagged as preview");
+        expect(model.startup_steps[0].command_text == model.startup_lines[0],
+               "#710: label lifecycle step command should mirror the legacy startup line");
+        expect(model.startup_steps[0].routine_name.empty(), "#710: label preview lifecycle step should not masquerade as a routine");
+        expect(model.startup_steps[0].source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#710: label preview lifecycle step should use the missing source-field sentinel");
+        expect(model.startup_steps[0].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#710: label preview lifecycle step should use the missing source-line sentinel");
+    }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("LABEL FORM 'E:\\Project-Copperfin\\samples\\mailing.lbx' PREVIEW") != std::string::npos, "bootstrap should preview the label asset directly");

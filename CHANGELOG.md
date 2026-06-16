@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#710 report/label preview lifecycle provenance coverage shipped: focused xAsset tests now prove preview lifecycle steps mirror legacy startup lines, use preview kind metadata, and carry explicit missing source sentinels.
 - E1/#709 xAsset lifecycle step provenance shipped: startup/shutdown plans now expose structured lifecycle steps with method source provenance and synthetic activation/preview commands using explicit missing sentinels while preserving legacy line/routine vectors.
 - E1/#708 xAsset action binding provenance shipped: action bindings now expose title source field provenance plus routine source field/line provenance inherited from method-backed actions, with synthetic submenu routines using missing sentinels.
 - E1/#707 xAsset method source-line provenance shipped: executable xAsset methods now retain memo declaration line indexes, wrapped field methods start at line zero, and synthetic submenu methods use the missing-line sentinel.
