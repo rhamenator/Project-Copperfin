@@ -664,6 +664,12 @@ struct VisualObjectVisibilityRequest {
     bool visible = false;
 };
 
+struct VisualObjectEnabledRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool enabled = false;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -789,6 +795,7 @@ VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& reque
 VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequest& request);
 VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopRequest& request);
 VisualAssetEditResult set_visual_object_visibility(const VisualObjectVisibilityRequest& request);
+VisualAssetEditResult set_visual_object_enabled(const VisualObjectEnabledRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

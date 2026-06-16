@@ -9044,6 +9044,181 @@ void test_set_visual_object_visibility_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_enabled_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_enabled_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "enabled.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "ENABLED", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", ".T."},
+        {"cmdTwo", "twoButton", "two-guid", ".T."},
+        {"cmdThree", "threeButton", "three-guid", ".F."},
+        {"cmdOther", "otherButton", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#796: enabled fixture should be writable");
+
+    const auto enabled_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ENABLED"
+        });
+        expect(result.ok && result.exists, "#796: enabled fixture property should be readable");
+        return result.value;
+    };
+    const auto enabled = [&](const std::string& unique_id) {
+        return enabled_for(table_path.string(), unique_id);
+    };
+    const auto enabled_state = [&]() {
+        return enabled("one-guid") + "," +
+            enabled("two-guid") + "," +
+            enabled("three-guid") + "," +
+            enabled("other-guid");
+    };
+
+    auto enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .enabled = false
+    });
+    expect(enabled_result.ok, "#796: enabled assignment should support mixed selectors");
+    expect(enabled("one-guid") == ".F." &&
+            enabled("two-guid") == ".F." &&
+            enabled("three-guid") == ".F." &&
+            enabled("other-guid") == ".T.",
+        "#796: enabled false assignment should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#796: first enabled write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#796: second enabled write should remain undo-backed");
+    expect(enabled_state() == ".T.,.T.,.F.,.T.", "#796: enabled undo should restore original states");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .enabled = true
+    });
+    expect(enabled_result.ok, "#796: enabled true assignment should support record-index selectors");
+    expect(enabled("three-guid") == ".T." &&
+            enabled("one-guid") == ".T." &&
+            enabled("two-guid") == ".T.",
+        "#796: enabled true assignment should use FoxPro logical formatting");
+
+    const std::string committed_state = enabled_state();
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = table_path.string(),
+        .objects = {},
+        .enabled = true
+    });
+    expect(!enabled_result.ok, "#796: enabled assignment should reject empty selections");
+    expect(enabled_state() == committed_state, "#796: empty-selection failures should not mutate enabled states");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .enabled = false
+    });
+    expect(!enabled_result.ok, "#796: enabled assignment should reject missing selected objects");
+    expect(enabled_state() == committed_state, "#796: missing-object failures should not mutate enabled states");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .enabled = false
+    });
+    expect(!enabled_result.ok, "#796: enabled assignment should reject duplicate selected objects");
+    expect(enabled_state() == committed_state, "#796: duplicate-selection failures should not mutate enabled states");
+
+    const fs::path blob_path = temp_dir / "enabled_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cmdBlob", "blob-guid", "Caption = \"Blob\"\r\nEnabled = .T.\r\n"},
+        {"cmdNoEnabled", "no-enabled-guid", "Caption = \"No Enabled\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#796: enabled property-blob fixture should be writable");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"}
+        },
+        .enabled = false
+    });
+    expect(enabled_result.ok, "#796: enabled assignment should support existing serialized properties");
+    expect(enabled_for(blob_path.string(), "blob-guid") == ".F.",
+        "#796: serialized enabled assignment should preserve property lookup");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#796: serialized enabled write should remain undo-backed");
+    expect(enabled_for(blob_path.string(), "blob-guid") == ".T.",
+        "#796: serialized enabled undo should restore original property value");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "no-enabled-guid"}
+        },
+        .enabled = true
+    });
+    expect(!enabled_result.ok, "#796: enabled assignment should reject missing serialized ENABLED properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_enabled.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#796: missing-ENABLED fixture should be writable");
+
+    enabled_result = copperfin::vfp::set_visual_object_enabled({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .enabled = true
+    });
+    expect(!enabled_result.ok, "#796: enabled assignment should reject missing ENABLED fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11631,6 +11806,7 @@ int main() {
     test_set_visual_object_tab_order_assigns_sequential_indexes();
     test_set_visual_object_tab_stop_assigns_logical_state();
     test_set_visual_object_visibility_assigns_logical_state();
+    test_set_visual_object_enabled_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
