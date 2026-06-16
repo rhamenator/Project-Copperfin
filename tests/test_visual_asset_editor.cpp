@@ -8776,6 +8776,140 @@ void test_set_visual_object_tab_order_assigns_sequential_indexes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_tab_stop_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_tab_stop_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "tab_stop.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "TABSTOP", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", ".T."},
+        {"cmdTwo", "twoButton", "two-guid", ".T."},
+        {"cmdThree", "threeButton", "three-guid", ".F."},
+        {"cmdOther", "otherButton", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#794: tab-stop fixture should be writable");
+
+    const auto tab_stop = [&](const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "TABSTOP"
+        });
+        expect(result.ok && result.exists, "#794: tab-stop fixture property should be readable");
+        return result.value;
+    };
+    const auto tab_stop_state = [&]() {
+        return tab_stop("one-guid") + "," +
+            tab_stop("two-guid") + "," +
+            tab_stop("three-guid") + "," +
+            tab_stop("other-guid");
+    };
+
+    auto tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .tab_stop = false
+    });
+    expect(tab_result.ok, "#794: tab-stop assignment should support mixed selectors");
+    expect(tab_stop("one-guid") == ".F." &&
+            tab_stop("two-guid") == ".F." &&
+            tab_stop("three-guid") == ".F." &&
+            tab_stop("other-guid") == ".T.",
+        "#794: tab-stop false assignment should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#794: first tab-stop write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#794: second tab-stop write should remain undo-backed");
+    expect(tab_stop_state() == ".T.,.T.,.F.,.T.", "#794: tab-stop undo should restore original states");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .tab_stop = true
+    });
+    expect(tab_result.ok, "#794: tab-stop true assignment should support record-index selectors");
+    expect(tab_stop("three-guid") == ".T." &&
+            tab_stop("one-guid") == ".T." &&
+            tab_stop("two-guid") == ".T.",
+        "#794: tab-stop true assignment should use FoxPro logical formatting");
+
+    const std::string committed_state = tab_stop_state();
+    tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = table_path.string(),
+        .objects = {},
+        .tab_stop = true
+    });
+    expect(!tab_result.ok, "#794: tab-stop assignment should reject empty selections");
+    expect(tab_stop_state() == committed_state, "#794: empty-selection failures should not mutate tab-stop states");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .tab_stop = false
+    });
+    expect(!tab_result.ok, "#794: tab-stop assignment should reject missing selected objects");
+    expect(tab_stop_state() == committed_state, "#794: missing-object failures should not mutate tab-stop states");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .tab_stop = false
+    });
+    expect(!tab_result.ok, "#794: tab-stop assignment should reject duplicate selected objects");
+    expect(tab_stop_state() == committed_state, "#794: duplicate-selection failures should not mutate tab-stop states");
+
+    const fs::path incomplete_path = temp_dir / "missing_tabstop.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#794: missing-TABSTOP fixture should be writable");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_stop({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .tab_stop = true
+    });
+    expect(!tab_result.ok, "#794: tab-stop assignment should reject missing TABSTOP fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11361,6 +11495,7 @@ int main() {
     test_snap_visual_objects_to_grid_by_axis();
     test_nudge_visual_objects_by_delta();
     test_set_visual_object_tab_order_assigns_sequential_indexes();
+    test_set_visual_object_tab_stop_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

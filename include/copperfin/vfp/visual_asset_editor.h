@@ -652,6 +652,12 @@ struct VisualObjectTabOrderRequest {
     int starting_tab_index = 0;
 };
 
+struct VisualObjectTabStopRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool tab_stop = false;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -775,6 +781,7 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
 VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRequest& request);
 VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& request);
 VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequest& request);
+VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
