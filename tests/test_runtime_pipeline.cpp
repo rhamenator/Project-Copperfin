@@ -1664,8 +1664,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should evaluate staged response-validation policy from the missing-response and validation helpers.");
         expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);") != std::string::npos,
                "library-output wrapper source should route missing-response output through the shared response-validation evaluation helper.");
-        expect(wrapper_source.find("(void)response_validation_evaluation;") != std::string::npos,
-               "library-output wrapper source should explicitly keep the scaffold-only response-validation evaluation result unused.");
+        expect(wrapper_source.find("(void)response_validation_evaluation;") == std::string::npos,
+               "library-output wrapper source should consume response-validation evaluation when admitting response parsing.");
         expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
                "library-output wrapper source should build a response artifact from the response read plan");
         expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,
@@ -3075,8 +3075,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should evaluate staged response-validation policy from the missing-response and validation helpers.");
         expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);") != std::string::npos,
                "fll-output wrapper source should route missing-response output through the shared response-validation evaluation helper.");
-        expect(wrapper_source.find("(void)response_validation_evaluation;") != std::string::npos,
-               "fll-output wrapper source should explicitly keep the scaffold-only response-validation evaluation result unused.");
+        expect(wrapper_source.find("(void)response_validation_evaluation;") == std::string::npos,
+               "fll-output wrapper source should consume response-validation evaluation when admitting response parsing.");
         expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(") != std::string::npos,
                "fll-output wrapper source should build a response artifact from the response read plan");
         expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(") != std::string::npos,

@@ -2319,7 +2319,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)missing_response;\n";
             stream << "    const auto response_validation_evaluation =\n";
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);\n";
-            stream << "    (void)response_validation_evaluation;\n";
             stream << "    const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n";
             stream << "        response_read_plan,\n";
             stream << "        response_document);\n";
@@ -2565,7 +2564,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)missing_response;\n";
             stream << "    const auto response_validation_evaluation =\n";
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);\n";
-            stream << "    (void)response_validation_evaluation;\n";
             stream << "    const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n";
             stream << "        response_read_plan,\n";
             stream << "        response_document);\n";
