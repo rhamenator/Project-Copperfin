@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#762`, adding selected visual object method query so method/event editors can open one selected `PROCEDURE`/`FUNCTION` declaration by name with source metadata, record/deleted state, not-found semantics, ambiguity checks, and read-only behavior.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#763`, adding selected visual object method copying so method/event editors can copy one selected `PROCEDURE`/`FUNCTION` between objects by record-index, object-name, or `UNIQUEID`, optionally rename or replace the target method, preserve target declaration kind on replacement, retain undo support, and preserve full memo bodies.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 

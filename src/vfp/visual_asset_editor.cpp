@@ -2069,6 +2069,53 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
     });
 }
 
+VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request) {
+    if (!request.target_method_name.empty() && trim_both(request.target_method_name).empty()) {
+        return {.ok = false, .error = "No target method name was provided."};
+    }
+
+    const auto source_method = query_visual_object_method({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .method_name = request.source_method_name
+    });
+    if (!source_method.ok) {
+        return {.ok = false, .error = source_method.error};
+    }
+    if (!source_method.exists) {
+        return {.ok = false, .error = "The source method was not found."};
+    }
+
+    const std::string target_method_name = request.target_method_name.empty()
+        ? source_method.method.method_name
+        : trim_both(request.target_method_name);
+    const auto target_method = query_visual_object_method({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .method_name = target_method_name
+    });
+    if (!target_method.ok) {
+        return {.ok = false, .error = target_method.error};
+    }
+    if (target_method.exists && !request.replace_existing) {
+        return {.ok = false, .error = "The target object already has a method with the requested name."};
+    }
+
+    return update_visual_object_method({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .method_name = target_method_name,
+        .method_kind = target_method.exists ? target_method.method.kind : source_method.method.kind,
+        .source_text = source_method.method.source_text
+    });
+}
+
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};

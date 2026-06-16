@@ -16,11 +16,6 @@ namespace copperfin::vfp {
 
 namespace {
 
-std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return static_cast<std::uint16_t>(bytes[offset]) |
-           (static_cast<std::uint16_t>(bytes[offset + 1]) << 8U);
-}
-
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
            (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
@@ -113,21 +108,6 @@ std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t 
         value.push_back(static_cast<char>(raw));
     }
     return trim_right(std::move(value));
-}
-
-std::string load_file_string(const std::string& path) {
-    std::error_code ignored;
-    if (!std::filesystem::is_regular_file(path, ignored)) {
-        return {};
-    }
-    std::ifstream input(path, std::ios::binary);
-    if (!input) {
-        return {};
-    }
-    return {
-        std::istreambuf_iterator<char>(input),
-        std::istreambuf_iterator<char>()
-    };
 }
 
 std::vector<std::uint8_t> read_binary_file(const std::string& path) {
@@ -509,7 +489,7 @@ DbfWriteResult write_memo_field_bytes(
     const std::string memo_value = value;
     if (memo_value.empty()) {
         write_le_u32(table_bytes, field_offset, 0U);
-        return {.ok = true, .record_count = record_count};
+        return {.ok = true, .error = {}, .record_count = record_count};
     }
 
     if (memo_bytes.size() < 8U) {
@@ -555,7 +535,7 @@ DbfWriteResult write_memo_field_bytes(
 
     write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);
     write_le_u32(table_bytes, field_offset, next_free_block);
-    return {.ok = true, .record_count = record_count};
+    return {.ok = true, .error = {}, .record_count = record_count};
 }
 
 DbfWriteResult write_field_bytes(
@@ -760,7 +740,7 @@ DbfWriteResult write_field_bytes(
         }
     }
 
-    return {.ok = true, .record_count = header.record_count};
+    return {.ok = true, .error = {}, .record_count = header.record_count};
 }
 
 DbfWriteResult append_blank_record_bytes(
@@ -845,7 +825,7 @@ DbfWriteResult append_blank_record_bytes(
 
     table_bytes.push_back(0x1AU);
     write_le_u32(table_bytes, 4U, header.record_count + 1U);
-    return {.ok = true, .record_count = header.record_count + 1U};
+    return {.ok = true, .error = {}, .record_count = header.record_count + 1U};
 }
 
 class MemoReader {
@@ -911,12 +891,7 @@ public:
             }
         }
 
-        text = trim_right(std::move(text));
-        if (text.size() > 160U) {
-            text.resize(160U);
-            text += "...";
-        }
-        return text;
+        return trim_right(std::move(text));
     }
 
 private:
@@ -1177,7 +1152,7 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
         table.records.push_back(std::move(record));
     }
 
-    return {.ok = true, .table = std::move(table)};
+    return {.ok = true, .table = std::move(table), .error = {}};
 }
 
 DbfWriteResult create_dbf_table_file(
@@ -1323,7 +1298,7 @@ DbfWriteResult create_dbf_table_file(
         return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = records.size()};
     }
 
-    return {.ok = true, .record_count = records.size()};
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
@@ -1384,7 +1359,7 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
         }
     }
 
-    return {.ok = true, .record_count = records.size()};
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name) {
@@ -1452,7 +1427,7 @@ DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& 
         }
     }
 
-    return {.ok = true, .record_count = records.size()};
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
@@ -1510,7 +1485,7 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
         }
     }
 
-    return {.ok = true, .record_count = records.size()};
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
@@ -1643,7 +1618,7 @@ DbfWriteResult set_record_deleted_flag(
         return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
     }
 
-    return {.ok = true, .record_count = header_result.header.record_count};
+    return {.ok = true, .error = {}, .record_count = header_result.header.record_count};
 }
 
 DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count) {
@@ -1677,7 +1652,7 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
         return {.ok = false, .error = "Unable to write table file.", .record_count = header.record_count};
     }
 
-    return {.ok = true, .record_count = record_count};
+    return {.ok = true, .error = {}, .record_count = record_count};
 }
 
 DbfWriteResult pack_dbf_table_file(const std::string& path) {
@@ -1722,7 +1697,7 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = original_record_count};
     }
 
-    return {.ok = true, .record_count = kept_count};
+    return {.ok = true, .error = {}, .record_count = kept_count};
 }
 
 DbfWriteResult pack_dbf_memo_file(const std::string& path) {
@@ -1744,7 +1719,7 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
         }
     }
     if (!has_memo_fields) {
-        return {.ok = true, .record_count = table_result.table.records.size()};
+        return {.ok = true, .error = {}, .record_count = table_result.table.records.size()};
     }
 
     std::vector<std::vector<std::string>> records;
@@ -1776,7 +1751,7 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
         }
     }
 
-    return {.ok = true, .record_count = records.size()};
+    return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
 DbfWriteResult zap_dbf_table_file(const std::string& path) {
@@ -1803,7 +1778,7 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
         return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
     }
 
-    return {.ok = true, .record_count = 0U};
+    return {.ok = true, .error = {}, .record_count = 0U};
 }
 
 }  // namespace copperfin::vfp

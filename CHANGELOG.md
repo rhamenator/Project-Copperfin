@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#763 selected visual object method copying shipped: method/event editors can copy one selected object's `PROCEDURE` or `FUNCTION` into another selected object by record-index, object-name, or `UNIQUEID`, optionally rename or replace the target method, preserve target declaration kind on replacement, keep unrelated methods intact, and read full memo bodies without the prior 160-byte display cap.
 - E2/#762 selected visual object method query shipped: method/event editors can open one selected `PROCEDURE` or `FUNCTION` declaration by name with source metadata, resolved record/deleted state, not-found semantics, ambiguity checks, and read-only behavior.
 - E2/#761 selected visual object method renaming shipped: method/event editors can rename `PROCEDURE` and `FUNCTION` declarations in selected object `METHODS` memos while preserving bodies, rejecting collisions, and retaining undo support.
 - E2/#760 selected visual object subtree duplication shipped: container copy/paste workflows can duplicate a selected root plus descendants with per-row replacement identities, copied parent rewrites, memo preservation, deleted-state preservation, and collision-safe validation before mutation.
