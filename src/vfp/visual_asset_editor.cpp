@@ -5584,6 +5584,19 @@ VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequ
         std::to_string(request.draw_mode));
 }
 
+VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRequest& request) {
+    if (request.draw_style < 0) {
+        return {.ok = false, .error = "DrawStyle must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DrawStyle",
+        "draw-style",
+        std::to_string(request.draw_style));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};

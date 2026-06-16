@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#886 selected visual object draw-style assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#885 selected visual object draw-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#884 selected visual object curvature assignment shipped: designer commands can assign caller-provided non-negative numeric `Curvature` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#883 selected visual object control-box assignment shipped: designer commands can assign caller-provided logical `ControlBox` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
