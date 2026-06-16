@@ -5413,6 +5413,16 @@ VisualAssetEditResult set_visual_object_dynamic_alignment(const VisualObjectDyna
         request.dynamic_alignment);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_current_control(
+    const VisualObjectDynamicCurrentControlRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicCurrentControl",
+        "dynamic current control",
+        request.dynamic_current_control);
+}
+
 VisualAssetEditResult set_visual_object_dynamic_font_name(const VisualObjectDynamicFontNameRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

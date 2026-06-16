@@ -784,6 +784,12 @@ struct VisualObjectDynamicAlignmentRequest {
     std::string dynamic_alignment;
 };
 
+struct VisualObjectDynamicCurrentControlRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string dynamic_current_control;
+};
+
 struct VisualObjectDynamicFontNameRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1133,6 +1139,7 @@ VisualAssetEditResult set_visual_object_font_strikethru(const VisualObjectFontSt
 VisualAssetEditResult set_visual_object_font_outline(const VisualObjectFontOutlineRequest& request);
 VisualAssetEditResult set_visual_object_font_shadow(const VisualObjectFontShadowRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_alignment(const VisualObjectDynamicAlignmentRequest& request);
+VisualAssetEditResult set_visual_object_dynamic_current_control(const VisualObjectDynamicCurrentControlRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_font_name(const VisualObjectDynamicFontNameRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_font_size(const VisualObjectDynamicFontSizeRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_font_bold(const VisualObjectDynamicFontBoldRequest& request);

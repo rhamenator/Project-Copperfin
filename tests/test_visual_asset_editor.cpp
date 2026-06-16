@@ -12777,6 +12777,29 @@ void test_set_visual_object_dynamic_alignment_assigns_expression_value() {
         });
 }
 
+void test_set_visual_object_dynamic_current_control_assigns_expression_value() {
+    test_dynamic_raw_scalar_property_assigns_expression_value(
+        "#850",
+        "dynamic_current_control",
+        "DynamicCurrentControl",
+        "DYNAMICCURRENTCONTROL",
+        "current-control",
+        "\"txtCustomer\"",
+        "\"txtOrders\"",
+        "\"txtOther\"",
+        "IIF(RECNO() % 2 = 0, \"txtOrders\", \"txtCustomer\")",
+        "\"txtCustomer\"",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& expression) {
+            return copperfin::vfp::set_visual_object_dynamic_current_control({
+                .path = path,
+                .objects = objects,
+                .dynamic_current_control = expression
+            });
+        });
+}
+
 void test_set_visual_object_dynamic_input_mask_assigns_expression_value() {
     test_dynamic_raw_scalar_property_assigns_expression_value(
         "#848",
@@ -21286,6 +21309,7 @@ int main() {
     test_set_visual_object_font_outline_assigns_logical_state();
     test_set_visual_object_font_shadow_assigns_logical_state();
     test_set_visual_object_dynamic_alignment_assigns_expression_value();
+    test_set_visual_object_dynamic_current_control_assigns_expression_value();
     test_set_visual_object_dynamic_font_name_assigns_expression_value();
     test_set_visual_object_dynamic_font_size_assigns_expression_value();
     test_set_visual_object_dynamic_font_bold_assigns_expression_value();
