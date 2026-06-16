@@ -303,6 +303,7 @@ The official command inventory is much larger than the current runtime. The deep
 - command-surface and expression/runtime-state depth: #7, #8
 - OLE/COM and automation compatibility: #10, #11
 - runtime fault containment and diagnostics beyond the now-closed automation lane: #13, #14
+- shared design-model and memo-heavy designer asset preservation: #22
 - document/vector and AI planning policy: #30, #31
 
 ### Runtime Arrays And Expressions

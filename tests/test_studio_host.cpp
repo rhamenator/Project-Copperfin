@@ -128,6 +128,49 @@ void test_open_document_infers_form_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_object_snapshot_preserves_empty_and_null_design_fields() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\customer.scx)";
+    document.kind = copperfin::studio::StudioAssetKind::form;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        {
+            .record_index = 7U,
+            .deleted = false,
+            .values = {
+                {.field_name = "OBJNAME", .field_type = 'C', .is_null = false, .display_value = "cmdSave"},
+                {.field_name = "PARENT", .field_type = 'C', .is_null = true, .display_value = ""},
+                {.field_name = "TAG", .field_type = 'M', .is_null = false, .display_value = ""},
+                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save"}
+            }
+        }
+    };
+
+    const auto objects = copperfin::studio::build_object_snapshot(document);
+    expect(objects.size() == 1U, "#658: form design snapshot should include the parsed record");
+    if (!objects.empty()) {
+        const auto parent = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
+            return property.name == "PARENT";
+        });
+        const auto tag = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
+            return property.name == "TAG";
+        });
+        const auto caption = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
+            return property.name == "Caption";
+        });
+
+        expect(parent != objects[0].properties.end(), "#658: null design fields should stay in object snapshots");
+        if (parent != objects[0].properties.end()) {
+            expect(parent->is_null, "#658: null design field metadata should stay attached");
+        }
+        expect(tag != objects[0].properties.end(), "#658: empty memo-backed design fields should stay in object snapshots");
+        if (tag != objects[0].properties.end()) {
+            expect(tag->value.empty(), "#658: empty design fields should preserve their empty value");
+        }
+        expect(caption != objects[0].properties.end(), "#658: visual property blob expansion should still work");
+    }
+}
+
 void test_open_document_preserves_validation_findings() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_validation_tests";
@@ -376,6 +419,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
+    test_object_snapshot_preserves_empty_and_null_design_fields();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();
     test_open_document_preserves_dbf_descriptor_validation_findings();

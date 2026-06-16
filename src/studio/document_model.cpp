@@ -199,10 +199,6 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         }
 
         for (const auto& value : record.values) {
-            if (value.display_value.empty()) {
-                continue;
-            }
-
             snapshot.properties.push_back({
                 .name = value.field_name,
                 .type = value.field_type,

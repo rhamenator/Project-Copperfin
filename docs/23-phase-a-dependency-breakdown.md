@@ -334,14 +334,11 @@ Active-open lane structure under `#8`:
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
 
-Current active-open prompt-sized slice queue:
+Current active-open prompt-sized slice queue after Phase A/D1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#13` | `#150` | preserve session and cursor state after runtime faults |
-| `#13` | `#151` | preserve repeated-continue stability after runtime faults |
-| `#14` | `#152` | tighten pause metadata and stack-frame fidelity |
-| `#14` | `#153` | tighten developer-facing diagnostic normalization |
+| `#22` | `#658` | preserve empty and NULL design-record fields in Studio object snapshots |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -351,33 +348,25 @@ Historical-closed prompt-sized native slice queues:
 - `#12`: `#135`, `#136`
 - `#13`: `#142`, `#143`
 - `#14`: `#144`, `#145`
+- `#13`: `#150`, `#151`
+- `#14`: `#152`, `#153`
 - `#95`: `#146`, `#147`, `#148`, `#149`
 
 Remaining active-open adjacent prompt-sized native slice queues:
 
-- `#13`: `#150`, `#151`
-- `#14`: `#152`, `#153`
-- broader repo execution leaves are now also pre-split beyond Phase A under `#15`-`#43`, `#57`, and `#91`; this document keeps the active queue focused on the Phase A critical path
+- `#22`: continue by opening the next shared design-model child after `#658` closes
+- broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
-Canonical remaining Phase A execution order:
+Canonical post-D1 execution order:
 
-1. `#150`
-2. `#151`
-3. `#152`
-4. `#153`
-5. `#92`
-6. `#97`
-7. `#98`
-8. `#99`
-9. `#100`
-10. `#101`
-11. `#93`
-12. `#94`
+1. `#658`
+2. next prompt-sized child under `#22`
+3. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
 
 Execution guardrails:
 
 - treat "coverage advanced" notes as progress evidence, not issue-closure evidence
-- keep adjacent open branches (`#154`-`#203`) paused until the canonical chain above is complete
+- keep work tied to an open prompt-sized child; create the next child under the active umbrella before coding when none exists
 
 Current dependency links:
 
