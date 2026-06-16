@@ -5477,6 +5477,19 @@ VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPictu
         std::to_string(request.picture_position));
 }
 
+VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictureSpacingRequest& request) {
+    if (request.picture_spacing < 0) {
+        return {.ok = false, .error = "PictureSpacing must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "PictureSpacing",
+        "picture-spacing",
+        std::to_string(request.picture_spacing));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
