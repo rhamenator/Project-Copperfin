@@ -5663,6 +5663,19 @@ VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRe
         std::to_string(request.scale_mode));
 }
 
+VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBarsRequest& request) {
+    if (request.scroll_bars < 0) {
+        return {.ok = false, .error = "ScrollBars must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ScrollBars",
+        "scroll-bars",
+        std::to_string(request.scroll_bars));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};
