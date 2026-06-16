@@ -10744,6 +10744,24 @@ void test_set_visual_object_sparse_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_add_line_feeds_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#853",
+        "addlinefeeds",
+        "AddLineFeeds",
+        "ADDLINEFEEDS",
+        "add-line-feeds",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_add_line_feeds({
+                .path = path,
+                .objects = objects,
+                .add_line_feeds = value
+            });
+        });
+}
+
 void test_set_visual_object_input_mask_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -21726,6 +21744,7 @@ int main() {
     test_set_visual_object_control_source_assigns_text();
     test_set_visual_object_current_control_assigns_text();
     test_set_visual_object_sparse_assigns_logical_state();
+    test_set_visual_object_add_line_feeds_assigns_logical_state();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();

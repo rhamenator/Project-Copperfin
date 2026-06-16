@@ -5310,6 +5310,15 @@ VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& 
         request.sparse ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AddLineFeeds",
+        "add-line-feeds",
+        request.add_line_feeds ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

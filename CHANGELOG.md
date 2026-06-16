@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#853 selected visual object add-line-feeds assignment shipped: designer commands can assign caller-provided logical `AddLineFeeds` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#852 selected visual object sparse-state assignment shipped: designer commands can assign caller-provided logical `Sparse` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#851 selected visual object current-control assignment shipped: designer commands can assign caller-provided `CurrentControl` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#850 selected visual object dynamic current-control assignment shipped: designer commands can assign caller-provided raw `DynamicCurrentControl` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
