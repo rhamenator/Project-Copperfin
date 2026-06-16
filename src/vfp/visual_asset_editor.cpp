@@ -5310,6 +5310,15 @@ VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& 
         request.format);
 }
 
+VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "FontName",
+        "font name",
+        request.font_name);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
