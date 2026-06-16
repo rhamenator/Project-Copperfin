@@ -8910,6 +8910,140 @@ void test_set_visual_object_tab_stop_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_visibility_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_visibility_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "visibility.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "VISIBLE", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", ".T."},
+        {"cmdTwo", "twoButton", "two-guid", ".T."},
+        {"cmdThree", "threeButton", "three-guid", ".F."},
+        {"cmdOther", "otherButton", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#795: visibility fixture should be writable");
+
+    const auto visibility = [&](const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "VISIBLE"
+        });
+        expect(result.ok && result.exists, "#795: visibility fixture property should be readable");
+        return result.value;
+    };
+    const auto visibility_state = [&]() {
+        return visibility("one-guid") + "," +
+            visibility("two-guid") + "," +
+            visibility("three-guid") + "," +
+            visibility("other-guid");
+    };
+
+    auto visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .visible = false
+    });
+    expect(visibility_result.ok, "#795: visibility assignment should support mixed selectors");
+    expect(visibility("one-guid") == ".F." &&
+            visibility("two-guid") == ".F." &&
+            visibility("three-guid") == ".F." &&
+            visibility("other-guid") == ".T.",
+        "#795: visibility false assignment should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#795: first visibility write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#795: second visibility write should remain undo-backed");
+    expect(visibility_state() == ".T.,.T.,.F.,.T.", "#795: visibility undo should restore original states");
+
+    visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .visible = true
+    });
+    expect(visibility_result.ok, "#795: visibility true assignment should support record-index selectors");
+    expect(visibility("three-guid") == ".T." &&
+            visibility("one-guid") == ".T." &&
+            visibility("two-guid") == ".T.",
+        "#795: visibility true assignment should use FoxPro logical formatting");
+
+    const std::string committed_state = visibility_state();
+    visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = table_path.string(),
+        .objects = {},
+        .visible = true
+    });
+    expect(!visibility_result.ok, "#795: visibility assignment should reject empty selections");
+    expect(visibility_state() == committed_state, "#795: empty-selection failures should not mutate visibility states");
+
+    visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .visible = false
+    });
+    expect(!visibility_result.ok, "#795: visibility assignment should reject missing selected objects");
+    expect(visibility_state() == committed_state, "#795: missing-object failures should not mutate visibility states");
+
+    visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .visible = false
+    });
+    expect(!visibility_result.ok, "#795: visibility assignment should reject duplicate selected objects");
+    expect(visibility_state() == committed_state, "#795: duplicate-selection failures should not mutate visibility states");
+
+    const fs::path incomplete_path = temp_dir / "missing_visible.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#795: missing-VISIBLE fixture should be writable");
+
+    visibility_result = copperfin::vfp::set_visual_object_visibility({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .visible = true
+    });
+    expect(!visibility_result.ok, "#795: visibility assignment should reject missing VISIBLE fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11496,6 +11630,7 @@ int main() {
     test_nudge_visual_objects_by_delta();
     test_set_visual_object_tab_order_assigns_sequential_indexes();
     test_set_visual_object_tab_stop_assigns_logical_state();
+    test_set_visual_object_visibility_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

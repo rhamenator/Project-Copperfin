@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#795 selected visual object visibility assignment shipped: designer visibility commands can assign FoxPro logical `.T.`/`.F.` `VISIBLE` values to selected objects while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#794 selected visual object tab-stop assignment shipped: designer tab-navigation commands can assign FoxPro logical `.T.`/`.F.` `TABSTOP` values to selected objects while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#793 selected visual object tab-order assignment shipped: designer tab-order commands can assign sequential `TABINDEX` values to selected objects in caller-provided order while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#792 selected visual object nudging shipped: designer nudge commands can move selected objects by horizontal `HPOS`, vertical `VPOS`, or both-axis deltas while preserving unrelated objects and routing coordinate writes through rollback-safe batch edits.
