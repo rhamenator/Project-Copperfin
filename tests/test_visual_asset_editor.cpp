@@ -1,6 +1,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -124,6 +125,72 @@ void write_synthetic_direct_and_memo_asset(
     }
 }
 
+struct SyntheticNamedVisualObject {
+    std::string objname;
+    std::string name;
+    std::string properties;
+};
+
+void write_synthetic_named_object_asset(
+    const std::filesystem::path& table_path,
+    const std::filesystem::path& memo_path,
+    const std::vector<SyntheticNamedVisualObject>& objects) {
+    constexpr std::size_t header_length = 129U;
+    constexpr std::size_t record_length = 33U;
+    std::vector<std::uint8_t> table_bytes(header_length + (record_length * objects.size()) + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, static_cast<std::uint32_t>(objects.size()));
+    write_le_u16(table_bytes, 8U, static_cast<std::uint16_t>(header_length));
+    write_le_u16(table_bytes, 10U, static_cast<std::uint16_t>(record_length));
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "NAME", 'C', 5U, 24U);
+    write_field_descriptor(table_bytes, 96U, "PROPERTIES", 'M', 29U, 4U);
+    table_bytes[128] = 0x0DU;
+    table_bytes[header_length + (record_length * objects.size())] = 0x1AU;
+
+    std::vector<std::uint8_t> memo_bytes(512U * (objects.size() * 2U + 2U), 0U);
+    write_be_u16(memo_bytes, 6U, 512U);
+    std::uint32_t next_block = 1U;
+    auto write_memo = [&](const std::string& value) {
+        const std::uint32_t block = next_block++;
+        const std::size_t offset = static_cast<std::size_t>(block) * 512U;
+        memo_bytes[offset + 3U] = 1U;
+        write_be_u32(memo_bytes, offset + 4U, static_cast<std::uint32_t>(value.size()));
+        write_ascii(memo_bytes, offset + 8U, value);
+        return block;
+    };
+
+    for (std::size_t index = 0; index < objects.size(); ++index) {
+        const auto& object = objects[index];
+        const std::size_t record_offset = header_length + (record_length * index);
+        table_bytes[record_offset] = 0x20U;
+        if (!object.objname.empty()) {
+            write_le_u32(table_bytes, record_offset + 1U, write_memo(object.objname));
+        }
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 5U), 24U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 5U, object.name);
+        if (!object.properties.empty()) {
+            write_le_u32(table_bytes, record_offset + 29U, write_memo(object.properties));
+        }
+    }
+    write_be_u32(memo_bytes, 0U, next_block);
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+}
+
 void test_update_visual_object_property_rewrites_properties_memo() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -180,6 +247,7 @@ void test_update_visual_object_property_rewrites_properties_memo() {
     const auto update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
+        .object_name = {},
         .property_name = "Left",
         .property_value = "25"
     });
@@ -220,6 +288,102 @@ void test_update_visual_object_property_rewrites_properties_memo() {
 
     const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
     expect(!empty_undo_status.available, "undo journal should be empty after undoing the only memo-backed edit");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_property_targets_selected_object_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_named_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "named.scx";
+    const fs::path memo_path = temp_dir / "named.sct";
+    write_synthetic_named_object_asset(table_path, memo_path, {
+        {.objname = "cmdSave", .name = "saveButton", .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {.objname = "", .name = "fallbackButton", .properties = "Caption = \"Fallback\"\r\nTop = 20\r\n"},
+        {.objname = "txtName", .name = "nameBox", .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"}
+    });
+
+    auto update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "CMDSAVE",
+        .property_name = "Caption",
+        .property_value = "\"Persist\""
+    });
+    expect(update_result.ok, "#730: visual property edits should target selected objects by OBJNAME case-insensitively");
+
+    update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "fallbackbutton",
+        .property_name = "Top",
+        .property_value = "44"
+    });
+    expect(update_result.ok, "#730: visual property edits should fall back to NAME when OBJNAME is absent");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+    expect(parse_result.ok, "#730: name-targeted edit fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 3U) {
+        const auto& first_record = parse_result.table.records[0];
+        const auto& second_record = parse_result.table.records[1];
+        const auto& third_record = parse_result.table.records[2];
+        const auto first_properties = std::find_if(first_record.values.begin(), first_record.values.end(), [](const auto& value) {
+            return value.field_name == "PROPERTIES";
+        });
+        const auto second_properties = std::find_if(second_record.values.begin(), second_record.values.end(), [](const auto& value) {
+            return value.field_name == "PROPERTIES";
+        });
+        const auto third_properties = std::find_if(third_record.values.begin(), third_record.values.end(), [](const auto& value) {
+            return value.field_name == "PROPERTIES";
+        });
+        expect(first_properties != first_record.values.end() &&
+                first_properties->display_value.find("Caption = \"Persist\"") != std::string::npos,
+            "#730: OBJNAME-targeted edits should update only the selected object's property blob");
+        expect(second_properties != second_record.values.end() &&
+                second_properties->display_value.find("Top = 44") != std::string::npos,
+            "#730: NAME fallback edits should update the selected object's property blob");
+        expect(third_properties != third_record.values.end() &&
+                third_properties->display_value.find("Caption = \"Name\"") != std::string::npos,
+            "#730: name-targeted edits should not update unrelated object property blobs");
+    }
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#730: undo should restore the NAME fallback property edit");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#730: undo should restore the OBJNAME-targeted property edit");
+
+    const auto missing_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "doesNotExist",
+        .property_name = "Caption",
+        .property_value = "\"Missing\""
+    });
+    expect(!missing_result.ok, "#730: missing object names should fail instead of editing by record index");
+    expect(missing_result.error.find("No visual object") != std::string::npos,
+        "#730: missing object-name failures should explain that no object matched");
+
+    const fs::path duplicate_table_path = temp_dir / "duplicate.scx";
+    const fs::path duplicate_memo_path = temp_dir / "duplicate.sct";
+    write_synthetic_named_object_asset(duplicate_table_path, duplicate_memo_path, {
+        {.objname = "dupButton", .name = "firstDup", .properties = "Caption = \"First\"\r\n"},
+        {.objname = "DUPBUTTON", .name = "secondDup", .properties = "Caption = \"Second\"\r\n"}
+    });
+    const auto duplicate_result = copperfin::vfp::update_visual_object_property({
+        .path = duplicate_table_path.string(),
+        .record_index = 0U,
+        .object_name = "dupbutton",
+        .property_name = "Caption",
+        .property_value = "\"Ambiguous\""
+    });
+    expect(!duplicate_result.ok, "#730: ambiguous object names should fail instead of editing an arbitrary row");
+    expect(duplicate_result.error.find("ambiguous") != std::string::npos,
+        "#730: ambiguous object-name failures should explain the ambiguity");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -278,6 +442,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
     auto update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
+        .object_name = {},
         .property_name = "HPOS",
         .property_value = "9583.333"
     });
@@ -286,6 +451,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
     update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
+        .object_name = {},
         .property_name = "GRID",
         .property_value = "true"
     });
@@ -294,6 +460,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
     update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
+        .object_name = {},
         .property_name = "EXPR",
         .property_value = "\"newexpr\""
     });
@@ -424,6 +591,7 @@ void test_update_visual_object_property_round_trips_added_vcx_property() {
     const auto update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
+        .object_name = {},
         .property_name = "Caption",
         .property_value = "\"Customer Class\""
     });
@@ -499,6 +667,7 @@ void test_update_visual_object_property_round_trips_label_and_menu_assets() {
         auto update_result = copperfin::vfp::update_visual_object_property({
             .path = table_path.string(),
             .record_index = 0U,
+            .object_name = {},
             .property_name = "TITLE",
             .property_value = asset_label + "Updated"
         });
@@ -507,6 +676,7 @@ void test_update_visual_object_property_round_trips_label_and_menu_assets() {
         update_result = copperfin::vfp::update_visual_object_property({
             .path = table_path.string(),
             .record_index = 0U,
+            .object_name = {},
             .property_name = "EXPR",
             .property_value = "\"" + asset_label + "MemoUpdated\""
         });
@@ -584,6 +754,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
         auto update_result = copperfin::vfp::update_visual_object_property({
             .path = table_path.string(),
             .record_index = 0U,
+            .object_name = {},
             .property_name = "TITLE",
             .property_value = asset_label + "Updated"
         });
@@ -592,6 +763,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
         update_result = copperfin::vfp::update_visual_object_property({
             .path = table_path.string(),
             .record_index = 0U,
+            .object_name = {},
             .property_name = "DETAILS",
             .property_value = asset_label + "MemoUpdated"
         });
@@ -648,6 +820,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
+    test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_rewrites_direct_fields();
     test_update_visual_object_property_round_trips_added_vcx_property();
     test_update_visual_object_property_round_trips_label_and_menu_assets();

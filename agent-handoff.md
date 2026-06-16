@@ -30,9 +30,9 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 is COMPLETE as of 2026-06-16. E1/#22 is ready to close after a successful closure audit.** All prompt-sized shared design-model children `#658`-`#729` are closed, and full configured validation passed with `ctest --test-dir build --output-on-failure` (`35/35`). After closing `#22`, move to E2/#23 by opening the first prompt-sized designer interaction, builder, or context-aware editor child before coding.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#730`, adding object-name-targeted visual property edits so designer/property-grid callers can resolve selected objects by case-insensitive `OBJNAME` or fallback `NAME`, with explicit missing/ambiguous failures and unchanged record-index/undo behavior.
 
-Next: close `#22` with the closure-audit evidence, then continue from `#23`. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
+Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
 Language-service queue update:
 

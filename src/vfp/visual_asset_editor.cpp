@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <system_error>
@@ -154,6 +155,67 @@ struct VisualPropertyState {
     bool direct_field = false;
     std::string value;
 };
+
+std::string normalize_visual_object_name(std::string value) {
+    value = trim_both(std::move(value));
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
+
+const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
+    const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& candidate) {
+        return candidate.field_name == field_name;
+    });
+    return value == record.values.end() ? nullptr : &(*value);
+}
+
+VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
+    if (request.object_name.empty()) {
+        record_index = request.record_index;
+        return {.ok = true, .error = {}};
+    }
+
+    const std::string requested_name = normalize_visual_object_name(request.object_name);
+    if (requested_name.empty()) {
+        return {.ok = false, .error = "No object name was provided."};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    auto find_matches = [&](const std::string& field_name) {
+        std::vector<std::size_t> matches;
+        for (const auto& record : table_result.table.records) {
+            const auto* value = find_record_value(record, field_name);
+            if (value == nullptr) {
+                continue;
+            }
+            if (normalize_visual_object_name(value->display_value) == requested_name) {
+                matches.push_back(record.record_index);
+            }
+        }
+        return matches;
+    };
+
+    std::vector<std::size_t> matches = find_matches("OBJNAME");
+    if (matches.empty()) {
+        matches = find_matches("NAME");
+    }
+
+    if (matches.empty()) {
+        return {.ok = false, .error = "No visual object with the requested name was found."};
+    }
+    if (matches.size() > 1U) {
+        return {.ok = false, .error = "The requested visual object name is ambiguous."};
+    }
+
+    record_index = matches.front();
+    return {.ok = true, .error = {}};
+}
 
 VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
@@ -476,11 +538,17 @@ VisualAssetEditResult apply_visual_object_property_change(
         return {.ok = false, .error = "No property name was provided."};
     }
 
-    const auto table_result = parse_dbf_table_from_file(request.path, request.record_index + 1U);
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index(request, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
     if (!table_result.ok) {
         return {.ok = false, .error = table_result.error};
     }
-    if (request.record_index >= table_result.table.records.size()) {
+    if (record_index >= table_result.table.records.size()) {
         return {.ok = false, .error = "The requested object record is not currently available."};
     }
 
@@ -495,7 +563,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     });
     if (direct_field_it != fields.end()) {
         if (record_undo_entry) {
-            const auto property_state = read_current_visual_property_state(request.path, request.record_index, request.property_name);
+            const auto property_state = read_current_visual_property_state(request.path, record_index, request.property_name);
             if (!property_state.has_value()) {
                 return {.ok = false, .error = "Unable to read the current property value for undo."};
             }
@@ -505,7 +573,7 @@ VisualAssetEditResult apply_visual_object_property_change(
             if (!(property_state->exists && property_state->value == request.property_value)) {
                 std::string error;
                 if (!record_visual_asset_undo_entry(request.path, {
-                        .record_index = request.record_index,
+                        .record_index = record_index,
                         .property_name = request.property_name,
                         .prior_value = property_state->value,
                         .prior_value_exists = property_state->exists,
@@ -516,14 +584,14 @@ VisualAssetEditResult apply_visual_object_property_change(
             }
         }
 
-        return replace_field_value(request.path, request.record_index, *direct_field_it, request.property_value);
+        return replace_field_value(request.path, record_index, *direct_field_it, request.property_value);
     }
 
     if (!is_property_blob_asset_path(request.path)) {
         return {.ok = false, .error = "The requested property is not exposed as a writable field on this asset."};
     }
 
-    const auto& record = table_result.table.records[request.record_index];
+    const auto& record = table_result.table.records[record_index];
     auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
         return value.field_name == "PROPERTIES";
     });
@@ -542,7 +610,7 @@ VisualAssetEditResult apply_visual_object_property_change(
         if (!(exists && prior_value == request.property_value)) {
             std::string error;
             if (!record_visual_asset_undo_entry(request.path, {
-                    .record_index = request.record_index,
+                    .record_index = record_index,
                     .property_name = request.property_name,
                     .prior_value = prior_value,
                     .prior_value_exists = exists,
@@ -565,7 +633,7 @@ VisualAssetEditResult apply_visual_object_property_change(
 
     return replace_memo_field_value(
         request.path,
-        request.record_index,
+        record_index,
         "PROPERTIES",
         serialize_visual_property_blob(assignments));
 }
@@ -756,6 +824,7 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
         {
             .path = path,
             .record_index = entry->record_index,
+            .object_name = {},
             .property_name = entry->property_name,
             .property_value = entry->prior_value
         },
