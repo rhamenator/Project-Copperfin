@@ -796,6 +796,12 @@ struct VisualObjectOleDropEffectsRequest {
     int ole_drop_effects = 0;
 };
 
+struct VisualObjectOleDropTextInsertionRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int ole_drop_text_insertion = 0;
+};
+
 struct VisualObjectBackStyleRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1291,6 +1297,8 @@ VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequ
 VisualAssetEditResult set_visual_object_ole_drag_mode(const VisualObjectOleDragModeRequest& request);
 VisualAssetEditResult set_visual_object_ole_drop_mode(const VisualObjectOleDropModeRequest& request);
 VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDropEffectsRequest& request);
+VisualAssetEditResult set_visual_object_ole_drop_text_insertion(
+    const VisualObjectOleDropTextInsertionRequest& request);
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request);
 VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderStyleRequest& request);
 VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWidthRequest& request);

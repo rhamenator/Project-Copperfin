@@ -5443,6 +5443,20 @@ VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDr
         std::to_string(request.ole_drop_effects));
 }
 
+VisualAssetEditResult set_visual_object_ole_drop_text_insertion(
+    const VisualObjectOleDropTextInsertionRequest& request) {
+    if (request.ole_drop_text_insertion < 0) {
+        return {.ok = false, .error = "OLEDropTextInsertion must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "OLEDropTextInsertion",
+        "OLE drop text-insertion",
+        std::to_string(request.ole_drop_text_insertion));
+}
+
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
         return {.ok = false, .error = "BackStyle must not be negative."};
