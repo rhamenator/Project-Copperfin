@@ -870,6 +870,7 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
 
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_response_tests";
     const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path startup_path = temp_root / "content" / "startup.prg";
     const fs::path source_path = temp_root / "content" / "exports.prg";
     const fs::path request_path = temp_root / "AddNumbers.request.json";
     const fs::path response_path = temp_root / "nested" / "AddNumbers.response.json";
@@ -881,10 +882,11 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
         manifest_path,
         std::string("manifest_version=1\n"
         "project_title=BridgeResponse\n"
-        "startup_item=exports.prg\n"
-        "startup_source=") + source_path.string() + "\n"
+        "startup_item=startup.prg\n"
+        "startup_source=") + startup_path.string() + "\n"
         "security_enabled=false\n"
         "dotnet_story=none\n");
+    write_text(startup_path, "RETURN 7\n");
     write_text(
         source_path,
         "nLeft = 40\n"
@@ -940,6 +942,8 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
            "runtime host should preserve bridge export metadata in diagnostics");
     expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
            "runtime host should report the PRG return value in bridge diagnostics");
+    expect(process.stdout_text.find("bridge.execution_source: " + source_path.string()) != std::string::npos,
+           "runtime host bridge mode should execute the descriptor source instead of manifest startup");
     expect(fs::exists(response_path),
            "runtime host should write the requested bridge response artifact");
 

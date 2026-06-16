@@ -176,7 +176,10 @@ int run_runtime_bridge_invocation(
         return 6;
     }
 
-    if (lowercase_copy(std::filesystem::path(startup_source).extension().string()) != ".prg") {
+    const std::string execution_source = trim_copy(options.source_path).empty()
+        ? startup_source
+        : options.source_path;
+    if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
         std::cout << "error: Bridge invocation currently requires a PRG startup source.\n";
@@ -184,7 +187,7 @@ int run_runtime_bridge_invocation(
     }
 
     copperfin::runtime::RuntimeSessionOptions session_options{};
-    session_options.startup_path = startup_source;
+    session_options.startup_path = execution_source;
     session_options.working_directory = working_directory;
     session_options.stop_on_entry = false;
     session_options.quit_confirm_callback = []() -> bool {
@@ -237,6 +240,7 @@ int run_runtime_bridge_invocation(
     std::cout << "bridge.library_export: " << options.library_export << "\n";
     std::cout << "bridge.routine_kind: " << options.routine_kind << "\n";
     std::cout << "bridge.source: " << options.source_path << ":" << options.source_line << "\n";
+    std::cout << "bridge.execution_source: " << execution_source << "\n";
     std::cout << "bridge.parameter_declaration: " << options.parameter_declaration << "\n";
     std::cout << "bridge.parameter_names: " << options.parameter_names << "\n";
     std::cout << "bridge.parameter_count: " << options.parameter_count << "\n";
