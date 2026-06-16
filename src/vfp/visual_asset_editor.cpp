@@ -385,6 +385,51 @@ std::pair<bool, std::string> delete_visual_method_from_blob(
     return {deleted, serialize_visual_lines(output_lines)};
 }
 
+VisualAssetEditResult rename_visual_method_in_blob(
+    const std::string& existing_blob,
+    const std::string& requested_method_name,
+    const std::string& new_method_name,
+    std::string& updated_blob) {
+    const std::string normalized_requested_name = normalize_visual_object_name(requested_method_name);
+    const std::string normalized_new_name = normalize_visual_object_name(new_method_name);
+    if (normalized_requested_name.empty() || normalized_new_name.empty()) {
+        return {.ok = false, .error = "Method names cannot be empty."};
+    }
+
+    std::vector<std::string> existing_lines = split_visual_lines(existing_blob);
+    std::optional<std::size_t> source_line_index;
+    for (std::size_t line_index = 0U; line_index < existing_lines.size(); ++line_index) {
+        const std::string trimmed_line = trim_both(existing_lines[line_index]);
+        std::string declaration_kind;
+        std::string declaration_name;
+        if (!parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name)) {
+            continue;
+        }
+        const std::string normalized_declaration_name = normalize_visual_object_name(declaration_name);
+        if (normalized_declaration_name == normalized_new_name &&
+            normalized_declaration_name != normalized_requested_name) {
+            return {.ok = false, .error = "The requested target method already exists."};
+        }
+        if (normalized_declaration_name == normalized_requested_name) {
+            source_line_index = line_index;
+        }
+    }
+
+    if (!source_line_index.has_value()) {
+        return {.ok = false, .error = "The requested method was not found."};
+    }
+
+    const std::string trimmed_line = trim_both(existing_lines[*source_line_index]);
+    std::string declaration_kind;
+    std::string declaration_name;
+    if (!parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name)) {
+        return {.ok = false, .error = "The requested method declaration could not be parsed."};
+    }
+    existing_lines[*source_line_index] = declaration_kind + " " + trim_both(new_method_name);
+    updated_blob = serialize_visual_lines(existing_lines);
+    return {.ok = true, .error = {}};
+}
+
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
     const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& candidate) {
@@ -1837,6 +1882,63 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         request.method_name);
     if (!deleted) {
         return {.ok = false, .error = "The requested method was not found."};
+    }
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "METHODS",
+        .property_value = updated_blob
+    });
+}
+
+VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (trim_both(request.method_name).empty()) {
+        return {.ok = false, .error = "No method name was provided."};
+    }
+    if (trim_both(request.new_method_name).empty()) {
+        return {.ok = false, .error = "No target method name was provided."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
+    if (methods_field == nullptr) {
+        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+    }
+
+    std::string updated_blob;
+    const auto rename_result = rename_visual_method_in_blob(
+        methods_field->display_value,
+        request.method_name,
+        request.new_method_name,
+        updated_blob);
+    if (!rename_result.ok) {
+        return rename_result;
     }
 
     return update_visual_object_property({

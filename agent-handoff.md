@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#760`, adding selected visual object subtree duplication so container copy/paste workflows can copy a root plus descendants with per-row replacement identities, copied parent rewrites, memo/deleted-state preservation, and collision-safe validation.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#761`, adding selected visual object method renaming so method/event editors can rename `PROCEDURE`/`FUNCTION` declarations while preserving bodies, rejecting target collisions, and retaining undo support.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 

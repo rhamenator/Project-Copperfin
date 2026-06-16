@@ -229,6 +229,15 @@ struct VisualObjectMethodDeleteRequest {
     std::string method_name;
 };
 
+struct VisualObjectMethodRenameRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+    std::string new_method_name;
+};
+
 struct VisualObjectDuplicateRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -333,6 +342,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request);
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
+VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);

@@ -1171,6 +1171,140 @@ void test_delete_visual_object_method_removes_selected_methods() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_object_method_updates_declarations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_rename_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_rename.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "PROCEDURE LostFocus\r\nTHISFORM.ValidateName()\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#761: method-rename fixture should be writable");
+
+    auto rename_result = copperfin::vfp::rename_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "click",
+        .new_method_name = "SaveClick"
+    });
+    expect(rename_result.ok, "#761: method rename should update procedure declarations case-insensitively");
+
+    rename_result = copperfin::vfp::rename_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {},
+        .method_name = "GetCaption",
+        .new_method_name = "BuildCaption"
+    });
+    expect(rename_result.ok, "#761: method rename should update function declarations by object-name selection");
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok, "#761: renamed method fixture should remain readable");
+    const auto* save_click = find_method_snapshot(method_result.methods, "SaveClick");
+    const auto* build_caption = find_method_snapshot(method_result.methods, "BuildCaption");
+    expect(save_click != nullptr &&
+            save_click->kind == "procedure" &&
+            save_click->source_text == "THISFORM.Save()",
+        "#761: procedure rename should preserve kind and body text");
+    expect(build_caption != nullptr &&
+            build_caption->kind == "function" &&
+            build_caption->source_text == "RETURN THIS.Caption",
+        "#761: function rename should preserve kind and body text");
+    expect(find_method_snapshot(method_result.methods, "Click") == nullptr &&
+            find_method_snapshot(method_result.methods, "GetCaption") == nullptr,
+        "#761: method rename should remove the old declaration names");
+
+    auto other_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid"
+    });
+    expect(other_result.ok && find_method_snapshot(other_result.methods, "LostFocus") != nullptr,
+        "#761: method rename should preserve unrelated object METHODS memos");
+
+    rename_result = copperfin::vfp::rename_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "SaveClick",
+        .new_method_name = "BuildCaption"
+    });
+    expect(!rename_result.ok, "#761: method rename should reject target method collisions");
+
+    rename_result = copperfin::vfp::rename_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "DoesNotExist",
+        .new_method_name = "Missing"
+    });
+    expect(!rename_result.ok, "#761: method rename should reject missing source methods");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok &&
+            find_method_snapshot(method_result.methods, "SaveClick") != nullptr &&
+            find_method_snapshot(method_result.methods, "BuildCaption") != nullptr,
+        "#761: failed method renames should not mutate the METHODS memo");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#761: undo should restore function rename");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#761: undo should restore procedure rename");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok &&
+            find_method_snapshot(method_result.methods, "Click") != nullptr &&
+            find_method_snapshot(method_result.methods, "GetCaption") != nullptr &&
+            find_method_snapshot(method_result.methods, "SaveClick") == nullptr &&
+            find_method_snapshot(method_result.methods, "BuildCaption") == nullptr,
+        "#761: undo should restore previous METHODS memo declarations");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_duplicate_visual_object_appends_identity_safe_copy() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3527,6 +3661,7 @@ int main() {
     test_list_visual_object_methods_reads_selected_methods();
     test_update_visual_object_method_updates_and_appends_methods();
     test_delete_visual_object_method_removes_selected_methods();
+    test_rename_visual_object_method_updates_declarations();
     test_duplicate_visual_object_appends_identity_safe_copy();
     test_create_visual_object_appends_toolbox_field_values();
     test_reparent_visual_object_updates_container_parent();
