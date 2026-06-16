@@ -176,9 +176,9 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
             .deleted = false,
             .values = {
                 {.field_name = "OBJNAME", .field_type = 'M', .is_null = false, .display_value = "cmdSave", .memo_block_number = 101U},
-                {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "8.000"},
-                {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "1.000"},
-                {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "WINDOWS"},
+                {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "8.000", .memo_block_number = 102U},
+                {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "1.000", .memo_block_number = 103U},
+                {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "WINDOWS", .memo_block_number = 104U},
                 {.field_name = "PARENT", .field_type = 'M', .is_null = false, .display_value = "frmCustomer", .memo_block_number = 105U},
                 {.field_name = "HELP", .field_type = 'M', .is_null = true, .display_value = "", .memo_block_number = 0U},
                 {.field_name = "TAG", .field_type = 'M', .is_null = false, .display_value = ""},
@@ -195,10 +195,13 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
     if (!objects.empty()) {
         expect(objects[0].objtype_code == 8, "#667: object snapshots should expose raw OBJTYPE metadata");
         expect(objects[0].objtype_field_index == 1U, "#671: raw OBJTYPE metadata should retain DBF field provenance");
+        expect(objects[0].objtype_memo_block_number == 102U, "#724: raw OBJTYPE metadata should retain memo block provenance");
         expect(objects[0].objcode_code == 1, "#667: object snapshots should expose raw OBJCODE metadata");
         expect(objects[0].objcode_field_index == 2U, "#671: raw OBJCODE metadata should retain DBF field provenance");
+        expect(objects[0].objcode_memo_block_number == 103U, "#724: raw OBJCODE metadata should retain memo block provenance");
         expect(objects[0].platform == "WINDOWS", "#667: object snapshots should expose raw PLATFORM metadata");
         expect(objects[0].platform_field_index == 3U, "#671: raw PLATFORM metadata should retain DBF field provenance");
+        expect(objects[0].platform_memo_block_number == 104U, "#724: raw PLATFORM metadata should retain memo block provenance");
         expect(objects[0].object_name == "cmdSave", "#660: object snapshots should expose the design object name");
         expect(objects[0].object_name_field_index == 0U, "#672: object name metadata should retain DBF field provenance");
         expect(objects[0].object_name_memo_block_number == 101U, "#717: object names should retain selected memo block provenance");
@@ -374,7 +377,7 @@ void test_object_snapshot_trims_normalized_display_metadata() {
                 {.field_name = "OBJNAME", .field_type = 'C', .is_null = false, .display_value = "   "},
                 {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "  cmdSave  "},
                 {.field_name = "BASECLASS", .field_type = 'C', .is_null = false, .display_value = "  commandbutton  "},
-                {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "  WINDOWS  "},
+                {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "  WINDOWS  ", .memo_block_number = 134U},
                 {.field_name = "CLASS", .field_type = 'C', .is_null = false, .display_value = "  commandbutton  "}
             }
         }
@@ -393,6 +396,7 @@ void test_object_snapshot_trims_normalized_display_metadata() {
         expect(form_objects[0].subtitle_field_index == 2U, "#705: form subtitle provenance should point at BASECLASS");
         expect(form_objects[0].platform == "WINDOWS", "#705: platform metadata should be trimmed");
         expect(form_objects[0].platform_field_index == 3U, "#705: platform provenance should still point at PLATFORM");
+        expect(form_objects[0].platform_memo_block_number == 134U, "#724: trimmed platform metadata should retain source memo block provenance");
         const auto name = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
             return property.name == "NAME";
         });
@@ -463,8 +467,8 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
                 {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "MAIN"},
                 {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO FORM customer", .memo_block_number = 203U},
                 {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "Open customer maintenance", .memo_block_number = 204U},
-                {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "3.000"},
-                {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "7.000"}
+                {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "3.000", .memo_block_number = 205U},
+                {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "7.000", .memo_block_number = 206U}
             }
         },
         {
@@ -515,7 +519,9 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
         expect(objects[0].subtitle_field_index == 1U, "#673: menu subtitle metadata should retain selected LEVELNAME provenance");
         expect(objects[0].objtype_code == 3, "#668: menu snapshots should retain raw OBJTYPE metadata");
+        expect(objects[0].objtype_memo_block_number == 205U, "#724: menu OBJTYPE metadata should retain source memo block provenance");
         expect(objects[0].objcode_code == 7, "#668: menu snapshots should retain raw OBJCODE metadata");
+        expect(objects[0].objcode_memo_block_number == 206U, "#724: menu OBJCODE metadata should retain source memo block provenance");
     }
     if (objects.size() >= 2U) {
         expect(objects[1].menu_prompt == "Tools", "#668: menu snapshots should expose PROMPT metadata when it is not field zero");
@@ -541,10 +547,16 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
             "#718: missing menu MESSAGE metadata should expose memo block zero");
         expect(objects[1].objtype_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#671: missing OBJTYPE provenance should use the object missing-field sentinel");
+        expect(objects[1].objtype_memo_block_number == 0U,
+            "#724: missing OBJTYPE metadata should expose memo block zero");
         expect(objects[1].objcode_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#671: missing OBJCODE provenance should use the object missing-field sentinel");
+        expect(objects[1].objcode_memo_block_number == 0U,
+            "#724: missing OBJCODE metadata should expose memo block zero");
         expect(objects[1].platform_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#671: missing PLATFORM provenance should use the object missing-field sentinel");
+        expect(objects[1].platform_memo_block_number == 0U,
+            "#724: missing PLATFORM metadata should expose memo block zero");
     }
     if (objects.size() >= 3U) {
         expect(objects[2].title == "Record 4", "#673: snapshots without display fields should keep synthetic title fallback");

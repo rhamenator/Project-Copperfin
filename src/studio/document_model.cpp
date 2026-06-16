@@ -260,10 +260,13 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         snapshot.deleted = record.deleted;
         snapshot.objtype_code = parse_scaled_int(record, "OBJTYPE").value_or(0);
         snapshot.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
+        snapshot.objtype_memo_block_number = memo_block_number_or_zero(record, "OBJTYPE");
         snapshot.objcode_code = parse_scaled_int(record, "OBJCODE").value_or(0);
         snapshot.objcode_field_index = field_index_or_missing(record, "OBJCODE");
+        snapshot.objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
         snapshot.platform = first_non_empty(record, {"PLATFORM"});
         snapshot.platform_field_index = field_index_or_missing(record, "PLATFORM");
+        snapshot.platform_memo_block_number = memo_block_number_or_zero(record, "PLATFORM");
         const FieldSelection object_name = first_non_empty_selection(record, {"OBJNAME", "NAME"});
         snapshot.object_name = object_name.value;
         snapshot.object_name_field_index = object_name.field_index;

@@ -80,10 +80,13 @@ struct StudioObjectSnapshot {
     bool deleted = false;
     int objtype_code = 0;
     std::size_t objtype_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t objtype_memo_block_number = 0;
     int objcode_code = 0;
     std::size_t objcode_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t objcode_memo_block_number = 0;
     std::string platform{};
     std::size_t platform_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t platform_memo_block_number = 0;
     std::string object_name{};
     std::size_t object_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t object_name_memo_block_number = 0;
