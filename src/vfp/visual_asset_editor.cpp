@@ -2286,6 +2286,57 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObjectSubtreeDeletedStateRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    std::size_t root_record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, root_record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto descendants_result = list_visual_object_descendants({
+        .path = request.path,
+        .record_index = root_record_index,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!descendants_result.ok) {
+        return {.ok = false, .error = descendants_result.error};
+    }
+
+    std::vector<VisualObjectDeletedStateBatchItem> objects;
+    objects.reserve(descendants_result.descendants.size() + 1U);
+    objects.push_back({
+        .record_index = root_record_index,
+        .object_name = {},
+        .unique_id = {},
+        .deleted = request.deleted
+    });
+    for (const auto& descendant : descendants_result.descendants) {
+        objects.push_back({
+            .record_index = descendant.object.record_index,
+            .object_name = {},
+            .unique_id = {},
+            .deleted = request.deleted
+        });
+    }
+
+    return set_visual_object_deleted_states({
+        .path = request.path,
+        .objects = std::move(objects)
+    });
+}
+
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
     if (request.properties.empty()) {
         return {.ok = false, .error = "No property changes were provided."};

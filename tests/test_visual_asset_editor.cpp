@@ -2291,6 +2291,112 @@ void test_list_visual_object_descendants_walks_container_tree() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_subtree_deleted_state_updates_descendants() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_subtree_delete_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "subtree_delete.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cntMain", "mainContainer", "container-guid", ""},
+        {"cmdSave", "saveButton", "save-guid", "cntMain"},
+        {"txtName", "nameBox", "name-guid", "cntMain"},
+        {"lblNested", "nestedLabel", "nested-guid", "txtName"},
+        {"cmdOther", "otherButton", "other-guid", ""},
+        {"", "", "nameless-guid", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#758: subtree deleted-state fixture should be writable");
+    const auto initial_delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(initial_delete_result.ok, "#758: subtree fixture should support existing deleted descendants");
+
+    const auto is_deleted = [&](const std::string& unique_id) {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#758: subtree fixture should remain listable");
+        const auto object = std::find_if(
+            list_result.objects.begin(),
+            list_result.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& candidate) {
+                return candidate.unique_id == unique_id;
+            });
+        expect(object != list_result.objects.end(), "#758: expected subtree object should remain present");
+        return object != list_result.objects.end() && object->deleted;
+    };
+
+    auto subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "container-guid",
+        .deleted = true
+    });
+    expect(subtree_result.ok, "#758: subtree deleted-state changes should support UNIQUEID source selection");
+    expect(is_deleted("container-guid") &&
+            is_deleted("save-guid") &&
+            is_deleted("name-guid") &&
+            is_deleted("nested-guid"),
+        "#758: subtree delete should mark the selected root and all descendants deleted");
+    expect(!is_deleted("other-guid"),
+        "#758: subtree delete should preserve unrelated root/sibling rows");
+
+    subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cntMain",
+        .unique_id = {},
+        .deleted = false
+    });
+    expect(subtree_result.ok, "#758: subtree deleted-state changes should support object-name source selection");
+    expect(!is_deleted("container-guid") &&
+            !is_deleted("save-guid") &&
+            !is_deleted("name-guid") &&
+            !is_deleted("nested-guid"),
+        "#758: subtree restore should clear deleted flags on root and descendants");
+
+    subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid",
+        .deleted = true
+    });
+    expect(!subtree_result.ok, "#758: subtree delete should fail explicitly for missing source selections");
+
+    subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "nameless-guid",
+        .deleted = true
+    });
+    expect(!subtree_result.ok, "#758: subtree delete should fail explicitly for nameless source rows");
+
+    expect(!is_deleted("container-guid") &&
+            !is_deleted("save-guid") &&
+            !is_deleted("name-guid") &&
+            !is_deleted("nested-guid") &&
+            !is_deleted("other-guid") &&
+            !is_deleted("nameless-guid"),
+        "#758: failed subtree deleted-state requests should not mutate existing flags");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3173,6 +3279,7 @@ int main() {
     test_reorder_visual_object_updates_z_order();
     test_list_visual_object_children_filters_immediate_children();
     test_list_visual_object_descendants_walks_container_tree();
+    test_set_visual_object_subtree_deleted_state_updates_descendants();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
