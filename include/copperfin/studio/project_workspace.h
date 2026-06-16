@@ -19,8 +19,11 @@ struct StudioProjectEntry {
     std::string type_code{};
     std::size_t type_field_index = StudioProjectMissingFieldIndex;
     std::string type_title{};
+    std::size_t type_title_field_index = StudioProjectMissingFieldIndex;
     std::string group_id{};
+    std::size_t group_id_field_index = StudioProjectMissingFieldIndex;
     std::string group_title{};
+    std::size_t group_title_field_index = StudioProjectMissingFieldIndex;
     std::string key{};
     std::size_t key_field_index = StudioProjectMissingFieldIndex;
     std::string comments{};

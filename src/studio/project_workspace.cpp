@@ -89,6 +89,7 @@ struct ProjectTypeDescriptor {
     std::string type_title;
     std::string group_id;
     std::string group_title;
+    std::string_view source_field_name;
 };
 
 ProjectTypeDescriptor describe_project_item(
@@ -96,52 +97,52 @@ ProjectTypeDescriptor describe_project_item(
     const std::string& extension,
     const std::string& item_name) {
     if (type_code == "H") {
-        return {"Project Header", "project", "Project"};
+        return {"Project Header", "project", "Project", "TYPE"};
     }
 
     if (extension == ".scx") {
-        return {"Form", "forms", "Forms"};
+        return {"Form", "forms", "Forms", "NAME"};
     }
     if (extension == ".vcx") {
-        return {"Class Library", "classes", "Class Libraries"};
+        return {"Class Library", "classes", "Class Libraries", "NAME"};
     }
     if (extension == ".frx") {
-        return {"Report", "reports", "Reports"};
+        return {"Report", "reports", "Reports", "NAME"};
     }
     if (extension == ".lbx") {
-        return {"Label", "labels", "Labels"};
+        return {"Label", "labels", "Labels", "NAME"};
     }
     if (extension == ".mnx") {
-        return {"Menu", "menus", "Menus"};
+        return {"Menu", "menus", "Menus", "NAME"};
     }
     if (extension == ".prg") {
-        return {"Program", "programs", "Programs"};
+        return {"Program", "programs", "Programs", "NAME"};
     }
     if (extension == ".dbc") {
-        return {"Database", "databases", "Databases"};
+        return {"Database", "databases", "Databases", "NAME"};
     }
     if (extension == ".dbf") {
-        return {"Table", "tables", "Tables"};
+        return {"Table", "tables", "Tables", "NAME"};
     }
     if (extension == ".qpr") {
-        return {"Query", "queries", "Queries"};
+        return {"Query", "queries", "Queries", "NAME"};
     }
     if (extension == ".h" || extension == ".hpp" || extension == ".ch") {
-        return {"Header", "code", "Code"};
+        return {"Header", "code", "Code", "NAME"};
     }
     if (extension == ".dll" || extension == ".ocx") {
-        return {"Library", "libraries", "Libraries"};
+        return {"Library", "libraries", "Libraries", "NAME"};
     }
 
     if (type_code == "K") {
-        return {"Project Item", "project_items", "Project Items"};
+        return {"Project Item", "project_items", "Project Items", "TYPE"};
     }
 
     if (!item_name.empty()) {
-        return {"Project Item", "other_assets", "Other Assets"};
+        return {"Project Item", "other_assets", "Other Assets", "NAME"};
     }
 
-    return {"Project Record", "other_records", "Other Records"};
+    return {"Project Record", "other_records", "Other Records", {}};
 }
 
 std::string default_output_path(const StudioDocumentModel& document, const std::string& project_title) {
@@ -277,8 +278,14 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         entry.type_code = type_code;
         entry.type_field_index = field_index_or_missing(record, "TYPE");
         entry.type_title = descriptor.type_title;
+        const std::size_t classification_field_index = descriptor.source_field_name.empty()
+            ? StudioProjectMissingFieldIndex
+            : field_index_or_missing(record, descriptor.source_field_name);
+        entry.type_title_field_index = classification_field_index;
         entry.group_id = descriptor.group_id;
+        entry.group_id_field_index = classification_field_index;
         entry.group_title = descriptor.group_title;
+        entry.group_title_field_index = classification_field_index;
         entry.key = key;
         entry.key_field_index = field_index_or_missing(record, "KEY");
         entry.comments = comments;

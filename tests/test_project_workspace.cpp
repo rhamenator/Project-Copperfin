@@ -86,6 +86,9 @@ void test_build_project_workspace() {
            "#663: missing NOLOGO build-flag provenance should be explicit");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
+    expect(workspace.entries[0].type_title_field_index == 0U, "#680: TYPE-derived project entry classification provenance should be preserved");
+    expect(workspace.entries[0].group_id_field_index == 0U, "#680: TYPE-derived project group id provenance should be preserved");
+    expect(workspace.entries[0].group_title_field_index == 0U, "#680: TYPE-derived project group title provenance should be preserved");
     expect(workspace.entries[0].name_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#662: missing project header name provenance should be explicit");
     expect(workspace.entries[0].relative_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
@@ -93,6 +96,10 @@ void test_build_project_workspace() {
     expect(workspace.entries[0].key_field_index == 1U, "#662: project header key field ordinal should be preserved");
     expect(workspace.entries[1].type_field_index == 0U, "#662: project entry type field ordinal should be preserved");
     expect(workspace.entries[1].name_field_index == 1U, "#662: project entry name field ordinal should be preserved");
+    expect(workspace.entries[1].type_title == "Program", "#680: project entry classification should still derive from NAME extension");
+    expect(workspace.entries[1].type_title_field_index == 1U, "#680: NAME-derived project entry classification provenance should be preserved");
+    expect(workspace.entries[1].group_id_field_index == 1U, "#680: NAME-derived project group id provenance should be preserved");
+    expect(workspace.entries[1].group_title_field_index == 1U, "#680: NAME-derived project group title provenance should be preserved");
     expect(workspace.entries[1].relative_path == "main.prg", "#679: project entry relative path should preserve normalized path text");
     expect(workspace.entries[1].relative_path_field_index == 1U, "#679: project entry relative path provenance should retain selected NAME field ordinal");
     expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
@@ -103,6 +110,8 @@ void test_build_project_workspace() {
     expect(workspace.entries[2].exclude_field_index == 3U, "#677: EXCLUDE project entry flag provenance should be preserved");
     expect(workspace.entries[2].main_program_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#677: missing MAINPROG project entry flag provenance should be explicit");
+    expect(workspace.entries[2].group_id == "forms", "#680: project entry grouping should still derive from NAME extension");
+    expect(workspace.entries[2].group_id_field_index == 1U, "#680: form grouping provenance should retain NAME field ordinal");
 
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";
