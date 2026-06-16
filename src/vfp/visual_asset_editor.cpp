@@ -5365,6 +5365,15 @@ VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormReques
         request.mdi_form ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_whats_this_button(const VisualObjectWhatsThisButtonRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "WhatsThisButton",
+        "WhatsThis button",
+        request.whats_this_button ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
