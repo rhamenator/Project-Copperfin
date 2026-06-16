@@ -151,6 +151,20 @@ struct VisualObjectPropertyReorderRequest {
     std::string relative_property_name;
 };
 
+struct VisualObjectPropertyReorderBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string property_name;
+    std::string placement;
+    std::string relative_property_name;
+};
+
+struct VisualObjectPropertyReorderBatchRequest {
+    std::string path;
+    std::vector<VisualObjectPropertyReorderBatchItem> properties;
+};
+
 struct VisualObjectPropertySnapshot {
     std::string property_name;
     std::string value;
@@ -496,6 +510,7 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
 VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request);
 VisualAssetEditResult rename_visual_object_properties(const VisualObjectPropertyRenameBatchRequest& request);
 VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request);
+VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropertyReorderBatchRequest& request);
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request);
 [[nodiscard]] VisualAssetUndoStatus query_visual_object_undo(const std::string& path);
 VisualAssetEditResult undo_visual_object_property(const std::string& path);

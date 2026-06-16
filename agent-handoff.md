@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#772`, adding rollback-safe batch selected visual object memo-property renames so multi-select property grids can rename `PROPERTIES` assignments across selected objects by record-index, object-name, or `UNIQUEID`, preserve values and unrelated assignments, roll back later failures without disturbing prior undo history, and retain successful batch undo support.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#773`, adding rollback-safe batch selected visual object memo-property reorders so multi-select property grids can reorder `PROPERTIES` assignments across selected objects by record-index, object-name, or `UNIQUEID`, support first/last/before/after placements, preserve values and unrelated assignments, roll back later failures without disturbing prior undo history, and retain successful batch undo support.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
