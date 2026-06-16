@@ -5301,6 +5301,15 @@ VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurren
         request.current_control);
 }
 
+VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Sparse",
+        "sparse",
+        request.sparse ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

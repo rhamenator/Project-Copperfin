@@ -712,6 +712,12 @@ struct VisualObjectCurrentControlRequest {
     std::string current_control;
 };
 
+struct VisualObjectSparseRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool sparse = false;
+};
+
 struct VisualObjectInputMaskRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1133,6 +1139,7 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
 VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request);
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request);
+VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request);
