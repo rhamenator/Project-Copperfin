@@ -523,6 +523,9 @@ int run_runtime_bridge_invocation(
     if (!descriptor_matches("export_name", options.library_export) ||
         !descriptor_matches("routine_kind", options.routine_kind) ||
         !descriptor_matches("source_path", options.source_path) ||
+        !descriptor_matches("source_line", options.source_line) ||
+        !descriptor_matches("parameter_declaration", options.parameter_declaration) ||
+        !descriptor_matches("parameter_names", options.parameter_names) ||
         !descriptor_matches("parameter_count", options.parameter_count)) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";

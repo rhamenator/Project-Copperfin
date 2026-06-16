@@ -1742,6 +1742,86 @@ void test_runtime_host_rejects_bridge_descriptor_identity_mismatch(const std::st
     }
 }
 
+void test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_descriptor_metadata_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path source_path = temp_root / "content" / "exports.prg";
+    const fs::path request_path = temp_root / "AddNumbers.request.json";
+    const fs::path response_path = temp_root / "AddNumbers.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeDescriptorMetadata\n"
+        "startup_item=exports.prg\n"
+        "startup_source=") + source_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(source_path, "RETURN 42\n");
+    write_text(
+        request_path,
+        std::string("{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"AddNumbers\",\n"
+        "  \"routine_kind\": \"procedure\",\n"
+        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_line\": 1,\n"
+        "  \"parameter_declaration\": \"PARAMETERS\",\n"
+        "  \"parameter_names\": \"tnLeft|tnRight\",\n"
+        "  \"parameter_count\": 2,\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameters\": [\n"
+        "    {\"name\": \"tnLeft\", \"value\": \"40\", \"surface\": \"int\"},\n"
+        "    {\"name\": \"tnRight\", \"value\": \"2\", \"surface\": \"int\"}\n"
+        "  ]\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "AddNumbers",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "tnLeft|tnRight",
+            "--parameter-count", "2",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 6) {
+        std::cerr << "bridge-descriptor-metadata stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-descriptor-metadata stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 6,
+           "runtime host should reject bridge descriptor metadata mismatches before execution");
+    expect(process.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+           "runtime host should keep bridge mode visible on descriptor metadata errors");
+    expect(process.stdout_text.find("error: Bridge request descriptor mismatch.") != std::string::npos,
+           "runtime host should report descriptor metadata mismatches");
+    expect(!fs::exists(response_path),
+           "runtime host should not write a success response when descriptor metadata mismatches");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1767,6 +1847,7 @@ int main(int argc, char** argv) {
     test_runtime_host_rejects_bridge_request_contract_mismatch(argv[1]);
     test_runtime_host_rejects_nested_bridge_descriptor_fields(argv[1]);
     test_runtime_host_rejects_bridge_descriptor_identity_mismatch(argv[1]);
+    test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
