@@ -5332,6 +5332,15 @@ VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequ
         format_visual_geometry_number(request.font_size));
 }
 
+VisualAssetEditResult set_visual_object_font_bold(const VisualObjectFontBoldRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "FontBold",
+        "font bold",
+        request.font_bold ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
