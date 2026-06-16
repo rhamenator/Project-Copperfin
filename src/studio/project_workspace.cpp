@@ -401,6 +401,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     if (startup != nullptr) {
         workspace.build_plan.startup_item = startup->name;
+        workspace.build_plan.startup_item_field_index = startup->name_field_index;
         workspace.build_plan.startup_record_index = startup->record_index;
     }
 

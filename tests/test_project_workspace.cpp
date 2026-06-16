@@ -73,6 +73,7 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.output_kind == "executable", "build plan should infer executable output kind from .exe output path");
     expect(workspace.build_plan.build_target == "x64 Windows executable", "build plan should label .exe outputs as Windows executables");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
+    expect(workspace.build_plan.startup_item_field_index == 1U, "#681: build plan startup item provenance should retain selected NAME field ordinal");
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
     expect(workspace.build_plan.project_key_field_index == 1U, "#663: build plan should preserve project key field provenance");
@@ -151,6 +152,8 @@ void test_build_project_workspace_with_excluded_assets() {
     expect(
         workspace.build_plan.startup_item == R"(forms\legacy.scx)",
         "workspace should choose a real asset as startup even when every asset is excluded");
+    expect(workspace.build_plan.startup_item_field_index == 1U,
+           "#681: excluded fallback startup item provenance should retain selected NAME field ordinal");
     expect(
         workspace.build_plan.startup_record_index == 1U,
         "workspace should keep the excluded asset record index when it becomes the startup fallback");

@@ -57,6 +57,7 @@ struct StudioProjectBuildPlan {
     std::string output_kind{};
     std::string build_target{};
     std::string startup_item{};
+    std::size_t startup_item_field_index = StudioProjectMissingFieldIndex;
     std::size_t startup_record_index = 0;
     std::size_t total_items = 0;
     std::size_t excluded_items = 0;
