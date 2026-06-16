@@ -1339,8 +1339,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route interpreted-result admission through the shared native-return admission helper.");
             expect(wrapper_source.find("(void)native_return_admission;") == std::string::npos,
                    "build host DLL wrapper should consume native-return admission when admitting outcome selection.");
-            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
-                   "build host DLL wrapper should parse the typed success integer value from the success representation");
+            expect(wrapper_source.find("const auto success_value_representation = interpreted_result.selected_return_value_representation;") != std::string::npos,
+                   "build host DLL wrapper should route interpreted response return values into native-return planning");
+            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n        success_value_representation);") != std::string::npos,
+                   "build host DLL wrapper should parse the typed success integer value from the interpreted response representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host DLL wrapper should parse the typed fallback integer value from the fallback representation");
             expect(wrapper_source.find("const auto int_value_representation = std::to_string(int_value);") != std::string::npos,
@@ -2390,8 +2392,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should route interpreted-result admission through the shared native-return admission helper.");
             expect(wrapper_source.find("(void)native_return_admission;") == std::string::npos,
                    "build host FLL wrapper should consume native-return admission when admitting outcome selection.");
-            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
-                   "build host FLL wrapper should parse the typed success integer value from the success representation");
+            expect(wrapper_source.find("const auto success_value_representation = interpreted_result.selected_return_value_representation;") != std::string::npos,
+                   "build host FLL wrapper should route interpreted response return values into native-return planning");
+            expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n        success_value_representation);") != std::string::npos,
+                   "build host FLL wrapper should parse the typed success integer value from the interpreted response representation");
             expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                    "build host FLL wrapper should parse the typed fallback integer value from the fallback representation");
             expect(wrapper_source.find("const auto int_value_representation = std::to_string(int_value);") != std::string::npos,

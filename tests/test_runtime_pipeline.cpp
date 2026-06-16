@@ -1760,8 +1760,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should route interpreted-result admission through the shared native-return admission helper.");
         expect(wrapper_source.find("(void)native_return_admission;") == std::string::npos,
                "library-output wrapper source should consume native-return admission when admitting outcome selection.");
-        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
-               "library-output wrapper source should parse the typed success integer value from the success representation");
+        expect(wrapper_source.find("const auto success_value_representation = interpreted_result.selected_return_value_representation;") != std::string::npos,
+               "library-output wrapper source should route interpreted response return values into native-return planning");
+        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n        success_value_representation);") != std::string::npos,
+               "library-output wrapper source should parse the typed success integer value from the interpreted response representation");
         expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "library-output wrapper source should parse the typed fallback integer value from the fallback representation");
         expect(wrapper_source.find("const auto int_value_representation = std::to_string(int_value);") != std::string::npos,
@@ -3296,8 +3298,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route interpreted-result admission through the shared native-return admission helper.");
         expect(wrapper_source.find("(void)native_return_admission;") == std::string::npos,
                "fll-output wrapper source should consume native-return admission when admitting outcome selection.");
-        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
-               "fll-output wrapper source should parse the typed success integer value from the success representation");
+        expect(wrapper_source.find("const auto success_value_representation = interpreted_result.selected_return_value_representation;") != std::string::npos,
+               "fll-output wrapper source should route interpreted response return values into native-return planning");
+        expect(wrapper_source.find("const int success_int_value = copperfin_parse_runtime_bridge_int_value_representation(\n        success_value_representation);") != std::string::npos,
+               "fll-output wrapper source should parse the typed success integer value from the interpreted response representation");
         expect(wrapper_source.find("const int fallback_int_value = copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "fll-output wrapper source should parse the typed fallback integer value from the fallback representation");
         expect(wrapper_source.find("const auto int_value_representation = std::to_string(int_value);") != std::string::npos,
