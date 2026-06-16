@@ -5229,6 +5229,15 @@ VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatus
         request.status_bar_text);
 }
 
+VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "ControlSource",
+        "control-source",
+        request.control_source);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

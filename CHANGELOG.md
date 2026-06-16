@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#802 selected visual object control-source assignment shipped: designer commands can assign caller text to selected `ControlSource` values, sharing the text-property path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#801 selected visual object status-bar text assignment shipped: designer commands can assign caller text to selected `StatusBarText` values, sharing the text-property path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#800 selected visual object tooltip text assignment shipped: designer commands can assign caller text to selected `ToolTipText` values, sharing the caption text preflight path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#799 selected visual object caption assignment shipped: designer commands can assign caller text to selected `Caption` values, storing raw DBF field text for direct fields and quoted VFP string literals for serialized properties while preserving rollback-safe batch writes.

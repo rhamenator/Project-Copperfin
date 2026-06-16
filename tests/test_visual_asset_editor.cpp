@@ -10131,6 +10131,191 @@ void test_set_visual_object_status_bar_text_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_control_source_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_controlsource_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "controlsource.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "CONTROLSOURCE", .type = 'C', .length = 70U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtOne", "oneBox", "one-guid", "customers.name"},
+        {"txtTwo", "twoBox", "two-guid", "customers.city"},
+        {"txtOther", "otherBox", "other-guid", "customers.state"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#802: control-source fixture should be writable");
+
+    const auto control_source_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ControlSource"
+        });
+        expect(result.ok && result.exists, "#802: control-source fixture property should be readable");
+        return result.value;
+    };
+    const auto control_source = [&](const std::string& unique_id) {
+        return control_source_for(table_path.string(), unique_id);
+    };
+    const auto control_source_state = [&]() {
+        return control_source("one-guid") + "," +
+            control_source("two-guid") + "," +
+            control_source("other-guid");
+    };
+
+    auto control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .control_source = "orders.total"
+    });
+    expect(control_result.ok, "#802: control-source assignment should support object-name and record-index selectors");
+    expect(control_source("one-guid") == "orders.total" &&
+            control_source("two-guid") == "orders.total" &&
+            control_source("other-guid") == "customers.state",
+        "#802: direct control-source assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#802: first control-source write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#802: second control-source write should remain undo-backed");
+    expect(control_source_state() == "customers.name,customers.city,customers.state",
+        "#802: control-source undo should restore original direct values");
+
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .control_source = "ThisForm.CurrentCustomer"
+    });
+    expect(control_result.ok, "#802: control-source assignment should support UNIQUEID selectors");
+    expect(control_source("one-guid") == "ThisForm.CurrentCustomer" &&
+            control_source("two-guid") == "ThisForm.CurrentCustomer",
+        "#802: direct control-source assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = control_source_state();
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = table_path.string(),
+        .objects = {},
+        .control_source = "Ignored"
+    });
+    expect(!control_result.ok, "#802: control-source assignment should reject empty selections");
+    expect(control_source_state() == committed_state, "#802: empty-selection failures should not mutate control sources");
+
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .control_source = "Ignored"
+    });
+    expect(!control_result.ok, "#802: control-source assignment should reject missing selected objects");
+    expect(control_source_state() == committed_state, "#802: missing-object failures should not mutate control sources");
+
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}}
+        },
+        .control_source = "Ignored"
+    });
+    expect(!control_result.ok, "#802: control-source assignment should reject duplicate selected objects");
+    expect(control_source_state() == committed_state, "#802: duplicate-selection failures should not mutate control sources");
+
+    const fs::path blob_path = temp_dir / "controlsource_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "ControlSource = \"customers.name\"\r\nCaption = \"Name\"\r\n"},
+        {"txtNoSource", "no-source-guid", "Caption = \"No source\"\r\n"},
+        {"txtOther", "other-guid", "ControlSource = \"customers.state\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#802: control-source property-blob fixture should be writable");
+
+    const auto blob_control_source_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ControlSource"
+        });
+    };
+
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoSource", .unique_id = {}}
+        },
+        .control_source = "orders.\"total\""
+    });
+    expect(control_result.ok, "#802: control-source assignment should support existing and absent serialized properties");
+    auto blob_source = blob_control_source_state("blob-guid");
+    auto appended_source = blob_control_source_state("no-source-guid");
+    auto other_source = blob_control_source_state("other-guid");
+    expect(blob_source.ok && blob_source.exists && blob_source.value == "\"orders.\"\"total\"\"\"" &&
+            appended_source.ok && appended_source.exists && appended_source.value == "\"orders.\"\"total\"\"\"" &&
+            other_source.ok && other_source.exists && other_source.value == "\"customers.state\"",
+        "#802: serialized control-source assignment should quote text, append missing ControlSource, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#802: appended serialized control-source write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#802: existing serialized control-source write should remain undo-backed");
+    blob_source = blob_control_source_state("blob-guid");
+    appended_source = blob_control_source_state("no-source-guid");
+    expect(blob_source.ok && blob_source.exists && blob_source.value == "\"customers.name\"" &&
+            appended_source.ok && !appended_source.exists,
+        "#802: serialized control-source undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_controlsource.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#802: missing-ControlSource fixture should be writable");
+
+    control_result = copperfin::vfp::set_visual_object_control_source({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .control_source = "Ignored"
+    });
+    expect(!control_result.ok, "#802: control-source assignment should reject objects without a writable ControlSource carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -12724,6 +12909,7 @@ int main() {
     test_set_visual_object_caption_assigns_text();
     test_set_visual_object_tooltip_text_assigns_text();
     test_set_visual_object_status_bar_text_assigns_text();
+    test_set_visual_object_control_source_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
