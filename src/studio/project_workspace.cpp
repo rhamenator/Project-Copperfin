@@ -269,6 +269,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
         StudioProjectEntry entry;
         entry.record_index = record.record_index;
+        entry.deleted = record.deleted;
         entry.name = name.empty() ? ("Record " + std::to_string(record.record_index)) : name;
         entry.name_field_index = field_index_or_missing(record, "NAME");
         entry.relative_path = relative_path;

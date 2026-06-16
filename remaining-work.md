@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#685 project entry deleted-state preservation is now shipped. Project workspace entries now retain DBF deleted-record state so designer tooling can see deleted PJX/PJT rows without changing grouping, startup, or build behavior; focused `test_project_workspace` coverage proves live and deleted entry state preservation.
 - 2026-06-16: E1/#684 visual property blob line provenance is now shipped. Parsed visual property assignments now preserve source memo line indexes, and studio property snapshots expose those line indexes for blob-derived properties while direct DBF fields use `StudioObjectMissingLineIndex`; focused `test_studio_host` coverage proves first/later blob property line provenance and direct-field sentinel behavior.
 - 2026-06-16: E1/#683 project build output classification provenance is now shipped. `StudioProjectBuildPlan` now preserves source DBF field ordinals for `output_kind` and `build_target`, using `StudioProjectMissingFieldIndex` when classification comes from a synthesized output-path fallback; focused `test_project_workspace` coverage proves stored OUTFILE provenance and fallback sentinel behavior.
 - 2026-06-16: E1/#682 report layout classification provenance is now shipped. Report/label layout snapshots now preserve source DBF field ordinals for normalized section title/band labels and layout object kind labels; focused `test_report_layout` coverage proves section `OBJCODE` and object `OBJTYPE` classification provenance.

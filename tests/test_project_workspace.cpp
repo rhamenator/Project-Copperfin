@@ -17,9 +17,11 @@ void expect(bool condition, const std::string& message) {
 
 copperfin::vfp::DbfRecord make_record(
     std::size_t record_index,
-    std::initializer_list<copperfin::vfp::DbfRecordValue> values) {
+    std::initializer_list<copperfin::vfp::DbfRecordValue> values,
+    bool deleted = false) {
     copperfin::vfp::DbfRecord record;
     record.record_index = record_index;
+    record.deleted = deleted;
     record.values.assign(values.begin(), values.end());
     return record;
 }
@@ -55,7 +57,11 @@ void test_build_project_workspace() {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "reports\\invoice.frx"},
             {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "true"}
-        })
+        }),
+        make_record(4, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "menus\\oldmenu.mnx"}
+        }, true)
     };
 
     const auto workspace = copperfin::studio::build_project_workspace(document);
@@ -65,7 +71,7 @@ void test_build_project_workspace() {
     expect(workspace.project_key_field_index == 1U, "#678: workspace project key field provenance should be preserved");
     expect(workspace.home_directory_field_index == 2U, "#678: workspace home directory field provenance should be preserved");
     expect(workspace.output_path_field_index == 3U, "#678: workspace output path field provenance should be preserved");
-    expect(workspace.entries.size() == 4U, "workspace should include all project records");
+    expect(workspace.entries.size() == 5U, "workspace should include all project records");
     expect(workspace.groups.size() >= 3U, "workspace should group header, program, and form/report items");
     expect(workspace.build_plan.available, "build plan should be available");
     expect(workspace.build_plan.can_build, "build plan should be buildable with entries and an output path");
@@ -89,6 +95,7 @@ void test_build_project_workspace() {
            "#663: missing NOLOGO build-flag provenance should be explicit");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
+    expect(!workspace.entries[0].deleted, "#685: live project entries should preserve non-deleted state");
     expect(workspace.entries[0].type_title_field_index == 0U, "#680: TYPE-derived project entry classification provenance should be preserved");
     expect(workspace.entries[0].group_id_field_index == 0U, "#680: TYPE-derived project group id provenance should be preserved");
     expect(workspace.entries[0].group_title_field_index == 0U, "#680: TYPE-derived project group title provenance should be preserved");
@@ -115,6 +122,8 @@ void test_build_project_workspace() {
            "#677: missing MAINPROG project entry flag provenance should be explicit");
     expect(workspace.entries[2].group_id == "forms", "#680: project entry grouping should still derive from NAME extension");
     expect(workspace.entries[2].group_id_field_index == 1U, "#680: form grouping provenance should retain NAME field ordinal");
+    expect(workspace.entries[4].deleted, "#685: deleted PJX records should stay visible on project entries");
+    expect(workspace.entries[4].relative_path == R"(menus\oldmenu.mnx)", "#685: deleted entries should keep normalized path metadata");
 
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";

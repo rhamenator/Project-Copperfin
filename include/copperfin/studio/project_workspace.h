@@ -12,6 +12,7 @@ inline constexpr std::size_t StudioProjectMissingFieldIndex = static_cast<std::s
 
 struct StudioProjectEntry {
     std::size_t record_index = 0;
+    bool deleted = false;
     std::string name{};
     std::size_t name_field_index = StudioProjectMissingFieldIndex;
     std::string relative_path{};
