@@ -1793,6 +1793,124 @@ VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethod
     };
 }
 
+VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMethodQueryRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .exists = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .method = {}
+        };
+    }
+    if (trim_both(request.method_name).empty()) {
+        return {
+            .ok = false,
+            .error = "No method name was provided.",
+            .exists = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .method = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .exists = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .method = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .exists = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .method = {}
+        };
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested object record is not currently available.",
+            .exists = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .method = {}
+        };
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const auto* methods_field = find_record_value(record, "METHODS");
+    if (methods_field == nullptr) {
+        return {
+            .ok = false,
+            .error = "The selected object does not expose a METHODS memo field.",
+            .exists = false,
+            .record_index = record_index,
+            .record_deleted = record.deleted,
+            .method = {}
+        };
+    }
+
+    const std::vector<VisualObjectMethodSnapshot> methods = parse_visual_methods_blob(
+        methods_field->display_value,
+        methods_field->memo_block_number);
+    const std::string normalized_method_name = normalize_visual_object_name(request.method_name);
+    std::vector<VisualObjectMethodSnapshot> matches;
+    for (const auto& method : methods) {
+        if (normalize_visual_object_name(method.method_name) == normalized_method_name) {
+            matches.push_back(method);
+        }
+    }
+    if (matches.size() > 1U) {
+        return {
+            .ok = false,
+            .error = "The requested method name is ambiguous.",
+            .exists = false,
+            .record_index = record_index,
+            .record_deleted = record.deleted,
+            .method = {}
+        };
+    }
+    if (matches.empty()) {
+        return {
+            .ok = true,
+            .error = {},
+            .exists = false,
+            .record_index = record_index,
+            .record_deleted = record.deleted,
+            .method = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .exists = true,
+        .record_index = record_index,
+        .record_deleted = record.deleted,
+        .method = matches.front()
+    };
+}
+
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

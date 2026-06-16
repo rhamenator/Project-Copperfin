@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#762 selected visual object method query shipped: method/event editors can open one selected `PROCEDURE` or `FUNCTION` declaration by name with source metadata, resolved record/deleted state, not-found semantics, ambiguity checks, and read-only behavior.
 - E2/#761 selected visual object method renaming shipped: method/event editors can rename `PROCEDURE` and `FUNCTION` declarations in selected object `METHODS` memos while preserving bodies, rejecting collisions, and retaining undo support.
 - E2/#760 selected visual object subtree duplication shipped: container copy/paste workflows can duplicate a selected root plus descendants with per-row replacement identities, copied parent rewrites, memo preservation, deleted-state preservation, and collision-safe validation before mutation.
 - E2/#759 selected visual object ancestor listing shipped: container breadcrumbs can enumerate parent chains from immediate parent to root with depth metadata, ambiguity detection, cycle protection, and read-only behavior.

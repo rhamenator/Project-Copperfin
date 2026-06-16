@@ -211,6 +211,23 @@ struct VisualObjectMethodListResult {
     std::vector<VisualObjectMethodSnapshot> methods;
 };
 
+struct VisualObjectMethodQueryRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+};
+
+struct VisualObjectMethodQueryResult {
+    bool ok = false;
+    std::string error;
+    bool exists = false;
+    std::size_t record_index = 0;
+    bool record_deleted = false;
+    VisualObjectMethodSnapshot method;
+};
+
 struct VisualObjectMethodEditRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -340,6 +357,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObjectDescendantsListRequest& request);
 [[nodiscard]] VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectAncestorsListRequest& request);
 [[nodiscard]] VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request);
+[[nodiscard]] VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMethodQueryRequest& request);
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request);
