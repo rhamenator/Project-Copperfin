@@ -23,8 +23,10 @@ struct XAssetMethod {
 struct XAssetActionBinding {
     std::size_t record_index = 0;
     std::size_t title_field_index = studio::StudioObjectMissingFieldIndex;
+    std::uint32_t title_memo_block_number = 0;
     std::size_t routine_source_field_index = studio::StudioObjectMissingFieldIndex;
     std::size_t routine_source_line_index = studio::StudioObjectMissingLineIndex;
+    std::uint32_t routine_source_memo_block_number = 0;
     std::string action_id;
     std::string title;
     std::string kind;

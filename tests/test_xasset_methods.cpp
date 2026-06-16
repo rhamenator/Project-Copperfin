@@ -125,11 +125,17 @@ void test_build_xasset_executable_model() {
                "#708: form action routines should inherit method source field provenance");
         expect(model.actions[0].routine_source_line_index == 0U,
                "#708: form action routines should inherit method source line provenance");
+        expect(model.actions[0].title_memo_block_number == 0U,
+               "#720: synthesized form action titles should expose memo block zero");
+        expect(model.actions[0].routine_source_memo_block_number == 30U,
+               "#720: form action routines should inherit method memo block provenance");
         expect(model.actions[4].action_id == "frmdemo.init", "root form init should be dispatchable");
         expect(model.actions[4].routine_source_field_index == 3U,
                "#708: root form action routines should inherit method source field provenance");
         expect(model.actions[4].routine_source_line_index == 3U,
                "#708: root form action routines should inherit method declaration line provenance");
+        expect(model.actions[4].routine_source_memo_block_number == 40U,
+               "#720: root form action routines should inherit method memo block provenance");
         expect(model.actions[7].action_id == "frmdemo.pgfmain.page2.activate", "nested page methods should be dispatchable");
     }
     expect(model.startup_routines.size() == 5U, "startup should include data environment, load, init, and activate methods");
@@ -533,7 +539,7 @@ void test_build_menu_xasset_executable_model() {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
             {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  3"},
-            {.field_name = "PROMPT", .field_type = 'M', .display_value = "More"}
+            {.field_name = "PROMPT", .field_type = 'M', .display_value = "More", .memo_block_number = 65U}
         }),
         make_record(5, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
@@ -602,6 +608,10 @@ void test_build_menu_xasset_executable_model() {
                "#708: command actions should inherit COMMAND field provenance");
         expect(model.actions[0].routine_source_line_index == 0U,
                "#708: command actions should inherit wrapped COMMAND line provenance");
+        expect(model.actions[0].title_memo_block_number == 0U,
+               "#720: fallback command action titles should expose memo block zero");
+        expect(model.actions[0].routine_source_memo_block_number == 63U,
+               "#720: command actions should inherit COMMAND memo block provenance");
         expect(model.actions[1].action_id == "shortcut.item2", "second action should expose the item2 action id");
         expect(model.actions[1].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
                "#708: procedure action title fallbacks should use the missing-title-field sentinel");
@@ -609,13 +619,19 @@ void test_build_menu_xasset_executable_model() {
                "#708: procedure actions should inherit PROCEDURE field provenance");
         expect(model.actions[1].routine_source_line_index == 1U,
                "#708: procedure actions should inherit embedded declaration line provenance");
+        expect(model.actions[1].routine_source_memo_block_number == 64U,
+               "#720: procedure actions should inherit PROCEDURE memo block provenance");
         expect(model.actions[2].action_id == "shortcut.item3", "third action should expose the submenu action id");
         expect(model.actions[2].title_field_index == 3U,
                "#708: submenu action titles sourced from PROMPT should retain PROMPT field provenance");
+        expect(model.actions[2].title_memo_block_number == 65U,
+               "#720: submenu action titles should retain PROMPT memo block provenance");
         expect(model.actions[2].routine_source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
                "#708: synthetic submenu action routines should use missing routine field provenance");
         expect(model.actions[2].routine_source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                "#708: synthetic submenu action routines should use missing routine line provenance");
+        expect(model.actions[2].routine_source_memo_block_number == 0U,
+               "#720: synthetic submenu action routines should expose memo block zero");
         expect(model.actions[2].kind == "submenu", "submenu item should be tagged as a submenu action");
     }
 

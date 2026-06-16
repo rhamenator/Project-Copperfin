@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 is COMPLETE as of 2026-06-16.** The live blocker path has moved to E1/#22. Latest slice: `#719`, preserving xAsset method memo block provenance for form/class `METHODS`, wrapped menu method fields, embedded menu procedures, and synthetic submenu activation methods while executable source generation remains unchanged; after closing it, continue `#22` by opening the next prompt-sized shared design-model child.
+**D1/#19 is COMPLETE as of 2026-06-16.** The live blocker path has moved to E1/#22. Latest slice: `#720`, preserving xAsset action memo block provenance for title sources and routine sources across form method actions, menu command/procedure actions, and synthetic submenu actions while action IDs and dispatch semantics remain unchanged; after closing it, continue `#22` by opening the next prompt-sized shared design-model child.
 
 Next: the highest-priority open umbrella at the head of the live blocker path is `#22`. Continue by creating or selecting the next prompt-sized shared design-model child under `#22`; do not reopen closed D1/#19, native-wrapper, transpilation, or debugger slices.
 
