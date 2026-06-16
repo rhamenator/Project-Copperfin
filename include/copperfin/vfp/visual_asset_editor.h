@@ -856,6 +856,12 @@ struct VisualObjectSpecialEffectRequest {
     int special_effect = 0;
 };
 
+struct VisualObjectCurvatureRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int curvature = 0;
+};
+
 struct VisualObjectMousePointerRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1350,6 +1356,7 @@ VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderSty
 VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWidthRequest& request);
 VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderColorRequest& request);
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request);
+VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request);
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request);
 VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request);
 VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPicturePositionRequest& request);

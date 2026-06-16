@@ -11437,6 +11437,29 @@ void test_set_visual_object_special_effect_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_curvature_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#884",
+        "curvature",
+        "Curvature",
+        "CURVATURE",
+        "curvature",
+        0,
+        10,
+        99,
+        25,
+        50,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_curvature({
+                .path = path,
+                .objects = objects,
+                .curvature = value
+            });
+        });
+}
+
 void test_set_visual_object_mouse_pointer_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#865",
@@ -22626,6 +22649,7 @@ int main() {
     test_set_visual_object_border_width_assigns_numeric_value();
     test_set_visual_object_border_color_assigns_numeric_value();
     test_set_visual_object_special_effect_assigns_numeric_value();
+    test_set_visual_object_curvature_assigns_numeric_value();
     test_set_visual_object_mouse_pointer_assigns_numeric_value();
     test_set_visual_object_picture_margin_assigns_numeric_value();
     test_set_visual_object_picture_position_assigns_numeric_value();

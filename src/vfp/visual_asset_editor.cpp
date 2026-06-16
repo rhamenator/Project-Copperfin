@@ -5558,6 +5558,19 @@ VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecial
         std::to_string(request.special_effect));
 }
 
+VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request) {
+    if (request.curvature < 0) {
+        return {.ok = false, .error = "Curvature must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Curvature",
+        "curvature",
+        std::to_string(request.curvature));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};
