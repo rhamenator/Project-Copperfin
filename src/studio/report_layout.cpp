@@ -35,6 +35,15 @@ const vfp::DbfRecordValue* find_value(const DbfRecord& record, std::string_view 
     return nullptr;
 }
 
+std::optional<std::size_t> find_field_index(const DbfRecord& record, std::string_view field_name) {
+    for (std::size_t index = 0U; index < record.values.size(); ++index) {
+        if (record.values[index].field_name == field_name) {
+            return index;
+        }
+    }
+    return std::nullopt;
+}
+
 std::string value_or_empty(const DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     return value == nullptr ? std::string() : value->display_value;
@@ -175,7 +184,12 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     const auto add_highlight = [&](std::string_view name) {
         const std::string value = first_non_empty(record, {name});
         if (!value.empty()) {
-            object.highlights.push_back({std::string(name), value});
+            object.highlights.push_back({
+                .name = std::string(name),
+                .record_index = record.record_index,
+                .field_index = find_field_index(record, name).value_or(0U),
+                .value = value
+            });
         }
     };
 
@@ -205,6 +219,7 @@ bool is_band_record(const DbfRecord& record) {
 
 void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValue>& settings) {
     const std::string expr = value_or_empty(record, "EXPR");
+    const std::size_t expr_field_index = find_field_index(record, "EXPR").value_or(0U);
     std::size_t start = 0U;
     while (start <= expr.size()) {
         const std::size_t end = expr.find('\n', start);
@@ -218,7 +233,12 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
             const std::string name = trim_copy(line.substr(0U, equals));
             const std::string value = trim_copy(line.substr(equals + 1U));
             if (!name.empty()) {
-                settings.push_back({name, value});
+                settings.push_back({
+                    .name = name,
+                    .record_index = record.record_index,
+                    .field_index = expr_field_index,
+                    .value = value
+                });
             }
         }
 
@@ -231,7 +251,12 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     const auto append_numeric = [&](std::string_view field_name) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
         if (!value.empty()) {
-            settings.push_back({std::string(field_name), value});
+            settings.push_back({
+                .name = std::string(field_name),
+                .record_index = record.record_index,
+                .field_index = find_field_index(record, field_name).value_or(0U),
+                .value = value
+            });
         }
     };
 

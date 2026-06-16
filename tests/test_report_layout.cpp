@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 namespace {
 
@@ -101,6 +102,33 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
     expect(layout.sections[1].objects[0].expression == "customer.company", "detail object should surface its expression");
+    const auto orientation = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "ORIENTATION";
+    });
+    expect(orientation != layout.settings.end(), "#661: report settings should include parsed EXPR settings");
+    if (orientation != layout.settings.end()) {
+        expect(orientation->record_index == 0U, "#661: parsed EXPR settings should retain their source record index");
+        expect(orientation->field_index == 2U, "#661: parsed EXPR settings should retain the source EXPR field ordinal");
+    }
+    const auto top_margin = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "TOPMARGIN";
+    });
+    expect(top_margin != layout.settings.end(), "#661: report settings should include direct numeric settings");
+    if (top_margin != layout.settings.end()) {
+        expect(top_margin->record_index == 0U, "#661: direct settings should retain their source record index");
+        expect(top_margin->field_index == 3U, "#661: direct settings should retain their DBF field ordinal");
+    }
+    const auto fontface = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "FONTFACE";
+        });
+    expect(fontface != layout.sections[1].objects[0].highlights.end(), "#661: layout highlights should include FONTFACE");
+    if (fontface != layout.sections[1].objects[0].highlights.end()) {
+        expect(fontface->record_index == 3U, "#661: layout highlights should retain source record index");
+        expect(fontface->field_index == 6U, "#661: layout highlights should retain DBF field ordinal");
+    }
 }
 
 }  // namespace

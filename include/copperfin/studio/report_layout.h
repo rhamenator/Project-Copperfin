@@ -10,6 +10,8 @@ namespace copperfin::studio {
 
 struct StudioNamedValue {
     std::string name{};
+    std::size_t record_index = 0;
+    std::size_t field_index = 0;
     std::string value{};
 };
 

@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#661 report-layout provenance shipped: report/label layout settings and object highlights now carry their source record index and DBF field ordinal, preserving enough metadata for round-trip-safe designer edits.
 - E1/#660 design-object identity metadata shipped: Studio object snapshots now expose object name, UNIQUEID, parent, class, and baseclass fields from DBF-family visual records for shared designer navigation and round-trip fidelity.
 - E1/#659 design-property provenance shipped: Studio property snapshots now preserve original DBF field ordinals and mark values expanded from visual `PROPERTIES` blobs, giving designer workflows enough metadata to distinguish direct fields from parsed blob assignments.
 - E1/#658 design-record snapshot fidelity shipped: Studio object snapshots now preserve empty and NULL DBF-family design fields instead of dropping them, while existing visual property blob expansion remains intact. Focused `test_studio_host` coverage proves empty memo-backed fields, NULL fields, and parsed visual properties survive in one normalized snapshot.
