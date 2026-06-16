@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#770 selected visual object memo-property reordering shipped: property grids can move one memo-backed `PROPERTIES` assignment to first, last, before another assignment, or after another assignment on a selected object by record-index, object-name, or `UNIQUEID`, preserving values and undo support while rejecting direct DBF fields and invalid reorder cases without mutation.
 - E2/#769 selected visual object memo-property renaming shipped: property grids can rename one memo-backed `PROPERTIES` assignment on a selected object by record-index, object-name, or `UNIQUEID`, preserving values and undo support while rejecting direct DBF fields, empty names, missing sources, duplicate sources, target collisions, same-name renames, and missing `PROPERTIES` carriers.
 - E2/#768 selected visual object property moves shipped: property grids can move direct DBF-backed or memo-backed `PROPERTIES` values between selected objects by record-index, object-name, or `UNIQUEID`, optionally rename target properties, require explicit replacement for existing targets, reject self-moves, clear sources only after target writes, and preserve undo support.
 - E2/#767 selected visual object property copying shipped: property grids can copy direct DBF-backed or memo-backed `PROPERTIES` values from one selected object to another by record-index, object-name, or `UNIQUEID`, optionally rename the target property, require explicit replacement for existing targets, and preserve undo support.

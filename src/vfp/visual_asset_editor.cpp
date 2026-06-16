@@ -447,6 +447,83 @@ VisualAssetEditResult reorder_visual_methods_blob(
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult find_unique_visual_property_assignment_index(
+    const std::vector<VisualPropertyAssignment>& assignments,
+    const std::string& property_name,
+    const std::string& missing_error,
+    const std::string& ambiguous_error,
+    std::size_t& property_index) {
+    const std::string normalized_property_name = normalize_visual_property_name(property_name);
+    std::vector<std::size_t> matches;
+    for (std::size_t index = 0U; index < assignments.size(); ++index) {
+        if (normalize_visual_property_name(assignments[index].name) == normalized_property_name) {
+            matches.push_back(index);
+        }
+    }
+    if (matches.empty()) {
+        return {.ok = false, .error = missing_error};
+    }
+    if (matches.size() > 1U) {
+        return {.ok = false, .error = ambiguous_error};
+    }
+    property_index = matches.front();
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult reorder_visual_property_assignments(
+    std::vector<VisualPropertyAssignment>& assignments,
+    const std::string& requested_property_name,
+    const std::string& placement,
+    const std::string& relative_property_name) {
+    std::size_t source_index = 0U;
+    const auto source_result = find_unique_visual_property_assignment_index(
+        assignments,
+        requested_property_name,
+        "The requested property was not found.",
+        "The requested property name is ambiguous.",
+        source_index);
+    if (!source_result.ok) {
+        return source_result;
+    }
+
+    const std::string normalized_placement = normalize_visual_property_name(placement);
+    const auto moving_property = assignments[source_index];
+    assignments.erase(assignments.begin() + static_cast<std::ptrdiff_t>(source_index));
+
+    std::size_t insert_index = assignments.size();
+    if (normalized_placement == "first") {
+        insert_index = 0U;
+    } else if (normalized_placement == "last") {
+        insert_index = assignments.size();
+    } else if (normalized_placement == "before" || normalized_placement == "after") {
+        if (trim_both(relative_property_name).empty()) {
+            return {.ok = false, .error = "No relative property name was provided."};
+        }
+        if (normalize_visual_property_name(relative_property_name) == normalize_visual_property_name(requested_property_name)) {
+            return {.ok = false, .error = "The source property cannot be positioned relative to itself."};
+        }
+
+        std::size_t relative_index = 0U;
+        const auto relative_result = find_unique_visual_property_assignment_index(
+            assignments,
+            relative_property_name,
+            "The relative property was not found.",
+            "The relative property name is ambiguous.",
+            relative_index);
+        if (!relative_result.ok) {
+            return relative_result;
+        }
+        insert_index = normalized_placement == "before" ? relative_index : relative_index + 1U;
+    } else {
+        return {.ok = false, .error = "Unknown property placement was requested."};
+    }
+
+    assignments.insert(
+        assignments.begin() + static_cast<std::ptrdiff_t>(insert_index),
+        moving_property);
+    return {.ok = true, .error = {}};
+}
+
 std::pair<bool, std::string> delete_visual_method_from_blob(
     const std::string& existing_blob,
     const std::string& requested_method_name) {
@@ -1576,6 +1653,90 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         record_index,
         "PROPERTIES",
         serialize_visual_property_blob(assignments));
+}
+
+VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (trim_both(request.property_name).empty()) {
+        return {.ok = false, .error = "No property name was provided."};
+    }
+
+    const std::string placement = normalize_visual_property_name(request.placement);
+    if (placement != "first" && placement != "last" && placement != "before" && placement != "after") {
+        return {.ok = false, .error = "Unknown property placement was requested."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto is_direct_field_name = [&](const std::string& property_name) {
+        const std::string normalized_property_name = normalize_visual_property_name(property_name);
+        return std::any_of(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+            return normalize_visual_property_name(field.name) == normalized_property_name;
+        });
+    };
+    if (is_direct_field_name(request.property_name)) {
+        return {.ok = false, .error = "Direct DBF-backed fields cannot be reordered per object."};
+    }
+    if ((placement == "before" || placement == "after") &&
+        !trim_both(request.relative_property_name).empty() &&
+        is_direct_field_name(request.relative_property_name)) {
+        return {.ok = false, .error = "Direct DBF-backed fields cannot be reordered per object."};
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = "The requested property is not exposed as a reorderable memo-backed property on this asset."};
+    }
+
+    const auto* properties_field = find_record_value(table_result.table.records[record_index], "PROPERTIES");
+    if (properties_field == nullptr) {
+        return {.ok = false, .error = "The selected object does not expose a PROPERTIES memo field."};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_field->display_value);
+    const auto reorder_result = reorder_visual_property_assignments(
+        assignments,
+        request.property_name,
+        request.placement,
+        request.relative_property_name);
+    if (!reorder_result.ok) {
+        return reorder_result;
+    }
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "PROPERTIES",
+        .property_value = serialize_visual_property_blob(assignments)
+    });
 }
 
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
