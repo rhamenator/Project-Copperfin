@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#842 selected visual object dynamic font-italic assignment shipped: designer commands can assign caller-provided raw `DynamicFontItalic` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#841 selected visual object dynamic font-bold assignment shipped: designer commands can assign caller-provided raw `DynamicFontBold` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#840 selected visual object dynamic font-size assignment shipped: designer commands can assign caller-provided raw `DynamicFontSize` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#839 selected visual object dynamic font-name assignment shipped: designer commands can assign caller-provided raw `DynamicFontName` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.

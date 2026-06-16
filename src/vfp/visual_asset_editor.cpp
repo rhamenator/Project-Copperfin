@@ -5413,6 +5413,15 @@ VisualAssetEditResult set_visual_object_dynamic_font_bold(const VisualObjectDyna
         request.dynamic_font_bold);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_font_italic(const VisualObjectDynamicFontItalicRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicFontItalic",
+        "dynamic font italic",
+        request.dynamic_font_italic);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
