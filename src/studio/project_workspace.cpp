@@ -28,6 +28,11 @@ std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_vie
     return StudioProjectMissingFieldIndex;
 }
 
+std::uint32_t memo_block_number_or_zero(const vfp::DbfRecord& record, std::string_view field_name) {
+    const auto* value = find_value(record, field_name);
+    return value == nullptr ? 0U : value->memo_block_number;
+}
+
 bool looks_like_unresolved_memo(const std::string& value) {
     return value.rfind("<memo block ", 0) == 0;
 }
@@ -308,19 +313,26 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     if (header_record != document.table_preview.records.end()) {
         workspace.project_key = trim_copy(value_or_empty(*header_record, "KEY"));
         workspace.project_key_field_index = field_index_or_missing(*header_record, "KEY");
+        workspace.project_key_memo_block_number = memo_block_number_or_zero(*header_record, "KEY");
         workspace.project_title = workspace.project_key.empty()
             ? filename_stem_for_vfp_path(document.path)
             : workspace.project_key;
         workspace.project_title_field_index = workspace.project_key.empty()
             ? StudioProjectMissingFieldIndex
             : workspace.project_key_field_index;
+        workspace.project_title_memo_block_number = workspace.project_key.empty()
+            ? 0U
+            : workspace.project_key_memo_block_number;
         workspace.home_directory = trim_copy(value_or_empty(*header_record, "HOMEDIR"));
         workspace.home_directory_field_index = field_index_or_missing(*header_record, "HOMEDIR");
+        workspace.home_directory_memo_block_number = memo_block_number_or_zero(*header_record, "HOMEDIR");
         workspace.output_path = trim_copy(value_or_empty(*header_record, "OUTFILE"));
         workspace.output_path_field_index = field_index_or_missing(*header_record, "OUTFILE");
+        workspace.output_path_memo_block_number = memo_block_number_or_zero(*header_record, "OUTFILE");
         if (looks_like_unresolved_memo(workspace.output_path)) {
             workspace.output_path.clear();
             workspace.output_path_field_index = StudioProjectMissingFieldIndex;
+            workspace.output_path_memo_block_number = 0U;
         }
     } else {
         workspace.project_title = filename_stem_for_vfp_path(document.path);
@@ -329,6 +341,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     if (workspace.output_path.empty()) {
         workspace.output_path = default_output_path(document, workspace.project_title);
         workspace.output_path_field_index = StudioProjectMissingFieldIndex;
+        workspace.output_path_memo_block_number = 0U;
     }
 
     std::vector<StudioProjectGroup> groups;
@@ -414,12 +427,17 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     workspace.build_plan.available = true;
     workspace.build_plan.project_title = workspace.project_title;
     workspace.build_plan.project_key = workspace.project_key;
+    workspace.build_plan.project_key_memo_block_number = workspace.project_key_memo_block_number;
     workspace.build_plan.home_directory = workspace.home_directory;
+    workspace.build_plan.home_directory_memo_block_number = workspace.home_directory_memo_block_number;
     workspace.build_plan.output_path = workspace.output_path;
+    workspace.build_plan.output_path_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.output_kind = infer_output_kind(workspace.output_path);
     workspace.build_plan.output_kind_field_index = workspace.output_path_field_index;
+    workspace.build_plan.output_kind_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind);
     workspace.build_plan.build_target_field_index = workspace.output_path_field_index;
+    workspace.build_plan.build_target_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.total_items = workspace.entries.size();
     workspace.build_plan.excluded_items = static_cast<std::size_t>(std::count_if(
         workspace.entries.begin(),
@@ -513,7 +531,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     if (header_record != document.table_preview.records.end()) {
         workspace.build_plan.project_key_field_index = field_index_or_missing(*header_record, "KEY");
         workspace.build_plan.home_directory_field_index = field_index_or_missing(*header_record, "HOMEDIR");
-        workspace.build_plan.output_path_field_index = field_index_or_missing(*header_record, "OUTFILE");
+        workspace.build_plan.output_path_field_index = workspace.output_path_field_index;
         workspace.build_plan.debug_enabled = value_as_bool(*header_record, "DEBUG");
         workspace.build_plan.debug_field_index = field_index_or_missing(*header_record, "DEBUG");
         workspace.build_plan.encrypt_enabled = value_as_bool(*header_record, "ENCRYPT");

@@ -3,6 +3,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -52,14 +53,19 @@ struct StudioProjectBuildPlan {
     std::string project_title{};
     std::string project_key{};
     std::size_t project_key_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t project_key_memo_block_number = 0;
     std::string home_directory{};
     std::size_t home_directory_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t home_directory_memo_block_number = 0;
     std::string output_path{};
     std::size_t output_path_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t output_path_memo_block_number = 0;
     std::string output_kind{};
     std::size_t output_kind_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t output_kind_memo_block_number = 0;
     std::string build_target{};
     std::size_t build_target_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t build_target_memo_block_number = 0;
     std::string startup_item{};
     std::size_t startup_item_field_index = StudioProjectMissingFieldIndex;
     std::size_t startup_record_index = 0;
@@ -80,12 +86,16 @@ struct StudioProjectWorkspace {
     bool available = false;
     std::string project_title{};
     std::size_t project_title_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t project_title_memo_block_number = 0;
     std::string project_key{};
     std::size_t project_key_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t project_key_memo_block_number = 0;
     std::string home_directory{};
     std::size_t home_directory_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t home_directory_memo_block_number = 0;
     std::string output_path{};
     std::size_t output_path_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t output_path_memo_block_number = 0;
     std::vector<StudioProjectGroup> groups{};
     std::vector<StudioProjectEntry> entries{};
     StudioProjectBuildPlan build_plan{};

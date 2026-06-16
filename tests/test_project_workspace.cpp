@@ -35,8 +35,8 @@ void test_build_project_workspace() {
         make_record(0, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
             {.field_name = "KEY", .field_type = 'C', .display_value = "DEMOAPP"},
-            {.field_name = "HOMEDIR", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\samples)"},
-            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\demoapp.exe)"},
+            {.field_name = "HOMEDIR", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\samples)", .memo_block_number = 3U},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\demoapp.exe)", .memo_block_number = 4U},
             {.field_name = "DEBUG", .field_type = 'L', .display_value = "true"},
             {.field_name = "SAVECODE", .field_type = 'L', .display_value = "false"}
         }),
@@ -68,9 +68,13 @@ void test_build_project_workspace() {
     expect(workspace.available, "project workspace should be available for PJX documents");
     expect(workspace.project_title == "DEMOAPP", "workspace should use the project key as its title");
     expect(workspace.project_title_field_index == 1U, "#678: workspace project title should retain selected KEY field provenance");
+    expect(workspace.project_title_memo_block_number == 0U, "#714: project titles from non-memo KEY fields should expose memo block zero");
     expect(workspace.project_key_field_index == 1U, "#678: workspace project key field provenance should be preserved");
+    expect(workspace.project_key_memo_block_number == 0U, "#714: project keys from non-memo fields should expose memo block zero");
     expect(workspace.home_directory_field_index == 2U, "#678: workspace home directory field provenance should be preserved");
+    expect(workspace.home_directory_memo_block_number == 3U, "#714: workspace home directories should retain source memo block provenance");
     expect(workspace.output_path_field_index == 3U, "#678: workspace output path field provenance should be preserved");
+    expect(workspace.output_path_memo_block_number == 4U, "#714: workspace output paths should retain source memo block provenance");
     expect(workspace.entries.size() == 5U, "workspace should include all project records");
     expect(workspace.groups.size() >= 3U, "workspace should group header, program, and form/report items");
     expect(workspace.build_plan.available, "build plan should be available");
@@ -85,8 +89,13 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
     expect(workspace.build_plan.project_key_field_index == 1U, "#663: build plan should preserve project key field provenance");
+    expect(workspace.build_plan.project_key_memo_block_number == 0U, "#714: build-plan project keys should expose source memo block provenance");
     expect(workspace.build_plan.home_directory_field_index == 2U, "#663: build plan should preserve home directory field provenance");
+    expect(workspace.build_plan.home_directory_memo_block_number == 3U, "#714: build-plan home directories should retain source memo block provenance");
     expect(workspace.build_plan.output_path_field_index == 3U, "#663: build plan should preserve output path field provenance");
+    expect(workspace.build_plan.output_path_memo_block_number == 4U, "#714: build-plan output paths should retain source memo block provenance");
+    expect(workspace.build_plan.output_kind_memo_block_number == 4U, "#714: build-plan output kind should inherit output path memo block provenance");
+    expect(workspace.build_plan.build_target_memo_block_number == 4U, "#714: build-plan target should inherit output path memo block provenance");
     expect(workspace.build_plan.debug_field_index == 4U, "#663: build plan should preserve DEBUG field provenance");
     expect(workspace.build_plan.save_code_field_index == 5U, "#663: build plan should preserve SAVECODE field provenance");
     expect(workspace.build_plan.encrypt_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
@@ -194,8 +203,8 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
     document.table_preview.records = {
         make_record(0, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
-            {.field_name = "KEY", .field_type = 'M', .display_value = "<memo block 918>"},
-            {.field_name = "OUTFILE", .field_type = 'M', .display_value = "<memo block 919>"}
+            {.field_name = "KEY", .field_type = 'M', .display_value = "<memo block 918>", .memo_block_number = 918U},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = "<memo block 919>", .memo_block_number = 919U}
         }),
         make_record(1, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
@@ -207,13 +216,26 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
     const auto workspace = copperfin::studio::build_project_workspace(document);
     expect(workspace.project_key.empty(), "#694: unresolved memo placeholders should not become project keys");
     expect(workspace.project_key_field_index == 1U, "#694: unresolved project key fields should retain source provenance");
+    expect(workspace.project_key_memo_block_number == 918U, "#714: unresolved project keys should retain raw memo block provenance");
     expect(workspace.project_title == "memodemo", "#694: unresolved memo project keys should fall back to the project filename");
     expect(workspace.project_title_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#694: fallback project titles should not masquerade as stored memo provenance");
+    expect(workspace.project_title_memo_block_number == 0U, "#714: fallback project titles should expose memo block zero");
     expect(workspace.output_path == R"(E:\Project-Copperfin\samples\memodemo.exe)",
            "#694: unresolved memo OUTFILE values should keep default output fallback behavior");
     expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#694: unresolved output placeholders should not masquerade as usable output provenance");
+    expect(workspace.output_path_memo_block_number == 0U, "#714: fallback output paths should expose memo block zero");
+    expect(workspace.build_plan.project_key_memo_block_number == 918U,
+           "#714: build plans should retain unresolved project key memo block provenance");
+    expect(workspace.build_plan.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#714: fallback build-plan output paths should keep missing-field provenance");
+    expect(workspace.build_plan.output_path_memo_block_number == 0U,
+           "#714: fallback build-plan output paths should expose memo block zero");
+    expect(workspace.build_plan.output_kind_memo_block_number == 0U,
+           "#714: fallback build-plan output kind should expose memo block zero");
+    expect(workspace.build_plan.build_target_memo_block_number == 0U,
+           "#714: fallback build-plan target should expose memo block zero");
     expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
     expect(workspace.entries[1].name_field_index == 1U, "#694: unresolved memo name fields should retain source provenance");
     expect(workspace.entries[1].relative_path.empty(), "#694: unresolved memo names should not become relative paths");
