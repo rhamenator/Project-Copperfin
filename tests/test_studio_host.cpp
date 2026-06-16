@@ -336,6 +336,90 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
     }
 }
 
+void test_object_snapshot_trims_normalized_display_metadata() {
+    copperfin::studio::StudioDocumentModel form_document;
+    form_document.path = R"(E:\Project-Copperfin\samples\trimmed.scx)";
+    form_document.kind = copperfin::studio::StudioAssetKind::form;
+    form_document.table_preview_available = true;
+    form_document.table_preview.records = {
+        {
+            .record_index = 12U,
+            .deleted = false,
+            .values = {
+                {.field_name = "OBJNAME", .field_type = 'C', .is_null = false, .display_value = "   "},
+                {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "  cmdSave  "},
+                {.field_name = "BASECLASS", .field_type = 'C', .is_null = false, .display_value = "  commandbutton  "},
+                {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "  WINDOWS  "},
+                {.field_name = "CLASS", .field_type = 'C', .is_null = false, .display_value = "  commandbutton  "}
+            }
+        }
+    };
+
+    const auto form_objects = copperfin::studio::build_object_snapshot(form_document);
+    expect(form_objects.size() == 1U, "#705: trimmed form metadata should still produce an object snapshot");
+    if (!form_objects.empty()) {
+        expect(form_objects[0].object_name == "cmdSave",
+            "#705: whitespace-only OBJNAME should be ignored and fallback NAME should be trimmed");
+        expect(form_objects[0].object_name_field_index == 1U,
+            "#705: object-name provenance should point at the selected fallback field");
+        expect(form_objects[0].title == "cmdSave", "#705: form titles should use trimmed display metadata");
+        expect(form_objects[0].title_field_index == 1U, "#705: form title provenance should point at trimmed NAME");
+        expect(form_objects[0].subtitle == "commandbutton", "#705: form subtitles should use trimmed display metadata");
+        expect(form_objects[0].subtitle_field_index == 2U, "#705: form subtitle provenance should point at BASECLASS");
+        expect(form_objects[0].platform == "WINDOWS", "#705: platform metadata should be trimmed");
+        expect(form_objects[0].platform_field_index == 3U, "#705: platform provenance should still point at PLATFORM");
+        const auto name = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
+            return property.name == "NAME";
+        });
+        expect(name != form_objects[0].properties.end(), "#705: direct NAME property should remain visible");
+        if (name != form_objects[0].properties.end()) {
+            expect(name->value == "  cmdSave  ", "#705: direct DBF property values should remain source-faithful");
+            expect(name->field_index == 1U, "#705: direct DBF property provenance should remain unchanged");
+        }
+    }
+
+    copperfin::studio::StudioDocumentModel menu_document;
+    menu_document.path = R"(E:\Project-Copperfin\samples\trimmed.mnx)";
+    menu_document.kind = copperfin::studio::StudioAssetKind::menu;
+    menu_document.table_preview_available = true;
+    menu_document.table_preview.records = {
+        {
+            .record_index = 13U,
+            .deleted = false,
+            .values = {
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "  Customer  "},
+                {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "  MAIN  "},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "  DO FORM customer  "},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "  Open customer  "},
+                {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "  customer_menu  "}
+            }
+        }
+    };
+
+    const auto menu_objects = copperfin::studio::build_object_snapshot(menu_document);
+    expect(menu_objects.size() == 1U, "#705: trimmed menu metadata should still produce an object snapshot");
+    if (!menu_objects.empty()) {
+        expect(menu_objects[0].menu_prompt == "Customer", "#705: menu PROMPT metadata should be trimmed");
+        expect(menu_objects[0].menu_level_name == "MAIN", "#705: menu LEVELNAME metadata should be trimmed");
+        expect(menu_objects[0].menu_command == "DO FORM customer", "#705: menu COMMAND metadata should be trimmed");
+        expect(menu_objects[0].menu_message == "Open customer", "#705: menu MESSAGE metadata should be trimmed");
+        expect(menu_objects[0].object_name == "customer_menu", "#705: menu object-name fallback should be trimmed");
+        expect(menu_objects[0].object_name_field_index == 4U, "#705: menu object-name provenance should stay on NAME");
+        expect(menu_objects[0].title == "Customer", "#705: menu title metadata should be trimmed");
+        expect(menu_objects[0].title_field_index == 0U, "#705: menu title provenance should stay on PROMPT");
+        expect(menu_objects[0].subtitle == "MAIN", "#705: menu subtitle metadata should be trimmed");
+        expect(menu_objects[0].subtitle_field_index == 1U, "#705: menu subtitle provenance should stay on LEVELNAME");
+        const auto prompt = std::find_if(menu_objects[0].properties.begin(), menu_objects[0].properties.end(), [](const auto& property) {
+            return property.name == "PROMPT";
+        });
+        expect(prompt != menu_objects[0].properties.end(), "#705: direct PROMPT property should remain visible");
+        if (prompt != menu_objects[0].properties.end()) {
+            expect(prompt->value == "  Customer  ", "#705: direct menu property values should remain source-faithful");
+            expect(prompt->field_index == 0U, "#705: direct menu property provenance should remain unchanged");
+        }
+    }
+}
+
 void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\mainmenu.mnx)";
@@ -693,6 +777,7 @@ int main() {
     test_open_document_uses_vfp_filename_for_display_name();
     test_object_snapshot_preserves_empty_and_null_design_fields();
     test_object_snapshot_suppresses_unresolved_memo_placeholders();
+    test_object_snapshot_trims_normalized_display_metadata();
     test_menu_object_snapshot_preserves_normalized_menu_metadata();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();

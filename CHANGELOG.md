@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#705 Studio display metadata trimming shipped: generic object/menu snapshots now trim normalized active display metadata and ignore whitespace-only fallback candidates while preserving direct DBF property values unchanged.
 - E1/#704 PJX project type-code normalization shipped: project workspace header detection and item classification now trim and uppercase `TYPE` codes for stable metadata.
 - E1/#703 VFP project logical flag normalization shipped: PJX/PJT logical fields now parse trim- and case-insensitive VFP true values for build and entry flags.
 - E1/#702 VFP-aware Studio display names shipped: `open_document` now derives display names from backslash-aware VFP filename parsing instead of host-only filesystem semantics.

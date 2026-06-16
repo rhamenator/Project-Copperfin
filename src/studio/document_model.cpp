@@ -40,6 +40,16 @@ std::string usable_display_value(const vfp::DbfRecordValue& value) {
     return looks_like_unresolved_memo(value.display_value) ? std::string() : value.display_value;
 }
 
+std::string trim_copy(std::string text) {
+    text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    }));
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())) != 0) {
+        text.pop_back();
+    }
+    return text;
+}
+
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     if (value == nullptr) {
@@ -65,7 +75,7 @@ FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::init
     for (const auto field_name : field_names) {
         const auto* value = find_value(record, field_name);
         if (value != nullptr) {
-            const std::string usable_value = usable_display_value(*value);
+            const std::string usable_value = trim_copy(usable_display_value(*value));
             if (!usable_value.empty()) {
                 return {.value = usable_value, .field_index = field_index_or_missing(record, field_name)};
             }
@@ -76,22 +86,12 @@ FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::init
 
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
-        const std::string value = value_or_empty(record, field_name);
+        const std::string value = trim_copy(value_or_empty(record, field_name));
         if (!value.empty()) {
             return value;
         }
     }
     return {};
-}
-
-std::string trim_copy(std::string text) {
-    text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char ch) {
-        return std::isspace(ch) == 0;
-    }));
-    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())) != 0) {
-        text.pop_back();
-    }
-    return text;
 }
 
 std::optional<int> parse_scaled_int(const vfp::DbfRecord& record, std::string_view field_name) {
