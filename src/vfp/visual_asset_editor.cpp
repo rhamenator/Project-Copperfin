@@ -5616,6 +5616,16 @@ VisualAssetEditResult set_visual_object_dynamic_back_color(
         request.dynamic_back_color);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_fore_color(
+    const VisualObjectDynamicForeColorRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicForeColor",
+        "dynamic fore-color",
+        request.dynamic_fore_color);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
