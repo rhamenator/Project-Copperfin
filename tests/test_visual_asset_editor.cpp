@@ -269,6 +269,76 @@ void write_synthetic_named_direct_asset(
     }
 }
 
+void write_synthetic_named_geometry_asset(
+    const std::filesystem::path& table_path,
+    const std::filesystem::path& memo_path) {
+    constexpr std::size_t header_length = 193U;
+    constexpr std::size_t record_length = 53U;
+    constexpr std::size_t record_count = 2U;
+    std::vector<std::uint8_t> table_bytes(header_length + (record_length * record_count) + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, static_cast<std::uint32_t>(record_count));
+    write_le_u16(table_bytes, 8U, static_cast<std::uint16_t>(header_length));
+    write_le_u16(table_bytes, 10U, static_cast<std::uint16_t>(record_length));
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "NAME", 'C', 5U, 24U);
+    write_field_descriptor(table_bytes, 96U, "UNIQUEID", 'M', 29U, 4U);
+    write_field_descriptor(table_bytes, 128U, "HPOS", 'N', 33U, 10U);
+    write_field_descriptor(table_bytes, 160U, "VPOS", 'N', 43U, 10U);
+    table_bytes[192] = 0x0DU;
+    table_bytes[header_length + (record_length * record_count)] = 0x1AU;
+
+    std::vector<std::uint8_t> memo_bytes(2560U, 0U);
+    write_be_u32(memo_bytes, 0U, 5U);
+    write_be_u16(memo_bytes, 6U, 512U);
+    const auto write_memo = [&](std::uint32_t block, const std::string& value) {
+        const std::size_t offset = static_cast<std::size_t>(block) * 512U;
+        memo_bytes[offset + 3U] = 1U;
+        write_be_u32(memo_bytes, offset + 4U, static_cast<std::uint32_t>(value.size()));
+        write_ascii(memo_bytes, offset + 8U, value);
+    };
+    write_memo(1U, "cmdSave");
+    write_memo(2U, "first-guid");
+    write_memo(3U, "txtName");
+    write_memo(4U, "target-guid");
+
+    const auto write_record = [&](
+        std::size_t record_index,
+        std::uint32_t objname_block,
+        const std::string& name,
+        std::uint32_t unique_id_block,
+        const std::string& hpos,
+        const std::string& vpos) {
+        const std::size_t record_offset = header_length + (record_length * record_index);
+        table_bytes[record_offset] = 0x20U;
+        write_le_u32(table_bytes, record_offset + 1U, objname_block);
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 5U), 24U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 5U, name);
+        write_le_u32(table_bytes, record_offset + 29U, unique_id_block);
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 33U), 10U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 33U + (10U - hpos.size()), hpos);
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 43U), 10U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 43U + (10U - vpos.size()), vpos);
+    };
+    write_record(0U, 1U, "saveButton", 2U, "111.000", "211.000");
+    write_record(1U, 3U, "nameBox", 4U, "222.000", "322.000");
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+}
+
 void test_update_visual_object_property_rewrites_properties_memo() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -367,6 +437,74 @@ void test_update_visual_object_property_rewrites_properties_memo() {
 
     const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
     expect(!empty_undo_status.available, "undo journal should be empty after undoing the only memo-backed edit");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_properties_updates_selected_geometry_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_multi_property_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "geometry.scx";
+    const fs::path memo_path = temp_dir / "geometry.sct";
+    write_synthetic_named_geometry_asset(table_path, memo_path);
+
+    const auto update_result = copperfin::vfp::update_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .properties = {
+            {.property_name = "hpos", .property_value = "333.000"},
+            {.property_name = "VPOS", .property_value = "444.000"}
+        }
+    });
+    expect(update_result.ok, "#735: multi-property edits should update selected geometry fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#735: multi-property geometry fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto* first_hpos = find_record_field(parse_result.table.records[0], "HPOS");
+        const auto* first_vpos = find_record_field(parse_result.table.records[0], "VPOS");
+        const auto* second_hpos = find_record_field(parse_result.table.records[1], "HPOS");
+        const auto* second_vpos = find_record_field(parse_result.table.records[1], "VPOS");
+        expect(first_hpos != nullptr && std::abs(parse_number(first_hpos->display_value) - 111.0) < 0.001,
+            "#735: multi-property edits should preserve unrelated HPOS values");
+        expect(first_vpos != nullptr && std::abs(parse_number(first_vpos->display_value) - 211.0) < 0.001,
+            "#735: multi-property edits should preserve unrelated VPOS values");
+        expect(second_hpos != nullptr && std::abs(parse_number(second_hpos->display_value) - 333.0) < 0.001,
+            "#735: multi-property edits should update selected HPOS values");
+        expect(second_vpos != nullptr && std::abs(parse_number(second_vpos->display_value) - 444.0) < 0.001,
+            "#735: multi-property edits should update selected VPOS values");
+    }
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#735: multi-property edits should keep existing per-property undo compatibility");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#735: multi-property edits should make each changed property undoable");
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#735: multi-property geometry fixture should remain readable after undo");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto* second_hpos = find_record_field(parse_result.table.records[1], "HPOS");
+        const auto* second_vpos = find_record_field(parse_result.table.records[1], "VPOS");
+        expect(second_hpos != nullptr && std::abs(parse_number(second_hpos->display_value) - 222.0) < 0.001,
+            "#735: multi-property undo should restore selected HPOS values");
+        expect(second_vpos != nullptr && std::abs(parse_number(second_vpos->display_value) - 322.0) < 0.001,
+            "#735: multi-property undo should restore selected VPOS values");
+    }
+
+    const auto empty_result = copperfin::vfp::update_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .properties = {}
+    });
+    expect(!empty_result.ok, "#735: empty multi-property edit requests should fail explicitly");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1234,6 +1372,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
+    test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

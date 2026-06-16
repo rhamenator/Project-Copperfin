@@ -841,6 +841,28 @@ VisualAssetEditResult update_visual_object_property(const VisualObjectEditReques
     return apply_visual_object_property_change(request, true, false);
 }
 
+VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
+    if (request.properties.empty()) {
+        return {.ok = false, .error = "No property changes were provided."};
+    }
+
+    for (const auto& property : request.properties) {
+        const auto result = update_visual_object_property({
+            .path = request.path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .property_name = property.property_name,
+            .property_value = property.property_value
+        });
+        if (!result.ok) {
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetUndoStatus query_visual_object_undo(const std::string& path) {
     return query_visual_asset_undo_status_internal(path);
 }

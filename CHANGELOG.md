@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#735 multi-property visual asset edits shipped: designer drag/resize-style callers can now submit multiple property changes through one selected-object request, reusing record-index, object-name, and `UNIQUEID` targeting with existing per-property undo compatibility.
 - E2/#734 visual property names now match case-insensitively: direct DBF fields and memo-backed PROPERTIES assignments can be edited with VFP-style casing flexibility while preserving existing memo property-name spelling and undo behavior.
 - E2/#733 unchanged visual property edits now behave as no-ops: memo-backed and direct DBF-field property updates that already match the requested value return success without rewriting asset bytes or creating undo history.
 - E2/#732 UNIQUEID-targeted visual property edits shipped: designer/property-grid edits can now resolve selected objects by case-insensitive stable `UNIQUEID`, disambiguating duplicate names while preserving record-index, object-name, and undo behavior.
