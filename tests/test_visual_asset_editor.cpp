@@ -643,6 +643,93 @@ void test_update_visual_object_property_targets_selected_unique_id() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_property_matches_property_names_case_insensitively() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_case_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path memo_table_path = temp_dir / "property_case.scx";
+    const fs::path memo_path = temp_dir / "property_case.sct";
+    write_synthetic_named_object_asset(memo_table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = {},
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        }
+    });
+    const auto memo_update_result = copperfin::vfp::update_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = "CMDSAVE",
+        .unique_id = {},
+        .property_name = "caption",
+        .property_value = "\"Lower\""
+    });
+    expect(memo_update_result.ok, "#734: memo-backed property names should match case-insensitively");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(memo_table_path.string(), 1U);
+    expect(parse_result.ok, "#734: case-insensitive memo property fixture should remain readable");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        const auto* properties = find_record_field(parse_result.table.records[0], "PROPERTIES");
+        expect(properties != nullptr &&
+                properties->display_value.find("Caption = \"Lower\"") != std::string::npos,
+            "#734: memo property updates should preserve existing property-name casing");
+        expect(properties != nullptr &&
+                properties->display_value.find("caption = \"Lower\"") == std::string::npos,
+            "#734: memo property updates should not append duplicate lower-case properties");
+    }
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(memo_table_path.string());
+    expect(undo_result.ok, "#734: case-insensitive memo property undo should restore the original value");
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(memo_table_path.string(), 1U);
+    expect(parse_result.ok, "#734: case-insensitive memo property fixture should remain readable after undo");
+    if (parse_result.ok && !parse_result.table.records.empty()) {
+        const auto* properties = find_record_field(parse_result.table.records[0], "PROPERTIES");
+        expect(properties != nullptr &&
+                properties->display_value.find("Caption = \"Save\"") != std::string::npos,
+            "#734: case-insensitive memo property undo should resolve the original property name");
+    }
+
+    const fs::path direct_table_path = temp_dir / "property_case_direct.scx";
+    const fs::path direct_memo_path = temp_dir / "property_case_direct.sct";
+    write_synthetic_named_direct_asset(direct_table_path, direct_memo_path);
+    const auto direct_update_result = copperfin::vfp::update_visual_object_property({
+        .path = direct_table_path.string(),
+        .record_index = 0U,
+        .object_name = "TXTNAME",
+        .unique_id = {},
+        .property_name = "hpos",
+        .property_value = "444.000"
+    });
+    expect(direct_update_result.ok, "#734: direct DBF-field property names should match case-insensitively");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(direct_table_path.string(), 2U);
+    expect(parse_result.ok, "#734: case-insensitive direct-field fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto* second_hpos = find_record_field(parse_result.table.records[1], "HPOS");
+        expect(second_hpos != nullptr &&
+                std::abs(parse_number(second_hpos->display_value) - 444.0) < 0.001,
+            "#734: lower-case direct-field edits should update the resolved field");
+    }
+
+    undo_result = copperfin::vfp::undo_visual_object_property(direct_table_path.string());
+    expect(undo_result.ok, "#734: case-insensitive direct-field undo should restore the original value");
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(direct_table_path.string(), 2U);
+    expect(parse_result.ok, "#734: case-insensitive direct-field fixture should remain readable after undo");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto* second_hpos = find_record_field(parse_result.table.records[1], "HPOS");
+        expect(second_hpos != nullptr &&
+                std::abs(parse_number(second_hpos->display_value) - 222.0) < 0.001,
+            "#734: case-insensitive direct-field undo should restore the resolved field");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_targets_selected_object_name_direct_field() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1150,6 +1237,7 @@ int main() {
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
+    test_update_visual_object_property_matches_property_names_case_insensitively();
     test_update_visual_object_property_targets_selected_object_name_direct_field();
     test_update_visual_object_property_rewrites_direct_fields();
     test_update_visual_object_property_round_trips_added_vcx_property();

@@ -164,9 +164,18 @@ std::string normalize_visual_object_name(std::string value) {
     return value;
 }
 
+std::string normalize_visual_property_name(std::string value) {
+    value = trim_both(std::move(value));
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
+
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
+    const std::string requested_field_name = normalize_visual_property_name(field_name);
     const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& candidate) {
-        return candidate.field_name == field_name;
+        return normalize_visual_property_name(candidate.field_name) == requested_field_name;
     });
     return value == record.values.end() ? nullptr : &(*value);
 }
@@ -511,8 +520,9 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
     }
 
     const auto& record = table_result.table.records[record_index];
+    const std::string requested_property_name = normalize_visual_property_name(property_name);
     const auto direct_field_value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& value) {
-        return value.field_name == property_name;
+        return normalize_visual_property_name(value.field_name) == requested_property_name;
     });
     if (direct_field_value != record.values.end()) {
         return VisualPropertyState{
@@ -535,7 +545,7 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
 
     const auto assignments = parse_visual_property_blob(properties_field->display_value);
     const auto property = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
-        return assignment.name == property_name;
+        return normalize_visual_property_name(assignment.name) == requested_property_name;
     });
     if (property == assignments.end()) {
         return VisualPropertyState{
@@ -583,8 +593,9 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
 
     const auto fields = read_raw_field_descriptors(table_bytes);
+    const std::string requested_property_name = normalize_visual_property_name(request.property_name);
     const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
-        return field.name == request.property_name;
+        return normalize_visual_property_name(field.name) == requested_property_name;
     });
     if (direct_field_it != fields.end()) {
         if (record_undo_entry) {
@@ -628,7 +639,7 @@ VisualAssetEditResult apply_visual_object_property_change(
 
     auto assignments = parse_visual_property_blob(properties_it->display_value);
     auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& property) {
-        return property.name == request.property_name;
+        return normalize_visual_property_name(property.name) == requested_property_name;
     });
 
     if (record_undo_entry) {
