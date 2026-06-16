@@ -1810,6 +1810,131 @@ void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_object_updates_identity_safely() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_rename_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "rename.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "frmMain"},
+        {"txtName", "nameBox", "name-guid", "frmMain"},
+        {"oldDeleted", "deletedName", "deleted-guid", "frmMain"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#754: rename fixture should be writable");
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "deleted-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#754: rename fixture should support deleted-row collision setup");
+
+    auto rename_result = copperfin::vfp::rename_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .update_object_name = true,
+        .new_object_name = "cmdCommit",
+        .update_name = true,
+        .new_name = "commitButton",
+        .update_unique_id = true,
+        .new_unique_id = "commit-guid"
+    });
+    expect(rename_result.ok, "#754: rename should update selected object identity fields together");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U,
+        "#754: renamed visual asset should remain listable");
+    if (list_result.ok && list_result.objects.size() == 3U) {
+        expect(list_result.objects[0].object_name == "cmdCommit" &&
+                list_result.objects[0].unique_id == "commit-guid",
+            "#754: rename should expose updated OBJNAME and UNIQUEID");
+        expect(list_result.objects[1].object_name == "txtName" &&
+                list_result.objects[1].unique_id == "name-guid",
+            "#754: rename should preserve unrelated object identity");
+        expect(list_result.objects[2].deleted && list_result.objects[2].unique_id == "deleted-guid",
+            "#754: rename should preserve deleted-row identity metadata");
+    }
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "commit-guid",
+        .property_name = "NAME"
+    });
+    expect(property_result.ok && property_result.value == "commitButton",
+        "#754: rename should update NAME and keep UNIQUEID selection usable");
+
+    rename_result = copperfin::vfp::rename_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdCommit",
+        .unique_id = {},
+        .update_object_name = false,
+        .new_object_name = {},
+        .update_name = false,
+        .new_name = {},
+        .update_unique_id = true,
+        .new_unique_id = "deleted-guid"
+    });
+    expect(!rename_result.ok,
+        "#754: rename should reject identity collisions with deleted rows");
+
+    rename_result = copperfin::vfp::rename_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdCommit",
+        .unique_id = {},
+        .update_object_name = false,
+        .new_object_name = {},
+        .update_name = false,
+        .new_name = {},
+        .update_unique_id = false,
+        .new_unique_id = {}
+    });
+    expect(!rename_result.ok, "#754: empty rename requests should fail explicitly");
+
+    property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdCommit",
+        .unique_id = {},
+        .property_name = "UNIQUEID"
+    });
+    expect(property_result.ok && property_result.value == "commit-guid",
+        "#754: failed rename requests should not mutate selected identity fields");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#754: rename should route UNIQUEID through existing undo");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#754: rename should route NAME through existing undo");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#754: rename should route OBJNAME through existing undo");
+
+    list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U &&
+            list_result.objects[0].object_name == "cmdSave" &&
+            list_result.objects[0].unique_id == "save-guid",
+        "#754: undo should restore renamed identity fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2688,6 +2813,7 @@ int main() {
     test_reparent_visual_object_updates_container_parent();
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
+    test_rename_visual_object_updates_identity_safely();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

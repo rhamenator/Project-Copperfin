@@ -442,6 +442,28 @@ VisualObjectDuplicateResult reject_identity_collision(
     return {.ok = true, .error = {}, .record_index = 0U};
 }
 
+VisualAssetEditResult reject_identity_collision_excluding_record(
+    const DbfTable& table,
+    const std::string& field_name,
+    const std::string& requested_value,
+    std::size_t excluded_record_index) {
+    const std::string normalized_value = normalize_visual_object_name(requested_value);
+    if (normalized_value.empty()) {
+        return {.ok = true, .error = {}};
+    }
+    if (!find_field_index(table, field_name).has_value()) {
+        return {.ok = false, .error = "The requested identity field is not present in the asset."};
+    }
+    const auto matches = find_matching_record_indexes(table, field_name, normalized_value);
+    const auto collision = std::find_if(matches.begin(), matches.end(), [&](std::size_t record_index) {
+        return record_index != excluded_record_index;
+    });
+    if (collision != matches.end()) {
+        return {.ok = false, .error = "The requested identity value already exists in the asset."};
+    }
+    return {.ok = true, .error = {}};
+}
+
 void replace_duplicate_field_value(
     const DbfTable& table,
     std::vector<std::string>& values,
@@ -1757,6 +1779,95 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
         .unique_id = {},
         .property_name = "PARENT",
         .property_value = parent_name
+    });
+}
+
+VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (!request.update_object_name && !request.update_name && !request.update_unique_id) {
+        return {.ok = false, .error = "No identity fields were provided."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    const auto& table = table_result.table;
+    if (record_index >= table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto require_field = [&](const std::string& field_name) -> VisualAssetEditResult {
+        if (find_field_index(table, field_name).has_value()) {
+            return {.ok = true, .error = {}};
+        }
+        return {.ok = false, .error = "The requested identity field is not present in the asset."};
+    };
+    for (const auto& check : {
+             request.update_object_name ? require_field("OBJNAME") : VisualAssetEditResult{.ok = true, .error = {}},
+             request.update_name ? require_field("NAME") : VisualAssetEditResult{.ok = true, .error = {}},
+             request.update_unique_id ? require_field("UNIQUEID") : VisualAssetEditResult{.ok = true, .error = {}}
+         }) {
+        if (!check.ok) {
+            return check;
+        }
+    }
+
+    const auto* current_objname = find_record_value(table.records[record_index], "OBJNAME");
+    const auto* current_name = find_record_value(table.records[record_index], "NAME");
+    const auto* current_unique_id = find_record_value(table.records[record_index], "UNIQUEID");
+    const std::string final_objname = request.update_object_name
+        ? request.new_object_name
+        : (current_objname == nullptr ? std::string{} : current_objname->display_value);
+    const std::string final_name = request.update_name
+        ? request.new_name
+        : (current_name == nullptr ? std::string{} : current_name->display_value);
+    const std::string final_unique_id = request.update_unique_id
+        ? request.new_unique_id
+        : (current_unique_id == nullptr ? std::string{} : current_unique_id->display_value);
+
+    for (const auto& check : {
+             reject_identity_collision_excluding_record(table, "OBJNAME", final_objname, record_index),
+             reject_identity_collision_excluding_record(table, "NAME", final_name, record_index),
+             reject_identity_collision_excluding_record(table, "UNIQUEID", final_unique_id, record_index)
+         }) {
+        if (!check.ok) {
+            return check;
+        }
+    }
+
+    std::vector<VisualObjectPropertyChange> changes;
+    if (request.update_object_name) {
+        changes.push_back({.property_name = "OBJNAME", .property_value = request.new_object_name});
+    }
+    if (request.update_name) {
+        changes.push_back({.property_name = "NAME", .property_value = request.new_name});
+    }
+    if (request.update_unique_id) {
+        changes.push_back({.property_name = "UNIQUEID", .property_value = request.new_unique_id});
+    }
+
+    return update_visual_object_properties({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .properties = changes
     });
 }
 
