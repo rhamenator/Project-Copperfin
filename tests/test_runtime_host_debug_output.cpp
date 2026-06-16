@@ -865,6 +865,95 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
     }
 }
 
+void test_runtime_host_writes_bridge_response_artifact(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_response_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path source_path = temp_root / "content" / "exports.prg";
+    const fs::path request_path = temp_root / "AddNumbers.request.json";
+    const fs::path response_path = temp_root / "nested" / "AddNumbers.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeResponse\n"
+        "startup_item=exports.prg\n"
+        "startup_source=") + source_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(source_path, "RETURN\n");
+    write_text(
+        request_path,
+        std::string("{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"AddNumbers\",\n"
+        "  \"routine_kind\": \"procedure\",\n"
+        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_line\": 7,\n"
+        "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+        "  \"parameter_names\": \"left,right\",\n"
+        "  \"parameter_count\": 2,\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameters\": []\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "AddNumbers",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "7",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "left,right",
+            "--parameter-count", "2",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "bridge-response stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-response stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "runtime host should accept wrapper-emitted bridge descriptor and response arguments");
+    expect(process.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+           "runtime host should report bridge invocation mode");
+    expect(process.stdout_text.find("bridge.library_export: AddNumbers") != std::string::npos,
+           "runtime host should preserve bridge export metadata in diagnostics");
+    expect(fs::exists(response_path),
+           "runtime host should write the requested bridge response artifact");
+
+    const std::string response_document = read_text(response_path);
+    expect(response_document.find("\"status\": \"ok\"") != std::string::npos,
+           "runtime host bridge response should include ok status");
+    expect(response_document.find("\"return_value\": \"0\"") != std::string::npos,
+           "runtime host bridge response should include a return value field");
+    expect(response_document.find("\"response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\"") != std::string::npos,
+           "runtime host bridge response should echo the expected response media type");
+    expect(response_document.find("\"schema_version\": \"v1\"") != std::string::npos,
+           "runtime host bridge response should echo the requested schema version");
+    expect(response_document.find("\"diagnostics\": \"bridge_response_written\"") != std::string::npos,
+           "runtime host bridge response should include diagnostics");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -880,6 +969,7 @@ int main(int argc, char** argv) {
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
+    test_runtime_host_writes_bridge_response_artifact(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

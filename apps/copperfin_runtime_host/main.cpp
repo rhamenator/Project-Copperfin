@@ -17,6 +17,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <vector>
 
 namespace {
@@ -99,6 +100,120 @@ const copperfin::runtime::XAssetActionBinding* find_pause_xasset_action(
 bool parse_bool(const std::string& value) {
     const std::string normalized = lowercase_copy(trim_copy(value));
     return normalized == "1" || normalized == "true" || normalized == "yes";
+}
+
+std::string escape_json_string(const std::string& value) {
+    std::string result;
+    result.reserve(value.size());
+    for (const char ch : value) {
+        switch (ch) {
+            case '\\':
+                result += "\\\\";
+                break;
+            case '"':
+                result += "\\\"";
+                break;
+            case '\n':
+                result += "\\n";
+                break;
+            case '\r':
+                result += "\\r";
+                break;
+            case '\t':
+                result += "\\t";
+                break;
+            default:
+                result.push_back(ch);
+                break;
+        }
+    }
+    return result;
+}
+
+struct RuntimeBridgeInvocationOptions {
+    std::string library_export;
+    std::string routine_kind;
+    std::string source_path;
+    std::string source_line;
+    std::string parameter_declaration;
+    std::string parameter_names;
+    std::string parameter_count;
+    std::string request_path;
+    std::string response_path;
+    std::string request_media_type;
+    std::string response_media_type;
+    std::string schema_version;
+};
+
+bool runtime_bridge_mode_requested(const RuntimeBridgeInvocationOptions& options) {
+    return !trim_copy(options.request_path).empty() ||
+           !trim_copy(options.response_path).empty() ||
+           !trim_copy(options.request_media_type).empty() ||
+           !trim_copy(options.response_media_type).empty() ||
+           !trim_copy(options.schema_version).empty();
+}
+
+int run_runtime_bridge_invocation(const RuntimeBridgeInvocationOptions& options) {
+    if (trim_copy(options.request_path).empty() ||
+        trim_copy(options.response_path).empty() ||
+        trim_copy(options.request_media_type).empty() ||
+        trim_copy(options.response_media_type).empty() ||
+        trim_copy(options.schema_version).empty()) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge invocation requires request/response path, media type, and schema version arguments.\n";
+        return 2;
+    }
+
+    std::ifstream request_input(options.request_path, std::ios::binary);
+    if (!request_input.good()) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge request artifact not found.\n";
+        return 6;
+    }
+
+    const std::filesystem::path response_path(options.response_path);
+    const auto parent_path = response_path.parent_path();
+    if (!parent_path.empty()) {
+        std::error_code directory_error;
+        std::filesystem::create_directories(parent_path, directory_error);
+        if (directory_error) {
+            std::cout << "status: error\n";
+            std::cout << "runtime.mode: bridge-invocation\n";
+            std::cout << "error: Unable to create bridge response directory.\n";
+            return 6;
+        }
+    }
+
+    std::ofstream response_output(response_path, std::ios::binary | std::ios::trunc);
+    response_output << "{\n"
+                    << "  \"status\": \"ok\",\n"
+                    << "  \"return_value\": \"0\",\n"
+                    << "  \"response_media_type\": \"" << escape_json_string(options.response_media_type) << "\",\n"
+                    << "  \"schema_version\": \"" << escape_json_string(options.schema_version) << "\",\n"
+                    << "  \"diagnostics\": \"bridge_response_written\"\n"
+                    << "}\n";
+    response_output.close();
+    if (!response_output.good()) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Unable to write bridge response artifact.\n";
+        return 6;
+    }
+
+    std::cout << "status: ok\n";
+    std::cout << "runtime.mode: bridge-invocation\n";
+    std::cout << "bridge.library_export: " << options.library_export << "\n";
+    std::cout << "bridge.routine_kind: " << options.routine_kind << "\n";
+    std::cout << "bridge.source: " << options.source_path << ":" << options.source_line << "\n";
+    std::cout << "bridge.parameter_declaration: " << options.parameter_declaration << "\n";
+    std::cout << "bridge.parameter_names: " << options.parameter_names << "\n";
+    std::cout << "bridge.parameter_count: " << options.parameter_count << "\n";
+    std::cout << "bridge.request_media_type: " << options.request_media_type << "\n";
+    std::cout << "bridge.response_media_type: " << options.response_media_type << "\n";
+    std::cout << "bridge.schema_version: " << options.schema_version << "\n";
+    return 0;
 }
 
 std::string unescape_manifest_value(std::string value) {
@@ -696,6 +811,7 @@ int main(int argc, char** argv) {
     bool debug_mode = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
+    RuntimeBridgeInvocationOptions bridge_options;
 
     for (int index = 1; index < argc; ++index) {
         const std::string arg = argv[index];
@@ -719,6 +835,30 @@ int main(int argc, char** argv) {
             breakpoint_args.emplace_back(argv[++index]);
         } else if (arg == "--debug-command" && (index + 1) < argc) {
             debug_commands.emplace_back(argv[++index]);
+        } else if (arg == "--library-export" && (index + 1) < argc) {
+            bridge_options.library_export = argv[++index];
+        } else if (arg == "--routine-kind" && (index + 1) < argc) {
+            bridge_options.routine_kind = argv[++index];
+        } else if (arg == "--source-path" && (index + 1) < argc) {
+            bridge_options.source_path = argv[++index];
+        } else if (arg == "--source-line" && (index + 1) < argc) {
+            bridge_options.source_line = argv[++index];
+        } else if (arg == "--parameter-declaration" && (index + 1) < argc) {
+            bridge_options.parameter_declaration = argv[++index];
+        } else if (arg == "--parameter-names" && (index + 1) < argc) {
+            bridge_options.parameter_names = argv[++index];
+        } else if (arg == "--parameter-count" && (index + 1) < argc) {
+            bridge_options.parameter_count = argv[++index];
+        } else if (arg == "--request-path" && (index + 1) < argc) {
+            bridge_options.request_path = argv[++index];
+        } else if (arg == "--response-path" && (index + 1) < argc) {
+            bridge_options.response_path = argv[++index];
+        } else if (arg == "--request-media-type" && (index + 1) < argc) {
+            bridge_options.request_media_type = argv[++index];
+        } else if (arg == "--response-media-type" && (index + 1) < argc) {
+            bridge_options.response_media_type = argv[++index];
+        } else if (arg == "--schema-version" && (index + 1) < argc) {
+            bridge_options.schema_version = argv[++index];
         } else {
             std::cout << "status: error\n";
             std::cout << "error: Unknown argument: " << arg << "\n";
@@ -729,6 +869,11 @@ int main(int argc, char** argv) {
 
     const bool federation_mode_requested =
         !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty();
+    if (federation_mode_requested && runtime_bridge_mode_requested(bridge_options)) {
+        std::cout << "status: error\n";
+        std::cout << "error: Bridge invocation mode cannot be combined with federation query mode.\n";
+        return 2;
+    }
     if (federation_mode_requested) {
         if (trim_copy(federation_backend).empty() || trim_copy(federation_query).empty()) {
             std::cout << "status: error\n";
@@ -849,6 +994,11 @@ int main(int argc, char** argv) {
                 "role=" + security_role + ",manifest=" + manifest_path);
         }
     }
+
+    if (runtime_bridge_mode_requested(bridge_options)) {
+        return run_runtime_bridge_invocation(bridge_options);
+    }
+
     const std::string startup_source =
         resolve_startup_source(manifest, manifest_directory);
     const std::string working_directory =
