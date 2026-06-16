@@ -92,6 +92,7 @@ struct VisualObjectSnapshot {
     std::string parent_name;
     std::string class_name;
     std::string baseclass_name;
+    std::string caption;
 };
 
 struct VisualObjectListResult {

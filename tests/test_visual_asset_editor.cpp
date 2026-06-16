@@ -843,12 +843,16 @@ void test_list_visual_objects_reads_selection_outline() {
             "#743: visual object outlines should prefer OBJNAME over NAME");
         expect(list_result.objects[0].unique_id == "save-guid",
             "#743: visual object outlines should expose stable UNIQUEID values");
+        expect(list_result.objects[0].caption == "\"Save\"",
+            "#745: visual object outlines should expose parsed Caption values");
         expect(list_result.objects[1].record_index == 1U && list_result.objects[1].deleted,
             "#743: visual object outlines should keep deleted records visible");
         expect(list_result.objects[1].object_name == "fallbackButton",
             "#743: visual object outlines should fall back to NAME when OBJNAME is absent");
         expect(list_result.objects[1].unique_id == "fallback-guid",
             "#743: visual object outlines should expose stable UNIQUEID values on fallback-name rows");
+        expect(list_result.objects[1].caption == "\"Fallback\"",
+            "#745: visual object outlines should expose parsed Caption values on fallback-name rows");
     }
     expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
         "#743: visual object outlining should not create undo history");
@@ -894,6 +898,8 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[1].class_name.empty() &&
                 list_result.objects[1].baseclass_name.empty(),
             "#744: missing hierarchy/class metadata should remain empty");
+        expect(list_result.objects[1].caption.empty(),
+            "#745: visual object outlines should keep captions empty when no Caption property exists");
     }
 
     fs::remove_all(temp_dir, ignored);
