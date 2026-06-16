@@ -2401,7 +2401,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        stub_return);\n";
             stream << "    const auto placeholder_return_value_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);\n";
-            stream << "    (void)placeholder_return_value_admission;\n";
             stream << "    const auto placeholder_return_value =\n";
             stream << "        copperfin_runtime_bridge_execute_placeholder_return_value(placeholder_return_value_plan);\n";
             stream << "    const auto placeholder_return_int_admission =\n";
@@ -2657,7 +2656,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        stub_return);\n";
             stream << "    const auto placeholder_return_value_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);\n";
-            stream << "    (void)placeholder_return_value_admission;\n";
             stream << "    const auto placeholder_return_value =\n";
             stream << "        copperfin_runtime_bridge_execute_placeholder_return_value(placeholder_return_value_plan);\n";
             stream << "    const auto placeholder_return_int_admission =\n";
