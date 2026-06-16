@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#725 project logical flag memo block provenance shipped: project entries and build plans now expose source memo block numbers for EXCLUDE, MAINPROG, LOCAL, DEBUG, ENCRYPT, SAVECODE, and NOLOGO flag metadata, including missing-field block-zero behavior.
 - E1/#724 Studio raw type/platform memo block provenance shipped: generic object snapshots now expose source memo block numbers for raw OBJTYPE, OBJCODE, and PLATFORM metadata, including trimmed platform values and missing-field block-zero behavior.
 - E1/#723 report object geometry memo block provenance shipped: report/label layout objects now expose source memo block numbers for object kind, raw OBJTYPE/OBJCODE, and HPOS/VPOS/WIDTH/HEIGHT metadata, including missing-field and deleted-object cases.
 - E1/#722 report section memo block provenance shipped: report/label section snapshots now expose source memo block numbers for band title/kind, raw OBJCODE, VPOS, and HEIGHT metadata, including deleted sections.

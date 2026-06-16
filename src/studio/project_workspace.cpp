@@ -409,10 +409,13 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         entry.comments_memo_block_number = memo_block_number_or_zero(record, "COMMENTS");
         entry.excluded = value_as_bool(record, "EXCLUDE");
         entry.exclude_field_index = field_index_or_missing(record, "EXCLUDE");
+        entry.exclude_memo_block_number = memo_block_number_or_zero(record, "EXCLUDE");
         entry.main_program = value_as_bool(record, "MAINPROG");
         entry.main_program_field_index = field_index_or_missing(record, "MAINPROG");
+        entry.main_program_memo_block_number = memo_block_number_or_zero(record, "MAINPROG");
         entry.local = value_as_bool(record, "LOCAL");
         entry.local_field_index = field_index_or_missing(record, "LOCAL");
+        entry.local_memo_block_number = memo_block_number_or_zero(record, "LOCAL");
 
         auto& group = ensure_group(descriptor.group_id, descriptor.group_title);
         group.record_indexes.push_back(entry.record_index);
@@ -548,12 +551,16 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         workspace.build_plan.output_path_field_index = workspace.output_path_field_index;
         workspace.build_plan.debug_enabled = value_as_bool(*header_record, "DEBUG");
         workspace.build_plan.debug_field_index = field_index_or_missing(*header_record, "DEBUG");
+        workspace.build_plan.debug_memo_block_number = memo_block_number_or_zero(*header_record, "DEBUG");
         workspace.build_plan.encrypt_enabled = value_as_bool(*header_record, "ENCRYPT");
         workspace.build_plan.encrypt_field_index = field_index_or_missing(*header_record, "ENCRYPT");
+        workspace.build_plan.encrypt_memo_block_number = memo_block_number_or_zero(*header_record, "ENCRYPT");
         workspace.build_plan.save_code = value_as_bool(*header_record, "SAVECODE");
         workspace.build_plan.save_code_field_index = field_index_or_missing(*header_record, "SAVECODE");
+        workspace.build_plan.save_code_memo_block_number = memo_block_number_or_zero(*header_record, "SAVECODE");
         workspace.build_plan.no_logo = value_as_bool(*header_record, "NOLOGO");
         workspace.build_plan.no_logo_field_index = field_index_or_missing(*header_record, "NOLOGO");
+        workspace.build_plan.no_logo_memo_block_number = memo_block_number_or_zero(*header_record, "NOLOGO");
     }
 
     if (startup != nullptr) {

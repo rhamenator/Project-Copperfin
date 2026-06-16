@@ -37,26 +37,26 @@ void test_build_project_workspace() {
             {.field_name = "KEY", .field_type = 'C', .display_value = "DEMOAPP"},
             {.field_name = "HOMEDIR", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\samples)", .memo_block_number = 3U},
             {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\demoapp.exe)", .memo_block_number = 4U},
-            {.field_name = "DEBUG", .field_type = 'L', .display_value = "true"},
-            {.field_name = "SAVECODE", .field_type = 'L', .display_value = "false"}
+            {.field_name = "DEBUG", .field_type = 'L', .display_value = "true", .memo_block_number = 5U},
+            {.field_name = "SAVECODE", .field_type = 'L', .display_value = "false", .memo_block_number = 6U}
         }),
         make_record(1, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg", .memo_block_number = 11U},
-            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true", .memo_block_number = 12U},
             {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Application entry point", .memo_block_number = 13U},
-            {.field_name = "LOCAL", .field_type = 'L', .display_value = "true"}
+            {.field_name = "LOCAL", .field_type = 'L', .display_value = "true", .memo_block_number = 14U}
         }),
         make_record(2, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\customer.scx", .memo_block_number = 21U},
             {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Customer maintenance", .memo_block_number = 22U},
-            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "false"}
+            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "false", .memo_block_number = 23U}
         }),
         make_record(3, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "reports\\invoice.frx"},
-            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "true"}
+            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "true", .memo_block_number = 32U}
         }),
         make_record(4, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
@@ -98,11 +98,15 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.output_kind_memo_block_number == 4U, "#714: build-plan output kind should inherit output path memo block provenance");
     expect(workspace.build_plan.build_target_memo_block_number == 4U, "#714: build-plan target should inherit output path memo block provenance");
     expect(workspace.build_plan.debug_field_index == 4U, "#663: build plan should preserve DEBUG field provenance");
+    expect(workspace.build_plan.debug_memo_block_number == 5U, "#725: build DEBUG flags should retain memo block provenance");
     expect(workspace.build_plan.save_code_field_index == 5U, "#663: build plan should preserve SAVECODE field provenance");
+    expect(workspace.build_plan.save_code_memo_block_number == 6U, "#725: build SAVECODE flags should retain memo block provenance");
     expect(workspace.build_plan.encrypt_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#663: missing ENCRYPT build-flag provenance should be explicit");
+    expect(workspace.build_plan.encrypt_memo_block_number == 0U, "#725: missing ENCRYPT flags should expose memo block zero");
     expect(workspace.build_plan.no_logo_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#663: missing NOLOGO build-flag provenance should be explicit");
+    expect(workspace.build_plan.no_logo_memo_block_number == 0U, "#725: missing NOLOGO flags should expose memo block zero");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
     expect(workspace.build_plan.deleted_items == 1U, "#687: build plan should count deleted source rows explicitly");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
@@ -135,16 +139,23 @@ void test_build_project_workspace() {
     expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
     expect(workspace.entries[1].comments_memo_block_number == 13U, "#715: project entry comments should retain COMMENTS memo block provenance");
     expect(workspace.entries[1].main_program_field_index == 2U, "#677: MAINPROG project entry flag provenance should be preserved");
+    expect(workspace.entries[1].main_program_memo_block_number == 12U, "#725: MAINPROG entry flags should retain memo block provenance");
     expect(workspace.entries[1].local_field_index == 4U, "#677: LOCAL project entry flag provenance should be preserved");
+    expect(workspace.entries[1].local_memo_block_number == 14U, "#725: LOCAL entry flags should retain memo block provenance");
     expect(workspace.entries[1].exclude_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#677: missing EXCLUDE project entry flag provenance should be explicit");
+    expect(workspace.entries[1].exclude_memo_block_number == 0U, "#725: missing EXCLUDE entry flags should expose memo block zero");
     expect(workspace.entries[2].exclude_field_index == 3U, "#677: EXCLUDE project entry flag provenance should be preserved");
+    expect(workspace.entries[2].exclude_memo_block_number == 23U, "#725: EXCLUDE entry flags should retain memo block provenance even when false");
     expect(workspace.entries[2].main_program_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#677: missing MAINPROG project entry flag provenance should be explicit");
+    expect(workspace.entries[2].main_program_memo_block_number == 0U, "#725: missing MAINPROG entry flags should expose memo block zero");
     expect(workspace.entries[2].group_id == "forms", "#680: project entry grouping should still derive from NAME extension");
     expect(workspace.entries[2].group_id_field_index == 1U, "#680: form grouping provenance should retain NAME field ordinal");
     expect(workspace.entries[2].relative_path_memo_block_number == 21U, "#715: form relative paths should inherit NAME memo block provenance");
     expect(workspace.entries[2].comments_memo_block_number == 22U, "#715: form comments should retain COMMENTS memo block provenance");
+    expect(workspace.entries[3].excluded, "#677: EXCLUDE project entry flags should retain truth values");
+    expect(workspace.entries[3].exclude_memo_block_number == 32U, "#725: true EXCLUDE entry flags should retain memo block provenance");
     expect(workspace.entries[4].deleted, "#685: deleted PJX records should stay visible on project entries");
     expect(workspace.entries[4].relative_path == R"(menus\oldmenu.mnx)", "#685: deleted entries should keep normalized path metadata");
     expect(workspace.entries[4].relative_path_memo_block_number == 41U, "#715: deleted entry relative paths should retain NAME memo block provenance");
@@ -429,7 +440,7 @@ void test_build_project_workspace_prefers_live_header() {
         make_record(2, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
-            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true", .memo_block_number = 57U}
         })
     };
 
@@ -459,7 +470,7 @@ void test_build_project_workspace_skips_deleted_startup_candidates() {
         make_record(1, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = "deletedmain.prg"},
-            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true", .memo_block_number = 57U}
         }, true),
         make_record(2, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
@@ -475,6 +486,8 @@ void test_build_project_workspace_skips_deleted_startup_candidates() {
     expect(workspace.build_plan.startup_record_index == 2U,
            "#693: startup record index should point at the selected live program");
     expect(workspace.entries[1].deleted, "#693: deleted startup candidate entries should remain visible");
+    expect(workspace.entries[1].main_program_memo_block_number == 57U,
+           "#725: deleted MAINPROG candidate flags should retain memo block provenance");
     expect(workspace.build_plan.deleted_items == 1U, "#693: deleted startup candidates should remain counted");
 }
 

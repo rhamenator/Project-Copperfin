@@ -40,10 +40,13 @@ struct StudioProjectEntry {
     std::uint32_t comments_memo_block_number = 0;
     bool excluded = false;
     std::size_t exclude_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t exclude_memo_block_number = 0;
     bool main_program = false;
     std::size_t main_program_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t main_program_memo_block_number = 0;
     bool local = false;
     std::size_t local_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t local_memo_block_number = 0;
 };
 
 struct StudioProjectGroup {
@@ -83,12 +86,16 @@ struct StudioProjectBuildPlan {
     std::size_t deleted_items = 0;
     bool debug_enabled = false;
     std::size_t debug_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t debug_memo_block_number = 0;
     bool encrypt_enabled = false;
     std::size_t encrypt_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t encrypt_memo_block_number = 0;
     bool save_code = false;
     std::size_t save_code_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t save_code_memo_block_number = 0;
     bool no_logo = false;
     std::size_t no_logo_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t no_logo_memo_block_number = 0;
 };
 
 struct StudioProjectWorkspace {
