@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#701 UNC project item path coverage shipped: focused project-workspace tests now prove UNC item paths normalize to project-relative text under the project directory and filename fallbacks outside it.
 - E1/#700 VFP absolute project item path normalization shipped: PJX/PJT entries now normalize Windows/UNC-style absolute item paths independent of host OS, preserving project-relative paths when possible and filename fallbacks otherwise.
 - E1/#699 deleted xAsset record handling shipped: executable xAsset models now skip DBF-deleted design rows for active root paths, methods, menu actions, shortcut detection, and activation fallback behavior.
 - E1/#698 xAsset menu activation path-stem handling shipped: non-shortcut menu activation targets now use VFP/Windows-aware filename stems instead of POSIX-only path parsing.

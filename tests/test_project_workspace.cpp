@@ -262,6 +262,39 @@ void test_build_project_workspace_normalizes_vfp_absolute_item_paths() {
            "#700: existing relative VFP paths should remain unchanged");
 }
 
+void test_build_project_workspace_normalizes_unc_item_paths() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(\\fileserver\share\Project-Copperfin\samples\paths.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "UNCPATHS"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(\\fileserver\share\Project-Copperfin\build\paths.exe)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = R"(\\fileserver\share\Project-Copperfin\samples\forms\customer.scx)"}
+        }),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = R"(\\otherserver\share\lib\helper.prg)"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.entries.size() == 3U, "#701: workspace should include UNC path fixture entries");
+    expect(workspace.entries[1].relative_path == R"(forms\customer.scx)",
+           "#701: UNC paths under the project directory should normalize to project-relative text");
+    expect(workspace.entries[1].relative_path_field_index == 1U,
+           "#701: normalized UNC project item paths should retain NAME provenance");
+    expect(workspace.entries[2].relative_path == "helper.prg",
+           "#701: UNC paths outside the project directory should fall back to a deterministic filename");
+    expect(workspace.entries[2].relative_path_field_index == 1U,
+           "#701: outside UNC fallback should still retain NAME provenance");
+}
+
 void test_build_project_workspace_prefers_live_header() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\headerdemo.pjx)";
@@ -437,6 +470,7 @@ int main() {
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
+    test_build_project_workspace_normalizes_unc_item_paths();
     test_build_project_workspace_prefers_live_header();
     test_build_project_workspace_skips_deleted_startup_candidates();
     test_build_project_workspace_with_dll_output();
