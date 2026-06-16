@@ -5412,6 +5412,19 @@ VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWid
         std::to_string(request.border_width));
 }
 
+VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderColorRequest& request) {
+    if (request.border_color < 0) {
+        return {.ok = false, .error = "BorderColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BorderColor",
+        "border-color",
+        std::to_string(request.border_color));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
