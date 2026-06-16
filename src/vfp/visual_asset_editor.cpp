@@ -570,7 +570,7 @@ VisualAssetEditResult rename_visual_method_in_blob(
     }
 
     std::vector<std::string> existing_lines = split_visual_lines(existing_blob);
-    std::optional<std::size_t> source_line_index;
+    std::vector<std::size_t> source_line_indexes;
     for (std::size_t line_index = 0U; line_index < existing_lines.size(); ++line_index) {
         const std::string trimmed_line = trim_both(existing_lines[line_index]);
         std::string declaration_kind;
@@ -584,21 +584,24 @@ VisualAssetEditResult rename_visual_method_in_blob(
             return {.ok = false, .error = "The requested target method already exists."};
         }
         if (normalized_declaration_name == normalized_requested_name) {
-            source_line_index = line_index;
+            source_line_indexes.push_back(line_index);
         }
     }
 
-    if (!source_line_index.has_value()) {
+    if (source_line_indexes.empty()) {
         return {.ok = false, .error = "The requested method was not found."};
     }
+    if (source_line_indexes.size() > 1U) {
+        return {.ok = false, .error = "The requested method name is ambiguous."};
+    }
 
-    const std::string trimmed_line = trim_both(existing_lines[*source_line_index]);
+    const std::string trimmed_line = trim_both(existing_lines[source_line_indexes.front()]);
     std::string declaration_kind;
     std::string declaration_name;
     if (!parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name)) {
         return {.ok = false, .error = "The requested method declaration could not be parsed."};
     }
-    existing_lines[*source_line_index] = declaration_kind + " " + trim_both(new_method_name);
+    existing_lines[source_line_indexes.front()] = declaration_kind + " " + trim_both(new_method_name);
     updated_blob = serialize_visual_lines(existing_lines);
     return {.ok = true, .error = {}};
 }
@@ -2953,6 +2956,70 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+}
+
+VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenameBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.methods.empty()) {
+        return {.ok = false, .error = "No method renames were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_renames = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& method : request.methods) {
+        if (trim_both(method.method_name).empty()) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No method name was provided."};
+        }
+        if (trim_both(method.new_method_name).empty()) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No target method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No target method name was provided."};
+        }
+
+        const auto result = rename_visual_object_method({
+            .path = request.path,
+            .record_index = method.record_index,
+            .object_name = method.object_name,
+            .unique_id = method.unique_id,
+            .method_name = method.method_name,
+            .new_method_name = method.new_method_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
 }
 
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request) {

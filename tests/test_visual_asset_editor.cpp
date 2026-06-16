@@ -4051,6 +4051,320 @@ void test_rename_visual_object_method_updates_declarations() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_object_methods_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_rename_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_rename_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\n"
+            "FUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC\r\n"
+            "PROCEDURE Init\r\nTHIS.Enabled = .T.\r\nENDPROC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "PROCEDURE LostFocus\r\nTHISFORM.ValidateName()\r\nENDPROC\r\n"
+            "FUNCTION Valid\r\nRETURN .T.\r\nENDFUNC"
+        },
+        {
+            "lblStatus",
+            "statusLabel",
+            "status-guid",
+            "PROCEDURE Paint\r\nTHIS.Refresh()\r\nENDPROC\r\n"
+            "FUNCTION RefreshValue\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {
+            "dupObj",
+            "dupName",
+            "dup-guid",
+            "PROCEDURE Click\r\nWAIT WINDOW \"first\"\r\nENDPROC\r\n"
+            "PROCEDURE click\r\nWAIT WINDOW \"second\"\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#777: method-rename-batch fixture should be writable");
+
+    const auto method_state = [&](const std::string& unique_id, const std::string& method_name) {
+        return copperfin::vfp::query_visual_object_method({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .method_name = method_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "click",
+                .new_method_name = "SaveClick"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .method_name = "Valid",
+                .new_method_name = "IsValid"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .method_name = "Paint",
+                .new_method_name = "PaintStatus"
+            }
+        }
+    });
+    expect(batch_result.ok, "#777: batch method rename should support mixed selectors plus procedure and function renames");
+
+    auto save_click = method_state("save-guid", "Click");
+    auto save_save_click = method_state("save-guid", "SaveClick");
+    auto name_valid = method_state("name-guid", "Valid");
+    auto name_is_valid = method_state("name-guid", "IsValid");
+    auto status_paint = method_state("status-guid", "Paint");
+    auto status_paint_status = method_state("status-guid", "PaintStatus");
+    auto save_get_caption = method_state("save-guid", "GetCaption");
+    auto save_init = method_state("save-guid", "Init");
+    auto name_lost_focus = method_state("name-guid", "LostFocus");
+    auto status_refresh_value = method_state("status-guid", "RefreshValue");
+    expect(save_click.ok && !save_click.exists &&
+            name_valid.ok && !name_valid.exists &&
+            status_paint.ok && !status_paint.exists &&
+            save_save_click.ok && save_save_click.exists && save_save_click.method.kind == "procedure" &&
+            name_is_valid.ok && name_is_valid.exists && name_is_valid.method.kind == "function" &&
+            status_paint_status.ok && status_paint_status.exists && status_paint_status.method.kind == "procedure",
+        "#777: batch method rename should rename requested procedure and function declarations");
+    expect(save_get_caption.ok && save_get_caption.exists &&
+            save_init.ok && save_init.exists &&
+            name_lost_focus.ok && name_lost_focus.exists &&
+            status_refresh_value.ok && status_refresh_value.exists,
+        "#777: batch method rename should preserve unrelated methods");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#777: successful batch renames should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init",
+                .new_method_name = "StartUp"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "MissingMethod",
+                .new_method_name = "MissingRenamed"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject missing methods");
+    save_init = method_state("save-guid", "Init");
+    auto save_start_up = method_state("save-guid", "StartUp");
+    expect(save_init.ok && save_init.exists &&
+            save_start_up.ok && !save_start_up.exists,
+        "#777: missing-method failures should roll back earlier method renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init",
+                .new_method_name = "StartUp"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = " ",
+                .new_method_name = "EmptySource"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject empty source method names");
+    save_init = method_state("save-guid", "Init");
+    save_start_up = method_state("save-guid", "StartUp");
+    expect(save_init.ok && save_init.exists &&
+            save_start_up.ok && !save_start_up.exists,
+        "#777: empty-source failures should roll back earlier method renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init",
+                .new_method_name = "StartUp"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "GetCaption",
+                .new_method_name = " "
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject empty target method names");
+    save_init = method_state("save-guid", "Init");
+    save_start_up = method_state("save-guid", "StartUp");
+    expect(save_init.ok && save_init.exists &&
+            save_start_up.ok && !save_start_up.exists,
+        "#777: empty-target failures should roll back earlier method renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init",
+                .new_method_name = "StartUp"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "dup-guid",
+                .method_name = "Click",
+                .new_method_name = "DupClick"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject duplicate matching method names");
+    save_init = method_state("save-guid", "Init");
+    save_start_up = method_state("save-guid", "StartUp");
+    auto duplicate_click = method_state("dup-guid", "Click");
+    expect(save_init.ok && save_init.exists &&
+            save_start_up.ok && !save_start_up.exists &&
+            !duplicate_click.ok,
+        "#777: duplicate-method failures should roll back earlier renames and report ambiguity");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .method_name = "RefreshValue",
+                .new_method_name = "StatusRefresh"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "GetCaption",
+                .new_method_name = "SaveClick"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject target collisions");
+    status_refresh_value = method_state("status-guid", "RefreshValue");
+    auto status_status_refresh = method_state("status-guid", "StatusRefresh");
+    save_get_caption = method_state("save-guid", "GetCaption");
+    expect(status_refresh_value.ok && status_refresh_value.exists &&
+            status_status_refresh.ok && !status_status_refresh.exists &&
+            save_get_caption.ok && save_get_caption.exists,
+        "#777: target-collision failures should roll back earlier method renames");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#777: failed batch rename rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {}
+    });
+    expect(!batch_result.ok, "#777: empty batch method rename requests should fail explicitly");
+
+    const fs::path unsupported_path = temp_dir / "method_rename_batch_unsupported.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdUnsupported", "unsupported-guid"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#777: unsupported method-rename-batch fixture should be writable");
+    batch_result = copperfin::vfp::rename_visual_object_methods({
+        .path = unsupported_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "unsupported-guid",
+                .method_name = "Click",
+                .new_method_name = "SaveClick"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#777: batch method rename should reject objects without METHODS carriers");
+
+    for (int index = 0; index < 3; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#777: undo should restore each successful batch method rename");
+    }
+
+    save_click = method_state("save-guid", "Click");
+    save_save_click = method_state("save-guid", "SaveClick");
+    name_valid = method_state("name-guid", "Valid");
+    name_is_valid = method_state("name-guid", "IsValid");
+    status_paint = method_state("status-guid", "Paint");
+    status_paint_status = method_state("status-guid", "PaintStatus");
+    save_get_caption = method_state("save-guid", "GetCaption");
+    name_lost_focus = method_state("name-guid", "LostFocus");
+    status_refresh_value = method_state("status-guid", "RefreshValue");
+    expect(save_click.ok && save_click.exists &&
+            save_save_click.ok && !save_save_click.exists &&
+            name_valid.ok && name_valid.exists &&
+            name_is_valid.ok && !name_is_valid.exists &&
+            status_paint.ok && status_paint.exists &&
+            status_paint_status.ok && !status_paint_status.exists &&
+            save_get_caption.ok && save_get_caption.exists &&
+            name_lost_focus.ok && name_lost_focus.exists &&
+            status_refresh_value.ok && status_refresh_value.exists,
+        "#777: successful batch rename undo should restore original method names and preserve unrelated methods");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_copy_visual_object_method_between_selected_objects() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -7282,6 +7596,7 @@ int main() {
     test_delete_visual_object_method_removes_selected_methods();
     test_delete_visual_object_methods_rolls_back_failed_batches();
     test_rename_visual_object_method_updates_declarations();
+    test_rename_visual_object_methods_rolls_back_failed_batches();
     test_copy_visual_object_method_between_selected_objects();
     test_move_visual_object_method_between_selected_objects();
     test_reorder_visual_object_methods_within_selected_object();

@@ -393,6 +393,19 @@ struct VisualObjectMethodRenameRequest {
     std::string new_method_name;
 };
 
+struct VisualObjectMethodRenameBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+    std::string new_method_name;
+};
+
+struct VisualObjectMethodRenameBatchRequest {
+    std::string path;
+    std::vector<VisualObjectMethodRenameBatchItem> methods;
+};
+
 struct VisualObjectMethodCopyRequest {
     std::string path;
     std::size_t source_record_index = 0;
@@ -536,6 +549,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDeleteBatchRequest& request);
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request);
+VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenameBatchRequest& request);
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request);
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request);
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request);

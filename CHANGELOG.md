@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#777 batch selected visual object method renames shipped: method/event editors can rename `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, preserving method kind/body and unrelated methods, rejecting missing/ambiguous/colliding/malformed batch items explicitly, preserving prior undo history when later items fail, and retaining successful batch undo support.
 - E2/#776 batch selected visual object method deletes shipped: method/event editors can delete `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, preserving unrelated methods, rejecting missing/ambiguous/malformed batch items explicitly, preserving prior undo history when later items fail, and retaining successful batch undo support.
 - E2/#775 batch selected visual object property moves shipped: multi-select property grids can move direct DBF-backed fields and memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, including target renames and explicit replacement while clearing sources, preserving undo support, and preserving prior undo history when later items fail.
 - E2/#774 batch selected visual object property copies shipped: multi-select property grids can copy direct DBF-backed fields and memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, including target renames and explicit replacement while preserving sources, undo support, and prior undo history when later items fail.
