@@ -339,6 +339,36 @@ void test_build_project_workspace_normalizes_vfp_logical_flags() {
            "#703: normalized EXCLUDE should drive excluded item counts");
 }
 
+void test_build_project_workspace_normalizes_project_type_codes() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\typecodes.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = " h "},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "TYPECODES"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\typecodes.exe)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = " k "},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "README"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.project_title == "TYPECODES", "#704: lowercase padded header TYPE should still select the project header");
+    expect(workspace.entries[0].type_code == "H", "#704: header type code should be normalized for downstream metadata");
+    expect(workspace.entries[0].type_title == "Project Header", "#704: normalized header TYPE should keep header classification");
+    expect(workspace.entries[1].type_code == "K", "#704: item type code should be normalized for downstream metadata");
+    expect(workspace.entries[1].type_title == "Project Item",
+           "#704: normalized K type should preserve Project Item fallback when extension classification is unavailable");
+    expect(workspace.entries[1].type_title_field_index == 0U,
+           "#704: TYPE-derived fallback classification should retain TYPE field provenance");
+    expect(workspace.entries[1].group_id == "project_items",
+           "#704: normalized K type should keep Project Items grouping fallback");
+}
+
 void test_build_project_workspace_prefers_live_header() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\headerdemo.pjx)";
@@ -516,6 +546,7 @@ int main() {
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
     test_build_project_workspace_normalizes_unc_item_paths();
     test_build_project_workspace_normalizes_vfp_logical_flags();
+    test_build_project_workspace_normalizes_project_type_codes();
     test_build_project_workspace_prefers_live_header();
     test_build_project_workspace_skips_deleted_startup_candidates();
     test_build_project_workspace_with_dll_output();

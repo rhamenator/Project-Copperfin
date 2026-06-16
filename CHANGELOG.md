@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#704 PJX project type-code normalization shipped: project workspace header detection and item classification now trim and uppercase `TYPE` codes for stable metadata.
 - E1/#703 VFP project logical flag normalization shipped: PJX/PJT logical fields now parse trim- and case-insensitive VFP true values for build and entry flags.
 - E1/#702 VFP-aware Studio display names shipped: `open_document` now derives display names from backslash-aware VFP filename parsing instead of host-only filesystem semantics.
 - E1/#701 UNC project item path coverage shipped: focused project-workspace tests now prove UNC item paths normalize to project-relative text under the project directory and filename fallbacks outside it.

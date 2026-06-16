@@ -57,9 +57,20 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+std::string uppercase_copy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::toupper(ch));
+    });
+    return value;
+}
+
 bool value_as_bool(const vfp::DbfRecord& record, std::string_view field_name) {
     const std::string value = lowercase_copy(trim_copy(value_or_empty(record, field_name)));
     return value == "true" || value == "t" || value == ".t." || value == "y";
+}
+
+std::string type_code_of(const vfp::DbfRecord& record) {
+    return uppercase_copy(trim_copy(value_or_empty(record, "TYPE")));
 }
 
 std::string extension_of(const std::string& value) {
@@ -283,14 +294,14 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         document.table_preview.records.begin(),
         document.table_preview.records.end(),
         [](const vfp::DbfRecord& record) {
-            return !record.deleted && value_or_empty(record, "TYPE") == "H";
+            return !record.deleted && type_code_of(record) == "H";
         });
     if (header_record == document.table_preview.records.end()) {
         header_record = std::find_if(
             document.table_preview.records.begin(),
             document.table_preview.records.end(),
             [](const vfp::DbfRecord& record) {
-                return value_or_empty(record, "TYPE") == "H";
+                return type_code_of(record) == "H";
             });
     }
 
@@ -338,7 +349,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     };
 
     for (const auto& record : document.table_preview.records) {
-        const std::string type_code = trim_copy(value_or_empty(record, "TYPE"));
+        const std::string type_code = type_code_of(record);
         const std::string name = trim_copy(value_or_empty(record, "NAME"));
         const std::string key = trim_copy(value_or_empty(record, "KEY"));
         const std::string comments = trim_copy(value_or_empty(record, "COMMENTS"));
