@@ -916,6 +916,12 @@ struct VisualObjectScrollBarsRequest {
     int scroll_bars = 0;
 };
 
+struct VisualObjectWindowStateRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int window_state = 0;
+};
+
 struct VisualObjectMousePointerRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1420,6 +1426,7 @@ VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRe
 VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRequest& request);
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request);
 VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBarsRequest& request);
+VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowStateRequest& request);
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request);
 VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request);
 VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPicturePositionRequest& request);

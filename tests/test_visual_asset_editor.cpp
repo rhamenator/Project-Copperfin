@@ -11652,6 +11652,29 @@ void test_set_visual_object_scroll_bars_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_window_state_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#894",
+        "window_state",
+        "WindowState",
+        "WINDOWSTATE",
+        "window-state",
+        0,
+        1,
+        2,
+        3,
+        4,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_window_state({
+                .path = path,
+                .objects = objects,
+                .window_state = value
+            });
+        });
+}
+
 void test_set_visual_object_mouse_pointer_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#865",
@@ -22851,6 +22874,7 @@ int main() {
     test_set_visual_object_fill_style_assigns_numeric_value();
     test_set_visual_object_scale_mode_assigns_numeric_value();
     test_set_visual_object_scroll_bars_assigns_numeric_value();
+    test_set_visual_object_window_state_assigns_numeric_value();
     test_set_visual_object_mouse_pointer_assigns_numeric_value();
     test_set_visual_object_picture_margin_assigns_numeric_value();
     test_set_visual_object_picture_position_assigns_numeric_value();

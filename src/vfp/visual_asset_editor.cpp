@@ -5676,6 +5676,19 @@ VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBars
         std::to_string(request.scroll_bars));
 }
 
+VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowStateRequest& request) {
+    if (request.window_state < 0) {
+        return {.ok = false, .error = "WindowState must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "WindowState",
+        "window-state",
+        std::to_string(request.window_state));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};
