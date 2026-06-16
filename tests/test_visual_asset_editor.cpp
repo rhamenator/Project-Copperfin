@@ -9394,6 +9394,181 @@ void test_set_visual_object_read_only_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_locked_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_locked_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "locked.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "LOCKED", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtOne", "oneBox", "one-guid", ".F."},
+        {"txtTwo", "twoBox", "two-guid", ".F."},
+        {"txtThree", "threeBox", "three-guid", ".T."},
+        {"txtOther", "otherBox", "other-guid", ".F."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#798: locked fixture should be writable");
+
+    const auto locked_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "LOCKED"
+        });
+        expect(result.ok && result.exists, "#798: locked fixture property should be readable");
+        return result.value;
+    };
+    const auto locked = [&](const std::string& unique_id) {
+        return locked_for(table_path.string(), unique_id);
+    };
+    const auto locked_state = [&]() {
+        return locked("one-guid") + "," +
+            locked("two-guid") + "," +
+            locked("three-guid") + "," +
+            locked("other-guid");
+    };
+
+    auto locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .locked = true
+    });
+    expect(locked_result.ok, "#798: locked assignment should support mixed selectors");
+    expect(locked("one-guid") == ".T." &&
+            locked("two-guid") == ".T." &&
+            locked("three-guid") == ".T." &&
+            locked("other-guid") == ".F.",
+        "#798: locked true assignment should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#798: first locked write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#798: second locked write should remain undo-backed");
+    expect(locked_state() == ".F.,.F.,.T.,.F.", "#798: locked undo should restore original states");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .locked = false
+    });
+    expect(locked_result.ok, "#798: unlocked assignment should support record-index selectors");
+    expect(locked("three-guid") == ".F." &&
+            locked("one-guid") == ".F." &&
+            locked("two-guid") == ".F.",
+        "#798: unlocked assignment should use FoxPro logical formatting");
+
+    const std::string committed_state = locked_state();
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = table_path.string(),
+        .objects = {},
+        .locked = true
+    });
+    expect(!locked_result.ok, "#798: locked assignment should reject empty selections");
+    expect(locked_state() == committed_state, "#798: empty-selection failures should not mutate locked states");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .locked = true
+    });
+    expect(!locked_result.ok, "#798: locked assignment should reject missing selected objects");
+    expect(locked_state() == committed_state, "#798: missing-object failures should not mutate locked states");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}}
+        },
+        .locked = true
+    });
+    expect(!locked_result.ok, "#798: locked assignment should reject duplicate selected objects");
+    expect(locked_state() == committed_state, "#798: duplicate-selection failures should not mutate locked states");
+
+    const fs::path blob_path = temp_dir / "locked_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "Caption = \"Blob\"\r\nLocked = .F.\r\n"},
+        {"txtNoLocked", "no-locked-guid", "Caption = \"No Locked\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#798: locked property-blob fixture should be writable");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"}
+        },
+        .locked = true
+    });
+    expect(locked_result.ok, "#798: locked assignment should support existing serialized properties");
+    expect(locked_for(blob_path.string(), "blob-guid") == ".T.",
+        "#798: serialized locked assignment should preserve property lookup");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#798: serialized locked write should remain undo-backed");
+    expect(locked_for(blob_path.string(), "blob-guid") == ".F.",
+        "#798: serialized locked undo should restore original property value");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "no-locked-guid"}
+        },
+        .locked = true
+    });
+    expect(!locked_result.ok, "#798: locked assignment should reject missing serialized LOCKED properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_locked.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#798: missing-LOCKED fixture should be writable");
+
+    locked_result = copperfin::vfp::set_visual_object_locked({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .locked = true
+    });
+    expect(!locked_result.ok, "#798: locked assignment should reject missing LOCKED fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11983,6 +12158,7 @@ int main() {
     test_set_visual_object_visibility_assigns_logical_state();
     test_set_visual_object_enabled_assigns_logical_state();
     test_set_visual_object_read_only_assigns_logical_state();
+    test_set_visual_object_locked_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
