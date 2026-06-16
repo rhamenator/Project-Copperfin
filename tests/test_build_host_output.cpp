@@ -1417,6 +1417,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the placeholder return through the generated stub-emission output-application call-site.");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
+            expect(wrapper_source.find("(void)tcMode;") == std::string::npos,
+                   "build host DLL wrapper should consume DLL arguments through bridge call bindings.");
             expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
                    "build host DLL wrapper should preserve the DLL placeholder argument binding");
             expect(wrapper_source.find(", stub_emission_wrapper);") != std::string::npos,
@@ -2347,6 +2349,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should route the placeholder return through the generated stub-emission output-application call-site.");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");
+            expect(wrapper_source.find("(void)parm;") == std::string::npos,
+                   "build host FLL wrapper should consume ParamBlk through bridge call bindings.");
             expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
                    "build host FLL wrapper should preserve the ParamBlk call-surface binding");
             expect(wrapper_source.find(", stub_emission_wrapper);") != std::string::npos,

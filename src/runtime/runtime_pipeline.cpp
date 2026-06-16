@@ -2258,7 +2258,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                     ? std::string{}
                     : declaration_kind_found->second;
             stream << "COPPERFIN_EXPORT int " << symbol << "(ParamBlk* parm) {\n";
-            stream << "    (void)parm;\n";
             stream << "    const auto stub_emission_wrapper =\n";
             stream << "        copperfin_runtime_bridge_build_stub_emission_wrapper(\n";
             stream << "            copperfin_build_runtime_bridge_fll_int_return_surface(),\n";
@@ -2488,9 +2487,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             const std::string parameter_name_manifest = build_manifest_parameter_names(effective_names);
             stream << "COPPERFIN_EXPORT int COPPERFIN_VFP_DLL_CALL " << symbol << "("
                    << build_placeholder_int_parameter_list(effective_names) << ") {\n";
-            for (std::size_t index = 0; index < effective_names.size(); ++index) {
-                stream << "    (void)" << sanitize_cpp_identifier(effective_names[index], index) << ";\n";
-            }
             stream << "    const auto stub_emission_wrapper =\n";
             stream << "        copperfin_runtime_bridge_build_stub_emission_wrapper(\n";
             stream << "            copperfin_build_runtime_bridge_native_int_return_surface(),\n";

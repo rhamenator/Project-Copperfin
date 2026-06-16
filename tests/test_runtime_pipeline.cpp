@@ -1596,8 +1596,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare the VFP DLL calling-convention macro");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL InitLibrary(int tcMode)") != std::string::npos,
                "library-output wrapper source should scaffold procedure entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)tcMode;") != std::string::npos,
-               "library-output wrapper source should consume placeholder DLL arguments");
+        expect(wrapper_source.find("(void)tcMode;") == std::string::npos,
+               "library-output wrapper source should consume DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for InitLibrary");
         expect(wrapper_source.find("\"lparameters\", \"tcMode\", 1U, reinterpret_cast<void*>(&InitLibrary), stub_emission_wrapper);") != std::string::npos,
@@ -1982,8 +1982,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should record the typed native success integer value.");
         expect(wrapper_source.find("int COPPERFIN_VFP_DLL_CALL AddNumbers(int tnLeft, int tnRight)") != std::string::npos,
                "library-output wrapper source should scaffold function entrypoints with the VFP calling convention");
-        expect(wrapper_source.find("(void)tnRight;") != std::string::npos,
-               "library-output wrapper source should consume multiple placeholder DLL arguments");
+        expect(wrapper_source.find("(void)tnRight;") == std::string::npos,
+               "library-output wrapper source should consume multiple DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for AddNumbers");
         expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
@@ -3255,6 +3255,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route the placeholder return through the generated stub-emission output-application call-site.");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "fll-output wrapper source should encode the export name into the bridge invocation plan");
+        expect(wrapper_source.find("(void)parm;") == std::string::npos,
+               "fll-output wrapper source should consume ParamBlk through bridge call bindings.");
         expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
                "fll-output wrapper source should preserve the ParamBlk call-surface binding");
         expect(wrapper_source.find(", stub_emission_wrapper);") != std::string::npos,
