@@ -1696,6 +1696,120 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_batch_delete_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "batch_delete.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid"},
+        {"txtName", "nameBox", "name-guid"},
+        {"lblStatus", "statusLabel", "status-guid"},
+        {"dupControl", "dupOne", "dup-one-guid"},
+        {"dupControl", "dupTwo", "dup-two-guid"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#753: batch deleted-state fixture should be writable");
+
+    const auto is_deleted = [&](const std::string& unique_id) {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#753: batch deleted-state fixture should remain listable");
+        const auto object = std::find_if(
+            list_result.objects.begin(),
+            list_result.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& candidate) {
+                return candidate.unique_id == unique_id;
+            });
+        expect(object != list_result.objects.end(), "#753: expected visual object should remain present");
+        return object != list_result.objects.end() && object->deleted;
+    };
+
+    auto batch_result = copperfin::vfp::set_visual_object_deleted_states({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .deleted = true
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .deleted = true
+            }
+        }
+    });
+    expect(batch_result.ok, "#753: batch deleted-state changes should support mixed selector modes");
+    expect(is_deleted("save-guid") && is_deleted("name-guid"),
+        "#753: batch deleted-state changes should mark multiple selected objects deleted");
+    expect(!is_deleted("status-guid"),
+        "#753: batch deleted-state changes should preserve unrelated records");
+
+    batch_result = copperfin::vfp::set_visual_object_deleted_states({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = "cmdSave",
+                .unique_id = {},
+                .deleted = false
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "name-guid",
+                .deleted = false
+            }
+        }
+    });
+    expect(batch_result.ok, "#753: batch deleted-state changes should restore objects through the same surface");
+    expect(!is_deleted("save-guid") && !is_deleted("name-guid"),
+        "#753: batch deleted-state restore should clear deleted flags");
+
+    batch_result = copperfin::vfp::set_visual_object_deleted_states({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .deleted = true
+            },
+            {
+                .record_index = 0U,
+                .object_name = "dupControl",
+                .unique_id = {},
+                .deleted = true
+            }
+        }
+    });
+    expect(!batch_result.ok,
+        "#753: batch deleted-state changes should reject ambiguous later selections");
+    expect(!is_deleted("status-guid") && !is_deleted("dup-one-guid") && !is_deleted("dup-two-guid"),
+        "#753: failed batch deleted-state changes should roll back earlier flag mutations");
+
+    batch_result = copperfin::vfp::set_visual_object_deleted_states({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#753: empty batch deleted-state requests should fail explicitly");
+    expect(!is_deleted("save-guid") && !is_deleted("name-guid") && !is_deleted("status-guid"),
+        "#753: empty batch deleted-state requests should not mutate existing flags");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2573,6 +2687,7 @@ int main() {
     test_create_visual_object_appends_toolbox_field_values();
     test_reparent_visual_object_updates_container_parent();
     test_update_visual_object_batch_rolls_back_failed_alignment();
+    test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

@@ -1786,6 +1786,88 @@ VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedS
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object deleted-state changes were provided."};
+    }
+
+    struct AppliedDeletedState {
+        std::size_t record_index = 0;
+        bool prior_deleted = false;
+    };
+    std::vector<AppliedDeletedState> applied;
+
+    const auto rollback_applied_states = [&]() -> VisualAssetEditResult {
+        for (auto item = applied.rbegin(); item != applied.rend(); ++item) {
+            const auto rollback_result = set_record_deleted_flag(request.path, item->record_index, item->prior_deleted);
+            if (!rollback_result.ok) {
+                return {.ok = false, .error = rollback_result.error};
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& object : request.objects) {
+        std::size_t record_index = 0U;
+        const auto resolution = resolve_visual_object_record_index({
+            .path = request.path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .property_name = {},
+            .property_value = {}
+        }, record_index);
+        if (!resolution.ok) {
+            const auto rollback_result = rollback_applied_states();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = resolution.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return resolution;
+        }
+
+        const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+        if (!table_result.ok || record_index >= table_result.table.records.size()) {
+            const std::string error = table_result.ok
+                ? "The requested object record is not currently available."
+                : table_result.error;
+            const auto rollback_result = rollback_applied_states();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = error};
+        }
+
+        const bool prior_deleted = table_result.table.records[record_index].deleted;
+        if (prior_deleted == object.deleted) {
+            continue;
+        }
+
+        const auto result = set_record_deleted_flag(request.path, record_index, object.deleted);
+        if (!result.ok) {
+            const auto rollback_result = rollback_applied_states();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = result.error};
+        }
+        applied.push_back({.record_index = record_index, .prior_deleted = prior_deleted});
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
     if (request.properties.empty()) {
         return {.ok = false, .error = "No property changes were provided."};

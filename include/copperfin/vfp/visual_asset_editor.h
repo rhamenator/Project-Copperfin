@@ -97,6 +97,18 @@ struct VisualObjectDeletedStateRequest {
     bool deleted = false;
 };
 
+struct VisualObjectDeletedStateBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    bool deleted = false;
+};
+
+struct VisualObjectDeletedStateBatchRequest {
+    std::string path;
+    std::vector<VisualObjectDeletedStateBatchItem> objects;
+};
+
 struct VisualObjectSnapshot {
     std::size_t record_index = 0;
     bool deleted = false;
@@ -215,6 +227,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
+VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request);
