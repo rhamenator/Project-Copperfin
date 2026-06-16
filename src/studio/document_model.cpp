@@ -267,16 +267,34 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         switch (document.kind) {
             case StudioAssetKind::report:
             case StudioAssetKind::label:
-                snapshot.title = first_non_empty(record, {"EXPR", "NAME", "UNIQUEID"});
-                snapshot.subtitle = first_non_empty(record, {"OBJTYPE", "OBJCODE", "FONTFACE", "PLATFORM"});
+                {
+                    const FieldSelection title = first_non_empty_selection(record, {"EXPR", "NAME", "UNIQUEID"});
+                    snapshot.title = title.value;
+                    snapshot.title_field_index = title.field_index;
+                    const FieldSelection subtitle = first_non_empty_selection(record, {"OBJTYPE", "OBJCODE", "FONTFACE", "PLATFORM"});
+                    snapshot.subtitle = subtitle.value;
+                    snapshot.subtitle_field_index = subtitle.field_index;
+                }
                 break;
             case StudioAssetKind::menu:
-                snapshot.title = first_non_empty(record, {"PROMPT", "NAME", "LEVELNAME"});
-                snapshot.subtitle = first_non_empty(record, {"LEVELNAME", "OBJTYPE", "OBJCODE"});
+                {
+                    const FieldSelection title = first_non_empty_selection(record, {"PROMPT", "NAME", "LEVELNAME"});
+                    snapshot.title = title.value;
+                    snapshot.title_field_index = title.field_index;
+                    const FieldSelection subtitle = first_non_empty_selection(record, {"LEVELNAME", "OBJTYPE", "OBJCODE"});
+                    snapshot.subtitle = subtitle.value;
+                    snapshot.subtitle_field_index = subtitle.field_index;
+                }
                 break;
             case StudioAssetKind::project:
-                snapshot.title = first_non_empty(record, {"NAME", "KEY", "TYPE"});
-                snapshot.subtitle = first_non_empty(record, {"TYPE", "KEY", "COMMENTS"});
+                {
+                    const FieldSelection title = first_non_empty_selection(record, {"NAME", "KEY", "TYPE"});
+                    snapshot.title = title.value;
+                    snapshot.title_field_index = title.field_index;
+                    const FieldSelection subtitle = first_non_empty_selection(record, {"TYPE", "KEY", "COMMENTS"});
+                    snapshot.subtitle = subtitle.value;
+                    snapshot.subtitle_field_index = subtitle.field_index;
+                }
                 break;
             case StudioAssetKind::form:
             case StudioAssetKind::class_library:
@@ -286,8 +304,14 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
             case StudioAssetKind::program:
             case StudioAssetKind::header:
             case StudioAssetKind::unknown:
-                snapshot.title = first_non_empty(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
-                snapshot.subtitle = first_non_empty(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
+                {
+                    const FieldSelection title = first_non_empty_selection(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
+                    snapshot.title = title.value;
+                    snapshot.title_field_index = title.field_index;
+                    const FieldSelection subtitle = first_non_empty_selection(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
+                    snapshot.subtitle = subtitle.value;
+                    snapshot.subtitle_field_index = subtitle.field_index;
+                }
                 break;
         }
         if (snapshot.title.empty()) {

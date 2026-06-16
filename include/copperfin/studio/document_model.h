@@ -99,7 +99,9 @@ struct StudioObjectSnapshot {
     std::string menu_message{};
     std::size_t menu_message_field_index = StudioObjectMissingFieldIndex;
     std::string title{};
+    std::size_t title_field_index = StudioObjectMissingFieldIndex;
     std::string subtitle{};
+    std::size_t subtitle_field_index = StudioObjectMissingFieldIndex;
     std::vector<StudioPropertySnapshot> properties{};
 };
 

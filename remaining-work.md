@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#673 object title/subtitle provenance is now shipped. Studio object snapshots now preserve source DBF field ordinals for friendly title and subtitle display values, while synthesized titles and missing subtitles use `StudioObjectMissingFieldIndex`; focused `test_studio_host` coverage proves form/menu source ordinals plus synthesized fallback behavior.
 - 2026-06-16: E1/#672 object identity/hierarchy provenance is now shipped. Studio object snapshots now preserve source DBF field ordinals for normalized object name, unique ID, parent, class, and baseclass metadata, including fallback-selected `NAME` and `PARENTID` fields; focused `test_studio_host` coverage proves direct ordinals, fallback ordinals, and missing-field sentinels.
 - 2026-06-16: E1/#671 raw visual metadata provenance is now shipped. Studio object snapshots now preserve source DBF field ordinals for raw `OBJTYPE`, `OBJCODE`, and `PLATFORM` metadata, using the explicit object missing-field sentinel when those optional fields are absent; focused `test_studio_host` coverage proves both present-field ordinals and missing-field sentinels.
 - 2026-06-16: E1/#670 object snapshot missing-field provenance is now shipped. Normalized menu metadata now uses an explicit missing-field sentinel so absent MNX/MNT fields do not masquerade as DBF field ordinal `0`; focused `test_studio_host` coverage proves present fields keep real ordinals while missing fields use the sentinel.

@@ -172,6 +172,10 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         expect(objects[0].class_name_field_index == 9U, "#672: CLASS metadata should retain DBF field provenance");
         expect(objects[0].baseclass_name == "commandbutton", "#660: object snapshots should expose BASECLASS metadata");
         expect(objects[0].baseclass_name_field_index == 10U, "#672: BASECLASS metadata should retain DBF field provenance");
+        expect(objects[0].title == "cmdSave", "#673: friendly titles should keep existing form selection priority");
+        expect(objects[0].title_field_index == 0U, "#673: friendly title metadata should retain selected DBF field provenance");
+        expect(objects[0].subtitle == "commandbutton", "#673: friendly subtitles should keep existing form selection priority");
+        expect(objects[0].subtitle_field_index == 10U, "#673: friendly subtitle metadata should retain selected DBF field provenance");
         const auto parent = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
             return property.name == "PARENT";
         });
@@ -237,11 +241,18 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
                 {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "tools_menu"},
                 {.field_name = "PARENTID", .field_type = 'C', .is_null = false, .display_value = "main_menu"}
             }
+        },
+        {
+            .record_index = 4U,
+            .deleted = false,
+            .values = {
+                {.field_name = "COMMENT", .field_type = 'M', .is_null = false, .display_value = "No display fields"}
+            }
         }
     };
 
     const auto objects = copperfin::studio::build_object_snapshot(document);
-    expect(objects.size() == 2U, "#668: menu snapshot should include parsed menu records");
+    expect(objects.size() == 3U, "#668: menu snapshot should include parsed menu records");
     if (objects.size() >= 1U) {
         expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
         expect(objects[0].menu_prompt_field_index == 0U, "#669: menu PROMPT metadata should retain DBF field provenance");
@@ -252,7 +263,9 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[0].menu_message == "Open customer maintenance", "#668: menu snapshots should expose MESSAGE metadata");
         expect(objects[0].menu_message_field_index == 3U, "#669: menu MESSAGE metadata should retain DBF field provenance");
         expect(objects[0].title == "Customer", "#668: menu prompt should continue to drive friendly title fallback");
+        expect(objects[0].title_field_index == 0U, "#673: menu title metadata should retain selected PROMPT provenance");
         expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
+        expect(objects[0].subtitle_field_index == 1U, "#673: menu subtitle metadata should retain selected LEVELNAME provenance");
         expect(objects[0].objtype_code == 3, "#668: menu snapshots should retain raw OBJTYPE metadata");
         expect(objects[0].objcode_code == 7, "#668: menu snapshots should retain raw OBJCODE metadata");
     }
@@ -263,6 +276,10 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[1].object_name_field_index == 3U, "#672: object name fallback should retain selected NAME field provenance");
         expect(objects[1].parent_name == "main_menu", "#672: parent metadata should fall back to PARENTID");
         expect(objects[1].parent_name_field_index == 4U, "#672: parent fallback should retain selected PARENTID field provenance");
+        expect(objects[1].title == "Tools", "#673: menu title metadata should preserve existing PROMPT priority");
+        expect(objects[1].title_field_index == 1U, "#673: menu title fallback should retain selected PROMPT provenance");
+        expect(objects[1].subtitle == "TOOLS", "#673: menu subtitle metadata should preserve existing LEVELNAME priority");
+        expect(objects[1].subtitle_field_index == 0U, "#673: menu subtitle fallback should retain selected LEVELNAME provenance");
         expect(objects[1].unique_id_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#672: missing UNIQUEID provenance should use the object missing-field sentinel");
         expect(objects[1].class_name_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
@@ -278,6 +295,14 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
             "#671: missing OBJCODE provenance should use the object missing-field sentinel");
         expect(objects[1].platform_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#671: missing PLATFORM provenance should use the object missing-field sentinel");
+    }
+    if (objects.size() >= 3U) {
+        expect(objects[2].title == "Record 4", "#673: snapshots without display fields should keep synthetic title fallback");
+        expect(objects[2].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#673: synthesized titles should use the object missing-field sentinel");
+        expect(objects[2].subtitle.empty(), "#673: snapshots without subtitle fields should keep empty subtitle fallback");
+        expect(objects[2].subtitle_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#673: missing subtitles should use the object missing-field sentinel");
     }
 }
 

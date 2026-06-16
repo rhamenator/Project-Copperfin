@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#673 object title/subtitle provenance shipped: Studio object snapshots now preserve source DBF field ordinals for friendly title and subtitle display values, including synthesized-title sentinel behavior.
 - E1/#672 object identity/hierarchy provenance shipped: Studio object snapshots now preserve source DBF field ordinals for normalized object name, unique ID, parent, class, and baseclass metadata, including fallback-selected fields.
 - E1/#671 raw visual metadata provenance shipped: Studio object snapshots now preserve source DBF field ordinals for raw `OBJTYPE`, `OBJCODE`, and `PLATFORM` metadata, using the explicit object missing-field sentinel when absent.
 - E1/#670 object snapshot missing-field provenance shipped: normalized menu metadata now uses an explicit missing-field sentinel instead of conflating absent MNX/MNT fields with DBF field ordinal `0`.
