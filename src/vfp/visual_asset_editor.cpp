@@ -5536,6 +5536,20 @@ VisualAssetEditResult set_visual_object_highlight_back_color(
         std::to_string(request.highlight_back_color));
 }
 
+VisualAssetEditResult set_visual_object_highlight_fore_color(
+    const VisualObjectHighlightForeColorRequest& request) {
+    if (request.highlight_fore_color < 0) {
+        return {.ok = false, .error = "HighlightForeColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HighlightForeColor",
+        "highlight fore-color",
+        std::to_string(request.highlight_fore_color));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
