@@ -236,7 +236,9 @@ std::optional<std::size_t> find_json_array_end(const std::string& document, std:
     return std::nullopt;
 }
 
-std::vector<std::string> extract_bridge_parameter_values(const std::string& document) {
+std::vector<std::string> extract_bridge_parameter_field_values(
+    const std::string& document,
+    const std::string& field_name) {
     std::vector<std::string> values;
     const auto parameters_token = std::string("\"parameters\"");
     const auto parameters_offset = document.find(parameters_token);
@@ -252,7 +254,7 @@ std::vector<std::string> extract_bridge_parameter_values(const std::string& docu
         return values;
     }
 
-    const auto value_token = std::string("\"value\"");
+    const auto value_token = std::string("\"") + field_name + "\"";
     std::size_t cursor = array_start + 1U;
     while (cursor < *array_end) {
         const auto value_offset = document.find(value_token, cursor);
@@ -285,6 +287,39 @@ std::vector<std::string> extract_bridge_parameter_values(const std::string& docu
         cursor = value_end;
     }
     return values;
+}
+
+std::vector<std::string> split_bridge_parameter_name_list(const std::string& names) {
+    std::vector<std::string> result;
+    std::size_t segment_start = 0;
+    while (segment_start <= names.size()) {
+        const std::size_t separator = names.find('|', segment_start);
+        const std::string segment = trim_copy(names.substr(
+            segment_start,
+            separator == std::string::npos ? std::string::npos : separator - segment_start));
+        if (!segment.empty()) {
+            result.push_back(segment);
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        segment_start = separator + 1U;
+    }
+    return result;
+}
+
+bool bridge_parameter_names_match(
+    const std::vector<std::string>& expected_names,
+    const std::vector<std::string>& request_names) {
+    if (expected_names.size() != request_names.size()) {
+        return false;
+    }
+    for (std::size_t index = 0; index < expected_names.size(); ++index) {
+        if (lowercase_copy(trim_copy(expected_names[index])) != lowercase_copy(trim_copy(request_names[index]))) {
+            return false;
+        }
+    }
+    return true;
 }
 
 struct RuntimeBridgeInvocationOptions {
@@ -404,7 +439,8 @@ int run_runtime_bridge_invocation(
     const std::string request_document = request_document_stream.str();
     const std::string request_media_type = extract_json_field(request_document, "request_media_type");
     const std::string request_schema_version = extract_json_field(request_document, "schema_version");
-    const std::vector<std::string> parameter_values = extract_bridge_parameter_values(request_document);
+    const std::vector<std::string> parameter_names = extract_bridge_parameter_field_values(request_document, "name");
+    const std::vector<std::string> parameter_values = extract_bridge_parameter_field_values(request_document, "value");
     if (request_media_type != options.request_media_type) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
@@ -441,6 +477,12 @@ int run_runtime_bridge_invocation(
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
             std::cout << "error: Bridge request parameter count mismatch.\n";
+            return 6;
+        }
+        if (!bridge_parameter_names_match(split_bridge_parameter_name_list(options.parameter_names), parameter_names)) {
+            std::cout << "status: error\n";
+            std::cout << "runtime.mode: bridge-invocation\n";
+            std::cout << "error: Bridge request parameter name mismatch.\n";
             return 6;
         }
         std::string bootstrap_error;
