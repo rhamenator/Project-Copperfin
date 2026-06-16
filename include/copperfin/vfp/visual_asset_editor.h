@@ -766,6 +766,12 @@ struct VisualObjectBackStyleRequest {
     int back_style = 0;
 };
 
+struct VisualObjectBorderStyleRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int border_style = 0;
+};
+
 struct VisualObjectInputMaskRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1196,6 +1202,7 @@ VisualAssetEditResult set_visual_object_down_picture(const VisualObjectDownPictu
 VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisabledPictureRequest& request);
 VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDragPictureRequest& request);
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request);
+VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderStyleRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request);
