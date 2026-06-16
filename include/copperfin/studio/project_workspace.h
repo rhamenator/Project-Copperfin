@@ -51,7 +51,11 @@ struct StudioProjectEntry {
 
 struct StudioProjectGroup {
     std::string id{};
+    std::size_t id_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t id_memo_block_number = 0;
     std::string title{};
+    std::size_t title_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t title_memo_block_number = 0;
     std::size_t item_count = 0;
     std::size_t excluded_count = 0;
     std::size_t deleted_count = 0;

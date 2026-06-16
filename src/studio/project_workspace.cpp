@@ -346,7 +346,11 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     std::vector<StudioProjectGroup> groups;
 
-    auto ensure_group = [&](const std::string& group_id, const std::string& group_title) -> StudioProjectGroup& {
+    auto ensure_group = [&](
+        const std::string& group_id,
+        const std::string& group_title,
+        std::size_t group_field_index,
+        std::uint32_t group_memo_block_number) -> StudioProjectGroup& {
         const auto existing = std::find_if(groups.begin(), groups.end(), [&](const StudioProjectGroup& group) {
             return group.id == group_id;
         });
@@ -356,7 +360,11 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
         groups.push_back({
             .id = group_id,
-            .title = group_title
+            .id_field_index = group_field_index,
+            .id_memo_block_number = group_memo_block_number,
+            .title = group_title,
+            .title_field_index = group_field_index,
+            .title_memo_block_number = group_memo_block_number
         });
         return groups.back();
     };
@@ -417,7 +425,11 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         entry.local_field_index = field_index_or_missing(record, "LOCAL");
         entry.local_memo_block_number = memo_block_number_or_zero(record, "LOCAL");
 
-        auto& group = ensure_group(descriptor.group_id, descriptor.group_title);
+        auto& group = ensure_group(
+            descriptor.group_id,
+            descriptor.group_title,
+            entry.group_id_field_index,
+            entry.group_id_memo_block_number);
         group.record_indexes.push_back(entry.record_index);
         ++group.item_count;
         if (entry.excluded) {

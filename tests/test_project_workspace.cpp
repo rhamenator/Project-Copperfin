@@ -165,12 +165,36 @@ void test_build_project_workspace() {
     expect(workspace.entries[4].relative_path == R"(menus\oldmenu.mnx)", "#685: deleted entries should keep normalized path metadata");
     expect(workspace.entries[4].relative_path_memo_block_number == 41U, "#715: deleted entry relative paths should retain NAME memo block provenance");
 
+    const auto project_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
+        return group.id == "project";
+    });
+    expect(project_group != workspace.groups.end(), "#727: workspace should include a project metadata group");
+    if (project_group != workspace.groups.end()) {
+        expect(project_group->id_field_index == 0U, "#727: project group ids should retain TYPE field provenance");
+        expect(project_group->id_memo_block_number == 0U, "#727: project group ids from non-memo TYPE should expose block zero");
+        expect(project_group->title_field_index == 0U, "#727: project group titles should retain TYPE field provenance");
+        expect(project_group->title_memo_block_number == 0U, "#727: project group titles from non-memo TYPE should expose block zero");
+    }
+    const auto programs_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
+        return group.id == "programs";
+    });
+    expect(programs_group != workspace.groups.end(), "#727: workspace should include a programs group");
+    if (programs_group != workspace.groups.end()) {
+        expect(programs_group->id_field_index == 1U, "#727: program group ids should retain selected NAME field provenance");
+        expect(programs_group->id_memo_block_number == 11U, "#727: program group ids should inherit selected NAME memo block provenance");
+        expect(programs_group->title_field_index == 1U, "#727: program group titles should retain selected NAME field provenance");
+        expect(programs_group->title_memo_block_number == 11U, "#727: program group titles should inherit selected NAME memo block provenance");
+    }
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";
     });
     expect(forms_group != workspace.groups.end(), "workspace should include a forms group");
     if (forms_group != workspace.groups.end()) {
         expect(forms_group->deleted_count == 0U, "#686: live-only project groups should expose zero deleted entries");
+        expect(forms_group->id_field_index == 1U, "#727: form group ids should retain selected NAME field provenance");
+        expect(forms_group->id_memo_block_number == 21U, "#727: form group ids should inherit selected NAME memo block provenance");
+        expect(forms_group->title_field_index == 1U, "#727: form group titles should retain selected NAME field provenance");
+        expect(forms_group->title_memo_block_number == 21U, "#727: form group titles should inherit selected NAME memo block provenance");
     }
     const auto menus_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "menus";
@@ -179,6 +203,10 @@ void test_build_project_workspace() {
     if (menus_group != workspace.groups.end()) {
         expect(menus_group->item_count == 1U, "#686: project group item count should continue to include deleted source rows");
         expect(menus_group->deleted_count == 1U, "#686: project groups should count deleted source rows explicitly");
+        expect(menus_group->id_field_index == 1U, "#727: deleted-menu group ids should retain selected NAME field provenance");
+        expect(menus_group->id_memo_block_number == 41U, "#727: deleted-menu group ids should inherit selected NAME memo block provenance");
+        expect(menus_group->title_field_index == 1U, "#727: deleted-menu group titles should retain selected NAME field provenance");
+        expect(menus_group->title_memo_block_number == 41U, "#727: deleted-menu group titles should inherit selected NAME memo block provenance");
     }
 }
 
