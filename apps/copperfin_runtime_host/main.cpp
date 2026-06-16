@@ -308,36 +308,81 @@ std::vector<std::string> extract_bridge_parameter_field_values(
     }
 
     const auto value_token = std::string("\"") + field_name + "\"";
-    std::size_t cursor = array_start + 1U;
-    while (cursor < *array_end) {
-        const auto value_offset = document.find(value_token, cursor);
-        if (value_offset == std::string::npos || value_offset >= *array_end) {
-            break;
-        }
-        const auto colon_offset = document.find(':', value_offset + value_token.size());
-        if (colon_offset == std::string::npos || colon_offset >= *array_end) {
-            break;
-        }
-        const auto value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
-        if (value_start == std::string::npos || value_start >= *array_end) {
-            break;
-        }
-        if (document[value_start] == '"') {
-            std::size_t value_end = value_start;
-            const auto parsed = parse_json_string_at(document, value_start, value_end);
-            if (!parsed.has_value() || value_end > *array_end + 1U) {
+    std::size_t object_depth = 0U;
+    std::size_t array_depth = 1U;
+    for (std::size_t cursor = array_start + 1U; cursor < *array_end; ++cursor) {
+        const char ch = document[cursor];
+        if (ch == '"') {
+            std::size_t string_end = cursor + 1U;
+            bool escaping = false;
+            for (; string_end < *array_end; ++string_end) {
+                const char string_ch = document[string_end];
+                if (escaping) {
+                    escaping = false;
+                    continue;
+                }
+                if (string_ch == '\\') {
+                    escaping = true;
+                    continue;
+                }
+                if (string_ch == '"') {
+                    break;
+                }
+            }
+            if (string_end >= *array_end) {
                 break;
             }
-            values.push_back(*parsed);
-            cursor = value_end;
+            if (object_depth == 1U &&
+                array_depth == 1U &&
+                string_end + 1U == cursor + value_token.size() &&
+                document.compare(cursor, value_token.size(), value_token) == 0) {
+                const auto colon_offset = document.find_first_not_of(" \t\r\n", string_end + 1U);
+                if (colon_offset == std::string::npos ||
+                    colon_offset >= *array_end ||
+                    document[colon_offset] != ':') {
+                    cursor = string_end;
+                    continue;
+                }
+                const auto value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
+                if (value_start == std::string::npos || value_start >= *array_end) {
+                    break;
+                }
+                if (document[value_start] == '"') {
+                    std::size_t value_end = value_start;
+                    const auto parsed = parse_json_string_at(document, value_start, value_end);
+                    if (!parsed.has_value() || value_end > *array_end + 1U) {
+                        break;
+                    }
+                    values.push_back(*parsed);
+                    cursor = value_end - 1U;
+                    continue;
+                }
+                const auto value_end = document.find_first_of(",}", value_start);
+                if (value_end == std::string::npos || value_end > *array_end) {
+                    break;
+                }
+                values.push_back(trim_copy(document.substr(value_start, value_end - value_start)));
+                cursor = value_end - 1U;
+                continue;
+            }
+            cursor = string_end;
             continue;
         }
-        const auto value_end = document.find_first_of(",}", value_start);
-        if (value_end == std::string::npos || value_end > *array_end) {
-            break;
+        if (ch == '{') {
+            ++object_depth;
+            continue;
         }
-        values.push_back(trim_copy(document.substr(value_start, value_end - value_start)));
-        cursor = value_end;
+        if (ch == '}' && object_depth > 0U) {
+            --object_depth;
+            continue;
+        }
+        if (ch == '[') {
+            ++array_depth;
+            continue;
+        }
+        if (ch == ']' && array_depth > 0U) {
+            --array_depth;
+        }
     }
     return values;
 }
