@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <optional>
 #include <string_view>
 
 namespace copperfin::studio {
@@ -75,9 +76,68 @@ std::string filename_stem_for_vfp_path(const std::string& value) {
     return leaf.substr(0U, dot);
 }
 
+std::string filename_for_vfp_path(const std::string& value) {
+    const std::size_t separator = value.find_last_of("/\\");
+    return separator == std::string::npos ? value : value.substr(separator + 1U);
+}
+
+std::string parent_for_vfp_path(const std::string& value) {
+    const std::size_t separator = value.find_last_of("/\\");
+    return separator == std::string::npos ? std::string() : value.substr(0U, separator);
+}
+
+std::string slash_normalized_copy(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', '/');
+    return value;
+}
+
+bool is_windows_drive_absolute_path(const std::string& value) {
+    return value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+}
+
+bool is_unc_path(const std::string& value) {
+    return value.size() >= 2U &&
+        ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
+}
+
+bool is_vfp_absolute_path(const std::string& value) {
+    return is_windows_drive_absolute_path(value) || is_unc_path(value) || std::filesystem::path(value).is_absolute();
+}
+
+std::optional<std::string> vfp_relative_to_document_dir(const StudioDocumentModel& document, const std::string& value) {
+    const std::string document_dir = slash_normalized_copy(parent_for_vfp_path(document.path));
+    const std::string item_path = slash_normalized_copy(value);
+    if (document_dir.empty() || item_path.size() <= document_dir.size()) {
+        return std::nullopt;
+    }
+
+    const std::string document_dir_lower = lowercase_copy(document_dir);
+    const std::string item_path_lower = lowercase_copy(item_path);
+    if (item_path_lower.rfind(document_dir_lower, 0U) != 0U) {
+        return std::nullopt;
+    }
+
+    const char separator = item_path[document_dir.size()];
+    if (separator != '/') {
+        return std::nullopt;
+    }
+
+    return value.substr(document_dir.size() + 1U);
+}
+
 std::string fallback_relative_path(const StudioDocumentModel& document, const std::string& value) {
     if (value.empty()) {
         return {};
+    }
+
+    if (is_vfp_absolute_path(value)) {
+        if (const auto relative = vfp_relative_to_document_dir(document, value)) {
+            return *relative;
+        }
+        return filename_for_vfp_path(value);
     }
 
     std::filesystem::path item_path(value);

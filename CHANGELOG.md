@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#700 VFP absolute project item path normalization shipped: PJX/PJT entries now normalize Windows/UNC-style absolute item paths independent of host OS, preserving project-relative paths when possible and filename fallbacks otherwise.
 - E1/#699 deleted xAsset record handling shipped: executable xAsset models now skip DBF-deleted design rows for active root paths, methods, menu actions, shortcut detection, and activation fallback behavior.
 - E1/#698 xAsset menu activation path-stem handling shipped: non-shortcut menu activation targets now use VFP/Windows-aware filename stems instead of POSIX-only path parsing.
 - E1/#697 unresolved xAsset memo placeholder handling shipped: executable xAsset models now treat unresolved `<memo block N>` placeholders as absent text for object paths, wrapped method bodies, menu action titles, and submenu targets.
