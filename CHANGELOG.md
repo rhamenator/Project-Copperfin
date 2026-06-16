@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#837 selected visual object font-outline assignment shipped: designer commands can assign caller-provided logical `FontOutline` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#836 selected visual object font-strikethru assignment shipped: designer commands can assign caller-provided logical `FontStrikethru` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#835 selected visual object font-underline assignment shipped: designer commands can assign caller-provided logical `FontUnderline` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#834 selected visual object font-italic assignment shipped: designer commands can assign caller-provided logical `FontItalic` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

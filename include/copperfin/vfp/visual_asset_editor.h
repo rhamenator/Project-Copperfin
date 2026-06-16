@@ -754,6 +754,12 @@ struct VisualObjectFontStrikethruRequest {
     bool font_strikethru = false;
 };
 
+struct VisualObjectFontOutlineRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool font_outline = false;
+};
+
 struct VisualObjectRowSourceRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1050,6 +1056,7 @@ VisualAssetEditResult set_visual_object_font_bold(const VisualObjectFontBoldRequ
 VisualAssetEditResult set_visual_object_font_italic(const VisualObjectFontItalicRequest& request);
 VisualAssetEditResult set_visual_object_font_underline(const VisualObjectFontUnderlineRequest& request);
 VisualAssetEditResult set_visual_object_font_strikethru(const VisualObjectFontStrikethruRequest& request);
+VisualAssetEditResult set_visual_object_font_outline(const VisualObjectFontOutlineRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
