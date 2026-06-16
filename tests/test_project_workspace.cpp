@@ -42,15 +42,15 @@ void test_build_project_workspace() {
         }),
         make_record(1, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
-            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg", .memo_block_number = 11U},
             {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"},
-            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Application entry point"},
+            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Application entry point", .memo_block_number = 13U},
             {.field_name = "LOCAL", .field_type = 'L', .display_value = "true"}
         }),
         make_record(2, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
-            {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\customer.scx"},
-            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Customer maintenance"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\customer.scx", .memo_block_number = 21U},
+            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "Customer maintenance", .memo_block_number = 22U},
             {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "false"}
         }),
         make_record(3, {
@@ -60,7 +60,7 @@ void test_build_project_workspace() {
         }),
         make_record(4, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
-            {.field_name = "NAME", .field_type = 'M', .display_value = "menus\\oldmenu.mnx"}
+            {.field_name = "NAME", .field_type = 'M', .display_value = "menus\\oldmenu.mnx", .memo_block_number = 41U}
         }, true)
     };
 
@@ -86,6 +86,7 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.build_target_field_index == 3U, "#683: build plan target provenance should retain OUTFILE field ordinal");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_item_field_index == 1U, "#681: build plan startup item provenance should retain selected NAME field ordinal");
+    expect(workspace.build_plan.startup_item_memo_block_number == 11U, "#715: build plan startup items should inherit selected entry NAME memo block provenance");
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
     expect(workspace.build_plan.project_key_field_index == 1U, "#663: build plan should preserve project key field provenance");
@@ -105,10 +106,14 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
     expect(workspace.build_plan.deleted_items == 1U, "#687: build plan should count deleted source rows explicitly");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
+    expect(workspace.entries[0].type_memo_block_number == 0U, "#715: non-memo TYPE fields should expose memo block zero");
     expect(!workspace.entries[0].deleted, "#685: live project entries should preserve non-deleted state");
     expect(workspace.entries[0].type_title_field_index == 0U, "#680: TYPE-derived project entry classification provenance should be preserved");
+    expect(workspace.entries[0].type_title_memo_block_number == 0U, "#715: TYPE-derived classifications should inherit TYPE memo block provenance");
     expect(workspace.entries[0].group_id_field_index == 0U, "#680: TYPE-derived project group id provenance should be preserved");
+    expect(workspace.entries[0].group_id_memo_block_number == 0U, "#715: TYPE-derived group ids should inherit TYPE memo block provenance");
     expect(workspace.entries[0].group_title_field_index == 0U, "#680: TYPE-derived project group title provenance should be preserved");
+    expect(workspace.entries[0].group_title_memo_block_number == 0U, "#715: TYPE-derived group titles should inherit TYPE memo block provenance");
     expect(workspace.entries[0].name_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#662: missing project header name provenance should be explicit");
     expect(workspace.entries[0].relative_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
@@ -116,13 +121,19 @@ void test_build_project_workspace() {
     expect(workspace.entries[0].key_field_index == 1U, "#662: project header key field ordinal should be preserved");
     expect(workspace.entries[1].type_field_index == 0U, "#662: project entry type field ordinal should be preserved");
     expect(workspace.entries[1].name_field_index == 1U, "#662: project entry name field ordinal should be preserved");
+    expect(workspace.entries[1].name_memo_block_number == 11U, "#715: project entry names should retain NAME memo block provenance");
     expect(workspace.entries[1].type_title == "Program", "#680: project entry classification should still derive from NAME extension");
     expect(workspace.entries[1].type_title_field_index == 1U, "#680: NAME-derived project entry classification provenance should be preserved");
+    expect(workspace.entries[1].type_title_memo_block_number == 11U, "#715: NAME-derived classifications should inherit NAME memo block provenance");
     expect(workspace.entries[1].group_id_field_index == 1U, "#680: NAME-derived project group id provenance should be preserved");
+    expect(workspace.entries[1].group_id_memo_block_number == 11U, "#715: NAME-derived group ids should inherit NAME memo block provenance");
     expect(workspace.entries[1].group_title_field_index == 1U, "#680: NAME-derived project group title provenance should be preserved");
+    expect(workspace.entries[1].group_title_memo_block_number == 11U, "#715: NAME-derived group titles should inherit NAME memo block provenance");
     expect(workspace.entries[1].relative_path == "main.prg", "#679: project entry relative path should preserve normalized path text");
     expect(workspace.entries[1].relative_path_field_index == 1U, "#679: project entry relative path provenance should retain selected NAME field ordinal");
+    expect(workspace.entries[1].relative_path_memo_block_number == 11U, "#715: project entry relative paths should inherit NAME memo block provenance");
     expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
+    expect(workspace.entries[1].comments_memo_block_number == 13U, "#715: project entry comments should retain COMMENTS memo block provenance");
     expect(workspace.entries[1].main_program_field_index == 2U, "#677: MAINPROG project entry flag provenance should be preserved");
     expect(workspace.entries[1].local_field_index == 4U, "#677: LOCAL project entry flag provenance should be preserved");
     expect(workspace.entries[1].exclude_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
@@ -132,8 +143,11 @@ void test_build_project_workspace() {
            "#677: missing MAINPROG project entry flag provenance should be explicit");
     expect(workspace.entries[2].group_id == "forms", "#680: project entry grouping should still derive from NAME extension");
     expect(workspace.entries[2].group_id_field_index == 1U, "#680: form grouping provenance should retain NAME field ordinal");
+    expect(workspace.entries[2].relative_path_memo_block_number == 21U, "#715: form relative paths should inherit NAME memo block provenance");
+    expect(workspace.entries[2].comments_memo_block_number == 22U, "#715: form comments should retain COMMENTS memo block provenance");
     expect(workspace.entries[4].deleted, "#685: deleted PJX records should stay visible on project entries");
     expect(workspace.entries[4].relative_path == R"(menus\oldmenu.mnx)", "#685: deleted entries should keep normalized path metadata");
+    expect(workspace.entries[4].relative_path_memo_block_number == 41U, "#715: deleted entry relative paths should retain NAME memo block provenance");
 
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";
@@ -208,8 +222,8 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
         }),
         make_record(1, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
-            {.field_name = "NAME", .field_type = 'M', .display_value = "<memo block 920>"},
-            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "<memo block 921>"}
+            {.field_name = "NAME", .field_type = 'M', .display_value = "<memo block 920>", .memo_block_number = 920U},
+            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "<memo block 921>", .memo_block_number = 921U}
         })
     };
 
@@ -238,11 +252,16 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
            "#714: fallback build-plan target should expose memo block zero");
     expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
     expect(workspace.entries[1].name_field_index == 1U, "#694: unresolved memo name fields should retain source provenance");
+    expect(workspace.entries[1].name_memo_block_number == 920U, "#715: unresolved entry names should retain source memo block provenance");
     expect(workspace.entries[1].relative_path.empty(), "#694: unresolved memo names should not become relative paths");
     expect(workspace.entries[1].relative_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#694: relative path provenance should be missing when usable name text is absent");
+    expect(workspace.entries[1].relative_path_memo_block_number == 0U,
+           "#715: missing relative paths should expose memo block zero");
     expect(workspace.entries[1].comments.empty(), "#694: unresolved memo comments should not become normalized comments");
     expect(workspace.entries[1].comments_field_index == 2U, "#694: unresolved memo comment fields should retain source provenance");
+    expect(workspace.entries[1].comments_memo_block_number == 921U,
+           "#715: unresolved entry comments should retain source memo block provenance");
 }
 
 void test_build_project_workspace_normalizes_vfp_absolute_item_paths() {

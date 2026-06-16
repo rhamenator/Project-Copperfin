@@ -338,7 +338,7 @@ Current active-open prompt-sized slice queue after Phase A/D1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#22` | open next child | continue shared design-model fidelity after `#714` |
+| `#22` | open next child | continue shared design-model fidelity after `#715` |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -354,7 +354,7 @@ Historical-closed prompt-sized native slice queues:
 
 Remaining active-open adjacent prompt-sized native slice queues:
 
-- `#22`: `#714` is shipped; continue by opening the next shared design-model child if no open child remains
+- `#22`: `#715` is shipped; continue by opening the next shared design-model child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Canonical post-D1 execution order:
@@ -416,8 +416,9 @@ Canonical post-D1 execution order:
 55. `#712`
 56. `#713`
 57. `#714`
-58. next prompt-sized child under `#22`
-59. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
+58. `#715`
+59. next prompt-sized child under `#22`
+60. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
 
 Execution guardrails:
 

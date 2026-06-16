@@ -368,31 +368,45 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         const std::string comments = trim_copy(value_or_empty(record, "COMMENTS"));
         const std::string relative_path = fallback_relative_path(document, name);
         const ProjectTypeDescriptor descriptor = describe_project_item(type_code, extension_of(name), name);
+        const std::uint32_t name_memo_block_number = memo_block_number_or_zero(record, "NAME");
 
         StudioProjectEntry entry;
         entry.record_index = record.record_index;
         entry.deleted = record.deleted;
         entry.name = name.empty() ? ("Record " + std::to_string(record.record_index)) : name;
         entry.name_field_index = field_index_or_missing(record, "NAME");
+        entry.name_memo_block_number = name_memo_block_number;
         entry.relative_path = relative_path;
         entry.relative_path_field_index = relative_path.empty()
             ? StudioProjectMissingFieldIndex
             : entry.name_field_index;
+        entry.relative_path_memo_block_number = relative_path.empty()
+            ? 0U
+            : name_memo_block_number;
         entry.type_code = type_code;
         entry.type_field_index = field_index_or_missing(record, "TYPE");
+        entry.type_memo_block_number = memo_block_number_or_zero(record, "TYPE");
         entry.type_title = descriptor.type_title;
         const std::size_t classification_field_index = descriptor.source_field_name.empty()
             ? StudioProjectMissingFieldIndex
             : field_index_or_missing(record, descriptor.source_field_name);
+        const std::uint32_t classification_memo_block_number = descriptor.source_field_name.empty()
+            ? 0U
+            : memo_block_number_or_zero(record, descriptor.source_field_name);
         entry.type_title_field_index = classification_field_index;
+        entry.type_title_memo_block_number = classification_memo_block_number;
         entry.group_id = descriptor.group_id;
         entry.group_id_field_index = classification_field_index;
+        entry.group_id_memo_block_number = classification_memo_block_number;
         entry.group_title = descriptor.group_title;
         entry.group_title_field_index = classification_field_index;
+        entry.group_title_memo_block_number = classification_memo_block_number;
         entry.key = key;
         entry.key_field_index = field_index_or_missing(record, "KEY");
+        entry.key_memo_block_number = memo_block_number_or_zero(record, "KEY");
         entry.comments = comments;
         entry.comments_field_index = field_index_or_missing(record, "COMMENTS");
+        entry.comments_memo_block_number = memo_block_number_or_zero(record, "COMMENTS");
         entry.excluded = value_as_bool(record, "EXCLUDE");
         entry.exclude_field_index = field_index_or_missing(record, "EXCLUDE");
         entry.main_program = value_as_bool(record, "MAINPROG");
@@ -545,6 +559,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     if (startup != nullptr) {
         workspace.build_plan.startup_item = startup->name;
         workspace.build_plan.startup_item_field_index = startup->name_field_index;
+        workspace.build_plan.startup_item_memo_block_number = startup->name_memo_block_number;
         workspace.build_plan.startup_record_index = startup->record_index;
     }
 

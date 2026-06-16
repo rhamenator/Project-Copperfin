@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#715 project entry memo block provenance shipped: project entries and build-plan startup selections now expose source memo block numbers for entry names, relative paths, classifications/groups, keys, comments, and startup items while preserving placeholder suppression.
 - E1/#714 project header memo block provenance shipped: project workspace and build-plan header metadata now expose source memo block numbers for project keys, home directories, output paths, and output-derived build labels while synthesized fallbacks report block zero.
 - E1/#713 report named-value memo block provenance shipped: report settings and layout-object highlights now expose source memo block numbers for parsed EXPR values and direct fields, including deleted root settings, while preserving placeholder suppression.
 - E1/#712 Studio property memo block provenance shipped: object property snapshots now expose source memo block numbers for direct DBF fields and blob-derived properties, preserving decoded, unresolved, and block-zero memo provenance without changing display values.
