@@ -89,6 +89,9 @@ struct VisualObjectSnapshot {
     bool deleted = false;
     std::string object_name;
     std::string unique_id;
+    std::string parent_name;
+    std::string class_name;
+    std::string baseclass_name;
 };
 
 struct VisualObjectListResult {

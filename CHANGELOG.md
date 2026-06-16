@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#744 visual object outlines now include hierarchy/class metadata, exposing trimmed `PARENT`, `CLASS`, and `BASECLASS` values when present while leaving missing metadata empty.
 - E2/#743 visual object outline listing shipped: designer selection panes can now enumerate DBF visual object records with record indexes, deleted flags, `OBJNAME`/fallback `NAME` selection names, and stable `UNIQUEID` values.
 - E2/#742 selector-aware visual property query/list results now report whether the resolved selected DBF record is deleted, so designer shells can display live versus tombstoned visual objects.
 - E2/#741 selected visual object deleted-state edits shipped: designer delete/restore interactions can now set DBF deleted flags through record-index, object-name, or `UNIQUEID` selection without mutating unrelated records.

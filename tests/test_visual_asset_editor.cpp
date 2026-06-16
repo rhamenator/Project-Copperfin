@@ -856,6 +856,49 @@ void test_list_visual_objects_reads_selection_outline() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_list_visual_objects_reads_hierarchy_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_object_outline_metadata_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "outline_metadata.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "PARENT", .type = 'C', .length = 16U},
+        {.name = "CLASS", .type = 'C', .length = 16U},
+        {.name = "BASECLASS", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "Page1", "cmdButton", "CommandButton"},
+        {"txtName", "nameBox", "name-guid", "", "", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#744: object outline metadata fixture should be writable");
+
+    const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok, "#744: visual object outlines should list metadata fixtures");
+    expect(list_result.objects.size() == 2U, "#744: visual object outlines should preserve row count with metadata fields");
+    if (list_result.objects.size() == 2U) {
+        expect(list_result.objects[0].parent_name == "Page1",
+            "#744: visual object outlines should expose parent/container names");
+        expect(list_result.objects[0].class_name == "cmdButton",
+            "#744: visual object outlines should expose class names");
+        expect(list_result.objects[0].baseclass_name == "CommandButton",
+            "#744: visual object outlines should expose baseclass names");
+        expect(list_result.objects[1].parent_name.empty() &&
+                list_result.objects[1].class_name.empty() &&
+                list_result.objects[1].baseclass_name.empty(),
+            "#744: missing hierarchy/class metadata should remain empty");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1725,6 +1768,7 @@ int main() {
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
     test_list_visual_objects_reads_selection_outline();
+    test_list_visual_objects_reads_hierarchy_metadata();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

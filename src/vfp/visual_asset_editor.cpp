@@ -1039,6 +1039,9 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
         const auto* objname = find_record_value(record, "OBJNAME");
         const auto* name = find_record_value(record, "NAME");
         const auto* unique_id = find_record_value(record, "UNIQUEID");
+        const auto* parent_name = find_record_value(record, "PARENT");
+        const auto* class_name = find_record_value(record, "CLASS");
+        const auto* baseclass_name = find_record_value(record, "BASECLASS");
         std::string object_name = objname == nullptr ? std::string{} : trim_both(objname->display_value);
         if (object_name.empty() && name != nullptr) {
             object_name = trim_both(name->display_value);
@@ -1048,7 +1051,10 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
             .record_index = record.record_index,
             .deleted = record.deleted,
             .object_name = object_name,
-            .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value)
+            .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value),
+            .parent_name = parent_name == nullptr ? std::string{} : trim_both(parent_name->display_value),
+            .class_name = class_name == nullptr ? std::string{} : trim_both(class_name->display_value),
+            .baseclass_name = baseclass_name == nullptr ? std::string{} : trim_both(baseclass_name->display_value)
         });
     }
 
