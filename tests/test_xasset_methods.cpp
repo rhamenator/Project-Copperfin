@@ -286,6 +286,83 @@ void test_form_root_object_path_ignores_comments_and_data_environment() {
         "bootstrap should sequence data-environment startup into form startup");
 }
 
+void test_xasset_executable_model_suppresses_unresolved_memo_placeholders() {
+    copperfin::studio::StudioDocumentModel form_document;
+    form_document.path = R"(E:\Project-Copperfin\samples\placeholder.scx)";
+    form_document.kind = copperfin::studio::StudioAssetKind::form;
+    form_document.table_preview_available = true;
+    form_document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "<memo block 50>"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "<memo block 51>"}
+        }),
+        make_record(1, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "frmLive"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Load\r\nx = 1\r\nENDPROC"}
+        })
+    };
+
+    const auto form_model = copperfin::runtime::build_xasset_executable_model(form_document);
+    expect(form_model.ok, "#697: form xAsset model should still build with unresolved memo placeholders");
+    expect(form_model.root_object_path == "frmLive", "#697: unresolved memo object names should not become root object paths");
+    expect(form_model.methods.size() == 1U, "#697: unresolved METHODS memo placeholders should not materialize methods");
+    if (!form_model.methods.empty()) {
+        expect(form_model.methods[0].object_path == "frmLive", "#697: live method owner should remain intact");
+        expect(form_model.methods[0].source_text.find("<memo block") == std::string::npos,
+               "#697: unresolved memo placeholders should not become method source text");
+    }
+
+    copperfin::studio::StudioDocumentModel menu_document;
+    menu_document.path = R"(E:\Project-Copperfin\samples\placeholder.mnx)";
+    menu_document.kind = copperfin::studio::StudioAssetKind::menu;
+    menu_document.table_preview_available = true;
+    menu_document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4"},
+            {.field_name = "SETUP", .field_type = 'M', .display_value = "<memo block 52>"},
+            {.field_name = "CLEANUP", .field_type = 'M', .display_value = "<memo block 53>"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "Shortcut"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"}
+        }),
+        make_record(2, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  1"},
+            {.field_name = "PROMPT", .field_type = 'M', .display_value = "<memo block 54>"},
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "<memo block 55>"}
+        }),
+        make_record(3, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "2"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "<memo block 56>"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "SubTarget"}
+        })
+    };
+
+    const auto menu_model = copperfin::runtime::build_xasset_executable_model(menu_document);
+    expect(menu_model.ok, "#697: menu xAsset model should still build with unresolved memo placeholders");
+    expect(menu_model.methods.size() == 1U, "#697: unresolved setup/cleanup/command placeholders should not materialize wrapped methods");
+    expect(menu_model.actions.size() == 1U, "#697: submenu fallback should still create one action");
+    if (!menu_model.actions.empty()) {
+        expect(menu_model.actions[0].action_id == "shortcut.item1", "#697: action id should use deterministic owner fallback");
+        expect(menu_model.actions[0].title == "Shortcut.item1", "#697: unresolved PROMPT should fall back to the owner path");
+        expect(menu_model.actions[0].kind == "submenu", "#697: unresolved command should allow submenu fallback");
+    }
+    if (!menu_model.methods.empty()) {
+        expect(menu_model.methods[0].source_text == "ACTIVATE POPUP SubTarget",
+               "#697: submenu activation should use the following usable submenu level name");
+    }
+    const std::string menu_bootstrap = copperfin::runtime::build_xasset_bootstrap_source(menu_model, true);
+    expect(menu_bootstrap.find("<memo block") == std::string::npos,
+           "#697: unresolved memo placeholders should not appear in generated xAsset bootstrap source");
+}
+
 void test_build_menu_xasset_executable_model() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\shortcut.mnx)";
@@ -471,6 +548,7 @@ int main() {
     test_build_xasset_executable_model();
     test_build_class_library_xasset_executable_model();
     test_form_root_object_path_ignores_comments_and_data_environment();
+    test_xasset_executable_model_suppresses_unresolved_memo_placeholders();
     test_build_menu_xasset_executable_model();
     test_build_report_xasset_executable_model();
     test_build_label_xasset_executable_model();

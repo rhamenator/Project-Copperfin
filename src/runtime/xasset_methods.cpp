@@ -22,9 +22,13 @@ const copperfin::vfp::DbfRecordValue* find_value(
     return nullptr;
 }
 
+bool looks_like_unresolved_memo(const std::string& value) {
+    return value.rfind("<memo block ", 0) == 0;
+}
+
 std::string value_or_empty(const copperfin::vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
-    if (value == nullptr || value->display_value == "<memo block 0>") {
+    if (value == nullptr || looks_like_unresolved_memo(value->display_value)) {
         return {};
     }
     return value->display_value;

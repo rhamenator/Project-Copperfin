@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#697 unresolved xAsset memo placeholder handling shipped: executable xAsset models now treat unresolved `<memo block N>` placeholders as absent text for object paths, wrapped method bodies, menu action titles, and submenu targets.
 - E1/#696 unresolved object memo placeholder handling shipped: generic studio object snapshots now treat unresolved `<memo block N>` placeholders as absent text for active object/menu metadata, direct property values, and visual property-blob expansion.
 - E1/#695 unresolved report memo placeholder handling shipped: FRX/LBX layout normalization now treats unresolved `<memo block N>` placeholders as absent text instead of active settings, object titles, expressions, or highlights.
 - E1/#694 unresolved project memo placeholder handling shipped: PJX/PJT workspace normalization now treats unresolved `<memo block N>` placeholders as absent text instead of active project metadata, with Windows-style path stems used for fallback titles/outputs.
