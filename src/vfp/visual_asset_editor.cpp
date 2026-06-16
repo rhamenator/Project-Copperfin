@@ -912,6 +912,81 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
     };
 }
 
+VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .properties = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .properties = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .properties = {}
+        };
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested object record is not currently available.",
+            .properties = {}
+        };
+    }
+
+    std::vector<VisualObjectPropertySnapshot> properties;
+    const auto& record = table_result.table.records[record_index];
+    for (const auto& value : record.values) {
+        if (normalize_visual_property_name(value.field_name) == "properties") {
+            continue;
+        }
+        properties.push_back({
+            .property_name = value.field_name,
+            .value = value.display_value,
+            .direct_field = true
+        });
+    }
+
+    const auto properties_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return normalize_visual_property_name(value.field_name) == "properties";
+    });
+    if (properties_field != record.values.end()) {
+        for (const auto& assignment : parse_visual_property_blob(properties_field->display_value)) {
+            properties.push_back({
+                .property_name = assignment.name,
+                .value = assignment.value,
+                .direct_field = false
+            });
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .properties = std::move(properties)
+    };
+}
+
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
     if (request.properties.empty()) {
         return {.ok = false, .error = "No property changes were provided."};

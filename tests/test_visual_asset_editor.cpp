@@ -47,6 +47,15 @@ const copperfin::vfp::DbfRecordValue* find_record_field(
     return value == record.values.end() ? nullptr : &(*value);
 }
 
+const copperfin::vfp::VisualObjectPropertySnapshot* find_property_snapshot(
+    const std::vector<copperfin::vfp::VisualObjectPropertySnapshot>& properties,
+    const std::string& property_name) {
+    const auto value = std::find_if(properties.begin(), properties.end(), [&](const auto& candidate) {
+        return candidate.property_name == property_name;
+    });
+    return value == properties.end() ? nullptr : &(*value);
+}
+
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
     bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
@@ -580,6 +589,60 @@ void test_query_visual_object_property_reads_selected_values() {
         "#736: visual property queries should return the selected direct-field value");
     expect(!copperfin::vfp::query_visual_object_undo(direct_table_path.string()).available,
         "#736: direct-field queries should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_list_visual_object_properties_reads_selected_surface() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_list_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "list.scx";
+    const fs::path memo_path = temp_dir / "list.sct";
+    write_synthetic_named_object_asset(table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        },
+        {
+            .objname = "txtName",
+            .name = "nameBox",
+            .unique_id = "target-guid",
+            .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"
+        }
+    });
+
+    const auto list_result = copperfin::vfp::list_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    expect(list_result.ok, "#737: visual property lists should support selected-object UNIQUEID selectors");
+
+    const auto* name = find_property_snapshot(list_result.properties, "NAME");
+    const auto* unique_id = find_property_snapshot(list_result.properties, "UNIQUEID");
+    const auto* properties = find_property_snapshot(list_result.properties, "PROPERTIES");
+    const auto* caption = find_property_snapshot(list_result.properties, "Caption");
+    const auto* left = find_property_snapshot(list_result.properties, "Left");
+    expect(name != nullptr && name->direct_field && name->value == "nameBox",
+        "#737: visual property lists should include selected direct DBF fields");
+    expect(unique_id != nullptr && unique_id->direct_field && unique_id->value == "target-guid",
+        "#737: visual property lists should include selected memo-backed DBF identity fields as direct entries");
+    expect(properties == nullptr,
+        "#737: visual property lists should not duplicate the raw PROPERTIES carrier field");
+    expect(caption != nullptr && !caption->direct_field && caption->value == "\"Name\"",
+        "#737: visual property lists should include parsed memo-backed Caption assignments");
+    expect(left != nullptr && !left->direct_field && left->value == "30",
+        "#737: visual property lists should include parsed memo-backed Left assignments");
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#737: visual property lists should not create undo history");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1449,6 +1512,7 @@ int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_query_visual_object_property_reads_selected_values();
+    test_list_visual_object_properties_reads_selected_surface();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
