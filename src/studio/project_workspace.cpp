@@ -338,6 +338,12 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         [](const StudioProjectEntry& entry) {
             return entry.excluded;
         }));
+    workspace.build_plan.deleted_items = static_cast<std::size_t>(std::count_if(
+        workspace.entries.begin(),
+        workspace.entries.end(),
+        [](const StudioProjectEntry& entry) {
+            return entry.deleted;
+        }));
 
     const auto startup_entry = std::find_if(
         workspace.entries.begin(),

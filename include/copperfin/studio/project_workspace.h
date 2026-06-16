@@ -65,6 +65,7 @@ struct StudioProjectBuildPlan {
     std::size_t startup_record_index = 0;
     std::size_t total_items = 0;
     std::size_t excluded_items = 0;
+    std::size_t deleted_items = 0;
     bool debug_enabled = false;
     std::size_t debug_field_index = StudioProjectMissingFieldIndex;
     bool encrypt_enabled = false;

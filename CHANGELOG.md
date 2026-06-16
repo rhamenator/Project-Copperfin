@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#687 project build deleted-entry counts shipped: `StudioProjectBuildPlan` summaries now expose deleted-source-row counts while keeping existing total and excluded item counts unchanged.
 - E1/#686 project group deleted-entry counts shipped: project workspace group summaries now expose deleted-source-row counts while keeping existing item and excluded counts unchanged.
 - E1/#685 project entry deleted-state preservation shipped: project workspace entries now retain DBF deleted-record state so designer tooling can see deleted PJX/PJT rows without changing grouping or build behavior.
 - E1/#684 visual property blob line provenance shipped: parsed visual property assignments now preserve source memo line indexes, and studio property snapshots expose them for blob-derived properties while marking direct DBF fields with `StudioObjectMissingLineIndex`.

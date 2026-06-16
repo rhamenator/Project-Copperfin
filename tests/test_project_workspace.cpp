@@ -94,6 +94,7 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.no_logo_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#663: missing NOLOGO build-flag provenance should be explicit");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
+    expect(workspace.build_plan.deleted_items == 1U, "#687: build plan should count deleted source rows explicitly");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
     expect(!workspace.entries[0].deleted, "#685: live project entries should preserve non-deleted state");
     expect(workspace.entries[0].type_title_field_index == 0U, "#680: TYPE-derived project entry classification provenance should be preserved");
