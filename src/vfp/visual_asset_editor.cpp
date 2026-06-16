@@ -1395,6 +1395,80 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
     });
 }
 
+VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request) {
+    if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
+        return {.ok = false, .error = "No target property name was provided."};
+    }
+
+    const auto source_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!source_property.ok) {
+        return {.ok = false, .error = source_property.error};
+    }
+    if (!source_property.exists) {
+        return {.ok = false, .error = "The source property was not found."};
+    }
+
+    const std::string target_property_name = request.target_property_name.empty()
+        ? source_property.property_name
+        : trim_both(request.target_property_name);
+    const auto target_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name
+    });
+    if (!target_property.ok) {
+        return {.ok = false, .error = target_property.error};
+    }
+    if (target_property.record_index == source_property.record_index &&
+        normalize_visual_property_name(target_property_name) == normalize_visual_property_name(source_property.property_name)) {
+        return {.ok = false, .error = "The source property cannot be moved onto itself."};
+    }
+    if (target_property.exists && !request.replace_existing) {
+        return {.ok = false, .error = "The target object already has the requested property."};
+    }
+
+    const auto copy_result = copy_visual_object_property({
+        .path = request.path,
+        .source_record_index = request.source_record_index,
+        .source_object_name = request.source_object_name,
+        .source_unique_id = request.source_unique_id,
+        .source_property_name = request.source_property_name,
+        .target_record_index = request.target_record_index,
+        .target_object_name = request.target_object_name,
+        .target_unique_id = request.target_unique_id,
+        .target_property_name = request.target_property_name,
+        .replace_existing = request.replace_existing
+    });
+    if (!copy_result.ok) {
+        return copy_result;
+    }
+
+    const auto clear_result = clear_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!clear_result.ok) {
+        const auto rollback_result = undo_visual_object_property(request.path);
+        if (!rollback_result.ok) {
+            return {.ok = false, .error = clear_result.error + " Target rollback failed: " + rollback_result.error};
+        }
+        return {.ok = false, .error = clear_result.error};
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
     if (request.path.empty()) {
         return {

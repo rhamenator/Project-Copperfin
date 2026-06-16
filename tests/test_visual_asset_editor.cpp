@@ -1022,6 +1022,263 @@ void test_copy_visual_object_property_between_selected_objects() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_move_visual_object_property_between_selected_objects() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_move_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_move.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblOther", "otherLabel", "other-guid", "333", "Caption = \"Other\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#768: property-move fixture should be writable");
+
+    auto move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "hpos",
+        .target_record_index = 0U,
+        .target_object_name = "txtName",
+        .target_unique_id = {},
+        .target_property_name = {},
+        .replace_existing = true
+    });
+    expect(move_result.ok, "#768: property move should support UNIQUEID source, object-name target, and direct-field replacement");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = "cmdSave",
+        .source_unique_id = {},
+        .source_property_name = "caption",
+        .target_record_index = 1U,
+        .target_object_name = {},
+        .target_unique_id = {},
+        .target_property_name = "MovedCaption",
+        .replace_existing = false
+    });
+    expect(move_result.ok, "#768: property move should support object-name source, record-index target, and target renames");
+
+    auto source_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "HPOS"
+    });
+    auto target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    auto source_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    auto moved_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "MovedCaption"
+    });
+    expect(source_hpos.ok && source_hpos.exists && source_hpos.value.empty() &&
+            target_hpos.ok && target_hpos.exists && target_hpos.value == "111",
+        "#768: direct-field moves should write target value and clear source value");
+    expect(source_caption.ok && !source_caption.exists &&
+            moved_caption.ok && moved_caption.exists && moved_caption.value == "\"Save\"",
+        "#768: memo-backed moves should create target assignment and remove source assignment");
+
+    auto target_top = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Top"
+    });
+    auto other_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "other-guid",
+        .property_name = "Caption"
+    });
+    expect(target_top.ok && target_top.exists && target_top.value == "30" &&
+            other_caption.ok && other_caption.exists && other_caption.value == "\"Other\"",
+        "#768: property move should preserve unrelated target assignments and unrelated objects");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject target collisions without replacement");
+    auto target_caption_after_failed_copy = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Caption"
+    });
+    expect(target_caption_after_failed_copy.ok &&
+            target_caption_after_failed_copy.exists &&
+            target_caption_after_failed_copy.value == "\"Name\"",
+        "#768: failed target copies should leave the source property intact");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = {},
+        .replace_existing = true
+    });
+    expect(!move_result.ok, "#768: property move should reject same-object same-property moves");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "MissingProp",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "MissingCopy",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject missing source properties");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = " ",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "EmptySource",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject empty source property names");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = " ",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject empty requested target property names");
+
+    const fs::path unsupported_path = temp_dir / "property_move_unsupported.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdSource", "source-guid", "111"},
+        {"txtTarget", "target-guid", "222"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#768: unsupported property-move fixture should be writable");
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = unsupported_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_property_name = "HPOS",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject unsupported target property paths");
+
+    for (int index = 0; index < 4; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#768: undo should restore each copy/clear step from successful moves");
+    }
+
+    source_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "HPOS"
+    });
+    target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    source_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    moved_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "MovedCaption"
+    });
+    expect(source_hpos.ok && source_hpos.exists && source_hpos.value == "111" &&
+            target_hpos.ok && target_hpos.exists && target_hpos.value == "222" &&
+            source_caption.ok && source_caption.exists && source_caption.value == "\"Save\"" &&
+            moved_caption.ok && !moved_caption.exists,
+        "#768: undo should restore moved source and target property state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_list_visual_object_properties_reads_selected_surface() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -5039,6 +5296,7 @@ int main() {
     test_query_visual_object_property_reads_selected_values();
     test_clear_visual_object_property_resets_selected_values();
     test_copy_visual_object_property_between_selected_objects();
+    test_move_visual_object_property_between_selected_objects();
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
     test_list_visual_objects_reads_selection_outline();

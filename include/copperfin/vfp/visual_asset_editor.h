@@ -94,6 +94,19 @@ struct VisualObjectPropertyCopyRequest {
     bool replace_existing = false;
 };
 
+struct VisualObjectPropertyMoveRequest {
+    std::string path;
+    std::size_t source_record_index = 0;
+    std::string source_object_name;
+    std::string source_unique_id;
+    std::string source_property_name;
+    std::size_t target_record_index = 0;
+    std::string target_object_name;
+    std::string target_unique_id;
+    std::string target_property_name;
+    bool replace_existing = false;
+};
+
 struct VisualObjectPropertySnapshot {
     std::string property_name;
     std::string value;
@@ -434,6 +447,7 @@ VisualAssetEditResult update_visual_object_property(const VisualObjectEditReques
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
 VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request);
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request);
+VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request);
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request);
 [[nodiscard]] VisualAssetUndoStatus query_visual_object_undo(const std::string& path);
 VisualAssetEditResult undo_visual_object_property(const std::string& path);
