@@ -188,6 +188,7 @@ FieldSelection first_non_empty_selection(const DbfRecord& record, std::initializ
 StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     StudioLayoutObjectSnapshot object;
     object.record_index = record.record_index;
+    object.deleted = record.deleted;
     object.objtype_code = parse_scaled_int_or_default(record, "OBJTYPE");
     object.objcode_code = parse_scaled_int_or_default(record, "OBJCODE");
     object.object_kind = object_kind_name(object.objtype_code);
@@ -335,6 +336,10 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
+            const int objtype = parse_scaled_int_or_default(record, "OBJTYPE");
+            if (is_layout_object_type(objtype)) {
+                snapshot.deleted_objects.push_back(build_layout_object(record));
+            }
             continue;
         }
 

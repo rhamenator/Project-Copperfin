@@ -21,6 +21,7 @@ struct StudioNamedValue {
 
 struct StudioLayoutObjectSnapshot {
     std::size_t record_index = 0;
+    bool deleted = false;
     int objtype_code = 0;
     int objcode_code = 0;
     std::string object_kind{};
@@ -65,6 +66,7 @@ struct StudioReportLayoutSnapshot {
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioReportSectionSnapshot> sections{};
     std::vector<StudioLayoutObjectSnapshot> unplaced_objects{};
+    std::vector<StudioLayoutObjectSnapshot> deleted_objects{};
 };
 
 [[nodiscard]] StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& document);

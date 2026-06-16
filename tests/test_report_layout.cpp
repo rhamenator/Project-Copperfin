@@ -100,6 +100,18 @@ void test_build_report_layout_groups_band_objects() {
                 value("WIDTH", "100.000"),
                 value("HEIGHT", "100.000")
             }
+        },
+        {
+            .record_index = 6U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Deleted label\""),
+                value("HPOS", "1000.000"),
+                value("VPOS", "2600.000"),
+                value("WIDTH", "1200.000"),
+                value("HEIGHT", "300.000")
+            }
         }
     };
 
@@ -181,6 +193,13 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.unplaced_objects[0].title == "Record 5", "#675: untitled report layout object should keep synthetic title fallback");
         expect(layout.unplaced_objects[0].title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#675: synthesized report layout object title should use the missing-field sentinel");
+    }
+    expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
+    if (!layout.deleted_objects.empty()) {
+        expect(layout.deleted_objects[0].deleted, "#689: deleted report layout object snapshots should retain deleted state");
+        expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
+        expect(layout.deleted_objects[0].title_field_index == 1U,
+            "#689: deleted report layout objects should retain title provenance");
     }
 }
 

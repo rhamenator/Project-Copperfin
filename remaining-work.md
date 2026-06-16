@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#689 deleted report layout objects are now shipped. Report/label layout snapshots now preserve DBF-deleted layout object records in a dedicated `deleted_objects` collection without changing visible section grouping; focused `test_report_layout` coverage proves deleted object state, title metadata, and title provenance survive.
 - 2026-06-16: E1/#688 object snapshot deleted-state coverage is now shipped. Studio object snapshot coverage now proves deleted menu records remain visible with their DBF deleted flag and title provenance, locking in the existing deleted-record preservation behavior for normalized object snapshots.
 - 2026-06-16: E1/#687 project build deleted-entry counts are now shipped. `StudioProjectBuildPlan` summaries now expose deleted-source-row counts while keeping existing total and excluded item counts unchanged; focused `test_project_workspace` coverage proves deleted build-plan counts from preserved PJX/PJT row state.
 - 2026-06-16: E1/#686 project group deleted-entry counts are now shipped. Project workspace group summaries now expose deleted-source-row counts while keeping existing item and excluded counts unchanged; focused `test_project_workspace` coverage proves live-only groups report zero deleted rows and deleted menu rows remain grouped with an explicit deleted count.
