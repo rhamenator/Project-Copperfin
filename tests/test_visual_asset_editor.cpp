@@ -11181,6 +11181,29 @@ void test_set_visual_object_ole_drag_mode_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_ole_drop_mode_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#874",
+        "ole_drop_mode",
+        "OLEDropMode",
+        "OLEDROPMODE",
+        "OLE drop-mode",
+        0,
+        1,
+        2,
+        3,
+        4,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_ole_drop_mode({
+                .path = path,
+                .objects = objects,
+                .ole_drop_mode = value
+            });
+        });
+}
+
 void test_set_visual_object_back_style_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#860",
@@ -22404,6 +22427,7 @@ int main() {
     test_set_visual_object_drag_icon_assigns_text();
     test_set_visual_object_drag_mode_assigns_numeric_value();
     test_set_visual_object_ole_drag_mode_assigns_numeric_value();
+    test_set_visual_object_ole_drop_mode_assigns_numeric_value();
     test_set_visual_object_back_style_assigns_numeric_value();
     test_set_visual_object_border_style_assigns_numeric_value();
     test_set_visual_object_border_width_assigns_numeric_value();

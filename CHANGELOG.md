@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#874 selected visual object OLE drop-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `OLEDropMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#873 selected visual object OLE drag-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `OLEDragMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#872 selected visual object drag-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `DragMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#871 selected visual object drag-icon assignment shipped: designer commands can assign caller-provided `DragIcon` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
