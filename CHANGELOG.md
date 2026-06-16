@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#858 selected visual object disabled-picture assignment shipped: designer commands can assign caller-provided `DisabledPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#857 selected visual object down-picture assignment shipped: designer commands can assign caller-provided `DownPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#856 selected visual object picture assignment shipped: designer commands can assign caller-provided `Picture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#855 selected visual object always-on-bottom assignment shipped: designer commands can assign caller-provided logical `AlwaysOnBottom` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

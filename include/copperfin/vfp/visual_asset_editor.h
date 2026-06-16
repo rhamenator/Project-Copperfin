@@ -748,6 +748,12 @@ struct VisualObjectDownPictureRequest {
     std::string down_picture;
 };
 
+struct VisualObjectDisabledPictureRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string disabled_picture;
+};
+
 struct VisualObjectInputMaskRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1175,6 +1181,7 @@ VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOn
 VisualAssetEditResult set_visual_object_always_on_bottom(const VisualObjectAlwaysOnBottomRequest& request);
 VisualAssetEditResult set_visual_object_picture(const VisualObjectPictureRequest& request);
 VisualAssetEditResult set_visual_object_down_picture(const VisualObjectDownPictureRequest& request);
+VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisabledPictureRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request);

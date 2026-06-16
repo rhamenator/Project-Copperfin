@@ -10840,6 +10840,29 @@ void test_set_visual_object_down_picture_assigns_text() {
                 .path = path,
                 .objects = objects,
                 .down_picture = value
+                });
+        });
+}
+
+void test_set_visual_object_disabled_picture_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#858",
+        "disabled_picture",
+        "DisabledPicture",
+        "DISABLEDPICTURE",
+        "disabled-picture",
+        "buttons\\customer_disabled.bmp",
+        "buttons\\orders_disabled.bmp",
+        "buttons\\other_disabled.bmp",
+        "C:\\\\images\\\\customer \"disabled\".bmp",
+        "gallery.forms.customer_disabled",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_disabled_picture({
+                .path = path,
+                .objects = objects,
+                .disabled_picture = value
             });
         });
 }
@@ -21831,6 +21854,7 @@ int main() {
     test_set_visual_object_always_on_bottom_assigns_logical_state();
     test_set_visual_object_picture_assigns_text();
     test_set_visual_object_down_picture_assigns_text();
+    test_set_visual_object_disabled_picture_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();

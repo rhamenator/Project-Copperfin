@@ -5355,6 +5355,15 @@ VisualAssetEditResult set_visual_object_down_picture(const VisualObjectDownPictu
         request.down_picture);
 }
 
+VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisabledPictureRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "DisabledPicture",
+        "disabled-picture",
+        request.disabled_picture);
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
