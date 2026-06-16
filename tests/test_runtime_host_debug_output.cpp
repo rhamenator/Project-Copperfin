@@ -885,7 +885,11 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
         "startup_source=") + source_path.string() + "\n"
         "security_enabled=false\n"
         "dotnet_story=none\n");
-    write_text(source_path, "RETURN\n");
+    write_text(
+        source_path,
+        "nLeft = 40\n"
+        "nRight = 2\n"
+        "RETURN nLeft + nRight\n");
     write_text(
         request_path,
         std::string("{\n"
@@ -934,14 +938,16 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
            "runtime host should report bridge invocation mode");
     expect(process.stdout_text.find("bridge.library_export: AddNumbers") != std::string::npos,
            "runtime host should preserve bridge export metadata in diagnostics");
+    expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
+           "runtime host should report the PRG return value in bridge diagnostics");
     expect(fs::exists(response_path),
            "runtime host should write the requested bridge response artifact");
 
     const std::string response_document = read_text(response_path);
     expect(response_document.find("\"status\": \"ok\"") != std::string::npos,
            "runtime host bridge response should include ok status");
-    expect(response_document.find("\"return_value\": \"0\"") != std::string::npos,
-           "runtime host bridge response should include a return value field");
+    expect(response_document.find("\"return_value\": \"42\"") != std::string::npos,
+           "runtime host bridge response should include the evaluated PRG return value");
     expect(response_document.find("\"response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\"") != std::string::npos,
            "runtime host bridge response should echo the expected response media type");
     expect(response_document.find("\"schema_version\": \"v1\"") != std::string::npos,

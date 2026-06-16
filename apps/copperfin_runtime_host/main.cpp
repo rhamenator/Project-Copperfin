@@ -153,7 +153,10 @@ bool runtime_bridge_mode_requested(const RuntimeBridgeInvocationOptions& options
            !trim_copy(options.schema_version).empty();
 }
 
-int run_runtime_bridge_invocation(const RuntimeBridgeInvocationOptions& options) {
+int run_runtime_bridge_invocation(
+    const RuntimeBridgeInvocationOptions& options,
+    const std::string& startup_source,
+    const std::string& working_directory) {
     if (trim_copy(options.request_path).empty() ||
         trim_copy(options.response_path).empty() ||
         trim_copy(options.request_media_type).empty() ||
@@ -173,6 +176,33 @@ int run_runtime_bridge_invocation(const RuntimeBridgeInvocationOptions& options)
         return 6;
     }
 
+    if (lowercase_copy(std::filesystem::path(startup_source).extension().string()) != ".prg") {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge invocation currently requires a PRG startup source.\n";
+        return 6;
+    }
+
+    copperfin::runtime::RuntimeSessionOptions session_options{};
+    session_options.startup_path = startup_source;
+    session_options.working_directory = working_directory;
+    session_options.stop_on_entry = false;
+    session_options.quit_confirm_callback = []() -> bool {
+        return true;
+    };
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
+    const auto runtime_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    if (runtime_state.reason == copperfin::runtime::DebugPauseReason::error) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: " << runtime_state.message << "\n";
+        return 5;
+    }
+
+    const std::string return_value = runtime_state.last_return_value.has_value()
+        ? copperfin::runtime::format_value(*runtime_state.last_return_value)
+        : std::string{};
+
     const std::filesystem::path response_path(options.response_path);
     const auto parent_path = response_path.parent_path();
     if (!parent_path.empty()) {
@@ -189,7 +219,7 @@ int run_runtime_bridge_invocation(const RuntimeBridgeInvocationOptions& options)
     std::ofstream response_output(response_path, std::ios::binary | std::ios::trunc);
     response_output << "{\n"
                     << "  \"status\": \"ok\",\n"
-                    << "  \"return_value\": \"0\",\n"
+                    << "  \"return_value\": \"" << escape_json_string(return_value) << "\",\n"
                     << "  \"response_media_type\": \"" << escape_json_string(options.response_media_type) << "\",\n"
                     << "  \"schema_version\": \"" << escape_json_string(options.schema_version) << "\",\n"
                     << "  \"diagnostics\": \"bridge_response_written\"\n"
@@ -213,6 +243,7 @@ int run_runtime_bridge_invocation(const RuntimeBridgeInvocationOptions& options)
     std::cout << "bridge.request_media_type: " << options.request_media_type << "\n";
     std::cout << "bridge.response_media_type: " << options.response_media_type << "\n";
     std::cout << "bridge.schema_version: " << options.schema_version << "\n";
+    std::cout << "bridge.return_value: " << return_value << "\n";
     return 0;
 }
 
@@ -995,14 +1026,15 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (runtime_bridge_mode_requested(bridge_options)) {
-        return run_runtime_bridge_invocation(bridge_options);
-    }
-
     const std::string startup_source =
         resolve_startup_source(manifest, manifest_directory);
     const std::string working_directory =
         resolve_effective_working_directory(manifest, manifest_directory);
+
+    if (runtime_bridge_mode_requested(bridge_options)) {
+        return run_runtime_bridge_invocation(bridge_options, startup_source, working_directory);
+    }
+
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
     const bool prg_startup = startup_extension == ".prg";
     copperfin::runtime::XAssetExecutableModel xasset_model;
