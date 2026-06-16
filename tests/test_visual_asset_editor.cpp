@@ -7809,6 +7809,210 @@ void test_align_visual_objects_to_anchor_geometry() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_resize_visual_objects_to_anchor_geometry() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_resize_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "resize.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "WIDTH", .type = 'C', .length = 10U},
+        {.name = "HEIGHT", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdAnchor", "anchorButton", "anchor-guid", "10", "20", "100", "50"},
+        {"txtName", "nameBox", "name-guid", "1", "2", "30", "10"},
+        {"lblStatus", "statusLabel", "status-guid", "5", "6", "20", "25"},
+        {"badGeometry", "badGeometry", "bad-guid", "7", "8", "bad", "10"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#787: resize fixture should be writable");
+
+    const auto property_value = [&](const std::string& unique_id, const std::string& property_name) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, "#787: resize fixture property should be readable");
+        return result.value;
+    };
+
+    const auto size_state = [&]() {
+        return property_value("name-guid", "WIDTH") + "," +
+            property_value("name-guid", "HEIGHT") + "," +
+            property_value("status-guid", "WIDTH") + "," +
+            property_value("status-guid", "HEIGHT");
+    };
+
+    auto resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = "txtName", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "width"
+    });
+    expect(resize_result.ok, "#787: resize should support width mode with mixed selectors");
+    expect(property_value("name-guid", "WIDTH") == "100" &&
+            property_value("status-guid", "WIDTH") == "100" &&
+            property_value("name-guid", "HEIGHT") == "10",
+        "#787: width resize should copy anchor WIDTH and preserve HEIGHT");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#787: first successful resize write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#787: second successful resize write should remain undo-backed");
+    expect(size_state() == "30,10,20,25",
+        "#787: resize undo should restore original sizes");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = "cmdAnchor",
+        .anchor_unique_id = {},
+        .objects = {
+            {.record_index = 1U, .object_name = {}, .unique_id = {}},
+            {.record_index = 2U, .object_name = {}, .unique_id = {}}
+        },
+        .mode = "height"
+    });
+    expect(resize_result.ok, "#787: resize should support height mode by object-name anchor and record-index targets");
+    expect(property_value("name-guid", "HEIGHT") == "50" &&
+            property_value("status-guid", "HEIGHT") == "50",
+        "#787: height resize should copy anchor HEIGHT");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "size"
+    });
+    expect(resize_result.ok, "#787: resize should support size mode");
+    expect(size_state() == "100,50,100,50",
+        "#787: size resize should copy both anchor WIDTH and HEIGHT");
+
+    const std::string committed_state = size_state();
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .mode = "width"
+    });
+    expect(!resize_result.ok, "#787: resize should reject missing selected objects");
+    expect(size_state() == committed_state,
+        "#787: missing-target resize failures should leave prior sizes unchanged");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "missing-anchor",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "width"
+    });
+    expect(!resize_result.ok, "#787: resize should reject missing anchors");
+    expect(size_state() == committed_state,
+        "#787: missing-anchor failures should leave prior sizes unchanged");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "bad-guid"}
+        },
+        .mode = "width"
+    });
+    expect(!resize_result.ok, "#787: resize should reject non-numeric geometry");
+    expect(size_state() == committed_state,
+        "#787: non-numeric resize failures should leave prior sizes unchanged");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "diagonal"
+    });
+    expect(!resize_result.ok, "#787: resize should reject unsupported resize modes");
+    expect(size_state() == committed_state,
+        "#787: unsupported-mode resize failures should leave prior sizes unchanged");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {},
+        .mode = "width"
+    });
+    expect(!resize_result.ok, "#787: resize should reject empty target selections");
+    expect(size_state() == committed_state,
+        "#787: empty-target resize failures should leave prior sizes unchanged");
+
+    const fs::path incomplete_path = temp_dir / "missing_resize_geometry.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "WIDTH", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdAnchor", "anchor-guid", "10", "20", "100"},
+        {"txtName", "name-guid", "1", "2", "30"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#787: missing-resize-geometry fixture should be writable");
+
+    resize_result = copperfin::vfp::resize_visual_objects({
+        .path = incomplete_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "height"
+    });
+    expect(!resize_result.ok, "#787: resize should reject missing geometry fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -10097,6 +10301,7 @@ int main() {
     test_reparent_visual_objects_rolls_back_failed_batches();
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_align_visual_objects_to_anchor_geometry();
+    test_resize_visual_objects_to_anchor_geometry();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
     test_rename_visual_objects_rolls_back_failed_batches();

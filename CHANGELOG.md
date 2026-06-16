@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#787 selected visual object resize-to-anchor shipped: designer resize commands can set selected objects to an anchor width, height, or full size through `WIDTH`/`HEIGHT` while preserving batch rollback and undo semantics.
 - E2/#786 selected visual object alignment shipped: designer alignment commands can align multiple selected objects to an anchor by left, right, top, bottom, horizontal-center, or vertical-center using `HPOS`/`VPOS`/`WIDTH`/`HEIGHT` while preserving batch rollback and undo semantics.
 - E2/#785 batch selected visual object duplication shipped: designer copy/paste workflows can duplicate multiple selected rows in one rollback-safe operation, returning duplicate record indexes while preserving copied memo-backed properties, METHODS content, hierarchy/class metadata, and existing deleted flags.
 - E2/#784 batch toolbox visual object creation shipped: designer/toolbox workflows can append multiple visual object rows atomically, returning created record indexes while validating field names and identity collisions across existing live/deleted rows plus pending creates before any write.

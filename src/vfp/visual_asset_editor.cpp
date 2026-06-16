@@ -4251,6 +4251,72 @@ VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& r
     });
 }
 
+VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object resize targets were provided."};
+    }
+
+    const std::string mode = normalize_visual_property_name(request.mode);
+    if (mode != "width" && mode != "height" && mode != "size") {
+        return {.ok = false, .error = "Unsupported visual object resize mode."};
+    }
+
+    VisualObjectGeometry anchor_geometry;
+    const auto anchor_result = read_visual_object_geometry(
+        request.path,
+        request.anchor_record_index,
+        request.anchor_object_name,
+        request.anchor_unique_id,
+        anchor_geometry);
+    if (!anchor_result.ok) {
+        return anchor_result;
+    }
+
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        VisualObjectGeometry object_geometry;
+        const auto object_result = read_visual_object_geometry(
+            request.path,
+            object.record_index,
+            object.object_name,
+            object.unique_id,
+            object_geometry);
+        if (!object_result.ok) {
+            return object_result;
+        }
+
+        std::vector<VisualObjectPropertyChange> properties;
+        if (mode == "width" || mode == "size") {
+            properties.push_back({
+                .property_name = "WIDTH",
+                .property_value = format_visual_geometry_number(anchor_geometry.width)
+            });
+        }
+        if (mode == "height" || mode == "size") {
+            properties.push_back({
+                .property_name = "HEIGHT",
+                .property_value = format_visual_geometry_number(anchor_geometry.height)
+            });
+        }
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = std::move(properties)
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#786`, adding selected visual object alignment so designer commands can align multiple objects to an anchor by left, right, top, bottom, horizontal-center, or vertical-center using `HPOS`/`VPOS`/`WIDTH`/`HEIGHT`, while preserving rollback-safe batch property edits and undo-backed successful writes.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#787`, adding selected visual object resize-to-anchor so designer commands can resize multiple objects to an anchor width, height, or full size using `WIDTH`/`HEIGHT`, while preserving rollback-safe batch property edits and undo-backed successful writes.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
