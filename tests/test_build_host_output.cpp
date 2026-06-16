@@ -1399,9 +1399,11 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only placeholder-return-int admission result unused.");
             expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);") != std::string::npos,
                    "build host DLL wrapper should execute stub emission before shared stub-return emission.");
+            expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host DLL wrapper should build the stub-emission return surface before shared stub-return emission.");
             expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
                    "build host DLL wrapper should propagate the typed native fallback integer value downstream");
-            expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);") != std::string::npos,
+            expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);") != std::string::npos,
                    "build host DLL wrapper should route the placeholder return through the plan-backed shared stub-emission emitter helper.");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host DLL wrapper should encode the export name into the bridge invocation plan");
@@ -2321,9 +2323,11 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should explicitly keep the scaffold-only stub-emission admission result unused.");
             expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);") != std::string::npos,
                    "build host FLL wrapper should execute stub emission before shared stub-return emission.");
+            expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
+                   "build host FLL wrapper should build the stub-emission return surface before shared stub-return emission.");
             expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
                    "build host FLL wrapper should propagate the typed native fallback integer value downstream");
-            expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);") != std::string::npos,
+            expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);") != std::string::npos,
                    "build host FLL wrapper should route the placeholder return through the plan-backed shared stub-emission emitter helper.");
             expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                    "build host FLL wrapper should encode the export name into the bridge invocation plan");

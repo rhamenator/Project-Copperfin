@@ -2206,11 +2206,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static int copperfin_runtime_bridge_emit_stub_return_shared(\n";
     stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan,\n";
-    stream << "    const CopperfinRuntimeBridgeStubEmission& stub_emission) {\n";
-    stream << "    const auto stub_emission_return_surface =\n";
-    stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
-    stream << "            stub_emission,\n";
-    stream << "            placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.native_return_surface);\n";
+    stream << "    const CopperfinRuntimeBridgeStubEmissionReturnSurface& stub_emission_return_surface) {\n";
     stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
     stream << "        stub_emission_return_surface,\n";
     stream << "        placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.return_adapter);\n";
@@ -2427,7 +2423,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)stub_emission_admission;\n";
             stream << "    const auto stub_emission =\n";
             stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);\n";
+            stream << "    const auto stub_emission_return_surface =\n";
+            stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
+            stream << "            stub_emission,\n";
+            stream << "            placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.native_return_surface);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);\n";
             stream << "}\n\n";
         }
         stream << "static const CopperfinFoxInfoRecord kCopperfinFoxInfo[] = {\n";
@@ -2677,7 +2677,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)stub_emission_admission;\n";
             stream << "    const auto stub_emission =\n";
             stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);\n";
+            stream << "    const auto stub_emission_return_surface =\n";
+            stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
+            stream << "            stub_emission,\n";
+            stream << "            placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.native_return_surface);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);\n";
             stream << "}\n\n";
         }
         return stream.str();
