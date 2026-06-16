@@ -225,9 +225,13 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
     expect(objects.size() == 1U, "#668: menu snapshot should include the parsed menu record");
     if (!objects.empty()) {
         expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
+        expect(objects[0].menu_prompt_field_index == 0U, "#669: menu PROMPT metadata should retain DBF field provenance");
         expect(objects[0].menu_level_name == "MAIN", "#668: menu snapshots should expose LEVELNAME metadata");
+        expect(objects[0].menu_level_name_field_index == 1U, "#669: menu LEVELNAME metadata should retain DBF field provenance");
         expect(objects[0].menu_command == "DO FORM customer", "#668: menu snapshots should expose COMMAND metadata");
+        expect(objects[0].menu_command_field_index == 2U, "#669: menu COMMAND metadata should retain DBF field provenance");
         expect(objects[0].menu_message == "Open customer maintenance", "#668: menu snapshots should expose MESSAGE metadata");
+        expect(objects[0].menu_message_field_index == 3U, "#669: menu MESSAGE metadata should retain DBF field provenance");
         expect(objects[0].title == "Customer", "#668: menu prompt should continue to drive friendly title fallback");
         expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
         expect(objects[0].objtype_code == 3, "#668: menu snapshots should retain raw OBJTYPE metadata");

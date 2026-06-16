@@ -81,9 +81,13 @@ struct StudioObjectSnapshot {
     std::string class_name{};
     std::string baseclass_name{};
     std::string menu_prompt{};
+    std::size_t menu_prompt_field_index = 0;
     std::string menu_level_name{};
+    std::size_t menu_level_name_field_index = 0;
     std::string menu_command{};
+    std::size_t menu_command_field_index = 0;
     std::string menu_message{};
+    std::size_t menu_message_field_index = 0;
     std::string title{};
     std::string subtitle{};
     std::vector<StudioPropertySnapshot> properties{};

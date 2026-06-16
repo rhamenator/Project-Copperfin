@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#669 menu metadata provenance shipped: normalized menu prompt, level, command, and message fields now preserve source DBF field ordinals for round-trip-safe MNX/MNT designer edits.
 - E1/#668 menu metadata normalization shipped: Studio object snapshots now expose menu prompt, level name, command, and message metadata for MNX/MNT designer workflows while preserving raw codes and field properties.
 - E1/#667 visual object raw-code preservation shipped: Studio object snapshots now expose raw visual-record `OBJTYPE`, `OBJCODE`, and `PLATFORM` metadata for form/class designer round-trip workflows.
 - E1/#666 report raw type-code preservation shipped: report/label section and layout-object snapshots now retain raw `OBJTYPE`/`OBJCODE` numeric values alongside derived UI labels for round-trip-safe designer workflows.
