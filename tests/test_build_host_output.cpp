@@ -1053,8 +1053,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared final-return-adoption admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
                    "build host DLL wrapper should declare a shared final-return-adoption execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
-                   "build host DLL wrapper should stage final-return adoption through the shared execution helper.");
+            expect(wrapper_source.find("const auto& return_emission = plan.return_emission") != std::string::npos,
+                   "build host DLL wrapper should consume explicit return emission while adopting final returns.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_placeholder_return_statement(") != std::string::npos,
                    "build host DLL wrapper should declare a shared placeholder return-statement helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
@@ -1159,8 +1159,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should execute the return-materialization plan before building the return-emission plan.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan,\n        return_materialization);") != std::string::npos,
                    "build host DLL wrapper should build the return-emission plan from the return-materialization plan and materialized return.");
-            expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,
-                   "build host DLL wrapper should build the final-return-adoption plan directly from the return-emission plan once the wrapper contract is carried by response validation.");
+            expect(wrapper_source.find("const auto return_emission =\n        copperfin_runtime_bridge_execute_return_emission(return_emission_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the return-emission plan before building the final-return-adoption plan.");
+            expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        return_emission,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,
+                   "build host DLL wrapper should build the final-return-adoption plan from the return-emission plan and emitted return.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n        final_return_adoption_plan);") != std::string::npos,
                    "build host DLL wrapper should build the return-activation plan directly from the final-return-adoption plan once the wrapper contract is carried by response validation.");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan);") != std::string::npos,
@@ -1941,8 +1943,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared final-return-adoption admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeFinalReturnAdoption copperfin_runtime_bridge_execute_final_return_adoption(") != std::string::npos,
                    "build host FLL wrapper should declare a shared final-return-adoption execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_emission(plan.return_emission_plan)") != std::string::npos,
-                   "build host FLL wrapper should stage final-return adoption through the shared execution helper.");
+            expect(wrapper_source.find("const auto& return_emission = plan.return_emission") != std::string::npos,
+                   "build host FLL wrapper should consume explicit return emission while adopting final returns.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_placeholder_return_statement(") != std::string::npos,
                    "build host FLL wrapper should declare a shared placeholder return-statement helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeReturnActivationPlan") != std::string::npos,
@@ -2047,8 +2049,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should execute the return-materialization plan before building the return-emission plan.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan,\n        return_materialization);") != std::string::npos,
                    "build host FLL wrapper should build the return-emission plan from the return-materialization plan and materialized return.");
-            expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,
-                   "build host FLL wrapper should build the final-return-adoption plan directly from the return-emission plan once the wrapper contract is carried by response validation.");
+            expect(wrapper_source.find("const auto return_emission =\n        copperfin_runtime_bridge_execute_return_emission(return_emission_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the return-emission plan before building the final-return-adoption plan.");
+            expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        return_emission,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,
+                   "build host FLL wrapper should build the final-return-adoption plan from the return-emission plan and emitted return.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n        final_return_adoption_plan);") != std::string::npos,
                    "build host FLL wrapper should build the return-activation plan directly from the final-return-adoption plan once the wrapper contract is carried by response validation.");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan);") != std::string::npos,
