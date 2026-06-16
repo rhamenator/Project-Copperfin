@@ -814,6 +814,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeResponseReadPlan {\n";
     stream << "    CopperfinRuntimeBridgeRequestWritePlan request_write_plan;\n";
+    stream << "    bool request_write_succeeded = false;\n";
     stream << "    std::filesystem::path source_path;\n";
     stream << "    std::string read_mode;\n";
     stream << "    bool require_existing_response = true;\n";
@@ -1578,12 +1579,14 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return true;\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(\n";
-    stream << "    CopperfinRuntimeBridgeRequestWritePlan request_write_plan) {\n";
+    stream << "    CopperfinRuntimeBridgeRequestWritePlan request_write_plan,\n";
+    stream << "    bool request_write_succeeded) {\n";
     stream << "    const auto source_path =\n";
     stream << "        request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.response_path;\n";
     stream << "    const auto read_mode = copperfin_build_runtime_bridge_response_read_mode();\n";
     stream << "    return CopperfinRuntimeBridgeResponseReadPlan{\n";
     stream << "        std::move(request_write_plan),\n";
+    stream << "        request_write_succeeded,\n";
     stream << "        source_path,\n";
     stream << "        read_mode,\n";
     stream << "        copperfin_runtime_bridge_require_existing_response_policy()};\n";
@@ -1593,6 +1596,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static std::string copperfin_runtime_bridge_execute_read_response(\n";
     stream << "    const CopperfinRuntimeBridgeResponseReadPlan& plan) {\n";
+    stream << "    if (!plan.request_write_succeeded) {\n";
+    stream << "        return copperfin_build_runtime_bridge_empty_response_document();\n";
+    stream << "    }\n";
     stream << "    if (plan.require_existing_response && !std::filesystem::exists(plan.source_path)) {\n";
     stream << "        return copperfin_build_runtime_bridge_empty_response_document();\n";
     stream << "    }\n";
@@ -2306,9 +2312,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        request_artifact);\n";
             stream << "    const auto request_write_execution =\n";
             stream << "        copperfin_runtime_bridge_execute_write_request(request_write_plan);\n";
-            stream << "    (void)request_write_execution;\n";
             stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
-            stream << "        request_write_plan);\n";
+            stream << "        request_write_plan,\n";
+            stream << "        request_write_execution);\n";
             stream << "    const auto response_document =\n";
             stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";
@@ -2547,9 +2553,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        request_artifact);\n";
             stream << "    const auto request_write_execution =\n";
             stream << "        copperfin_runtime_bridge_execute_write_request(request_write_plan);\n";
-            stream << "    (void)request_write_execution;\n";
             stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
-            stream << "        request_write_plan);\n";
+            stream << "        request_write_plan,\n";
+            stream << "        request_write_execution);\n";
             stream << "    const auto response_document =\n";
             stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";

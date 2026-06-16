@@ -1306,10 +1306,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should stage request-document writes through the shared request-write execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseReadPlan") != std::string::npos,
                "library-output wrapper source should declare a response-read-plan surface");
+        expect(wrapper_source.find("bool request_write_succeeded = false;") != std::string::npos,
+               "library-output wrapper source should carry request-write success on the response-read plan.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "library-output wrapper source should declare a response-read-plan helper");
         expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
                "library-output wrapper source should declare a shared response-read execution helper.");
+        expect(wrapper_source.find("if (!plan.request_write_succeeded)") != std::string::npos,
+               "library-output wrapper source should fall back when request writing failed before reading a response.");
         expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
                "library-output wrapper source should stage response-document reads through the shared response-read execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
@@ -1542,8 +1546,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build the request artifact directly from the response-validation plan once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(\n        request_artifact);") != std::string::npos,
                "library-output wrapper source should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
-        expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
-               "library-output wrapper source should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan,\n        request_write_execution);") != std::string::npos,
+               "library-output wrapper source should build the response-read plan from the request-write plan and executed write result.");
         expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
                "library-output wrapper source should execute the response-read plan before building the response artifact.");
         expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
@@ -1650,8 +1654,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build a request write plan from the request artifact");
         expect(wrapper_source.find("const auto request_write_execution =\n        copperfin_runtime_bridge_execute_write_request(request_write_plan);") != std::string::npos,
                "library-output wrapper source should execute the request-write plan through the shared helper.");
-        expect(wrapper_source.find("(void)request_write_execution;") != std::string::npos,
-               "library-output wrapper source should explicitly discard the scaffold-only request-write execution result.");
+        expect(wrapper_source.find("(void)request_write_execution;") == std::string::npos,
+               "library-output wrapper source should consume request-write execution when planning response reads.");
         expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "library-output wrapper source should build a response read plan from the request write plan");
         expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
@@ -2715,10 +2719,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should stage request-document writes through the shared request-write execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseReadPlan") != std::string::npos,
                "fll-output wrapper source should declare a response-read-plan surface");
+        expect(wrapper_source.find("bool request_write_succeeded = false;") != std::string::npos,
+               "fll-output wrapper source should carry request-write success on the response-read plan.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseReadPlan copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "fll-output wrapper source should declare a response-read-plan helper");
         expect(wrapper_source.find("static std::string copperfin_runtime_bridge_execute_read_response(") != std::string::npos,
                "fll-output wrapper source should declare a shared response-read execution helper.");
+        expect(wrapper_source.find("if (!plan.request_write_succeeded)") != std::string::npos,
+               "fll-output wrapper source should fall back when request writing failed before reading a response.");
         expect(wrapper_source.find("response_document << input.rdbuf();") != std::string::npos,
                "fll-output wrapper source should stage response-document reads through the shared response-read execution helper.");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeResponseArtifact") != std::string::npos,
@@ -2949,8 +2957,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build the request artifact directly from the response-validation plan once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(\n        request_artifact);") != std::string::npos,
                "fll-output wrapper source should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
-        expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
-               "fll-output wrapper source should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan,\n        request_write_execution);") != std::string::npos,
+               "fll-output wrapper source should build the response-read plan from the request-write plan and executed write result.");
         expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
                "fll-output wrapper source should execute the response-read plan before building the response artifact.");
         expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
@@ -3061,8 +3069,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build a request write plan from the request artifact");
         expect(wrapper_source.find("const auto request_write_execution =\n        copperfin_runtime_bridge_execute_write_request(request_write_plan);") != std::string::npos,
                "fll-output wrapper source should execute the request-write plan through the shared helper.");
-        expect(wrapper_source.find("(void)request_write_execution;") != std::string::npos,
-               "fll-output wrapper source should explicitly discard the scaffold-only request-write execution result.");
+        expect(wrapper_source.find("(void)request_write_execution;") == std::string::npos,
+               "fll-output wrapper source should consume request-write execution when planning response reads.");
         expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                "fll-output wrapper source should build a response read plan from the request write plan");
         expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
