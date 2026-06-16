@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#738 visual property listings now carry editor metadata: direct entries expose DBF field types and memo-backed `PROPERTIES` assignments expose parsed source line indexes for context-aware property-grid editors.
 - E2/#737 selector-aware visual property listing shipped: property-grid callers can now enumerate a selected object's direct DBF-backed fields plus parsed memo-backed `PROPERTIES` assignments without duplicating the raw carrier field or creating undo history.
 - E2/#736 selector-aware visual property queries shipped: property-grid/context-aware editor callers can now read selected object property values using record-index, object-name, or `UNIQUEID` selectors with case-insensitive property-name resolution and no undo history.
 - E2/#735 multi-property visual asset edits shipped: designer drag/resize-style callers can now submit multiple property changes through one selected-object request, reusing record-index, object-name, and `UNIQUEID` targeting with existing per-property undo compatibility.

@@ -963,7 +963,9 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         properties.push_back({
             .property_name = value.field_name,
             .value = value.display_value,
-            .direct_field = true
+            .direct_field = true,
+            .field_type = value.field_type,
+            .source_line_index = static_cast<std::size_t>(-1)
         });
     }
 
@@ -975,7 +977,9 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
             properties.push_back({
                 .property_name = assignment.name,
                 .value = assignment.value,
-                .direct_field = false
+                .direct_field = false,
+                .field_type = '\0',
+                .source_line_index = assignment.source_line_index
             });
         }
     }

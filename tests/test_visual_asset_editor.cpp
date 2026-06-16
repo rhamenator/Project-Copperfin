@@ -633,14 +633,22 @@ void test_list_visual_object_properties_reads_selected_surface() {
     const auto* left = find_property_snapshot(list_result.properties, "Left");
     expect(name != nullptr && name->direct_field && name->value == "nameBox",
         "#737: visual property lists should include selected direct DBF fields");
+    expect(name != nullptr && name->field_type == 'C' && name->source_line_index == static_cast<std::size_t>(-1),
+        "#738: direct property list entries should expose DBF field type and missing source-line metadata");
     expect(unique_id != nullptr && unique_id->direct_field && unique_id->value == "target-guid",
         "#737: visual property lists should include selected memo-backed DBF identity fields as direct entries");
+    expect(unique_id != nullptr && unique_id->field_type == 'M',
+        "#738: memo-backed direct DBF fields should preserve their DBF field type in property listings");
     expect(properties == nullptr,
         "#737: visual property lists should not duplicate the raw PROPERTIES carrier field");
     expect(caption != nullptr && !caption->direct_field && caption->value == "\"Name\"",
         "#737: visual property lists should include parsed memo-backed Caption assignments");
+    expect(caption != nullptr && caption->field_type == '\0' && caption->source_line_index == 0U,
+        "#738: memo-backed property list entries should expose parsed source-line metadata without DBF field type");
     expect(left != nullptr && !left->direct_field && left->value == "30",
         "#737: visual property lists should include parsed memo-backed Left assignments");
+    expect(left != nullptr && left->source_line_index == 1U,
+        "#738: later memo-backed property list entries should retain their parsed source line index");
     expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
         "#737: visual property lists should not create undo history");
 

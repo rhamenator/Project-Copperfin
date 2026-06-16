@@ -62,6 +62,8 @@ struct VisualObjectPropertySnapshot {
     std::string property_name;
     std::string value;
     bool direct_field = false;
+    char field_type = '\0';
+    std::size_t source_line_index = static_cast<std::size_t>(-1);
 };
 
 struct VisualObjectPropertyListResult {
