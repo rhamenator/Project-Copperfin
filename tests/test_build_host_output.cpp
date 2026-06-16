@@ -1205,8 +1205,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
             expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
                    "build host DLL wrapper should route dispatch execution through the shared process-launch helper.");
-            expect(wrapper_source.find("(void)process_launch;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only process-launch result unused.");
+            expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
+                   "build host DLL wrapper should consume process launch when evaluating host failure.");
             expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(\n        dispatch_plan);") != std::string::npos,
                    "build host DLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
@@ -2131,8 +2131,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
             expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
                    "build host FLL wrapper should route dispatch execution through the shared process-launch helper.");
-            expect(wrapper_source.find("(void)process_launch;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only process-launch result unused.");
+            expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
+                   "build host FLL wrapper should consume process launch when evaluating host failure.");
             expect(wrapper_source.find("const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(\n        dispatch_plan);") != std::string::npos,
                    "build host FLL wrapper should build a payload plan from the dispatch plan");
             expect(wrapper_source.find("const auto interpretation_plan = copperfin_build_runtime_bridge_interpretation_plan(") != std::string::npos,
