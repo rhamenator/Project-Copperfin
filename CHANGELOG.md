@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#862 selected visual object border-width assignment shipped: designer commands can assign caller-provided non-negative numeric `BorderWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#861 selected visual object border-style assignment shipped: designer commands can assign caller-provided non-negative numeric `BorderStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#860 selected visual object back-style assignment shipped: designer commands can assign caller-provided non-negative numeric `BackStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#859 selected visual object OLE drag-picture assignment shipped: designer commands can assign caller-provided `OLEDragPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
