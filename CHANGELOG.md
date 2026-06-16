@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#867 selected visual object picture-position assignment shipped: designer commands can assign caller-provided non-negative numeric `PicturePosition` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#866 selected visual object picture-margin assignment shipped: designer commands can assign caller-provided non-negative numeric `PictureMargin` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#865 selected visual object mouse-pointer assignment shipped: designer commands can assign caller-provided non-negative numeric `MousePointer` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#864 selected visual object special-effect assignment shipped: designer commands can assign caller-provided non-negative numeric `SpecialEffect` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
