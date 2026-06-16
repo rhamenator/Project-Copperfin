@@ -1343,8 +1343,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should admit staged return materialization from the outcome-selection admission and return-materialization plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_materialization(outcome_selection_admission, return_materialization_plan);") != std::string::npos,
                    "build host DLL wrapper should route outcome-selection admission through the shared return-materialization admission helper.");
-            expect(wrapper_source.find("(void)return_materialization_admission;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only return-materialization admission result unused.");
+            expect(wrapper_source.find("(void)return_materialization_admission;") == std::string::npos,
+                   "build host DLL wrapper should consume return-materialization admission when admitting return emission.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                    "build host DLL wrapper should build a return emission plan from the return materialization plan");
             expect(wrapper_source.find("const auto return_emission_admission =") != std::string::npos,
@@ -2267,8 +2267,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should admit staged return materialization from the outcome-selection admission and return-materialization plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_materialization(outcome_selection_admission, return_materialization_plan);") != std::string::npos,
                    "build host FLL wrapper should route outcome-selection admission through the shared return-materialization admission helper.");
-            expect(wrapper_source.find("(void)return_materialization_admission;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only return-materialization admission result unused.");
+            expect(wrapper_source.find("(void)return_materialization_admission;") == std::string::npos,
+                   "build host FLL wrapper should consume return-materialization admission when admitting return emission.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(") != std::string::npos,
                    "build host FLL wrapper should build a return emission plan from the return materialization plan");
             expect(wrapper_source.find("const auto return_emission_admission =") != std::string::npos,
