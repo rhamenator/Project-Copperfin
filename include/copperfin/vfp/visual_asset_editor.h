@@ -533,10 +533,25 @@ struct VisualObjectCreateRequest {
     std::vector<VisualObjectPropertyChange> field_values;
 };
 
+struct VisualObjectCreateBatchItem {
+    std::vector<VisualObjectPropertyChange> field_values;
+};
+
+struct VisualObjectCreateBatchRequest {
+    std::string path;
+    std::vector<VisualObjectCreateBatchItem> objects;
+};
+
 struct VisualObjectCreateResult {
     bool ok = false;
     std::string error;
     std::size_t record_index = 0;
+};
+
+struct VisualObjectCreateBatchResult {
+    bool ok = false;
+    std::string error;
+    std::vector<std::size_t> record_indexes;
 };
 
 struct VisualObjectReparentRequest {
@@ -652,6 +667,7 @@ VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReor
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
+VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

@@ -6630,6 +6630,249 @@ void test_create_visual_object_appends_toolbox_field_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_visual_objects_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_batch_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "batch_create.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "frmMain",
+            "commandbutton",
+            "commandbutton",
+            "Caption = \"Save\"\r\n",
+            ""
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "frmMain",
+            "textbox",
+            "textbox",
+            "Caption = \"Name\"\r\n",
+            ""
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#784: batch create fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#784: batch create fixture should support deleted-row collision setup");
+
+    const auto object_count = [&]() {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#784: batch-create fixture should remain listable");
+        return list_result.objects.size();
+    };
+
+    auto batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "chkActive"},
+                    {.property_name = "NAME", .property_value = "activeCheck"},
+                    {.property_name = "UNIQUEID", .property_value = "active-guid"},
+                    {.property_name = "PARENT", .property_value = "frmMain"},
+                    {.property_name = "CLASS", .property_value = "checkbox"},
+                    {.property_name = "BASECLASS", .property_value = "checkbox"},
+                    {.property_name = "PROPERTIES", .property_value = "Caption = \"Active\"\r\nLeft = 24\r\n"},
+                    {.property_name = "METHODS", .property_value = "PROCEDURE Click\r\nTHIS.Value = !THIS.Value\r\nENDPROC"}
+                }
+            },
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "lblState"},
+                    {.property_name = "NAME", .property_value = "stateLabel"},
+                    {.property_name = "UNIQUEID", .property_value = "state-guid"},
+                    {.property_name = "PARENT", .property_value = "frmMain"},
+                    {.property_name = "CLASS", .property_value = "label"},
+                    {.property_name = "BASECLASS", .property_value = "label"},
+                    {.property_name = "PROPERTIES", .property_value = "Caption = \"State\"\r\nLeft = 48\r\n"}
+                }
+            }
+        }
+    });
+    expect(batch_result.ok && batch_result.record_indexes.size() == 2U &&
+            batch_result.record_indexes[0] == 2U && batch_result.record_indexes[1] == 3U,
+        "#784: batch creates should append each object and return created record indexes");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 4U,
+        "#784: batch creates should append all requested objects");
+    if (list_result.ok && list_result.objects.size() == 4U) {
+        expect(list_result.objects[1].deleted && list_result.objects[1].unique_id == "name-guid",
+            "#784: batch creates should preserve existing deleted-row flags");
+        expect(!list_result.objects[2].deleted &&
+                list_result.objects[2].object_name == "chkActive" &&
+                list_result.objects[2].unique_id == "active-guid" &&
+                list_result.objects[2].caption == "\"Active\"",
+            "#784: first batch-created object should expose initialized metadata");
+        expect(!list_result.objects[3].deleted &&
+                list_result.objects[3].object_name == "lblState" &&
+                list_result.objects[3].unique_id == "state-guid" &&
+                list_result.objects[3].caption == "\"State\"",
+            "#784: second batch-created object should expose initialized metadata");
+    }
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "active-guid",
+        .property_name = "Left"
+    });
+    expect(property_result.ok && property_result.exists && property_result.value == "24",
+        "#784: batch creates should initialize memo-backed properties");
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "active-guid"
+    });
+    expect(method_result.ok && find_method_snapshot(method_result.methods, "Click") != nullptr,
+        "#784: batch creates should initialize METHODS memo content");
+
+    const auto committed_count = object_count();
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp"},
+                    {.property_name = "NAME", .property_value = "tempButton"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            },
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "txtClone"},
+                    {.property_name = "NAME", .property_value = "cloneBox"},
+                    {.property_name = "UNIQUEID", .property_value = "name-guid"}
+                }
+            }
+        }
+    });
+    expect(!batch_result.ok && batch_result.record_indexes.empty(),
+        "#784: batch creates should reject identity collisions with deleted rows");
+    expect(object_count() == committed_count,
+        "#784: deleted-row collision failures should not append partial rows");
+
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp"},
+                    {.property_name = "NAME", .property_value = "tempButton"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            },
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp2"},
+                    {.property_name = "NAME", .property_value = "tempButton2"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            }
+        }
+    });
+    expect(!batch_result.ok, "#784: batch creates should reject within-batch identity collisions");
+    expect(object_count() == committed_count,
+        "#784: within-batch collision failures should not append partial rows");
+
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            },
+            {
+                .field_values = {
+                    {.property_name = "UNKNOWN", .property_value = "value"}
+                }
+            }
+        }
+    });
+    expect(!batch_result.ok, "#784: batch creates should reject unknown fields");
+    expect(object_count() == committed_count,
+        "#784: unknown-field failures should not append partial rows");
+
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            },
+            {
+                .field_values = {
+                    {.property_name = "  ", .property_value = "value"}
+                }
+            }
+        }
+    });
+    expect(!batch_result.ok, "#784: batch creates should reject empty field names");
+    expect(object_count() == committed_count,
+        "#784: empty-field-name failures should not append partial rows");
+
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .field_values = {
+                    {.property_name = "OBJNAME", .property_value = "cmdTemp"},
+                    {.property_name = "UNIQUEID", .property_value = "temp-guid"}
+                }
+            },
+            {
+                .field_values = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#784: batch creates should reject empty item field sets");
+    expect(object_count() == committed_count,
+        "#784: empty-item failures should not append partial rows");
+
+    batch_result = copperfin::vfp::create_visual_objects({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#784: batch creates should reject empty batch requests");
+    expect(object_count() == committed_count,
+        "#784: empty-batch failures should not append rows");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_reparent_visual_object_updates_container_parent() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -9377,6 +9620,7 @@ int main() {
     test_reorder_visual_object_methods_rolls_back_failed_batches();
     test_duplicate_visual_object_appends_identity_safe_copy();
     test_create_visual_object_appends_toolbox_field_values();
+    test_create_visual_objects_rolls_back_failed_batches();
     test_reparent_visual_object_updates_container_parent();
     test_reparent_visual_objects_rolls_back_failed_batches();
     test_update_visual_object_batch_rolls_back_failed_alignment();
