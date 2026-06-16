@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#812 selected visual object incremental-search assignment shipped: combo/list designer commands can assign FoxPro logical `.T.`/`.F.` `IncrementalSearch` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#811 selected visual object integral-height assignment shipped: combo/list designer commands can assign FoxPro logical `.T.`/`.F.` `IntegralHeight` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#810 selected visual object column-lines assignment shipped: combo/list designer commands can assign FoxPro logical `.T.`/`.F.` `ColumnLines` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#809 selected visual object column-widths assignment shipped: combo/list designer commands can assign caller-provided `ColumnWidths` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.

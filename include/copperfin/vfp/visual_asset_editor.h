@@ -760,6 +760,12 @@ struct VisualObjectIntegralHeightRequest {
     bool integral_height = false;
 };
 
+struct VisualObjectIncrementalSearchRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool incremental_search = false;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -901,6 +907,7 @@ VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCou
 VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWidthsRequest& request);
 VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLinesRequest& request);
 VisualAssetEditResult set_visual_object_integral_height(const VisualObjectIntegralHeightRequest& request);
+VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectIncrementalSearchRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

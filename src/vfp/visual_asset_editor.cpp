@@ -5385,6 +5385,15 @@ VisualAssetEditResult set_visual_object_integral_height(const VisualObjectIntegr
         request.integral_height ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectIncrementalSearchRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "IncrementalSearch",
+        "incremental-search",
+        request.incremental_search ? ".T." : ".F.");
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

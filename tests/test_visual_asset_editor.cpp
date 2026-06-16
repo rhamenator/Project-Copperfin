@@ -12005,6 +12005,190 @@ void test_set_visual_object_integral_height_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_incremental_search_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_incremental_search_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "incremental_search.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "INCREMENTALSEARCH", .type = 'C', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", ".F."},
+        {"lstOrders", "ordersList", "orders-guid", ".F."},
+        {"cboOther", "otherCombo", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#812: incremental-search fixture should be writable");
+
+    const auto incremental_search_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "IncrementalSearch"
+        });
+        expect(result.ok && result.exists, "#812: incremental-search fixture property should be readable");
+        return result.value;
+    };
+    const auto incremental_search = [&](const std::string& unique_id) {
+        return incremental_search_for(table_path.string(), unique_id);
+    };
+    const auto incremental_search_state = [&]() {
+        return incremental_search("customer-guid") + "," +
+            incremental_search("orders-guid") + "," +
+            incremental_search("other-guid");
+    };
+
+    auto search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .incremental_search = true
+    });
+    expect(search_result.ok, "#812: incremental-search assignment should support object-name and record-index selectors");
+    expect(incremental_search("customer-guid") == ".T." &&
+            incremental_search("orders-guid") == ".T." &&
+            incremental_search("other-guid") == ".T.",
+        "#812: direct incremental-search assignment should write FoxPro logical text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#812: first incremental-search write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#812: second incremental-search write should remain undo-backed");
+    expect(incremental_search_state() == ".F.,.F.,.T.", "#812: incremental-search undo should restore original direct values");
+
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .incremental_search = false
+    });
+    expect(search_result.ok, "#812: incremental-search assignment should support UNIQUEID selectors");
+    expect(incremental_search("customer-guid") == ".F." &&
+            incremental_search("orders-guid") == ".F.",
+        "#812: direct incremental-search assignment should store false FoxPro logical values");
+
+    const std::string committed_state = incremental_search_state();
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = table_path.string(),
+        .objects = {},
+        .incremental_search = true
+    });
+    expect(!search_result.ok, "#812: incremental-search assignment should reject empty selections");
+    expect(incremental_search_state() == committed_state, "#812: empty-selection failures should not mutate incremental-search values");
+
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .incremental_search = true
+    });
+    expect(!search_result.ok, "#812: incremental-search assignment should reject missing selected objects");
+    expect(incremental_search_state() == committed_state, "#812: missing-object failures should not mutate incremental-search values");
+
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .incremental_search = true
+    });
+    expect(!search_result.ok, "#812: incremental-search assignment should reject duplicate selected objects");
+    expect(incremental_search_state() == committed_state, "#812: duplicate-selection failures should not mutate incremental-search values");
+
+    const fs::path blob_path = temp_dir / "incremental_search_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "IncrementalSearch = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoSearch", "no-search-guid", "Caption = \"No search\"\r\n"},
+        {"cboOther", "other-guid", "IncrementalSearch = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#812: incremental-search property-blob fixture should be writable");
+
+    const auto blob_incremental_search_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "IncrementalSearch"
+        });
+    };
+
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoSearch", .unique_id = {}}
+        },
+        .incremental_search = true
+    });
+    expect(search_result.ok, "#812: incremental-search assignment should support existing and absent serialized properties");
+    auto blob_search = blob_incremental_search_state("blob-guid");
+    auto appended_search = blob_incremental_search_state("no-search-guid");
+    auto other_search = blob_incremental_search_state("other-guid");
+    expect(blob_search.ok && blob_search.exists && blob_search.value == ".T." &&
+            appended_search.ok && appended_search.exists && appended_search.value == ".T." &&
+            other_search.ok && other_search.exists && other_search.value == ".T.",
+        "#812: serialized incremental-search assignment should write FoxPro logical values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#812: appended serialized incremental-search write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#812: existing serialized incremental-search write should remain undo-backed");
+    blob_search = blob_incremental_search_state("blob-guid");
+    appended_search = blob_incremental_search_state("no-search-guid");
+    expect(blob_search.ok && blob_search.exists && blob_search.value == ".F." &&
+            appended_search.ok && !appended_search.exists,
+        "#812: serialized incremental-search undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_incrementalsearch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#812: missing-IncrementalSearch fixture should be writable");
+
+    search_result = copperfin::vfp::set_visual_object_incremental_search({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .incremental_search = true
+    });
+    expect(!search_result.ok, "#812: incremental-search assignment should reject objects without a writable IncrementalSearch carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -14608,6 +14792,7 @@ int main() {
     test_set_visual_object_column_widths_assigns_text();
     test_set_visual_object_column_lines_assigns_logical_state();
     test_set_visual_object_integral_height_assigns_logical_state();
+    test_set_visual_object_incremental_search_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
