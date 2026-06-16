@@ -203,6 +203,7 @@ std::vector<XAssetMethod> parse_methods_blob(
     const std::string& blob) {
     std::vector<XAssetMethod> methods;
     std::string current_name;
+    std::size_t current_line_index = studio::StudioObjectMissingLineIndex;
     std::ostringstream current_source;
 
     auto flush = [&]() {
@@ -213,6 +214,7 @@ std::vector<XAssetMethod> parse_methods_blob(
         XAssetMethod method;
         method.record_index = record_index;
         method.source_field_index = source_field_index;
+        method.source_line_index = current_line_index;
         method.object_path = owner_path;
         method.method_name = method_name;
         method.routine_name = sanitize_routine_name("__cf_" + owner_path + "_" + method_name);
@@ -221,16 +223,20 @@ std::vector<XAssetMethod> parse_methods_blob(
             methods.push_back(std::move(method));
         }
         current_name.clear();
+        current_line_index = studio::StudioObjectMissingLineIndex;
         current_source.str({});
         current_source.clear();
     };
 
-    for (const auto& raw_line : split_lines(blob)) {
+    const std::vector<std::string> lines = split_lines(blob);
+    for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index) {
+        const auto& raw_line = lines[line_index];
         const std::string line = trim_copy(raw_line);
         if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
             flush();
             const auto separator = line.find(' ');
             current_name = trim_copy(line.substr(separator + 1U));
+            current_line_index = line_index;
             continue;
         }
         if (starts_with_insensitive(line, "ENDPROC") || starts_with_insensitive(line, "ENDFUNC") || starts_with_insensitive(line, "END FUNC")) {
@@ -254,15 +260,27 @@ std::vector<XAssetMethod> parse_embedded_routines(
     return parse_methods_blob(record_index, source_field_index, object_path, blob);
 }
 
+bool contains_embedded_routine_declaration(const std::string& blob) {
+    for (const auto& raw_line : split_lines(blob)) {
+        const std::string line = trim_copy(raw_line);
+        if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
+            return true;
+        }
+    }
+    return false;
+}
+
 XAssetMethod make_wrapped_method(
     std::size_t record_index,
     std::size_t source_field_index,
+    std::size_t source_line_index,
     const std::string& object_path,
     std::string method_name,
     std::string source_text) {
     XAssetMethod method;
     method.record_index = record_index;
     method.source_field_index = source_field_index;
+    method.source_line_index = source_line_index;
     method.object_path = object_path;
     method.method_name = std::move(method_name);
     method.routine_name = sanitize_routine_name("__cf_" + object_path + "_" + method.method_name);
@@ -296,11 +314,11 @@ std::vector<XAssetMethod> parse_field_as_routines(
         return {};
     }
 
-    if (starts_with_insensitive(trimmed, "PROCEDURE ") || starts_with_insensitive(trimmed, "FUNCTION ")) {
+    if (contains_embedded_routine_declaration(trimmed)) {
         return parse_embedded_routines(record_index, source_field_index, object_path, trimmed);
     }
 
-    return {make_wrapped_method(record_index, source_field_index, object_path, field_role, trimmed)};
+    return {make_wrapped_method(record_index, source_field_index, 0U, object_path, field_role, trimmed)};
 }
 
 bool has_method(
@@ -473,6 +491,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                         const auto wrapped = make_wrapped_method(
                             record.record_index,
                             studio::StudioObjectMissingFieldIndex,
+                            studio::StudioObjectMissingLineIndex,
                             object_path,
                             "activate_popup",
                             "ACTIVATE POPUP " + *submenu_name);

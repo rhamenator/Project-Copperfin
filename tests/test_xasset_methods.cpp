@@ -96,10 +96,20 @@ void test_build_xasset_executable_model() {
     if (model.methods.size() == 8U) {
         expect(model.methods[0].source_field_index == 3U,
                "#706: data-environment methods should preserve the source METHODS field ordinal");
+        expect(model.methods[0].source_line_index == 0U,
+               "#707: first data-environment method should preserve its declaration line index");
+        expect(model.methods[1].source_line_index == 3U,
+               "#707: later data-environment methods should preserve declaration line indexes inside METHODS");
         expect(model.methods[3].source_field_index == 3U,
                "#706: root form methods should preserve the source METHODS field ordinal");
+        expect(model.methods[3].source_line_index == 0U,
+               "#707: root form method line provenance should start at its declaration line");
+        expect(model.methods[4].source_line_index == 3U,
+               "#707: later root form methods should preserve declaration line indexes inside METHODS");
         expect(model.methods[7].source_field_index == 4U,
                "#706: nested object methods should preserve the source METHODS field ordinal");
+        expect(model.methods[7].source_line_index == 0U,
+               "#707: nested object methods should preserve their METHODS declaration line index");
     }
     if (model.actions.size() >= 8U) {
         expect(model.actions[0].action_id == "dataenvironment.beforeopentables", "data environment startup should be dispatchable");
@@ -378,6 +388,8 @@ void test_xasset_executable_model_suppresses_unresolved_memo_placeholders() {
                "#697: submenu activation should use the following usable submenu level name");
         expect(menu_model.methods[0].source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
                "#706: synthetic submenu activation methods should use the missing-field sentinel");
+        expect(menu_model.methods[0].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#707: synthetic submenu activation methods should use the missing-line sentinel");
     }
     const std::string menu_bootstrap = copperfin::runtime::build_xasset_bootstrap_source(menu_model, true);
     expect(menu_bootstrap.find("<memo block") == std::string::npos,
@@ -469,7 +481,7 @@ void test_build_menu_xasset_executable_model() {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
             {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  2"},
-            {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "PROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC"}
+            {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "* metadata header\r\nPROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC"}
         }),
         make_record(4, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
@@ -504,23 +516,30 @@ void test_build_menu_xasset_executable_model() {
     expect(setup_method != nullptr, "#706: menu setup method should be discoverable for provenance assertions");
     if (setup_method != nullptr) {
         expect(setup_method->source_field_index == 1U, "#706: wrapped SETUP methods should retain SETUP field provenance");
+        expect(setup_method->source_line_index == 0U, "#707: wrapped SETUP methods should start at source line zero");
     }
     expect(cleanup_method != nullptr, "#706: menu cleanup method should be discoverable for provenance assertions");
     if (cleanup_method != nullptr) {
         expect(cleanup_method->source_field_index == 2U, "#706: wrapped CLEANUP methods should retain CLEANUP field provenance");
+        expect(cleanup_method->source_line_index == 0U, "#707: wrapped CLEANUP methods should start at source line zero");
     }
     expect(command_method != nullptr, "#706: menu command method should be discoverable for provenance assertions");
     if (command_method != nullptr) {
         expect(command_method->source_field_index == 3U, "#706: wrapped COMMAND methods should retain COMMAND field provenance");
+        expect(command_method->source_line_index == 0U, "#707: wrapped COMMAND methods should start at source line zero");
     }
     expect(procedure_method != nullptr, "#706: menu procedure method should be discoverable for provenance assertions");
     if (procedure_method != nullptr) {
         expect(procedure_method->source_field_index == 3U, "#706: embedded PROCEDURE methods should retain PROCEDURE field provenance");
+        expect(procedure_method->source_line_index == 1U,
+               "#707: embedded PROCEDURE methods should retain declaration line indexes inside the memo field");
     }
     expect(submenu_method != nullptr, "#706: synthetic submenu method should be discoverable for provenance assertions");
     if (submenu_method != nullptr) {
         expect(submenu_method->source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
                "#706: synthetic submenu methods should use the missing-field sentinel");
+        expect(submenu_method->source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#707: synthetic submenu methods should use the missing-line sentinel");
     }
     if (model.actions.size() >= 3U) {
         expect(model.actions[0].action_id == "shortcut.item1", "first action should expose the item1 action id");

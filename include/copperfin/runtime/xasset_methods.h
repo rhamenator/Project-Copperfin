@@ -11,6 +11,7 @@ namespace copperfin::runtime {
 struct XAssetMethod {
     std::size_t record_index = 0;
     std::size_t source_field_index = studio::StudioObjectMissingFieldIndex;
+    std::size_t source_line_index = studio::StudioObjectMissingLineIndex;
     std::string object_path;
     std::string method_name;
     std::string routine_name;
