@@ -12800,6 +12800,29 @@ void test_set_visual_object_dynamic_input_mask_assigns_expression_value() {
         });
 }
 
+void test_set_visual_object_dynamic_line_height_assigns_expression_value() {
+    test_dynamic_raw_scalar_property_assigns_expression_value(
+        "#849",
+        "dynamic_line_height",
+        "DynamicLineHeight",
+        "DYNAMICLINEHEIGHT",
+        "line-height",
+        "12",
+        "14",
+        "16",
+        "IIF(RECNO() % 2 = 0, 18, 12)",
+        "15",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& expression) {
+            return copperfin::vfp::set_visual_object_dynamic_line_height({
+                .path = path,
+                .objects = objects,
+                .dynamic_line_height = expression
+            });
+        });
+}
+
 void test_set_visual_object_dynamic_font_bold_assigns_expression_value() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -21252,6 +21275,7 @@ int main() {
     test_set_visual_object_control_source_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
+    test_set_visual_object_dynamic_line_height_assigns_expression_value();
     test_set_visual_object_format_assigns_text();
     test_set_visual_object_font_name_assigns_text();
     test_set_visual_object_font_size_assigns_numeric_value();

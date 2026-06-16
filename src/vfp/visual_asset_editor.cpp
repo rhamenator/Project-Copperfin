@@ -5310,6 +5310,15 @@ VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDyn
         request.dynamic_input_mask);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicLineHeight",
+        "dynamic line height",
+        request.dynamic_line_height);
+}
+
 VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request) {
     return set_visual_object_text_property(
         request.path,
