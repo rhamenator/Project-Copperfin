@@ -5403,6 +5403,19 @@ VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSele
         request.multi_select ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& request) {
+    if (request.style < 0) {
+        return {.ok = false, .error = "Style must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Style",
+        "style",
+        std::to_string(request.style));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
