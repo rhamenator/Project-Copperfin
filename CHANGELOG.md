@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#752 rollback-safe batch visual object edits shipped: multi-select designer operations can now apply per-object geometry/property changes through existing undo semantics and roll back all successful batch changes when a later item fails.
 - E2/#751 selected visual object reparenting shipped: container-editing workflows can move selected objects under another resolved parent object or clear the parent for root placement while rejecting missing parents and self-parenting through the existing undo-backed property path.
 - E2/#750 toolbox visual object creation shipped: designers can append a live visual object row from caller-provided field values, including memo-backed properties and methods, with unknown-field rejection, identity collision safety, and deleted-row preservation.
 - E2/#749 selected visual object duplication shipped: designer copy/paste workflows can append a live copy of a selected object with caller-provided replacement `OBJNAME`/`NAME`/`UNIQUEID` values while preserving existing properties, methods, hierarchy metadata, and identity collision safety.

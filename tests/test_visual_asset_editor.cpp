@@ -1582,6 +1582,120 @@ void test_reparent_visual_object_updates_container_parent() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_batch_rolls_back_failed_alignment() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "10", "20", "Caption = \"Save\"\r\n"},
+        {"txtName", "nameBox", "name-guid", "30", "40", "Caption = \"Name\"\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "50", "60", "Caption = \"Status\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#752: batch-edit fixture should be writable");
+
+    const auto property_value = [&](const std::string& unique_id, const std::string& property_name) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, "#752: batch-edit fixture property should be readable");
+        return result.value;
+    };
+
+    auto batch_result = copperfin::vfp::update_visual_object_batch({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .properties = {
+                    {.property_name = "HPOS", .property_value = "100"},
+                    {.property_name = "VPOS", .property_value = "200"}
+                }
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .properties = {
+                    {.property_name = "HPOS", .property_value = "100"},
+                    {.property_name = "VPOS", .property_value = "300"}
+                }
+            }
+        }
+    });
+    expect(batch_result.ok, "#752: batch edits should apply multi-object geometry changes");
+    expect(property_value("save-guid", "HPOS") == "100" &&
+            property_value("save-guid", "VPOS") == "200",
+        "#752: batch edits should update UNIQUEID-selected geometry");
+    expect(property_value("name-guid", "HPOS") == "100" &&
+            property_value("name-guid", "VPOS") == "300",
+        "#752: batch edits should update object-name-selected geometry");
+    expect(property_value("status-guid", "HPOS") == "50" &&
+            property_value("status-guid", "VPOS") == "60",
+        "#752: batch edits should preserve unrelated records");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#752: successful batch edits should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::update_visual_object_batch({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = "cmdSave",
+                .unique_id = {},
+                .properties = {
+                    {.property_name = "HPOS", .property_value = "400"}
+                }
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "name-guid",
+                .properties = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#752: batch edits should fail explicitly on an empty item property list");
+    expect(property_value("save-guid", "HPOS") == "100",
+        "#752: failed batch edits should roll back earlier successful object edits");
+    const auto undo_after_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failure.available == undo_before_failure.available &&
+            undo_after_failure.label == undo_before_failure.label,
+        "#752: failed batch rollback should clean up undo entries created by the failed batch");
+
+    batch_result = copperfin::vfp::update_visual_object_batch({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#752: empty batch edit requests should fail explicitly");
+    expect(property_value("save-guid", "HPOS") == "100" &&
+            property_value("name-guid", "VPOS") == "300",
+        "#752: empty batch edit requests should not mutate existing geometry");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2458,6 +2572,7 @@ int main() {
     test_duplicate_visual_object_appends_identity_safe_copy();
     test_create_visual_object_appends_toolbox_field_values();
     test_reparent_visual_object_updates_container_parent();
+    test_update_visual_object_batch_rolls_back_failed_alignment();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

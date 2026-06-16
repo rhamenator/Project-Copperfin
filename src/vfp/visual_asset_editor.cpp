@@ -1818,6 +1818,53 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object edits were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    for (const auto& object : request.objects) {
+        if (object.properties.empty()) {
+            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                const auto rollback_result = undo_visual_object_property(request.path);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = "No property changes were provided. Rollback failed: " + rollback_result.error
+                    };
+                }
+            }
+            return {.ok = false, .error = "No property changes were provided."};
+        }
+
+        const auto result = update_visual_object_properties({
+            .path = request.path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = object.properties
+        });
+        if (!result.ok) {
+            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                const auto rollback_result = undo_visual_object_property(request.path);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = result.error + " Rollback failed: " + rollback_result.error
+                    };
+                }
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetUndoStatus query_visual_object_undo(const std::string& path) {
     return query_visual_asset_undo_status_internal(path);
 }
