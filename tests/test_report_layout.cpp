@@ -139,6 +139,11 @@ void test_build_report_layout_groups_band_objects() {
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.available, "report layout should be available for report assets");
     expect(!layout.is_label, "report layout should distinguish reports from labels");
+    expect(layout.document_title == "synthetic.frx", "#728: report layout document titles should mirror Studio display names");
+    expect(layout.document_title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+        "#728: display-name report titles should use missing DBF field provenance");
+    expect(layout.document_title_memo_block_number == 0U,
+        "#728: display-name report titles should expose memo block zero");
     expect(layout.sections.size() == 2U, "report layout should detect two sections");
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
@@ -372,11 +377,41 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
     }
 }
 
+void test_build_report_layout_reports_missing_title_provenance_when_unavailable() {
+    copperfin::studio::StudioDocumentModel label_document;
+    label_document.display_name = "mailing.lbx";
+    label_document.kind = copperfin::studio::StudioAssetKind::label;
+    label_document.table_preview_available = true;
+
+    const auto label_layout = copperfin::studio::build_report_layout(label_document);
+    expect(label_layout.available, "#728: label assets should still produce report layouts");
+    expect(label_layout.is_label, "#728: label layouts should retain label classification");
+    expect(label_layout.document_title == "mailing.lbx", "#728: label document titles should mirror Studio display names");
+    expect(label_layout.document_title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+        "#728: display-name label titles should use missing DBF field provenance");
+    expect(label_layout.document_title_memo_block_number == 0U,
+        "#728: display-name label titles should expose memo block zero");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "customer.scx";
+    document.kind = copperfin::studio::StudioAssetKind::form;
+    document.table_preview_available = true;
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(!layout.available, "#728: non-report assets should not produce report layouts");
+    expect(layout.document_title.empty(), "#728: unavailable report layouts should keep empty document titles");
+    expect(layout.document_title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+        "#728: unavailable report layouts should retain missing document-title field provenance");
+    expect(layout.document_title_memo_block_number == 0U,
+        "#728: unavailable report layouts should expose document-title memo block zero");
+}
+
 }  // namespace
 
 int main() {
     test_build_report_layout_groups_band_objects();
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
+    test_build_report_layout_reports_missing_title_provenance_when_unavailable();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

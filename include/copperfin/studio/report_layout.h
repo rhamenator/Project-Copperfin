@@ -80,6 +80,8 @@ struct StudioReportLayoutSnapshot {
     bool available = false;
     bool is_label = false;
     std::string document_title{};
+    std::size_t document_title_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t document_title_memo_block_number = 0;
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioNamedValue> deleted_settings{};
     std::vector<StudioReportSectionSnapshot> sections{};

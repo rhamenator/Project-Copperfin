@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#728 report document title provenance shipped: report/label layout snapshots now expose explicit missing-field and block-zero provenance for display-name-derived document titles, including unavailable non-report layouts.
 - E1/#727 project group summary provenance shipped: aggregate project groups now expose source field and memo block metadata for group ids and titles, inheriting the first entry that establishes each group while preserving counts and sorting.
 - E1/#726 build-plan project title provenance shipped: project build plans now mirror workspace project-title source field and memo block metadata, including fallback titles and live-header selection.
 - E1/#725 project logical flag memo block provenance shipped: project entries and build plans now expose source memo block numbers for EXCLUDE, MAINPROG, LOCAL, DEBUG, ENCRYPT, SAVECODE, and NOLOGO flag metadata, including missing-field block-zero behavior.

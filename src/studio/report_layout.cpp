@@ -388,6 +388,8 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
     snapshot.available = true;
     snapshot.is_label = document.kind == StudioAssetKind::label;
     snapshot.document_title = document.display_name;
+    snapshot.document_title_field_index = StudioReportMissingFieldIndex;
+    snapshot.document_title_memo_block_number = 0U;
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
