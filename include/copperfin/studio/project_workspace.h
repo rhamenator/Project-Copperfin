@@ -62,6 +62,8 @@ struct StudioProjectBuildPlan {
     bool available = false;
     bool can_build = false;
     std::string project_title{};
+    std::size_t project_title_field_index = StudioProjectMissingFieldIndex;
+    std::uint32_t project_title_memo_block_number = 0;
     std::string project_key{};
     std::size_t project_key_field_index = StudioProjectMissingFieldIndex;
     std::uint32_t project_key_memo_block_number = 0;

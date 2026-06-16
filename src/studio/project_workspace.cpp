@@ -443,6 +443,8 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     workspace.build_plan.available = true;
     workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.project_title_field_index = workspace.project_title_field_index;
+    workspace.build_plan.project_title_memo_block_number = workspace.project_title_memo_block_number;
     workspace.build_plan.project_key = workspace.project_key;
     workspace.build_plan.project_key_memo_block_number = workspace.project_key_memo_block_number;
     workspace.build_plan.home_directory = workspace.home_directory;

@@ -79,6 +79,11 @@ void test_build_project_workspace() {
     expect(workspace.groups.size() >= 3U, "workspace should group header, program, and form/report items");
     expect(workspace.build_plan.available, "build plan should be available");
     expect(workspace.build_plan.can_build, "build plan should be buildable with entries and an output path");
+    expect(workspace.build_plan.project_title == "DEMOAPP", "#726: build-plan project titles should mirror workspace titles");
+    expect(workspace.build_plan.project_title_field_index == 1U,
+           "#726: build-plan project titles should mirror workspace title field provenance");
+    expect(workspace.build_plan.project_title_memo_block_number == 0U,
+           "#726: build-plan project titles should mirror workspace title memo block provenance");
     expect(workspace.build_plan.output_path == R"(E:\Project-Copperfin\build\demoapp.exe)", "build plan should keep the explicit output path");
     expect(workspace.build_plan.output_kind == "executable", "build plan should infer executable output kind from .exe output path");
     expect(workspace.build_plan.output_kind_field_index == 3U, "#683: build plan output kind provenance should retain OUTFILE field ordinal");
@@ -246,6 +251,11 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
     expect(workspace.project_title_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#694: fallback project titles should not masquerade as stored memo provenance");
     expect(workspace.project_title_memo_block_number == 0U, "#714: fallback project titles should expose memo block zero");
+    expect(workspace.build_plan.project_title == "memodemo", "#726: build-plan fallback titles should mirror workspace titles");
+    expect(workspace.build_plan.project_title_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#726: build-plan fallback titles should preserve missing-field provenance");
+    expect(workspace.build_plan.project_title_memo_block_number == 0U,
+           "#726: build-plan fallback titles should expose memo block zero");
     expect(workspace.output_path == R"(E:\Project-Copperfin\samples\memodemo.exe)",
            "#694: unresolved memo OUTFILE values should keep default output fallback behavior");
     expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
@@ -448,6 +458,11 @@ void test_build_project_workspace_prefers_live_header() {
     expect(workspace.available, "#692: workspace should still load projects with deleted header rows");
     expect(workspace.project_title == "LIVEAPP", "#692: workspace metadata should prefer the live project header");
     expect(workspace.project_title_field_index == 1U, "#692: live header title should retain KEY provenance");
+    expect(workspace.build_plan.project_title == "LIVEAPP", "#726: build-plan titles should prefer the live project header");
+    expect(workspace.build_plan.project_title_field_index == 1U,
+           "#726: build-plan live-header titles should retain KEY field provenance");
+    expect(workspace.build_plan.project_title_memo_block_number == 0U,
+           "#726: build-plan live-header titles should retain KEY memo block provenance");
     expect(workspace.output_path == R"(E:\Project-Copperfin\build\live.app)",
            "#692: active output metadata should come from the live project header");
     expect(workspace.build_plan.output_kind == "app", "#692: build plan should infer output kind from the live header");
