@@ -29,6 +29,15 @@ struct XAssetActionBinding {
     std::string routine_name;
 };
 
+struct XAssetLifecycleStep {
+    std::size_t record_index = 0;
+    std::size_t source_field_index = studio::StudioObjectMissingFieldIndex;
+    std::size_t source_line_index = studio::StudioObjectMissingLineIndex;
+    std::string kind;
+    std::string command_text;
+    std::string routine_name;
+};
+
 struct XAssetExecutableModel {
     bool ok = false;
     bool runnable_startup = false;
@@ -42,8 +51,10 @@ struct XAssetExecutableModel {
     std::vector<XAssetActionBinding> actions;
     std::vector<std::string> startup_routines;
     std::vector<std::string> startup_lines;
+    std::vector<XAssetLifecycleStep> startup_steps;
     std::vector<std::string> shutdown_routines;
     std::vector<std::string> shutdown_lines;
+    std::vector<XAssetLifecycleStep> shutdown_steps;
 };
 
 XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);

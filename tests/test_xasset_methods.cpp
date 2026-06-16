@@ -130,6 +130,8 @@ void test_build_xasset_executable_model() {
     expect(model.shutdown_routines.size() == 2U, "shutdown should include form and data-environment cleanup methods");
     expect(model.startup_lines.size() == 5U, "form startup lines should mirror startup routine count");
     expect(model.shutdown_lines.size() == 2U, "form shutdown lines should mirror shutdown routine count");
+    expect(model.startup_steps.size() == 5U, "#709: form startup steps should mirror startup routine count");
+    expect(model.shutdown_steps.size() == 2U, "#709: form shutdown steps should mirror shutdown routine count");
     if (model.startup_routines.size() == 5U) {
         expect(model.startup_routines[0] == "__cf_Dataenvironment_BeforeOpenTables",
                "form startup should begin with data-environment BeforeOpenTables");
@@ -154,6 +156,21 @@ void test_build_xasset_executable_model() {
         expect(model.startup_lines[4] == "DO __cf_frmDemo_Activate",
                "form startup lines should match Activate ordering");
     }
+    if (model.startup_steps.size() == 5U) {
+        expect(model.startup_steps[0].kind == "method", "#709: method-backed startup steps should be tagged as methods");
+        expect(model.startup_steps[0].command_text == "DO __cf_Dataenvironment_BeforeOpenTables",
+               "#709: startup step command text should mirror the legacy startup line");
+        expect(model.startup_steps[0].routine_name == "__cf_Dataenvironment_BeforeOpenTables",
+               "#709: startup steps should carry routine identity");
+        expect(model.startup_steps[0].record_index == 0U, "#709: startup steps should retain source record provenance");
+        expect(model.startup_steps[0].source_field_index == 3U, "#709: startup steps should inherit method source field provenance");
+        expect(model.startup_steps[0].source_line_index == 0U, "#709: startup steps should inherit method source line provenance");
+        expect(model.startup_steps[3].routine_name == "__cf_frmDemo_Init",
+               "#709: later startup steps should preserve lifecycle ordering");
+        expect(model.startup_steps[3].record_index == 1U, "#709: later startup steps should retain source record provenance");
+        expect(model.startup_steps[3].source_field_index == 3U, "#709: later startup steps should inherit source field provenance");
+        expect(model.startup_steps[3].source_line_index == 3U, "#709: later startup steps should inherit source line provenance");
+    }
     if (model.shutdown_routines.size() == 2U) {
         expect(model.shutdown_routines[0] == "__cf_frmDemo_Destroy",
                "form shutdown should call Destroy before data-environment cleanup");
@@ -165,6 +182,13 @@ void test_build_xasset_executable_model() {
                "form shutdown lines should match runtime-shutdown order");
         expect(model.shutdown_lines[1] == "DO __cf_Dataenvironment_CloseTables",
                "form shutdown lines should match close-tables ordering");
+    }
+    if (model.shutdown_steps.size() == 2U) {
+        expect(model.shutdown_steps[0].command_text == "DO __cf_frmDemo_Destroy",
+               "#709: shutdown step command text should mirror the legacy shutdown line");
+        expect(model.shutdown_steps[0].record_index == 1U, "#709: shutdown steps should retain source record provenance");
+        expect(model.shutdown_steps[0].source_field_index == 3U, "#709: shutdown steps should inherit method source field provenance");
+        expect(model.shutdown_steps[0].source_line_index == 9U, "#709: shutdown steps should inherit method source line provenance");
     }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
@@ -524,6 +548,8 @@ void test_build_menu_xasset_executable_model() {
     expect(model.actions.size() >= 3U, "menu model should expose runnable menu actions");
     expect(model.shutdown_routines.size() == 1U, "menu model should expose cleanup routines for post-event-loop shutdown");
     expect(model.shutdown_lines.size() == 1U, "menu model should emit exactly one cleanup shutdown line");
+    expect(model.startup_steps.size() == 2U, "#709: menu startup steps should include setup plus synthetic activation");
+    expect(model.shutdown_steps.size() == 1U, "#709: menu shutdown steps should include cleanup provenance");
     const auto* setup_method = find_method(model.methods, "__cf_shortcut_setup");
     const auto* cleanup_method = find_method(model.methods, "__cf_shortcut_cleanup");
     const auto* command_method = find_method(model.methods, "__cf_Shortcut_item1_command");
@@ -597,6 +623,23 @@ void test_build_menu_xasset_executable_model() {
         expect(model.startup_lines[1] == "ACTIVATE POPUP Shortcut",
                "menu startup should activate the popup after setup");
     }
+    if (model.startup_steps.size() == 2U) {
+        expect(model.startup_steps[0].kind == "method", "#709: setup startup step should be method-backed");
+        expect(model.startup_steps[0].command_text == "DO __cf_shortcut_setup",
+               "#709: setup startup step should mirror the legacy startup line");
+        expect(model.startup_steps[0].source_field_index == 1U,
+               "#709: setup startup step should retain SETUP field provenance");
+        expect(model.startup_steps[0].source_line_index == 0U,
+               "#709: setup startup step should retain wrapped source line provenance");
+        expect(model.startup_steps[1].kind == "activation", "#709: menu activation should be tagged as synthetic activation");
+        expect(model.startup_steps[1].command_text == "ACTIVATE POPUP Shortcut",
+               "#709: activation step command text should mirror the legacy startup line");
+        expect(model.startup_steps[1].source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#709: synthetic activation should use the missing source-field sentinel");
+        expect(model.startup_steps[1].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#709: synthetic activation should use the missing source-line sentinel");
+        expect(model.startup_steps[1].routine_name.empty(), "#709: synthetic activation should not masquerade as a routine");
+    }
     if (model.actions.size() >= 2U) {
         expect(model.actions[0].routine_name == "__cf_Shortcut_item1_command",
                "menu action binding should dispatch item1 command routine");
@@ -610,6 +653,14 @@ void test_build_menu_xasset_executable_model() {
     if (model.shutdown_lines.size() == 1U) {
         expect(model.shutdown_lines[0] == "DO __cf_shortcut_cleanup",
                "menu shutdown should execute cleanup after event-loop exit");
+    }
+    if (model.shutdown_steps.size() == 1U) {
+        expect(model.shutdown_steps[0].command_text == "DO __cf_shortcut_cleanup",
+               "#709: cleanup shutdown step should mirror the legacy shutdown line");
+        expect(model.shutdown_steps[0].source_field_index == 2U,
+               "#709: cleanup shutdown step should retain CLEANUP field provenance");
+        expect(model.shutdown_steps[0].source_line_index == 0U,
+               "#709: cleanup shutdown step should retain wrapped source line provenance");
     }
 }
 

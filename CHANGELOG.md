@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#709 xAsset lifecycle step provenance shipped: startup/shutdown plans now expose structured lifecycle steps with method source provenance and synthetic activation/preview commands using explicit missing sentinels while preserving legacy line/routine vectors.
 - E1/#708 xAsset action binding provenance shipped: action bindings now expose title source field provenance plus routine source field/line provenance inherited from method-backed actions, with synthetic submenu routines using missing sentinels.
 - E1/#707 xAsset method source-line provenance shipped: executable xAsset methods now retain memo declaration line indexes, wrapped field methods start at line zero, and synthetic submenu methods use the missing-line sentinel.
 - E1/#706 xAsset method source-field provenance shipped: executable xAsset methods now retain the DBF field ordinal for form/class `METHODS` blobs and menu method fields, with synthetic submenu methods using the missing-field sentinel.

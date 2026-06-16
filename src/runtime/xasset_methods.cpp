@@ -327,18 +327,26 @@ std::vector<XAssetMethod> parse_field_as_routines(
     return {make_wrapped_method(record_index, source_field_index, 0U, object_path, field_role, trimmed)};
 }
 
-bool has_method(
+const XAssetMethod* find_method_by_object_method(
     const std::vector<XAssetMethod>& methods,
     const std::string& object_path,
-    const std::string& method_name,
-    std::string& routine_name) {
+    const std::string& method_name) {
     const std::string normalized_object = lowercase_copy(object_path);
     const std::string normalized_method = lowercase_copy(method_name);
     const auto found = std::find_if(methods.begin(), methods.end(), [&](const XAssetMethod& method) {
         return lowercase_copy(method.object_path) == normalized_object &&
             lowercase_copy(method.method_name) == normalized_method;
     });
-    if (found == methods.end()) {
+    return found == methods.end() ? nullptr : &*found;
+}
+
+bool has_method(
+    const std::vector<XAssetMethod>& methods,
+    const std::string& object_path,
+    const std::string& method_name,
+    std::string& routine_name) {
+    const auto* found = find_method_by_object_method(methods, object_path, method_name);
+    if (found == nullptr) {
         return false;
     }
     routine_name = found->routine_name;
@@ -355,20 +363,40 @@ void append_unique_line(std::vector<std::string>& lines, std::string line) {
     }
 }
 
+void append_lifecycle_step(
+    std::vector<XAssetLifecycleStep>& steps,
+    XAssetLifecycleStep step) {
+    step.command_text = trim_copy(std::move(step.command_text));
+    if (step.command_text.empty()) {
+        return;
+    }
+    steps.push_back(std::move(step));
+}
+
 void append_if_method_exists(
     const std::vector<XAssetMethod>& methods,
     const std::string& object_path,
     const std::string& method_name,
     std::vector<std::string>& routines,
-    std::vector<std::string>& lines) {
-    std::string routine_name;
-    if (!has_method(methods, object_path, method_name, routine_name)) {
+    std::vector<std::string>& lines,
+    std::vector<XAssetLifecycleStep>& steps) {
+    const auto* method = find_method_by_object_method(methods, object_path, method_name);
+    if (method == nullptr) {
         return;
     }
-    if (std::find(routines.begin(), routines.end(), routine_name) == routines.end()) {
-        routines.push_back(routine_name);
+    if (std::find(routines.begin(), routines.end(), method->routine_name) == routines.end()) {
+        routines.push_back(method->routine_name);
     }
-    append_unique_line(lines, "DO " + routine_name);
+    const std::string command_text = "DO " + method->routine_name;
+    append_unique_line(lines, command_text);
+    append_lifecycle_step(steps, {
+        .record_index = method->record_index,
+        .source_field_index = method->source_field_index,
+        .source_line_index = method->source_line_index,
+        .kind = "method",
+        .command_text = command_text,
+        .routine_name = method->routine_name
+    });
 }
 
 void append_methods(std::vector<XAssetMethod>& destination, const std::vector<XAssetMethod>& methods) {
@@ -559,29 +587,47 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
     }
 
     if (document.kind == studio::StudioAssetKind::form || document.kind == studio::StudioAssetKind::class_library) {
-        append_if_method_exists(model.methods, "Dataenvironment", "BeforeOpenTables", model.startup_routines, model.startup_lines);
-        append_if_method_exists(model.methods, "Dataenvironment", "OpenTables", model.startup_routines, model.startup_lines);
+        append_if_method_exists(model.methods, "Dataenvironment", "BeforeOpenTables", model.startup_routines, model.startup_lines, model.startup_steps);
+        append_if_method_exists(model.methods, "Dataenvironment", "OpenTables", model.startup_routines, model.startup_lines, model.startup_steps);
         if (!model.root_object_path.empty()) {
-            append_if_method_exists(model.methods, model.root_object_path, "Load", model.startup_routines, model.startup_lines);
-            append_if_method_exists(model.methods, model.root_object_path, "Init", model.startup_routines, model.startup_lines);
+            append_if_method_exists(model.methods, model.root_object_path, "Load", model.startup_routines, model.startup_lines, model.startup_steps);
+            append_if_method_exists(model.methods, model.root_object_path, "Init", model.startup_routines, model.startup_lines, model.startup_steps);
             if (document.kind == studio::StudioAssetKind::form) {
-                append_if_method_exists(model.methods, model.root_object_path, "Activate", model.startup_routines, model.startup_lines);
+                append_if_method_exists(model.methods, model.root_object_path, "Activate", model.startup_routines, model.startup_lines, model.startup_steps);
             }
 
-            append_if_method_exists(model.methods, model.root_object_path, "Deactivate", model.shutdown_routines, model.shutdown_lines);
-            append_if_method_exists(model.methods, model.root_object_path, "Destroy", model.shutdown_routines, model.shutdown_lines);
-            append_if_method_exists(model.methods, model.root_object_path, "Unload", model.shutdown_routines, model.shutdown_lines);
+            append_if_method_exists(model.methods, model.root_object_path, "Deactivate", model.shutdown_routines, model.shutdown_lines, model.shutdown_steps);
+            append_if_method_exists(model.methods, model.root_object_path, "Destroy", model.shutdown_routines, model.shutdown_lines, model.shutdown_steps);
+            append_if_method_exists(model.methods, model.root_object_path, "Unload", model.shutdown_routines, model.shutdown_lines, model.shutdown_steps);
         }
-        append_if_method_exists(model.methods, "Dataenvironment", "CloseTables", model.shutdown_routines, model.shutdown_lines);
+        append_if_method_exists(model.methods, "Dataenvironment", "CloseTables", model.shutdown_routines, model.shutdown_lines, model.shutdown_steps);
         model.runnable_startup = !model.startup_routines.empty();
     } else if (document.kind == studio::StudioAssetKind::menu) {
         for (const auto& method : model.methods) {
             if (lowercase_copy(method.method_name) == "setup") {
                 model.startup_routines.push_back(method.routine_name);
-                append_unique_line(model.startup_lines, "DO " + method.routine_name);
+                const std::string command_text = "DO " + method.routine_name;
+                append_unique_line(model.startup_lines, command_text);
+                append_lifecycle_step(model.startup_steps, {
+                    .record_index = method.record_index,
+                    .source_field_index = method.source_field_index,
+                    .source_line_index = method.source_line_index,
+                    .kind = "method",
+                    .command_text = command_text,
+                    .routine_name = method.routine_name
+                });
             } else if (lowercase_copy(method.method_name) == "cleanup") {
                 model.shutdown_routines.push_back(method.routine_name);
-                append_unique_line(model.shutdown_lines, "DO " + method.routine_name);
+                const std::string command_text = "DO " + method.routine_name;
+                append_unique_line(model.shutdown_lines, command_text);
+                append_lifecycle_step(model.shutdown_steps, {
+                    .record_index = method.record_index,
+                    .source_field_index = method.source_field_index,
+                    .source_line_index = method.source_line_index,
+                    .kind = "method",
+                    .command_text = command_text,
+                    .routine_name = method.routine_name
+                });
             }
         }
 
@@ -598,18 +644,31 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         }
 
         if (!model.activation_target.empty()) {
-            model.startup_lines.push_back("ACTIVATE " + uppercase_copy(model.activation_kind) + " " + model.activation_target);
+            const std::string command_text = "ACTIVATE " + uppercase_copy(model.activation_kind) + " " + model.activation_target;
+            model.startup_lines.push_back(command_text);
+            append_lifecycle_step(model.startup_steps, {
+                .kind = "activation",
+                .command_text = command_text,
+                .routine_name = ""
+            });
             model.startup_enters_event_loop = true;
         }
 
         model.runnable_startup = !model.startup_lines.empty();
     } else if (document.kind == studio::StudioAssetKind::report || document.kind == studio::StudioAssetKind::label) {
         const std::string quoted_path = "'" + document.path + "'";
+        std::string command_text;
         if (document.kind == studio::StudioAssetKind::report) {
-            model.startup_lines.push_back("REPORT FORM " + quoted_path + " PREVIEW");
+            command_text = "REPORT FORM " + quoted_path + " PREVIEW";
         } else {
-            model.startup_lines.push_back("LABEL FORM " + quoted_path + " PREVIEW");
+            command_text = "LABEL FORM " + quoted_path + " PREVIEW";
         }
+        model.startup_lines.push_back(command_text);
+        append_lifecycle_step(model.startup_steps, {
+            .kind = "preview",
+            .command_text = command_text,
+            .routine_name = ""
+        });
         model.startup_enters_event_loop = true;
         model.runnable_startup = true;
     }
