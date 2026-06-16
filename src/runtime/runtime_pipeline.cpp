@@ -1214,6 +1214,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "static std::string copperfin_build_runtime_bridge_request_media_type_field_name() {\n";
     stream << "    return \"request_media_type\";\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_request_fields_field_name() {\n";
+    stream << "    return \"request_fields\";\n";
+    stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_parameter_name_field_name() {\n";
     stream << "    return \"name\";\n";
     stream << "}\n\n";
@@ -1275,6 +1278,18 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "                   << \"\\\": \\\"\"\n";
     stream << "                   << copperfin_escape_runtime_bridge_json_string(request_media_type)\n";
     stream << "                   << \"\\\",\\n\";\n";
+    stream << "    request_stream << \"  \\\"\"\n";
+    stream << "                   << copperfin_build_runtime_bridge_request_fields_field_name()\n";
+    stream << "                   << \"\\\": [\";\n";
+    stream << "    for (std::size_t index = 0; index < payload_plan.request_fields.size(); ++index) {\n";
+    stream << "        if (index > 0U) {\n";
+    stream << "            request_stream << \", \";\n";
+    stream << "        }\n";
+    stream << "        request_stream << \"\\\"\"\n";
+    stream << "                       << copperfin_escape_runtime_bridge_json_string(payload_plan.request_fields[index])\n";
+    stream << "                       << \"\\\"\";\n";
+    stream << "    }\n";
+    stream << "    request_stream << \"],\\n\";\n";
     stream << "    request_stream << \"  \\\"\"\n";
     stream << "                   << copperfin_build_runtime_bridge_parameters_field_name()\n";
     stream << "                   << \"\\\": [\\n\";\n";
