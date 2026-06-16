@@ -217,13 +217,20 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     if (header_record != document.table_preview.records.end()) {
         workspace.project_key = trim_copy(value_or_empty(*header_record, "KEY"));
+        workspace.project_key_field_index = field_index_or_missing(*header_record, "KEY");
         workspace.project_title = workspace.project_key.empty()
             ? std::filesystem::path(document.path).stem().string()
             : workspace.project_key;
+        workspace.project_title_field_index = workspace.project_key.empty()
+            ? StudioProjectMissingFieldIndex
+            : workspace.project_key_field_index;
         workspace.home_directory = trim_copy(value_or_empty(*header_record, "HOMEDIR"));
+        workspace.home_directory_field_index = field_index_or_missing(*header_record, "HOMEDIR");
         workspace.output_path = trim_copy(value_or_empty(*header_record, "OUTFILE"));
+        workspace.output_path_field_index = field_index_or_missing(*header_record, "OUTFILE");
         if (looks_like_unresolved_memo(workspace.output_path)) {
             workspace.output_path.clear();
+            workspace.output_path_field_index = StudioProjectMissingFieldIndex;
         }
     } else {
         workspace.project_title = std::filesystem::path(document.path).stem().string();
@@ -231,6 +238,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     if (workspace.output_path.empty()) {
         workspace.output_path = default_output_path(document, workspace.project_title);
+        workspace.output_path_field_index = StudioProjectMissingFieldIndex;
     }
 
     std::vector<StudioProjectGroup> groups;

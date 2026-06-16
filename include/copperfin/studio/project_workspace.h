@@ -69,9 +69,13 @@ struct StudioProjectBuildPlan {
 struct StudioProjectWorkspace {
     bool available = false;
     std::string project_title{};
+    std::size_t project_title_field_index = StudioProjectMissingFieldIndex;
     std::string project_key{};
+    std::size_t project_key_field_index = StudioProjectMissingFieldIndex;
     std::string home_directory{};
+    std::size_t home_directory_field_index = StudioProjectMissingFieldIndex;
     std::string output_path{};
+    std::size_t output_path_field_index = StudioProjectMissingFieldIndex;
     std::vector<StudioProjectGroup> groups{};
     std::vector<StudioProjectEntry> entries{};
     StudioProjectBuildPlan build_plan{};

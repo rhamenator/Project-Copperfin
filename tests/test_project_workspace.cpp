@@ -61,6 +61,10 @@ void test_build_project_workspace() {
     const auto workspace = copperfin::studio::build_project_workspace(document);
     expect(workspace.available, "project workspace should be available for PJX documents");
     expect(workspace.project_title == "DEMOAPP", "workspace should use the project key as its title");
+    expect(workspace.project_title_field_index == 1U, "#678: workspace project title should retain selected KEY field provenance");
+    expect(workspace.project_key_field_index == 1U, "#678: workspace project key field provenance should be preserved");
+    expect(workspace.home_directory_field_index == 2U, "#678: workspace home directory field provenance should be preserved");
+    expect(workspace.output_path_field_index == 3U, "#678: workspace output path field provenance should be preserved");
     expect(workspace.entries.size() == 4U, "workspace should include all project records");
     expect(workspace.groups.size() >= 3U, "workspace should group header, program, and form/report items");
     expect(workspace.build_plan.available, "build plan should be available");
@@ -127,6 +131,9 @@ void test_build_project_workspace_with_excluded_assets() {
     expect(
         workspace.build_plan.output_path == R"(E:\Project-Copperfin\samples\LEGACYAPP.exe)",
         "workspace should fall back to a default output path when the stored memo output is unresolved");
+    expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#678: unresolved memo output fallback should not masquerade as stored OUTFILE provenance");
+    expect(workspace.project_title_field_index == 1U, "#678: workspace title should keep KEY provenance when KEY supplies title");
     expect(workspace.build_plan.output_kind == "executable", "default output path fallback should still infer executable output kind");
     expect(
         workspace.build_plan.startup_item == R"(forms\legacy.scx)",

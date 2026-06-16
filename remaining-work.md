@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#678 workspace project metadata provenance is now shipped. `StudioProjectWorkspace` now preserves source DBF field ordinals for project title/key, home directory, and output path metadata, using `StudioProjectMissingFieldIndex` for synthesized defaults and unresolved memo fallbacks; focused `test_project_workspace` coverage proves explicit header provenance and fallback sentinel behavior.
 - 2026-06-16: E1/#677 project entry flag provenance is now shipped. Project workspace entries now preserve source DBF field ordinals for normalized `EXCLUDE`, `MAINPROG`, and `LOCAL` flags, using `StudioProjectMissingFieldIndex` when optional flag fields are absent; focused `test_project_workspace` coverage proves present and missing flag provenance.
 - 2026-06-16: E1/#676 report setting memo-line provenance is now shipped. Parsed report/label root `EXPR` settings now preserve source memo line indexes while direct numeric settings use `StudioReportMissingLineIndex`; focused `test_report_layout` coverage proves first/later parsed setting line ordinals and direct-setting sentinel behavior.
 - 2026-06-16: E1/#675 report layout object title provenance is now shipped. Report/label layout object snapshots now preserve source DBF field ordinals for friendly titles, while synthesized titles use `StudioReportMissingFieldIndex`; focused `test_report_layout` coverage proves EXPR-sourced title ordinals and synthetic-title sentinel behavior.
