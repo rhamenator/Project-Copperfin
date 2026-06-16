@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#764 selected visual object method moves shipped: method/event editors can move one selected `PROCEDURE` or `FUNCTION` between objects, optionally rename or replace the target method, delete the source method only after the target write succeeds, reject self-overwrites, and preserve undo-backed restoration.
 - E2/#763 selected visual object method copying shipped: method/event editors can copy one selected object's `PROCEDURE` or `FUNCTION` into another selected object by record-index, object-name, or `UNIQUEID`, optionally rename or replace the target method, preserve target declaration kind on replacement, keep unrelated methods intact, and read full memo bodies without the prior 160-byte display cap.
 - E2/#762 selected visual object method query shipped: method/event editors can open one selected `PROCEDURE` or `FUNCTION` declaration by name with source metadata, resolved record/deleted state, not-found semantics, ambiguity checks, and read-only behavior.
 - E2/#761 selected visual object method renaming shipped: method/event editors can rename `PROCEDURE` and `FUNCTION` declarations in selected object `METHODS` memos while preserving bodies, rejecting collisions, and retaining undo support.

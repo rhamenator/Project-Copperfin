@@ -1732,6 +1732,320 @@ void test_copy_visual_object_method_between_selected_objects() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_move_visual_object_method_between_selected_objects() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_move_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_move.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSource",
+            "sourceButton",
+            "source-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {
+            "txtTarget",
+            "targetBox",
+            "target-guid",
+            "PROCEDURE Existing\r\nTHISFORM.Old()\r\nENDPROC\r\nFUNCTION Refresh\r\nRETURN .F.\r\nENDFUNC"
+        },
+        {
+            "lblOther",
+            "otherLabel",
+            "other-guid",
+            "PROCEDURE Other\r\nTHISFORM.Other()\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#764: method-move fixture should be writable");
+
+    auto move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "click",
+        .target_record_index = 0U,
+        .target_object_name = "txtTarget",
+        .target_unique_id = {},
+        .target_method_name = {},
+        .replace_existing = false
+    });
+    expect(move_result.ok, "#764: method move should move procedures by UNIQUEID source and object-name target");
+
+    auto source_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "source-guid"
+    });
+    auto target_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    expect(source_methods.ok &&
+            find_method_snapshot(source_methods.methods, "Click") == nullptr &&
+            find_method_snapshot(source_methods.methods, "GetCaption") != nullptr,
+        "#764: method move should delete only the moved source method");
+    const auto* moved_click = target_methods.ok ? find_method_snapshot(target_methods.methods, "Click") : nullptr;
+    expect(moved_click != nullptr &&
+            moved_click->kind == "procedure" &&
+            moved_click->source_text == "THISFORM.Save()" &&
+            find_method_snapshot(target_methods.methods, "Existing") != nullptr,
+        "#764: method move should append the moved procedure while preserving target methods");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = "cmdSource",
+        .source_unique_id = {},
+        .source_method_name = "GetCaption",
+        .target_record_index = 1U,
+        .target_object_name = {},
+        .target_unique_id = {},
+        .target_method_name = "CaptionText",
+        .replace_existing = false
+    });
+    expect(move_result.ok, "#764: method move should support record-index targets and target method renames");
+
+    source_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "source-guid"
+    });
+    target_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    const auto* moved_caption = target_methods.ok ? find_method_snapshot(target_methods.methods, "CaptionText") : nullptr;
+    expect(source_methods.ok && source_methods.methods.empty(),
+        "#764: moving the final source method should leave the source METHODS memo empty");
+    expect(moved_caption != nullptr &&
+            moved_caption->kind == "function" &&
+            moved_caption->source_text == "RETURN THIS.Caption",
+        "#764: renamed function moves should preserve source body and function kind");
+
+    auto other_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "other-guid"
+    });
+    expect(other_methods.ok && find_method_snapshot(other_methods.methods, "Other") != nullptr,
+        "#764: method move should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should restore the moved function source deletion");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should remove the moved function target copy");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should restore the moved procedure source deletion");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should remove the moved procedure target copy");
+
+    source_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "source-guid"
+    });
+    target_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    expect(source_methods.ok &&
+            find_method_snapshot(source_methods.methods, "Click") != nullptr &&
+            find_method_snapshot(source_methods.methods, "GetCaption") != nullptr &&
+            target_methods.ok &&
+            find_method_snapshot(target_methods.methods, "Click") == nullptr &&
+            find_method_snapshot(target_methods.methods, "CaptionText") == nullptr,
+        "#764: undo should restore source and target METHODS memos after moves");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Click",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = "Existing",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject target collisions without replacement");
+    source_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "source-guid"
+    });
+    expect(source_methods.ok && find_method_snapshot(source_methods.methods, "Click") != nullptr,
+        "#764: failed target copies should leave the source method intact");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Click",
+        .target_record_index = 1U,
+        .target_object_name = {},
+        .target_unique_id = {},
+        .target_method_name = "Refresh",
+        .replace_existing = true
+    });
+    expect(move_result.ok, "#764: method move should allow explicit replacement");
+    target_methods = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    const auto* refresh = target_methods.ok ? find_method_snapshot(target_methods.methods, "Refresh") : nullptr;
+    expect(refresh != nullptr &&
+            refresh->kind == "function" &&
+            refresh->source_text == "THISFORM.Save()",
+        "#764: replacing target methods during move should preserve target declaration kind");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should restore replacement source deletion");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#764: undo should restore replacement target body");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Click",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "source-guid",
+        .target_method_name = {},
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject same-source implicit overwrites");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = " ",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = "EmptySource",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject empty source method names");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Click",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = " ",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject empty requested target method names");
+
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Missing",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = "Missing",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject missing source methods");
+
+    const fs::path duplicate_path = temp_dir / "method_move_duplicate.scx";
+    const std::vector<std::vector<std::string>> duplicate_records{
+        {
+            "cmdDup",
+            "dupButton",
+            "dup-guid",
+            "PROCEDURE Click\r\nRETURN 1\r\nENDPROC\r\nPROCEDURE click\r\nRETURN 2\r\nENDPROC"
+        },
+        {"txtTarget", "targetBox", "target-guid", ""}
+    };
+    const auto duplicate_create_result = copperfin::vfp::create_dbf_table_file(
+        duplicate_path.string(),
+        fields,
+        duplicate_records);
+    expect(duplicate_create_result.ok, "#764: duplicate method-move fixture should be writable");
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = duplicate_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "dup-guid",
+        .source_method_name = "CLICK",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = {},
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject duplicate source declarations as ambiguous");
+
+    const fs::path no_methods_path = temp_dir / "method_move_no_methods.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> no_methods_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> no_methods_records{
+        {"cmdSource", "source-guid"},
+        {"txtTarget", "target-guid"}
+    };
+    const auto no_methods_create_result = copperfin::vfp::create_dbf_table_file(
+        no_methods_path.string(),
+        no_methods_fields,
+        no_methods_records);
+    expect(no_methods_create_result.ok, "#764: missing-METHODS method-move fixture should be writable");
+    move_result = copperfin::vfp::move_visual_object_method({
+        .path = no_methods_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_method_name = "Click",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_method_name = {},
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#764: method move should reject missing METHODS fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_duplicate_visual_object_appends_identity_safe_copy() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -4091,6 +4405,7 @@ int main() {
     test_delete_visual_object_method_removes_selected_methods();
     test_rename_visual_object_method_updates_declarations();
     test_copy_visual_object_method_between_selected_objects();
+    test_move_visual_object_method_between_selected_objects();
     test_duplicate_visual_object_appends_identity_safe_copy();
     test_create_visual_object_appends_toolbox_field_values();
     test_reparent_visual_object_updates_container_parent();

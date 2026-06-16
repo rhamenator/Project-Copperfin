@@ -2116,6 +2116,80 @@ VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequ
     });
 }
 
+VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request) {
+    if (!request.target_method_name.empty() && trim_both(request.target_method_name).empty()) {
+        return {.ok = false, .error = "No target method name was provided."};
+    }
+
+    const auto source_method = query_visual_object_method({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .method_name = request.source_method_name
+    });
+    if (!source_method.ok) {
+        return {.ok = false, .error = source_method.error};
+    }
+    if (!source_method.exists) {
+        return {.ok = false, .error = "The source method was not found."};
+    }
+
+    const std::string target_method_name = request.target_method_name.empty()
+        ? source_method.method.method_name
+        : trim_both(request.target_method_name);
+    const auto target_method = query_visual_object_method({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .method_name = target_method_name
+    });
+    if (!target_method.ok) {
+        return {.ok = false, .error = target_method.error};
+    }
+    if (target_method.record_index == source_method.record_index &&
+        normalize_visual_object_name(target_method_name) == normalize_visual_object_name(source_method.method.method_name)) {
+        return {.ok = false, .error = "The source method cannot be moved onto itself."};
+    }
+    if (target_method.exists && !request.replace_existing) {
+        return {.ok = false, .error = "The target object already has a method with the requested name."};
+    }
+
+    const auto copy_result = copy_visual_object_method({
+        .path = request.path,
+        .source_record_index = request.source_record_index,
+        .source_object_name = request.source_object_name,
+        .source_unique_id = request.source_unique_id,
+        .source_method_name = request.source_method_name,
+        .target_record_index = request.target_record_index,
+        .target_object_name = request.target_object_name,
+        .target_unique_id = request.target_unique_id,
+        .target_method_name = request.target_method_name,
+        .replace_existing = request.replace_existing
+    });
+    if (!copy_result.ok) {
+        return copy_result;
+    }
+
+    const auto delete_result = delete_visual_object_method({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .method_name = request.source_method_name
+    });
+    if (!delete_result.ok) {
+        const auto rollback_result = undo_visual_object_property(request.path);
+        if (!rollback_result.ok) {
+            return {.ok = false, .error = delete_result.error + " Target rollback failed: " + rollback_result.error};
+        }
+        return {.ok = false, .error = delete_result.error};
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};

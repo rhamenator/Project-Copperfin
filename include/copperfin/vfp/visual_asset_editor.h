@@ -268,6 +268,19 @@ struct VisualObjectMethodCopyRequest {
     bool replace_existing = false;
 };
 
+struct VisualObjectMethodMoveRequest {
+    std::string path;
+    std::size_t source_record_index = 0;
+    std::string source_object_name;
+    std::string source_unique_id;
+    std::string source_method_name;
+    std::size_t target_record_index = 0;
+    std::string target_object_name;
+    std::string target_unique_id;
+    std::string target_method_name;
+    bool replace_existing = false;
+};
+
 struct VisualObjectDuplicateRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -375,6 +388,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request);
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request);
+VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
