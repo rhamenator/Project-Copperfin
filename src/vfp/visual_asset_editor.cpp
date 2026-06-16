@@ -5377,6 +5377,15 @@ VisualAssetEditResult set_visual_object_font_outline(const VisualObjectFontOutli
         request.font_outline ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_font_shadow(const VisualObjectFontShadowRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "FontShadow",
+        "font shadow",
+        request.font_shadow ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,

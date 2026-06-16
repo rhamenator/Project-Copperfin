@@ -760,6 +760,12 @@ struct VisualObjectFontOutlineRequest {
     bool font_outline = false;
 };
 
+struct VisualObjectFontShadowRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool font_shadow = false;
+};
+
 struct VisualObjectRowSourceRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1057,6 +1063,7 @@ VisualAssetEditResult set_visual_object_font_italic(const VisualObjectFontItalic
 VisualAssetEditResult set_visual_object_font_underline(const VisualObjectFontUnderlineRequest& request);
 VisualAssetEditResult set_visual_object_font_strikethru(const VisualObjectFontStrikethruRequest& request);
 VisualAssetEditResult set_visual_object_font_outline(const VisualObjectFontOutlineRequest& request);
+VisualAssetEditResult set_visual_object_font_shadow(const VisualObjectFontShadowRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
