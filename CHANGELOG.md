@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#797 selected visual object read-only assignment shipped: designer commands can assign FoxPro logical `.T.`/`.F.` `READONLY` values to selected objects, including existing serialized properties, while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#796 selected visual object enabled-state assignment shipped: designer commands can assign FoxPro logical `.T.`/`.F.` `ENABLED` values to selected objects, including existing serialized properties, while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#795 selected visual object visibility assignment shipped: designer visibility commands can assign FoxPro logical `.T.`/`.F.` `VISIBLE` values to selected objects while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#794 selected visual object tab-stop assignment shipped: designer tab-navigation commands can assign FoxPro logical `.T.`/`.F.` `TABSTOP` values to selected objects while rejecting duplicate selections before rollback-safe batch writes.

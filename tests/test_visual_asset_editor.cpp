@@ -9219,6 +9219,181 @@ void test_set_visual_object_enabled_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_read_only_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_read_only_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "readonly.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "READONLY", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtOne", "oneBox", "one-guid", ".F."},
+        {"txtTwo", "twoBox", "two-guid", ".F."},
+        {"txtThree", "threeBox", "three-guid", ".T."},
+        {"txtOther", "otherBox", "other-guid", ".F."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#797: read-only fixture should be writable");
+
+    const auto read_only_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "READONLY"
+        });
+        expect(result.ok && result.exists, "#797: read-only fixture property should be readable");
+        return result.value;
+    };
+    const auto read_only = [&](const std::string& unique_id) {
+        return read_only_for(table_path.string(), unique_id);
+    };
+    const auto read_only_state = [&]() {
+        return read_only("one-guid") + "," +
+            read_only("two-guid") + "," +
+            read_only("three-guid") + "," +
+            read_only("other-guid");
+    };
+
+    auto read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .read_only = true
+    });
+    expect(read_only_result.ok, "#797: read-only assignment should support mixed selectors");
+    expect(read_only("one-guid") == ".T." &&
+            read_only("two-guid") == ".T." &&
+            read_only("three-guid") == ".T." &&
+            read_only("other-guid") == ".F.",
+        "#797: read-only true assignment should preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#797: first read-only write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#797: second read-only write should remain undo-backed");
+    expect(read_only_state() == ".F.,.F.,.T.,.F.", "#797: read-only undo should restore original states");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .read_only = false
+    });
+    expect(read_only_result.ok, "#797: editable assignment should support record-index selectors");
+    expect(read_only("three-guid") == ".F." &&
+            read_only("one-guid") == ".F." &&
+            read_only("two-guid") == ".F.",
+        "#797: editable assignment should use FoxPro logical formatting");
+
+    const std::string committed_state = read_only_state();
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = table_path.string(),
+        .objects = {},
+        .read_only = true
+    });
+    expect(!read_only_result.ok, "#797: read-only assignment should reject empty selections");
+    expect(read_only_state() == committed_state, "#797: empty-selection failures should not mutate read-only states");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .read_only = true
+    });
+    expect(!read_only_result.ok, "#797: read-only assignment should reject missing selected objects");
+    expect(read_only_state() == committed_state, "#797: missing-object failures should not mutate read-only states");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}}
+        },
+        .read_only = true
+    });
+    expect(!read_only_result.ok, "#797: read-only assignment should reject duplicate selected objects");
+    expect(read_only_state() == committed_state, "#797: duplicate-selection failures should not mutate read-only states");
+
+    const fs::path blob_path = temp_dir / "readonly_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "Caption = \"Blob\"\r\nReadOnly = .F.\r\n"},
+        {"txtNoReadOnly", "no-readonly-guid", "Caption = \"No ReadOnly\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#797: read-only property-blob fixture should be writable");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"}
+        },
+        .read_only = true
+    });
+    expect(read_only_result.ok, "#797: read-only assignment should support existing serialized properties");
+    expect(read_only_for(blob_path.string(), "blob-guid") == ".T.",
+        "#797: serialized read-only assignment should preserve property lookup");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#797: serialized read-only write should remain undo-backed");
+    expect(read_only_for(blob_path.string(), "blob-guid") == ".F.",
+        "#797: serialized read-only undo should restore original property value");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "no-readonly-guid"}
+        },
+        .read_only = true
+    });
+    expect(!read_only_result.ok, "#797: read-only assignment should reject missing serialized READONLY properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_readonly.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#797: missing-READONLY fixture should be writable");
+
+    read_only_result = copperfin::vfp::set_visual_object_read_only({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .read_only = true
+    });
+    expect(!read_only_result.ok, "#797: read-only assignment should reject missing READONLY fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11807,6 +11982,7 @@ int main() {
     test_set_visual_object_tab_stop_assigns_logical_state();
     test_set_visual_object_visibility_assigns_logical_state();
     test_set_visual_object_enabled_assigns_logical_state();
+    test_set_visual_object_read_only_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
