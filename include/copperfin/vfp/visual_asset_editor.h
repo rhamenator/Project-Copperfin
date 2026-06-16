@@ -736,6 +736,12 @@ struct VisualObjectMinButtonRequest {
     bool min_button = false;
 };
 
+struct VisualObjectMovableRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool movable = false;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1371,6 +1377,7 @@ VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableReque
 VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBoxRequest& request);
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request);
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request);
+VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);

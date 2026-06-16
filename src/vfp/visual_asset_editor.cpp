@@ -5337,6 +5337,15 @@ VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRe
         request.min_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Movable",
+        "movable",
+        request.movable ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
