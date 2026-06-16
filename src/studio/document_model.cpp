@@ -30,6 +30,7 @@ const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_
 struct FieldSelection {
     std::string value{};
     std::size_t field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t memo_block_number = 0;
 };
 
 bool looks_like_unresolved_memo(const std::string& value) {
@@ -77,7 +78,11 @@ FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::init
         if (value != nullptr) {
             const std::string usable_value = trim_copy(usable_display_value(*value));
             if (!usable_value.empty()) {
-                return {.value = usable_value, .field_index = field_index_or_missing(record, field_name)};
+                return {
+                    .value = usable_value,
+                    .field_index = field_index_or_missing(record, field_name),
+                    .memo_block_number = value->memo_block_number
+                };
             }
         }
     }
@@ -257,18 +262,23 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         const FieldSelection object_name = first_non_empty_selection(record, {"OBJNAME", "NAME"});
         snapshot.object_name = object_name.value;
         snapshot.object_name_field_index = object_name.field_index;
+        snapshot.object_name_memo_block_number = object_name.memo_block_number;
         const FieldSelection unique_id = first_non_empty_selection(record, {"UNIQUEID"});
         snapshot.unique_id = unique_id.value;
         snapshot.unique_id_field_index = unique_id.field_index;
+        snapshot.unique_id_memo_block_number = unique_id.memo_block_number;
         const FieldSelection parent_name = first_non_empty_selection(record, {"PARENT", "PARENTID"});
         snapshot.parent_name = parent_name.value;
         snapshot.parent_name_field_index = parent_name.field_index;
+        snapshot.parent_name_memo_block_number = parent_name.memo_block_number;
         const FieldSelection class_name = first_non_empty_selection(record, {"CLASS"});
         snapshot.class_name = class_name.value;
         snapshot.class_name_field_index = class_name.field_index;
+        snapshot.class_name_memo_block_number = class_name.memo_block_number;
         const FieldSelection baseclass_name = first_non_empty_selection(record, {"BASECLASS"});
         snapshot.baseclass_name = baseclass_name.value;
         snapshot.baseclass_name_field_index = baseclass_name.field_index;
+        snapshot.baseclass_name_memo_block_number = baseclass_name.memo_block_number;
         if (document.kind == StudioAssetKind::menu) {
             snapshot.menu_prompt = first_non_empty(record, {"PROMPT"});
             snapshot.menu_prompt_field_index = field_index_or_missing(record, "PROMPT");
@@ -286,9 +296,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                     const FieldSelection title = first_non_empty_selection(record, {"EXPR", "NAME", "UNIQUEID"});
                     snapshot.title = title.value;
                     snapshot.title_field_index = title.field_index;
+                    snapshot.title_memo_block_number = title.memo_block_number;
                     const FieldSelection subtitle = first_non_empty_selection(record, {"OBJTYPE", "OBJCODE", "FONTFACE", "PLATFORM"});
                     snapshot.subtitle = subtitle.value;
                     snapshot.subtitle_field_index = subtitle.field_index;
+                    snapshot.subtitle_memo_block_number = subtitle.memo_block_number;
                 }
                 break;
             case StudioAssetKind::menu:
@@ -296,9 +308,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                     const FieldSelection title = first_non_empty_selection(record, {"PROMPT", "NAME", "LEVELNAME"});
                     snapshot.title = title.value;
                     snapshot.title_field_index = title.field_index;
+                    snapshot.title_memo_block_number = title.memo_block_number;
                     const FieldSelection subtitle = first_non_empty_selection(record, {"LEVELNAME", "OBJTYPE", "OBJCODE"});
                     snapshot.subtitle = subtitle.value;
                     snapshot.subtitle_field_index = subtitle.field_index;
+                    snapshot.subtitle_memo_block_number = subtitle.memo_block_number;
                 }
                 break;
             case StudioAssetKind::project:
@@ -306,9 +320,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                     const FieldSelection title = first_non_empty_selection(record, {"NAME", "KEY", "TYPE"});
                     snapshot.title = title.value;
                     snapshot.title_field_index = title.field_index;
+                    snapshot.title_memo_block_number = title.memo_block_number;
                     const FieldSelection subtitle = first_non_empty_selection(record, {"TYPE", "KEY", "COMMENTS"});
                     snapshot.subtitle = subtitle.value;
                     snapshot.subtitle_field_index = subtitle.field_index;
+                    snapshot.subtitle_memo_block_number = subtitle.memo_block_number;
                 }
                 break;
             case StudioAssetKind::form:
@@ -323,9 +339,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                     const FieldSelection title = first_non_empty_selection(record, {"OBJNAME", "NAME", "TITLE", "UNIQUEID", "CLASS"});
                     snapshot.title = title.value;
                     snapshot.title_field_index = title.field_index;
+                    snapshot.title_memo_block_number = title.memo_block_number;
                     const FieldSelection subtitle = first_non_empty_selection(record, {"BASECLASS", "CLASS", "OBJTYPE", "OBJCODE", "PLATFORM"});
                     snapshot.subtitle = subtitle.value;
                     snapshot.subtitle_field_index = subtitle.field_index;
+                    snapshot.subtitle_memo_block_number = subtitle.memo_block_number;
                 }
                 break;
         }

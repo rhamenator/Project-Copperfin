@@ -86,14 +86,19 @@ struct StudioObjectSnapshot {
     std::size_t platform_field_index = StudioObjectMissingFieldIndex;
     std::string object_name{};
     std::size_t object_name_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t object_name_memo_block_number = 0;
     std::string unique_id{};
     std::size_t unique_id_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t unique_id_memo_block_number = 0;
     std::string parent_name{};
     std::size_t parent_name_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t parent_name_memo_block_number = 0;
     std::string class_name{};
     std::size_t class_name_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t class_name_memo_block_number = 0;
     std::string baseclass_name{};
     std::size_t baseclass_name_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t baseclass_name_memo_block_number = 0;
     std::string menu_prompt{};
     std::size_t menu_prompt_field_index = StudioObjectMissingFieldIndex;
     std::string menu_level_name{};
@@ -104,8 +109,10 @@ struct StudioObjectSnapshot {
     std::size_t menu_message_field_index = StudioObjectMissingFieldIndex;
     std::string title{};
     std::size_t title_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t title_memo_block_number = 0;
     std::string subtitle{};
     std::size_t subtitle_field_index = StudioObjectMissingFieldIndex;
+    std::uint32_t subtitle_memo_block_number = 0;
     std::vector<StudioPropertySnapshot> properties{};
 };
 

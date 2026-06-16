@@ -175,17 +175,17 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
             .record_index = 7U,
             .deleted = false,
             .values = {
-                {.field_name = "OBJNAME", .field_type = 'C', .is_null = false, .display_value = "cmdSave"},
+                {.field_name = "OBJNAME", .field_type = 'M', .is_null = false, .display_value = "cmdSave", .memo_block_number = 101U},
                 {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "8.000"},
                 {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "1.000"},
                 {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "WINDOWS"},
-                {.field_name = "PARENT", .field_type = 'C', .is_null = false, .display_value = "frmCustomer"},
+                {.field_name = "PARENT", .field_type = 'M', .is_null = false, .display_value = "frmCustomer", .memo_block_number = 105U},
                 {.field_name = "HELP", .field_type = 'M', .is_null = true, .display_value = "", .memo_block_number = 0U},
                 {.field_name = "TAG", .field_type = 'M', .is_null = false, .display_value = ""},
                 {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save\r\nEnabled = .T.", .memo_block_number = 7U},
-                {.field_name = "UNIQUEID", .field_type = 'C', .is_null = false, .display_value = "cmd-save-1"},
-                {.field_name = "CLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"},
-                {.field_name = "BASECLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"}
+                {.field_name = "UNIQUEID", .field_type = 'M', .is_null = false, .display_value = "cmd-save-1", .memo_block_number = 108U},
+                {.field_name = "CLASS", .field_type = 'M', .is_null = false, .display_value = "commandbutton", .memo_block_number = 109U},
+                {.field_name = "BASECLASS", .field_type = 'M', .is_null = false, .display_value = "commandbutton", .memo_block_number = 110U}
             }
         }
     };
@@ -201,18 +201,25 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         expect(objects[0].platform_field_index == 3U, "#671: raw PLATFORM metadata should retain DBF field provenance");
         expect(objects[0].object_name == "cmdSave", "#660: object snapshots should expose the design object name");
         expect(objects[0].object_name_field_index == 0U, "#672: object name metadata should retain DBF field provenance");
+        expect(objects[0].object_name_memo_block_number == 101U, "#717: object names should retain selected memo block provenance");
         expect(objects[0].unique_id == "cmd-save-1", "#660: object snapshots should expose stable UNIQUEID metadata");
         expect(objects[0].unique_id_field_index == 8U, "#672: UNIQUEID metadata should retain DBF field provenance");
+        expect(objects[0].unique_id_memo_block_number == 108U, "#717: unique IDs should retain selected memo block provenance");
         expect(objects[0].parent_name == "frmCustomer", "#660: object snapshots should expose parent hierarchy metadata");
         expect(objects[0].parent_name_field_index == 4U, "#672: parent hierarchy metadata should retain DBF field provenance");
+        expect(objects[0].parent_name_memo_block_number == 105U, "#717: parent names should retain selected memo block provenance");
         expect(objects[0].class_name == "commandbutton", "#660: object snapshots should expose CLASS metadata");
         expect(objects[0].class_name_field_index == 9U, "#672: CLASS metadata should retain DBF field provenance");
+        expect(objects[0].class_name_memo_block_number == 109U, "#717: class names should retain selected memo block provenance");
         expect(objects[0].baseclass_name == "commandbutton", "#660: object snapshots should expose BASECLASS metadata");
         expect(objects[0].baseclass_name_field_index == 10U, "#672: BASECLASS metadata should retain DBF field provenance");
+        expect(objects[0].baseclass_name_memo_block_number == 110U, "#717: baseclass names should retain selected memo block provenance");
         expect(objects[0].title == "cmdSave", "#673: friendly titles should keep existing form selection priority");
         expect(objects[0].title_field_index == 0U, "#673: friendly title metadata should retain selected DBF field provenance");
+        expect(objects[0].title_memo_block_number == 101U, "#717: friendly titles should inherit selected field memo block provenance");
         expect(objects[0].subtitle == "commandbutton", "#673: friendly subtitles should keep existing form selection priority");
         expect(objects[0].subtitle_field_index == 10U, "#673: friendly subtitle metadata should retain selected DBF field provenance");
+        expect(objects[0].subtitle_memo_block_number == 110U, "#717: friendly subtitles should inherit selected field memo block provenance");
         const auto parent = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
             return property.name == "PARENT";
         });
@@ -236,7 +243,7 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
             expect(!parent->derived_from_property_blob, "#659: direct DBF fields should not be marked blob-derived");
             expect(parent->source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                 "#684: direct DBF fields should not masquerade as property-blob line metadata");
-            expect(parent->memo_block_number == 0U, "#712: non-memo direct properties should expose memo block zero");
+            expect(parent->memo_block_number == 105U, "#717: memo-backed direct identity properties should retain memo block provenance");
         }
         expect(help != objects[0].properties.end(), "#658: null design fields should stay in object snapshots");
         if (help != objects[0].properties.end()) {
@@ -292,10 +299,16 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
         expect(form_objects[0].object_name.empty(), "#696: unresolved memo object names should not become active names");
         expect(form_objects[0].object_name_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#696: active object-name provenance should be missing when usable text is absent");
+        expect(form_objects[0].object_name_memo_block_number == 0U,
+            "#717: suppressed object-name metadata should expose memo block zero");
         expect(form_objects[0].title == "Record 10", "#696: unresolved memo title sources should use synthetic fallback");
         expect(form_objects[0].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#696: synthetic titles should not masquerade as unresolved memo provenance");
+        expect(form_objects[0].title_memo_block_number == 0U,
+            "#717: synthetic object titles should expose memo block zero");
         expect(form_objects[0].subtitle.empty(), "#696: unresolved memo subtitle sources should remain absent");
+        expect(form_objects[0].subtitle_memo_block_number == 0U,
+            "#717: suppressed subtitles should expose memo block zero");
         const auto objname = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
             return property.name == "OBJNAME";
         });
