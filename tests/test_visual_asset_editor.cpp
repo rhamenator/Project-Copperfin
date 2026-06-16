@@ -12566,6 +12566,197 @@ void test_set_visual_object_dynamic_font_size_assigns_expression_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_dynamic_font_bold_assigns_expression_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_dynamic_font_bold_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "dynamic_font_bold.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "DYNAMICFONTBOLD", .type = 'C', .length = 96U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtCustomer", "customerBox", "customer-guid", ".F."},
+        {"lblOrders", "ordersLabel", "orders-guid", ".T."},
+        {"txtOther", "otherBox", "other-guid", ".F."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#841: dynamic font-bold fixture should be writable");
+
+    const auto dynamic_font_bold_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontBold"
+        });
+        expect(result.ok && result.exists, "#841: dynamic font-bold fixture property should be readable");
+        return result.value;
+    };
+    const auto dynamic_font_bold = [&](const std::string& unique_id) {
+        return dynamic_font_bold_for(table_path.string(), unique_id);
+    };
+    const auto dynamic_font_bold_state = [&]() {
+        return dynamic_font_bold("customer-guid") + "," +
+            dynamic_font_bold("orders-guid") + "," +
+            dynamic_font_bold("other-guid");
+    };
+
+    const std::string bold_expression = "IIF(RECNO() % 2 = 0, .T., .F.)";
+    auto bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .dynamic_font_bold = bold_expression
+    });
+    expect(bold_result.ok, "#841: dynamic font-bold assignment should support object-name and record-index selectors");
+    expect(dynamic_font_bold("customer-guid") == bold_expression &&
+            dynamic_font_bold("orders-guid") == bold_expression &&
+            dynamic_font_bold("other-guid") == ".F.",
+        "#841: direct dynamic font-bold assignment should write raw expression text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#841: first dynamic font-bold write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#841: second dynamic font-bold write should remain undo-backed");
+    expect(dynamic_font_bold_state() == ".F.,.T.,.F.",
+        "#841: dynamic font-bold undo should restore original direct values");
+
+    const std::string constant_expression = ".T.";
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .dynamic_font_bold = constant_expression
+    });
+    expect(bold_result.ok, "#841: dynamic font-bold assignment should support UNIQUEID selectors");
+    expect(dynamic_font_bold("customer-guid") == constant_expression &&
+            dynamic_font_bold("orders-guid") == constant_expression,
+        "#841: direct dynamic font-bold assignment should store raw constant expressions");
+
+    const std::string committed_state = dynamic_font_bold_state();
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = table_path.string(),
+        .objects = {},
+        .dynamic_font_bold = ".F."
+    });
+    expect(!bold_result.ok, "#841: dynamic font-bold assignment should reject empty selections");
+    expect(dynamic_font_bold_state() == committed_state,
+        "#841: empty-selection failures should not mutate dynamic font-bold expressions");
+
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .dynamic_font_bold = ".F."
+    });
+    expect(!bold_result.ok, "#841: dynamic font-bold assignment should reject missing selected objects");
+    expect(dynamic_font_bold_state() == committed_state,
+        "#841: missing-object failures should not mutate dynamic font-bold expressions");
+
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}}
+        },
+        .dynamic_font_bold = ".F."
+    });
+    expect(!bold_result.ok, "#841: dynamic font-bold assignment should reject duplicate selected objects");
+    expect(dynamic_font_bold_state() == committed_state,
+        "#841: duplicate-selection failures should not mutate dynamic font-bold expressions");
+
+    const fs::path blob_path = temp_dir / "dynamic_font_bold_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "DynamicFontBold = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"txtNoBold", "no-bold-guid", "Caption = \"No bold\"\r\n"},
+        {"txtOther", "other-guid", "DynamicFontBold = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#841: dynamic font-bold property-blob fixture should be writable");
+
+    const auto blob_dynamic_font_bold_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontBold"
+        });
+    };
+
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoBold", .unique_id = {}}
+        },
+        .dynamic_font_bold = bold_expression
+    });
+    expect(bold_result.ok, "#841: dynamic font-bold assignment should support existing and absent serialized properties");
+    auto blob_bold = blob_dynamic_font_bold_state("blob-guid");
+    auto appended_bold = blob_dynamic_font_bold_state("no-bold-guid");
+    auto other_bold = blob_dynamic_font_bold_state("other-guid");
+    expect(blob_bold.ok && blob_bold.exists && blob_bold.value == bold_expression &&
+            appended_bold.ok && appended_bold.exists && appended_bold.value == bold_expression &&
+            other_bold.ok && other_bold.exists && other_bold.value == ".T.",
+        "#841: serialized dynamic font-bold assignment should write raw expressions and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#841: appended serialized dynamic font-bold write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#841: existing serialized dynamic font-bold write should remain undo-backed");
+    blob_bold = blob_dynamic_font_bold_state("blob-guid");
+    appended_bold = blob_dynamic_font_bold_state("no-bold-guid");
+    expect(blob_bold.ok && blob_bold.exists && blob_bold.value == ".F." &&
+            appended_bold.ok && !appended_bold.exists,
+        "#841: serialized dynamic font-bold undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_dynamicfontbold.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#841: missing-DynamicFontBold fixture should be writable");
+
+    bold_result = copperfin::vfp::set_visual_object_dynamic_font_bold({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .dynamic_font_bold = ".F."
+    });
+    expect(!bold_result.ok,
+        "#841: dynamic font-bold assignment should reject objects without a writable DynamicFontBold carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_row_source_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -20215,6 +20406,7 @@ int main() {
     test_set_visual_object_font_shadow_assigns_logical_state();
     test_set_visual_object_dynamic_font_name_assigns_expression_value();
     test_set_visual_object_dynamic_font_size_assigns_expression_value();
+    test_set_visual_object_dynamic_font_bold_assigns_expression_value();
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
