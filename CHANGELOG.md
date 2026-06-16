@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#22 shared design model and memo-heavy round-trip preservation closure audit shipped: all prompt-sized shared design-model children #658-#729 are closed, and full validation passes with all 35 configured tests.
 - E1/#729 report section id provenance shipped: report/label section snapshots now expose explicit missing-field and block-zero provenance for synthesized section ids while preserving OBJCODE-backed title and band-kind provenance.
 - E1/#728 report document title provenance shipped: report/label layout snapshots now expose explicit missing-field and block-zero provenance for display-name-derived document titles, including unavailable non-report layouts.
 - E1/#727 project group summary provenance shipped: aggregate project groups now expose source field and memo block metadata for group ids and titles, inheriting the first entry that establishes each group while preserving counts and sorting.
