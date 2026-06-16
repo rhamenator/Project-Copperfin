@@ -1228,6 +1228,16 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "library-output wrapper source should declare a shared process-launch helper.");
+        expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
+               "library-output wrapper source should include standard process-launch support.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
+               "library-output wrapper source should build a runtime-host command line from dispatch execution.");
+        expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
+               "library-output wrapper source should execute the runtime-host command line.");
+        expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+               "library-output wrapper source should compare runtime-host exit code with the expected exit code.");
+        expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
+               "library-output wrapper source should not keep the deterministic process-launch failure placeholder.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                "library-output wrapper source should declare a shared host-failure evaluation helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,
@@ -2744,6 +2754,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "fll-output wrapper source should declare a shared process-launch helper.");
+        expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
+               "fll-output wrapper source should include standard process-launch support.");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
+               "fll-output wrapper source should build a runtime-host command line from dispatch execution.");
+        expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
+               "fll-output wrapper source should execute the runtime-host command line.");
+        expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+               "fll-output wrapper source should compare runtime-host exit code with the expected exit code.");
+        expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
+               "fll-output wrapper source should not keep the deterministic process-launch failure placeholder.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                "fll-output wrapper source should declare a shared host-failure evaluation helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,

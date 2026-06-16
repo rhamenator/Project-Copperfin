@@ -819,6 +819,16 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                    "build host DLL wrapper should declare a shared process-launch helper.");
+            expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
+                   "build host DLL wrapper should include standard process-launch support.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
+                   "build host DLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
+                   "build host DLL wrapper should execute the runtime-host command line.");
+            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+                   "build host DLL wrapper should compare runtime-host exit code with the expected exit code.");
+            expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
+                   "build host DLL wrapper should not keep the deterministic process-launch failure placeholder.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                    "build host DLL wrapper should declare a shared host-failure evaluation helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,
@@ -1836,6 +1846,16 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                    "build host FLL wrapper should declare a shared process-launch helper.");
+            expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
+                   "build host FLL wrapper should include standard process-launch support.");
+            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
+                   "build host FLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
+                   "build host FLL wrapper should execute the runtime-host command line.");
+            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+                   "build host FLL wrapper should compare runtime-host exit code with the expected exit code.");
+            expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
+                   "build host FLL wrapper should not keep the deterministic process-launch failure placeholder.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeHostFailureEvaluation copperfin_runtime_bridge_evaluate_host_failure(") != std::string::npos,
                    "build host FLL wrapper should declare a shared host-failure evaluation helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(") != std::string::npos,
