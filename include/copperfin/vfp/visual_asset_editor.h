@@ -217,6 +217,16 @@ struct VisualObjectRenameRequest {
     std::string new_unique_id;
 };
 
+struct VisualObjectReorderRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string placement;
+    std::string target_object_name;
+    std::string target_unique_id;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -240,6 +250,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
+VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);

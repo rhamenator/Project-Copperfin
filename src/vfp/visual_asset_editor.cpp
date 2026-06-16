@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <optional>
 #include <sstream>
@@ -1869,6 +1870,126 @@ VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& requ
         .unique_id = {},
         .properties = changes
     });
+}
+
+VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    const std::string placement = normalize_visual_property_name(request.placement);
+    if (placement != "front" && placement != "back" && placement != "before" && placement != "after") {
+        return {.ok = false, .error = "Unsupported visual object placement."};
+    }
+
+    std::size_t source_record_index = 0U;
+    const auto source_resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, source_record_index);
+    if (!source_resolution.ok) {
+        return source_resolution;
+    }
+
+    std::size_t target_record_index = 0U;
+    if (placement == "before" || placement == "after") {
+        if (trim_both(request.target_object_name).empty() && trim_both(request.target_unique_id).empty()) {
+            return {.ok = false, .error = "No target object selector was provided."};
+        }
+        const auto target_resolution = resolve_visual_object_record_index({
+            .path = request.path,
+            .record_index = 0U,
+            .object_name = request.target_object_name,
+            .unique_id = request.target_unique_id,
+            .property_name = {},
+            .property_value = {}
+        }, target_record_index);
+        if (!target_resolution.ok) {
+            return target_resolution;
+        }
+        if (target_record_index == source_record_index) {
+            return {.ok = false, .error = "A visual object cannot be reordered relative to itself."};
+        }
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    const auto& table = table_result.table;
+    if (source_record_index >= table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+    if ((placement == "before" || placement == "after") && target_record_index >= table.records.size()) {
+        return {.ok = false, .error = "The requested target record is not currently available."};
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table.records.size());
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table.records.size());
+    for (const auto& record : table.records) {
+        std::vector<std::string> values;
+        values.reserve(table.fields.size());
+        for (const auto& field : table.fields) {
+            const auto* value = find_record_value(record, field.name);
+            values.push_back(value == nullptr ? std::string{} : value->display_value);
+        }
+        records.push_back(std::move(values));
+        deleted_flags.push_back(record.deleted);
+    }
+
+    std::vector<std::size_t> order;
+    order.reserve(records.size());
+    for (std::size_t index = 0U; index < records.size(); ++index) {
+        if (index != source_record_index) {
+            order.push_back(index);
+        }
+    }
+
+    std::size_t insert_position = 0U;
+    if (placement == "back") {
+        insert_position = order.size();
+    } else if (placement == "before" || placement == "after") {
+        const auto target = std::find(order.begin(), order.end(), target_record_index);
+        if (target == order.end()) {
+            return {.ok = false, .error = "The requested target record is not currently available."};
+        }
+        insert_position = static_cast<std::size_t>(std::distance(order.begin(), target));
+        if (placement == "after") {
+            ++insert_position;
+        }
+    }
+    order.insert(order.begin() + static_cast<std::ptrdiff_t>(insert_position), source_record_index);
+
+    std::vector<std::vector<std::string>> reordered_records;
+    reordered_records.reserve(records.size());
+    std::vector<bool> reordered_deleted_flags;
+    reordered_deleted_flags.reserve(deleted_flags.size());
+    for (const auto record_index : order) {
+        reordered_records.push_back(records[record_index]);
+        reordered_deleted_flags.push_back(deleted_flags[record_index]);
+    }
+
+    const auto create_result = create_dbf_table_file(request.path, table.fields, reordered_records);
+    if (!create_result.ok) {
+        return {.ok = false, .error = create_result.error};
+    }
+    for (std::size_t index = 0U; index < reordered_deleted_flags.size(); ++index) {
+        if (!reordered_deleted_flags[index]) {
+            continue;
+        }
+        const auto delete_result = set_record_deleted_flag(request.path, index, true);
+        if (!delete_result.ok) {
+            return {.ok = false, .error = delete_result.error};
+        }
+    }
+
+    return {.ok = true, .error = {}};
 }
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {

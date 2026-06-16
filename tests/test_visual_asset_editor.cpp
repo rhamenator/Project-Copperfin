@@ -1935,6 +1935,154 @@ void test_rename_visual_object_updates_identity_safely() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_reorder_visual_object_updates_z_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_reorder_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "reorder.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdA", "buttonA", "a-guid", "Caption = \"A\"\r\n"},
+        {"cmdB", "buttonB", "b-guid", "Caption = \"B\"\r\n"},
+        {"cmdC", "buttonC", "c-guid", "Caption = \"C\"\r\n"},
+        {"cmdD", "buttonD", "d-guid", "Caption = \"D\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#755: reorder fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "c-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#755: reorder fixture should support deleted-row preservation setup");
+
+    const auto order_string = [&]() {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#755: reordered visual asset should remain listable");
+        std::string value;
+        for (const auto& object : list_result.objects) {
+            if (!value.empty()) {
+                value += ",";
+            }
+            value += object.unique_id;
+            if (object.deleted) {
+                value += "*";
+            }
+        }
+        return value;
+    };
+
+    auto reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "c-guid",
+        .placement = "front",
+        .target_object_name = {},
+        .target_unique_id = {}
+    });
+    expect(reorder_result.ok, "#755: reorder should support front placement by UNIQUEID");
+    expect(order_string() == "c-guid*,a-guid,b-guid,d-guid",
+        "#755: front placement should move the selected record to the front and preserve deleted flags");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdA",
+        .unique_id = {},
+        .placement = "back",
+        .target_object_name = {},
+        .target_unique_id = {}
+    });
+    expect(reorder_result.ok, "#755: reorder should support back placement by object name after indexes change");
+    expect(order_string() == "c-guid*,b-guid,d-guid,a-guid",
+        "#755: back placement should move the selected record to the back");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "a-guid",
+        .placement = "before",
+        .target_object_name = "cmdB",
+        .target_unique_id = {}
+    });
+    expect(reorder_result.ok, "#755: reorder should support before-target placement by object-name target");
+    expect(order_string() == "c-guid*,a-guid,b-guid,d-guid",
+        "#755: before placement should insert the selected record before the resolved target");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "b-guid",
+        .placement = "after",
+        .target_object_name = {},
+        .target_unique_id = "d-guid"
+    });
+    expect(reorder_result.ok, "#755: reorder should support after-target placement by UNIQUEID target");
+    expect(order_string() == "c-guid*,a-guid,d-guid,b-guid",
+        "#755: after placement should insert the selected record after the resolved target");
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "a-guid",
+        .property_name = "Caption"
+    });
+    expect(property_result.ok && property_result.value == "\"A\"",
+        "#755: reorder should preserve memo-backed field values");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "b-guid",
+        .placement = "before",
+        .target_object_name = {},
+        .target_unique_id = "b-guid"
+    });
+    expect(!reorder_result.ok, "#755: reorder should reject self-targeted relative moves");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "b-guid",
+        .placement = "after",
+        .target_object_name = "missingObject",
+        .target_unique_id = {}
+    });
+    expect(!reorder_result.ok, "#755: reorder should reject missing target selectors");
+
+    reorder_result = copperfin::vfp::reorder_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "b-guid",
+        .placement = "sideways",
+        .target_object_name = {},
+        .target_unique_id = {}
+    });
+    expect(!reorder_result.ok, "#755: reorder should reject unsupported placements");
+    expect(order_string() == "c-guid*,a-guid,d-guid,b-guid",
+        "#755: failed reorder requests should not mutate record order");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2814,6 +2962,7 @@ int main() {
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
+    test_reorder_visual_object_updates_z_order();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
