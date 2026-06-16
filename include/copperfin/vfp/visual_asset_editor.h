@@ -549,6 +549,20 @@ struct VisualObjectReparentRequest {
     bool clear_parent = false;
 };
 
+struct VisualObjectReparentBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_object_name;
+    std::string parent_unique_id;
+    bool clear_parent = false;
+};
+
+struct VisualObjectReparentBatchRequest {
+    std::string path;
+    std::vector<VisualObjectReparentBatchItem> objects;
+};
+
 struct VisualObjectRenameRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -608,6 +622,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
+VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
 VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);

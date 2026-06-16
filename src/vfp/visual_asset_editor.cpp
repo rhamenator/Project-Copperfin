@@ -3849,6 +3849,50 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
     });
 }
 
+VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object reparent operations were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_reparents = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& object : request.objects) {
+        const auto result = reparent_visual_object({
+            .path = request.path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .parent_object_name = object.parent_object_name,
+            .parent_unique_id = object.parent_unique_id,
+            .clear_parent = object.clear_parent
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_reparents();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
