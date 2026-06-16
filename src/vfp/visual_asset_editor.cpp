@@ -5364,6 +5364,15 @@ VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisab
         request.disabled_picture);
 }
 
+VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDragPictureRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "OLEDragPicture",
+        "OLE drag-picture",
+        request.ole_drag_picture);
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

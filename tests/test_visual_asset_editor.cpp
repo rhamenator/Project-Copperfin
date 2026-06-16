@@ -10863,6 +10863,29 @@ void test_set_visual_object_disabled_picture_assigns_text() {
                 .path = path,
                 .objects = objects,
                 .disabled_picture = value
+                });
+        });
+}
+
+void test_set_visual_object_ole_drag_picture_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#859",
+        "ole_drag_picture",
+        "OLEDragPicture",
+        "OLEDRAGPICTURE",
+        "OLE drag-picture",
+        "drag\\customer.bmp",
+        "drag\\orders.bmp",
+        "drag\\other.bmp",
+        "C:\\\\images\\\\customer \"drag\".bmp",
+        "gallery.forms.customer_drag",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_ole_drag_picture({
+                .path = path,
+                .objects = objects,
+                .ole_drag_picture = value
             });
         });
 }
@@ -21855,6 +21878,7 @@ int main() {
     test_set_visual_object_picture_assigns_text();
     test_set_visual_object_down_picture_assigns_text();
     test_set_visual_object_disabled_picture_assigns_text();
+    test_set_visual_object_ole_drag_picture_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();
