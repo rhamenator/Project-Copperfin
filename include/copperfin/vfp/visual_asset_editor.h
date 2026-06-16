@@ -603,6 +603,20 @@ struct VisualObjectReorderRequest {
     std::string target_unique_id;
 };
 
+struct VisualObjectReorderBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string placement;
+    std::string target_object_name;
+    std::string target_unique_id;
+};
+
+struct VisualObjectReorderBatchRequest {
+    std::string path;
+    std::vector<VisualObjectReorderBatchItem> objects;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -643,6 +657,7 @@ VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchReq
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
 VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest& request);
 VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request);
+VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request);
 VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObjectSubtreeDeletedStateRequest& request);

@@ -7698,6 +7698,219 @@ void test_reorder_visual_object_updates_z_order() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_reorder_visual_objects_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_batch_reorder_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "batch_reorder.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdA", "buttonA", "a-guid", "Caption = \"A\"\r\n"},
+        {"cmdB", "buttonB", "b-guid", "Caption = \"B\"\r\n"},
+        {"cmdC", "buttonC", "c-guid", "Caption = \"C\"\r\n"},
+        {"cmdD", "buttonD", "d-guid", "Caption = \"D\"\r\n"},
+        {"cmdE", "buttonE", "e-guid", "Caption = \"E\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#783: batch reorder fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "c-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#783: batch reorder fixture should support deleted-row preservation setup");
+
+    const auto order_string = [&]() {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#783: batch-reordered visual asset should remain listable");
+        std::string value;
+        for (const auto& object : list_result.objects) {
+            if (!value.empty()) {
+                value += ",";
+            }
+            value += object.unique_id;
+            if (object.deleted) {
+                value += "*";
+            }
+        }
+        return value;
+    };
+
+    const std::string original_order = order_string();
+    auto batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#783: batch reorder should reject empty operation sets");
+    expect(order_string() == original_order, "#783: empty batch failures should not mutate record order");
+
+    batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "d-guid",
+                .placement = "front",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = "cmdA",
+                .unique_id = {},
+                .placement = "back",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 3U,
+                .object_name = {},
+                .unique_id = {},
+                .placement = "before",
+                .target_object_name = {},
+                .target_unique_id = "c-guid"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "after",
+                .target_object_name = "cmdA",
+                .target_unique_id = {}
+            }
+        }
+    });
+    expect(batch_result.ok,
+        "#783: batch reorder should support mixed source selectors and front/back/before/after placements");
+    expect(order_string() == "d-guid,e-guid,c-guid*,a-guid,b-guid",
+        "#783: batch reorder should apply operations against the evolving row order and preserve deleted flags");
+
+    const auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "a-guid",
+        .property_name = "Caption"
+    });
+    expect(property_result.ok && property_result.value == "\"A\"",
+        "#783: batch reorder should preserve memo-backed field values");
+
+    const std::string committed_order = order_string();
+    batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "front",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "e-guid",
+                .placement = "after",
+                .target_object_name = "missingObject",
+                .target_unique_id = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#783: batch reorder should reject missing target selectors");
+    expect(order_string() == committed_order,
+        "#783: missing-target failures should roll back earlier batch order changes");
+
+    batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "front",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "missing-guid",
+                .placement = "back",
+                .target_object_name = {},
+                .target_unique_id = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#783: batch reorder should reject missing source selectors");
+    expect(order_string() == committed_order,
+        "#783: missing-source failures should roll back earlier batch order changes");
+
+    batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "front",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "before",
+                .target_object_name = {},
+                .target_unique_id = "b-guid"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#783: batch reorder should reject self-relative moves");
+    expect(order_string() == committed_order,
+        "#783: self-relative failures should roll back earlier batch order changes");
+
+    batch_result = copperfin::vfp::reorder_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "b-guid",
+                .placement = "front",
+                .target_object_name = {},
+                .target_unique_id = {}
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "a-guid",
+                .placement = "sideways",
+                .target_object_name = {},
+                .target_unique_id = {}
+            }
+        }
+    });
+    expect(!batch_result.ok, "#783: batch reorder should reject unsupported placements");
+    expect(order_string() == committed_order,
+        "#783: unsupported-placement failures should roll back earlier batch order changes");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_list_visual_object_children_filters_immediate_children() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -9171,6 +9384,7 @@ int main() {
     test_rename_visual_object_updates_identity_safely();
     test_rename_visual_objects_rolls_back_failed_batches();
     test_reorder_visual_object_updates_z_order();
+    test_reorder_visual_objects_rolls_back_failed_batches();
     test_list_visual_object_children_filters_immediate_children();
     test_list_visual_object_descendants_walks_container_tree();
     test_set_visual_object_subtree_deleted_state_updates_descendants();

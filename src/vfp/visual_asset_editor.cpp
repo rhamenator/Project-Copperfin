@@ -819,6 +819,162 @@ VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditR
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult resolve_visual_object_record_index_from_records(
+    const std::vector<DbfRecord>& records,
+    std::size_t requested_record_index,
+    const std::string& object_name,
+    const std::string& unique_id,
+    std::size_t& record_index) {
+    const std::string requested_unique_id = normalize_visual_object_name(unique_id);
+    if (!requested_unique_id.empty()) {
+        std::vector<std::size_t> matches;
+        for (std::size_t index = 0U; index < records.size(); ++index) {
+            const auto* value = find_record_value(records[index], "UNIQUEID");
+            if (value != nullptr && normalize_visual_object_name(value->display_value) == requested_unique_id) {
+                matches.push_back(index);
+            }
+        }
+        if (matches.empty()) {
+            return {.ok = false, .error = "No visual object with the requested unique id was found."};
+        }
+        if (matches.size() > 1U) {
+            return {.ok = false, .error = "The requested visual object unique id is ambiguous."};
+        }
+
+        record_index = matches.front();
+        return {.ok = true, .error = {}};
+    }
+
+    if (object_name.empty()) {
+        record_index = requested_record_index;
+        return {.ok = true, .error = {}};
+    }
+
+    const std::string requested_name = normalize_visual_object_name(object_name);
+    if (requested_name.empty()) {
+        return {.ok = false, .error = "No object name was provided."};
+    }
+
+    std::vector<std::size_t> matches;
+    for (std::size_t index = 0U; index < records.size(); ++index) {
+        const auto* value = find_record_value(records[index], "OBJNAME");
+        if (value != nullptr && normalize_visual_object_name(value->display_value) == requested_name) {
+            matches.push_back(index);
+        }
+    }
+    if (matches.empty()) {
+        for (std::size_t index = 0U; index < records.size(); ++index) {
+            const auto* value = find_record_value(records[index], "NAME");
+            if (value != nullptr && normalize_visual_object_name(value->display_value) == requested_name) {
+                matches.push_back(index);
+            }
+        }
+    }
+
+    if (matches.empty()) {
+        return {.ok = false, .error = "No visual object with the requested name was found."};
+    }
+    if (matches.size() > 1U) {
+        return {.ok = false, .error = "The requested visual object name is ambiguous."};
+    }
+
+    record_index = matches.front();
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult apply_visual_object_reorder_to_records(
+    std::vector<DbfRecord>& records,
+    const VisualObjectReorderBatchItem& request) {
+    const std::string placement = normalize_visual_property_name(request.placement);
+    if (placement != "front" && placement != "back" && placement != "before" && placement != "after") {
+        return {.ok = false, .error = "Unsupported visual object placement."};
+    }
+
+    std::size_t source_record_index = 0U;
+    const auto source_resolution = resolve_visual_object_record_index_from_records(
+        records,
+        request.record_index,
+        request.object_name,
+        request.unique_id,
+        source_record_index);
+    if (!source_resolution.ok) {
+        return source_resolution;
+    }
+    if (source_record_index >= records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    std::size_t target_record_index = 0U;
+    if (placement == "before" || placement == "after") {
+        if (trim_both(request.target_object_name).empty() && trim_both(request.target_unique_id).empty()) {
+            return {.ok = false, .error = "No target object selector was provided."};
+        }
+        const auto target_resolution = resolve_visual_object_record_index_from_records(
+            records,
+            0U,
+            request.target_object_name,
+            request.target_unique_id,
+            target_record_index);
+        if (!target_resolution.ok) {
+            return target_resolution;
+        }
+        if (target_record_index >= records.size()) {
+            return {.ok = false, .error = "The requested target record is not currently available."};
+        }
+        if (target_record_index == source_record_index) {
+            return {.ok = false, .error = "A visual object cannot be reordered relative to itself."};
+        }
+    }
+
+    std::vector<std::size_t> order;
+    order.reserve(records.size());
+    for (std::size_t index = 0U; index < records.size(); ++index) {
+        if (index != source_record_index) {
+            order.push_back(index);
+        }
+    }
+
+    std::size_t insert_position = 0U;
+    if (placement == "back") {
+        insert_position = order.size();
+    } else if (placement == "before" || placement == "after") {
+        const auto target = std::find(order.begin(), order.end(), target_record_index);
+        if (target == order.end()) {
+            return {.ok = false, .error = "The requested target record is not currently available."};
+        }
+        insert_position = static_cast<std::size_t>(std::distance(order.begin(), target));
+        if (placement == "after") {
+            ++insert_position;
+        }
+    }
+    order.insert(order.begin() + static_cast<std::ptrdiff_t>(insert_position), source_record_index);
+
+    std::vector<DbfRecord> reordered_records;
+    reordered_records.reserve(records.size());
+    for (const auto record_index : order) {
+        reordered_records.push_back(records[record_index]);
+    }
+    records = std::move(reordered_records);
+    return {.ok = true, .error = {}};
+}
+
+std::vector<std::vector<std::string>> visual_record_values_for_write(
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<DbfRecord>& records) {
+    std::vector<std::vector<std::string>> values;
+    values.reserve(records.size());
+    for (const auto& record : records) {
+        std::vector<std::string> record_values;
+        record_values.reserve(fields.size());
+        for (const auto& field : fields) {
+            const auto* value = find_record_value(record, field.name);
+            record_values.push_back(value == nullptr ? std::string{} : value->display_value);
+        }
+        values.push_back(std::move(record_values));
+    }
+    return values;
+}
+
 VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
     std::size_t record_index,
@@ -4142,6 +4298,61 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
         }
         const auto delete_result = set_record_deleted_flag(request.path, index, true);
         if (!delete_result.ok) {
+            return {.ok = false, .error = delete_result.error};
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object reorders were provided."};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    std::vector<DbfRecord> reordered_records = table_result.table.records;
+    for (const auto& object : request.objects) {
+        const auto result = apply_visual_object_reorder_to_records(reordered_records, object);
+        if (!result.ok) {
+            return result;
+        }
+    }
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
+    if (original_table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
+        ? std::vector<std::uint8_t>{}
+        : read_binary_file(memo_path);
+
+    const auto create_result = create_dbf_table_file(
+        request.path,
+        table_result.table.fields,
+        visual_record_values_for_write(table_result.table.fields, reordered_records));
+    if (!create_result.ok) {
+        return {.ok = false, .error = create_result.error};
+    }
+
+    for (std::size_t index = 0U; index < reordered_records.size(); ++index) {
+        if (!reordered_records[index].deleted) {
+            continue;
+        }
+        const auto delete_result = set_record_deleted_flag(request.path, index, true);
+        if (!delete_result.ok) {
+            write_binary_file(request.path, original_table_bytes);
+            if (!memo_path.empty() && !original_memo_bytes.empty()) {
+                write_binary_file(memo_path, original_memo_bytes);
+            }
             return {.ok = false, .error = delete_result.error};
         }
     }

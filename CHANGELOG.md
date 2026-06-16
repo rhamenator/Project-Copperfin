@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#783 batch selected visual object z-order reorders shipped: designer z-order workflows can reorder multiple selected visual objects in one atomic operation, supporting record-index, object-name, and `UNIQUEID` source selectors plus front/back/before/after placements while preserving deleted flags, memo-backed fields, and prior state on failed batches.
 - E2/#782 batch selected visual object identity renames shipped: designer naming workflows can update `OBJNAME`, `NAME`, and `UNIQUEID` across multiple selected objects in one rollback-safe operation, preserving live/deleted identity collision checks, prior undo history when later items fail, and successful batch undo support.
 - E2/#781 batch selected visual object reparenting shipped: container editors can reparent multiple selected objects in one rollback-safe operation, supporting parent object-name selection, parent `UNIQUEID` selection, root-level parent clearing, prior undo preservation when later items fail, and successful batch undo support.
 - E2/#780 batch selected visual object method reorders shipped: method/event editors can reorder `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, supporting first/last/before/after placements while preserving method kind/body, unrelated methods, prior undo history when later items fail, and successful batch undo support.

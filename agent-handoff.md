@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#782`, adding rollback-safe batch selected visual object identity renames so designer naming workflows can update `OBJNAME`, `NAME`, and `UNIQUEID` across multiple selected objects by record-index, object-name, or `UNIQUEID`, preserve live/deleted collision checks, reject invalid source/new identity selections explicitly, roll back later failures without disturbing prior undo history, and retain successful batch undo support.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#783`, adding atomic batch selected visual object z-order reorders so designer workflows can move multiple selected rows by record-index, object-name, or `UNIQUEID`, apply front/back/before/after placements against the evolving row order, reject invalid source/target/self/placement selections explicitly, and preserve deleted flags plus memo-backed fields without leaving partial writes on failed batches.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
