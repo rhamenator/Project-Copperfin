@@ -12948,6 +12948,199 @@ void test_set_visual_object_dynamic_font_italic_assigns_expression_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_dynamic_font_underline_assigns_expression_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_dynamic_font_underline_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "dynamic_font_underline.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "DYNAMICFONTUNDERLINE", .type = 'C', .length = 96U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtCustomer", "customerBox", "customer-guid", ".F."},
+        {"lblOrders", "ordersLabel", "orders-guid", ".T."},
+        {"txtOther", "otherBox", "other-guid", ".F."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#843: dynamic font-underline fixture should be writable");
+
+    const auto dynamic_font_underline_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontUnderline"
+        });
+        expect(result.ok && result.exists, "#843: dynamic font-underline fixture property should be readable");
+        return result.value;
+    };
+    const auto dynamic_font_underline = [&](const std::string& unique_id) {
+        return dynamic_font_underline_for(table_path.string(), unique_id);
+    };
+    const auto dynamic_font_underline_state = [&]() {
+        return dynamic_font_underline("customer-guid") + "," +
+            dynamic_font_underline("orders-guid") + "," +
+            dynamic_font_underline("other-guid");
+    };
+
+    const std::string underline_expression = "IIF(RECNO() % 2 = 0, .T., .F.)";
+    auto underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .dynamic_font_underline = underline_expression
+    });
+    expect(underline_result.ok,
+        "#843: dynamic font-underline assignment should support object-name and record-index selectors");
+    expect(dynamic_font_underline("customer-guid") == underline_expression &&
+            dynamic_font_underline("orders-guid") == underline_expression &&
+            dynamic_font_underline("other-guid") == ".F.",
+        "#843: direct dynamic font-underline assignment should write raw expression text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#843: first dynamic font-underline write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#843: second dynamic font-underline write should remain undo-backed");
+    expect(dynamic_font_underline_state() == ".F.,.T.,.F.",
+        "#843: dynamic font-underline undo should restore original direct values");
+
+    const std::string constant_expression = ".T.";
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .dynamic_font_underline = constant_expression
+    });
+    expect(underline_result.ok, "#843: dynamic font-underline assignment should support UNIQUEID selectors");
+    expect(dynamic_font_underline("customer-guid") == constant_expression &&
+            dynamic_font_underline("orders-guid") == constant_expression,
+        "#843: direct dynamic font-underline assignment should store raw constant expressions");
+
+    const std::string committed_state = dynamic_font_underline_state();
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = table_path.string(),
+        .objects = {},
+        .dynamic_font_underline = ".F."
+    });
+    expect(!underline_result.ok, "#843: dynamic font-underline assignment should reject empty selections");
+    expect(dynamic_font_underline_state() == committed_state,
+        "#843: empty-selection failures should not mutate dynamic font-underline expressions");
+
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .dynamic_font_underline = ".F."
+    });
+    expect(!underline_result.ok, "#843: dynamic font-underline assignment should reject missing selected objects");
+    expect(dynamic_font_underline_state() == committed_state,
+        "#843: missing-object failures should not mutate dynamic font-underline expressions");
+
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}}
+        },
+        .dynamic_font_underline = ".F."
+    });
+    expect(!underline_result.ok, "#843: dynamic font-underline assignment should reject duplicate selected objects");
+    expect(dynamic_font_underline_state() == committed_state,
+        "#843: duplicate-selection failures should not mutate dynamic font-underline expressions");
+
+    const fs::path blob_path = temp_dir / "dynamic_font_underline_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "DynamicFontUnderline = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"txtNoUnderline", "no-underline-guid", "Caption = \"No underline\"\r\n"},
+        {"txtOther", "other-guid", "DynamicFontUnderline = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#843: dynamic font-underline property-blob fixture should be writable");
+
+    const auto blob_dynamic_font_underline_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontUnderline"
+        });
+    };
+
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoUnderline", .unique_id = {}}
+        },
+        .dynamic_font_underline = underline_expression
+    });
+    expect(underline_result.ok,
+        "#843: dynamic font-underline assignment should support existing and absent serialized properties");
+    auto blob_underline = blob_dynamic_font_underline_state("blob-guid");
+    auto appended_underline = blob_dynamic_font_underline_state("no-underline-guid");
+    auto other_underline = blob_dynamic_font_underline_state("other-guid");
+    expect(blob_underline.ok && blob_underline.exists && blob_underline.value == underline_expression &&
+            appended_underline.ok && appended_underline.exists && appended_underline.value == underline_expression &&
+            other_underline.ok && other_underline.exists && other_underline.value == ".T.",
+        "#843: serialized dynamic font-underline assignment should write raw expressions and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#843: appended serialized dynamic font-underline write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#843: existing serialized dynamic font-underline write should remain undo-backed");
+    blob_underline = blob_dynamic_font_underline_state("blob-guid");
+    appended_underline = blob_dynamic_font_underline_state("no-underline-guid");
+    expect(blob_underline.ok && blob_underline.exists && blob_underline.value == ".F." &&
+            appended_underline.ok && !appended_underline.exists,
+        "#843: serialized dynamic font-underline undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_dynamicfontunderline.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#843: missing-DynamicFontUnderline fixture should be writable");
+
+    underline_result = copperfin::vfp::set_visual_object_dynamic_font_underline({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .dynamic_font_underline = ".F."
+    });
+    expect(!underline_result.ok,
+        "#843: dynamic font-underline assignment should reject objects without a writable DynamicFontUnderline carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_row_source_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -20599,6 +20792,7 @@ int main() {
     test_set_visual_object_dynamic_font_size_assigns_expression_value();
     test_set_visual_object_dynamic_font_bold_assigns_expression_value();
     test_set_visual_object_dynamic_font_italic_assigns_expression_value();
+    test_set_visual_object_dynamic_font_underline_assigns_expression_value();
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();

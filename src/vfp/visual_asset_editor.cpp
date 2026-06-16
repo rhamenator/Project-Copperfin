@@ -5422,6 +5422,15 @@ VisualAssetEditResult set_visual_object_dynamic_font_italic(const VisualObjectDy
         request.dynamic_font_italic);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_font_underline(const VisualObjectDynamicFontUnderlineRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicFontUnderline",
+        "dynamic font underline",
+        request.dynamic_font_underline);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
