@@ -112,6 +112,8 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
     expect(layout.sections[0].objcode_code == 1, "#666: report sections should preserve raw OBJCODE values");
     expect(layout.sections[0].objcode_field_index == 1U, "#664: report section should preserve OBJCODE field provenance");
+    expect(layout.sections[0].title_field_index == 1U, "#682: report section title provenance should retain OBJCODE field ordinal");
+    expect(layout.sections[0].band_kind_field_index == 1U, "#682: report section band-kind provenance should retain OBJCODE field ordinal");
     expect(layout.sections[0].top_field_index == 2U, "#664: report section should preserve VPOS field provenance");
     expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
@@ -125,6 +127,7 @@ void test_build_report_layout_groups_band_objects() {
     }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
+    expect(layout.sections[1].objects[0].object_kind_field_index == 0U, "#682: report object kind provenance should retain OBJTYPE field ordinal");
     expect(layout.sections[1].objects[0].objtype_code == 8, "#666: layout objects should preserve raw OBJTYPE values");
     expect(layout.sections[1].objects[0].objcode_code == 0, "#666: layout objects should preserve raw OBJCODE values");
     expect(layout.sections[1].objects[0].expression == "customer.company", "detail object should surface its expression");

@@ -192,6 +192,7 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.objcode_code = parse_scaled_int_or_default(record, "OBJCODE");
     object.object_kind = object_kind_name(object.objtype_code);
     object.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
+    object.object_kind_field_index = object.objtype_field_index;
     object.objcode_field_index = field_index_or_missing(record, "OBJCODE");
     const FieldSelection title = first_non_empty_selection(record, {"NAME", "EXPR", "UNIQUEID"});
     object.title = title.value;
@@ -344,13 +345,16 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
 
         if (is_band_record(record)) {
             const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
+            const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
             snapshot.sections.push_back({
                 .id = make_section_id(record.record_index, objcode),
                 .title = band_title(objcode),
+                .title_field_index = objcode_field_index,
                 .band_kind = band_kind_name(objcode),
+                .band_kind_field_index = objcode_field_index,
                 .record_index = record.record_index,
                 .objcode_code = objcode,
-                .objcode_field_index = field_index_or_missing(record, "OBJCODE"),
+                .objcode_field_index = objcode_field_index,
                 .top = parse_scaled_int_or_default(record, "VPOS"),
                 .top_field_index = field_index_or_missing(record, "VPOS"),
                 .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),

@@ -24,6 +24,7 @@ struct StudioLayoutObjectSnapshot {
     int objtype_code = 0;
     int objcode_code = 0;
     std::string object_kind{};
+    std::size_t object_kind_field_index = StudioReportMissingFieldIndex;
     std::size_t objtype_field_index = StudioReportMissingFieldIndex;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
     std::string title{};
@@ -44,7 +45,9 @@ struct StudioLayoutObjectSnapshot {
 struct StudioReportSectionSnapshot {
     std::string id{};
     std::string title{};
+    std::size_t title_field_index = StudioReportMissingFieldIndex;
     std::string band_kind{};
+    std::size_t band_kind_field_index = StudioReportMissingFieldIndex;
     std::size_t record_index = 0;
     int objcode_code = 0;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
