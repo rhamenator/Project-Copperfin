@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#807 selected visual object bound-column assignment shipped: combo/list designer commands can assign caller-provided numeric `BoundColumn` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#806 selected visual object row-source-type assignment shipped: combo/list designer commands can assign caller-provided numeric `RowSourceType` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#805 selected visual object row-source assignment shipped: combo/list designer commands can assign caller text to selected `RowSource` values, sharing the text-property path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#804 selected visual object format assignment shipped: designer commands can assign caller text to selected `Format` values, sharing the text-property path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.

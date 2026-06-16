@@ -5332,6 +5332,19 @@ VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSou
         std::to_string(request.row_source_type));
 }
 
+VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request) {
+    if (request.bound_column < 0) {
+        return {.ok = false, .error = "BoundColumn must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BoundColumn",
+        "bound-column",
+        std::to_string(request.bound_column));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
