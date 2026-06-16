@@ -143,6 +143,14 @@ void test_build_report_layout_groups_band_objects() {
     if (orientation != layout.settings.end()) {
         expect(orientation->record_index == 0U, "#661: parsed EXPR settings should retain their source record index");
         expect(orientation->field_index == 2U, "#661: parsed EXPR settings should retain the source EXPR field ordinal");
+        expect(orientation->source_line_index == 0U, "#676: parsed EXPR settings should retain their source memo line index");
+    }
+    const auto paper_size = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "PAPERSIZE";
+    });
+    expect(paper_size != layout.settings.end(), "#676: report settings should include later parsed EXPR settings");
+    if (paper_size != layout.settings.end()) {
+        expect(paper_size->source_line_index == 1U, "#676: later EXPR settings should retain their source memo line index");
     }
     const auto top_margin = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "TOPMARGIN";
@@ -151,6 +159,8 @@ void test_build_report_layout_groups_band_objects() {
     if (top_margin != layout.settings.end()) {
         expect(top_margin->record_index == 0U, "#661: direct settings should retain their source record index");
         expect(top_margin->field_index == 3U, "#661: direct settings should retain their DBF field ordinal");
+        expect(top_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#676: direct settings should not masquerade as parsed memo-line settings");
     }
     const auto fontface = std::find_if(
         layout.sections[1].objects[0].highlights.begin(),

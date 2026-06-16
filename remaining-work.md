@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#676 report setting memo-line provenance is now shipped. Parsed report/label root `EXPR` settings now preserve source memo line indexes while direct numeric settings use `StudioReportMissingLineIndex`; focused `test_report_layout` coverage proves first/later parsed setting line ordinals and direct-setting sentinel behavior.
 - 2026-06-16: E1/#675 report layout object title provenance is now shipped. Report/label layout object snapshots now preserve source DBF field ordinals for friendly titles, while synthesized titles use `StudioReportMissingFieldIndex`; focused `test_report_layout` coverage proves EXPR-sourced title ordinals and synthetic-title sentinel behavior.
 - 2026-06-16: E1/#674 report layout missing-field provenance is now shipped. Report/label layout snapshots now use `StudioReportMissingFieldIndex` for missing section, object, setting, and highlight field provenance instead of conflating absent fields with DBF ordinal `0`; focused `test_report_layout` coverage proves a present object field keeps its ordinal while a missing report object field uses the sentinel.
 - 2026-06-16: E1/#673 object title/subtitle provenance is now shipped. Studio object snapshots now preserve source DBF field ordinals for friendly title and subtitle display values, while synthesized titles and missing subtitles use `StudioObjectMissingFieldIndex`; focused `test_studio_host` coverage proves form/menu source ordinals plus synthesized fallback behavior.

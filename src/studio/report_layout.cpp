@@ -251,6 +251,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     const std::string expr = value_or_empty(record, "EXPR");
     const std::size_t expr_field_index = field_index_or_missing(record, "EXPR");
     std::size_t start = 0U;
+    std::size_t line_index = 0U;
     while (start <= expr.size()) {
         const std::size_t end = expr.find('\n', start);
         std::string line = end == std::string::npos ? expr.substr(start) : expr.substr(start, end - start);
@@ -267,6 +268,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
                     .name = name,
                     .record_index = record.record_index,
                     .field_index = expr_field_index,
+                    .source_line_index = line_index,
                     .value = value
                 });
             }
@@ -276,6 +278,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
             break;
         }
         start = end + 1U;
+        ++line_index;
     }
 
     const auto append_numeric = [&](std::string_view field_name) {

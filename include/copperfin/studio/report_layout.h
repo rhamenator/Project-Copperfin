@@ -9,11 +9,13 @@
 namespace copperfin::studio {
 
 inline constexpr std::size_t StudioReportMissingFieldIndex = static_cast<std::size_t>(-1);
+inline constexpr std::size_t StudioReportMissingLineIndex = static_cast<std::size_t>(-1);
 
 struct StudioNamedValue {
     std::string name{};
     std::size_t record_index = 0;
     std::size_t field_index = StudioReportMissingFieldIndex;
+    std::size_t source_line_index = StudioReportMissingLineIndex;
     std::string value{};
 };
 

@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#676 report setting memo-line provenance shipped: parsed report/label root `EXPR` settings now preserve source memo line indexes, with direct settings marked by `StudioReportMissingLineIndex`.
 - E1/#675 report layout object title provenance shipped: report/label layout object snapshots now preserve source DBF field ordinals for friendly titles, using `StudioReportMissingFieldIndex` for synthesized titles.
 - E1/#674 report layout missing-field provenance shipped: report/label layout snapshots now use an explicit `StudioReportMissingFieldIndex` sentinel instead of conflating absent fields with DBF ordinal `0`.
 - E1/#673 object title/subtitle provenance shipped: Studio object snapshots now preserve source DBF field ordinals for friendly title and subtitle display values, including synthesized-title sentinel behavior.
