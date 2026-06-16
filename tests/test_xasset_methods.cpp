@@ -42,9 +42,11 @@ bool has_action_id(
 
 copperfin::vfp::DbfRecord make_record(
     std::size_t record_index,
-    std::initializer_list<copperfin::vfp::DbfRecordValue> values) {
+    std::initializer_list<copperfin::vfp::DbfRecordValue> values,
+    bool deleted = false) {
     copperfin::vfp::DbfRecord record;
     record.record_index = record_index;
+    record.deleted = deleted;
     record.values.assign(values.begin(), values.end());
     return record;
 }
@@ -363,6 +365,62 @@ void test_xasset_executable_model_suppresses_unresolved_memo_placeholders() {
            "#697: unresolved memo placeholders should not appear in generated xAsset bootstrap source");
 }
 
+void test_xasset_executable_model_skips_deleted_records() {
+    copperfin::studio::StudioDocumentModel form_document;
+    form_document.path = R"(E:\Project-Copperfin\samples\deleted.scx)";
+    form_document.kind = copperfin::studio::StudioAssetKind::form;
+    form_document.table_preview_available = true;
+    form_document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "oldForm"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Init\r\nx = 0\r\nENDPROC"}
+        }, true),
+        make_record(1, {
+            {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "frmLive"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Load\r\nx = 1\r\nENDPROC"}
+        })
+    };
+
+    const auto form_model = copperfin::runtime::build_xasset_executable_model(form_document);
+    expect(form_model.ok, "#699: form xAsset model should still build with deleted records present");
+    expect(form_model.root_object_path == "frmLive", "#699: deleted form records should not become root object paths");
+    expect(form_model.methods.size() == 1U, "#699: deleted form records should not materialize methods");
+    expect(!has_action_id(form_model.actions, "oldform.init"), "#699: deleted form methods should not become actions");
+    expect(has_action_id(form_model.actions, "frmlive.load"), "#699: live form methods should remain actions");
+
+    copperfin::studio::StudioDocumentModel menu_document;
+    menu_document.path = R"(E:\Project-Copperfin\samples\deletedmenu.mnx)";
+    menu_document.kind = copperfin::studio::StudioAssetKind::menu;
+    menu_document.table_preview_available = true;
+    menu_document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "DeletedShortcut"}
+        }, true),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
+            {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Deleted"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  1"},
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "CLEAR EVENTS"}
+        }, true),
+        make_record(2, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "1"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "LiveMenu"}
+        })
+    };
+
+    const auto menu_model = copperfin::runtime::build_xasset_executable_model(menu_document);
+    expect(menu_model.ok, "#699: menu xAsset model should still build with deleted records present");
+    expect(menu_model.activation_kind == "menu", "#699: deleted shortcut records should not force popup activation");
+    expect(menu_model.activation_target == "deletedmenu", "#699: live non-shortcut menu activation should use the path stem");
+    expect(menu_model.actions.empty(), "#699: deleted menu item records should not become actions");
+    expect(menu_model.methods.empty(), "#699: deleted menu command records should not materialize methods");
+}
+
 void test_build_menu_xasset_executable_model() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\shortcut.mnx)";
@@ -572,6 +630,7 @@ int main() {
     test_build_class_library_xasset_executable_model();
     test_form_root_object_path_ignores_comments_and_data_environment();
     test_xasset_executable_model_suppresses_unresolved_memo_placeholders();
+    test_xasset_executable_model_skips_deleted_records();
     test_build_menu_xasset_executable_model();
     test_build_menu_xasset_activation_uses_vfp_path_stem();
     test_build_report_xasset_executable_model();

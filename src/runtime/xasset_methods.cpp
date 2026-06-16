@@ -338,7 +338,7 @@ void append_methods(std::vector<XAssetMethod>& destination, const std::vector<XA
 
 bool has_object_type(const studio::StudioDocumentModel& document, int expected_type) {
     return std::any_of(document.table_preview.records.begin(), document.table_preview.records.end(), [&](const copperfin::vfp::DbfRecord& record) {
-        return numeric_value_or_default(record, "OBJTYPE") == expected_type;
+        return !record.deleted && numeric_value_or_default(record, "OBJTYPE") == expected_type;
     });
 }
 
@@ -348,6 +348,9 @@ bool is_menu_item_record(const copperfin::vfp::DbfRecord& record) {
 
 std::optional<std::string> find_first_menu_container_name(const studio::StudioDocumentModel& document) {
     for (const auto& record : document.table_preview.records) {
+        if (record.deleted) {
+            continue;
+        }
         if (numeric_value_or_default(record, "OBJTYPE") != 2) {
             continue;
         }
@@ -364,6 +367,9 @@ std::optional<std::string> find_following_submenu_name(
     std::size_t record_position) {
     for (std::size_t index = record_position + 1U; index < document.table_preview.records.size(); ++index) {
         const auto& record = document.table_preview.records[index];
+        if (record.deleted) {
+            continue;
+        }
         if (numeric_value_or_default(record, "OBJTYPE") != 2) {
             continue;
         }
@@ -427,6 +433,9 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
     for (std::size_t record_position = 0; record_position < document.table_preview.records.size(); ++record_position) {
         const auto& record = document.table_preview.records[record_position];
+        if (record.deleted) {
+            continue;
+        }
         const std::string object_path = document.kind == studio::StudioAssetKind::menu
             ? build_menu_owner_path(record)
             : build_object_path(record);
