@@ -89,6 +89,17 @@ void test_build_report_layout_groups_band_objects() {
                 value("WIDTH", "1800.000"),
                 value("HEIGHT", "350.000")
             }
+        },
+        {
+            .record_index = 5U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "6"),
+                value("HPOS", "50.000"),
+                value("VPOS", "8000.000"),
+                value("WIDTH", "100.000"),
+                value("HEIGHT", "100.000")
+            }
         }
     };
 
@@ -108,6 +119,9 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.sections[0].objects[0].objtype_field_index == 0U, "#674: present report object fields should keep DBF field provenance");
         expect(layout.sections[0].objects[0].objcode_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#674: missing report object fields should not masquerade as DBF field zero");
+        expect(layout.sections[0].objects[0].title == "\"Invoice\"", "#675: report layout object titles should keep existing EXPR fallback");
+        expect(layout.sections[0].objects[0].title_field_index == 1U,
+            "#675: report layout object title provenance should retain selected EXPR field ordinal");
     }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
@@ -116,6 +130,7 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].expression == "customer.company", "detail object should surface its expression");
     expect(layout.sections[1].objects[0].objtype_field_index == 0U, "#665: layout objects should preserve OBJTYPE field provenance");
     expect(layout.sections[1].objects[0].objcode_field_index == 1U, "#666: layout objects should preserve OBJCODE field provenance");
+    expect(layout.sections[1].objects[0].title_field_index == 2U, "#675: detail object title provenance should retain selected EXPR field ordinal");
     expect(layout.sections[1].objects[0].expression_field_index == 2U, "#665: layout objects should preserve EXPR field provenance");
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].top_field_index == 4U, "#665: layout objects should preserve VPOS field provenance");
@@ -147,6 +162,12 @@ void test_build_report_layout_groups_band_objects() {
     if (fontface != layout.sections[1].objects[0].highlights.end()) {
         expect(fontface->record_index == 3U, "#661: layout highlights should retain source record index");
         expect(fontface->field_index == 7U, "#661: layout highlights should retain DBF field ordinal");
+    }
+    expect(layout.unplaced_objects.size() == 1U, "#675: object without matching section should remain unplaced");
+    if (!layout.unplaced_objects.empty()) {
+        expect(layout.unplaced_objects[0].title == "Record 5", "#675: untitled report layout object should keep synthetic title fallback");
+        expect(layout.unplaced_objects[0].title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+            "#675: synthesized report layout object title should use the missing-field sentinel");
     }
 }
 

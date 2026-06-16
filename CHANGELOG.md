@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#675 report layout object title provenance shipped: report/label layout object snapshots now preserve source DBF field ordinals for friendly titles, using `StudioReportMissingFieldIndex` for synthesized titles.
 - E1/#674 report layout missing-field provenance shipped: report/label layout snapshots now use an explicit `StudioReportMissingFieldIndex` sentinel instead of conflating absent fields with DBF ordinal `0`.
 - E1/#673 object title/subtitle provenance shipped: Studio object snapshots now preserve source DBF field ordinals for friendly title and subtitle display values, including synthesized-title sentinel behavior.
 - E1/#672 object identity/hierarchy provenance shipped: Studio object snapshots now preserve source DBF field ordinals for normalized object name, unique ID, parent, class, and baseclass metadata, including fallback-selected fields.

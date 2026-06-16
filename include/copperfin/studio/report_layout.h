@@ -25,6 +25,7 @@ struct StudioLayoutObjectSnapshot {
     std::size_t objtype_field_index = StudioReportMissingFieldIndex;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
     std::string title{};
+    std::size_t title_field_index = StudioReportMissingFieldIndex;
     std::string expression{};
     std::size_t expression_field_index = StudioReportMissingFieldIndex;
     int left = 0;

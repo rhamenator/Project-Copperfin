@@ -35,6 +35,11 @@ const vfp::DbfRecordValue* find_value(const DbfRecord& record, std::string_view 
     return nullptr;
 }
 
+struct FieldSelection {
+    std::string value{};
+    std::size_t field_index = StudioReportMissingFieldIndex;
+};
+
 std::optional<std::size_t> find_field_index(const DbfRecord& record, std::string_view field_name) {
     for (std::size_t index = 0U; index < record.values.size(); ++index) {
         if (record.values[index].field_name == field_name) {
@@ -170,6 +175,16 @@ std::string first_non_empty(const DbfRecord& record, std::initializer_list<std::
     return {};
 }
 
+FieldSelection first_non_empty_selection(const DbfRecord& record, std::initializer_list<std::string_view> field_names) {
+    for (const auto field_name : field_names) {
+        const std::string value = trim_copy(value_or_empty(record, field_name));
+        if (!value.empty() && value != "<memo block 0>") {
+            return {.value = value, .field_index = field_index_or_missing(record, field_name)};
+        }
+    }
+    return {};
+}
+
 StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     StudioLayoutObjectSnapshot object;
     object.record_index = record.record_index;
@@ -178,7 +193,9 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.object_kind = object_kind_name(object.objtype_code);
     object.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
     object.objcode_field_index = field_index_or_missing(record, "OBJCODE");
-    object.title = first_non_empty(record, {"NAME", "EXPR", "UNIQUEID"});
+    const FieldSelection title = first_non_empty_selection(record, {"NAME", "EXPR", "UNIQUEID"});
+    object.title = title.value;
+    object.title_field_index = title.field_index;
     object.expression = first_non_empty(record, {"EXPR"});
     object.expression_field_index = field_index_or_missing(record, "EXPR");
     object.left = parse_scaled_int_or_default(record, "HPOS");

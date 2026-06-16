@@ -338,7 +338,7 @@ Current active-open prompt-sized slice queue after Phase A/D1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#22` | `#674` | use explicit missing field indexes in report layout snapshots |
+| `#22` | `#675` | preserve report layout object title field provenance |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -354,7 +354,7 @@ Historical-closed prompt-sized native slice queues:
 
 Remaining active-open adjacent prompt-sized native slice queues:
 
-- `#22`: complete `#674`, then continue by opening the next shared design-model child if no open child remains
+- `#22`: complete `#675`, then continue by opening the next shared design-model child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Canonical post-D1 execution order:
@@ -376,8 +376,9 @@ Canonical post-D1 execution order:
 15. `#672`
 16. `#673`
 17. `#674`
-18. next prompt-sized child under `#22`
-19. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
+18. `#675`
+19. next prompt-sized child under `#22`
+20. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
 
 Execution guardrails:
 
