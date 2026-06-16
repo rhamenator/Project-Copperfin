@@ -180,9 +180,9 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
                 {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "1.000"},
                 {.field_name = "PLATFORM", .field_type = 'C', .is_null = false, .display_value = "WINDOWS"},
                 {.field_name = "PARENT", .field_type = 'C', .is_null = false, .display_value = "frmCustomer"},
-                {.field_name = "HELP", .field_type = 'M', .is_null = true, .display_value = ""},
+                {.field_name = "HELP", .field_type = 'M', .is_null = true, .display_value = "", .memo_block_number = 0U},
                 {.field_name = "TAG", .field_type = 'M', .is_null = false, .display_value = ""},
-                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save\r\nEnabled = .T."},
+                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save\r\nEnabled = .T.", .memo_block_number = 7U},
                 {.field_name = "UNIQUEID", .field_type = 'C', .is_null = false, .display_value = "cmd-save-1"},
                 {.field_name = "CLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"},
                 {.field_name = "BASECLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"}
@@ -236,27 +236,32 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
             expect(!parent->derived_from_property_blob, "#659: direct DBF fields should not be marked blob-derived");
             expect(parent->source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                 "#684: direct DBF fields should not masquerade as property-blob line metadata");
+            expect(parent->memo_block_number == 0U, "#712: non-memo direct properties should expose memo block zero");
         }
         expect(help != objects[0].properties.end(), "#658: null design fields should stay in object snapshots");
         if (help != objects[0].properties.end()) {
             expect(help->is_null, "#658: null design field metadata should stay attached");
             expect(help->field_index == 5U, "#659: null direct fields should preserve their DBF field ordinal");
+            expect(help->memo_block_number == 0U, "#712: null block-zero memo properties should expose memo block zero");
         }
         expect(tag != objects[0].properties.end(), "#658: empty memo-backed design fields should stay in object snapshots");
         if (tag != objects[0].properties.end()) {
             expect(tag->value.empty(), "#658: empty design fields should preserve their empty value");
             expect(tag->field_index == 6U, "#659: empty direct fields should preserve their DBF field ordinal");
+            expect(tag->memo_block_number == 0U, "#712: empty direct memo properties should expose memo block zero");
         }
         expect(caption != objects[0].properties.end(), "#658: visual property blob expansion should still work");
         if (caption != objects[0].properties.end()) {
             expect(caption->field_index == 7U, "#659: blob-derived properties should retain the source PROPERTIES field ordinal");
             expect(caption->derived_from_property_blob, "#659: blob-derived properties should expose their provenance");
             expect(caption->source_line_index == 0U, "#684: first blob-derived property should retain its source memo line");
+            expect(caption->memo_block_number == 7U, "#712: blob-derived properties should inherit the source PROPERTIES memo block");
         }
         expect(enabled != objects[0].properties.end(), "#684: second visual property blob line should expand into snapshots");
         if (enabled != objects[0].properties.end()) {
             expect(enabled->field_index == 7U, "#684: later blob-derived properties should retain the source PROPERTIES field ordinal");
             expect(enabled->source_line_index == 1U, "#684: later blob-derived properties should retain their source memo line");
+            expect(enabled->memo_block_number == 7U, "#712: later blob-derived properties should inherit the source PROPERTIES memo block");
         }
     }
 }
@@ -271,12 +276,12 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
             .record_index = 10U,
             .deleted = false,
             .values = {
-                {.field_name = "OBJNAME", .field_type = 'M', .is_null = false, .display_value = "<memo block 40>"},
+                {.field_name = "OBJNAME", .field_type = 'M', .is_null = false, .display_value = "<memo block 40>", .memo_block_number = 40U},
                 {.field_name = "NAME", .field_type = 'M', .is_null = false, .display_value = "<memo block 41>"},
                 {.field_name = "TITLE", .field_type = 'M', .is_null = false, .display_value = "<memo block 42>"},
                 {.field_name = "CLASS", .field_type = 'M', .is_null = false, .display_value = "<memo block 43>"},
                 {.field_name = "BASECLASS", .field_type = 'M', .is_null = false, .display_value = "<memo block 44>"},
-                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "<memo block 45>"}
+                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "<memo block 45>", .memo_block_number = 45U}
             }
         }
     };
@@ -298,6 +303,7 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
         if (objname != form_objects[0].properties.end()) {
             expect(objname->field_index == 0U, "#696: direct unresolved memo fields should retain field provenance");
             expect(objname->value.empty(), "#696: direct unresolved memo placeholders should not become property values");
+            expect(objname->memo_block_number == 40U, "#712: unresolved direct memo fields should retain memo block provenance");
         }
         const auto caption = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
             return property.name == "Caption";

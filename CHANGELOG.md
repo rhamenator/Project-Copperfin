@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#712 Studio property memo block provenance shipped: object property snapshots now expose source memo block numbers for direct DBF fields and blob-derived properties, preserving decoded, unresolved, and block-zero memo provenance without changing display values.
 - E1/#711 DBF memo block provenance shipped: parsed DBF record values now expose stored memo block numbers for memo-backed fields, including unresolved/missing sidecar placeholders and empty block-zero memo pointers, while non-memo fields report block zero.
 - E1/#710 report/label preview lifecycle provenance coverage shipped: focused xAsset tests now prove preview lifecycle steps mirror legacy startup lines, use preview kind metadata, and carry explicit missing source sentinels.
 - E1/#709 xAsset lifecycle step provenance shipped: startup/shutdown plans now expose structured lifecycle steps with method source provenance and synthetic activation/preview commands using explicit missing sentinels while preserving legacy line/routine vectors.

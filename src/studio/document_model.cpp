@@ -122,7 +122,8 @@ bool supports_visual_property_blob(const StudioDocumentModel& document) {
 void append_property_snapshots(
     const std::vector<vfp::VisualPropertyAssignment>& assignments,
     std::vector<StudioPropertySnapshot>& properties,
-    std::size_t source_field_index) {
+    std::size_t source_field_index,
+    std::uint32_t source_memo_block_number) {
     for (const auto& assignment : assignments) {
         if (assignment.name.empty()) {
             continue;
@@ -142,6 +143,7 @@ void append_property_snapshots(
             .is_null = assignment.value.empty(),
             .derived_from_property_blob = true,
             .source_line_index = assignment.source_line_index,
+            .memo_block_number = source_memo_block_number,
             .value = assignment.value
         });
     }
@@ -338,6 +340,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 .field_index = field_index,
                 .type = value.field_type,
                 .is_null = value.is_null,
+                .memo_block_number = value.memo_block_number,
                 .value = usable_display_value(value)
             });
         }
@@ -351,7 +354,8 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                     append_property_snapshots(
                         vfp::parse_visual_property_blob(property_blob.display_value),
                         snapshot.properties,
-                        field_index);
+                        field_index,
+                        property_blob.memo_block_number);
                     break;
                 }
             }

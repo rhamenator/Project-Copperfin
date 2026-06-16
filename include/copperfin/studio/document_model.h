@@ -4,6 +4,7 @@
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -70,6 +71,7 @@ struct StudioPropertySnapshot {
     bool is_null = false;
     bool derived_from_property_blob = false;
     std::size_t source_line_index = StudioObjectMissingLineIndex;
+    std::uint32_t memo_block_number = 0;
     std::string value{};
 };
 
