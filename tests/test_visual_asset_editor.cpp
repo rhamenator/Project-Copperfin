@@ -10943,6 +10943,24 @@ void test_set_visual_object_sparse_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_closable_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#882",
+        "closable",
+        "Closable",
+        "CLOSABLE",
+        "closable",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_closable({
+                .path = path,
+                .objects = objects,
+                .closable = value
+            });
+        });
+}
+
 void test_set_visual_object_hide_selection_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#877",
@@ -22566,6 +22584,7 @@ int main() {
     test_set_visual_object_status_bar_text_assigns_text();
     test_set_visual_object_control_source_assigns_text();
     test_set_visual_object_current_control_assigns_text();
+    test_set_visual_object_closable_assigns_logical_state();
     test_set_visual_object_hide_selection_assigns_logical_state();
     test_set_visual_object_allow_cell_selection_assigns_logical_state();
     test_set_visual_object_sparse_assigns_logical_state();

@@ -712,6 +712,12 @@ struct VisualObjectCurrentControlRequest {
     std::string current_control;
 };
 
+struct VisualObjectClosableRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool closable = false;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1313,6 +1319,7 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
 VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request);
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request);
+VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);

@@ -5301,6 +5301,15 @@ VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurren
         request.current_control);
 }
 
+VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Closable",
+        "closable",
+        request.closable ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
