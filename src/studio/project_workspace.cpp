@@ -271,6 +271,9 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         entry.name = name.empty() ? ("Record " + std::to_string(record.record_index)) : name;
         entry.name_field_index = field_index_or_missing(record, "NAME");
         entry.relative_path = relative_path;
+        entry.relative_path_field_index = relative_path.empty()
+            ? StudioProjectMissingFieldIndex
+            : entry.name_field_index;
         entry.type_code = type_code;
         entry.type_field_index = field_index_or_missing(record, "TYPE");
         entry.type_title = descriptor.type_title;

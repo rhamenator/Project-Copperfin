@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#679 project entry relative-path provenance shipped: `StudioProjectEntry` now preserves the source DBF field ordinal for normalized `relative_path` values, using `StudioProjectMissingFieldIndex` when absent.
 - E1/#678 workspace project metadata provenance shipped: `StudioProjectWorkspace` now preserves source DBF field ordinals for project title/key, home directory, and output path metadata, using `StudioProjectMissingFieldIndex` for synthesized fallbacks.
 - E1/#677 project entry flag provenance shipped: project workspace entries now preserve source DBF field ordinals for `EXCLUDE`, `MAINPROG`, and `LOCAL` flags, using `StudioProjectMissingFieldIndex` when absent.
 - E1/#676 report setting memo-line provenance shipped: parsed report/label root `EXPR` settings now preserve source memo line indexes, with direct settings marked by `StudioReportMissingLineIndex`.

@@ -15,6 +15,7 @@ struct StudioProjectEntry {
     std::string name{};
     std::size_t name_field_index = StudioProjectMissingFieldIndex;
     std::string relative_path{};
+    std::size_t relative_path_field_index = StudioProjectMissingFieldIndex;
     std::string type_code{};
     std::size_t type_field_index = StudioProjectMissingFieldIndex;
     std::string type_title{};

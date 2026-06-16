@@ -88,9 +88,13 @@ void test_build_project_workspace() {
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
     expect(workspace.entries[0].name_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#662: missing project header name provenance should be explicit");
+    expect(workspace.entries[0].relative_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#679: missing project header relative path provenance should be explicit");
     expect(workspace.entries[0].key_field_index == 1U, "#662: project header key field ordinal should be preserved");
     expect(workspace.entries[1].type_field_index == 0U, "#662: project entry type field ordinal should be preserved");
     expect(workspace.entries[1].name_field_index == 1U, "#662: project entry name field ordinal should be preserved");
+    expect(workspace.entries[1].relative_path == "main.prg", "#679: project entry relative path should preserve normalized path text");
+    expect(workspace.entries[1].relative_path_field_index == 1U, "#679: project entry relative path provenance should retain selected NAME field ordinal");
     expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
     expect(workspace.entries[1].main_program_field_index == 2U, "#677: MAINPROG project entry flag provenance should be preserved");
     expect(workspace.entries[1].local_field_index == 4U, "#677: LOCAL project entry flag provenance should be preserved");
