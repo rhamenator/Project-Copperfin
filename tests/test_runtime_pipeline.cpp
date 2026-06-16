@@ -1396,6 +1396,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should stage response field extraction through the shared response-parse execution helper.");
         expect(wrapper_source.find("object_depth == 1U && array_depth == 0U") != std::string::npos,
                "library-output wrapper source should validate required response fields as top-level object fields");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_find_json_field_value_start(") != std::string::npos,
+               "library-output wrapper source should declare a shared response field-value scanner");
+        expect(wrapper_source.find("copperfin_runtime_bridge_find_json_field_value_start(response_document, field_name, value_start)") != std::string::npos,
+               "library-output wrapper source should extract response field values through the shared scanner");
         expect(wrapper_source.find("response_document.compare(index, field_token.size(), field_token) == 0") != std::string::npos,
                "library-output wrapper source should compare required response fields through the scanner token match");
         expect(wrapper_source.find("return response_document.find(field_token) != std::string::npos;") == std::string::npos,
@@ -2942,6 +2946,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should stage response field extraction through the shared response-parse execution helper.");
         expect(wrapper_source.find("object_depth == 1U && array_depth == 0U") != std::string::npos,
                "fll-output wrapper source should validate required response fields as top-level object fields");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_find_json_field_value_start(") != std::string::npos,
+               "fll-output wrapper source should declare a shared response field-value scanner");
+        expect(wrapper_source.find("copperfin_runtime_bridge_find_json_field_value_start(response_document, field_name, value_start)") != std::string::npos,
+               "fll-output wrapper source should extract response field values through the shared scanner");
         expect(wrapper_source.find("response_document.compare(index, field_token.size(), field_token) == 0") != std::string::npos,
                "fll-output wrapper source should compare required response fields through the scanner token match");
         expect(wrapper_source.find("return response_document.find(field_token) != std::string::npos;") == std::string::npos,
