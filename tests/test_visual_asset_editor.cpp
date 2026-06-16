@@ -11051,6 +11051,24 @@ void test_set_visual_object_half_height_caption_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_mdi_form_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#896",
+        "mdi_form",
+        "MDIForm",
+        "MDIFORM",
+        "MDI form",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_mdi_form({
+                .path = path,
+                .objects = objects,
+                .mdi_form = value
+            });
+        });
+}
+
 void test_set_visual_object_hide_selection_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#877",
@@ -22864,6 +22882,7 @@ int main() {
     test_set_visual_object_min_button_assigns_logical_state();
     test_set_visual_object_movable_assigns_logical_state();
     test_set_visual_object_half_height_caption_assigns_logical_state();
+    test_set_visual_object_mdi_form_assigns_logical_state();
     test_set_visual_object_hide_selection_assigns_logical_state();
     test_set_visual_object_allow_cell_selection_assigns_logical_state();
     test_set_visual_object_sparse_assigns_logical_state();

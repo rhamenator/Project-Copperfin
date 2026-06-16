@@ -5356,6 +5356,15 @@ VisualAssetEditResult set_visual_object_half_height_caption(
         request.half_height_caption ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MDIForm",
+        "MDI form",
+        request.mdi_form ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

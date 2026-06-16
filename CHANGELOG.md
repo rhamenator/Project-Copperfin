@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#896 selected visual object MDI form assignment shipped: designer commands can assign caller-provided logical `MDIForm` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#895 selected visual object half-height-caption assignment shipped: designer commands can assign caller-provided logical `HalfHeightCaption` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#894 selected visual object window-state assignment shipped: designer commands can assign caller-provided non-negative numeric `WindowState` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#893 selected visual object scroll-bars assignment shipped: designer commands can assign caller-provided non-negative numeric `ScrollBars` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
