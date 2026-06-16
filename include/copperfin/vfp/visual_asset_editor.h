@@ -736,6 +736,12 @@ struct VisualObjectAlwaysOnBottomRequest {
     bool always_on_bottom = false;
 };
 
+struct VisualObjectPictureRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string picture;
+};
+
 struct VisualObjectInputMaskRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1161,6 +1167,7 @@ VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& 
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);
 VisualAssetEditResult set_visual_object_always_on_bottom(const VisualObjectAlwaysOnBottomRequest& request);
+VisualAssetEditResult set_visual_object_picture(const VisualObjectPictureRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request);

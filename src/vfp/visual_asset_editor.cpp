@@ -5337,6 +5337,15 @@ VisualAssetEditResult set_visual_object_always_on_bottom(const VisualObjectAlway
         request.always_on_bottom ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_picture(const VisualObjectPictureRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "Picture",
+        "picture",
+        request.picture);
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
