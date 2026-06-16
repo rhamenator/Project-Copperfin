@@ -104,6 +104,11 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[0].top_field_index == 2U, "#664: report section should preserve VPOS field provenance");
     expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
+    if (!layout.sections[0].objects.empty()) {
+        expect(layout.sections[0].objects[0].objtype_field_index == 0U, "#674: present report object fields should keep DBF field provenance");
+        expect(layout.sections[0].objects[0].objcode_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+            "#674: missing report object fields should not masquerade as DBF field zero");
+    }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
     expect(layout.sections[1].objects[0].objtype_code == 8, "#666: layout objects should preserve raw OBJTYPE values");

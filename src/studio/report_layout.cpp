@@ -44,6 +44,10 @@ std::optional<std::size_t> find_field_index(const DbfRecord& record, std::string
     return std::nullopt;
 }
 
+std::size_t field_index_or_missing(const DbfRecord& record, std::string_view field_name) {
+    return find_field_index(record, field_name).value_or(StudioReportMissingFieldIndex);
+}
+
 std::string value_or_empty(const DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     return value == nullptr ? std::string() : value->display_value;
@@ -172,19 +176,19 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.objtype_code = parse_scaled_int_or_default(record, "OBJTYPE");
     object.objcode_code = parse_scaled_int_or_default(record, "OBJCODE");
     object.object_kind = object_kind_name(object.objtype_code);
-    object.objtype_field_index = find_field_index(record, "OBJTYPE").value_or(0U);
-    object.objcode_field_index = find_field_index(record, "OBJCODE").value_or(0U);
+    object.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
+    object.objcode_field_index = field_index_or_missing(record, "OBJCODE");
     object.title = first_non_empty(record, {"NAME", "EXPR", "UNIQUEID"});
     object.expression = first_non_empty(record, {"EXPR"});
-    object.expression_field_index = find_field_index(record, "EXPR").value_or(0U);
+    object.expression_field_index = field_index_or_missing(record, "EXPR");
     object.left = parse_scaled_int_or_default(record, "HPOS");
-    object.left_field_index = find_field_index(record, "HPOS").value_or(0U);
+    object.left_field_index = field_index_or_missing(record, "HPOS");
     object.top = parse_scaled_int_or_default(record, "VPOS");
-    object.top_field_index = find_field_index(record, "VPOS").value_or(0U);
+    object.top_field_index = field_index_or_missing(record, "VPOS");
     object.width = std::max(0, parse_scaled_int_or_default(record, "WIDTH"));
-    object.width_field_index = find_field_index(record, "WIDTH").value_or(0U);
+    object.width_field_index = field_index_or_missing(record, "WIDTH");
     object.height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
-    object.height_field_index = find_field_index(record, "HEIGHT").value_or(0U);
+    object.height_field_index = field_index_or_missing(record, "HEIGHT");
 
     if (object.title.empty()) {
         object.title = "Record " + std::to_string(record.record_index);
@@ -196,7 +200,7 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
             object.highlights.push_back({
                 .name = std::string(name),
                 .record_index = record.record_index,
-                .field_index = find_field_index(record, name).value_or(0U),
+                .field_index = field_index_or_missing(record, name),
                 .value = value
             });
         }
@@ -228,7 +232,7 @@ bool is_band_record(const DbfRecord& record) {
 
 void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValue>& settings) {
     const std::string expr = value_or_empty(record, "EXPR");
-    const std::size_t expr_field_index = find_field_index(record, "EXPR").value_or(0U);
+    const std::size_t expr_field_index = field_index_or_missing(record, "EXPR");
     std::size_t start = 0U;
     while (start <= expr.size()) {
         const std::size_t end = expr.find('\n', start);
@@ -263,7 +267,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
             settings.push_back({
                 .name = std::string(field_name),
                 .record_index = record.record_index,
-                .field_index = find_field_index(record, field_name).value_or(0U),
+                .field_index = field_index_or_missing(record, field_name),
                 .value = value
             });
         }
@@ -326,11 +330,11 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
                 .band_kind = band_kind_name(objcode),
                 .record_index = record.record_index,
                 .objcode_code = objcode,
-                .objcode_field_index = find_field_index(record, "OBJCODE").value_or(0U),
+                .objcode_field_index = field_index_or_missing(record, "OBJCODE"),
                 .top = parse_scaled_int_or_default(record, "VPOS"),
-                .top_field_index = find_field_index(record, "VPOS").value_or(0U),
+                .top_field_index = field_index_or_missing(record, "VPOS"),
                 .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
-                .height_field_index = find_field_index(record, "HEIGHT").value_or(0U)
+                .height_field_index = field_index_or_missing(record, "HEIGHT")
             });
         }
     }
