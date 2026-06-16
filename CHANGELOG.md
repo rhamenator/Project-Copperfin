@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- D1/#529 request-write executor call-site shipped: generated DLL/FLL native-wrapper stubs now execute `copperfin_runtime_bridge_execute_write_request(request_write_plan)` immediately after constructing the request-write plan and explicitly discard the scaffold-only execution result before continuing into response-read planning, so request documents are materialized through the shared helper while the stub still follows the placeholder-return path. Focused `test_runtime_pipeline` and `test_build_host_output` coverage now both prove the helper declaration, request-document write body, request-write execution call-site, and explicit discard in DLL and FLL generated output.
 - D1/#592 descriptor wrapper-plan propagation shipped: generated DLL/FLL native-wrapper scaffolds now carry the stub-emission wrapper contract through `CopperfinRuntimeBridgeDescriptor`, so exported DLL/FLL stubs now build that wrapper once before constructing the descriptor and then build invocations straight from the enriched descriptor instead of passing the wrapper separately at the invocation seam. Focused `test_runtime_pipeline` and `test_build_host_output` coverage now both prove the descriptor-plan wrapper contract path.
 This changelog is an exhaustive ledger compiled from the dated implementation notes already tracked in [remaining-work.md](remaining-work.md).
 

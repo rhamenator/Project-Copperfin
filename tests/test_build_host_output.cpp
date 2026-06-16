@@ -1209,6 +1209,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a request artifact from the response validation plan");
             expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
                    "build host DLL wrapper should build a request write plan from the request artifact");
+            expect(wrapper_source.find("const auto request_write_execution =\n        copperfin_runtime_bridge_execute_write_request(request_write_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the request-write plan through the shared helper.");
+            expect(wrapper_source.find("(void)request_write_execution;") != std::string::npos,
+                   "build host DLL wrapper should explicitly discard the scaffold-only request-write execution result.");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host DLL wrapper should build a response read plan from the request write plan");
             expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
@@ -2097,6 +2101,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a request artifact from the response validation plan");
             expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(") != std::string::npos,
                    "build host FLL wrapper should build a request write plan from the request artifact");
+            expect(wrapper_source.find("const auto request_write_execution =\n        copperfin_runtime_bridge_execute_write_request(request_write_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the request-write plan through the shared helper.");
+            expect(wrapper_source.find("(void)request_write_execution;") != std::string::npos,
+                   "build host FLL wrapper should explicitly discard the scaffold-only request-write execution result.");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(") != std::string::npos,
                    "build host FLL wrapper should build a response read plan from the request write plan");
             expect(wrapper_source.find("const auto missing_response =") != std::string::npos,
