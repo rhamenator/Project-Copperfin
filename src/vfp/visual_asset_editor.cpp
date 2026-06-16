@@ -5319,6 +5319,15 @@ VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLine
         request.add_line_feeds ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AlwaysOnTop",
+        "always-on-top",
+        request.always_on_top ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
