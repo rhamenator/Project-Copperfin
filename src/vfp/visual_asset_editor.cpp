@@ -179,6 +179,20 @@ std::string normalize_visual_object_name(std::string value) {
     return value;
 }
 
+std::string format_visual_string_property_value(const std::string& value) {
+    std::string formatted;
+    formatted.reserve(value.size() + 2U);
+    formatted.push_back('"');
+    for (const char ch : value) {
+        if (ch == '"') {
+            formatted.push_back('"');
+        }
+        formatted.push_back(ch);
+    }
+    formatted.push_back('"');
+    return formatted;
+}
+
 std::string normalize_visual_property_name(std::string value) {
     value = trim_both(std::move(value));
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
@@ -5062,6 +5076,56 @@ VisualAssetEditResult set_visual_object_locked(const VisualObjectLockedRequest& 
                 {
                     .property_name = "LOCKED",
                     .property_value = request.locked ? ".T." : ".F."
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
+}
+
+VisualAssetEditResult set_visual_object_caption(const VisualObjectCaptionRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for caption assignment."};
+    }
+
+    std::vector<std::size_t> resolved_record_indexes;
+    resolved_record_indexes.reserve(request.objects.size());
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        const auto property_result = query_visual_object_property({
+            .path = request.path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .property_name = "Caption"
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
+            resolved_record_indexes.end()) {
+            return {.ok = false, .error = "The same visual object was selected more than once for caption assignment."};
+        }
+        resolved_record_indexes.push_back(property_result.record_index);
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = {
+                {
+                    .property_name = "Caption",
+                    .property_value = property_result.direct_field
+                        ? request.caption
+                        : format_visual_string_property_value(request.caption)
                 }
             }
         });

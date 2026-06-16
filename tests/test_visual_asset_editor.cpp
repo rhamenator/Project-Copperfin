@@ -9569,6 +9569,194 @@ void test_set_visual_object_locked_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_caption_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_caption_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "caption.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "CAPTION", .type = 'C', .length = 50U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", "One"},
+        {"cmdTwo", "twoButton", "two-guid", "Two"},
+        {"cmdThree", "threeButton", "three-guid", "Three"},
+        {"cmdOther", "otherButton", "other-guid", "Other"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#799: caption fixture should be writable");
+
+    const auto caption_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "Caption"
+        });
+        expect(result.ok && result.exists, "#799: caption fixture property should be readable");
+        return result.value;
+    };
+    const auto caption = [&](const std::string& unique_id) {
+        return caption_for(table_path.string(), unique_id);
+    };
+    const auto caption_state = [&]() {
+        return caption("one-guid") + "," +
+            caption("two-guid") + "," +
+            caption("three-guid") + "," +
+            caption("other-guid");
+    };
+
+    auto caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .caption = "Primary Action"
+    });
+    expect(caption_result.ok, "#799: caption assignment should support mixed selectors");
+    expect(caption("one-guid") == "Primary Action" &&
+            caption("two-guid") == "Primary Action" &&
+            caption("three-guid") == "Three" &&
+            caption("other-guid") == "Other",
+        "#799: direct caption assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#799: first caption write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#799: second caption write should remain undo-backed");
+    expect(caption_state() == "One,Two,Three,Other", "#799: caption undo should restore original direct values");
+
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .caption = "Ready \"Now\""
+    });
+    expect(caption_result.ok, "#799: caption assignment should support record-index selectors");
+    expect(caption("three-guid") == "Ready \"Now\"" &&
+            caption("one-guid") == "Ready \"Now\"" &&
+            caption("two-guid") == "Two",
+        "#799: direct caption assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = caption_state();
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = table_path.string(),
+        .objects = {},
+        .caption = "Ignored"
+    });
+    expect(!caption_result.ok, "#799: caption assignment should reject empty selections");
+    expect(caption_state() == committed_state, "#799: empty-selection failures should not mutate captions");
+
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .caption = "Ignored"
+    });
+    expect(!caption_result.ok, "#799: caption assignment should reject missing selected objects");
+    expect(caption_state() == committed_state, "#799: missing-object failures should not mutate captions");
+
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .caption = "Ignored"
+    });
+    expect(!caption_result.ok, "#799: caption assignment should reject duplicate selected objects");
+    expect(caption_state() == committed_state, "#799: duplicate-selection failures should not mutate captions");
+
+    const fs::path blob_path = temp_dir / "caption_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cmdBlob", "blob-guid", "Caption = \"Blob\"\r\nEnabled = .T.\r\n"},
+        {"cmdNoCaption", "no-caption-guid", "Enabled = .T.\r\n"},
+        {"cmdOther", "other-guid", "Caption = \"Other\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#799: caption property-blob fixture should be writable");
+
+    const auto blob_caption_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "Caption"
+        });
+    };
+
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cmdNoCaption", .unique_id = {}}
+        },
+        .caption = "He said \"Run\""
+    });
+    expect(caption_result.ok, "#799: caption assignment should support existing and absent serialized properties");
+    auto blob_caption = blob_caption_state("blob-guid");
+    auto appended_caption = blob_caption_state("no-caption-guid");
+    auto other_caption = blob_caption_state("other-guid");
+    expect(blob_caption.ok && blob_caption.exists && blob_caption.value == "\"He said \"\"Run\"\"\"" &&
+            appended_caption.ok && appended_caption.exists && appended_caption.value == "\"He said \"\"Run\"\"\"" &&
+            other_caption.ok && other_caption.exists && other_caption.value == "\"Other\"",
+        "#799: serialized caption assignment should quote text, append missing Caption, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#799: appended serialized caption write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#799: existing serialized caption write should remain undo-backed");
+    blob_caption = blob_caption_state("blob-guid");
+    appended_caption = blob_caption_state("no-caption-guid");
+    expect(blob_caption.ok && blob_caption.exists && blob_caption.value == "\"Blob\"" &&
+            appended_caption.ok && !appended_caption.exists,
+        "#799: serialized caption undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_caption.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#799: missing-Caption fixture should be writable");
+
+    caption_result = copperfin::vfp::set_visual_object_caption({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .caption = "Ignored"
+    });
+    expect(!caption_result.ok, "#799: caption assignment should reject objects without a writable Caption carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -12159,6 +12347,7 @@ int main() {
     test_set_visual_object_enabled_assigns_logical_state();
     test_set_visual_object_read_only_assigns_logical_state();
     test_set_visual_object_locked_assigns_logical_state();
+    test_set_visual_object_caption_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
