@@ -5571,6 +5571,19 @@ VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureReq
         std::to_string(request.curvature));
 }
 
+VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request) {
+    if (request.draw_mode < 0) {
+        return {.ok = false, .error = "DrawMode must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DrawMode",
+        "draw-mode",
+        std::to_string(request.draw_mode));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};
