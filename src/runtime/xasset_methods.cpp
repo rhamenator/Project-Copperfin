@@ -290,12 +290,18 @@ XAssetMethod make_wrapped_method(
 
 XAssetActionBinding make_action_binding(
     std::size_t record_index,
+    std::size_t title_field_index,
+    std::size_t routine_source_field_index,
+    std::size_t routine_source_line_index,
     std::string action_id,
     std::string title,
     std::string kind,
     std::string routine_name) {
     XAssetActionBinding binding;
     binding.record_index = record_index;
+    binding.title_field_index = title_field_index;
+    binding.routine_source_field_index = routine_source_field_index;
+    binding.routine_source_line_index = routine_source_line_index;
     binding.action_id = lowercase_copy(trim_copy(std::move(action_id)));
     binding.title = trim_copy(std::move(title));
     binding.kind = trim_copy(std::move(kind));
@@ -442,6 +448,15 @@ std::optional<std::string> find_menu_action_routine(
     return found->routine_name;
 }
 
+const XAssetMethod* find_method_by_routine_name(
+    const std::vector<XAssetMethod>& methods,
+    const std::string& routine_name) {
+    const auto found = std::find_if(methods.begin(), methods.end(), [&](const XAssetMethod& method) {
+        return method.routine_name == routine_name;
+    });
+    return found == methods.end() ? nullptr : &*found;
+}
+
 }  // namespace
 
 XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document) {
@@ -503,11 +518,18 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
                 if (action_routine.has_value()) {
                     std::string title = trim_copy(value_or_empty(record, "PROMPT"));
+                    const std::size_t title_field_index = title.empty()
+                        ? studio::StudioObjectMissingFieldIndex
+                        : field_index_or_missing(record, "PROMPT");
                     if (title.empty()) {
                         title = object_path;
                     }
+                    const auto* routine_method = find_method_by_routine_name(model.methods, *action_routine);
                     model.actions.push_back(make_action_binding(
                         record.record_index,
+                        title_field_index,
+                        routine_method == nullptr ? studio::StudioObjectMissingFieldIndex : routine_method->source_field_index,
+                        routine_method == nullptr ? studio::StudioObjectMissingLineIndex : routine_method->source_line_index,
                         object_path,
                         title,
                         action_kind,
@@ -602,6 +624,9 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
             model.actions.push_back(make_action_binding(
                 method.record_index,
+                studio::StudioObjectMissingFieldIndex,
+                method.source_field_index,
+                method.source_line_index,
                 title,
                 title,
                 "method",

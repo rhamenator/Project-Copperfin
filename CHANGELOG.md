@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#708 xAsset action binding provenance shipped: action bindings now expose title source field provenance plus routine source field/line provenance inherited from method-backed actions, with synthetic submenu routines using missing sentinels.
 - E1/#707 xAsset method source-line provenance shipped: executable xAsset methods now retain memo declaration line indexes, wrapped field methods start at line zero, and synthetic submenu methods use the missing-line sentinel.
 - E1/#706 xAsset method source-field provenance shipped: executable xAsset methods now retain the DBF field ordinal for form/class `METHODS` blobs and menu method fields, with synthetic submenu methods using the missing-field sentinel.
 - E1/#705 Studio display metadata trimming shipped: generic object/menu snapshots now trim normalized active display metadata and ignore whitespace-only fallback candidates while preserving direct DBF property values unchanged.

@@ -113,7 +113,17 @@ void test_build_xasset_executable_model() {
     }
     if (model.actions.size() >= 8U) {
         expect(model.actions[0].action_id == "dataenvironment.beforeopentables", "data environment startup should be dispatchable");
+        expect(model.actions[0].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: synthesized form action titles should use the missing-title-field sentinel");
+        expect(model.actions[0].routine_source_field_index == 3U,
+               "#708: form action routines should inherit method source field provenance");
+        expect(model.actions[0].routine_source_line_index == 0U,
+               "#708: form action routines should inherit method source line provenance");
         expect(model.actions[4].action_id == "frmdemo.init", "root form init should be dispatchable");
+        expect(model.actions[4].routine_source_field_index == 3U,
+               "#708: root form action routines should inherit method source field provenance");
+        expect(model.actions[4].routine_source_line_index == 3U,
+               "#708: root form action routines should inherit method declaration line provenance");
         expect(model.actions[7].action_id == "frmdemo.pgfmain.page2.activate", "nested page methods should be dispatchable");
     }
     expect(model.startup_routines.size() == 5U, "startup should include data environment, load, init, and activate methods");
@@ -381,6 +391,12 @@ void test_xasset_executable_model_suppresses_unresolved_memo_placeholders() {
     if (!menu_model.actions.empty()) {
         expect(menu_model.actions[0].action_id == "shortcut.item1", "#697: action id should use deterministic owner fallback");
         expect(menu_model.actions[0].title == "Shortcut.item1", "#697: unresolved PROMPT should fall back to the owner path");
+        expect(menu_model.actions[0].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: unresolved prompt fallback titles should use the missing-title-field sentinel");
+        expect(menu_model.actions[0].routine_source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: synthetic submenu action routines should use missing routine field provenance");
+        expect(menu_model.actions[0].routine_source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#708: synthetic submenu action routines should use missing routine line provenance");
         expect(menu_model.actions[0].kind == "submenu", "#697: unresolved command should allow submenu fallback");
     }
     if (!menu_model.methods.empty()) {
@@ -543,8 +559,26 @@ void test_build_menu_xasset_executable_model() {
     }
     if (model.actions.size() >= 3U) {
         expect(model.actions[0].action_id == "shortcut.item1", "first action should expose the item1 action id");
+        expect(model.actions[0].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: command action title fallbacks should use the missing-title-field sentinel");
+        expect(model.actions[0].routine_source_field_index == 3U,
+               "#708: command actions should inherit COMMAND field provenance");
+        expect(model.actions[0].routine_source_line_index == 0U,
+               "#708: command actions should inherit wrapped COMMAND line provenance");
         expect(model.actions[1].action_id == "shortcut.item2", "second action should expose the item2 action id");
+        expect(model.actions[1].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: procedure action title fallbacks should use the missing-title-field sentinel");
+        expect(model.actions[1].routine_source_field_index == 3U,
+               "#708: procedure actions should inherit PROCEDURE field provenance");
+        expect(model.actions[1].routine_source_line_index == 1U,
+               "#708: procedure actions should inherit embedded declaration line provenance");
         expect(model.actions[2].action_id == "shortcut.item3", "third action should expose the submenu action id");
+        expect(model.actions[2].title_field_index == 3U,
+               "#708: submenu action titles sourced from PROMPT should retain PROMPT field provenance");
+        expect(model.actions[2].routine_source_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+               "#708: synthetic submenu action routines should use missing routine field provenance");
+        expect(model.actions[2].routine_source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+               "#708: synthetic submenu action routines should use missing routine line provenance");
         expect(model.actions[2].kind == "submenu", "submenu item should be tagged as a submenu action");
     }
 
