@@ -15432,6 +15432,29 @@ void test_set_visual_object_bound_column_assigns_numeric_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_button_count_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#881",
+        "button_count",
+        "ButtonCount",
+        "BUTTONCOUNT",
+        "button-count",
+        2,
+        3,
+        1,
+        4,
+        0,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_button_count({
+                .path = path,
+                .objects = objects,
+                .button_count = value
+            });
+        });
+}
+
 void test_set_visual_object_column_count_assigns_numeric_value() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -22595,6 +22618,7 @@ int main() {
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
+    test_set_visual_object_button_count_assigns_numeric_value();
     test_set_visual_object_column_count_assigns_numeric_value();
     test_set_visual_object_column_widths_assigns_text();
     test_set_visual_object_column_lines_assigns_logical_state();

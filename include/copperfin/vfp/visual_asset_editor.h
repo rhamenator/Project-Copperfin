@@ -1024,6 +1024,12 @@ struct VisualObjectBoundColumnRequest {
     int bound_column = 0;
 };
 
+struct VisualObjectButtonCountRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int button_count = 0;
+};
+
 struct VisualObjectColumnCountRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1361,6 +1367,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_shadow(const VisualObjectDy
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
+VisualAssetEditResult set_visual_object_button_count(const VisualObjectButtonCountRequest& request);
 VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCountRequest& request);
 VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWidthsRequest& request);
 VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLinesRequest& request);

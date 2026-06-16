@@ -5844,6 +5844,19 @@ VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColu
         std::to_string(request.bound_column));
 }
 
+VisualAssetEditResult set_visual_object_button_count(const VisualObjectButtonCountRequest& request) {
+    if (request.button_count < 0) {
+        return {.ok = false, .error = "ButtonCount must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ButtonCount",
+        "button-count",
+        std::to_string(request.button_count));
+}
+
 VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCountRequest& request) {
     if (request.column_count < 0) {
         return {.ok = false, .error = "ColumnCount must not be negative."};
