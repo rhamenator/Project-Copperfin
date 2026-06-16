@@ -5359,6 +5359,15 @@ VisualAssetEditResult set_visual_object_font_underline(const VisualObjectFontUnd
         request.font_underline ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_font_strikethru(const VisualObjectFontStrikethruRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "FontStrikethru",
+        "font strikethru",
+        request.font_strikethru ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
