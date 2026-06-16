@@ -457,6 +457,29 @@ void test_build_menu_xasset_executable_model() {
     }
 }
 
+void test_build_menu_xasset_activation_uses_vfp_path_stem() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\mainmenu.mnx)";
+    document.kind = copperfin::studio::StudioAssetKind::menu;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "1"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "MainMenu"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "#698: non-shortcut menu xAsset model should build from Windows-style paths");
+    expect(model.activation_kind == "menu", "#698: non-shortcut menus should activate as menus");
+    expect(model.activation_target == "mainmenu", "#698: activation target should use the VFP path filename stem");
+    expect(model.startup_lines.size() == 1U, "#698: non-shortcut menu startup should contain one activation line");
+    if (!model.startup_lines.empty()) {
+        expect(model.startup_lines[0] == "ACTIVATE MENU mainmenu",
+               "#698: generated activation line should not include Windows directory text");
+    }
+}
+
 void test_build_report_xasset_executable_model() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\invoice.frx)";
@@ -550,6 +573,7 @@ int main() {
     test_form_root_object_path_ignores_comments_and_data_environment();
     test_xasset_executable_model_suppresses_unresolved_memo_placeholders();
     test_build_menu_xasset_executable_model();
+    test_build_menu_xasset_activation_uses_vfp_path_stem();
     test_build_report_xasset_executable_model();
     test_build_label_xasset_executable_model();
     test_build_real_menu_xasset_executable_model();

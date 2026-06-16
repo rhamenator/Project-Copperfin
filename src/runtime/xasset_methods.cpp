@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <filesystem>
 #include <optional>
 #include <sstream>
 #include <string_view>
@@ -56,6 +55,16 @@ std::string uppercase_copy(std::string value) {
         return static_cast<char>(std::toupper(ch));
     });
     return value;
+}
+
+std::string filename_stem_for_vfp_path(const std::string& value) {
+    const std::size_t separator = value.find_last_of("/\\");
+    const std::string leaf = separator == std::string::npos ? value : value.substr(separator + 1U);
+    const std::size_t dot = leaf.find_last_of('.');
+    if (dot == std::string::npos || dot == 0U) {
+        return leaf;
+    }
+    return leaf.substr(0U, dot);
 }
 
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
@@ -511,7 +520,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 model.activation_target = "shortcut";
             }
         } else {
-            model.activation_target = std::filesystem::path(document.path).stem().string();
+            model.activation_target = filename_stem_for_vfp_path(document.path);
         }
 
         if (!model.activation_target.empty()) {
