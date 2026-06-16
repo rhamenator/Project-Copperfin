@@ -1757,6 +1757,60 @@ VisualAssetEditResult set_visual_object_text_property(
     });
 }
 
+VisualAssetEditResult set_visual_object_scalar_property(
+    const std::string& path,
+    const std::vector<VisualObjectAlignmentTarget>& objects,
+    const std::string& property_name,
+    const std::string& property_label,
+    const std::string& property_value) {
+    if (path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for " + property_label + " assignment."};
+    }
+
+    std::vector<std::size_t> resolved_record_indexes;
+    resolved_record_indexes.reserve(objects.size());
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(objects.size());
+    for (const auto& object : objects) {
+        const auto property_result = query_visual_object_property({
+            .path = path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .property_name = property_name
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
+            resolved_record_indexes.end()) {
+            return {.ok = false, .error = "The same visual object was selected more than once for " +
+                property_label + " assignment."};
+        }
+        resolved_record_indexes.push_back(property_result.record_index);
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = {
+                {
+                    .property_name = property_name,
+                    .property_value = property_value
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = path,
+        .objects = edits
+    });
+}
+
 }  // namespace
 
 std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::string& text) {
@@ -5263,6 +5317,19 @@ VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRe
         "RowSource",
         "row-source",
         request.row_source);
+}
+
+VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request) {
+    if (request.row_source_type < 0) {
+        return {.ok = false, .error = "RowSourceType must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "RowSourceType",
+        "row-source type",
+        std::to_string(request.row_source_type));
 }
 
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {

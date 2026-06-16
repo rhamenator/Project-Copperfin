@@ -724,6 +724,12 @@ struct VisualObjectRowSourceRequest {
     std::string row_source;
 };
 
+struct VisualObjectRowSourceTypeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int row_source_type = 0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -859,6 +865,7 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
+VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
