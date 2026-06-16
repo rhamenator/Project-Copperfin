@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#872 selected visual object drag-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `DragMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#871 selected visual object drag-icon assignment shipped: designer commands can assign caller-provided `DragIcon` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#870 selected visual object mouse-icon assignment shipped: designer commands can assign caller-provided `MouseIcon` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#869 selected visual object picture-selection-display assignment shipped: designer commands can assign caller-provided non-negative numeric `PictureSelectionDisplay` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

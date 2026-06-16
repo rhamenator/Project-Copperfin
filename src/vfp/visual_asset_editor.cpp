@@ -5391,6 +5391,19 @@ VisualAssetEditResult set_visual_object_drag_icon(const VisualObjectDragIconRequ
         request.drag_icon);
 }
 
+VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequest& request) {
+    if (request.drag_mode < 0) {
+        return {.ok = false, .error = "DragMode must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DragMode",
+        "drag-mode",
+        std::to_string(request.drag_mode));
+}
+
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
         return {.ok = false, .error = "BackStyle must not be negative."};

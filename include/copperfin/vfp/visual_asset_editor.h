@@ -772,6 +772,12 @@ struct VisualObjectDragIconRequest {
     std::string drag_icon;
 };
 
+struct VisualObjectDragModeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int drag_mode = 0;
+};
+
 struct VisualObjectBackStyleRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1263,6 +1269,7 @@ VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisab
 VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDragPictureRequest& request);
 VisualAssetEditResult set_visual_object_mouse_icon(const VisualObjectMouseIconRequest& request);
 VisualAssetEditResult set_visual_object_drag_icon(const VisualObjectDragIconRequest& request);
+VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequest& request);
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request);
 VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderStyleRequest& request);
 VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWidthRequest& request);
