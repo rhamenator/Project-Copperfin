@@ -42,6 +42,7 @@ struct StudioProjectGroup {
     std::string title{};
     std::size_t item_count = 0;
     std::size_t excluded_count = 0;
+    std::size_t deleted_count = 0;
     std::vector<std::size_t> record_indexes{};
 };
 

@@ -129,6 +129,17 @@ void test_build_project_workspace() {
         return group.id == "forms";
     });
     expect(forms_group != workspace.groups.end(), "workspace should include a forms group");
+    if (forms_group != workspace.groups.end()) {
+        expect(forms_group->deleted_count == 0U, "#686: live-only project groups should expose zero deleted entries");
+    }
+    const auto menus_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
+        return group.id == "menus";
+    });
+    expect(menus_group != workspace.groups.end(), "#686: deleted menu entries should still contribute to their project group");
+    if (menus_group != workspace.groups.end()) {
+        expect(menus_group->item_count == 1U, "#686: project group item count should continue to include deleted source rows");
+        expect(menus_group->deleted_count == 1U, "#686: project groups should count deleted source rows explicitly");
+    }
 }
 
 void test_build_project_workspace_with_excluded_assets() {

@@ -304,6 +304,9 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         if (entry.excluded) {
             ++group.excluded_count;
         }
+        if (entry.deleted) {
+            ++group.deleted_count;
+        }
 
         workspace.entries.push_back(std::move(entry));
     }
