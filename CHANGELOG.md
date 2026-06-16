@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#746 selected visual object method listing shipped: context-aware method/event editors can now enumerate `PROCEDURE` and `FUNCTION` declarations from a selected record's `METHODS` memo with source text, declaration line, memo block, and resolved record metadata.
 - E2/#745 visual object outlines now include parsed `Caption` values from `PROPERTIES` memo assignments, giving designer selection panes user-facing labels while preserving existing identity metadata.
 - E2/#744 visual object outlines now include hierarchy/class metadata, exposing trimmed `PARENT`, `CLASS`, and `BASECLASS` values when present while leaving missing metadata empty.
 - E2/#743 visual object outline listing shipped: designer selection panes can now enumerate DBF visual object records with record indexes, deleted flags, `OBJNAME`/fallback `NAME` selection names, and stable `UNIQUEID` values.

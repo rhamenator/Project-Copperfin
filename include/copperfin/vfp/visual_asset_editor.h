@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -101,6 +102,29 @@ struct VisualObjectListResult {
     std::vector<VisualObjectSnapshot> objects;
 };
 
+struct VisualObjectMethodListRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct VisualObjectMethodSnapshot {
+    std::string method_name;
+    std::string kind;
+    std::string source_text;
+    std::size_t source_line_index = static_cast<std::size_t>(-1);
+    std::uint32_t source_memo_block_number = 0;
+};
+
+struct VisualObjectMethodListResult {
+    bool ok = false;
+    std::string error;
+    std::size_t record_index = 0;
+    bool record_deleted = false;
+    std::vector<VisualObjectMethodSnapshot> methods;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -117,6 +141,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request);
 [[nodiscard]] VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request);
 [[nodiscard]] VisualObjectListResult list_visual_objects(const std::string& path);
+[[nodiscard]] VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);

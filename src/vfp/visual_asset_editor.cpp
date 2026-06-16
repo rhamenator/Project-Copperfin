@@ -174,6 +174,85 @@ std::string normalize_visual_property_name(std::string value) {
     return value;
 }
 
+bool starts_with_insensitive(const std::string& text, const std::string& prefix) {
+    if (text.size() < prefix.size()) {
+        return false;
+    }
+    for (std::size_t index = 0U; index < prefix.size(); ++index) {
+        if (std::tolower(static_cast<unsigned char>(text[index])) !=
+            std::tolower(static_cast<unsigned char>(prefix[index]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<std::string> split_visual_lines(const std::string& text) {
+    std::vector<std::string> lines;
+    std::istringstream stream(text);
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        lines.push_back(line);
+    }
+    return lines;
+}
+
+std::vector<VisualObjectMethodSnapshot> parse_visual_methods_blob(
+    const std::string& text,
+    std::uint32_t source_memo_block_number) {
+    std::vector<VisualObjectMethodSnapshot> methods;
+    std::string current_name;
+    std::string current_kind;
+    std::size_t current_line_index = static_cast<std::size_t>(-1);
+    std::ostringstream current_source;
+
+    const auto flush = [&]() {
+        if (current_name.empty()) {
+            return;
+        }
+        methods.push_back({
+            .method_name = current_name,
+            .kind = current_kind,
+            .source_text = trim_both(current_source.str()),
+            .source_line_index = current_line_index,
+            .source_memo_block_number = source_memo_block_number
+        });
+        current_name.clear();
+        current_kind.clear();
+        current_line_index = static_cast<std::size_t>(-1);
+        current_source.str({});
+        current_source.clear();
+    };
+
+    const std::vector<std::string> lines = split_visual_lines(text);
+    for (std::size_t line_index = 0U; line_index < lines.size(); ++line_index) {
+        const std::string line = trim_both(lines[line_index]);
+        if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
+            flush();
+            const auto separator = line.find(' ');
+            current_name = trim_both(line.substr(separator + 1U));
+            current_kind = starts_with_insensitive(line, "FUNCTION ") ? "function" : "procedure";
+            current_line_index = line_index;
+            continue;
+        }
+        if (starts_with_insensitive(line, "ENDPROC") ||
+            starts_with_insensitive(line, "ENDFUNC") ||
+            starts_with_insensitive(line, "END FUNC")) {
+            flush();
+            continue;
+        }
+        if (!current_name.empty()) {
+            current_source << lines[line_index] << "\n";
+        }
+    }
+
+    flush();
+    return methods;
+}
+
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
     const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& candidate) {
@@ -1074,6 +1153,74 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
         .ok = true,
         .error = {},
         .objects = std::move(objects)
+    };
+}
+
+VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .record_index = 0U,
+            .record_deleted = false,
+            .methods = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .methods = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .methods = {}
+        };
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested object record is not currently available.",
+            .record_index = 0U,
+            .record_deleted = false,
+            .methods = {}
+        };
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const auto* methods_field = find_record_value(record, "METHODS");
+    std::vector<VisualObjectMethodSnapshot> methods;
+    if (methods_field != nullptr && !trim_both(methods_field->display_value).empty()) {
+        methods = parse_visual_methods_blob(
+            methods_field->display_value,
+            methods_field->memo_block_number);
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = record_index,
+        .record_deleted = record.deleted,
+        .methods = std::move(methods)
     };
 }
 
