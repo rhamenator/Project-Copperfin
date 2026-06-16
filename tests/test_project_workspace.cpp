@@ -186,6 +186,43 @@ void test_build_project_workspace_with_excluded_assets() {
            "workspace should keep the excluded asset record index when it becomes the startup fallback");
 }
 
+void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\memodemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'M', .display_value = "<memo block 918>"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = "<memo block 919>"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "<memo block 920>"},
+            {.field_name = "COMMENTS", .field_type = 'M', .display_value = "<memo block 921>"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.project_key.empty(), "#694: unresolved memo placeholders should not become project keys");
+    expect(workspace.project_key_field_index == 1U, "#694: unresolved project key fields should retain source provenance");
+    expect(workspace.project_title == "memodemo", "#694: unresolved memo project keys should fall back to the project filename");
+    expect(workspace.project_title_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#694: fallback project titles should not masquerade as stored memo provenance");
+    expect(workspace.output_path == R"(E:\Project-Copperfin\samples\memodemo.exe)",
+           "#694: unresolved memo OUTFILE values should keep default output fallback behavior");
+    expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#694: unresolved output placeholders should not masquerade as usable output provenance");
+    expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
+    expect(workspace.entries[1].name_field_index == 1U, "#694: unresolved memo name fields should retain source provenance");
+    expect(workspace.entries[1].relative_path.empty(), "#694: unresolved memo names should not become relative paths");
+    expect(workspace.entries[1].relative_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#694: relative path provenance should be missing when usable name text is absent");
+    expect(workspace.entries[1].comments.empty(), "#694: unresolved memo comments should not become normalized comments");
+    expect(workspace.entries[1].comments_field_index == 2U, "#694: unresolved memo comment fields should retain source provenance");
+}
+
 void test_build_project_workspace_prefers_live_header() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\headerdemo.pjx)";
@@ -359,6 +396,7 @@ void test_build_project_workspace_with_app_output() {
 int main() {
     test_build_project_workspace();
     test_build_project_workspace_with_excluded_assets();
+    test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_prefers_live_header();
     test_build_project_workspace_skips_deleted_startup_candidates();
     test_build_project_workspace_with_dll_output();

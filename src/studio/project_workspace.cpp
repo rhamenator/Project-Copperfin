@@ -27,9 +27,13 @@ std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_vie
     return StudioProjectMissingFieldIndex;
 }
 
+bool looks_like_unresolved_memo(const std::string& value) {
+    return value.rfind("<memo block ", 0) == 0;
+}
+
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
-    if (value == nullptr || value->display_value == "<memo block 0>") {
+    if (value == nullptr || looks_like_unresolved_memo(value->display_value)) {
         return {};
     }
     return value->display_value;
@@ -38,10 +42,6 @@ std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_
 bool value_as_bool(const vfp::DbfRecord& record, std::string_view field_name) {
     const std::string value = value_or_empty(record, field_name);
     return value == "true" || value == "t" || value == ".t." || value == "Y" || value == "y";
-}
-
-bool looks_like_unresolved_memo(const std::string& value) {
-    return value.rfind("<memo block ", 0) == 0;
 }
 
 std::string trim_copy(std::string value) {
@@ -63,6 +63,16 @@ std::string lowercase_copy(std::string value) {
 
 std::string extension_of(const std::string& value) {
     return lowercase_copy(std::filesystem::path(value).extension().string());
+}
+
+std::string filename_stem_for_vfp_path(const std::string& value) {
+    const std::size_t separator = value.find_last_of("/\\");
+    const std::string leaf = separator == std::string::npos ? value : value.substr(separator + 1U);
+    const std::size_t dot = leaf.find_last_of('.');
+    if (dot == std::string::npos || dot == 0U) {
+        return leaf;
+    }
+    return leaf.substr(0U, dot);
 }
 
 std::string fallback_relative_path(const StudioDocumentModel& document, const std::string& value) {
@@ -147,7 +157,7 @@ ProjectTypeDescriptor describe_project_item(
 
 std::string default_output_path(const StudioDocumentModel& document, const std::string& project_title) {
     const std::string stem = project_title.empty()
-        ? std::filesystem::path(document.path).stem().string()
+        ? filename_stem_for_vfp_path(document.path)
         : project_title;
     const std::string leaf = stem + ".exe";
     const std::size_t separator = document.path.find_last_of("/\\");
@@ -228,7 +238,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         workspace.project_key = trim_copy(value_or_empty(*header_record, "KEY"));
         workspace.project_key_field_index = field_index_or_missing(*header_record, "KEY");
         workspace.project_title = workspace.project_key.empty()
-            ? std::filesystem::path(document.path).stem().string()
+            ? filename_stem_for_vfp_path(document.path)
             : workspace.project_key;
         workspace.project_title_field_index = workspace.project_key.empty()
             ? StudioProjectMissingFieldIndex
@@ -242,7 +252,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
             workspace.output_path_field_index = StudioProjectMissingFieldIndex;
         }
     } else {
-        workspace.project_title = std::filesystem::path(document.path).stem().string();
+        workspace.project_title = filename_stem_for_vfp_path(document.path);
     }
 
     if (workspace.output_path.empty()) {
