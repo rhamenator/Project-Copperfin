@@ -5386,6 +5386,15 @@ VisualAssetEditResult set_visual_object_font_shadow(const VisualObjectFontShadow
         request.font_shadow ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_dynamic_alignment(const VisualObjectDynamicAlignmentRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicAlignment",
+        "dynamic alignment",
+        request.dynamic_alignment);
+}
+
 VisualAssetEditResult set_visual_object_dynamic_font_name(const VisualObjectDynamicFontNameRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
