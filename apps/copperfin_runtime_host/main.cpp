@@ -412,6 +412,14 @@ std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstra
     return bootstrap_path;
 }
 
+void remove_runtime_bridge_routine_bootstrap(const std::optional<std::filesystem::path>& bootstrap_path) {
+    if (!bootstrap_path.has_value()) {
+        return;
+    }
+    std::error_code ignored;
+    std::filesystem::remove(*bootstrap_path, ignored);
+}
+
 int run_runtime_bridge_invocation(
     const RuntimeBridgeInvocationOptions& options,
     const std::string& startup_source,
@@ -470,6 +478,7 @@ int run_runtime_bridge_invocation(
         ? startup_source
         : options.source_path;
     bool routine_bootstrap_materialized = false;
+    std::optional<std::filesystem::path> routine_bootstrap_path;
     if (!trim_copy(options.library_export).empty() &&
         !trim_copy(options.source_path).empty() &&
         (trim_copy(options.parameter_count) == "0" || !parameter_values.empty())) {
@@ -494,6 +503,7 @@ int run_runtime_bridge_invocation(
             return 6;
         }
         execution_source = bootstrap_path->string();
+        routine_bootstrap_path = *bootstrap_path;
         routine_bootstrap_materialized = true;
     }
     if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
@@ -512,6 +522,7 @@ int run_runtime_bridge_invocation(
     };
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
     const auto runtime_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    remove_runtime_bridge_routine_bootstrap(routine_bootstrap_path);
     if (runtime_state.reason == copperfin::runtime::DebugPauseReason::error) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
