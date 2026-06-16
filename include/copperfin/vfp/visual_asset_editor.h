@@ -73,6 +73,14 @@ struct VisualObjectPropertyListRequest {
     std::string unique_id;
 };
 
+struct VisualObjectPropertyClearRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string property_name;
+};
+
 struct VisualObjectPropertySnapshot {
     std::string property_name;
     std::string value;
@@ -411,6 +419,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
 VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObjectSubtreeDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
+VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request);
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request);
 [[nodiscard]] VisualAssetUndoStatus query_visual_object_undo(const std::string& path);
 VisualAssetEditResult undo_visual_object_property(const std::string& path);

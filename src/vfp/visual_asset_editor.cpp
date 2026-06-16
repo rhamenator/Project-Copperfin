@@ -1063,7 +1063,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
     }
-    if (request.property_name.empty()) {
+    if (trim_both(request.property_name).empty()) {
         return {.ok = false, .error = "No property name was provided."};
     }
 
@@ -1139,6 +1139,9 @@ VisualAssetEditResult apply_visual_object_property_change(
     if (record_undo_entry) {
         const bool exists = assignment_it != assignments.end();
         const std::string prior_value = exists ? assignment_it->value : std::string{};
+        if (!exists && remove_property_if_missing) {
+            return {.ok = true, .error = {}};
+        }
         if (exists && prior_value == request.property_value) {
             return {.ok = true, .error = {}};
         }
@@ -1333,6 +1336,17 @@ bool is_property_blob_asset_path(const std::string& path) {
 
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
     return apply_visual_object_property_change(request, true, false);
+}
+
+VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request) {
+    return apply_visual_object_property_change({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, true, true);
 }
 
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {

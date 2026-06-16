@@ -644,6 +644,177 @@ void test_query_visual_object_property_reads_selected_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_clear_visual_object_property_resets_selected_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_clear_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "clear.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nLeft = 30\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#766: property-clear fixture should be writable");
+
+    auto clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "MissingProp"
+    });
+    expect(clear_result.ok, "#766: clearing missing memo-backed properties should succeed as a no-op");
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#766: missing memo-backed property clears should not create undo history");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 1U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "hpos"
+    });
+    expect(clear_result.ok, "#766: property clear should support record-index direct-field selection");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "caption"
+    });
+    expect(clear_result.ok, "#766: property clear should support UNIQUEID memo-backed selection");
+
+    auto hpos_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    expect(hpos_query.ok && hpos_query.exists && hpos_query.direct_field && hpos_query.value.empty(),
+        "#766: direct-field clears should write an empty value through the direct field path");
+
+    auto caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    expect(caption_query.ok && !caption_query.exists,
+        "#766: memo-backed clears should remove the assignment instead of leaving an empty value");
+
+    auto left_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Left"
+    });
+    auto other_caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "Caption"
+    });
+    expect(left_query.ok && left_query.exists && left_query.value == "10" &&
+            other_caption_query.ok && other_caption_query.exists && other_caption_query.value == "\"Name\"",
+        "#766: property clear should preserve unrelated memo assignments and unrelated objects");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = " "
+    });
+    expect(!clear_result.ok, "#766: property clear should reject empty property names");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject missing selected objects");
+
+    const fs::path no_properties_path = temp_dir / "clear_no_properties.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> no_properties_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> no_properties_records{
+        {"cmdNoProps", "no-props-guid"}
+    };
+    const auto no_properties_create = copperfin::vfp::create_dbf_table_file(
+        no_properties_path.string(),
+        no_properties_fields,
+        no_properties_records);
+    expect(no_properties_create.ok, "#766: missing-PROPERTIES fixture should be writable");
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = no_properties_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "no-props-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject missing PROPERTIES fields for memo-backed clears");
+
+    const fs::path unsupported_path = temp_dir / "clear_unsupported.dbf";
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        no_properties_fields,
+        no_properties_records);
+    expect(unsupported_create.ok, "#766: unsupported asset fixture should be writable");
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = unsupported_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "no-props-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject unsupported asset paths for memo-backed clears");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#766: undo should restore cleared memo-backed assignments");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#766: undo should restore cleared direct fields");
+
+    caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    hpos_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    expect(caption_query.ok && caption_query.exists && caption_query.value == "\"Save\"" &&
+            hpos_query.ok && hpos_query.exists && hpos_query.value == "222",
+        "#766: undo should restore direct and memo-backed cleared property values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_list_visual_object_properties_reads_selected_surface() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -4659,6 +4830,7 @@ int main() {
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_query_visual_object_property_reads_selected_values();
+    test_clear_visual_object_property_resets_selected_values();
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
     test_list_visual_objects_reads_selection_outline();

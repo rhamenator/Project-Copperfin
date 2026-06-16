@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#766 selected visual object property clearing shipped: property grids can clear direct DBF fields to empty values and remove memo-backed `PROPERTIES` assignments by selected record, object name, or `UNIQUEID`, with missing memo assignments treated as no-op/no-undo and successful clears remaining undo-backed.
 - E2/#765 selected visual object method reordering shipped: method/event editors can move selected `PROCEDURE` or `FUNCTION` declarations to first, last, before another method, or after another method inside one selected object's `METHODS` memo while preserving bodies, kinds, unrelated methods, and undo support.
 - E2/#764 selected visual object method moves shipped: method/event editors can move one selected `PROCEDURE` or `FUNCTION` between objects, optionally rename or replace the target method, delete the source method only after the target write succeeds, reject self-overwrites, and preserve undo-backed restoration.
 - E2/#763 selected visual object method copying shipped: method/event editors can copy one selected object's `PROCEDURE` or `FUNCTION` into another selected object by record-index, object-name, or `UNIQUEID`, optionally rename or replace the target method, preserve target declaration kind on replacement, keep unrelated methods intact, and read full memo bodies without the prior 160-byte display cap.
