@@ -1426,6 +1426,59 @@ VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyCle
     }, true, true);
 }
 
+VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyClearBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = "No property clears were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_clears = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.property_name).empty()) {
+            const auto rollback_result = rollback_batch_clears();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No property name was provided."};
+        }
+
+        const auto result = clear_visual_object_property({
+            .path = request.path,
+            .record_index = property.record_index,
+            .object_name = property.object_name,
+            .unique_id = property.unique_id,
+            .property_name = property.property_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_clears();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request) {
     if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
         return {.ok = false, .error = "No target property name was provided."};

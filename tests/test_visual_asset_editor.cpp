@@ -815,6 +815,146 @@ void test_clear_visual_object_property_resets_selected_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_clear_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_clear_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "clear_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "211", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "322", "Caption = \"Name\"\r\nLeft = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "433", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#771: property-clear-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "hpos"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .property_name = "Caption"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = "MissingMemo"
+            }
+        }
+    });
+    expect(batch_result.ok, "#771: batch property clears should support mixed selectors and missing memo no-ops");
+
+    auto save_hpos = property_state("save-guid", "HPOS");
+    auto name_caption = property_state("name-guid", "Caption");
+    auto status_left = property_state("status-guid", "Left");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.direct_field && save_hpos.value.empty() &&
+            name_caption.ok && !name_caption.exists &&
+            status_left.ok && status_left.exists && status_left.value == "50",
+        "#771: batch clears should clear direct fields, remove memo assignments, and preserve unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#771: successful batch clears should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "VPOS"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "missing-guid",
+                .property_name = "Caption"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#771: batch property clears should fail when a later selection is missing");
+    auto status_vpos = property_state("status-guid", "VPOS");
+    expect(status_vpos.ok && status_vpos.exists && status_vpos.value == "433",
+        "#771: failed batch clears should roll back earlier direct-field clears");
+    const auto undo_after_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failure.available == undo_before_failure.available &&
+            undo_after_failure.label == undo_before_failure.label,
+        "#771: failed batch rollback should clean up undo entries created by the failed batch");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "Left"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = " "
+            }
+        }
+    });
+    expect(!batch_result.ok, "#771: batch property clears should reject empty property names");
+    status_left = property_state("status-guid", "Left");
+    expect(status_left.ok && status_left.exists && status_left.value == "50",
+        "#771: empty-name batch failures should roll back earlier memo clears");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#771: empty batch clear requests should fail explicitly");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#771: undo should restore memo clears from successful batches");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#771: undo should restore direct-field clears from successful batches");
+
+    save_hpos = property_state("save-guid", "HPOS");
+    name_caption = property_state("name-guid", "Caption");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value == "111" &&
+            name_caption.ok && name_caption.exists && name_caption.value == "\"Name\"",
+        "#771: successful batch clear undo should restore original direct and memo-backed values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_copy_visual_object_property_between_selected_objects() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -5835,6 +5975,7 @@ int main() {
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_query_visual_object_property_reads_selected_values();
     test_clear_visual_object_property_resets_selected_values();
+    test_clear_visual_object_properties_rolls_back_failed_batches();
     test_copy_visual_object_property_between_selected_objects();
     test_move_visual_object_property_between_selected_objects();
     test_rename_visual_object_memo_property_updates_selected_object();

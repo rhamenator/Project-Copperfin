@@ -81,6 +81,18 @@ struct VisualObjectPropertyClearRequest {
     std::string property_name;
 };
 
+struct VisualObjectPropertyClearBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string property_name;
+};
+
+struct VisualObjectPropertyClearBatchRequest {
+    std::string path;
+    std::vector<VisualObjectPropertyClearBatchItem> properties;
+};
+
 struct VisualObjectPropertyCopyRequest {
     std::string path;
     std::size_t source_record_index = 0;
@@ -465,6 +477,7 @@ VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObject
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
 VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request);
+VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyClearBatchRequest& request);
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request);
 VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request);
 VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request);
