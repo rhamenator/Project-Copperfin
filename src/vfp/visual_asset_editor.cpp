@@ -3334,6 +3334,61 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
     });
 }
 
+VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReorderBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.methods.empty()) {
+        return {.ok = false, .error = "No method reorders were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_reorders = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& method : request.methods) {
+        if (trim_both(method.method_name).empty()) {
+            const auto rollback_result = rollback_batch_reorders();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No method name was provided."};
+        }
+
+        const auto result = reorder_visual_object_method({
+            .path = request.path,
+            .record_index = method.record_index,
+            .object_name = method.object_name,
+            .unique_id = method.unique_id,
+            .method_name = method.method_name,
+            .placement = method.placement,
+            .relative_method_name = method.relative_method_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_reorders();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};

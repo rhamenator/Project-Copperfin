@@ -476,6 +476,20 @@ struct VisualObjectMethodReorderRequest {
     std::string relative_method_name;
 };
 
+struct VisualObjectMethodReorderBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+    std::string placement;
+    std::string relative_method_name;
+};
+
+struct VisualObjectMethodReorderBatchRequest {
+    std::string path;
+    std::vector<VisualObjectMethodReorderBatchItem> methods;
+};
+
 struct VisualObjectDuplicateRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -589,6 +603,7 @@ VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBat
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request);
 VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBatchRequest& request);
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request);
+VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReorderBatchRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);

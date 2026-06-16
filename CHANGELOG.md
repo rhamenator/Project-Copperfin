@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#780 batch selected visual object method reorders shipped: method/event editors can reorder `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, supporting first/last/before/after placements while preserving method kind/body, unrelated methods, prior undo history when later items fail, and successful batch undo support.
 - E2/#779 batch selected visual object method moves shipped: method/event editors can move `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, including target renames and explicit replacement while deleting sources, preserving unrelated methods, prior undo history when later items fail, and successful batch undo support.
 - E2/#778 batch selected visual object method copies shipped: method/event editors can copy `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, including target renames and explicit replacement while preserving sources, unrelated methods, prior undo history when later items fail, and successful batch undo support.
 - E2/#777 batch selected visual object method renames shipped: method/event editors can rename `PROCEDURE` and `FUNCTION` declarations across selected objects in one rollback-safe operation, preserving method kind/body and unrelated methods, rejecting missing/ambiguous/colliding/malformed batch items explicitly, preserving prior undo history when later items fail, and retaining successful batch undo support.
