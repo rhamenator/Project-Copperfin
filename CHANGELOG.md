@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#791 selected visual object snap-to-grid shipped: designer snap commands can round selected objects to horizontal `HPOS`, vertical `VPOS`, or both-axis grid increments while preserving unrelated objects and routing coordinate writes through rollback-safe batch edits.
 - E2/#790 selected visual object distribution shipped: designer distribute commands can space selected objects evenly by horizontal `HPOS` or vertical `VPOS`, preserving endpoints and routing interior coordinate writes through rollback-safe batch edits.
 - E2/#789 selected visual object ungrouping shipped: designer ungroup commands can move immediate children to the container parent, clear root-level child parents, and mark the container deleted while preserving rollback and undo behavior for parent writes.
 - E2/#788 selected visual object grouping shipped: designer grouping can create a container row and reparent selected objects under it while restoring original table/memo bytes on invalid containers or failed selections.

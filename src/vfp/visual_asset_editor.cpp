@@ -4620,6 +4620,80 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
     });
 }
 
+VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for grid snapping."};
+    }
+
+    const std::string mode = normalize_visual_property_name(request.mode);
+    const bool snap_horizontal = mode == "horizontal" || mode == "both";
+    const bool snap_vertical = mode == "vertical" || mode == "both";
+    if (!snap_horizontal && !snap_vertical) {
+        return {.ok = false, .error = "Unsupported visual object grid snapping mode."};
+    }
+    if (snap_horizontal && request.grid_width <= 0.0) {
+        return {.ok = false, .error = "Grid width must be positive for horizontal snapping."};
+    }
+    if (snap_vertical && request.grid_height <= 0.0) {
+        return {.ok = false, .error = "Grid height must be positive for vertical snapping."};
+    }
+
+    const auto snap_coordinate = [](double coordinate, double grid_size) {
+        return std::round(coordinate / grid_size) * grid_size;
+    };
+
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        std::vector<VisualObjectPropertyChange> properties;
+        properties.reserve((snap_horizontal ? 1U : 0U) + (snap_vertical ? 1U : 0U));
+        if (snap_horizontal) {
+            double coordinate = 0.0;
+            const auto coordinate_result = read_visual_object_geometry_coordinate(
+                request.path,
+                object,
+                "HPOS",
+                coordinate);
+            if (!coordinate_result.ok) {
+                return coordinate_result;
+            }
+            properties.push_back({
+                .property_name = "HPOS",
+                .property_value = format_visual_geometry_number(snap_coordinate(coordinate, request.grid_width))
+            });
+        }
+        if (snap_vertical) {
+            double coordinate = 0.0;
+            const auto coordinate_result = read_visual_object_geometry_coordinate(
+                request.path,
+                object,
+                "VPOS",
+                coordinate);
+            if (!coordinate_result.ok) {
+                return coordinate_result;
+            }
+            properties.push_back({
+                .property_name = "VPOS",
+                .property_value = format_visual_geometry_number(snap_coordinate(coordinate, request.grid_height))
+            });
+        }
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = std::move(properties)
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
