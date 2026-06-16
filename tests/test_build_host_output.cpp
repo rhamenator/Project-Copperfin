@@ -835,6 +835,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should validate the declared required response fields.");
             expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
                    "build host DLL wrapper should fail response validation when required response fields are absent.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_response_media_type_field_name())") != std::string::npos,
+                   "build host DLL wrapper should read response media type during response validation.");
+            expect(wrapper_source.find("response_media_type == response_validation_plan.expected_response_media_type") != std::string::npos,
+                   "build host DLL wrapper should compare response media type with the expected response media type.");
+            expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
+                   "build host DLL wrapper should fail response validation when response media type mismatches.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host DLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -1834,6 +1840,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should validate the declared required response fields.");
             expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
                    "build host FLL wrapper should fail response validation when required response fields are absent.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_response_media_type_field_name())") != std::string::npos,
+                   "build host FLL wrapper should read response media type during response validation.");
+            expect(wrapper_source.find("response_media_type == response_validation_plan.expected_response_media_type") != std::string::npos,
+                   "build host FLL wrapper should compare response media type with the expected response media type.");
+            expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
+                   "build host FLL wrapper should fail response validation when response media type mismatches.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host FLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,

@@ -1244,6 +1244,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should validate the declared required response fields.");
         expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
                "library-output wrapper source should fail response validation when required response fields are absent.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_response_media_type_field_name())") != std::string::npos,
+               "library-output wrapper source should read response media type during response validation.");
+        expect(wrapper_source.find("response_media_type == response_validation_plan.expected_response_media_type") != std::string::npos,
+               "library-output wrapper source should compare response media type with the expected response media type.");
+        expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
+               "library-output wrapper source should fail response validation when response media type mismatches.");
         expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                "library-output wrapper source should track response-document availability in response-validation evaluation.");
         expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -2742,6 +2748,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should validate the declared required response fields.");
         expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
                "fll-output wrapper source should fail response validation when required response fields are absent.");
+        expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_response_media_type_field_name())") != std::string::npos,
+               "fll-output wrapper source should read response media type during response validation.");
+        expect(wrapper_source.find("response_media_type == response_validation_plan.expected_response_media_type") != std::string::npos,
+               "fll-output wrapper source should compare response media type with the expected response media type.");
+        expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
+               "fll-output wrapper source should fail response validation when response media type mismatches.");
         expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                "fll-output wrapper source should track response-document availability in response-validation evaluation.");
         expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,

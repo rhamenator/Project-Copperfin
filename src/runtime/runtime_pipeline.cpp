@@ -1546,6 +1546,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    }\n";
     stream << "    return true;\n";
     stream << "}\n\n";
+    stream << "static std::string copperfin_build_runtime_bridge_response_media_type_field_name();\n\n";
+    stream << "static std::string copperfin_runtime_bridge_extract_json_field(\n";
+    stream << "    const std::string& response_document,\n";
+    stream << "    const std::string& field_name);\n\n";
     stream << "static CopperfinRuntimeBridgeResponseValidationEvaluation copperfin_runtime_bridge_evaluate_response_validation(\n";
     stream << "    const CopperfinRuntimeBridgeMissingResponseEvaluation& missing_response,\n";
     stream << "    const CopperfinRuntimeBridgeResponseValidationPlan& response_validation_plan,\n";
@@ -1555,8 +1559,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        copperfin_runtime_bridge_response_document_has_required_fields(\n";
     stream << "            response_document,\n";
     stream << "            response_validation_plan.required_response_fields);\n";
+    stream << "    const auto response_media_type = copperfin_runtime_bridge_extract_json_field(\n";
+    stream << "        response_document,\n";
+    stream << "        copperfin_build_runtime_bridge_response_media_type_field_name());\n";
+    stream << "    const bool response_media_type_matches =\n";
+    stream << "        response_media_type == response_validation_plan.expected_response_media_type;\n";
     stream << "    const bool validation_failed =\n";
-    stream << "        missing_response.should_use_fallback_return || !response_document_available || !required_response_fields_present;\n";
+    stream << "        missing_response.should_use_fallback_return || !response_document_available || !required_response_fields_present || !response_media_type_matches;\n";
     stream << "    const bool should_use_fallback_return = validation_failed;\n";
     stream << "    return CopperfinRuntimeBridgeResponseValidationEvaluation{\n";
     stream << "        validation_failed,\n";
