@@ -253,6 +253,101 @@ std::vector<VisualObjectMethodSnapshot> parse_visual_methods_blob(
     return methods;
 }
 
+std::vector<std::string> split_replacement_source_lines(const std::string& source_text) {
+    const std::string trimmed = trim_both(source_text);
+    if (trimmed.empty()) {
+        return {};
+    }
+    return split_visual_lines(trimmed);
+}
+
+bool is_visual_method_end_line(const std::string& line) {
+    return starts_with_insensitive(line, "ENDPROC") ||
+        starts_with_insensitive(line, "ENDFUNC") ||
+        starts_with_insensitive(line, "END FUNC");
+}
+
+bool parse_visual_method_declaration(const std::string& line, std::string& kind, std::string& method_name) {
+    if (starts_with_insensitive(line, "PROCEDURE ")) {
+        const auto separator = line.find(' ');
+        kind = "procedure";
+        method_name = separator == std::string::npos ? std::string{} : trim_both(line.substr(separator + 1U));
+        return !method_name.empty();
+    }
+    if (starts_with_insensitive(line, "FUNCTION ")) {
+        const auto separator = line.find(' ');
+        kind = "function";
+        method_name = separator == std::string::npos ? std::string{} : trim_both(line.substr(separator + 1U));
+        return !method_name.empty();
+    }
+    return false;
+}
+
+std::string serialize_visual_lines(const std::vector<std::string>& lines) {
+    std::ostringstream output;
+    for (const auto& line : lines) {
+        output << line << "\r\n";
+    }
+    return output.str();
+}
+
+std::string update_visual_methods_blob(
+    const std::string& existing_blob,
+    const std::string& requested_method_name,
+    const std::string& requested_kind,
+    const std::string& replacement_source) {
+    const std::string normalized_requested_name = normalize_visual_object_name(requested_method_name);
+    const std::vector<std::string> replacement_lines = split_replacement_source_lines(replacement_source);
+    const std::vector<std::string> existing_lines = split_visual_lines(existing_blob);
+    std::vector<std::string> output_lines;
+    bool replaced = false;
+    bool skipping_replaced_body = false;
+    std::string replaced_kind;
+
+    for (const auto& raw_line : existing_lines) {
+        const std::string trimmed_line = trim_both(raw_line);
+        std::string declaration_kind;
+        std::string declaration_name;
+        if (!skipping_replaced_body &&
+            parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name) &&
+            normalize_visual_object_name(declaration_name) == normalized_requested_name) {
+            replaced = true;
+            skipping_replaced_body = true;
+            replaced_kind = declaration_kind;
+            output_lines.push_back(raw_line);
+            output_lines.insert(output_lines.end(), replacement_lines.begin(), replacement_lines.end());
+            continue;
+        }
+
+        if (skipping_replaced_body) {
+            if (is_visual_method_end_line(trimmed_line)) {
+                output_lines.push_back(raw_line);
+                skipping_replaced_body = false;
+            }
+            continue;
+        }
+
+        output_lines.push_back(raw_line);
+    }
+
+    if (skipping_replaced_body) {
+        output_lines.push_back(replaced_kind == "function" ? "ENDFUNC" : "ENDPROC");
+    }
+
+    if (!replaced) {
+        if (!output_lines.empty() && !trim_both(output_lines.back()).empty()) {
+            output_lines.push_back({});
+        }
+        const std::string normalized_kind = normalize_visual_object_name(requested_kind);
+        const bool append_function = normalized_kind == "function";
+        output_lines.push_back((append_function ? "FUNCTION " : "PROCEDURE ") + trim_both(requested_method_name));
+        output_lines.insert(output_lines.end(), replacement_lines.begin(), replacement_lines.end());
+        output_lines.push_back(append_function ? "ENDFUNC" : "ENDPROC");
+    }
+
+    return serialize_visual_lines(output_lines);
+}
+
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
     const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& candidate) {
@@ -1222,6 +1317,56 @@ VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethod
         .record_deleted = record.deleted,
         .methods = std::move(methods)
     };
+}
+
+VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (trim_both(request.method_name).empty()) {
+        return {.ok = false, .error = "No method name was provided."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
+    if (methods_field == nullptr) {
+        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+    }
+
+    const std::string updated_blob = update_visual_methods_blob(
+        methods_field->display_value,
+        request.method_name,
+        request.method_kind,
+        request.source_text);
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "METHODS",
+        .property_value = updated_blob
+    });
 }
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {

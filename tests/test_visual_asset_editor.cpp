@@ -56,6 +56,15 @@ const copperfin::vfp::VisualObjectPropertySnapshot* find_property_snapshot(
     return value == properties.end() ? nullptr : &(*value);
 }
 
+const copperfin::vfp::VisualObjectMethodSnapshot* find_method_snapshot(
+    const std::vector<copperfin::vfp::VisualObjectMethodSnapshot>& methods,
+    const std::string& method_name) {
+    const auto value = std::find_if(methods.begin(), methods.end(), [&](const auto& candidate) {
+        return candidate.method_name == method_name;
+    });
+    return value == methods.end() ? nullptr : &(*value);
+}
+
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
     bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
@@ -975,6 +984,100 @@ void test_list_visual_object_methods_reads_selected_methods() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_method_updates_and_appends_methods() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_edit_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_edit.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC"
+        },
+        {"txtName", "nameBox", "name-guid", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#747: method-edit fixture should be writable");
+
+    auto update_result = copperfin::vfp::update_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "click",
+        .method_kind = "procedure",
+        .source_text = "THISFORM.Save(.T.)"
+    });
+    expect(update_result.ok, "#747: method edits should update existing selected-object methods case-insensitively");
+
+    update_result = copperfin::vfp::update_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "GetCaption",
+        .method_kind = "function",
+        .source_text = "RETURN THIS.Caption"
+    });
+    expect(update_result.ok, "#747: method edits should append missing selected-object methods");
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok, "#747: updated method fixture should remain readable");
+    const auto* click = find_method_snapshot(method_result.methods, "Click");
+    const auto* get_caption = find_method_snapshot(method_result.methods, "GetCaption");
+    expect(click != nullptr && click->source_text == "THISFORM.Save(.T.)",
+        "#747: method edits should replace existing method bodies while preserving declaration names");
+    expect(get_caption != nullptr && get_caption->kind == "function" && get_caption->source_text == "RETURN THIS.Caption",
+        "#747: method edits should append missing methods with requested kind and source");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {}
+    });
+    expect(method_result.ok && method_result.methods.empty(),
+        "#747: selected-object method edits should not mutate unrelated object records");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#747: undo should restore the appended method edit");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#747: undo should restore the replaced method edit");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok, "#747: method fixture should remain readable after undo");
+    click = find_method_snapshot(method_result.methods, "Click");
+    get_caption = find_method_snapshot(method_result.methods, "GetCaption");
+    expect(click != nullptr && click->source_text == "THISFORM.Save()",
+        "#747: undo should restore original method source text");
+    expect(get_caption == nullptr,
+        "#747: undo should remove methods appended by the edit API");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1846,6 +1949,7 @@ int main() {
     test_list_visual_objects_reads_selection_outline();
     test_list_visual_objects_reads_hierarchy_metadata();
     test_list_visual_object_methods_reads_selected_methods();
+    test_update_visual_object_method_updates_and_appends_methods();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
