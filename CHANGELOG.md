@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#816 selected visual object display-value assignment shipped: combo/list designer commands can assign caller-provided `DisplayValue` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#815 selected visual object list-index assignment shipped: combo/list designer commands can assign caller-provided numeric `ListIndex` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#814 selected visual object style assignment shipped: combo/list designer commands can assign caller-provided numeric `Style` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#813 selected visual object multi-select assignment shipped: list designer commands can assign FoxPro logical `.T.`/`.F.` `MultiSelect` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.

@@ -12761,6 +12761,191 @@ void test_set_visual_object_list_index_assigns_numeric_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_display_value_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_display_value_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "display_value.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "DISPLAYVALUE", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", "Alice"},
+        {"lstOrders", "ordersList", "orders-guid", "Order 100"},
+        {"cboOther", "otherCombo", "other-guid", "Other"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#816: display-value fixture should be writable");
+
+    const auto display_value_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DisplayValue"
+        });
+        expect(result.ok && result.exists, "#816: display-value fixture property should be readable");
+        return result.value;
+    };
+    const auto display_value = [&](const std::string& unique_id) {
+        return display_value_for(table_path.string(), unique_id);
+    };
+    const auto display_value_state = [&]() {
+        return display_value("customer-guid") + "," +
+            display_value("orders-guid") + "," +
+            display_value("other-guid");
+    };
+
+    auto display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .display_value = "Bob"
+    });
+    expect(display_result.ok, "#816: display-value assignment should support object-name and record-index selectors");
+    expect(display_value("customer-guid") == "Bob" &&
+            display_value("orders-guid") == "Bob" &&
+            display_value("other-guid") == "Other",
+        "#816: direct display-value assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#816: first display-value write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#816: second display-value write should remain undo-backed");
+    expect(display_value_state() == "Alice,Order 100,Other",
+        "#816: display-value undo should restore original direct values");
+
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .display_value = "Selected"
+    });
+    expect(display_result.ok, "#816: display-value assignment should support UNIQUEID selectors");
+    expect(display_value("customer-guid") == "Selected" &&
+            display_value("orders-guid") == "Selected",
+        "#816: direct display-value assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = display_value_state();
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = table_path.string(),
+        .objects = {},
+        .display_value = "Ignored"
+    });
+    expect(!display_result.ok, "#816: display-value assignment should reject empty selections");
+    expect(display_value_state() == committed_state, "#816: empty-selection failures should not mutate display values");
+
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .display_value = "Ignored"
+    });
+    expect(!display_result.ok, "#816: display-value assignment should reject missing selected objects");
+    expect(display_value_state() == committed_state, "#816: missing-object failures should not mutate display values");
+
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .display_value = "Ignored"
+    });
+    expect(!display_result.ok, "#816: display-value assignment should reject duplicate selected objects");
+    expect(display_value_state() == committed_state, "#816: duplicate-selection failures should not mutate display values");
+
+    const fs::path blob_path = temp_dir / "display_value_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "DisplayValue = \"Alice\"\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoDisplay", "no-display-guid", "Caption = \"No display\"\r\n"},
+        {"cboOther", "other-guid", "DisplayValue = \"Other\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#816: display-value property-blob fixture should be writable");
+
+    const auto blob_display_value_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DisplayValue"
+        });
+    };
+
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoDisplay", .unique_id = {}}
+        },
+        .display_value = "Bob \"B\""
+    });
+    expect(display_result.ok, "#816: display-value assignment should support existing and absent serialized properties");
+    auto blob_display = blob_display_value_state("blob-guid");
+    auto appended_display = blob_display_value_state("no-display-guid");
+    auto other_display = blob_display_value_state("other-guid");
+    expect(blob_display.ok && blob_display.exists && blob_display.value == "\"Bob \"\"B\"\"\"" &&
+            appended_display.ok && appended_display.exists && appended_display.value == "\"Bob \"\"B\"\"\"" &&
+            other_display.ok && other_display.exists && other_display.value == "\"Other\"",
+        "#816: serialized display-value assignment should quote text, append missing DisplayValue, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#816: appended serialized display-value write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#816: existing serialized display-value write should remain undo-backed");
+    blob_display = blob_display_value_state("blob-guid");
+    appended_display = blob_display_value_state("no-display-guid");
+    expect(blob_display.ok && blob_display.exists && blob_display.value == "\"Alice\"" &&
+            appended_display.ok && !appended_display.exists,
+        "#816: serialized display-value undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_displayvalue.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#816: missing-DisplayValue fixture should be writable");
+
+    display_result = copperfin::vfp::set_visual_object_display_value({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .display_value = "Ignored"
+    });
+    expect(!display_result.ok, "#816: display-value assignment should reject objects without a writable DisplayValue carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -15368,6 +15553,7 @@ int main() {
     test_set_visual_object_multi_select_assigns_logical_state();
     test_set_visual_object_style_assigns_numeric_value();
     test_set_visual_object_list_index_assigns_numeric_value();
+    test_set_visual_object_display_value_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
