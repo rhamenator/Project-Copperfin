@@ -209,12 +209,20 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
 
     workspace.available = true;
 
-    const auto header_record = std::find_if(
+    auto header_record = std::find_if(
         document.table_preview.records.begin(),
         document.table_preview.records.end(),
         [](const vfp::DbfRecord& record) {
-            return value_or_empty(record, "TYPE") == "H";
+            return !record.deleted && value_or_empty(record, "TYPE") == "H";
         });
+    if (header_record == document.table_preview.records.end()) {
+        header_record = std::find_if(
+            document.table_preview.records.begin(),
+            document.table_preview.records.end(),
+            [](const vfp::DbfRecord& record) {
+                return value_or_empty(record, "TYPE") == "H";
+            });
+    }
 
     if (header_record != document.table_preview.records.end()) {
         workspace.project_key = trim_copy(value_or_empty(*header_record, "KEY"));

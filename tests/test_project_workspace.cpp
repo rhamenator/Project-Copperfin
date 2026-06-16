@@ -183,7 +183,42 @@ void test_build_project_workspace_with_excluded_assets() {
            "#681: excluded fallback startup item provenance should retain selected NAME field ordinal");
     expect(
         workspace.build_plan.startup_record_index == 1U,
-        "workspace should keep the excluded asset record index when it becomes the startup fallback");
+           "workspace should keep the excluded asset record index when it becomes the startup fallback");
+}
+
+void test_build_project_workspace_prefers_live_header() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\headerdemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "DELETEDAPP"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\deleted.exe)"}
+        }, true),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LIVEAPP"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\live.app)"}
+        }),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "#692: workspace should still load projects with deleted header rows");
+    expect(workspace.project_title == "LIVEAPP", "#692: workspace metadata should prefer the live project header");
+    expect(workspace.project_title_field_index == 1U, "#692: live header title should retain KEY provenance");
+    expect(workspace.output_path == R"(E:\Project-Copperfin\build\live.app)",
+           "#692: active output metadata should come from the live project header");
+    expect(workspace.build_plan.output_kind == "app", "#692: build plan should infer output kind from the live header");
+    expect(workspace.entries.size() == 3U, "#692: deleted project headers should remain visible as entries");
+    expect(workspace.entries[0].deleted, "#692: deleted header entries should retain deleted state");
+    expect(workspace.build_plan.deleted_items == 1U, "#692: build plan should still count deleted header rows");
 }
 
 void test_build_project_workspace_with_dll_output() {
@@ -291,6 +326,7 @@ void test_build_project_workspace_with_app_output() {
 int main() {
     test_build_project_workspace();
     test_build_project_workspace_with_excluded_assets();
+    test_build_project_workspace_prefers_live_header();
     test_build_project_workspace_with_dll_output();
     test_build_project_workspace_with_fll_output();
     test_build_project_workspace_with_fxp_output();

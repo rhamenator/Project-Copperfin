@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#692 live project-header selection shipped: project workspace metadata now prefers non-deleted PJX/PJT header records while deleted headers remain visible in preserved entries and deleted-entry counts.
 - E1/#691 deleted report root settings shipped: report/label layout snapshots now preserve DBF-deleted root settings in a dedicated collection without mixing them into live report settings.
 - E1/#690 deleted report layout sections shipped: report/label layout snapshots now preserve DBF-deleted band records in a dedicated collection without changing visible section grouping.
 - E1/#689 deleted report layout objects shipped: report/label layout snapshots now preserve DBF-deleted layout object records in a dedicated collection without changing visible section grouping.
