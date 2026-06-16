@@ -2368,7 +2368,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        return_materialization);\n";
             stream << "    const auto return_emission_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_emission(return_materialization_admission, return_emission_plan);\n";
-            stream << "    (void)return_emission_admission;\n";
             stream << "    const auto return_emission =\n";
             stream << "        copperfin_runtime_bridge_execute_return_emission(return_emission_plan);\n";
             stream << "    const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
@@ -2620,7 +2619,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        return_materialization);\n";
             stream << "    const auto return_emission_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_emission(return_materialization_admission, return_emission_plan);\n";
-            stream << "    (void)return_emission_admission;\n";
             stream << "    const auto return_emission =\n";
             stream << "        copperfin_runtime_bridge_execute_return_emission(return_emission_plan);\n";
             stream << "    const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n";
