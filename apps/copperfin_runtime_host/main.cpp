@@ -16,6 +16,7 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -130,6 +131,32 @@ std::string escape_json_string(const std::string& value) {
     return result;
 }
 
+std::string extract_json_field(const std::string& document, const std::string& field_name) {
+    const auto field_token = std::string("\"") + field_name + "\"";
+    const auto field_offset = document.find(field_token);
+    if (field_offset == std::string::npos) {
+        return {};
+    }
+    const auto colon_offset = document.find(':', field_offset + field_token.size());
+    if (colon_offset == std::string::npos) {
+        return {};
+    }
+    const auto value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
+    if (value_start == std::string::npos) {
+        return {};
+    }
+    if (document[value_start] == '"') {
+        const auto value_end = document.find('"', value_start + 1U);
+        return value_end == std::string::npos
+            ? std::string{}
+            : document.substr(value_start + 1U, value_end - value_start - 1U);
+    }
+    const auto value_end = document.find_first_of(",}", value_start);
+    return trim_copy(document.substr(
+        value_start,
+        value_end == std::string::npos ? std::string::npos : value_end - value_start));
+}
+
 struct RuntimeBridgeInvocationOptions {
     std::string library_export;
     std::string routine_kind;
@@ -173,6 +200,23 @@ int run_runtime_bridge_invocation(
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
         std::cout << "error: Bridge request artifact not found.\n";
+        return 6;
+    }
+    std::ostringstream request_document_stream;
+    request_document_stream << request_input.rdbuf();
+    const std::string request_document = request_document_stream.str();
+    const std::string request_media_type = extract_json_field(request_document, "request_media_type");
+    const std::string request_schema_version = extract_json_field(request_document, "schema_version");
+    if (request_media_type != options.request_media_type) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge request media type mismatch.\n";
+        return 6;
+    }
+    if (request_schema_version != options.schema_version) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge request schema version mismatch.\n";
         return 6;
     }
 

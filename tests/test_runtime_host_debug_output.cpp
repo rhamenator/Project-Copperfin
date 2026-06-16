@@ -964,6 +964,77 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
     }
 }
 
+void test_runtime_host_rejects_bridge_request_contract_mismatch(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_request_contract_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path source_path = temp_root / "content" / "exports.prg";
+    const fs::path request_path = temp_root / "AddNumbers.request.json";
+    const fs::path response_path = temp_root / "AddNumbers.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeRequestContract\n"
+        "startup_item=exports.prg\n"
+        "startup_source=") + source_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(source_path, "RETURN 42\n");
+    write_text(
+        request_path,
+        "{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"AddNumbers\",\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.bad-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameters\": []\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "AddNumbers",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "left,right",
+            "--parameter-count", "2",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 6) {
+        std::cerr << "bridge-request-contract stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-request-contract stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 6,
+           "runtime host should reject bridge request media-type mismatches before execution");
+    expect(process.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+           "runtime host should keep bridge mode visible on request contract errors");
+    expect(process.stdout_text.find("error: Bridge request media type mismatch.") != std::string::npos,
+           "runtime host should report the request media-type mismatch");
+    expect(!fs::exists(response_path),
+           "runtime host should not write a success response when the request contract mismatches");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -980,6 +1051,7 @@ int main(int argc, char** argv) {
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
+    test_runtime_host_rejects_bridge_request_contract_mismatch(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
