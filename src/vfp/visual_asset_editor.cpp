@@ -5346,6 +5346,15 @@ VisualAssetEditResult set_visual_object_picture(const VisualObjectPictureRequest
         request.picture);
 }
 
+VisualAssetEditResult set_visual_object_down_picture(const VisualObjectDownPictureRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "DownPicture",
+        "down-picture",
+        request.down_picture);
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
