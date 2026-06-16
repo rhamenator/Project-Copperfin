@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -180,6 +181,62 @@ bool runtime_bridge_mode_requested(const RuntimeBridgeInvocationOptions& options
            !trim_copy(options.schema_version).empty();
 }
 
+bool is_runtime_bridge_routine_identifier(const std::string& value) {
+    const std::string identifier = trim_copy(value);
+    if (identifier.empty()) {
+        return false;
+    }
+    const auto is_identifier_start = [](unsigned char ch) {
+        return std::isalpha(ch) != 0 || ch == '_';
+    };
+    const auto is_identifier_part = [](unsigned char ch) {
+        return std::isalnum(ch) != 0 || ch == '_';
+    };
+    if (!is_identifier_start(static_cast<unsigned char>(identifier.front()))) {
+        return false;
+    }
+    return std::all_of(identifier.begin() + 1, identifier.end(), [&](char ch) {
+        return is_identifier_part(static_cast<unsigned char>(ch));
+    });
+}
+
+std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstrap(
+    const RuntimeBridgeInvocationOptions& options,
+    std::string& error_message) {
+    const std::string export_name = trim_copy(options.library_export);
+    if (!is_runtime_bridge_routine_identifier(export_name)) {
+        error_message = "Bridge routine export name is not a supported PRG identifier.";
+        return std::nullopt;
+    }
+
+    std::ifstream source_input(options.source_path, std::ios::binary);
+    if (!source_input.good()) {
+        error_message = "Bridge routine source artifact not found.";
+        return std::nullopt;
+    }
+    std::ostringstream source_stream;
+    source_stream << source_input.rdbuf();
+    const std::string source_text = source_stream.str();
+
+    const std::string bootstrap_key = options.source_path + "|" + options.request_path + "|" + export_name;
+    const std::filesystem::path bootstrap_path =
+        std::filesystem::temp_directory_path() /
+        ("copperfin_bridge_" + export_name + "_" + std::to_string(std::hash<std::string>{}(bootstrap_key)) + ".prg");
+    std::ofstream bootstrap_output(bootstrap_path, std::ios::binary | std::ios::trunc);
+    bootstrap_output << "DO " << export_name << "\n";
+    bootstrap_output << source_text;
+    if (!source_text.empty() && source_text.back() != '\n') {
+        bootstrap_output << "\n";
+    }
+    bootstrap_output.close();
+    if (!bootstrap_output.good()) {
+        error_message = "Unable to write bridge routine bootstrap.";
+        return std::nullopt;
+    }
+
+    return bootstrap_path;
+}
+
 int run_runtime_bridge_invocation(
     const RuntimeBridgeInvocationOptions& options,
     const std::string& startup_source,
@@ -232,9 +289,24 @@ int run_runtime_bridge_invocation(
         return 6;
     }
 
-    const std::string execution_source = trim_copy(options.source_path).empty()
+    std::string execution_source = trim_copy(options.source_path).empty()
         ? startup_source
         : options.source_path;
+    bool routine_bootstrap_materialized = false;
+    if (!trim_copy(options.library_export).empty() &&
+        !trim_copy(options.source_path).empty() &&
+        trim_copy(options.parameter_count) == "0") {
+        std::string bootstrap_error;
+        const auto bootstrap_path = materialize_runtime_bridge_routine_bootstrap(options, bootstrap_error);
+        if (!bootstrap_path.has_value()) {
+            std::cout << "status: error\n";
+            std::cout << "runtime.mode: bridge-invocation\n";
+            std::cout << "error: " << bootstrap_error << "\n";
+            return 6;
+        }
+        execution_source = bootstrap_path->string();
+        routine_bootstrap_materialized = true;
+    }
     if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
@@ -297,6 +369,7 @@ int run_runtime_bridge_invocation(
     std::cout << "bridge.routine_kind: " << options.routine_kind << "\n";
     std::cout << "bridge.source: " << options.source_path << ":" << options.source_line << "\n";
     std::cout << "bridge.execution_source: " << execution_source << "\n";
+    std::cout << "bridge.routine_bootstrap: " << (routine_bootstrap_materialized ? "true" : "false") << "\n";
     std::cout << "bridge.parameter_declaration: " << options.parameter_declaration << "\n";
     std::cout << "bridge.parameter_names: " << options.parameter_names << "\n";
     std::cout << "bridge.parameter_count: " << options.parameter_count << "\n";
