@@ -201,6 +201,69 @@ std::string normalize_visual_property_name(std::string value) {
     return value;
 }
 
+std::string direct_field_descriptor_prefix(const std::string& normalized_property_name) {
+    constexpr std::size_t DbfDescriptorNameWidth = 11U;
+    return normalized_property_name.substr(0U, std::min(normalized_property_name.size(), DbfDescriptorNameWidth));
+}
+
+const DbfRecordValue* find_direct_visual_property_value(
+    const std::vector<DbfRecordValue>& values,
+    const std::string& property_name) {
+    const std::string requested_property_name = normalize_visual_property_name(property_name);
+    const auto exact_match = std::find_if(values.begin(), values.end(), [&](const DbfRecordValue& value) {
+        return normalize_visual_property_name(value.field_name) == requested_property_name;
+    });
+    if (exact_match != values.end()) {
+        return &*exact_match;
+    }
+
+    const std::string descriptor_prefix = direct_field_descriptor_prefix(requested_property_name);
+    if (descriptor_prefix == requested_property_name) {
+        return nullptr;
+    }
+
+    const DbfRecordValue* matched_value = nullptr;
+    for (const auto& value : values) {
+        if (normalize_visual_property_name(value.field_name) != descriptor_prefix) {
+            continue;
+        }
+        if (matched_value != nullptr) {
+            return nullptr;
+        }
+        matched_value = &value;
+    }
+    return matched_value;
+}
+
+std::vector<RawFieldDescriptor>::const_iterator find_direct_visual_property_field(
+    const std::vector<RawFieldDescriptor>& fields,
+    const std::string& property_name) {
+    const std::string requested_property_name = normalize_visual_property_name(property_name);
+    const auto exact_match = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return normalize_visual_property_name(field.name) == requested_property_name;
+    });
+    if (exact_match != fields.end()) {
+        return exact_match;
+    }
+
+    const std::string descriptor_prefix = direct_field_descriptor_prefix(requested_property_name);
+    if (descriptor_prefix == requested_property_name) {
+        return fields.end();
+    }
+
+    auto matched_field = fields.end();
+    for (auto field = fields.begin(); field != fields.end(); ++field) {
+        if (normalize_visual_property_name(field->name) != descriptor_prefix) {
+            continue;
+        }
+        if (matched_field != fields.end()) {
+            return fields.end();
+        }
+        matched_field = field;
+    }
+    return matched_field;
+}
+
 bool starts_with_insensitive(const std::string& text, const std::string& prefix) {
     if (text.size() < prefix.size()) {
         return false;
@@ -1372,10 +1435,8 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
 
     const auto& record = table_result.table.records[record_index];
     const std::string requested_property_name = normalize_visual_property_name(property_name);
-    const auto direct_field_value = std::find_if(record.values.begin(), record.values.end(), [&](const DbfRecordValue& value) {
-        return normalize_visual_property_name(value.field_name) == requested_property_name;
-    });
-    if (direct_field_value != record.values.end()) {
+    const auto* direct_field_value = find_direct_visual_property_value(record.values, property_name);
+    if (direct_field_value != nullptr) {
         return VisualPropertyState{
             .exists = true,
             .direct_field = true,
@@ -1450,10 +1511,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
 
     const auto fields = read_raw_field_descriptors(table_bytes);
-    const std::string requested_property_name = normalize_visual_property_name(request.property_name);
-    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
-        return normalize_visual_property_name(field.name) == requested_property_name;
-    });
+    const auto direct_field_it = find_direct_visual_property_field(fields, request.property_name);
     if (direct_field_it != fields.end()) {
         if (record_undo_entry) {
             const auto property_state = read_current_visual_property_state(request.path, record_index, request.property_name);
@@ -1495,6 +1553,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
 
     auto assignments = parse_visual_property_blob(properties_it->display_value);
+    const std::string requested_property_name = normalize_visual_property_name(request.property_name);
     auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& property) {
         return normalize_visual_property_name(property.name) == requested_property_name;
     });
@@ -5159,6 +5218,15 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
         "ToolTipText",
         "tooltip text",
         request.tooltip_text);
+}
+
+VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "StatusBarText",
+        "status-bar text",
+        request.status_bar_text);
 }
 
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {

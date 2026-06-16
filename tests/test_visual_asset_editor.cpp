@@ -9946,6 +9946,191 @@ void test_set_visual_object_tooltip_text_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_status_bar_text_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_statusbar_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "statusbar.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "STATUSBARTEXT", .type = 'C', .length = 70U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", "One status"},
+        {"cmdTwo", "twoButton", "two-guid", "Two status"},
+        {"cmdOther", "otherButton", "other-guid", "Other status"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#801: status-bar fixture should be writable");
+
+    const auto status_bar_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "StatusBarText"
+        });
+        expect(result.ok && result.exists, "#801: status-bar fixture property should be readable");
+        return result.value;
+    };
+    const auto status_bar = [&](const std::string& unique_id) {
+        return status_bar_for(table_path.string(), unique_id);
+    };
+    const auto status_bar_state = [&]() {
+        return status_bar("one-guid") + "," +
+            status_bar("two-guid") + "," +
+            status_bar("other-guid");
+    };
+
+    auto status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .status_bar_text = "Ready to save"
+    });
+    expect(status_result.ok, "#801: status-bar assignment should support object-name and record-index selectors");
+    expect(status_bar("one-guid") == "Ready to save" &&
+            status_bar("two-guid") == "Ready to save" &&
+            status_bar("other-guid") == "Other status",
+        "#801: direct status-bar assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#801: first status-bar write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#801: second status-bar write should remain undo-backed");
+    expect(status_bar_state() == "One status,Two status,Other status",
+        "#801: status-bar undo should restore original direct values");
+
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .status_bar_text = "Use \"Save\" to continue"
+    });
+    expect(status_result.ok, "#801: status-bar assignment should support UNIQUEID selectors");
+    expect(status_bar("one-guid") == "Use \"Save\" to continue" &&
+            status_bar("two-guid") == "Use \"Save\" to continue",
+        "#801: direct status-bar assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = status_bar_state();
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = table_path.string(),
+        .objects = {},
+        .status_bar_text = "Ignored"
+    });
+    expect(!status_result.ok, "#801: status-bar assignment should reject empty selections");
+    expect(status_bar_state() == committed_state, "#801: empty-selection failures should not mutate status-bar text");
+
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .status_bar_text = "Ignored"
+    });
+    expect(!status_result.ok, "#801: status-bar assignment should reject missing selected objects");
+    expect(status_bar_state() == committed_state, "#801: missing-object failures should not mutate status-bar text");
+
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .status_bar_text = "Ignored"
+    });
+    expect(!status_result.ok, "#801: status-bar assignment should reject duplicate selected objects");
+    expect(status_bar_state() == committed_state, "#801: duplicate-selection failures should not mutate status-bar text");
+
+    const fs::path blob_path = temp_dir / "statusbar_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cmdBlob", "blob-guid", "StatusBarText = \"Blob status\"\r\nCaption = \"Blob\"\r\n"},
+        {"cmdNoStatus", "no-status-guid", "Caption = \"No status\"\r\n"},
+        {"cmdOther", "other-guid", "StatusBarText = \"Other status\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#801: status-bar property-blob fixture should be writable");
+
+    const auto blob_status_bar_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "StatusBarText"
+        });
+    };
+
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cmdNoStatus", .unique_id = {}}
+        },
+        .status_bar_text = "Press \"Esc\" to cancel"
+    });
+    expect(status_result.ok, "#801: status-bar assignment should support existing and absent serialized properties");
+    auto blob_status = blob_status_bar_state("blob-guid");
+    auto appended_status = blob_status_bar_state("no-status-guid");
+    auto other_status = blob_status_bar_state("other-guid");
+    expect(blob_status.ok && blob_status.exists && blob_status.value == "\"Press \"\"Esc\"\" to cancel\"" &&
+            appended_status.ok && appended_status.exists && appended_status.value == "\"Press \"\"Esc\"\" to cancel\"" &&
+            other_status.ok && other_status.exists && other_status.value == "\"Other status\"",
+        "#801: serialized status-bar assignment should quote text, append missing StatusBarText, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#801: appended serialized status-bar write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#801: existing serialized status-bar write should remain undo-backed");
+    blob_status = blob_status_bar_state("blob-guid");
+    appended_status = blob_status_bar_state("no-status-guid");
+    expect(blob_status.ok && blob_status.exists && blob_status.value == "\"Blob status\"" &&
+            appended_status.ok && !appended_status.exists,
+        "#801: serialized status-bar undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_statusbar.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#801: missing-StatusBarText fixture should be writable");
+
+    status_result = copperfin::vfp::set_visual_object_status_bar_text({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .status_bar_text = "Ignored"
+    });
+    expect(!status_result.ok, "#801: status-bar assignment should reject objects without a writable StatusBarText carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -12538,6 +12723,7 @@ int main() {
     test_set_visual_object_locked_assigns_logical_state();
     test_set_visual_object_caption_assigns_text();
     test_set_visual_object_tooltip_text_assigns_text();
+    test_set_visual_object_status_bar_text_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
