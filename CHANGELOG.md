@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#719 xAsset method memo block provenance shipped: extracted form/class methods, wrapped menu methods, embedded menu routines, and synthetic submenu activation methods now expose source memo block provenance alongside field and line metadata.
 - E1/#718 Studio menu metadata memo block provenance shipped: normalized menu prompt, level, command, and message metadata now expose source memo block numbers, including unresolved placeholders and missing-field block-zero behavior.
 - E1/#717 Studio object identity memo block provenance shipped: normalized object identity and display metadata now expose source memo block numbers for object names, hierarchy/class fields, titles, and subtitles while synthesized/suppressed metadata reports block zero.
 - E1/#716 report layout object memo block provenance shipped: layout object titles and expressions now expose source memo block numbers, including selected EXPR titles, unresolved expression placeholders, deleted objects, and synthesized title fallbacks.

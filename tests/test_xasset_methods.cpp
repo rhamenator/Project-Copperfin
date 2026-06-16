@@ -70,20 +70,20 @@ void test_build_xasset_executable_model() {
             {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
             {.field_name = "OBJNAME", .field_type = 'M', .display_value = "Dataenvironment"},
             {.field_name = "BASECLASS", .field_type = 'M', .display_value = "dataenvironment"},
-            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE BeforeOpenTables\r\nSET DELETED ON\r\nENDPROC\r\nPROCEDURE OpenTables\r\nx = 1\r\nENDPROC\r\nPROCEDURE CloseTables\r\nCLEAR EVENTS\r\nENDPROC"}
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE BeforeOpenTables\r\nSET DELETED ON\r\nENDPROC\r\nPROCEDURE OpenTables\r\nx = 1\r\nENDPROC\r\nPROCEDURE CloseTables\r\nCLEAR EVENTS\r\nENDPROC", .memo_block_number = 30U}
         }),
         make_record(1, {
             {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
             {.field_name = "OBJNAME", .field_type = 'M', .display_value = "frmDemo"},
             {.field_name = "BASECLASS", .field_type = 'M', .display_value = "form"},
-            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Load\r\nx = 2\r\nENDPROC\r\nPROCEDURE Init\r\nSET DELETED OFF\r\nENDPROC\r\nPROCEDURE Activate\r\nx = 3\r\nENDPROC\r\nPROCEDURE Destroy\r\nx = 4\r\nENDPROC"}
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Load\r\nx = 2\r\nENDPROC\r\nPROCEDURE Init\r\nSET DELETED OFF\r\nENDPROC\r\nPROCEDURE Activate\r\nx = 3\r\nENDPROC\r\nPROCEDURE Destroy\r\nx = 4\r\nENDPROC", .memo_block_number = 40U}
         }),
         make_record(2, {
             {.field_name = "PLATFORM", .field_type = 'C', .display_value = "WINDOWS"},
             {.field_name = "OBJNAME", .field_type = 'M', .display_value = "pgfMain"},
             {.field_name = "PARENT", .field_type = 'M', .display_value = "frmDemo"},
             {.field_name = "BASECLASS", .field_type = 'M', .display_value = "pageframe"},
-            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Page2.Activate\r\nTHISFORM.Refresh\r\nENDPROC"}
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Page2.Activate\r\nTHISFORM.Refresh\r\nENDPROC", .memo_block_number = 50U}
         })
     };
 
@@ -96,18 +96,24 @@ void test_build_xasset_executable_model() {
     if (model.methods.size() == 8U) {
         expect(model.methods[0].source_field_index == 3U,
                "#706: data-environment methods should preserve the source METHODS field ordinal");
+        expect(model.methods[0].source_memo_block_number == 30U,
+               "#719: data-environment methods should preserve the source METHODS memo block");
         expect(model.methods[0].source_line_index == 0U,
                "#707: first data-environment method should preserve its declaration line index");
         expect(model.methods[1].source_line_index == 3U,
                "#707: later data-environment methods should preserve declaration line indexes inside METHODS");
         expect(model.methods[3].source_field_index == 3U,
                "#706: root form methods should preserve the source METHODS field ordinal");
+        expect(model.methods[3].source_memo_block_number == 40U,
+               "#719: root form methods should preserve the source METHODS memo block");
         expect(model.methods[3].source_line_index == 0U,
                "#707: root form method line provenance should start at its declaration line");
         expect(model.methods[4].source_line_index == 3U,
                "#707: later root form methods should preserve declaration line indexes inside METHODS");
         expect(model.methods[7].source_field_index == 4U,
                "#706: nested object methods should preserve the source METHODS field ordinal");
+        expect(model.methods[7].source_memo_block_number == 50U,
+               "#719: nested object methods should preserve the source METHODS memo block");
         expect(model.methods[7].source_line_index == 0U,
                "#707: nested object methods should preserve their METHODS declaration line index");
     }
@@ -500,8 +506,8 @@ void test_build_menu_xasset_executable_model() {
     document.table_preview.records = {
         make_record(0, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4"},
-            {.field_name = "SETUP", .field_type = 'M', .display_value = "PARAMETERS Param1\nParam1 = 'ready'"},
-            {.field_name = "CLEANUP", .field_type = 'M', .display_value = "CLEAR EVENTS"},
+            {.field_name = "SETUP", .field_type = 'M', .display_value = "PARAMETERS Param1\nParam1 = 'ready'", .memo_block_number = 61U},
+            {.field_name = "CLEANUP", .field_type = 'M', .display_value = "CLEAR EVENTS", .memo_block_number = 62U},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  0"}
         }),
         make_record(1, {
@@ -515,13 +521,13 @@ void test_build_menu_xasset_executable_model() {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
             {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  1"},
-            {.field_name = "COMMAND", .field_type = 'M', .display_value = "CLEAR EVENTS"}
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "CLEAR EVENTS", .memo_block_number = 63U}
         }),
         make_record(3, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
             {.field_name = "LEVELNAME", .field_type = 'C', .display_value = "Shortcut"},
             {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "  2"},
-            {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "* metadata header\r\nPROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC"}
+            {.field_name = "PROCEDURE", .field_type = 'M', .display_value = "* metadata header\r\nPROCEDURE ItemAction\r\nCLEAR EVENTS\r\nENDPROC", .memo_block_number = 64U}
         }),
         make_record(4, {
             {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3"},
@@ -559,22 +565,26 @@ void test_build_menu_xasset_executable_model() {
     if (setup_method != nullptr) {
         expect(setup_method->source_field_index == 1U, "#706: wrapped SETUP methods should retain SETUP field provenance");
         expect(setup_method->source_line_index == 0U, "#707: wrapped SETUP methods should start at source line zero");
+        expect(setup_method->source_memo_block_number == 61U, "#719: wrapped SETUP methods should retain SETUP memo block provenance");
     }
     expect(cleanup_method != nullptr, "#706: menu cleanup method should be discoverable for provenance assertions");
     if (cleanup_method != nullptr) {
         expect(cleanup_method->source_field_index == 2U, "#706: wrapped CLEANUP methods should retain CLEANUP field provenance");
         expect(cleanup_method->source_line_index == 0U, "#707: wrapped CLEANUP methods should start at source line zero");
+        expect(cleanup_method->source_memo_block_number == 62U, "#719: wrapped CLEANUP methods should retain CLEANUP memo block provenance");
     }
     expect(command_method != nullptr, "#706: menu command method should be discoverable for provenance assertions");
     if (command_method != nullptr) {
         expect(command_method->source_field_index == 3U, "#706: wrapped COMMAND methods should retain COMMAND field provenance");
         expect(command_method->source_line_index == 0U, "#707: wrapped COMMAND methods should start at source line zero");
+        expect(command_method->source_memo_block_number == 63U, "#719: wrapped COMMAND methods should retain COMMAND memo block provenance");
     }
     expect(procedure_method != nullptr, "#706: menu procedure method should be discoverable for provenance assertions");
     if (procedure_method != nullptr) {
         expect(procedure_method->source_field_index == 3U, "#706: embedded PROCEDURE methods should retain PROCEDURE field provenance");
         expect(procedure_method->source_line_index == 1U,
                "#707: embedded PROCEDURE methods should retain declaration line indexes inside the memo field");
+        expect(procedure_method->source_memo_block_number == 64U, "#719: embedded PROCEDURE methods should retain PROCEDURE memo block provenance");
     }
     expect(submenu_method != nullptr, "#706: synthetic submenu method should be discoverable for provenance assertions");
     if (submenu_method != nullptr) {
@@ -582,6 +592,7 @@ void test_build_menu_xasset_executable_model() {
                "#706: synthetic submenu methods should use the missing-field sentinel");
         expect(submenu_method->source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                "#707: synthetic submenu methods should use the missing-line sentinel");
+        expect(submenu_method->source_memo_block_number == 0U, "#719: synthetic submenu methods should expose memo block zero");
     }
     if (model.actions.size() >= 3U) {
         expect(model.actions[0].action_id == "shortcut.item1", "first action should expose the item1 action id");

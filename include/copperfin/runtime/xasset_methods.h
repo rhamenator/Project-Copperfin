@@ -3,6 +3,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@ struct XAssetMethod {
     std::size_t record_index = 0;
     std::size_t source_field_index = studio::StudioObjectMissingFieldIndex;
     std::size_t source_line_index = studio::StudioObjectMissingLineIndex;
+    std::uint32_t source_memo_block_number = 0;
     std::string object_path;
     std::string method_name;
     std::string routine_name;

@@ -42,6 +42,11 @@ std::size_t field_index_or_missing(const copperfin::vfp::DbfRecord& record, std:
     return studio::StudioObjectMissingFieldIndex;
 }
 
+std::uint32_t memo_block_number_or_zero(const copperfin::vfp::DbfRecord& record, std::string_view field_name) {
+    const auto* value = find_value(record, field_name);
+    return value == nullptr ? 0U : value->memo_block_number;
+}
+
 std::string trim_copy(std::string value) {
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
         return std::isspace(ch) == 0;
@@ -199,6 +204,7 @@ std::vector<std::string> split_lines(const std::string& text) {
 std::vector<XAssetMethod> parse_methods_blob(
     std::size_t record_index,
     std::size_t source_field_index,
+    std::uint32_t source_memo_block_number,
     const std::string& object_path,
     const std::string& blob) {
     std::vector<XAssetMethod> methods;
@@ -215,6 +221,7 @@ std::vector<XAssetMethod> parse_methods_blob(
         method.record_index = record_index;
         method.source_field_index = source_field_index;
         method.source_line_index = current_line_index;
+        method.source_memo_block_number = source_memo_block_number;
         method.object_path = owner_path;
         method.method_name = method_name;
         method.routine_name = sanitize_routine_name("__cf_" + owner_path + "_" + method_name);
@@ -255,9 +262,10 @@ std::vector<XAssetMethod> parse_methods_blob(
 std::vector<XAssetMethod> parse_embedded_routines(
     std::size_t record_index,
     std::size_t source_field_index,
+    std::uint32_t source_memo_block_number,
     const std::string& object_path,
     const std::string& blob) {
-    return parse_methods_blob(record_index, source_field_index, object_path, blob);
+    return parse_methods_blob(record_index, source_field_index, source_memo_block_number, object_path, blob);
 }
 
 bool contains_embedded_routine_declaration(const std::string& blob) {
@@ -274,6 +282,7 @@ XAssetMethod make_wrapped_method(
     std::size_t record_index,
     std::size_t source_field_index,
     std::size_t source_line_index,
+    std::uint32_t source_memo_block_number,
     const std::string& object_path,
     std::string method_name,
     std::string source_text) {
@@ -281,6 +290,7 @@ XAssetMethod make_wrapped_method(
     method.record_index = record_index;
     method.source_field_index = source_field_index;
     method.source_line_index = source_line_index;
+    method.source_memo_block_number = source_memo_block_number;
     method.object_path = object_path;
     method.method_name = std::move(method_name);
     method.routine_name = sanitize_routine_name("__cf_" + object_path + "_" + method.method_name);
@@ -314,6 +324,7 @@ std::vector<XAssetMethod> parse_field_as_routines(
     const std::string& object_path,
     const std::string& field_role,
     std::size_t source_field_index,
+    std::uint32_t source_memo_block_number,
     const std::string& blob) {
     const std::string trimmed = trim_copy(blob);
     if (trimmed.empty()) {
@@ -321,10 +332,10 @@ std::vector<XAssetMethod> parse_field_as_routines(
     }
 
     if (contains_embedded_routine_declaration(trimmed)) {
-        return parse_embedded_routines(record_index, source_field_index, object_path, trimmed);
+        return parse_embedded_routines(record_index, source_field_index, source_memo_block_number, object_path, trimmed);
     }
 
-    return {make_wrapped_method(record_index, source_field_index, 0U, object_path, field_role, trimmed)};
+    return {make_wrapped_method(record_index, source_field_index, 0U, source_memo_block_number, object_path, field_role, trimmed)};
 }
 
 const XAssetMethod* find_method_by_object_method(
@@ -518,13 +529,13 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 
         if (document.kind == studio::StudioAssetKind::menu) {
             append_methods(model.methods, parse_field_as_routines(
-                record.record_index, object_path, "setup", field_index_or_missing(record, "SETUP"), value_or_empty(record, "SETUP")));
+                record.record_index, object_path, "setup", field_index_or_missing(record, "SETUP"), memo_block_number_or_zero(record, "SETUP"), value_or_empty(record, "SETUP")));
             append_methods(model.methods, parse_field_as_routines(
-                record.record_index, object_path, "command", field_index_or_missing(record, "COMMAND"), value_or_empty(record, "COMMAND")));
+                record.record_index, object_path, "command", field_index_or_missing(record, "COMMAND"), memo_block_number_or_zero(record, "COMMAND"), value_or_empty(record, "COMMAND")));
             append_methods(model.methods, parse_field_as_routines(
-                record.record_index, object_path, "procedure", field_index_or_missing(record, "PROCEDURE"), value_or_empty(record, "PROCEDURE")));
+                record.record_index, object_path, "procedure", field_index_or_missing(record, "PROCEDURE"), memo_block_number_or_zero(record, "PROCEDURE"), value_or_empty(record, "PROCEDURE")));
             append_methods(model.methods, parse_field_as_routines(
-                record.record_index, object_path, "cleanup", field_index_or_missing(record, "CLEANUP"), value_or_empty(record, "CLEANUP")));
+                record.record_index, object_path, "cleanup", field_index_or_missing(record, "CLEANUP"), memo_block_number_or_zero(record, "CLEANUP"), value_or_empty(record, "CLEANUP")));
 
             if (is_menu_item_record(record)) {
                 std::optional<std::string> action_routine = find_menu_action_routine(model.methods, object_path);
@@ -535,6 +546,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                             record.record_index,
                             studio::StudioObjectMissingFieldIndex,
                             studio::StudioObjectMissingLineIndex,
+                            0U,
                             object_path,
                             "activate_popup",
                             "ACTIVATE POPUP " + *submenu_name);
@@ -570,6 +582,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 append_methods(model.methods, parse_methods_blob(
                     record.record_index,
                     field_index_or_missing(record, "METHODS"),
+                    memo_block_number_or_zero(record, "METHODS"),
                     object_path,
                     methods_blob));
             }
