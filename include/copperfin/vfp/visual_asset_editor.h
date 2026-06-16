@@ -814,6 +814,12 @@ struct VisualObjectPictureSpacingRequest {
     int picture_spacing = 0;
 };
 
+struct VisualObjectPictureSelectionDisplayRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int picture_selection_display = 0;
+};
+
 struct VisualObjectInputMaskRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1252,6 +1258,8 @@ VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePoi
 VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request);
 VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPicturePositionRequest& request);
 VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictureSpacingRequest& request);
+VisualAssetEditResult set_visual_object_picture_selection_display(
+    const VisualObjectPictureSelectionDisplayRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDynamicLineHeightRequest& request);

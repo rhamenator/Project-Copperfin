@@ -5490,6 +5490,20 @@ VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictur
         std::to_string(request.picture_spacing));
 }
 
+VisualAssetEditResult set_visual_object_picture_selection_display(
+    const VisualObjectPictureSelectionDisplayRequest& request) {
+    if (request.picture_selection_display < 0) {
+        return {.ok = false, .error = "PictureSelectionDisplay must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "PictureSelectionDisplay",
+        "picture-selection-display",
+        std::to_string(request.picture_selection_display));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
