@@ -961,8 +961,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared return-materialization admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterialization copperfin_runtime_bridge_execute_return_materialization(") != std::string::npos,
                    "build host DLL wrapper should declare a shared return-materialization execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_outcome_selection(plan.outcome_selection_plan)") != std::string::npos,
-                   "build host DLL wrapper should stage return materialization through the shared execution helper.");
+            expect(wrapper_source.find("const auto& outcome_selection = plan.outcome_selection") != std::string::npos,
+                   "build host DLL wrapper should consume explicit outcome selection while materializing returns.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
                    "build host DLL wrapper should declare a shared native-int return-surface helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
@@ -1151,8 +1151,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should execute the native-return plan before building the outcome-selection plan.");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan,\n        native_return);") != std::string::npos,
                    "build host DLL wrapper should build the outcome-selection plan from the native-return plan and native return.");
-            expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan);") != std::string::npos,
-                   "build host DLL wrapper should build the return-materialization plan directly from the outcome-selection plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto outcome_selection =\n        copperfin_runtime_bridge_execute_outcome_selection(outcome_selection_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the outcome-selection plan before building the return-materialization plan.");
+            expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan,\n        outcome_selection);") != std::string::npos,
+                   "build host DLL wrapper should build the return-materialization plan from the outcome-selection plan and outcome selection.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan);") != std::string::npos,
                    "build host DLL wrapper should build the return-emission plan directly from the return-materialization plan once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,
@@ -1845,8 +1847,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared return-materialization admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeReturnMaterialization copperfin_runtime_bridge_execute_return_materialization(") != std::string::npos,
                    "build host FLL wrapper should declare a shared return-materialization execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_outcome_selection(plan.outcome_selection_plan)") != std::string::npos,
-                   "build host FLL wrapper should stage return materialization through the shared execution helper.");
+            expect(wrapper_source.find("const auto& outcome_selection = plan.outcome_selection") != std::string::npos,
+                   "build host FLL wrapper should consume explicit outcome selection while materializing returns.");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
                    "build host FLL wrapper should declare a shared native-int return-surface helper.");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_native_int_return_surface()") != std::string::npos,
@@ -2035,8 +2037,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should execute the native-return plan before building the outcome-selection plan.");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan,\n        native_return);") != std::string::npos,
                    "build host FLL wrapper should build the outcome-selection plan from the native-return plan and native return.");
-            expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan);") != std::string::npos,
-                   "build host FLL wrapper should build the return-materialization plan directly from the outcome-selection plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto outcome_selection =\n        copperfin_runtime_bridge_execute_outcome_selection(outcome_selection_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the outcome-selection plan before building the return-materialization plan.");
+            expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n        outcome_selection_plan,\n        outcome_selection);") != std::string::npos,
+                   "build host FLL wrapper should build the return-materialization plan from the outcome-selection plan and outcome selection.");
             expect(wrapper_source.find("const auto return_emission_plan = copperfin_build_runtime_bridge_return_emission_plan(\n        return_materialization_plan);") != std::string::npos,
                    "build host FLL wrapper should build the return-emission plan directly from the return-materialization plan once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto final_return_adoption_plan = copperfin_build_runtime_bridge_final_return_adoption_plan(\n        return_emission_plan,\n        copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding));") != std::string::npos,

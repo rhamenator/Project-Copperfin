@@ -904,6 +904,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeReturnMaterializationPlan {\n";
     stream << "    CopperfinRuntimeBridgeOutcomeSelectionPlan outcome_selection_plan;\n";
+    stream << "    CopperfinRuntimeBridgeOutcomeSelection outcome_selection;\n";
     stream << "    std::string success_return_statement;\n";
     stream << "    std::string fallback_return_statement;\n";
     stream << "    std::string native_return_surface;\n";
@@ -1853,7 +1854,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        return_binding.value_representation);\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeReturnMaterializationPlan copperfin_build_runtime_bridge_return_materialization_plan(\n";
-    stream << "    CopperfinRuntimeBridgeOutcomeSelectionPlan outcome_selection_plan) {\n";
+    stream << "    CopperfinRuntimeBridgeOutcomeSelectionPlan outcome_selection_plan,\n";
+    stream << "    CopperfinRuntimeBridgeOutcomeSelection outcome_selection) {\n";
     stream << "    const auto& native_return_plan = outcome_selection_plan.native_return_plan;\n";
     stream << "    const auto success_return_statement = copperfin_build_runtime_bridge_return_statement(\n";
     stream << "        native_return_plan.native_return_surface,\n";
@@ -1865,6 +1867,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        native_return_plan.fallback_value_representation);\n";
     stream << "    return CopperfinRuntimeBridgeReturnMaterializationPlan{\n";
     stream << "        std::move(outcome_selection_plan),\n";
+    stream << "        std::move(outcome_selection),\n";
     stream << "        std::move(success_return_statement),\n";
     stream << "        std::move(fallback_return_statement),\n";
     stream << "        native_return_plan.native_return_surface};\n";
@@ -1883,12 +1886,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeReturnMaterialization copperfin_runtime_bridge_execute_return_materialization(\n";
     stream << "    const CopperfinRuntimeBridgeReturnMaterializationPlan& plan) {\n";
-    stream << "    const auto outcome_selection = copperfin_runtime_bridge_execute_outcome_selection(plan.outcome_selection_plan);\n";
+    stream << "    const auto& outcome_selection = plan.outcome_selection;\n";
     stream << "    return CopperfinRuntimeBridgeReturnMaterialization{\n";
     stream << "        outcome_selection.matched_success_status,\n";
     stream << "        plan.outcome_selection_plan.success_condition,\n";
-    stream << "        std::move(outcome_selection.selected_condition),\n";
-    stream << "        std::move(outcome_selection.diagnostics_value),\n";
+    stream << "        outcome_selection.selected_condition,\n";
+    stream << "        outcome_selection.diagnostics_value,\n";
     stream << "        plan.success_return_statement,\n";
     stream << "        plan.fallback_return_statement,\n";
     stream << "        outcome_selection.native_return_surface};\n";
@@ -2363,8 +2366,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto outcome_selection_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_outcome_selection(native_return_admission, outcome_selection_plan);\n";
             stream << "    (void)outcome_selection_admission;\n";
+            stream << "    const auto outcome_selection =\n";
+            stream << "        copperfin_runtime_bridge_execute_outcome_selection(outcome_selection_plan);\n";
             stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
-            stream << "        outcome_selection_plan);\n";
+            stream << "        outcome_selection_plan,\n";
+            stream << "        outcome_selection);\n";
             stream << "    const auto return_materialization_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_materialization(outcome_selection_admission, return_materialization_plan);\n";
             stream << "    (void)return_materialization_admission;\n";
@@ -2591,8 +2597,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto outcome_selection_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_outcome_selection(native_return_admission, outcome_selection_plan);\n";
             stream << "    (void)outcome_selection_admission;\n";
+            stream << "    const auto outcome_selection =\n";
+            stream << "        copperfin_runtime_bridge_execute_outcome_selection(outcome_selection_plan);\n";
             stream << "    const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(\n";
-            stream << "        outcome_selection_plan);\n";
+            stream << "        outcome_selection_plan,\n";
+            stream << "        outcome_selection);\n";
             stream << "    const auto return_materialization_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_materialization(outcome_selection_admission, return_materialization_plan);\n";
             stream << "    (void)return_materialization_admission;\n";
