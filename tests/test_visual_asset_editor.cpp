@@ -11821,6 +11821,190 @@ void test_set_visual_object_column_lines_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_integral_height_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_integral_height_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "integral_height.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "INTEGRALHEIGHT", .type = 'C', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", ".F."},
+        {"lstOrders", "ordersList", "orders-guid", ".F."},
+        {"cboOther", "otherCombo", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#811: integral-height fixture should be writable");
+
+    const auto integral_height_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "IntegralHeight"
+        });
+        expect(result.ok && result.exists, "#811: integral-height fixture property should be readable");
+        return result.value;
+    };
+    const auto integral_height = [&](const std::string& unique_id) {
+        return integral_height_for(table_path.string(), unique_id);
+    };
+    const auto integral_height_state = [&]() {
+        return integral_height("customer-guid") + "," +
+            integral_height("orders-guid") + "," +
+            integral_height("other-guid");
+    };
+
+    auto height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .integral_height = true
+    });
+    expect(height_result.ok, "#811: integral-height assignment should support object-name and record-index selectors");
+    expect(integral_height("customer-guid") == ".T." &&
+            integral_height("orders-guid") == ".T." &&
+            integral_height("other-guid") == ".T.",
+        "#811: direct integral-height assignment should write FoxPro logical text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#811: first integral-height write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#811: second integral-height write should remain undo-backed");
+    expect(integral_height_state() == ".F.,.F.,.T.", "#811: integral-height undo should restore original direct values");
+
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .integral_height = false
+    });
+    expect(height_result.ok, "#811: integral-height assignment should support UNIQUEID selectors");
+    expect(integral_height("customer-guid") == ".F." &&
+            integral_height("orders-guid") == ".F.",
+        "#811: direct integral-height assignment should store false FoxPro logical values");
+
+    const std::string committed_state = integral_height_state();
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = table_path.string(),
+        .objects = {},
+        .integral_height = true
+    });
+    expect(!height_result.ok, "#811: integral-height assignment should reject empty selections");
+    expect(integral_height_state() == committed_state, "#811: empty-selection failures should not mutate integral-height values");
+
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .integral_height = true
+    });
+    expect(!height_result.ok, "#811: integral-height assignment should reject missing selected objects");
+    expect(integral_height_state() == committed_state, "#811: missing-object failures should not mutate integral-height values");
+
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .integral_height = true
+    });
+    expect(!height_result.ok, "#811: integral-height assignment should reject duplicate selected objects");
+    expect(integral_height_state() == committed_state, "#811: duplicate-selection failures should not mutate integral-height values");
+
+    const fs::path blob_path = temp_dir / "integral_height_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "IntegralHeight = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoHeight", "no-height-guid", "Caption = \"No height\"\r\n"},
+        {"cboOther", "other-guid", "IntegralHeight = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#811: integral-height property-blob fixture should be writable");
+
+    const auto blob_integral_height_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "IntegralHeight"
+        });
+    };
+
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoHeight", .unique_id = {}}
+        },
+        .integral_height = true
+    });
+    expect(height_result.ok, "#811: integral-height assignment should support existing and absent serialized properties");
+    auto blob_height = blob_integral_height_state("blob-guid");
+    auto appended_height = blob_integral_height_state("no-height-guid");
+    auto other_height = blob_integral_height_state("other-guid");
+    expect(blob_height.ok && blob_height.exists && blob_height.value == ".T." &&
+            appended_height.ok && appended_height.exists && appended_height.value == ".T." &&
+            other_height.ok && other_height.exists && other_height.value == ".T.",
+        "#811: serialized integral-height assignment should write FoxPro logical values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#811: appended serialized integral-height write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#811: existing serialized integral-height write should remain undo-backed");
+    blob_height = blob_integral_height_state("blob-guid");
+    appended_height = blob_integral_height_state("no-height-guid");
+    expect(blob_height.ok && blob_height.exists && blob_height.value == ".F." &&
+            appended_height.ok && !appended_height.exists,
+        "#811: serialized integral-height undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_integralheight.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#811: missing-IntegralHeight fixture should be writable");
+
+    height_result = copperfin::vfp::set_visual_object_integral_height({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .integral_height = true
+    });
+    expect(!height_result.ok, "#811: integral-height assignment should reject objects without a writable IntegralHeight carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -14423,6 +14607,7 @@ int main() {
     test_set_visual_object_column_count_assigns_numeric_value();
     test_set_visual_object_column_widths_assigns_text();
     test_set_visual_object_column_lines_assigns_logical_state();
+    test_set_visual_object_integral_height_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

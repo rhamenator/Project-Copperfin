@@ -5376,6 +5376,15 @@ VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLin
         request.column_lines ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_integral_height(const VisualObjectIntegralHeightRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "IntegralHeight",
+        "integral-height",
+        request.integral_height ? ".T." : ".F.");
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
