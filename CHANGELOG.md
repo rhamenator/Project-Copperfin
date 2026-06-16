@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#741 selected visual object deleted-state edits shipped: designer delete/restore interactions can now set DBF deleted flags through record-index, object-name, or `UNIQUEID` selection without mutating unrelated records.
 - E2/#740 failed multi-property visual edits now roll back earlier successful changes, restoring selected-object geometry and leaving no extra undo history when a later batch property fails.
 - E2/#739 visual property query/list results now expose the resolved DBF record index so designer shells can reconcile object-name and `UNIQUEID` selections with the underlying asset row.
 - E2/#738 visual property listings now carry editor metadata: direct entries expose DBF field types and memo-backed `PROPERTIES` assignments expose parsed source line indexes for context-aware property-grid editors.

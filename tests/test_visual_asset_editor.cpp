@@ -698,6 +698,73 @@ void test_list_visual_object_properties_reads_selected_surface() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_deleted_state_targets_selected_object() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_deleted_state_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "deleted_state.scx";
+    const fs::path memo_path = temp_dir / "deleted_state.sct";
+    write_synthetic_named_geometry_asset(table_path, memo_path);
+
+    auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#741: visual object deleted-state edits should support UNIQUEID selection");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#741: deleted-state fixture should remain readable after delete");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(!parse_result.table.records[0].deleted,
+            "#741: selected delete should preserve unrelated records");
+        expect(parse_result.table.records[1].deleted,
+            "#741: selected delete should mark the resolved record deleted");
+    }
+
+    auto restore_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .deleted = false
+    });
+    expect(restore_result.ok, "#741: visual object deleted-state edits should support object-name restore");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#741: deleted-state fixture should remain readable after restore");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(!parse_result.table.records[0].deleted,
+            "#741: selected restore should preserve unrelated records");
+        expect(!parse_result.table.records[1].deleted,
+            "#741: selected restore should clear the resolved record deleted flag");
+    }
+
+    delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid",
+        .deleted = true
+    });
+    expect(!delete_result.ok, "#741: missing selected objects should not mutate deleted state");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#741: deleted-state fixture should remain readable after failed selection");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(!parse_result.table.records[0].deleted && !parse_result.table.records[1].deleted,
+            "#741: failed deleted-state selection should preserve all record flags");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1565,6 +1632,7 @@ int main() {
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_query_visual_object_property_reads_selected_values();
     test_list_visual_object_properties_reads_selected_surface();
+    test_set_visual_object_deleted_state_targets_selected_object();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

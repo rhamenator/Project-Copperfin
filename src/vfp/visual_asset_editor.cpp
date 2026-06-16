@@ -1001,6 +1001,32 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
     };
 }
 
+VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto result = set_record_deleted_flag(request.path, record_index, request.deleted);
+    if (!result.ok) {
+        return {.ok = false, .error = result.error};
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
     if (request.properties.empty()) {
         return {.ok = false, .error = "No property changes were provided."};
