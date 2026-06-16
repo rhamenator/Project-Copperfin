@@ -1678,6 +1678,313 @@ void test_move_visual_object_property_between_selected_objects() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_move_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_move_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_move_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "211", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "322", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "433", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#775: property-move-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "hpos",
+                .target_record_index = 0U,
+                .target_object_name = "txtName",
+                .target_unique_id = {},
+                .target_property_name = {},
+                .replace_existing = true
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = "cmdSave",
+                .source_unique_id = {},
+                .source_property_name = "Caption",
+                .target_record_index = 2U,
+                .target_object_name = {},
+                .target_unique_id = {},
+                .target_property_name = "MovedCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "status-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "StatusLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "VPOS",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "VPOS",
+                .replace_existing = true
+            }
+        }
+    });
+    expect(batch_result.ok, "#775: batch property move should support mixed selectors, direct fields, memo properties, target renames, and replacement");
+
+    auto save_hpos = property_state("save-guid", "HPOS");
+    auto save_vpos = property_state("save-guid", "VPOS");
+    auto name_hpos = property_state("name-guid", "HPOS");
+    auto status_vpos = property_state("status-guid", "VPOS");
+    auto save_caption = property_state("save-guid", "Caption");
+    auto status_moved_caption = property_state("status-guid", "MovedCaption");
+    auto status_left = property_state("status-guid", "Left");
+    auto name_status_left = property_state("name-guid", "StatusLeft");
+    auto name_top = property_state("name-guid", "Top");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value.empty() &&
+            save_vpos.ok && save_vpos.exists && save_vpos.value.empty() &&
+            name_hpos.ok && name_hpos.exists && name_hpos.value == "111" &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "211",
+        "#775: direct-field batch moves should write target values and clear source values");
+    expect(save_caption.ok && !save_caption.exists &&
+            status_moved_caption.ok && status_moved_caption.exists && status_moved_caption.value == "\"Save\"" &&
+            status_left.ok && !status_left.exists &&
+            name_status_left.ok && name_status_left.exists && name_status_left.value == "50" &&
+            name_top.ok && name_top.exists && name_top.value == "30",
+        "#775: memo-backed batch moves should create renamed targets, clear sources, and preserve unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#775: successful batch moves should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "Caption",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject target collisions");
+    auto status_temp_left = property_state("status-guid", "TempLeft");
+    auto save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: target-collision failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Missing",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "MissingMove",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject missing source properties");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: missing-source failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = " ",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "EmptySource",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject empty source names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: empty-source failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = " ",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject empty target names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: empty-target failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = {},
+                .replace_existing = true
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject same-object same-property moves");
+    auto name_caption = property_state("name-guid", "Caption");
+    expect(name_caption.ok && name_caption.exists && name_caption.value == "\"Name\"",
+        "#775: same-object same-property failures should preserve the source property");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#775: failed batch move rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#775: empty batch move requests should fail explicitly");
+
+    for (int index = 0; index < 8; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#775: undo should restore each copy/clear step from successful batch moves");
+    }
+
+    save_hpos = property_state("save-guid", "HPOS");
+    save_vpos = property_state("save-guid", "VPOS");
+    save_caption = property_state("save-guid", "Caption");
+    save_left = property_state("save-guid", "Left");
+    name_hpos = property_state("name-guid", "HPOS");
+    name_status_left = property_state("name-guid", "StatusLeft");
+    status_vpos = property_state("status-guid", "VPOS");
+    status_moved_caption = property_state("status-guid", "MovedCaption");
+    status_left = property_state("status-guid", "Left");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value == "111" &&
+            save_vpos.ok && save_vpos.exists && save_vpos.value == "211" &&
+            save_caption.ok && save_caption.exists && save_caption.value == "\"Save\"" &&
+            save_left.ok && save_left.exists && save_left.value == "10" &&
+            name_hpos.ok && name_hpos.exists && name_hpos.value == "222" &&
+            name_status_left.ok && !name_status_left.exists &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "433" &&
+            status_moved_caption.ok && !status_moved_caption.exists &&
+            status_left.ok && status_left.exists && status_left.value == "50",
+        "#775: successful batch move undo should restore original source and target state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_rename_visual_object_memo_property_updates_selected_object() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -6726,6 +7033,7 @@ int main() {
     test_copy_visual_object_property_between_selected_objects();
     test_copy_visual_object_properties_rolls_back_failed_batches();
     test_move_visual_object_property_between_selected_objects();
+    test_move_visual_object_properties_rolls_back_failed_batches();
     test_rename_visual_object_memo_property_updates_selected_object();
     test_rename_visual_object_memo_properties_rolls_back_failed_batches();
     test_reorder_visual_object_memo_properties_within_selected_object();

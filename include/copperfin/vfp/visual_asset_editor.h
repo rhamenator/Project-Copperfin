@@ -136,6 +136,23 @@ struct VisualObjectPropertyMoveRequest {
     bool replace_existing = false;
 };
 
+struct VisualObjectPropertyMoveBatchItem {
+    std::size_t source_record_index = 0;
+    std::string source_object_name;
+    std::string source_unique_id;
+    std::string source_property_name;
+    std::size_t target_record_index = 0;
+    std::string target_object_name;
+    std::string target_unique_id;
+    std::string target_property_name;
+    bool replace_existing = false;
+};
+
+struct VisualObjectPropertyMoveBatchRequest {
+    std::string path;
+    std::vector<VisualObjectPropertyMoveBatchItem> properties;
+};
+
 struct VisualObjectPropertyRenameRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -525,6 +542,7 @@ VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyC
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request);
 VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCopyBatchRequest& request);
 VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request);
+VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMoveBatchRequest& request);
 VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request);
 VisualAssetEditResult rename_visual_object_properties(const VisualObjectPropertyRenameBatchRequest& request);
 VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request);

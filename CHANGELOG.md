@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#775 batch selected visual object property moves shipped: multi-select property grids can move direct DBF-backed fields and memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, including target renames and explicit replacement while clearing sources, preserving undo support, and preserving prior undo history when later items fail.
 - E2/#774 batch selected visual object property copies shipped: multi-select property grids can copy direct DBF-backed fields and memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, including target renames and explicit replacement while preserving sources, undo support, and prior undo history when later items fail.
 - E2/#773 batch selected visual object memo-property reorders shipped: multi-select property grids can reorder memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, supporting first/last/before/after placements while preserving values, undo support, and prior undo history when later items fail.
 - E2/#772 batch selected visual object memo-property renames shipped: multi-select property grids can rename memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, preserving values, case-insensitive source matching, undo support, and prior undo history when later items fail.
