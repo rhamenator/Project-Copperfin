@@ -21,6 +21,7 @@ struct DbfRecordValue {
     char field_type = '\0';
     bool is_null = false;
     std::string display_value;
+    std::uint32_t memo_block_number = 0;
 };
 
 struct DbfRecord {

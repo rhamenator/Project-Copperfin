@@ -150,11 +150,26 @@ void test_parse_dbf_table_with_memo_sidecar() {
     expect(result.table.records.size() == 1U, "one record should be parsed");
     if (result.table.records.size() == 1U && result.table.records[0].values.size() >= 2U) {
         expect(result.table.records[0].values[0].display_value == "txtTitle1", "memo values should be decoded from the sidecar");
+        expect(result.table.records[0].values[0].memo_block_number == 1U,
+               "#711: decoded memo values should retain the stored memo block number");
         expect(result.table.records[0].values[1].display_value == "Textbox", "character values should be trimmed");
+        expect(result.table.records[0].values[1].memo_block_number == 0U,
+               "#711: non-memo fields should expose memo block zero");
+    }
+
+    fs::remove(memo_path, ignored);
+    const auto missing_sidecar_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(missing_sidecar_result.ok, "#711: DBF parsing should still succeed when a memo sidecar is missing");
+    if (missing_sidecar_result.ok &&
+        missing_sidecar_result.table.records.size() == 1U &&
+        !missing_sidecar_result.table.records[0].values.empty()) {
+        expect(missing_sidecar_result.table.records[0].values[0].display_value == "<memo block 1>",
+               "#711: unresolved memo blocks should keep the existing placeholder display text");
+        expect(missing_sidecar_result.table.records[0].values[0].memo_block_number == 1U,
+               "#711: unresolved memo blocks should retain structured block provenance");
     }
 
     fs::remove(table_path, ignored);
-    fs::remove(memo_path, ignored);
     fs::remove(temp_dir, ignored);
 }
 
@@ -283,7 +298,11 @@ void test_memo_field_create_replace_and_append_round_trip() {
     if (parse_result.table.records.size() == 2U) {
         expect(parse_result.table.records[0].values[0].display_value == "FIRST", "memo-backed created character fields should persist");
         expect(parse_result.table.records[0].values[1].display_value == "First memo body", "memo-backed created memo fields should round-trip through the sidecar");
+        expect(parse_result.table.records[0].values[1].memo_block_number != 0U,
+               "#711: created memo rows should retain non-zero memo block provenance");
         expect(parse_result.table.records[1].values[1].display_value == "Second memo body", "later memo rows should also round-trip");
+        expect(parse_result.table.records[1].values[1].memo_block_number != 0U,
+               "#711: later created memo rows should retain non-zero memo block provenance");
     }
 
     const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated first memo");
@@ -300,6 +319,8 @@ void test_memo_field_create_replace_and_append_round_trip() {
         expect(parse_result.table.records[0].values[1].display_value == "Updated first memo", "memo field replacements should persist through the shared DBF layer");
         expect(parse_result.table.records[2].values[0].display_value.empty(), "blank appended character fields in memo-backed tables should start empty");
         expect(parse_result.table.records[2].values[1].display_value.empty(), "blank appended memo fields should start with an empty pointer");
+        expect(parse_result.table.records[2].values[1].memo_block_number == 0U,
+               "#711: blank appended memo fields should expose memo block zero");
     }
 
     fs::remove_all(temp_dir, ignored);
@@ -1060,6 +1081,8 @@ void test_memo_sidecar_version_mismatch_is_diagnosed() {
     if (parse_result.ok && !parse_result.table.records.empty() && !parse_result.table.records[0].values.empty()) {
         expect(parse_result.table.records[0].values[0].display_value.find("<memo block 1>") != std::string::npos,
                "GAP-02/#264: unreadable memo payload should surface a stable placeholder diagnostic");
+        expect(parse_result.table.records[0].values[0].memo_block_number == 1U,
+               "#711: malformed memo payloads should retain structured block provenance");
     }
 
     fs::remove_all(temp_dir, ignored);

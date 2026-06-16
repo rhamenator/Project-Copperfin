@@ -942,8 +942,10 @@ std::string decode_value(
     char field_type,
     const std::vector<std::uint8_t>& raw,
     const MemoReader& memo_reader,
-    bool& is_null) {
+    bool& is_null,
+    std::uint32_t& memo_block_number) {
     is_null = false;
+    memo_block_number = 0U;
     if (raw.empty()) {
         return {};
     }
@@ -1027,6 +1029,7 @@ std::string decode_value(
                 return {};
             }
             const std::uint32_t block_number = read_le_u32(raw, 0U);
+            memo_block_number = block_number;
             if (block_number == 0U) {
                 return {};
             }
@@ -1160,12 +1163,14 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
                 bytes.begin() + static_cast<std::ptrdiff_t>(field_end));
 
             bool is_null = false;
-            const std::string display_value = decode_value(field.type, raw, memo_reader, is_null);
+            std::uint32_t memo_block_number = 0U;
+            const std::string display_value = decode_value(field.type, raw, memo_reader, is_null, memo_block_number);
             record.values.push_back({
                 .field_name = field.name,
                 .field_type = field.type,
                 .is_null = is_null,
-                .display_value = display_value
+                .display_value = display_value,
+                .memo_block_number = memo_block_number
             });
         }
 
