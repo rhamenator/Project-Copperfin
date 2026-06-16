@@ -1515,10 +1515,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeMissingResponseEvaluation copperfin_runtime_bridge_evaluate_missing_response(\n";
     stream << "    const CopperfinRuntimeBridgeHostFailureEvaluation& host_failure,\n";
-    stream << "    const CopperfinRuntimeBridgeResponseReadPlan& response_read_plan) {\n";
+    stream << "    const CopperfinRuntimeBridgeResponseReadPlan& response_read_plan,\n";
+    stream << "    const std::string& response_document) {\n";
     stream << "    const auto& failure_policy_plan =\n";
     stream << "        response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan;\n";
-    stream << "    const bool response_missing = response_read_plan.require_existing_response;\n";
+    stream << "    const bool response_missing = response_read_plan.require_existing_response && response_document.empty();\n";
     stream << "    const bool should_use_fallback_return =\n";
     stream << "        host_failure.should_use_fallback_return || response_missing;\n";
     stream << "    return CopperfinRuntimeBridgeMissingResponseEvaluation{\n";
@@ -2411,7 +2412,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto response_document =\n";
             stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";
-            stream << "        copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);\n";
+            stream << "        copperfin_runtime_bridge_evaluate_missing_response(\n";
+            stream << "            host_failure,\n";
+            stream << "            response_read_plan,\n";
+            stream << "            response_document);\n";
             stream << "    const auto response_validation_evaluation =\n";
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(\n";
             stream << "            missing_response,\n";
@@ -2652,7 +2656,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto response_document =\n";
             stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";
-            stream << "        copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);\n";
+            stream << "        copperfin_runtime_bridge_evaluate_missing_response(\n";
+            stream << "            host_failure,\n";
+            stream << "            response_read_plan,\n";
+            stream << "            response_document);\n";
             stream << "    const auto response_validation_evaluation =\n";
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(\n";
             stream << "            missing_response,\n";
