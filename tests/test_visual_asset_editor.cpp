@@ -518,6 +518,46 @@ void test_update_visual_object_properties_updates_selected_geometry_fields() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_multi_property_rollback_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "geometry_rollback.scx";
+    const fs::path memo_path = temp_dir / "geometry_rollback.sct";
+    write_synthetic_named_geometry_asset(table_path, memo_path);
+
+    const auto update_result = copperfin::vfp::update_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .properties = {
+            {.property_name = "HPOS", .property_value = "333.000"},
+            {.property_name = "NOT_A_FIELD", .property_value = "444.000"}
+        }
+    });
+    expect(!update_result.ok, "#740: failing multi-property edits should report the failed property change");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#740: rollback geometry fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto* second_hpos = find_record_field(parse_result.table.records[1], "HPOS");
+        const auto* second_vpos = find_record_field(parse_result.table.records[1], "VPOS");
+        expect(second_hpos != nullptr && std::abs(parse_number(second_hpos->display_value) - 222.0) < 0.001,
+            "#740: failed multi-property edits should restore earlier successful field changes");
+        expect(second_vpos != nullptr && std::abs(parse_number(second_vpos->display_value) - 322.0) < 0.001,
+            "#740: failed multi-property edits should leave later untouched fields unchanged");
+    }
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#740: failed multi-property rollback should not leave extra undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_query_visual_object_property_reads_selected_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1522,6 +1562,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_properties_updates_selected_geometry_fields();
+    test_update_visual_object_properties_rolls_back_failed_batches();
     test_query_visual_object_property_reads_selected_values();
     test_list_visual_object_properties_reads_selected_surface();
     test_update_visual_object_property_skips_noop_writes();

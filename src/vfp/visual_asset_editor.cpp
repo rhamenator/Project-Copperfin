@@ -1006,6 +1006,7 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
         return {.ok = false, .error = "No property changes were provided."};
     }
 
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
     for (const auto& property : request.properties) {
         const auto result = update_visual_object_property({
             .path = request.path,
@@ -1016,6 +1017,15 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
             .property_value = property.property_value
         });
         if (!result.ok) {
+            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                const auto rollback_result = undo_visual_object_property(request.path);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = result.error + " Rollback failed: " + rollback_result.error
+                    };
+                }
+            }
             return result;
         }
     }
