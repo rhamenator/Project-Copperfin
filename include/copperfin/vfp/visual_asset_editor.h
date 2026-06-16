@@ -712,6 +712,12 @@ struct VisualObjectInputMaskRequest {
     std::string input_mask;
 };
 
+struct VisualObjectDynamicInputMaskRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string dynamic_input_mask;
+};
+
 struct VisualObjectFormatRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1109,6 +1115,7 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
 VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request);
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
+VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDynamicInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request);
 VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequest& request);
 VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequest& request);

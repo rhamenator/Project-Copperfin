@@ -12777,6 +12777,29 @@ void test_set_visual_object_dynamic_alignment_assigns_expression_value() {
         });
 }
 
+void test_set_visual_object_dynamic_input_mask_assigns_expression_value() {
+    test_dynamic_raw_scalar_property_assigns_expression_value(
+        "#848",
+        "dynamic_input_mask",
+        "DynamicInputMask",
+        "DYNAMICINPUTMASK",
+        "input-mask",
+        "\"999-99-9999\"",
+        "\"99999\"",
+        "\"!!!\"",
+        "IIF(EMPTY(ALLTRIM(customer.type)), \"99999\", \"999-99-9999\")",
+        "\"999\"",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& expression) {
+            return copperfin::vfp::set_visual_object_dynamic_input_mask({
+                .path = path,
+                .objects = objects,
+                .dynamic_input_mask = expression
+            });
+        });
+}
+
 void test_set_visual_object_dynamic_font_bold_assigns_expression_value() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -21228,6 +21251,7 @@ int main() {
     test_set_visual_object_status_bar_text_assigns_text();
     test_set_visual_object_control_source_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
+    test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_format_assigns_text();
     test_set_visual_object_font_name_assigns_text();
     test_set_visual_object_font_size_assigns_numeric_value();
