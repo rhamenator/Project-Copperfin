@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#688 object snapshot deleted-state coverage shipped: studio object snapshot tests now prove deleted menu records remain visible with their DBF deleted flag and title provenance.
 - E1/#687 project build deleted-entry counts shipped: `StudioProjectBuildPlan` summaries now expose deleted-source-row counts while keeping existing total and excluded item counts unchanged.
 - E1/#686 project group deleted-entry counts shipped: project workspace group summaries now expose deleted-source-row counts while keeping existing item and excluded counts unchanged.
 - E1/#685 project entry deleted-state preservation shipped: project workspace entries now retain DBF deleted-record state so designer tooling can see deleted PJX/PJT rows without changing grouping or build behavior.

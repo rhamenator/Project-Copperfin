@@ -259,11 +259,19 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
             .values = {
                 {.field_name = "COMMENT", .field_type = 'M', .is_null = false, .display_value = "No display fields"}
             }
+        },
+        {
+            .record_index = 5U,
+            .deleted = true,
+            .values = {
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Obsolete"},
+                {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "OLD"}
+            }
         }
     };
 
     const auto objects = copperfin::studio::build_object_snapshot(document);
-    expect(objects.size() == 3U, "#668: menu snapshot should include parsed menu records");
+    expect(objects.size() == 4U, "#668: menu snapshot should include parsed menu records");
     if (objects.size() >= 1U) {
         expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
         expect(objects[0].menu_prompt_field_index == 0U, "#669: menu PROMPT metadata should retain DBF field provenance");
@@ -314,6 +322,11 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[2].subtitle.empty(), "#673: snapshots without subtitle fields should keep empty subtitle fallback");
         expect(objects[2].subtitle_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#673: missing subtitles should use the object missing-field sentinel");
+    }
+    if (objects.size() >= 4U) {
+        expect(objects[3].deleted, "#688: deleted menu records should stay visible on object snapshots");
+        expect(objects[3].title == "Obsolete", "#688: deleted menu records should keep normalized title metadata");
+        expect(objects[3].title_field_index == 0U, "#688: deleted menu records should keep title provenance");
     }
 }
 
