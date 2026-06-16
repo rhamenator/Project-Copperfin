@@ -171,6 +171,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         StudioObjectSnapshot snapshot;
         snapshot.record_index = record.record_index;
         snapshot.deleted = record.deleted;
+        snapshot.object_name = first_non_empty(record, {"OBJNAME", "NAME"});
+        snapshot.unique_id = first_non_empty(record, {"UNIQUEID"});
+        snapshot.parent_name = first_non_empty(record, {"PARENT", "PARENTID"});
+        snapshot.class_name = first_non_empty(record, {"CLASS"});
+        snapshot.baseclass_name = first_non_empty(record, {"BASECLASS"});
         switch (document.kind) {
             case StudioAssetKind::report:
             case StudioAssetKind::label:

@@ -72,6 +72,11 @@ struct StudioPropertySnapshot {
 struct StudioObjectSnapshot {
     std::size_t record_index = 0;
     bool deleted = false;
+    std::string object_name{};
+    std::string unique_id{};
+    std::string parent_name{};
+    std::string class_name{};
+    std::string baseclass_name{};
     std::string title{};
     std::string subtitle{};
     std::vector<StudioPropertySnapshot> properties{};

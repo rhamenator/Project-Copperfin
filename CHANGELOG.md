@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#660 design-object identity metadata shipped: Studio object snapshots now expose object name, UNIQUEID, parent, class, and baseclass fields from DBF-family visual records for shared designer navigation and round-trip fidelity.
 - E1/#659 design-property provenance shipped: Studio property snapshots now preserve original DBF field ordinals and mark values expanded from visual `PROPERTIES` blobs, giving designer workflows enough metadata to distinguish direct fields from parsed blob assignments.
 - E1/#658 design-record snapshot fidelity shipped: Studio object snapshots now preserve empty and NULL DBF-family design fields instead of dropping them, while existing visual property blob expansion remains intact. Focused `test_studio_host` coverage proves empty memo-backed fields, NULL fields, and parsed visual properties survive in one normalized snapshot.
 - D1/#637 bridge launch-environment dispatch shipped: generated DLL/FLL native-wrapper dispatch execution now carries `CopperfinRuntimeBridgeLaunchPlan::environment` into command construction, and runtime-host command lines now apply those environment assignments before launching the host. Focused `test_runtime_pipeline` and `test_build_host_output` coverage now both prove DLL/FLL generated output carries launch environment entries through dispatch and command construction.
