@@ -16,6 +16,7 @@ struct VisualObjectEditRequest {
     std::string path;
     std::size_t record_index = 0;
     std::string object_name;
+    std::string unique_id;
     std::string property_name;
     std::string property_value;
 };

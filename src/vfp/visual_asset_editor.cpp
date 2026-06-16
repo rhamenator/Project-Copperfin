@@ -171,7 +171,46 @@ const DbfRecordValue* find_record_value(const DbfRecord& record, const std::stri
     return value == record.values.end() ? nullptr : &(*value);
 }
 
+std::vector<std::size_t> find_matching_record_indexes(
+    const DbfTable& table,
+    const std::string& field_name,
+    const std::string& requested_value) {
+    std::vector<std::size_t> matches;
+    for (const auto& record : table.records) {
+        const auto* value = find_record_value(record, field_name);
+        if (value == nullptr) {
+            continue;
+        }
+        if (normalize_visual_object_name(value->display_value) == requested_value) {
+            matches.push_back(record.record_index);
+        }
+    }
+    return matches;
+}
+
 VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
+    const std::string requested_unique_id = normalize_visual_object_name(request.unique_id);
+    if (!requested_unique_id.empty()) {
+        const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+        if (!table_result.ok) {
+            return {.ok = false, .error = table_result.error};
+        }
+
+        const std::vector<std::size_t> matches = find_matching_record_indexes(
+            table_result.table,
+            "UNIQUEID",
+            requested_unique_id);
+        if (matches.empty()) {
+            return {.ok = false, .error = "No visual object with the requested unique id was found."};
+        }
+        if (matches.size() > 1U) {
+            return {.ok = false, .error = "The requested visual object unique id is ambiguous."};
+        }
+
+        record_index = matches.front();
+        return {.ok = true, .error = {}};
+    }
+
     if (request.object_name.empty()) {
         record_index = request.record_index;
         return {.ok = true, .error = {}};
@@ -187,23 +226,9 @@ VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditR
         return {.ok = false, .error = table_result.error};
     }
 
-    auto find_matches = [&](const std::string& field_name) {
-        std::vector<std::size_t> matches;
-        for (const auto& record : table_result.table.records) {
-            const auto* value = find_record_value(record, field_name);
-            if (value == nullptr) {
-                continue;
-            }
-            if (normalize_visual_object_name(value->display_value) == requested_name) {
-                matches.push_back(record.record_index);
-            }
-        }
-        return matches;
-    };
-
-    std::vector<std::size_t> matches = find_matches("OBJNAME");
+    std::vector<std::size_t> matches = find_matching_record_indexes(table_result.table, "OBJNAME", requested_name);
     if (matches.empty()) {
-        matches = find_matches("NAME");
+        matches = find_matching_record_indexes(table_result.table, "NAME", requested_name);
     }
 
     if (matches.empty()) {
@@ -825,6 +850,7 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
             .path = path,
             .record_index = entry->record_index,
             .object_name = {},
+            .unique_id = {},
             .property_name = entry->property_name,
             .property_value = entry->prior_value
         },

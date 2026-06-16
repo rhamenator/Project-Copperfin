@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#732 UNIQUEID-targeted visual property edits shipped: designer/property-grid edits can now resolve selected objects by case-insensitive stable `UNIQUEID`, disambiguating duplicate names while preserving record-index, object-name, and undo behavior.
 - E2/#731 object-name-targeted direct field edits shipped: selected-object property updates now have focused coverage for direct DBF fields such as HPOS, preserving unrelated objects and undoing via the resolved record index.
 - E2/#730 object-name-targeted visual property edits shipped: visual asset property updates can now resolve selected objects by case-insensitive OBJNAME or fallback NAME, reject ambiguous/missing names, and preserve existing record-index and undo behavior.
 - E1/#22 shared design model and memo-heavy round-trip preservation closure audit shipped: all prompt-sized shared design-model children #658-#729 are closed, and full validation passes with all 35 configured tests.

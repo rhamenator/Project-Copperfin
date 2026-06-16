@@ -37,6 +37,15 @@ double parse_number(const std::string& text) {
     }
 }
 
+const copperfin::vfp::DbfRecordValue* find_record_field(
+    const copperfin::vfp::DbfRecord& record,
+    const std::string& field_name) {
+    const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const auto& candidate) {
+        return candidate.field_name == field_name;
+    });
+    return value == record.values.end() ? nullptr : &(*value);
+}
+
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
     bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
@@ -128,6 +137,7 @@ void write_synthetic_direct_and_memo_asset(
 struct SyntheticNamedVisualObject {
     std::string objname;
     std::string name;
+    std::string unique_id;
     std::string properties;
 };
 
@@ -135,8 +145,8 @@ void write_synthetic_named_object_asset(
     const std::filesystem::path& table_path,
     const std::filesystem::path& memo_path,
     const std::vector<SyntheticNamedVisualObject>& objects) {
-    constexpr std::size_t header_length = 129U;
-    constexpr std::size_t record_length = 33U;
+    constexpr std::size_t header_length = 161U;
+    constexpr std::size_t record_length = 37U;
     std::vector<std::uint8_t> table_bytes(header_length + (record_length * objects.size()) + 1U, 0U);
     table_bytes[0] = 0x30U;
     table_bytes[1] = 126U;
@@ -150,11 +160,12 @@ void write_synthetic_named_object_asset(
 
     write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
     write_field_descriptor(table_bytes, 64U, "NAME", 'C', 5U, 24U);
-    write_field_descriptor(table_bytes, 96U, "PROPERTIES", 'M', 29U, 4U);
-    table_bytes[128] = 0x0DU;
+    write_field_descriptor(table_bytes, 96U, "UNIQUEID", 'M', 29U, 4U);
+    write_field_descriptor(table_bytes, 128U, "PROPERTIES", 'M', 33U, 4U);
+    table_bytes[160] = 0x0DU;
     table_bytes[header_length + (record_length * objects.size())] = 0x1AU;
 
-    std::vector<std::uint8_t> memo_bytes(512U * (objects.size() * 2U + 2U), 0U);
+    std::vector<std::uint8_t> memo_bytes(512U * (objects.size() * 3U + 2U), 0U);
     write_be_u16(memo_bytes, 6U, 512U);
     std::uint32_t next_block = 1U;
     auto write_memo = [&](const std::string& value) {
@@ -175,8 +186,11 @@ void write_synthetic_named_object_asset(
         }
         std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 5U), 24U, static_cast<std::uint8_t>(' '));
         write_ascii(table_bytes, record_offset + 5U, object.name);
+        if (!object.unique_id.empty()) {
+            write_le_u32(table_bytes, record_offset + 29U, write_memo(object.unique_id));
+        }
         if (!object.properties.empty()) {
-            write_le_u32(table_bytes, record_offset + 29U, write_memo(object.properties));
+            write_le_u32(table_bytes, record_offset + 33U, write_memo(object.properties));
         }
     }
     write_be_u32(memo_bytes, 0U, next_block);
@@ -303,6 +317,7 @@ void test_update_visual_object_property_rewrites_properties_memo() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = {},
+        .unique_id = {},
         .property_name = "Left",
         .property_value = "25"
     });
@@ -358,15 +373,16 @@ void test_update_visual_object_property_targets_selected_object_name() {
     const fs::path table_path = temp_dir / "named.scx";
     const fs::path memo_path = temp_dir / "named.sct";
     write_synthetic_named_object_asset(table_path, memo_path, {
-        {.objname = "cmdSave", .name = "saveButton", .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"},
-        {.objname = "", .name = "fallbackButton", .properties = "Caption = \"Fallback\"\r\nTop = 20\r\n"},
-        {.objname = "txtName", .name = "nameBox", .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"}
+        {.objname = "cmdSave", .name = "saveButton", .unique_id = {}, .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {.objname = "", .name = "fallbackButton", .unique_id = {}, .properties = "Caption = \"Fallback\"\r\nTop = 20\r\n"},
+        {.objname = "txtName", .name = "nameBox", .unique_id = {}, .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"}
     });
 
     auto update_result = copperfin::vfp::update_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = "CMDSAVE",
+        .unique_id = {},
         .property_name = "Caption",
         .property_value = "\"Persist\""
     });
@@ -376,6 +392,7 @@ void test_update_visual_object_property_targets_selected_object_name() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = "fallbackbutton",
+        .unique_id = {},
         .property_name = "Top",
         .property_value = "44"
     });
@@ -416,6 +433,7 @@ void test_update_visual_object_property_targets_selected_object_name() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = "doesNotExist",
+        .unique_id = {},
         .property_name = "Caption",
         .property_value = "\"Missing\""
     });
@@ -426,19 +444,132 @@ void test_update_visual_object_property_targets_selected_object_name() {
     const fs::path duplicate_table_path = temp_dir / "duplicate.scx";
     const fs::path duplicate_memo_path = temp_dir / "duplicate.sct";
     write_synthetic_named_object_asset(duplicate_table_path, duplicate_memo_path, {
-        {.objname = "dupButton", .name = "firstDup", .properties = "Caption = \"First\"\r\n"},
-        {.objname = "DUPBUTTON", .name = "secondDup", .properties = "Caption = \"Second\"\r\n"}
+        {.objname = "dupButton", .name = "firstDup", .unique_id = {}, .properties = "Caption = \"First\"\r\n"},
+        {.objname = "DUPBUTTON", .name = "secondDup", .unique_id = {}, .properties = "Caption = \"Second\"\r\n"}
     });
     const auto duplicate_result = copperfin::vfp::update_visual_object_property({
         .path = duplicate_table_path.string(),
         .record_index = 0U,
         .object_name = "dupbutton",
+        .unique_id = {},
         .property_name = "Caption",
         .property_value = "\"Ambiguous\""
     });
     expect(!duplicate_result.ok, "#730: ambiguous object names should fail instead of editing an arbitrary row");
     expect(duplicate_result.error.find("ambiguous") != std::string::npos,
         "#730: ambiguous object-name failures should explain the ambiguity");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_property_targets_selected_unique_id() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_uniqueid_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "uniqueid.scx";
+    const fs::path memo_path = temp_dir / "uniqueid.sct";
+    write_synthetic_named_object_asset(table_path, memo_path, {
+        {
+            .objname = "dupButton",
+            .name = "firstDup",
+            .unique_id = "first-guid",
+            .properties = "Caption = \"First\"\r\nLeft = 10\r\n"
+        },
+        {
+            .objname = "DUPBUTTON",
+            .name = "secondDup",
+            .unique_id = "target-guid",
+            .properties = "Caption = \"Second\"\r\nLeft = 20\r\n"
+        },
+        {
+            .objname = "txtName",
+            .name = "nameBox",
+            .unique_id = "other-guid",
+            .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"
+        }
+    });
+
+    const auto update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "dupbutton",
+        .unique_id = " TARGET-GUID ",
+        .property_name = "Caption",
+        .property_value = "\"ById\""
+    });
+    expect(update_result.ok, "#732: UNIQUEID-targeted edits should disambiguate duplicate object names");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+    expect(parse_result.ok, "#732: UNIQUEID-targeted fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 3U) {
+        const auto* first_properties = find_record_field(parse_result.table.records[0], "PROPERTIES");
+        const auto* second_properties = find_record_field(parse_result.table.records[1], "PROPERTIES");
+        const auto* third_properties = find_record_field(parse_result.table.records[2], "PROPERTIES");
+        expect(first_properties != nullptr &&
+                first_properties->display_value.find("Caption = \"First\"") != std::string::npos,
+            "#732: UNIQUEID-targeted edits should preserve duplicate-name non-target records");
+        expect(second_properties != nullptr &&
+                second_properties->display_value.find("Caption = \"ById\"") != std::string::npos,
+            "#732: UNIQUEID-targeted edits should update the resolved object record");
+        expect(third_properties != nullptr &&
+                third_properties->display_value.find("Caption = \"Name\"") != std::string::npos,
+            "#732: UNIQUEID-targeted edits should preserve unrelated object records");
+    }
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#732: UNIQUEID-targeted undo should use the resolved record index");
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+    expect(parse_result.ok, "#732: UNIQUEID-targeted fixture should remain readable after undo");
+    if (parse_result.ok && parse_result.table.records.size() == 3U) {
+        const auto* second_properties = find_record_field(parse_result.table.records[1], "PROPERTIES");
+        expect(second_properties != nullptr &&
+                second_properties->display_value.find("Caption = \"Second\"") != std::string::npos,
+            "#732: UNIQUEID-targeted undo should restore the resolved object's original value");
+    }
+
+    const auto missing_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid",
+        .property_name = "Caption",
+        .property_value = "\"Missing\""
+    });
+    expect(!missing_result.ok, "#732: missing UNIQUEID selectors should fail instead of editing by record index");
+    expect(missing_result.error.find("unique id") != std::string::npos,
+        "#732: missing UNIQUEID failures should name the selector type");
+
+    const fs::path duplicate_table_path = temp_dir / "duplicate_uniqueid.scx";
+    const fs::path duplicate_memo_path = temp_dir / "duplicate_uniqueid.sct";
+    write_synthetic_named_object_asset(duplicate_table_path, duplicate_memo_path, {
+        {
+            .objname = "first",
+            .name = "first",
+            .unique_id = "duplicate-guid",
+            .properties = "Caption = \"First\"\r\n"
+        },
+        {
+            .objname = "second",
+            .name = "second",
+            .unique_id = "DUPLICATE-GUID",
+            .properties = "Caption = \"Second\"\r\n"
+        }
+    });
+    const auto duplicate_result = copperfin::vfp::update_visual_object_property({
+        .path = duplicate_table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "duplicate-guid",
+        .property_name = "Caption",
+        .property_value = "\"Ambiguous\""
+    });
+    expect(!duplicate_result.ok, "#732: ambiguous UNIQUEID selectors should fail instead of editing an arbitrary row");
+    expect(duplicate_result.error.find("ambiguous") != std::string::npos,
+        "#732: ambiguous UNIQUEID failures should explain the ambiguity");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -459,6 +590,7 @@ void test_update_visual_object_property_targets_selected_object_name_direct_fiel
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = "TXTNAME",
+        .unique_id = {},
         .property_name = "HPOS",
         .property_value = "333.000"
     });
@@ -561,6 +693,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = {},
+        .unique_id = {},
         .property_name = "HPOS",
         .property_value = "9583.333"
     });
@@ -570,6 +703,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = {},
+        .unique_id = {},
         .property_name = "GRID",
         .property_value = "true"
     });
@@ -579,6 +713,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = {},
+        .unique_id = {},
         .property_name = "EXPR",
         .property_value = "\"newexpr\""
     });
@@ -710,6 +845,7 @@ void test_update_visual_object_property_round_trips_added_vcx_property() {
         .path = table_path.string(),
         .record_index = 0U,
         .object_name = {},
+        .unique_id = {},
         .property_name = "Caption",
         .property_value = "\"Customer Class\""
     });
@@ -786,6 +922,7 @@ void test_update_visual_object_property_round_trips_label_and_menu_assets() {
             .path = table_path.string(),
             .record_index = 0U,
             .object_name = {},
+            .unique_id = {},
             .property_name = "TITLE",
             .property_value = asset_label + "Updated"
         });
@@ -795,6 +932,7 @@ void test_update_visual_object_property_round_trips_label_and_menu_assets() {
             .path = table_path.string(),
             .record_index = 0U,
             .object_name = {},
+            .unique_id = {},
             .property_name = "EXPR",
             .property_value = "\"" + asset_label + "MemoUpdated\""
         });
@@ -873,6 +1011,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
             .path = table_path.string(),
             .record_index = 0U,
             .object_name = {},
+            .unique_id = {},
             .property_name = "TITLE",
             .property_value = asset_label + "Updated"
         });
@@ -882,6 +1021,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
             .path = table_path.string(),
             .record_index = 0U,
             .object_name = {},
+            .unique_id = {},
             .property_name = "DETAILS",
             .property_value = asset_label + "MemoUpdated"
         });
@@ -939,6 +1079,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_property_targets_selected_object_name();
+    test_update_visual_object_property_targets_selected_unique_id();
     test_update_visual_object_property_targets_selected_object_name_direct_field();
     test_update_visual_object_property_rewrites_direct_fields();
     test_update_visual_object_property_round_trips_added_vcx_property();
