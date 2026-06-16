@@ -4764,6 +4764,60 @@ VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& reque
     });
 }
 
+VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for tab-order assignment."};
+    }
+    if (request.starting_tab_index < 0) {
+        return {.ok = false, .error = "Starting tab index must not be negative."};
+    }
+
+    std::vector<std::size_t> resolved_record_indexes;
+    resolved_record_indexes.reserve(request.objects.size());
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (std::size_t index = 0U; index < request.objects.size(); ++index) {
+        const auto property_result = query_visual_object_property({
+            .path = request.path,
+            .record_index = request.objects[index].record_index,
+            .object_name = request.objects[index].object_name,
+            .unique_id = request.objects[index].unique_id,
+            .property_name = "TABINDEX"
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (!property_result.exists) {
+            return {.ok = false, .error = "The selected object does not expose a TABINDEX field."};
+        }
+        if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
+            resolved_record_indexes.end()) {
+            return {.ok = false, .error = "The same visual object was selected more than once for tab-order assignment."};
+        }
+        resolved_record_indexes.push_back(property_result.record_index);
+
+        edits.push_back({
+            .record_index = request.objects[index].record_index,
+            .object_name = request.objects[index].object_name,
+            .unique_id = request.objects[index].unique_id,
+            .properties = {
+                {
+                    .property_name = "TABINDEX",
+                    .property_value = std::to_string(request.starting_tab_index + static_cast<int>(index))
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

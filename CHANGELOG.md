@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#793 selected visual object tab-order assignment shipped: designer tab-order commands can assign sequential `TABINDEX` values to selected objects in caller-provided order while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#792 selected visual object nudging shipped: designer nudge commands can move selected objects by horizontal `HPOS`, vertical `VPOS`, or both-axis deltas while preserving unrelated objects and routing coordinate writes through rollback-safe batch edits.
 - E2/#791 selected visual object snap-to-grid shipped: designer snap commands can round selected objects to horizontal `HPOS`, vertical `VPOS`, or both-axis grid increments while preserving unrelated objects and routing coordinate writes through rollback-safe batch edits.
 - E2/#790 selected visual object distribution shipped: designer distribute commands can space selected objects evenly by horizontal `HPOS` or vertical `VPOS`, preserving endpoints and routing interior coordinate writes through rollback-safe batch edits.

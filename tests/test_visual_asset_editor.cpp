@@ -8629,6 +8629,153 @@ void test_nudge_visual_objects_by_delta() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_tab_order_assigns_sequential_indexes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_tab_order_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "tab_order.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "TABINDEX", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", "10"},
+        {"cmdTwo", "twoButton", "two-guid", "20"},
+        {"cmdThree", "threeButton", "three-guid", "30"},
+        {"cmdOther", "otherButton", "other-guid", "99"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#793: tab-order fixture should be writable");
+
+    const auto tab_index = [&](const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "TABINDEX"
+        });
+        expect(result.ok && result.exists, "#793: tab-order fixture property should be readable");
+        return result.value;
+    };
+    const auto tab_state = [&]() {
+        return tab_index("one-guid") + "," +
+            tab_index("two-guid") + "," +
+            tab_index("three-guid") + "," +
+            tab_index("other-guid");
+    };
+
+    auto tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 2U, .object_name = {}, .unique_id = {}}
+        },
+        .starting_tab_index = 5
+    });
+    expect(tab_result.ok, "#793: tab order should support mixed selectors in caller order");
+    expect(tab_index("two-guid") == "5" &&
+            tab_index("one-guid") == "6" &&
+            tab_index("three-guid") == "7" &&
+            tab_index("other-guid") == "99",
+        "#793: tab order should assign sequential indexes and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#793: first tab-order write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#793: second tab-order write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#793: third tab-order write should remain undo-backed");
+    expect(tab_state() == "10,20,30,99", "#793: tab-order undo should restore original indexes");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .starting_tab_index = 0
+    });
+    expect(tab_result.ok, "#793: tab order should support zero-based assignment");
+    expect(tab_index("three-guid") == "0" &&
+            tab_index("one-guid") == "1" &&
+            tab_index("two-guid") == "20",
+        "#793: zero-based tab order should use caller-provided ordering");
+
+    const std::string committed_state = tab_state();
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {},
+        .starting_tab_index = 1
+    });
+    expect(!tab_result.ok, "#793: tab order should reject empty selections");
+    expect(tab_state() == committed_state, "#793: empty-selection failures should not mutate tab indexes");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .starting_tab_index = -1
+    });
+    expect(!tab_result.ok, "#793: tab order should reject negative starting indexes");
+    expect(tab_state() == committed_state, "#793: negative-start failures should not mutate tab indexes");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .starting_tab_index = 1
+    });
+    expect(!tab_result.ok, "#793: tab order should reject missing selected objects");
+    expect(tab_state() == committed_state, "#793: missing-object failures should not mutate tab indexes");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .starting_tab_index = 1
+    });
+    expect(!tab_result.ok, "#793: tab order should reject duplicate selected objects");
+    expect(tab_state() == committed_state, "#793: duplicate-selection failures should not mutate tab indexes");
+
+    const fs::path incomplete_path = temp_dir / "missing_tabindex.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#793: missing-TABINDEX fixture should be writable");
+
+    tab_result = copperfin::vfp::set_visual_object_tab_order({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .starting_tab_index = 1
+    });
+    expect(!tab_result.ok, "#793: tab order should reject missing TABINDEX fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -11213,6 +11360,7 @@ int main() {
     test_distribute_visual_objects_evenly_by_axis();
     test_snap_visual_objects_to_grid_by_axis();
     test_nudge_visual_objects_by_delta();
+    test_set_visual_object_tab_order_assigns_sequential_indexes();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#792`, adding selected visual object nudging so designer commands can move selected objects by horizontal `HPOS`, vertical `VPOS`, or both-axis deltas while preserving unrelated objects and routing writes through rollback-safe batch property edits.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#793`, adding selected visual object tab-order assignment so designer commands can assign sequential `TABINDEX` values in caller-provided order while rejecting duplicate selections before rollback-safe batch writes.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
