@@ -7557,6 +7557,258 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_align_visual_objects_to_anchor_geometry() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_alignment_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "alignment.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "WIDTH", .type = 'C', .length = 10U},
+        {.name = "HEIGHT", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdAnchor", "anchorButton", "anchor-guid", "10", "20", "100", "50"},
+        {"txtName", "nameBox", "name-guid", "1", "2", "30", "10"},
+        {"lblStatus", "statusLabel", "status-guid", "5", "6", "20", "25"},
+        {"badGeometry", "badGeometry", "bad-guid", "bad", "8", "20", "10"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#786: alignment fixture should be writable");
+
+    const auto property_value = [&](const std::string& unique_id, const std::string& property_name) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, "#786: alignment fixture property should be readable");
+        return result.value;
+    };
+
+    const auto geometry_state = [&]() {
+        return property_value("name-guid", "HPOS") + "," +
+            property_value("name-guid", "VPOS") + "," +
+            property_value("status-guid", "HPOS") + "," +
+            property_value("status-guid", "VPOS");
+    };
+
+    auto align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = "txtName", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "left"
+    });
+    expect(align_result.ok, "#786: align should support left alignment with mixed selectors");
+    expect(property_value("name-guid", "HPOS") == "10" &&
+            property_value("status-guid", "HPOS") == "10" &&
+            property_value("name-guid", "VPOS") == "2",
+        "#786: left alignment should update HPOS and preserve unrelated VPOS fields");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#786: first successful alignment write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#786: second successful alignment write should remain undo-backed");
+    expect(geometry_state() == "1,2,5,6",
+        "#786: alignment undo should restore original geometry");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = "cmdAnchor",
+        .anchor_unique_id = {},
+        .objects = {
+            {.record_index = 0U, .object_name = "txtName", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "right"
+    });
+    expect(align_result.ok, "#786: align should support right alignment by object-name anchor");
+    expect(property_value("name-guid", "HPOS") == "80" &&
+            property_value("status-guid", "HPOS") == "90",
+        "#786: right alignment should account for each selected object width");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 1U, .object_name = {}, .unique_id = {}},
+            {.record_index = 2U, .object_name = {}, .unique_id = {}}
+        },
+        .mode = "top"
+    });
+    expect(align_result.ok, "#786: align should support top alignment by record-index targets");
+    expect(property_value("name-guid", "VPOS") == "20" &&
+            property_value("status-guid", "VPOS") == "20",
+        "#786: top alignment should copy anchor VPOS");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "bottom"
+    });
+    expect(align_result.ok, "#786: align should support bottom alignment");
+    expect(property_value("name-guid", "VPOS") == "60" &&
+            property_value("status-guid", "VPOS") == "45",
+        "#786: bottom alignment should account for each selected object height");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "horizontal-center"
+    });
+    expect(align_result.ok, "#786: align should support horizontal-center alignment");
+    expect(property_value("name-guid", "HPOS") == "45" &&
+            property_value("status-guid", "HPOS") == "50",
+        "#786: horizontal-center alignment should center each selected object against anchor width");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "status-guid"}
+        },
+        .mode = "vertical-center"
+    });
+    expect(align_result.ok, "#786: align should support vertical-center alignment");
+    expect(property_value("name-guid", "VPOS") == "40" &&
+            property_value("status-guid", "VPOS") == "32.5",
+        "#786: vertical-center alignment should center each selected object against anchor height");
+
+    const std::string committed_state = geometry_state();
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .mode = "left"
+    });
+    expect(!align_result.ok, "#786: align should reject missing selected objects");
+    expect(geometry_state() == committed_state,
+        "#786: missing-target alignment failures should leave prior geometry unchanged");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "missing-anchor",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "left"
+    });
+    expect(!align_result.ok, "#786: align should reject missing anchors");
+    expect(geometry_state() == committed_state,
+        "#786: missing-anchor failures should leave prior geometry unchanged");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "bad-guid"}
+        },
+        .mode = "left"
+    });
+    expect(!align_result.ok, "#786: align should reject non-numeric geometry");
+    expect(geometry_state() == committed_state,
+        "#786: non-numeric geometry failures should leave prior geometry unchanged");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "diagonal"
+    });
+    expect(!align_result.ok, "#786: align should reject unsupported alignment modes");
+    expect(geometry_state() == committed_state,
+        "#786: unsupported-mode failures should leave prior geometry unchanged");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = table_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {},
+        .mode = "left"
+    });
+    expect(!align_result.ok, "#786: align should reject empty target selections");
+    expect(geometry_state() == committed_state,
+        "#786: empty-target failures should leave prior geometry unchanged");
+
+    const fs::path incomplete_path = temp_dir / "missing_geometry.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdAnchor", "anchor-guid", "10", "20"},
+        {"txtName", "name-guid", "1", "2"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#786: missing-geometry fixture should be writable");
+
+    align_result = copperfin::vfp::align_visual_objects({
+        .path = incomplete_path.string(),
+        .anchor_record_index = 0U,
+        .anchor_object_name = {},
+        .anchor_unique_id = "anchor-guid",
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
+        },
+        .mode = "left"
+    });
+    expect(!align_result.ok, "#786: align should reject missing geometry fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -9844,6 +10096,7 @@ int main() {
     test_reparent_visual_object_updates_container_parent();
     test_reparent_visual_objects_rolls_back_failed_batches();
     test_update_visual_object_batch_rolls_back_failed_alignment();
+    test_align_visual_objects_to_anchor_geometry();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
     test_rename_visual_objects_rolls_back_failed_batches();

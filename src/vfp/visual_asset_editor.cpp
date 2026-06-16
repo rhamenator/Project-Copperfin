@@ -5,7 +5,10 @@
 
 #include <array>
 #include <algorithm>
+#include <cerrno>
 #include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -143,6 +146,13 @@ struct RawFieldDescriptor {
     char type = '\0';
     std::uint32_t offset = 0;
     std::uint8_t length = 0;
+};
+
+struct VisualObjectGeometry {
+    double hpos = 0.0;
+    double vpos = 0.0;
+    double width = 0.0;
+    double height = 0.0;
 };
 
 struct VisualAssetUndoEntry {
@@ -733,6 +743,82 @@ std::string visual_object_record_name(const DbfRecord& record) {
     }
     const auto* name = find_record_value(record, "NAME");
     return name == nullptr ? std::string{} : trim_both(name->display_value);
+}
+
+std::optional<double> parse_visual_geometry_number(const std::string& text) {
+    const std::string trimmed = trim_both(text);
+    if (trimmed.empty()) {
+        return std::nullopt;
+    }
+
+    errno = 0;
+    char* parse_end = nullptr;
+    const double value = std::strtod(trimmed.c_str(), &parse_end);
+    if (parse_end == trimmed.c_str() || parse_end == nullptr || *parse_end != '\0' || errno == ERANGE) {
+        return std::nullopt;
+    }
+    return value;
+}
+
+std::string format_visual_geometry_number(double value) {
+    const double rounded = std::round(value);
+    std::ostringstream stream;
+    if (std::abs(value - rounded) < 0.0005) {
+        stream << static_cast<long long>(rounded);
+        return stream.str();
+    }
+
+    stream << std::fixed << std::setprecision(3) << value;
+    std::string text = stream.str();
+    while (!text.empty() && text.back() == '0') {
+        text.pop_back();
+    }
+    if (!text.empty() && text.back() == '.') {
+        text.pop_back();
+    }
+    return text;
+}
+
+VisualAssetEditResult read_visual_object_geometry(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& object_name,
+    const std::string& unique_id,
+    VisualObjectGeometry& geometry) {
+    const auto read_property = [&](const std::string& property_name, double& output) -> VisualAssetEditResult {
+        const auto property_result = query_visual_object_property({
+            .path = path,
+            .record_index = record_index,
+            .object_name = object_name,
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (!property_result.exists) {
+            return {.ok = false, .error = "The selected object does not expose required geometry fields."};
+        }
+        const auto parsed_value = parse_visual_geometry_number(property_result.value);
+        if (!parsed_value.has_value()) {
+            return {.ok = false, .error = "The selected object geometry is not numeric."};
+        }
+        output = *parsed_value;
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& result : {
+             read_property("HPOS", geometry.hpos),
+             read_property("VPOS", geometry.vpos),
+             read_property("WIDTH", geometry.width),
+             read_property("HEIGHT", geometry.height)
+         }) {
+        if (!result.ok) {
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
 }
 
 VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
@@ -4082,6 +4168,87 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
     }
 
     return {.ok = true, .error = {}, .record_indexes = created_record_indexes};
+}
+
+VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object alignment targets were provided."};
+    }
+
+    const std::string mode = normalize_visual_property_name(request.mode);
+    if (mode != "left" &&
+        mode != "right" &&
+        mode != "top" &&
+        mode != "bottom" &&
+        mode != "horizontal-center" &&
+        mode != "vertical-center") {
+        return {.ok = false, .error = "Unsupported visual object alignment mode."};
+    }
+
+    VisualObjectGeometry anchor_geometry;
+    const auto anchor_result = read_visual_object_geometry(
+        request.path,
+        request.anchor_record_index,
+        request.anchor_object_name,
+        request.anchor_unique_id,
+        anchor_geometry);
+    if (!anchor_result.ok) {
+        return anchor_result;
+    }
+
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        VisualObjectGeometry object_geometry;
+        const auto object_result = read_visual_object_geometry(
+            request.path,
+            object.record_index,
+            object.object_name,
+            object.unique_id,
+            object_geometry);
+        if (!object_result.ok) {
+            return object_result;
+        }
+
+        std::string property_name;
+        double aligned_value = 0.0;
+        if (mode == "left") {
+            property_name = "HPOS";
+            aligned_value = anchor_geometry.hpos;
+        } else if (mode == "right") {
+            property_name = "HPOS";
+            aligned_value = anchor_geometry.hpos + anchor_geometry.width - object_geometry.width;
+        } else if (mode == "top") {
+            property_name = "VPOS";
+            aligned_value = anchor_geometry.vpos;
+        } else if (mode == "bottom") {
+            property_name = "VPOS";
+            aligned_value = anchor_geometry.vpos + anchor_geometry.height - object_geometry.height;
+        } else if (mode == "horizontal-center") {
+            property_name = "HPOS";
+            aligned_value = anchor_geometry.hpos + ((anchor_geometry.width - object_geometry.width) / 2.0);
+        } else {
+            property_name = "VPOS";
+            aligned_value = anchor_geometry.vpos + ((anchor_geometry.height - object_geometry.height) / 2.0);
+        }
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = {
+                {.property_name = property_name, .property_value = format_visual_geometry_number(aligned_value)}
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
 }
 
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {

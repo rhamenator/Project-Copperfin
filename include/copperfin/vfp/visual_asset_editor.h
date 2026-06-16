@@ -574,6 +574,21 @@ struct VisualObjectCreateBatchResult {
     std::vector<std::size_t> record_indexes;
 };
 
+struct VisualObjectAlignmentTarget {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct VisualObjectAlignmentRequest {
+    std::string path;
+    std::size_t anchor_record_index = 0;
+    std::string anchor_object_name;
+    std::string anchor_unique_id;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string mode;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -689,6 +704,7 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request);
+VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
