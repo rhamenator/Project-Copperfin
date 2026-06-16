@@ -1512,8 +1512,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared stub-emission wrapper surface.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmissionWrapper copperfin_runtime_bridge_build_stub_emission_wrapper(") != std::string::npos,
                "library-output wrapper source should declare a shared stub-emission wrapper helper.");
-        expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return_shared(") != std::string::npos,
-               "library-output wrapper source should declare a shared stub-emission emitter helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return_shared(") == std::string::npos,
+               "library-output wrapper source should apply stub-emission output at generated call-sites instead of a shared emitter helper.");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
                "library-output wrapper source should declare a shared placeholder-return-int execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value)};") != std::string::npos,
@@ -1522,8 +1522,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare the DLL native-int return adapter for shared output application.");
         expect(wrapper_source.find("const auto stub_emission_wrapper =\n        copperfin_runtime_bridge_build_stub_emission_wrapper(") != std::string::npos,
                "library-output wrapper source should build a shared stub-emission wrapper before building the descriptor plan.");
-        expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(") != std::string::npos,
-               "library-output wrapper source should route DLL stub emission through the shared emitter helper.");
+        expect(wrapper_source.find("return copperfin_runtime_bridge_apply_stub_emission_output(\n        stub_emission_return_surface,") != std::string::npos,
+               "library-output wrapper source should route DLL stub emission through the generated output-application call-site.");
         expect(wrapper_source.find("final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.native_return_surface") != std::string::npos,
                "library-output wrapper source should read the stub-emission return surface through the descriptor plan.");
         expect(wrapper_source.find("final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.return_adapter") != std::string::npos,
@@ -1835,11 +1835,11 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);") != std::string::npos,
                "library-output wrapper source should execute stub emission before shared stub-return emission.");
         expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
-               "library-output wrapper source should build the stub-emission return surface before shared stub-return emission.");
+               "library-output wrapper source should build the stub-emission return surface before direct output application.");
         expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
                "library-output wrapper source should propagate the typed native fallback integer value downstream");
-        expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);") != std::string::npos,
-               "library-output wrapper source should route the placeholder return through the plan-backed shared stub-emission emitter helper.");
+        expect(wrapper_source.find("return copperfin_runtime_bridge_apply_stub_emission_output(\n        stub_emission_return_surface,\n        placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.return_adapter);") != std::string::npos,
+               "library-output wrapper source should route the placeholder return through the generated stub-emission output-application call-site.");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "library-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{\"tcMode\", std::to_string(tcMode), \"int\"}") != std::string::npos,
@@ -2919,16 +2919,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared stub-emission wrapper surface.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmissionWrapper copperfin_runtime_bridge_build_stub_emission_wrapper(") != std::string::npos,
                "fll-output wrapper source should declare a shared stub-emission wrapper helper.");
-        expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return_shared(") != std::string::npos,
-               "fll-output wrapper source should declare a shared stub-emission emitter helper.");
+        expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return_shared(") == std::string::npos,
+               "fll-output wrapper source should apply stub-emission output at generated call-sites instead of a shared emitter helper.");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_execute_placeholder_return_int(") != std::string::npos,
                "fll-output wrapper source should declare a shared placeholder-return-int execution helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_execute_placeholder_return_int(placeholder_return_value)};") != std::string::npos,
                "fll-output wrapper source should route placeholder-return-int execution through the shared stub-emission helper.");
         expect(wrapper_source.find("const auto stub_emission_wrapper =\n        copperfin_runtime_bridge_build_stub_emission_wrapper(") != std::string::npos,
                "fll-output wrapper source should build a shared stub-emission wrapper before building the descriptor plan.");
-        expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(") != std::string::npos,
-               "fll-output wrapper source should route FLL stub emission through the shared emitter helper.");
+        expect(wrapper_source.find("return copperfin_runtime_bridge_apply_stub_emission_output(\n        stub_emission_return_surface,") != std::string::npos,
+               "fll-output wrapper source should route FLL stub emission through the generated output-application call-site.");
         expect(wrapper_source.find("final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.native_return_surface") != std::string::npos,
                "fll-output wrapper source should read the stub-emission return surface through the descriptor plan.");
         expect(wrapper_source.find("final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.return_adapter") != std::string::npos,
@@ -3236,11 +3236,11 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         expect(wrapper_source.find("const auto stub_emission =\n        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);") != std::string::npos,
                "fll-output wrapper source should execute stub emission before shared stub-return emission.");
         expect(wrapper_source.find("const auto stub_emission_return_surface =\n        copperfin_runtime_bridge_build_stub_emission_return_surface(") != std::string::npos,
-               "fll-output wrapper source should build the stub-emission return surface before shared stub-return emission.");
+               "fll-output wrapper source should build the stub-emission return surface before direct output application.");
         expect(wrapper_source.find("native_return_plan.fallback_int_value") != std::string::npos,
                "fll-output wrapper source should propagate the typed native fallback integer value downstream");
-        expect(wrapper_source.find("return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission_return_surface);") != std::string::npos,
-               "fll-output wrapper source should route the placeholder return through the plan-backed shared stub-emission emitter helper.");
+        expect(wrapper_source.find("return copperfin_runtime_bridge_apply_stub_emission_output(\n        stub_emission_return_surface,\n        placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.descriptor.stub_emission_wrapper.return_adapter);") != std::string::npos,
+               "fll-output wrapper source should route the placeholder return through the generated stub-emission output-application call-site.");
         expect(wrapper_source.find("\"--library-export\"") != std::string::npos,
                "fll-output wrapper source should encode the export name into the bridge invocation plan");
         expect(wrapper_source.find("{{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}}") != std::string::npos,
