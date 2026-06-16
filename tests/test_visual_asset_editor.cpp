@@ -8013,6 +8013,196 @@ void test_resize_visual_objects_to_anchor_geometry() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_distribute_visual_objects_evenly_by_axis() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_distribute_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "distribute.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdLeft", "leftButton", "left-guid", "0", "0"},
+        {"cmdMidA", "midAButton", "mida-guid", "70", "90"},
+        {"cmdMidB", "midBButton", "midb-guid", "10", "30"},
+        {"cmdRight", "rightButton", "right-guid", "100", "120"},
+        {"cmdBad", "badButton", "bad-guid", "bad", "10"},
+        {"cmdSameA", "sameAButton", "samea-guid", "5", "5"},
+        {"cmdSameB", "sameBButton", "sameb-guid", "5", "5"},
+        {"cmdSameC", "sameCButton", "samec-guid", "5", "5"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#790: distribute fixture should be writable");
+
+    const auto property_value = [&](const std::string& unique_id, const std::string& property_name) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, "#790: distribute fixture property should be readable");
+        return result.value;
+    };
+    const auto coordinate_state = [&]() {
+        return property_value("left-guid", "HPOS") + "," +
+            property_value("mida-guid", "HPOS") + "," +
+            property_value("midb-guid", "HPOS") + "," +
+            property_value("right-guid", "HPOS") + "," +
+            property_value("left-guid", "VPOS") + "," +
+            property_value("mida-guid", "VPOS") + "," +
+            property_value("midb-guid", "VPOS") + "," +
+            property_value("right-guid", "VPOS");
+    };
+
+    auto distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"},
+            {.record_index = 0U, .object_name = "cmdLeft", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "midb-guid"}
+        },
+        .mode = "horizontal"
+    });
+    expect(distribute_result.ok,
+        "#790: horizontal distribution should support mixed selectors and unsorted inputs");
+    expect(property_value("left-guid", "HPOS") == "0" &&
+            property_value("midb-guid", "HPOS") == "33.333" &&
+            property_value("mida-guid", "HPOS") == "66.667" &&
+            property_value("right-guid", "HPOS") == "100",
+        "#790: horizontal distribution should space interior HPOS values between endpoints");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#790: first distribution write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#790: second distribution write should remain undo-backed");
+    expect(property_value("mida-guid", "HPOS") == "70" &&
+            property_value("midb-guid", "HPOS") == "10",
+        "#790: distribution undo should restore original horizontal coordinates");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"},
+            {.record_index = 0U, .object_name = "cmdLeft", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "midb-guid"}
+        },
+        .mode = "vertical"
+    });
+    expect(distribute_result.ok, "#790: vertical distribution should support VPOS");
+    expect(property_value("left-guid", "VPOS") == "0" &&
+            property_value("midb-guid", "VPOS") == "40" &&
+            property_value("mida-guid", "VPOS") == "80" &&
+            property_value("right-guid", "VPOS") == "120",
+        "#790: vertical distribution should space interior VPOS values between endpoints");
+
+    const std::string committed_state = coordinate_state();
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "left-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"}
+        },
+        .mode = "horizontal"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject fewer than three selected objects");
+    expect(coordinate_state() == committed_state,
+        "#790: too-few-object failures should not mutate coordinates");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "left-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"}
+        },
+        .mode = "horizontal"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject missing selected objects");
+    expect(coordinate_state() == committed_state,
+        "#790: missing-object failures should not mutate coordinates");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "left-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "bad-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"}
+        },
+        .mode = "horizontal"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject non-numeric coordinates");
+    expect(coordinate_state() == committed_state,
+        "#790: non-numeric coordinate failures should not mutate coordinates");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "samea-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "sameb-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "samec-guid"}
+        },
+        .mode = "horizontal"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject duplicate endpoint coordinates");
+    expect(coordinate_state() == committed_state,
+        "#790: duplicate-endpoint failures should not mutate coordinates");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "left-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "midb-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "right-guid"}
+        },
+        .mode = "diagonal"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject unsupported modes");
+    expect(coordinate_state() == committed_state,
+        "#790: unsupported-mode failures should not mutate coordinates");
+
+    const fs::path incomplete_path = temp_dir / "missing_distribute_coordinate.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "HPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid", "0"},
+        {"cmdB", "b-guid", "50"},
+        {"cmdC", "c-guid", "100"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#790: missing-coordinate fixture should be writable");
+
+    distribute_result = copperfin::vfp::distribute_visual_objects({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "b-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "c-guid"}
+        },
+        .mode = "vertical"
+    });
+    expect(!distribute_result.ok, "#790: distribution should reject missing coordinate fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -10594,6 +10784,7 @@ int main() {
     test_update_visual_object_batch_rolls_back_failed_alignment();
     test_align_visual_objects_to_anchor_geometry();
     test_resize_visual_objects_to_anchor_geometry();
+    test_distribute_visual_objects_evenly_by_axis();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

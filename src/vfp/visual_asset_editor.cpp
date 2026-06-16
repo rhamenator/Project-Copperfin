@@ -821,6 +821,33 @@ VisualAssetEditResult read_visual_object_geometry(
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult read_visual_object_geometry_coordinate(
+    const std::string& path,
+    const VisualObjectAlignmentTarget& object,
+    const std::string& property_name,
+    double& coordinate) {
+    const auto property_result = query_visual_object_property({
+        .path = path,
+        .record_index = object.record_index,
+        .object_name = object.object_name,
+        .unique_id = object.unique_id,
+        .property_name = property_name
+    });
+    if (!property_result.ok) {
+        return {.ok = false, .error = property_result.error};
+    }
+    if (!property_result.exists) {
+        return {.ok = false, .error = "The selected object does not expose required distribution coordinates."};
+    }
+
+    const auto parsed_value = parse_visual_geometry_number(property_result.value);
+    if (!parsed_value.has_value()) {
+        return {.ok = false, .error = "The selected object distribution coordinate is not numeric."};
+    }
+    coordinate = *parsed_value;
+    return {.ok = true, .error = {}};
+}
+
 VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
     const auto* unique_id = find_record_value(record, "UNIQUEID");
     const auto* parent_name = find_record_value(record, "PARENT");
@@ -4512,6 +4539,85 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         .container_record_index = container_record_index,
         .child_count = children_result.children.size()
     };
+}
+
+VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.size() < 3U) {
+        return {.ok = false, .error = "At least three visual objects are required for distribution."};
+    }
+
+    const std::string mode = normalize_visual_property_name(request.mode);
+    std::string property_name;
+    if (mode == "horizontal") {
+        property_name = "HPOS";
+    } else if (mode == "vertical") {
+        property_name = "VPOS";
+    } else {
+        return {.ok = false, .error = "Unsupported visual object distribution mode."};
+    }
+
+    struct DistributionItem {
+        VisualObjectAlignmentTarget object;
+        double coordinate = 0.0;
+        std::size_t original_index = 0;
+    };
+    std::vector<DistributionItem> items;
+    items.reserve(request.objects.size());
+    for (std::size_t index = 0U; index < request.objects.size(); ++index) {
+        double coordinate = 0.0;
+        const auto coordinate_result = read_visual_object_geometry_coordinate(
+            request.path,
+            request.objects[index],
+            property_name,
+            coordinate);
+        if (!coordinate_result.ok) {
+            return coordinate_result;
+        }
+        items.push_back({
+            .object = request.objects[index],
+            .coordinate = coordinate,
+            .original_index = index
+        });
+    }
+
+    std::stable_sort(items.begin(), items.end(), [](const DistributionItem& left, const DistributionItem& right) {
+        if (left.coordinate == right.coordinate) {
+            return left.original_index < right.original_index;
+        }
+        return left.coordinate < right.coordinate;
+    });
+
+    const double first_coordinate = items.front().coordinate;
+    const double last_coordinate = items.back().coordinate;
+    if (std::abs(last_coordinate - first_coordinate) < 0.0005) {
+        return {.ok = false, .error = "Distribution endpoints must have distinct coordinates."};
+    }
+
+    const double step = (last_coordinate - first_coordinate) / static_cast<double>(items.size() - 1U);
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(items.size() - 2U);
+    for (std::size_t index = 1U; index + 1U < items.size(); ++index) {
+        const double distributed_coordinate = first_coordinate + (step * static_cast<double>(index));
+        edits.push_back({
+            .record_index = items[index].object.record_index,
+            .object_name = items[index].object.object_name,
+            .unique_id = items[index].object.unique_id,
+            .properties = {
+                {
+                    .property_name = property_name,
+                    .property_value = format_visual_geometry_number(distributed_coordinate)
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
 }
 
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {

@@ -624,6 +624,12 @@ struct VisualObjectUngroupResult {
     std::size_t child_count = 0;
 };
 
+struct VisualObjectDistributeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string mode;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -743,6 +749,7 @@ VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& r
 VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& request);
 VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request);
 VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request);
+VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
