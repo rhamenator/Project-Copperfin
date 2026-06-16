@@ -500,10 +500,30 @@ struct VisualObjectDuplicateRequest {
     std::string new_unique_id;
 };
 
+struct VisualObjectDuplicateBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string new_object_name;
+    std::string new_name;
+    std::string new_unique_id;
+};
+
+struct VisualObjectDuplicateBatchRequest {
+    std::string path;
+    std::vector<VisualObjectDuplicateBatchItem> objects;
+};
+
 struct VisualObjectDuplicateResult {
     bool ok = false;
     std::string error;
     std::size_t record_index = 0;
+};
+
+struct VisualObjectDuplicateBatchResult {
+    bool ok = false;
+    std::string error;
+    std::vector<std::size_t> record_indexes;
 };
 
 struct VisualObjectSubtreeDuplicateReplacement {
@@ -665,6 +685,7 @@ VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBat
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request);
 VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReorderBatchRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
+VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDuplicateBatchRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request);

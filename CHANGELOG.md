@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#785 batch selected visual object duplication shipped: designer copy/paste workflows can duplicate multiple selected rows in one rollback-safe operation, returning duplicate record indexes while preserving copied memo-backed properties, METHODS content, hierarchy/class metadata, and existing deleted flags.
 - E2/#784 batch toolbox visual object creation shipped: designer/toolbox workflows can append multiple visual object rows atomically, returning created record indexes while validating field names and identity collisions across existing live/deleted rows plus pending creates before any write.
 - E2/#783 batch selected visual object z-order reorders shipped: designer z-order workflows can reorder multiple selected visual objects in one atomic operation, supporting record-index, object-name, and `UNIQUEID` source selectors plus front/back/before/after placements while preserving deleted flags, memo-backed fields, and prior state on failed batches.
 - E2/#782 batch selected visual object identity renames shipped: designer naming workflows can update `OBJNAME`, `NAME`, and `UNIQUEID` across multiple selected objects in one rollback-safe operation, preserving live/deleted identity collision checks, prior undo history when later items fail, and successful batch undo support.

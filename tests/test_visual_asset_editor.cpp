@@ -6495,6 +6495,225 @@ void test_duplicate_visual_object_appends_identity_safe_copy() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_duplicate_visual_objects_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_batch_duplicate_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "batch_duplicate.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "frmMain",
+            "commandbutton",
+            "commandbutton",
+            "Caption = \"Save\"\r\nLeft = 12\r\n",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "frmMain",
+            "textbox",
+            "textbox",
+            "Caption = \"Name\"\r\n",
+            ""
+        },
+        {
+            "lblStatus",
+            "statusLabel",
+            "status-guid",
+            "frmMain",
+            "label",
+            "label",
+            "Caption = \"Status\"\r\nLeft = 36\r\n",
+            ""
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#785: batch duplicate fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#785: batch duplicate fixture should support deleted-row collision setup");
+
+    const auto object_count = [&]() {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#785: batch-duplicate fixture should remain listable");
+        return list_result.objects.size();
+    };
+
+    auto batch_result = copperfin::vfp::duplicate_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = "cmdSave",
+                .unique_id = {},
+                .new_object_name = "cmdSaveCopy",
+                .new_name = "saveButtonCopy",
+                .new_unique_id = "save-copy-guid"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .new_object_name = "lblStatusCopy",
+                .new_name = "statusLabelCopy",
+                .new_unique_id = "status-copy-guid"
+            }
+        }
+    });
+    expect(batch_result.ok && batch_result.record_indexes.size() == 2U &&
+            batch_result.record_indexes[0] == 3U && batch_result.record_indexes[1] == 4U,
+        "#785: batch duplicate should append each copy and return duplicate record indexes");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 5U,
+        "#785: batch duplicate should append all requested copies");
+    if (list_result.ok && list_result.objects.size() == 5U) {
+        expect(list_result.objects[1].deleted && list_result.objects[1].unique_id == "name-guid",
+            "#785: batch duplicate should preserve existing deleted flags");
+        expect(!list_result.objects[3].deleted &&
+                list_result.objects[3].object_name == "cmdSaveCopy" &&
+                list_result.objects[3].unique_id == "save-copy-guid" &&
+                list_result.objects[3].parent_name == "frmMain" &&
+                list_result.objects[3].class_name == "commandbutton" &&
+                list_result.objects[3].caption == "\"Save\"",
+            "#785: first batch duplicate should expose replacement identity and copied metadata");
+        expect(!list_result.objects[4].deleted &&
+                list_result.objects[4].object_name == "lblStatusCopy" &&
+                list_result.objects[4].unique_id == "status-copy-guid" &&
+                list_result.objects[4].caption == "\"Status\"",
+            "#785: second batch duplicate should expose replacement identity and copied metadata");
+    }
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-copy-guid",
+        .property_name = "Left"
+    });
+    expect(property_result.ok && property_result.exists && property_result.value == "12",
+        "#785: batch duplicate should preserve memo-backed properties");
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-copy-guid"
+    });
+    expect(method_result.ok && find_method_snapshot(method_result.methods, "Click") != nullptr,
+        "#785: batch duplicate should preserve METHODS memo content");
+
+    const auto committed_count = object_count();
+    batch_result = copperfin::vfp::duplicate_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .new_object_name = "cmdTemp",
+                .new_name = "tempButton",
+                .new_unique_id = "temp-guid"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .new_object_name = "lblTemp",
+                .new_name = "tempLabel",
+                .new_unique_id = "name-guid"
+            }
+        }
+    });
+    expect(!batch_result.ok && batch_result.record_indexes.empty(),
+        "#785: batch duplicate should reject identity collisions with deleted rows");
+    expect(object_count() == committed_count,
+        "#785: deleted-row collision failures should roll back earlier duplicate rows");
+
+    batch_result = copperfin::vfp::duplicate_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .new_object_name = "cmdTemp",
+                .new_name = "tempButton",
+                .new_unique_id = "temp-guid"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .new_object_name = "lblTemp",
+                .new_name = "tempLabel",
+                .new_unique_id = "temp-guid"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#785: batch duplicate should reject within-batch identity collisions");
+    expect(object_count() == committed_count,
+        "#785: within-batch collision failures should roll back earlier duplicate rows");
+
+    batch_result = copperfin::vfp::duplicate_visual_objects({
+        .path = table_path.string(),
+        .objects = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .new_object_name = "cmdTemp",
+                .new_name = "tempButton",
+                .new_unique_id = "temp-guid"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "missing-guid",
+                .new_object_name = "missingCopy",
+                .new_name = "missingCopy",
+                .new_unique_id = "missing-copy-guid"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#785: batch duplicate should reject missing source selectors");
+    expect(object_count() == committed_count,
+        "#785: missing-source failures should roll back earlier duplicate rows");
+
+    batch_result = copperfin::vfp::duplicate_visual_objects({
+        .path = table_path.string(),
+        .objects = {}
+    });
+    expect(!batch_result.ok, "#785: batch duplicate should reject empty batch requests");
+    expect(object_count() == committed_count,
+        "#785: empty-batch failures should not append rows");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_create_visual_object_appends_toolbox_field_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -9619,6 +9838,7 @@ int main() {
     test_reorder_visual_object_methods_within_selected_object();
     test_reorder_visual_object_methods_rolls_back_failed_batches();
     test_duplicate_visual_object_appends_identity_safe_copy();
+    test_duplicate_visual_objects_rolls_back_failed_batches();
     test_create_visual_object_appends_toolbox_field_values();
     test_create_visual_objects_rolls_back_failed_batches();
     test_reparent_visual_object_updates_container_parent();

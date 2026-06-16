@@ -3643,6 +3643,52 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     return {.ok = true, .error = {}, .record_index = duplicate_record_index};
 }
 
+VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDuplicateBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .record_indexes = {}};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual object duplicates were provided.", .record_indexes = {}};
+    }
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
+    if (original_table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table.", .record_indexes = {}};
+    }
+    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
+        ? std::vector<std::uint8_t>{}
+        : read_binary_file(memo_path);
+
+    const auto restore_original_asset = [&]() {
+        write_binary_file(request.path, original_table_bytes);
+        if (!memo_path.empty() && !original_memo_bytes.empty()) {
+            write_binary_file(memo_path, original_memo_bytes);
+        }
+    };
+
+    std::vector<std::size_t> duplicated_record_indexes;
+    duplicated_record_indexes.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        const auto duplicate_result = duplicate_visual_object({
+            .path = request.path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .new_object_name = object.new_object_name,
+            .new_name = object.new_name,
+            .new_unique_id = object.new_unique_id
+        });
+        if (!duplicate_result.ok) {
+            restore_original_asset();
+            return {.ok = false, .error = duplicate_result.error, .record_indexes = {}};
+        }
+        duplicated_record_indexes.push_back(duplicate_result.record_index);
+    }
+
+    return {.ok = true, .error = {}, .record_indexes = duplicated_record_indexes};
+}
+
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided.", .root_record_index = 0U, .copied_count = 0U};
