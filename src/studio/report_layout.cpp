@@ -322,6 +322,26 @@ std::size_t find_section_index(
     return sections.size();
 }
 
+StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
+    const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
+    const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
+    return {
+        .id = make_section_id(record.record_index, objcode),
+        .title = band_title(objcode),
+        .title_field_index = objcode_field_index,
+        .band_kind = band_kind_name(objcode),
+        .band_kind_field_index = objcode_field_index,
+        .record_index = record.record_index,
+        .deleted = record.deleted,
+        .objcode_code = objcode,
+        .objcode_field_index = objcode_field_index,
+        .top = parse_scaled_int_or_default(record, "VPOS"),
+        .top_field_index = field_index_or_missing(record, "VPOS"),
+        .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
+        .height_field_index = field_index_or_missing(record, "HEIGHT")
+    };
+}
+
 }  // namespace
 
 StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& document) {
@@ -336,6 +356,9 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
+            if (is_band_record(record)) {
+                snapshot.deleted_sections.push_back(build_report_section(record));
+            }
             const int objtype = parse_scaled_int_or_default(record, "OBJTYPE");
             if (is_layout_object_type(objtype)) {
                 snapshot.deleted_objects.push_back(build_layout_object(record));
@@ -349,22 +372,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         }
 
         if (is_band_record(record)) {
-            const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
-            const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
-            snapshot.sections.push_back({
-                .id = make_section_id(record.record_index, objcode),
-                .title = band_title(objcode),
-                .title_field_index = objcode_field_index,
-                .band_kind = band_kind_name(objcode),
-                .band_kind_field_index = objcode_field_index,
-                .record_index = record.record_index,
-                .objcode_code = objcode,
-                .objcode_field_index = objcode_field_index,
-                .top = parse_scaled_int_or_default(record, "VPOS"),
-                .top_field_index = field_index_or_missing(record, "VPOS"),
-                .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
-                .height_field_index = field_index_or_missing(record, "HEIGHT")
-            });
+            snapshot.sections.push_back(build_report_section(record));
         }
     }
 

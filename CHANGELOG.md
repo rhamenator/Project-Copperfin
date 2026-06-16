@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#690 deleted report layout sections shipped: report/label layout snapshots now preserve DBF-deleted band records in a dedicated collection without changing visible section grouping.
 - E1/#689 deleted report layout objects shipped: report/label layout snapshots now preserve DBF-deleted layout object records in a dedicated collection without changing visible section grouping.
 - E1/#688 object snapshot deleted-state coverage shipped: studio object snapshot tests now prove deleted menu records remain visible with their DBF deleted flag and title provenance.
 - E1/#687 project build deleted-entry counts shipped: `StudioProjectBuildPlan` summaries now expose deleted-source-row counts while keeping existing total and excluded item counts unchanged.

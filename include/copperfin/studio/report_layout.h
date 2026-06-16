@@ -50,6 +50,7 @@ struct StudioReportSectionSnapshot {
     std::string band_kind{};
     std::size_t band_kind_field_index = StudioReportMissingFieldIndex;
     std::size_t record_index = 0;
+    bool deleted = false;
     int objcode_code = 0;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
     int top = 0;
@@ -65,6 +66,7 @@ struct StudioReportLayoutSnapshot {
     std::string document_title{};
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioReportSectionSnapshot> sections{};
+    std::vector<StudioReportSectionSnapshot> deleted_sections{};
     std::vector<StudioLayoutObjectSnapshot> unplaced_objects{};
     std::vector<StudioLayoutObjectSnapshot> deleted_objects{};
 };

@@ -112,6 +112,16 @@ void test_build_report_layout_groups_band_objects() {
                 value("WIDTH", "1200.000"),
                 value("HEIGHT", "300.000")
             }
+        },
+        {
+            .record_index = 7U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "8"),
+                value("VPOS", "9000.000"),
+                value("HEIGHT", "700.000")
+            }
         }
     };
 
@@ -200,6 +210,13 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
         expect(layout.deleted_objects[0].title_field_index == 1U,
             "#689: deleted report layout objects should retain title provenance");
+    }
+    expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
+    if (!layout.deleted_sections.empty()) {
+        expect(layout.deleted_sections[0].deleted, "#690: deleted report section snapshots should retain deleted state");
+        expect(layout.deleted_sections[0].band_kind == "summary", "#690: deleted report sections should retain band metadata");
+        expect(layout.deleted_sections[0].objcode_field_index == 1U,
+            "#690: deleted report sections should retain OBJCODE provenance");
     }
 }
 
