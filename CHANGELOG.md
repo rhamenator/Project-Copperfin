@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#834 selected visual object font-italic assignment shipped: designer commands can assign caller-provided logical `FontItalic` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#833 selected visual object font-bold assignment shipped: designer commands can assign caller-provided logical `FontBold` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#832 selected visual object font-size assignment shipped: designer commands can assign caller-provided finite non-negative `FontSize` values, including fractional sizes, to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving compact numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#831 selected visual object font-name assignment shipped: designer commands can assign caller-provided `FontName` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.

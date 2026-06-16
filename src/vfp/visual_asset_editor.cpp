@@ -5341,6 +5341,15 @@ VisualAssetEditResult set_visual_object_font_bold(const VisualObjectFontBoldRequ
         request.font_bold ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_font_italic(const VisualObjectFontItalicRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "FontItalic",
+        "font italic",
+        request.font_italic ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,
