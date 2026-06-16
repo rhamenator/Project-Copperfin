@@ -595,17 +595,19 @@ VisualAssetEditResult apply_visual_object_property_change(
             if (!property_state->direct_field) {
                 return {.ok = false, .error = "Property lookup mismatch while recording undo."};
             }
-            if (!(property_state->exists && property_state->value == request.property_value)) {
-                std::string error;
-                if (!record_visual_asset_undo_entry(request.path, {
-                        .record_index = record_index,
-                        .property_name = request.property_name,
-                        .prior_value = property_state->value,
-                        .prior_value_exists = property_state->exists,
-                        .label = "Property " + request.property_name
-                    }, error)) {
-                    return {.ok = false, .error = error};
-                }
+            if (property_state->exists && property_state->value == request.property_value) {
+                return {.ok = true, .error = {}};
+            }
+
+            std::string error;
+            if (!record_visual_asset_undo_entry(request.path, {
+                    .record_index = record_index,
+                    .property_name = request.property_name,
+                    .prior_value = property_state->value,
+                    .prior_value_exists = property_state->exists,
+                    .label = "Property " + request.property_name
+                }, error)) {
+                return {.ok = false, .error = error};
             }
         }
 
@@ -632,17 +634,19 @@ VisualAssetEditResult apply_visual_object_property_change(
     if (record_undo_entry) {
         const bool exists = assignment_it != assignments.end();
         const std::string prior_value = exists ? assignment_it->value : std::string{};
-        if (!(exists && prior_value == request.property_value)) {
-            std::string error;
-            if (!record_visual_asset_undo_entry(request.path, {
-                    .record_index = record_index,
-                    .property_name = request.property_name,
-                    .prior_value = prior_value,
-                    .prior_value_exists = exists,
-                    .label = "Property " + request.property_name
-                }, error)) {
-                return {.ok = false, .error = error};
-            }
+        if (exists && prior_value == request.property_value) {
+            return {.ok = true, .error = {}};
+        }
+
+        std::string error;
+        if (!record_visual_asset_undo_entry(request.path, {
+                .record_index = record_index,
+                .property_name = request.property_name,
+                .prior_value = prior_value,
+                .prior_value_exists = exists,
+                .label = "Property " + request.property_name
+            }, error)) {
+            return {.ok = false, .error = error};
         }
     }
 

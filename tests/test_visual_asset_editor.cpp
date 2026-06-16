@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <cmath>
 #include <limits>
 #if defined(_WIN32)
@@ -74,6 +75,14 @@ void write_ascii(std::vector<std::uint8_t>& bytes, std::size_t offset, const std
     for (std::size_t index = 0; index < value.size(); ++index) {
         bytes[offset + index] = static_cast<std::uint8_t>(value[index]);
     }
+}
+
+std::vector<std::uint8_t> read_file_bytes(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
 }
 
 void write_field_descriptor(
@@ -358,6 +367,66 @@ void test_update_visual_object_property_rewrites_properties_memo() {
 
     const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
     expect(!empty_undo_status.available, "undo journal should be empty after undoing the only memo-backed edit");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_property_skips_noop_writes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_noop_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path memo_table_path = temp_dir / "noop_memo.scx";
+    const fs::path memo_path = temp_dir / "noop_memo.sct";
+    write_synthetic_named_object_asset(memo_table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        }
+    });
+    const auto memo_table_before = read_file_bytes(memo_table_path);
+    const auto memo_before = read_file_bytes(memo_path);
+    const auto memo_update_result = copperfin::vfp::update_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption",
+        .property_value = "\"Save\""
+    });
+    expect(memo_update_result.ok, "#733: unchanged memo-backed property edits should succeed as no-ops");
+    expect(read_file_bytes(memo_table_path) == memo_table_before,
+        "#733: unchanged memo-backed property edits should not rewrite the table bytes");
+    expect(read_file_bytes(memo_path) == memo_before,
+        "#733: unchanged memo-backed property edits should not rewrite the memo bytes");
+    expect(!copperfin::vfp::query_visual_object_undo(memo_table_path.string()).available,
+        "#733: unchanged memo-backed property edits should not create undo history");
+
+    const fs::path direct_table_path = temp_dir / "noop_direct.scx";
+    const fs::path direct_memo_path = temp_dir / "noop_direct.sct";
+    write_synthetic_named_direct_asset(direct_table_path, direct_memo_path);
+    const auto direct_table_before = read_file_bytes(direct_table_path);
+    const auto direct_memo_before = read_file_bytes(direct_memo_path);
+    const auto direct_update_result = copperfin::vfp::update_visual_object_property({
+        .path = direct_table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS",
+        .property_value = "222.000"
+    });
+    expect(direct_update_result.ok, "#733: unchanged direct-field property edits should succeed as no-ops");
+    expect(read_file_bytes(direct_table_path) == direct_table_before,
+        "#733: unchanged direct-field property edits should not rewrite the table bytes");
+    expect(read_file_bytes(direct_memo_path) == direct_memo_before,
+        "#733: unchanged direct-field property edits should not rewrite the memo bytes");
+    expect(!copperfin::vfp::query_visual_object_undo(direct_table_path.string()).available,
+        "#733: unchanged direct-field property edits should not create undo history");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1078,6 +1147,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
+    test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
     test_update_visual_object_property_targets_selected_object_name_direct_field();

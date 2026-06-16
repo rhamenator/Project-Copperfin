@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#733 unchanged visual property edits now behave as no-ops: memo-backed and direct DBF-field property updates that already match the requested value return success without rewriting asset bytes or creating undo history.
 - E2/#732 UNIQUEID-targeted visual property edits shipped: designer/property-grid edits can now resolve selected objects by case-insensitive stable `UNIQUEID`, disambiguating duplicate names while preserving record-index, object-name, and undo behavior.
 - E2/#731 object-name-targeted direct field edits shipped: selected-object property updates now have focused coverage for direct DBF fields such as HPOS, preserving unrelated objects and undoing via the resolved record index.
 - E2/#730 object-name-targeted visual property edits shipped: visual asset property updates can now resolve selected objects by case-insensitive OBJNAME or fallback NAME, reject ambiguous/missing names, and preserve existing record-index and undo behavior.
