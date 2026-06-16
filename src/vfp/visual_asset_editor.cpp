@@ -1349,6 +1349,52 @@ VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyCle
     }, true, true);
 }
 
+VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request) {
+    if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
+        return {.ok = false, .error = "No target property name was provided."};
+    }
+
+    const auto source_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!source_property.ok) {
+        return {.ok = false, .error = source_property.error};
+    }
+    if (!source_property.exists) {
+        return {.ok = false, .error = "The source property was not found."};
+    }
+
+    const std::string target_property_name = request.target_property_name.empty()
+        ? source_property.property_name
+        : trim_both(request.target_property_name);
+    const auto target_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name
+    });
+    if (!target_property.ok) {
+        return {.ok = false, .error = target_property.error};
+    }
+    if (target_property.exists && !request.replace_existing) {
+        return {.ok = false, .error = "The target object already has the requested property."};
+    }
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name,
+        .property_value = source_property.value
+    });
+}
+
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
     if (request.path.empty()) {
         return {
@@ -1362,7 +1408,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .value = {}
         };
     }
-    if (request.property_name.empty()) {
+    if (trim_both(request.property_name).empty()) {
         return {
             .ok = false,
             .error = "No property name was provided.",
