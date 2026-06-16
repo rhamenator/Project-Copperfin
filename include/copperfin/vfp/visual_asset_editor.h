@@ -372,6 +372,18 @@ struct VisualObjectMethodDeleteRequest {
     std::string method_name;
 };
 
+struct VisualObjectMethodDeleteBatchItem {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+};
+
+struct VisualObjectMethodDeleteBatchRequest {
+    std::string path;
+    std::vector<VisualObjectMethodDeleteBatchItem> methods;
+};
+
 struct VisualObjectMethodRenameRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -522,6 +534,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMethodQueryRequest& request);
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
+VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDeleteBatchRequest& request);
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request);
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request);
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request);

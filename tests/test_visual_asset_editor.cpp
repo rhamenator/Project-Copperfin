@@ -3683,6 +3683,240 @@ void test_delete_visual_object_method_removes_selected_methods() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_delete_visual_object_methods_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_delete_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_delete_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\n"
+            "FUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC\r\n"
+            "PROCEDURE Init\r\nTHIS.Enabled = .T.\r\nENDPROC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "PROCEDURE LostFocus\r\nTHISFORM.ValidateName()\r\nENDPROC\r\n"
+            "FUNCTION Valid\r\nRETURN .T.\r\nENDFUNC"
+        },
+        {
+            "lblStatus",
+            "statusLabel",
+            "status-guid",
+            "PROCEDURE Paint\r\nTHIS.Refresh()\r\nENDPROC\r\n"
+            "FUNCTION RefreshValue\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {
+            "dupObj",
+            "dupName",
+            "dup-guid",
+            "PROCEDURE Click\r\nWAIT WINDOW \"first\"\r\nENDPROC\r\n"
+            "PROCEDURE click\r\nWAIT WINDOW \"second\"\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#776: method-delete-batch fixture should be writable");
+
+    const auto method_state = [&](const std::string& unique_id, const std::string& method_name) {
+        return copperfin::vfp::query_visual_object_method({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .method_name = method_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "click"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .method_name = "LostFocus"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .method_name = "RefreshValue"
+            }
+        }
+    });
+    expect(batch_result.ok, "#776: batch method delete should support mixed selectors plus procedure and function deletion");
+
+    auto save_click = method_state("save-guid", "Click");
+    auto save_get_caption = method_state("save-guid", "GetCaption");
+    auto save_init = method_state("save-guid", "Init");
+    auto name_lost_focus = method_state("name-guid", "LostFocus");
+    auto name_valid = method_state("name-guid", "Valid");
+    auto status_paint = method_state("status-guid", "Paint");
+    auto status_refresh_value = method_state("status-guid", "RefreshValue");
+    expect(save_click.ok && !save_click.exists &&
+            name_lost_focus.ok && !name_lost_focus.exists &&
+            status_refresh_value.ok && !status_refresh_value.exists,
+        "#776: batch method delete should remove each requested declaration");
+    expect(save_get_caption.ok && save_get_caption.exists &&
+            save_init.ok && save_init.exists &&
+            name_valid.ok && name_valid.exists &&
+            status_paint.ok && status_paint.exists,
+        "#776: batch method delete should preserve unrelated methods");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#776: successful batch deletes should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "MissingMethod"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#776: batch method delete should reject missing methods");
+    save_init = method_state("save-guid", "Init");
+    expect(save_init.ok && save_init.exists,
+        "#776: missing-method failures should roll back earlier method deletes");
+
+    batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = " "
+            }
+        }
+    });
+    expect(!batch_result.ok, "#776: batch method delete should reject empty method names");
+    save_init = method_state("save-guid", "Init");
+    expect(save_init.ok && save_init.exists,
+        "#776: empty-name failures should roll back earlier method deletes");
+
+    batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .method_name = "Init"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "dup-guid",
+                .method_name = "Click"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#776: batch method delete should reject duplicate matching method names");
+    save_init = method_state("save-guid", "Init");
+    auto duplicate_click = method_state("dup-guid", "Click");
+    expect(save_init.ok && save_init.exists &&
+            !duplicate_click.ok,
+        "#776: duplicate-method failures should roll back earlier deletes and report ambiguity");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#776: failed batch delete rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {}
+    });
+    expect(!batch_result.ok, "#776: empty batch method delete requests should fail explicitly");
+
+    const fs::path unsupported_path = temp_dir / "method_delete_batch_unsupported.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdUnsupported", "unsupported-guid"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#776: unsupported method-delete-batch fixture should be writable");
+    batch_result = copperfin::vfp::delete_visual_object_methods({
+        .path = unsupported_path.string(),
+        .methods = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "unsupported-guid",
+                .method_name = "Click"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#776: batch method delete should reject objects without METHODS carriers");
+
+    for (int index = 0; index < 3; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#776: undo should restore each successful batch method delete");
+    }
+
+    save_click = method_state("save-guid", "Click");
+    name_lost_focus = method_state("name-guid", "LostFocus");
+    status_refresh_value = method_state("status-guid", "RefreshValue");
+    save_get_caption = method_state("save-guid", "GetCaption");
+    save_init = method_state("save-guid", "Init");
+    name_valid = method_state("name-guid", "Valid");
+    status_paint = method_state("status-guid", "Paint");
+    expect(save_click.ok && save_click.exists &&
+            name_lost_focus.ok && name_lost_focus.exists &&
+            status_refresh_value.ok && status_refresh_value.exists &&
+            save_get_caption.ok && save_get_caption.exists &&
+            save_init.ok && save_init.exists &&
+            name_valid.ok && name_valid.exists &&
+            status_paint.ok && status_paint.exists,
+        "#776: successful batch delete undo should restore deleted methods and preserve unrelated methods");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_rename_visual_object_method_updates_declarations() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -7046,6 +7280,7 @@ int main() {
     test_query_visual_object_method_reads_one_selected_method();
     test_update_visual_object_method_updates_and_appends_methods();
     test_delete_visual_object_method_removes_selected_methods();
+    test_delete_visual_object_methods_rolls_back_failed_batches();
     test_rename_visual_object_method_updates_declarations();
     test_copy_visual_object_method_between_selected_objects();
     test_move_visual_object_method_between_selected_objects();

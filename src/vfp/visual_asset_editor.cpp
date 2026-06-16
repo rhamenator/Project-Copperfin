@@ -2816,6 +2816,18 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
     }
 
+    const std::string normalized_method_name = normalize_visual_object_name(request.method_name);
+    const auto methods = parse_visual_methods_blob(methods_field->display_value, 0U);
+    const auto matching_count = std::count_if(methods.begin(), methods.end(), [&](const VisualObjectMethodSnapshot& method) {
+        return normalize_visual_object_name(method.method_name) == normalized_method_name;
+    });
+    if (matching_count == 0) {
+        return {.ok = false, .error = "The requested method was not found."};
+    }
+    if (matching_count > 1) {
+        return {.ok = false, .error = "The requested method name is ambiguous."};
+    }
+
     const auto [deleted, updated_blob] = delete_visual_method_from_blob(
         methods_field->display_value,
         request.method_name);
@@ -2831,6 +2843,59 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+}
+
+VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDeleteBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.methods.empty()) {
+        return {.ok = false, .error = "No method deletes were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_deletes = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& method : request.methods) {
+        if (trim_both(method.method_name).empty()) {
+            const auto rollback_result = rollback_batch_deletes();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No method name was provided."};
+        }
+
+        const auto result = delete_visual_object_method({
+            .path = request.path,
+            .record_index = method.record_index,
+            .object_name = method.object_name,
+            .unique_id = method.unique_id,
+            .method_name = method.method_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_deletes();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
 }
 
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request) {
