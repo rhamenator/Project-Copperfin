@@ -742,6 +742,12 @@ struct VisualObjectFontItalicRequest {
     bool font_italic = false;
 };
 
+struct VisualObjectFontUnderlineRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool font_underline = false;
+};
+
 struct VisualObjectRowSourceRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1036,6 +1042,7 @@ VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequ
 VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequest& request);
 VisualAssetEditResult set_visual_object_font_bold(const VisualObjectFontBoldRequest& request);
 VisualAssetEditResult set_visual_object_font_italic(const VisualObjectFontItalicRequest& request);
+VisualAssetEditResult set_visual_object_font_underline(const VisualObjectFontUnderlineRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
