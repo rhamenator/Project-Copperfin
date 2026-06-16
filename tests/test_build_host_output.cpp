@@ -985,6 +985,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared response-parse execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
                    "build host DLL wrapper should stage response field extraction through the shared response-parse execution helper.");
+            expect(wrapper_source.find("object_depth == 1U && array_depth == 0U") != std::string::npos,
+                   "build host DLL wrapper should validate required response fields as top-level object fields");
+            expect(wrapper_source.find("response_document.compare(index, field_token.size(), field_token) == 0") != std::string::npos,
+                   "build host DLL wrapper should compare required response fields through the scanner token match");
+            expect(wrapper_source.find("return response_document.find(field_token) != std::string::npos;") == std::string::npos,
+                   "build host DLL wrapper should not validate required response fields with raw token search");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeInterpretedResultPlan") != std::string::npos,
                    "build host DLL wrapper should declare an interpreted-result-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
@@ -2026,6 +2032,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared response-parse execution helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(response_document, plan.status_field)") != std::string::npos,
                    "build host FLL wrapper should stage response field extraction through the shared response-parse execution helper.");
+            expect(wrapper_source.find("object_depth == 1U && array_depth == 0U") != std::string::npos,
+                   "build host FLL wrapper should validate required response fields as top-level object fields");
+            expect(wrapper_source.find("response_document.compare(index, field_token.size(), field_token) == 0") != std::string::npos,
+                   "build host FLL wrapper should compare required response fields through the scanner token match");
+            expect(wrapper_source.find("return response_document.find(field_token) != std::string::npos;") == std::string::npos,
+                   "build host FLL wrapper should not validate required response fields with raw token search");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeInterpretedResultPlan") != std::string::npos,
                    "build host FLL wrapper should declare an interpreted-result-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(") != std::string::npos,
