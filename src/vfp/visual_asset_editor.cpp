@@ -5937,6 +5937,19 @@ VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayV
         request.display_value);
 }
 
+VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSelectedBackColorRequest& request) {
+    if (request.selected_back_color < 0) {
+        return {.ok = false, .error = "SelectedBackColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "SelectedBackColor",
+        "selected back-color",
+        std::to_string(request.selected_back_color));
+}
+
 VisualAssetEditResult set_visual_object_selected_item_back_color(
     const VisualObjectSelectedItemBackColorRequest& request) {
     if (request.selected_item_back_color < 0) {

@@ -17120,6 +17120,29 @@ void test_set_visual_object_display_value_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_selected_back_color_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#879",
+        "selected_back_color",
+        "SelectedBackColor",
+        "SELECTEDBACKCOLOR",
+        "selected back-color",
+        16777215,
+        12632256,
+        255,
+        65280,
+        0,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_selected_back_color({
+                .path = path,
+                .objects = objects,
+                .selected_back_color = value
+            });
+        });
+}
+
 void test_set_visual_object_selected_item_back_color_assigns_numeric_value() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -22558,6 +22581,7 @@ int main() {
     test_set_visual_object_style_assigns_numeric_value();
     test_set_visual_object_list_index_assigns_numeric_value();
     test_set_visual_object_display_value_assigns_text();
+    test_set_visual_object_selected_back_color_assigns_numeric_value();
     test_set_visual_object_selected_item_back_color_assigns_numeric_value();
     test_set_visual_object_selected_item_fore_color_assigns_numeric_value();
     test_set_visual_object_disabled_item_back_color_assigns_numeric_value();
