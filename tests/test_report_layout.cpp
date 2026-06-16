@@ -49,9 +49,9 @@ void test_build_report_layout_groups_band_objects() {
             .deleted = false,
             .values = {
                 value("OBJTYPE", "9"),
-                value("OBJCODE", "1"),
-                value("VPOS", "0.000"),
-                value("HEIGHT", "2000.000")
+                value("OBJCODE", "1", 41U),
+                value("VPOS", "0.000", 42U),
+                value("HEIGHT", "2000.000", 43U)
             }
         },
         {
@@ -119,9 +119,9 @@ void test_build_report_layout_groups_band_objects() {
             .deleted = true,
             .values = {
                 value("OBJTYPE", "9"),
-                value("OBJCODE", "8"),
-                value("VPOS", "9000.000"),
-                value("HEIGHT", "700.000")
+                value("OBJCODE", "8", 81U),
+                value("VPOS", "9000.000", 82U),
+                value("HEIGHT", "700.000", 83U)
             }
         },
         {
@@ -145,10 +145,15 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
     expect(layout.sections[0].objcode_code == 1, "#666: report sections should preserve raw OBJCODE values");
     expect(layout.sections[0].objcode_field_index == 1U, "#664: report section should preserve OBJCODE field provenance");
+    expect(layout.sections[0].objcode_memo_block_number == 41U, "#722: report sections should preserve OBJCODE memo block provenance");
     expect(layout.sections[0].title_field_index == 1U, "#682: report section title provenance should retain OBJCODE field ordinal");
+    expect(layout.sections[0].title_memo_block_number == 41U, "#722: report section titles should inherit OBJCODE memo block provenance");
     expect(layout.sections[0].band_kind_field_index == 1U, "#682: report section band-kind provenance should retain OBJCODE field ordinal");
+    expect(layout.sections[0].band_kind_memo_block_number == 41U, "#722: report section band kinds should inherit OBJCODE memo block provenance");
     expect(layout.sections[0].top_field_index == 2U, "#664: report section should preserve VPOS field provenance");
+    expect(layout.sections[0].top_memo_block_number == 42U, "#722: report section top geometry should preserve VPOS memo block provenance");
     expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
+    expect(layout.sections[0].height_memo_block_number == 43U, "#722: report section height geometry should preserve HEIGHT memo block provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
     if (!layout.sections[0].objects.empty()) {
         expect(layout.sections[0].objects[0].objtype_field_index == 0U, "#674: present report object fields should keep DBF field provenance");
@@ -240,6 +245,12 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.deleted_sections[0].band_kind == "summary", "#690: deleted report sections should retain band metadata");
         expect(layout.deleted_sections[0].objcode_field_index == 1U,
             "#690: deleted report sections should retain OBJCODE provenance");
+        expect(layout.deleted_sections[0].objcode_memo_block_number == 81U,
+            "#722: deleted report sections should retain OBJCODE memo block provenance");
+        expect(layout.deleted_sections[0].top_memo_block_number == 82U,
+            "#722: deleted report sections should retain VPOS memo block provenance");
+        expect(layout.deleted_sections[0].height_memo_block_number == 83U,
+            "#722: deleted report sections should retain HEIGHT memo block provenance");
     }
     const auto deleted_setting = std::find_if(layout.deleted_settings.begin(), layout.deleted_settings.end(), [](const auto& setting) {
         return setting.name == "DELETEDSETTING";

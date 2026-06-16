@@ -347,20 +347,26 @@ std::size_t find_section_index(
 StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
+    const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
     return {
         .id = make_section_id(record.record_index, objcode),
         .title = band_title(objcode),
         .title_field_index = objcode_field_index,
+        .title_memo_block_number = objcode_memo_block_number,
         .band_kind = band_kind_name(objcode),
         .band_kind_field_index = objcode_field_index,
+        .band_kind_memo_block_number = objcode_memo_block_number,
         .record_index = record.record_index,
         .deleted = record.deleted,
         .objcode_code = objcode,
         .objcode_field_index = objcode_field_index,
+        .objcode_memo_block_number = objcode_memo_block_number,
         .top = parse_scaled_int_or_default(record, "VPOS"),
         .top_field_index = field_index_or_missing(record, "VPOS"),
+        .top_memo_block_number = memo_block_number_or_zero(record, "VPOS"),
         .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
-        .height_field_index = field_index_or_missing(record, "HEIGHT")
+        .height_field_index = field_index_or_missing(record, "HEIGHT"),
+        .height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT")
     };
 }
 

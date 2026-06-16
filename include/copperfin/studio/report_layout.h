@@ -51,16 +51,21 @@ struct StudioReportSectionSnapshot {
     std::string id{};
     std::string title{};
     std::size_t title_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t title_memo_block_number = 0;
     std::string band_kind{};
     std::size_t band_kind_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t band_kind_memo_block_number = 0;
     std::size_t record_index = 0;
     bool deleted = false;
     int objcode_code = 0;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t objcode_memo_block_number = 0;
     int top = 0;
     std::size_t top_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t top_memo_block_number = 0;
     int height = 0;
     std::size_t height_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t height_memo_block_number = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 
