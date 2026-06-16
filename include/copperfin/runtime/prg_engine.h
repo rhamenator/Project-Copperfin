@@ -135,6 +135,7 @@ struct RuntimePauseState {
     std::string message;
     std::vector<RuntimeStackFrame> call_stack;
     std::map<std::string, PrgValue> globals;
+    std::optional<PrgValue> last_return_value;
     std::vector<RuntimeEvent> events;
     RuntimeWorkAreaState work_area{};
     std::vector<RuntimeCursorState> cursors;

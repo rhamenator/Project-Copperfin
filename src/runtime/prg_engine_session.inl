@@ -1494,6 +1494,7 @@
             state.message = std::move(message);
             state.executed_statement_count = executed_statement_count;
             state.globals = globals;
+            state.last_return_value = last_return_value;
             state.events = events;
             const DataSessionState &session = current_session_state();
             state.work_area.selected = session.selected_work_area;

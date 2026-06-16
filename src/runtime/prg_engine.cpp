@@ -375,6 +375,7 @@ namespace copperfin::runtime
         std::map<std::string, Program> programs;
         std::vector<Frame> stack;
         std::map<std::string, PrgValue> globals;
+        std::optional<PrgValue> last_return_value;
         std::map<std::string, RuntimeArray> arrays;
         std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;

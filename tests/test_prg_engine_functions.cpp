@@ -468,6 +468,72 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_return_expression_values_are_preserved_in_runtime_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_return_expression_values";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path numeric_path = temp_root / "return_numeric.prg";
+        write_text(
+            numeric_path,
+            "nLeft = 40\n"
+            "nRight = 2\n"
+            "RETURN nLeft + nRight\n");
+
+        copperfin::runtime::PrgRuntimeSession numeric_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(numeric_path.string(), temp_root.string()));
+        const auto numeric_state = numeric_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(numeric_state.completed, "numeric RETURN expression script should complete");
+        expect(numeric_state.last_return_value.has_value(),
+               "numeric RETURN expression should be preserved in runtime state");
+        if (numeric_state.last_return_value.has_value())
+        {
+            expect(copperfin::runtime::format_value(*numeric_state.last_return_value) == "42",
+                   "numeric RETURN expression should preserve the evaluated numeric result");
+        }
+
+        const fs::path string_path = temp_root / "return_string.prg";
+        write_text(
+            string_path,
+            "cPrefix = 'Copper'\n"
+            "RETURN cPrefix + 'fin'\n");
+
+        copperfin::runtime::PrgRuntimeSession string_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(string_path.string(), temp_root.string()));
+        const auto string_state = string_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(string_state.completed, "string RETURN expression script should complete");
+        expect(string_state.last_return_value.has_value(),
+               "string RETURN expression should be preserved in runtime state");
+        if (string_state.last_return_value.has_value())
+        {
+            expect(copperfin::runtime::format_value(*string_state.last_return_value) == "Copperfin",
+                   "string RETURN expression should preserve the evaluated string result");
+        }
+
+        const fs::path empty_path = temp_root / "return_empty.prg";
+        write_text(empty_path, "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession empty_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(empty_path.string(), temp_root.string()));
+        const auto empty_state = empty_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(empty_state.completed, "bare RETURN script should complete");
+        expect(empty_state.last_return_value.has_value(),
+               "bare RETURN should preserve an empty runtime return value");
+        if (empty_state.last_return_value.has_value())
+        {
+            expect(copperfin::runtime::format_value(*empty_state.last_return_value).empty(),
+                   "bare RETURN should preserve an empty value representation");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -479,6 +545,7 @@ int main()
     test_macro_dot_suffix_form();
     test_parameter_default_expressions_support_macros();
     test_macro_alias_qualified_field_access();
+    test_return_expression_values_are_preserved_in_runtime_state();
 
     if (test_failures() != 0)
     {

@@ -1693,6 +1693,9 @@
                 return {};
             }
             case StatementKind::return_statement:
+                last_return_value = trim_copy(statement.expression).empty()
+                    ? make_empty_value()
+                    : evaluate_expression(statement.expression, frame);
                 pop_frame();
                 return {.ok = true, .waiting_for_events = false, .frame_returned = true, .message = {}};
             case StatementKind::do_case_statement:
