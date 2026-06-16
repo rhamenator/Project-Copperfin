@@ -1238,6 +1238,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should detect missing responses from the read response document.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseValidationEvaluation copperfin_runtime_bridge_evaluate_response_validation(") != std::string::npos,
                "library-output wrapper source should declare a shared response-validation evaluation helper.");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_response_document_has_required_fields(") != std::string::npos,
+               "library-output wrapper source should declare a required response-field validation helper.");
+        expect(wrapper_source.find("response_validation_plan.required_response_fields") != std::string::npos,
+               "library-output wrapper source should validate the declared required response fields.");
+        expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
+               "library-output wrapper source should fail response validation when required response fields are absent.");
         expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                "library-output wrapper source should track response-document availability in response-validation evaluation.");
         expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -2730,6 +2736,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should detect missing responses from the read response document.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseValidationEvaluation copperfin_runtime_bridge_evaluate_response_validation(") != std::string::npos,
                "fll-output wrapper source should declare a shared response-validation evaluation helper.");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_response_document_has_required_fields(") != std::string::npos,
+               "fll-output wrapper source should declare a required response-field validation helper.");
+        expect(wrapper_source.find("response_validation_plan.required_response_fields") != std::string::npos,
+               "fll-output wrapper source should validate the declared required response fields.");
+        expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
+               "fll-output wrapper source should fail response validation when required response fields are absent.");
         expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                "fll-output wrapper source should track response-document availability in response-validation evaluation.");
         expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,

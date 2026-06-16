@@ -829,6 +829,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should detect missing responses from the read response document.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseValidationEvaluation copperfin_runtime_bridge_evaluate_response_validation(") != std::string::npos,
                    "build host DLL wrapper should declare a shared response-validation evaluation helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_response_document_has_required_fields(") != std::string::npos,
+                   "build host DLL wrapper should declare a required response-field validation helper.");
+            expect(wrapper_source.find("response_validation_plan.required_response_fields") != std::string::npos,
+                   "build host DLL wrapper should validate the declared required response fields.");
+            expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
+                   "build host DLL wrapper should fail response validation when required response fields are absent.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host DLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -1822,6 +1828,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should detect missing responses from the read response document.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeResponseValidationEvaluation copperfin_runtime_bridge_evaluate_response_validation(") != std::string::npos,
                    "build host FLL wrapper should declare a shared response-validation evaluation helper.");
+            expect(wrapper_source.find("static bool copperfin_runtime_bridge_response_document_has_required_fields(") != std::string::npos,
+                   "build host FLL wrapper should declare a required response-field validation helper.");
+            expect(wrapper_source.find("response_validation_plan.required_response_fields") != std::string::npos,
+                   "build host FLL wrapper should validate the declared required response fields.");
+            expect(wrapper_source.find("!required_response_fields_present") != std::string::npos,
+                   "build host FLL wrapper should fail response validation when required response fields are absent.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host FLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
