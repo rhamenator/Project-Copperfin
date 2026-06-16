@@ -30,6 +30,8 @@ enum class StudioUndoMode {
     command
 };
 
+inline constexpr std::size_t StudioObjectMissingFieldIndex = static_cast<std::size_t>(-1);
+
 struct StudioOpenRequest {
     std::string path{};
     std::string symbol{};
@@ -81,13 +83,13 @@ struct StudioObjectSnapshot {
     std::string class_name{};
     std::string baseclass_name{};
     std::string menu_prompt{};
-    std::size_t menu_prompt_field_index = 0;
+    std::size_t menu_prompt_field_index = StudioObjectMissingFieldIndex;
     std::string menu_level_name{};
-    std::size_t menu_level_name_field_index = 0;
+    std::size_t menu_level_name_field_index = StudioObjectMissingFieldIndex;
     std::string menu_command{};
-    std::size_t menu_command_field_index = 0;
+    std::size_t menu_command_field_index = StudioObjectMissingFieldIndex;
     std::string menu_message{};
-    std::size_t menu_message_field_index = 0;
+    std::size_t menu_message_field_index = StudioObjectMissingFieldIndex;
     std::string title{};
     std::string subtitle{};
     std::vector<StudioPropertySnapshot> properties{};

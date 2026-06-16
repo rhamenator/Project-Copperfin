@@ -218,12 +218,21 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
                 {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "3.000"},
                 {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "7.000"}
             }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "TOOLS"},
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Tools"},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO tools"}
+            }
         }
     };
 
     const auto objects = copperfin::studio::build_object_snapshot(document);
-    expect(objects.size() == 1U, "#668: menu snapshot should include the parsed menu record");
-    if (!objects.empty()) {
+    expect(objects.size() == 2U, "#668: menu snapshot should include parsed menu records");
+    if (objects.size() >= 1U) {
         expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
         expect(objects[0].menu_prompt_field_index == 0U, "#669: menu PROMPT metadata should retain DBF field provenance");
         expect(objects[0].menu_level_name == "MAIN", "#668: menu snapshots should expose LEVELNAME metadata");
@@ -236,6 +245,13 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
         expect(objects[0].objtype_code == 3, "#668: menu snapshots should retain raw OBJTYPE metadata");
         expect(objects[0].objcode_code == 7, "#668: menu snapshots should retain raw OBJCODE metadata");
+    }
+    if (objects.size() >= 2U) {
+        expect(objects[1].menu_prompt == "Tools", "#668: menu snapshots should expose PROMPT metadata when it is not field zero");
+        expect(objects[1].menu_prompt_field_index == 1U, "#670: present menu fields should keep their actual DBF ordinal");
+        expect(objects[1].menu_message.empty(), "#670: missing menu MESSAGE values should remain empty");
+        expect(objects[1].menu_message_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#670: missing menu MESSAGE provenance should not masquerade as field zero");
     }
 }
 
