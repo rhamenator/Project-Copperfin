@@ -221,6 +221,39 @@ void test_build_project_workspace_prefers_live_header() {
     expect(workspace.build_plan.deleted_items == 1U, "#692: build plan should still count deleted header rows");
 }
 
+void test_build_project_workspace_skips_deleted_startup_candidates() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\startupdemo.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "STARTUPDEMO"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\startupdemo.exe)"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "deletedmain.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+        }, true),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "livemain.prg"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.build_plan.startup_item == "livemain.prg",
+           "#693: deleted MAINPROG entries should not become active startup candidates");
+    expect(workspace.build_plan.startup_item_field_index == 1U,
+           "#693: live fallback startup item should retain selected NAME field ordinal");
+    expect(workspace.build_plan.startup_record_index == 2U,
+           "#693: startup record index should point at the selected live program");
+    expect(workspace.entries[1].deleted, "#693: deleted startup candidate entries should remain visible");
+    expect(workspace.build_plan.deleted_items == 1U, "#693: deleted startup candidates should remain counted");
+}
+
 void test_build_project_workspace_with_dll_output() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\librarydemo.pjx)";
@@ -327,6 +360,7 @@ int main() {
     test_build_project_workspace();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_prefers_live_header();
+    test_build_project_workspace_skips_deleted_startup_candidates();
     test_build_project_workspace_with_dll_output();
     test_build_project_workspace_with_fll_output();
     test_build_project_workspace_with_fxp_output();

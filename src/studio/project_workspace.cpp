@@ -357,33 +357,51 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
-            return entry.main_program && !entry.excluded;
+            return entry.main_program && !entry.excluded && !entry.deleted;
         });
     const auto program_entry = std::find_if(
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
-            return entry.group_id == "programs" && !entry.excluded;
+            return entry.group_id == "programs" && !entry.excluded && !entry.deleted;
         });
     const auto first_non_header = std::find_if(
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
-            return entry.group_id != "project" && !entry.excluded;
+            return entry.group_id != "project" && !entry.excluded && !entry.deleted;
         });
     const auto startup_entry_any = std::find_if(
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
-            return entry.main_program;
+            return entry.main_program && !entry.deleted;
         });
     const auto program_entry_any = std::find_if(
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
-            return entry.group_id == "programs";
+            return entry.group_id == "programs" && !entry.deleted;
         });
     const auto first_non_header_any = std::find_if(
+        workspace.entries.begin(),
+        workspace.entries.end(),
+        [](const StudioProjectEntry& entry) {
+            return entry.group_id != "project" && !entry.deleted;
+        });
+    const auto deleted_startup_entry_any = std::find_if(
+        workspace.entries.begin(),
+        workspace.entries.end(),
+        [](const StudioProjectEntry& entry) {
+            return entry.main_program;
+        });
+    const auto deleted_program_entry_any = std::find_if(
+        workspace.entries.begin(),
+        workspace.entries.end(),
+        [](const StudioProjectEntry& entry) {
+            return entry.group_id == "programs";
+        });
+    const auto deleted_first_non_header_any = std::find_if(
         workspace.entries.begin(),
         workspace.entries.end(),
         [](const StudioProjectEntry& entry) {
@@ -403,6 +421,12 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         startup = &(*program_entry_any);
     } else if (first_non_header_any != workspace.entries.end()) {
         startup = &(*first_non_header_any);
+    } else if (deleted_startup_entry_any != workspace.entries.end()) {
+        startup = &(*deleted_startup_entry_any);
+    } else if (deleted_program_entry_any != workspace.entries.end()) {
+        startup = &(*deleted_program_entry_any);
+    } else if (deleted_first_non_header_any != workspace.entries.end()) {
+        startup = &(*deleted_first_non_header_any);
     }
 
     if (header_record != document.table_preview.records.end()) {
