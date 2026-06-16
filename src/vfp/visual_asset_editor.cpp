@@ -5374,6 +5374,15 @@ VisualAssetEditResult set_visual_object_whats_this_button(const VisualObjectWhat
         request.whats_this_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsThisHelpRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "WhatsThisHelp",
+        "WhatsThis help",
+        request.whats_this_help ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

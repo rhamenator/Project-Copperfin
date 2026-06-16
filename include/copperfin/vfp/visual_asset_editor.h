@@ -760,6 +760,12 @@ struct VisualObjectWhatsThisButtonRequest {
     bool whats_this_button = false;
 };
 
+struct VisualObjectWhatsThisHelpRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool whats_this_help = false;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1417,6 +1423,7 @@ VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest
 VisualAssetEditResult set_visual_object_half_height_caption(const VisualObjectHalfHeightCaptionRequest& request);
 VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormRequest& request);
 VisualAssetEditResult set_visual_object_whats_this_button(const VisualObjectWhatsThisButtonRequest& request);
+VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsThisHelpRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
