@@ -5395,6 +5395,15 @@ VisualAssetEditResult set_visual_object_dynamic_font_name(const VisualObjectDyna
         request.dynamic_font_name);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_font_size(const VisualObjectDynamicFontSizeRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicFontSize",
+        "dynamic font size",
+        request.dynamic_font_size);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,

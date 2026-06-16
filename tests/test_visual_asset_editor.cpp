@@ -12375,6 +12375,197 @@ void test_set_visual_object_dynamic_font_name_assigns_expression_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_dynamic_font_size_assigns_expression_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_dynamic_font_size_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "dynamic_font_size.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "DYNAMICFONTSIZE", .type = 'C', .length = 96U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtCustomer", "customerBox", "customer-guid", "10"},
+        {"lblOrders", "ordersLabel", "orders-guid", "9"},
+        {"txtOther", "otherBox", "other-guid", "12"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#840: dynamic font-size fixture should be writable");
+
+    const auto dynamic_font_size_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontSize"
+        });
+        expect(result.ok && result.exists, "#840: dynamic font-size fixture property should be readable");
+        return result.value;
+    };
+    const auto dynamic_font_size = [&](const std::string& unique_id) {
+        return dynamic_font_size_for(table_path.string(), unique_id);
+    };
+    const auto dynamic_font_size_state = [&]() {
+        return dynamic_font_size("customer-guid") + "," +
+            dynamic_font_size("orders-guid") + "," +
+            dynamic_font_size("other-guid");
+    };
+
+    const std::string size_expression = "IIF(RECNO() % 2 = 0, 12, 10)";
+    auto size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .dynamic_font_size = size_expression
+    });
+    expect(size_result.ok, "#840: dynamic font-size assignment should support object-name and record-index selectors");
+    expect(dynamic_font_size("customer-guid") == size_expression &&
+            dynamic_font_size("orders-guid") == size_expression &&
+            dynamic_font_size("other-guid") == "12",
+        "#840: direct dynamic font-size assignment should write raw expression text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#840: first dynamic font-size write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#840: second dynamic font-size write should remain undo-backed");
+    expect(dynamic_font_size_state() == "10,9,12",
+        "#840: dynamic font-size undo should restore original direct values");
+
+    const std::string constant_expression = "11";
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .dynamic_font_size = constant_expression
+    });
+    expect(size_result.ok, "#840: dynamic font-size assignment should support UNIQUEID selectors");
+    expect(dynamic_font_size("customer-guid") == constant_expression &&
+            dynamic_font_size("orders-guid") == constant_expression,
+        "#840: direct dynamic font-size assignment should store raw constant expressions");
+
+    const std::string committed_state = dynamic_font_size_state();
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = table_path.string(),
+        .objects = {},
+        .dynamic_font_size = "99"
+    });
+    expect(!size_result.ok, "#840: dynamic font-size assignment should reject empty selections");
+    expect(dynamic_font_size_state() == committed_state,
+        "#840: empty-selection failures should not mutate dynamic font sizes");
+
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .dynamic_font_size = "99"
+    });
+    expect(!size_result.ok, "#840: dynamic font-size assignment should reject missing selected objects");
+    expect(dynamic_font_size_state() == committed_state,
+        "#840: missing-object failures should not mutate dynamic font sizes");
+
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "txtCustomer", .unique_id = {}}
+        },
+        .dynamic_font_size = "99"
+    });
+    expect(!size_result.ok, "#840: dynamic font-size assignment should reject duplicate selected objects");
+    expect(dynamic_font_size_state() == committed_state,
+        "#840: duplicate-selection failures should not mutate dynamic font sizes");
+
+    const fs::path blob_path = temp_dir / "dynamic_font_size_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "DynamicFontSize = 10\r\nCaption = \"Customer\"\r\n"},
+        {"txtNoSize", "no-size-guid", "Caption = \"No size\"\r\n"},
+        {"txtOther", "other-guid", "DynamicFontSize = 12\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#840: dynamic font-size property-blob fixture should be writable");
+
+    const auto blob_dynamic_font_size_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "DynamicFontSize"
+        });
+    };
+
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoSize", .unique_id = {}}
+        },
+        .dynamic_font_size = size_expression
+    });
+    expect(size_result.ok, "#840: dynamic font-size assignment should support existing and absent serialized properties");
+    auto blob_size = blob_dynamic_font_size_state("blob-guid");
+    auto appended_size = blob_dynamic_font_size_state("no-size-guid");
+    auto other_size = blob_dynamic_font_size_state("other-guid");
+    expect(blob_size.ok && blob_size.exists && blob_size.value == size_expression &&
+            appended_size.ok && appended_size.exists && appended_size.value == size_expression &&
+            other_size.ok && other_size.exists && other_size.value == "12",
+        "#840: serialized dynamic font-size assignment should write raw expressions and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#840: appended serialized dynamic font-size write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#840: existing serialized dynamic font-size write should remain undo-backed");
+    blob_size = blob_dynamic_font_size_state("blob-guid");
+    appended_size = blob_dynamic_font_size_state("no-size-guid");
+    expect(blob_size.ok && blob_size.exists && blob_size.value == "10" &&
+            appended_size.ok && !appended_size.exists,
+        "#840: serialized dynamic font-size undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_dynamicfontsize.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#840: missing-DynamicFontSize fixture should be writable");
+
+    size_result = copperfin::vfp::set_visual_object_dynamic_font_size({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .dynamic_font_size = "99"
+    });
+    expect(!size_result.ok,
+        "#840: dynamic font-size assignment should reject objects without a writable DynamicFontSize carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_row_source_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -20023,6 +20214,7 @@ int main() {
     test_set_visual_object_font_outline_assigns_logical_state();
     test_set_visual_object_font_shadow_assigns_logical_state();
     test_set_visual_object_dynamic_font_name_assigns_expression_value();
+    test_set_visual_object_dynamic_font_size_assigns_expression_value();
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
