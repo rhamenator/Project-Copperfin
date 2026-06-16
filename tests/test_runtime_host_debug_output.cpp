@@ -1059,6 +1059,103 @@ void test_runtime_host_invokes_zero_argument_bridge_export(const std::string& ru
     }
 }
 
+void test_runtime_host_passes_bridge_request_parameters_to_export(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_parameter_export_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path startup_path = temp_root / "content" / "startup.prg";
+    const fs::path source_path = temp_root / "content" / "exports.prg";
+    const fs::path request_path = temp_root / "AddNumbers.request.json";
+    const fs::path response_path = temp_root / "nested" / "AddNumbers.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeParameterExport\n"
+        "startup_item=startup.prg\n"
+        "startup_source=") + startup_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(startup_path, "RETURN 7\n");
+    write_text(
+        source_path,
+        "PROCEDURE AddNumbers\n"
+        "LPARAMETERS tnLeft, tnRight\n"
+        "RETURN tnLeft + tnRight\n"
+        "ENDPROC\n");
+    write_text(
+        request_path,
+        std::string("{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"AddNumbers\",\n"
+        "  \"routine_kind\": \"procedure\",\n"
+        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_line\": 1,\n"
+        "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+        "  \"parameter_names\": \"tnLeft|tnRight\",\n"
+        "  \"parameter_count\": 2,\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameters\": [\n"
+        "    {\"name\": \"tnLeft\", \"value\": \"40\", \"surface\": \"dll-int\"},\n"
+        "    {\"name\": \"tnRight\", \"value\": \"2\", \"surface\": \"dll-int\"}\n"
+        "  ]\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "AddNumbers",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "tnLeft|tnRight",
+            "--parameter-count", "2",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "bridge-parameter-export stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-parameter-export stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "runtime host should pass bridge request parameter values to exported routines");
+    expect(process.stdout_text.find("bridge.routine_bootstrap: true") != std::string::npos,
+           "runtime host should report routine bootstrap execution for parameterized exports");
+    expect(process.stdout_text.find("bridge.parameter_count: 2") != std::string::npos,
+           "runtime host should preserve the parameter count in diagnostics");
+    expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
+           "runtime host should report the parameterized export return value in diagnostics");
+    expect(fs::exists(response_path),
+           "runtime host should write the bridge response for parameterized exports");
+
+    const std::string response_document = read_text(response_path);
+    expect(response_document.find("\"status\": \"ok\"") != std::string::npos,
+           "parameterized bridge export response should include ok status");
+    expect(response_document.find("\"return_value\": \"42\"") != std::string::npos,
+           "parameterized bridge export response should include the exported routine return value");
+    expect(response_document.find("\"response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\"") != std::string::npos,
+           "parameterized bridge export response should echo the expected response media type");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_rejects_bridge_request_contract_mismatch(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -1224,6 +1321,7 @@ int main(int argc, char** argv) {
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
     test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
+    test_runtime_host_passes_bridge_request_parameters_to_export(argv[1]);
     test_runtime_host_rejects_bridge_request_contract_mismatch(argv[1]);
     test_runtime_host_rejects_bridge_descriptor_identity_mismatch(argv[1]);
 

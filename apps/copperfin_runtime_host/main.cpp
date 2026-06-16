@@ -158,6 +158,135 @@ std::string extract_json_field(const std::string& document, const std::string& f
         value_end == std::string::npos ? std::string::npos : value_end - value_start));
 }
 
+std::optional<std::string> parse_json_string_at(
+    const std::string& document,
+    std::size_t value_start,
+    std::size_t& value_end) {
+    if (value_start >= document.size() || document[value_start] != '"') {
+        return std::nullopt;
+    }
+    std::string result;
+    for (std::size_t index = value_start + 1U; index < document.size(); ++index) {
+        const char ch = document[index];
+        if (ch == '\\' && (index + 1U) < document.size()) {
+            const char escaped = document[++index];
+            switch (escaped) {
+                case 'n':
+                    result.push_back('\n');
+                    break;
+                case 'r':
+                    result.push_back('\r');
+                    break;
+                case 't':
+                    result.push_back('\t');
+                    break;
+                default:
+                    result.push_back(escaped);
+                    break;
+            }
+            continue;
+        }
+        if (ch == '"') {
+            value_end = index + 1U;
+            return result;
+        }
+        result.push_back(ch);
+    }
+    return std::nullopt;
+}
+
+std::optional<std::size_t> find_json_array_end(const std::string& document, std::size_t array_start) {
+    std::size_t depth = 0;
+    bool inside_string = false;
+    bool escaping = false;
+    for (std::size_t index = array_start; index < document.size(); ++index) {
+        const char ch = document[index];
+        if (inside_string) {
+            if (escaping) {
+                escaping = false;
+                continue;
+            }
+            if (ch == '\\') {
+                escaping = true;
+                continue;
+            }
+            if (ch == '"') {
+                inside_string = false;
+            }
+            continue;
+        }
+        if (ch == '"') {
+            inside_string = true;
+            continue;
+        }
+        if (ch == '[') {
+            ++depth;
+            continue;
+        }
+        if (ch == ']') {
+            if (depth == 0U) {
+                return std::nullopt;
+            }
+            --depth;
+            if (depth == 0U) {
+                return index;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::vector<std::string> extract_bridge_parameter_values(const std::string& document) {
+    std::vector<std::string> values;
+    const auto parameters_token = std::string("\"parameters\"");
+    const auto parameters_offset = document.find(parameters_token);
+    if (parameters_offset == std::string::npos) {
+        return values;
+    }
+    const auto array_start = document.find('[', parameters_offset + parameters_token.size());
+    if (array_start == std::string::npos) {
+        return values;
+    }
+    const auto array_end = find_json_array_end(document, array_start);
+    if (!array_end.has_value()) {
+        return values;
+    }
+
+    const auto value_token = std::string("\"value\"");
+    std::size_t cursor = array_start + 1U;
+    while (cursor < *array_end) {
+        const auto value_offset = document.find(value_token, cursor);
+        if (value_offset == std::string::npos || value_offset >= *array_end) {
+            break;
+        }
+        const auto colon_offset = document.find(':', value_offset + value_token.size());
+        if (colon_offset == std::string::npos || colon_offset >= *array_end) {
+            break;
+        }
+        const auto value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
+        if (value_start == std::string::npos || value_start >= *array_end) {
+            break;
+        }
+        if (document[value_start] == '"') {
+            std::size_t value_end = value_start;
+            const auto parsed = parse_json_string_at(document, value_start, value_end);
+            if (!parsed.has_value() || value_end > *array_end + 1U) {
+                break;
+            }
+            values.push_back(*parsed);
+            cursor = value_end;
+            continue;
+        }
+        const auto value_end = document.find_first_of(",}", value_start);
+        if (value_end == std::string::npos || value_end > *array_end) {
+            break;
+        }
+        values.push_back(trim_copy(document.substr(value_start, value_end - value_start)));
+        cursor = value_end;
+    }
+    return values;
+}
+
 struct RuntimeBridgeInvocationOptions {
     std::string library_export;
     std::string routine_kind;
@@ -202,6 +331,7 @@ bool is_runtime_bridge_routine_identifier(const std::string& value) {
 
 std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstrap(
     const RuntimeBridgeInvocationOptions& options,
+    const std::vector<std::string>& parameter_values,
     std::string& error_message) {
     const std::string export_name = trim_copy(options.library_export);
     if (!is_runtime_bridge_routine_identifier(export_name)) {
@@ -223,7 +353,17 @@ std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstra
         std::filesystem::temp_directory_path() /
         ("copperfin_bridge_" + export_name + "_" + std::to_string(std::hash<std::string>{}(bootstrap_key)) + ".prg");
     std::ofstream bootstrap_output(bootstrap_path, std::ios::binary | std::ios::trunc);
-    bootstrap_output << "DO " << export_name << "\n";
+    bootstrap_output << "DO " << export_name;
+    if (!parameter_values.empty()) {
+        bootstrap_output << " WITH ";
+        for (std::size_t index = 0; index < parameter_values.size(); ++index) {
+            if (index > 0U) {
+                bootstrap_output << ", ";
+            }
+            bootstrap_output << parameter_values[index];
+        }
+    }
+    bootstrap_output << "\n";
     bootstrap_output << source_text;
     if (!source_text.empty() && source_text.back() != '\n') {
         bootstrap_output << "\n";
@@ -264,6 +404,7 @@ int run_runtime_bridge_invocation(
     const std::string request_document = request_document_stream.str();
     const std::string request_media_type = extract_json_field(request_document, "request_media_type");
     const std::string request_schema_version = extract_json_field(request_document, "schema_version");
+    const std::vector<std::string> parameter_values = extract_bridge_parameter_values(request_document);
     if (request_media_type != options.request_media_type) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
@@ -295,9 +436,15 @@ int run_runtime_bridge_invocation(
     bool routine_bootstrap_materialized = false;
     if (!trim_copy(options.library_export).empty() &&
         !trim_copy(options.source_path).empty() &&
-        trim_copy(options.parameter_count) == "0") {
+        (trim_copy(options.parameter_count) == "0" || !parameter_values.empty())) {
+        if (trim_copy(options.parameter_count) != std::to_string(parameter_values.size())) {
+            std::cout << "status: error\n";
+            std::cout << "runtime.mode: bridge-invocation\n";
+            std::cout << "error: Bridge request parameter count mismatch.\n";
+            return 6;
+        }
         std::string bootstrap_error;
-        const auto bootstrap_path = materialize_runtime_bridge_routine_bootstrap(options, bootstrap_error);
+        const auto bootstrap_path = materialize_runtime_bridge_routine_bootstrap(options, parameter_values, bootstrap_error);
         if (!bootstrap_path.has_value()) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
