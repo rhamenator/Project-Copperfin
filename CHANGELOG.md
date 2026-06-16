@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#721 xAsset lifecycle memo block provenance shipped: startup/shutdown lifecycle steps now expose source memo block numbers for method-backed form/menu steps while synthetic activation and preview steps report block zero.
 - E1/#720 xAsset action memo block provenance shipped: action bindings now expose memo block provenance for title sources and executable routine sources, including form method actions, menu command/procedure actions, and synthetic submenu actions.
 - E1/#719 xAsset method memo block provenance shipped: extracted form/class methods, wrapped menu methods, embedded menu routines, and synthetic submenu activation methods now expose source memo block provenance alongside field and line metadata.
 - E1/#718 Studio menu metadata memo block provenance shipped: normalized menu prompt, level, command, and message metadata now expose source memo block numbers, including unresolved placeholders and missing-field block-zero behavior.

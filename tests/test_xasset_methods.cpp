@@ -177,11 +177,15 @@ void test_build_xasset_executable_model() {
         expect(model.startup_steps[0].record_index == 0U, "#709: startup steps should retain source record provenance");
         expect(model.startup_steps[0].source_field_index == 3U, "#709: startup steps should inherit method source field provenance");
         expect(model.startup_steps[0].source_line_index == 0U, "#709: startup steps should inherit method source line provenance");
+        expect(model.startup_steps[0].source_memo_block_number == 30U,
+               "#721: startup steps should inherit method memo block provenance");
         expect(model.startup_steps[3].routine_name == "__cf_frmDemo_Init",
                "#709: later startup steps should preserve lifecycle ordering");
         expect(model.startup_steps[3].record_index == 1U, "#709: later startup steps should retain source record provenance");
         expect(model.startup_steps[3].source_field_index == 3U, "#709: later startup steps should inherit source field provenance");
         expect(model.startup_steps[3].source_line_index == 3U, "#709: later startup steps should inherit source line provenance");
+        expect(model.startup_steps[3].source_memo_block_number == 40U,
+               "#721: later startup steps should inherit method memo block provenance");
     }
     if (model.shutdown_routines.size() == 2U) {
         expect(model.shutdown_routines[0] == "__cf_frmDemo_Destroy",
@@ -201,6 +205,8 @@ void test_build_xasset_executable_model() {
         expect(model.shutdown_steps[0].record_index == 1U, "#709: shutdown steps should retain source record provenance");
         expect(model.shutdown_steps[0].source_field_index == 3U, "#709: shutdown steps should inherit method source field provenance");
         expect(model.shutdown_steps[0].source_line_index == 9U, "#709: shutdown steps should inherit method source line provenance");
+        expect(model.shutdown_steps[0].source_memo_block_number == 40U,
+               "#721: shutdown steps should inherit method memo block provenance");
     }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
@@ -658,6 +664,8 @@ void test_build_menu_xasset_executable_model() {
                "#709: setup startup step should retain SETUP field provenance");
         expect(model.startup_steps[0].source_line_index == 0U,
                "#709: setup startup step should retain wrapped source line provenance");
+        expect(model.startup_steps[0].source_memo_block_number == 61U,
+               "#721: setup startup step should inherit SETUP memo block provenance");
         expect(model.startup_steps[1].kind == "activation", "#709: menu activation should be tagged as synthetic activation");
         expect(model.startup_steps[1].command_text == "ACTIVATE POPUP Shortcut",
                "#709: activation step command text should mirror the legacy startup line");
@@ -665,6 +673,8 @@ void test_build_menu_xasset_executable_model() {
                "#709: synthetic activation should use the missing source-field sentinel");
         expect(model.startup_steps[1].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                "#709: synthetic activation should use the missing source-line sentinel");
+        expect(model.startup_steps[1].source_memo_block_number == 0U,
+               "#721: synthetic activation should expose memo block zero");
         expect(model.startup_steps[1].routine_name.empty(), "#709: synthetic activation should not masquerade as a routine");
     }
     if (model.actions.size() >= 2U) {
@@ -688,6 +698,8 @@ void test_build_menu_xasset_executable_model() {
                "#709: cleanup shutdown step should retain CLEANUP field provenance");
         expect(model.shutdown_steps[0].source_line_index == 0U,
                "#709: cleanup shutdown step should retain wrapped source line provenance");
+        expect(model.shutdown_steps[0].source_memo_block_number == 62U,
+               "#721: cleanup shutdown step should inherit CLEANUP memo block provenance");
     }
 }
 
@@ -750,6 +762,8 @@ void test_build_report_xasset_executable_model() {
                "#710: report preview lifecycle step should use the missing source-field sentinel");
         expect(model.startup_steps[0].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                "#710: report preview lifecycle step should use the missing source-line sentinel");
+        expect(model.startup_steps[0].source_memo_block_number == 0U,
+               "#721: report preview lifecycle should expose memo block zero");
     }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
@@ -788,6 +802,8 @@ void test_build_label_xasset_executable_model() {
                "#710: label preview lifecycle step should use the missing source-field sentinel");
         expect(model.startup_steps[0].source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
                "#710: label preview lifecycle step should use the missing source-line sentinel");
+        expect(model.startup_steps[0].source_memo_block_number == 0U,
+               "#721: label preview lifecycle should expose memo block zero");
     }
 
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);

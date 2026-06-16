@@ -408,6 +408,7 @@ void append_if_method_exists(
         .record_index = method->record_index,
         .source_field_index = method->source_field_index,
         .source_line_index = method->source_line_index,
+        .source_memo_block_number = method->source_memo_block_number,
         .kind = "method",
         .command_text = command_text,
         .routine_name = method->routine_name
@@ -634,6 +635,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                     .record_index = method.record_index,
                     .source_field_index = method.source_field_index,
                     .source_line_index = method.source_line_index,
+                    .source_memo_block_number = method.source_memo_block_number,
                     .kind = "method",
                     .command_text = command_text,
                     .routine_name = method.routine_name
@@ -646,6 +648,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                     .record_index = method.record_index,
                     .source_field_index = method.source_field_index,
                     .source_line_index = method.source_line_index,
+                    .source_memo_block_number = method.source_memo_block_number,
                     .kind = "method",
                     .command_text = command_text,
                     .routine_name = method.routine_name

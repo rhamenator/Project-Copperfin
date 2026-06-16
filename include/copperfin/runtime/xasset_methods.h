@@ -37,6 +37,7 @@ struct XAssetLifecycleStep {
     std::size_t record_index = 0;
     std::size_t source_field_index = studio::StudioObjectMissingFieldIndex;
     std::size_t source_line_index = studio::StudioObjectMissingLineIndex;
+    std::uint32_t source_memo_block_number = 0;
     std::string kind;
     std::string command_text;
     std::string routine_name;
