@@ -1416,6 +1416,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should stage native-return selection through the shared execution helper.");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "library-output wrapper source should declare an integer return-representation parser");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_parse_json_string_at(") != std::string::npos,
+               "library-output wrapper source should declare a JSON string escape decoder for response parsing");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parse_json_string_at(response_document, value_start, string_end, decoded_value)") != std::string::npos,
+               "library-output wrapper source should decode escaped response string fields before interpreting returns");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
                "library-output wrapper source should declare a shared parsed-int default sentinel helper");
         expect(wrapper_source.find("copperfin_runtime_bridge_default_int_value()") != std::string::npos,
@@ -2952,6 +2956,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should stage native-return selection through the shared execution helper.");
         expect(wrapper_source.find("static int copperfin_parse_runtime_bridge_int_value_representation(") != std::string::npos,
                "fll-output wrapper source should declare an integer return-representation parser");
+        expect(wrapper_source.find("static bool copperfin_runtime_bridge_parse_json_string_at(") != std::string::npos,
+               "fll-output wrapper source should declare a JSON string escape decoder for response parsing");
+        expect(wrapper_source.find("copperfin_runtime_bridge_parse_json_string_at(response_document, value_start, string_end, decoded_value)") != std::string::npos,
+               "fll-output wrapper source should decode escaped response string fields before interpreting returns");
         expect(wrapper_source.find("static int copperfin_runtime_bridge_default_int_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared parsed-int default sentinel helper");
         expect(wrapper_source.find("copperfin_runtime_bridge_default_int_value()") != std::string::npos,
