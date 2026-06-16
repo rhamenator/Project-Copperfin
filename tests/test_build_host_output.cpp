@@ -1219,8 +1219,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should evaluate staged host failure from the process-launch helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);") != std::string::npos,
                    "build host DLL wrapper should route process-launch output through the shared host-failure evaluation helper.");
-            expect(wrapper_source.find("(void)host_failure;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only host-failure evaluation result unused.");
+            expect(wrapper_source.find("(void)host_failure;") == std::string::npos,
+                   "build host DLL wrapper should consume host-failure evaluation when evaluating missing response.");
             expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
                    "build host DLL wrapper should build a response-validation plan from the failure policy");
             expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,
@@ -2143,8 +2143,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should evaluate staged host failure from the process-launch helper.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);") != std::string::npos,
                    "build host FLL wrapper should route process-launch output through the shared host-failure evaluation helper.");
-            expect(wrapper_source.find("(void)host_failure;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only host-failure evaluation result unused.");
+            expect(wrapper_source.find("(void)host_failure;") == std::string::npos,
+                   "build host FLL wrapper should consume host-failure evaluation when evaluating missing response.");
             expect(wrapper_source.find("const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(") != std::string::npos,
                    "build host FLL wrapper should build a response-validation plan from the failure policy");
             expect(wrapper_source.find("const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(") != std::string::npos,

@@ -2300,7 +2300,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        placeholder_return_binding.value_representation);\n";
             stream << "    const auto host_failure =\n";
             stream << "        copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);\n";
-            stream << "    (void)host_failure;\n";
             stream << "    const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(\n";
             stream << "        failure_policy);\n";
             stream << "    const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(\n";
@@ -2544,7 +2543,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        placeholder_return_binding.value_representation);\n";
             stream << "    const auto host_failure =\n";
             stream << "        copperfin_runtime_bridge_evaluate_host_failure(process_launch, failure_policy);\n";
-            stream << "    (void)host_failure;\n";
             stream << "    const auto response_validation = copperfin_build_runtime_bridge_response_validation_plan(\n";
             stream << "        failure_policy);\n";
             stream << "    const auto request_artifact = copperfin_build_runtime_bridge_request_artifact(\n";
