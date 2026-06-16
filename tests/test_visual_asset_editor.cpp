@@ -10501,6 +10501,190 @@ void test_set_visual_object_input_mask_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_format_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_format_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "format.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "FORMAT", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtAmount", "amountBox", "amount-guid", "$999,999.99"},
+        {"txtDate", "dateBox", "date-guid", "K"},
+        {"txtOther", "otherBox", "other-guid", "!"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#804: format fixture should be writable");
+
+    const auto format_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "Format"
+        });
+        expect(result.ok && result.exists, "#804: format fixture property should be readable");
+        return result.value;
+    };
+    const auto format = [&](const std::string& unique_id) {
+        return format_for(table_path.string(), unique_id);
+    };
+    const auto format_state = [&]() {
+        return format("amount-guid") + "," +
+            format("date-guid") + "," +
+            format("other-guid");
+    };
+
+    auto format_result = copperfin::vfp::set_visual_object_format({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtAmount", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .format = "999,999.99"
+    });
+    expect(format_result.ok, "#804: format assignment should support object-name and record-index selectors");
+    expect(format("amount-guid") == "999,999.99" &&
+            format("date-guid") == "999,999.99" &&
+            format("other-guid") == "!",
+        "#804: direct format assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#804: first format write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#804: second format write should remain undo-backed");
+    expect(format_state() == "$999,999.99,K,!", "#804: format undo should restore original direct values");
+
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "amount-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "date-guid"}
+        },
+        .format = "@!"
+    });
+    expect(format_result.ok, "#804: format assignment should support UNIQUEID selectors");
+    expect(format("amount-guid") == "@!" &&
+            format("date-guid") == "@!",
+        "#804: direct format assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = format_state();
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = table_path.string(),
+        .objects = {},
+        .format = "Ignored"
+    });
+    expect(!format_result.ok, "#804: format assignment should reject empty selections");
+    expect(format_state() == committed_state, "#804: empty-selection failures should not mutate formats");
+
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "amount-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .format = "Ignored"
+    });
+    expect(!format_result.ok, "#804: format assignment should reject missing selected objects");
+    expect(format_state() == committed_state, "#804: missing-object failures should not mutate formats");
+
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "amount-guid"},
+            {.record_index = 0U, .object_name = "txtAmount", .unique_id = {}}
+        },
+        .format = "Ignored"
+    });
+    expect(!format_result.ok, "#804: format assignment should reject duplicate selected objects");
+    expect(format_state() == committed_state, "#804: duplicate-selection failures should not mutate formats");
+
+    const fs::path blob_path = temp_dir / "format_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "Format = \"99999\"\r\nCaption = \"Zip\"\r\n"},
+        {"txtNoFormat", "no-format-guid", "Caption = \"No format\"\r\n"},
+        {"txtOther", "other-guid", "Format = \"!\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#804: format property-blob fixture should be writable");
+
+    const auto blob_format_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "Format"
+        });
+    };
+
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoFormat", .unique_id = {}}
+        },
+        .format = "A\"!"
+    });
+    expect(format_result.ok, "#804: format assignment should support existing and absent serialized properties");
+    auto blob_format = blob_format_state("blob-guid");
+    auto appended_format = blob_format_state("no-format-guid");
+    auto other_format = blob_format_state("other-guid");
+    expect(blob_format.ok && blob_format.exists && blob_format.value == "\"A\"\"!\"" &&
+            appended_format.ok && appended_format.exists && appended_format.value == "\"A\"\"!\"" &&
+            other_format.ok && other_format.exists && other_format.value == "\"!\"",
+        "#804: serialized format assignment should quote text, append missing Format, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#804: appended serialized format write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#804: existing serialized format write should remain undo-backed");
+    blob_format = blob_format_state("blob-guid");
+    appended_format = blob_format_state("no-format-guid");
+    expect(blob_format.ok && blob_format.exists && blob_format.value == "\"99999\"" &&
+            appended_format.ok && !appended_format.exists,
+        "#804: serialized format undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_format.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#804: missing-Format fixture should be writable");
+
+    format_result = copperfin::vfp::set_visual_object_format({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .format = "Ignored"
+    });
+    expect(!format_result.ok, "#804: format assignment should reject objects without a writable Format carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -13096,6 +13280,7 @@ int main() {
     test_set_visual_object_status_bar_text_assigns_text();
     test_set_visual_object_control_source_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
+    test_set_visual_object_format_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

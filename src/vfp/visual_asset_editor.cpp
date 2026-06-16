@@ -5247,6 +5247,15 @@ VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRe
         request.input_mask);
 }
 
+VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "Format",
+        "format",
+        request.format);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
