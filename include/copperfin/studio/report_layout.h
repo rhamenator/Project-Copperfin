@@ -56,6 +56,8 @@ struct StudioLayoutObjectSnapshot {
 
 struct StudioReportSectionSnapshot {
     std::string id{};
+    std::size_t id_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t id_memo_block_number = 0;
     std::string title{};
     std::size_t title_field_index = StudioReportMissingFieldIndex;
     std::uint32_t title_memo_block_number = 0;

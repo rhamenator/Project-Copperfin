@@ -357,6 +357,8 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
     return {
         .id = make_section_id(record.record_index, objcode),
+        .id_field_index = StudioReportMissingFieldIndex,
+        .id_memo_block_number = 0U,
         .title = band_title(objcode),
         .title_field_index = objcode_field_index,
         .title_memo_block_number = objcode_memo_block_number,

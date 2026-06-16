@@ -148,6 +148,11 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
+    expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
+    expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+        "#729: synthesized report section ids should use missing DBF field provenance");
+    expect(layout.sections[0].id_memo_block_number == 0U,
+        "#729: synthesized report section ids should expose memo block zero");
     expect(layout.sections[0].objcode_code == 1, "#666: report sections should preserve raw OBJCODE values");
     expect(layout.sections[0].objcode_field_index == 1U, "#664: report section should preserve OBJCODE field provenance");
     expect(layout.sections[0].objcode_memo_block_number == 41U, "#722: report sections should preserve OBJCODE memo block provenance");
@@ -282,6 +287,10 @@ void test_build_report_layout_groups_band_objects() {
     if (!layout.deleted_sections.empty()) {
         expect(layout.deleted_sections[0].deleted, "#690: deleted report section snapshots should retain deleted state");
         expect(layout.deleted_sections[0].band_kind == "summary", "#690: deleted report sections should retain band metadata");
+        expect(layout.deleted_sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+            "#729: deleted synthesized section ids should use missing DBF field provenance");
+        expect(layout.deleted_sections[0].id_memo_block_number == 0U,
+            "#729: deleted synthesized section ids should expose memo block zero");
         expect(layout.deleted_sections[0].objcode_field_index == 1U,
             "#690: deleted report sections should retain OBJCODE provenance");
         expect(layout.deleted_sections[0].objcode_memo_block_number == 81U,
