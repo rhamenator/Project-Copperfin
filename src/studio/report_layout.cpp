@@ -57,6 +57,11 @@ std::size_t field_index_or_missing(const DbfRecord& record, std::string_view fie
     return find_field_index(record, field_name).value_or(StudioReportMissingFieldIndex);
 }
 
+std::uint32_t memo_block_number_or_zero(const DbfRecord& record, std::string_view field_name) {
+    const auto* value = find_value(record, field_name);
+    return value == nullptr ? 0U : value->memo_block_number;
+}
+
 std::string value_or_empty(const DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     if (value == nullptr || looks_like_unresolved_memo(value->display_value)) {
@@ -227,6 +232,7 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
                 .name = std::string(name),
                 .record_index = record.record_index,
                 .field_index = field_index_or_missing(record, name),
+                .memo_block_number = memo_block_number_or_zero(record, name),
                 .value = value
             });
         }
@@ -278,6 +284,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
                     .record_index = record.record_index,
                     .field_index = expr_field_index,
                     .source_line_index = line_index,
+                    .memo_block_number = memo_block_number_or_zero(record, "EXPR"),
                     .value = value
                 });
             }
@@ -297,6 +304,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
                 .name = std::string(field_name),
                 .record_index = record.record_index,
                 .field_index = field_index_or_missing(record, field_name),
+                .memo_block_number = memo_block_number_or_zero(record, field_name),
                 .value = value
             });
         }

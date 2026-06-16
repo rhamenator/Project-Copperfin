@@ -16,12 +16,13 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
-copperfin::vfp::DbfRecordValue value(std::string name, std::string display_value) {
+copperfin::vfp::DbfRecordValue value(std::string name, std::string display_value, std::uint32_t memo_block_number = 0U) {
     return {
         .field_name = std::move(name),
         .field_type = 'C',
         .is_null = false,
-        .display_value = std::move(display_value)
+        .display_value = std::move(display_value),
+        .memo_block_number = memo_block_number
     };
 }
 
@@ -38,7 +39,7 @@ void test_build_report_layout_groups_band_objects() {
             .values = {
                 value("OBJTYPE", "1"),
                 value("OBJCODE", "53"),
-                value("EXPR", "ORIENTATION=0\r\nPAPERSIZE=1"),
+                value("EXPR", "ORIENTATION=0\r\nPAPERSIZE=1", 9U),
                 value("TOPMARGIN", "10"),
                 value("BOTMARGIN", "12")
             }
@@ -74,7 +75,7 @@ void test_build_report_layout_groups_band_objects() {
                 value("VPOS", "2600.000"),
                 value("WIDTH", "4000.000"),
                 value("HEIGHT", "450.000"),
-                value("FONTFACE", "Segoe UI"),
+                value("FONTFACE", "Segoe UI", 12U),
                 value("FONTSIZE", "10")
             }
         },
@@ -129,7 +130,7 @@ void test_build_report_layout_groups_band_objects() {
             .values = {
                 value("OBJTYPE", "1"),
                 value("OBJCODE", "53"),
-                value("EXPR", "DELETEDSETTING=1"),
+                value("EXPR", "DELETEDSETTING=1", 19U),
                 value("TOPMARGIN", "99")
             }
         }
@@ -179,6 +180,7 @@ void test_build_report_layout_groups_band_objects() {
         expect(orientation->record_index == 0U, "#661: parsed EXPR settings should retain their source record index");
         expect(orientation->field_index == 2U, "#661: parsed EXPR settings should retain the source EXPR field ordinal");
         expect(orientation->source_line_index == 0U, "#676: parsed EXPR settings should retain their source memo line index");
+        expect(orientation->memo_block_number == 9U, "#713: parsed EXPR settings should inherit the source EXPR memo block");
     }
     const auto paper_size = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "PAPERSIZE";
@@ -186,6 +188,7 @@ void test_build_report_layout_groups_band_objects() {
     expect(paper_size != layout.settings.end(), "#676: report settings should include later parsed EXPR settings");
     if (paper_size != layout.settings.end()) {
         expect(paper_size->source_line_index == 1U, "#676: later EXPR settings should retain their source memo line index");
+        expect(paper_size->memo_block_number == 9U, "#713: later EXPR settings should inherit the source EXPR memo block");
     }
     const auto top_margin = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "TOPMARGIN";
@@ -196,6 +199,7 @@ void test_build_report_layout_groups_band_objects() {
         expect(top_margin->field_index == 3U, "#661: direct settings should retain their DBF field ordinal");
         expect(top_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
             "#676: direct settings should not masquerade as parsed memo-line settings");
+        expect(top_margin->memo_block_number == 0U, "#713: direct non-memo settings should expose memo block zero");
     }
     const auto fontface = std::find_if(
         layout.sections[1].objects[0].highlights.begin(),
@@ -207,6 +211,7 @@ void test_build_report_layout_groups_band_objects() {
     if (fontface != layout.sections[1].objects[0].highlights.end()) {
         expect(fontface->record_index == 3U, "#661: layout highlights should retain source record index");
         expect(fontface->field_index == 7U, "#661: layout highlights should retain DBF field ordinal");
+        expect(fontface->memo_block_number == 12U, "#713: memo-backed highlights should preserve source memo block provenance");
     }
     expect(layout.unplaced_objects.size() == 1U, "#675: object without matching section should remain unplaced");
     if (!layout.unplaced_objects.empty()) {
@@ -236,6 +241,7 @@ void test_build_report_layout_groups_band_objects() {
         expect(deleted_setting->record_index == 8U, "#691: deleted report root settings should retain record provenance");
         expect(deleted_setting->field_index == 2U, "#691: deleted report root settings should retain EXPR field provenance");
         expect(deleted_setting->source_line_index == 0U, "#691: deleted report root settings should retain memo-line provenance");
+        expect(deleted_setting->memo_block_number == 19U, "#713: deleted parsed EXPR settings should retain memo block provenance");
         expect(deleted_setting->value == "1", "#691: deleted report root settings should retain parsed value text");
     }
     const auto deleted_top_margin = std::find_if(layout.deleted_settings.begin(), layout.deleted_settings.end(), [](const auto& setting) {
@@ -247,6 +253,7 @@ void test_build_report_layout_groups_band_objects() {
         expect(deleted_top_margin->field_index == 3U, "#691: deleted direct settings should retain DBF field provenance");
         expect(deleted_top_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
             "#691: deleted direct settings should not masquerade as memo-line settings");
+        expect(deleted_top_margin->memo_block_number == 0U, "#713: deleted direct non-memo settings should expose memo block zero");
     }
     const auto live_deleted_setting = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "DELETEDSETTING";

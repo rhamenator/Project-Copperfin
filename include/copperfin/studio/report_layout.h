@@ -3,6 +3,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,7 @@ struct StudioNamedValue {
     std::size_t record_index = 0;
     std::size_t field_index = StudioReportMissingFieldIndex;
     std::size_t source_line_index = StudioReportMissingLineIndex;
+    std::uint32_t memo_block_number = 0;
     std::string value{};
 };
 
