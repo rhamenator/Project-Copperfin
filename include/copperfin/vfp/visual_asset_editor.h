@@ -1084,6 +1084,12 @@ struct VisualObjectSelectedBackColorRequest {
     int selected_back_color = 0;
 };
 
+struct VisualObjectSelectedForeColorRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int selected_fore_color = 0;
+};
+
 struct VisualObjectSelectedItemBackColorRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1365,6 +1371,7 @@ VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& re
 VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRequest& request);
 VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayValueRequest& request);
 VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSelectedBackColorRequest& request);
+VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSelectedForeColorRequest& request);
 VisualAssetEditResult set_visual_object_selected_item_back_color(const VisualObjectSelectedItemBackColorRequest& request);
 VisualAssetEditResult set_visual_object_selected_item_fore_color(const VisualObjectSelectedItemForeColorRequest& request);
 VisualAssetEditResult set_visual_object_disabled_item_back_color(const VisualObjectDisabledItemBackColorRequest& request);

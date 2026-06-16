@@ -5950,6 +5950,19 @@ VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSe
         std::to_string(request.selected_back_color));
 }
 
+VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSelectedForeColorRequest& request) {
+    if (request.selected_fore_color < 0) {
+        return {.ok = false, .error = "SelectedForeColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "SelectedForeColor",
+        "selected fore-color",
+        std::to_string(request.selected_fore_color));
+}
+
 VisualAssetEditResult set_visual_object_selected_item_back_color(
     const VisualObjectSelectedItemBackColorRequest& request) {
     if (request.selected_item_back_color < 0) {
