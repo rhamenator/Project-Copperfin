@@ -11452,6 +11452,191 @@ void test_set_visual_object_column_count_assigns_numeric_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_column_widths_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_column_widths_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "column_widths.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "COLUMNWIDTHS", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", "75,125"},
+        {"lstOrders", "ordersList", "orders-guid", "60,80,100"},
+        {"cboOther", "otherCombo", "other-guid", "90,90"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#809: column-widths fixture should be writable");
+
+    const auto column_widths_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnWidths"
+        });
+        expect(result.ok && result.exists, "#809: column-widths fixture property should be readable");
+        return result.value;
+    };
+    const auto column_widths = [&](const std::string& unique_id) {
+        return column_widths_for(table_path.string(), unique_id);
+    };
+    const auto column_widths_state = [&]() {
+        return column_widths("customer-guid") + ";" +
+            column_widths("orders-guid") + ";" +
+            column_widths("other-guid");
+    };
+
+    auto widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .column_widths = "40,90,120"
+    });
+    expect(widths_result.ok, "#809: column-widths assignment should support object-name and record-index selectors");
+    expect(column_widths("customer-guid") == "40,90,120" &&
+            column_widths("orders-guid") == "40,90,120" &&
+            column_widths("other-guid") == "90,90",
+        "#809: direct column-widths assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#809: first column-widths write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#809: second column-widths write should remain undo-backed");
+    expect(column_widths_state() == "75,125;60,80,100;90,90",
+        "#809: column-widths undo should restore original direct values");
+
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .column_widths = "10,20"
+    });
+    expect(widths_result.ok, "#809: column-widths assignment should support UNIQUEID selectors");
+    expect(column_widths("customer-guid") == "10,20" &&
+            column_widths("orders-guid") == "10,20",
+        "#809: direct column-widths assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = column_widths_state();
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = table_path.string(),
+        .objects = {},
+        .column_widths = "Ignored"
+    });
+    expect(!widths_result.ok, "#809: column-widths assignment should reject empty selections");
+    expect(column_widths_state() == committed_state, "#809: empty-selection failures should not mutate column widths");
+
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .column_widths = "Ignored"
+    });
+    expect(!widths_result.ok, "#809: column-widths assignment should reject missing selected objects");
+    expect(column_widths_state() == committed_state, "#809: missing-object failures should not mutate column widths");
+
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .column_widths = "Ignored"
+    });
+    expect(!widths_result.ok, "#809: column-widths assignment should reject duplicate selected objects");
+    expect(column_widths_state() == committed_state, "#809: duplicate-selection failures should not mutate column widths");
+
+    const fs::path blob_path = temp_dir / "column_widths_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "ColumnWidths = \"75,125\"\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoWidths", "no-widths-guid", "Caption = \"No widths\"\r\n"},
+        {"cboOther", "other-guid", "ColumnWidths = \"90,90\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#809: column-widths property-blob fixture should be writable");
+
+    const auto blob_column_widths_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnWidths"
+        });
+    };
+
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoWidths", .unique_id = {}}
+        },
+        .column_widths = "40,\"Auto\",120"
+    });
+    expect(widths_result.ok, "#809: column-widths assignment should support existing and absent serialized properties");
+    auto blob_widths = blob_column_widths_state("blob-guid");
+    auto appended_widths = blob_column_widths_state("no-widths-guid");
+    auto other_widths = blob_column_widths_state("other-guid");
+    expect(blob_widths.ok && blob_widths.exists && blob_widths.value == "\"40,\"\"Auto\"\",120\"" &&
+            appended_widths.ok && appended_widths.exists && appended_widths.value == "\"40,\"\"Auto\"\",120\"" &&
+            other_widths.ok && other_widths.exists && other_widths.value == "\"90,90\"",
+        "#809: serialized column-widths assignment should quote text, append missing ColumnWidths, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#809: appended serialized column-widths write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#809: existing serialized column-widths write should remain undo-backed");
+    blob_widths = blob_column_widths_state("blob-guid");
+    appended_widths = blob_column_widths_state("no-widths-guid");
+    expect(blob_widths.ok && blob_widths.exists && blob_widths.value == "\"75,125\"" &&
+            appended_widths.ok && !appended_widths.exists,
+        "#809: serialized column-widths undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_columnwidths.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#809: missing-ColumnWidths fixture should be writable");
+
+    widths_result = copperfin::vfp::set_visual_object_column_widths({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .column_widths = "Ignored"
+    });
+    expect(!widths_result.ok, "#809: column-widths assignment should reject objects without a writable ColumnWidths carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -14052,6 +14237,7 @@ int main() {
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
     test_set_visual_object_column_count_assigns_numeric_value();
+    test_set_visual_object_column_widths_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

@@ -5358,6 +5358,15 @@ VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCou
         std::to_string(request.column_count));
 }
 
+VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWidthsRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "ColumnWidths",
+        "column-widths",
+        request.column_widths);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

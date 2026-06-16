@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#809 selected visual object column-widths assignment shipped: combo/list designer commands can assign caller-provided `ColumnWidths` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#808 selected visual object column-count assignment shipped: combo/list designer commands can assign caller-provided numeric `ColumnCount` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#807 selected visual object bound-column assignment shipped: combo/list designer commands can assign caller-provided numeric `BoundColumn` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#806 selected visual object row-source-type assignment shipped: combo/list designer commands can assign caller-provided numeric `RowSourceType` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
