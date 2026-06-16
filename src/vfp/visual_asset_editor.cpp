@@ -5256,6 +5256,15 @@ VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& 
         request.format);
 }
 
+VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "RowSource",
+        "row-source",
+        request.row_source);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

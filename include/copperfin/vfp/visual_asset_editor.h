@@ -718,6 +718,12 @@ struct VisualObjectFormatRequest {
     std::string format;
 };
 
+struct VisualObjectRowSourceRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string row_source;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -852,6 +858,7 @@ VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatus
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request);
+VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
