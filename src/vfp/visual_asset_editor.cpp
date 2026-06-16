@@ -5301,6 +5301,15 @@ VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurren
         request.current_control);
 }
 
+VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HideSelection",
+        "hide-selection",
+        request.hide_selection ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

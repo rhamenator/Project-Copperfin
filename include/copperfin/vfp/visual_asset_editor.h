@@ -712,6 +712,12 @@ struct VisualObjectCurrentControlRequest {
     std::string current_control;
 };
 
+struct VisualObjectHideSelectionRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool hide_selection = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1283,6 +1289,7 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
 VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request);
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request);
+VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);
