@@ -2183,6 +2183,114 @@ void test_list_visual_object_children_filters_immediate_children() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_list_visual_object_descendants_walks_container_tree() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_descendants_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "descendants.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cntA", "containerA", "a-guid", "mainForm", "container", "container", "Caption = \"A\"\r\n"},
+        {"txtName", "nameBox", "name-guid", "cntA", "textbox", "textbox", "Caption = \"Name\"\r\n"},
+        {"lblNested", "nestedLabel", "nested-guid", "txtName", "label", "label", "Caption = \"Nested\"\r\n"},
+        {"dupContainer", "dupOne", "dup-one-guid", "mainForm", "container", "container", ""},
+        {"dupContainer", "dupTwo", "dup-two-guid", "mainForm", "container", "container", ""},
+        {"dupChild", "dupChildName", "dup-child-guid", "dupContainer", "label", "label", ""},
+        {"cmdOther", "otherButton", "other-guid", "", "commandbutton", "commandbutton", ""},
+        {"", "", "nameless-guid", "", "custom", "custom", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#757: descendants fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#757: descendants fixture should support deleted descendant setup");
+
+    auto descendants_result = copperfin::vfp::list_visual_object_descendants({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "form-guid"
+    });
+    expect(descendants_result.ok &&
+            descendants_result.parent_record_index == 0U &&
+            descendants_result.parent_name == "mainForm" &&
+            descendants_result.descendants.size() == 6U,
+        "#757: descendants should support UNIQUEID parent selection and fallback parent NAME resolution");
+    if (descendants_result.ok && descendants_result.descendants.size() == 6U) {
+        expect(descendants_result.descendants[0].object.unique_id == "a-guid" &&
+                descendants_result.descendants[0].depth == 1U,
+            "#757: descendants should list immediate children first with depth one");
+        expect(descendants_result.descendants[1].object.unique_id == "name-guid" &&
+                descendants_result.descendants[1].depth == 2U &&
+                descendants_result.descendants[1].object.deleted,
+            "#757: descendants should include deleted nested descendants with depth metadata");
+        expect(descendants_result.descendants[2].object.unique_id == "nested-guid" &&
+                descendants_result.descendants[2].depth == 3U,
+            "#757: descendants should walk grandchildren in pre-order");
+        expect(descendants_result.descendants[3].object.unique_id == "dup-one-guid" &&
+                descendants_result.descendants[4].object.unique_id == "dup-child-guid" &&
+                descendants_result.descendants[4].depth == 2U &&
+                descendants_result.descendants[5].object.unique_id == "dup-two-guid",
+            "#757: descendants should protect duplicate parent-name traversal from duplicate child entries");
+    }
+    const auto sibling = std::find_if(
+        descendants_result.descendants.begin(),
+        descendants_result.descendants.end(),
+        [](const copperfin::vfp::VisualObjectDescendantSnapshot& descendant) {
+            return descendant.object.unique_id == "other-guid";
+        });
+    expect(sibling == descendants_result.descendants.end(),
+        "#757: descendants should exclude sibling/root-level objects outside the selected parent");
+
+    descendants_result = copperfin::vfp::list_visual_object_descendants({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "mainForm",
+        .unique_id = {}
+    });
+    expect(descendants_result.ok && descendants_result.descendants.size() == 6U,
+        "#757: descendants should support fallback NAME parent selection");
+
+    descendants_result = copperfin::vfp::list_visual_object_descendants({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid"
+    });
+    expect(!descendants_result.ok, "#757: descendants should fail explicitly for missing parents");
+
+    descendants_result = copperfin::vfp::list_visual_object_descendants({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "nameless-guid"
+    });
+    expect(!descendants_result.ok, "#757: descendants should fail explicitly for nameless parent rows");
+
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#757: descendant listing should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3064,6 +3172,7 @@ int main() {
     test_rename_visual_object_updates_identity_safely();
     test_reorder_visual_object_updates_z_order();
     test_list_visual_object_children_filters_immediate_children();
+    test_list_visual_object_descendants_walks_container_tree();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

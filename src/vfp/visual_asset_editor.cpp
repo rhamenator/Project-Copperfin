@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -1456,6 +1457,110 @@ VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChi
         .parent_record_index = parent_record_index,
         .parent_name = parent_name,
         .children = std::move(children)
+    };
+}
+
+VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObjectDescendantsListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .descendants = {}
+        };
+    }
+
+    std::size_t parent_record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, parent_record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .descendants = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .descendants = {}
+        };
+    }
+    if (parent_record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested parent record is not currently available.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .descendants = {}
+        };
+    }
+
+    const auto& table = table_result.table;
+    const std::string parent_name = visual_object_record_name(table.records[parent_record_index]);
+    if (parent_name.empty()) {
+        return {
+            .ok = false,
+            .error = "The selected parent does not expose an object name.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .descendants = {}
+        };
+    }
+
+    std::vector<VisualObjectDescendantSnapshot> descendants;
+    std::vector<bool> visited(table.records.size(), false);
+    visited[parent_record_index] = true;
+
+    std::function<void(const std::string&, std::size_t)> append_descendants =
+        [&](const std::string& current_parent_name, std::size_t depth) {
+            const std::string normalized_parent_name = normalize_visual_object_name(current_parent_name);
+            if (normalized_parent_name.empty()) {
+                return;
+            }
+
+            for (std::size_t record_index = 0U; record_index < table.records.size(); ++record_index) {
+                if (visited[record_index]) {
+                    continue;
+                }
+                const auto* record_parent = find_record_value(table.records[record_index], "PARENT");
+                if (record_parent == nullptr ||
+                    normalize_visual_object_name(record_parent->display_value) != normalized_parent_name) {
+                    continue;
+                }
+
+                visited[record_index] = true;
+                VisualObjectSnapshot snapshot = build_visual_object_snapshot(table.records[record_index]);
+                descendants.push_back({
+                    .object = snapshot,
+                    .depth = depth
+                });
+                append_descendants(snapshot.object_name, depth + 1U);
+            }
+        };
+
+    append_descendants(parent_name, 1U);
+
+    return {
+        .ok = true,
+        .error = {},
+        .parent_record_index = parent_record_index,
+        .parent_name = parent_name,
+        .descendants = std::move(descendants)
     };
 }
 
