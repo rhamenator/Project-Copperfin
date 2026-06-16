@@ -132,6 +132,11 @@ std::string escape_json_string(const std::string& value) {
     return result;
 }
 
+std::optional<std::string> parse_json_string_at(
+    const std::string& document,
+    std::size_t value_start,
+    std::size_t& value_end);
+
 std::string extract_json_field(const std::string& document, const std::string& field_name) {
     const auto field_token = std::string("\"") + field_name + "\"";
     const auto field_offset = document.find(field_token);
@@ -147,10 +152,9 @@ std::string extract_json_field(const std::string& document, const std::string& f
         return {};
     }
     if (document[value_start] == '"') {
-        const auto value_end = document.find('"', value_start + 1U);
-        return value_end == std::string::npos
-            ? std::string{}
-            : document.substr(value_start + 1U, value_end - value_start - 1U);
+        std::size_t value_end = value_start;
+        const auto parsed = parse_json_string_at(document, value_start, value_end);
+        return parsed.has_value() ? *parsed : std::string{};
     }
     const auto value_end = document.find_first_of(",}", value_start);
     return trim_copy(document.substr(

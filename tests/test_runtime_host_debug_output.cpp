@@ -1161,6 +1161,97 @@ void test_runtime_host_removes_bridge_routine_bootstrap_after_execution(const st
     }
 }
 
+void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_escaped_descriptor_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path startup_path = temp_root / "content" / "startup.prg";
+    const fs::path source_path = temp_root / "content" / "exports\\escaped.prg";
+    const fs::path request_path = temp_root / "GetAnswer.request.json";
+    const fs::path response_path = temp_root / "nested" / "GetAnswer.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeEscapedDescriptor\n"
+        "startup_item=startup.prg\n"
+        "startup_source=") + startup_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(startup_path, "RETURN 7\n");
+    write_text(
+        source_path,
+        "PROCEDURE GetAnswer\n"
+        "RETURN 42\n"
+        "ENDPROC\n");
+
+    std::string escaped_source_path = source_path.string();
+    std::size_t slash_offset = 0;
+    while ((slash_offset = escaped_source_path.find('\\', slash_offset)) != std::string::npos) {
+        escaped_source_path.replace(slash_offset, 1U, "\\\\");
+        slash_offset += 2U;
+    }
+    write_text(
+        request_path,
+        std::string("{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"GetAnswer\",\n"
+        "  \"routine_kind\": \"procedure\",\n"
+        "  \"source_path\": \"") + escaped_source_path + "\",\n"
+        "  \"source_line\": 1,\n"
+        "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+        "  \"parameter_names\": \"\",\n"
+        "  \"parameter_count\": 0,\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameters\": []\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "GetAnswer",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "",
+            "--parameter-count", "0",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "bridge-escaped-descriptor stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-escaped-descriptor stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "runtime host should decode escaped descriptor strings before bridge validation");
+    expect(process.stdout_text.find("bridge.routine_bootstrap: true") != std::string::npos,
+           "runtime host should reach routine bootstrap execution after escaped descriptor validation");
+    expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
+           "runtime host should execute the escaped-path descriptor source");
+    const std::string response_document = read_text(response_path);
+    expect(response_document.find("\"return_value\": \"42\"") != std::string::npos,
+           "escaped descriptor bridge response should include the exported routine return value");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_passes_bridge_request_parameters_to_export(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -1594,6 +1685,7 @@ int main(int argc, char** argv) {
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
     test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
     test_runtime_host_removes_bridge_routine_bootstrap_after_execution(argv[1]);
+    test_runtime_host_unescapes_bridge_descriptor_string_fields(argv[1]);
     test_runtime_host_passes_bridge_request_parameters_to_export(argv[1]);
     test_runtime_host_rejects_bridge_parameter_count_mismatch(argv[1]);
     test_runtime_host_rejects_bridge_parameter_name_mismatch(argv[1]);
