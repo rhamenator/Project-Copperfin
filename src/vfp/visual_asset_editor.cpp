@@ -14,6 +14,7 @@
 #include <optional>
 #include <sstream>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -346,6 +347,40 @@ std::string update_visual_methods_blob(
     }
 
     return serialize_visual_lines(output_lines);
+}
+
+std::pair<bool, std::string> delete_visual_method_from_blob(
+    const std::string& existing_blob,
+    const std::string& requested_method_name) {
+    const std::string normalized_requested_name = normalize_visual_object_name(requested_method_name);
+    const std::vector<std::string> existing_lines = split_visual_lines(existing_blob);
+    std::vector<std::string> output_lines;
+    bool deleted = false;
+    bool skipping_deleted_body = false;
+
+    for (const auto& raw_line : existing_lines) {
+        const std::string trimmed_line = trim_both(raw_line);
+        std::string declaration_kind;
+        std::string declaration_name;
+        if (!skipping_deleted_body &&
+            parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name) &&
+            normalize_visual_object_name(declaration_name) == normalized_requested_name) {
+            deleted = true;
+            skipping_deleted_body = true;
+            continue;
+        }
+
+        if (skipping_deleted_body) {
+            if (is_visual_method_end_line(trimmed_line)) {
+                skipping_deleted_body = false;
+            }
+            continue;
+        }
+
+        output_lines.push_back(raw_line);
+    }
+
+    return {deleted, serialize_visual_lines(output_lines)};
 }
 
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
@@ -1358,6 +1393,57 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
         request.method_name,
         request.method_kind,
         request.source_text);
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "METHODS",
+        .property_value = updated_blob
+    });
+}
+
+VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (trim_both(request.method_name).empty()) {
+        return {.ok = false, .error = "No method name was provided."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
+    if (methods_field == nullptr) {
+        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+    }
+
+    const auto [deleted, updated_blob] = delete_visual_method_from_blob(
+        methods_field->display_value,
+        request.method_name);
+    if (!deleted) {
+        return {.ok = false, .error = "The requested method was not found."};
+    }
 
     return update_visual_object_property({
         .path = request.path,

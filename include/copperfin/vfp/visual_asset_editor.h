@@ -135,6 +135,14 @@ struct VisualObjectMethodEditRequest {
     std::string source_text;
 };
 
+struct VisualObjectMethodDeleteRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string method_name;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -153,6 +161,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectListResult list_visual_objects(const std::string& path);
 [[nodiscard]] VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request);
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
+VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);

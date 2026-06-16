@@ -1078,6 +1078,99 @@ void test_update_visual_object_method_updates_and_appends_methods() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_delete_visual_object_method_removes_selected_methods() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_delete_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_delete.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {"txtName", "nameBox", "name-guid", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#748: method-delete fixture should be writable");
+
+    auto delete_result = copperfin::vfp::delete_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "click"
+    });
+    expect(delete_result.ok, "#748: method deletes should remove existing selected-object methods case-insensitively");
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok, "#748: method-delete fixture should remain readable after delete");
+    expect(find_method_snapshot(method_result.methods, "Click") == nullptr,
+        "#748: method deletes should remove the full selected method block");
+    expect(find_method_snapshot(method_result.methods, "GetCaption") != nullptr,
+        "#748: method deletes should preserve unrelated methods in the same METHODS memo");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {}
+    });
+    expect(method_result.ok && method_result.methods.empty(),
+        "#748: selected-object method deletes should not mutate unrelated object records");
+
+    delete_result = copperfin::vfp::delete_visual_object_method({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "DoesNotExist"
+    });
+    expect(!delete_result.ok, "#748: missing method deletes should fail explicitly");
+
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok &&
+            find_method_snapshot(method_result.methods, "Click") == nullptr &&
+            find_method_snapshot(method_result.methods, "GetCaption") != nullptr,
+        "#748: missing method deletes should not mutate the METHODS memo");
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#748: undo should restore the deleted method block");
+    method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(method_result.ok &&
+            find_method_snapshot(method_result.methods, "Click") != nullptr &&
+            find_method_snapshot(method_result.methods, "GetCaption") != nullptr,
+        "#748: undo should restore deleted methods while preserving unrelated methods");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1950,6 +2043,7 @@ int main() {
     test_list_visual_objects_reads_hierarchy_metadata();
     test_list_visual_object_methods_reads_selected_methods();
     test_update_visual_object_method_updates_and_appends_methods();
+    test_delete_visual_object_method_removes_selected_methods();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
