@@ -42,8 +42,11 @@ struct StudioProjectBuildPlan {
     bool can_build = false;
     std::string project_title{};
     std::string project_key{};
+    std::size_t project_key_field_index = StudioProjectMissingFieldIndex;
     std::string home_directory{};
+    std::size_t home_directory_field_index = StudioProjectMissingFieldIndex;
     std::string output_path{};
+    std::size_t output_path_field_index = StudioProjectMissingFieldIndex;
     std::string output_kind{};
     std::string build_target{};
     std::string startup_item{};
@@ -51,9 +54,13 @@ struct StudioProjectBuildPlan {
     std::size_t total_items = 0;
     std::size_t excluded_items = 0;
     bool debug_enabled = false;
+    std::size_t debug_field_index = StudioProjectMissingFieldIndex;
     bool encrypt_enabled = false;
+    std::size_t encrypt_field_index = StudioProjectMissingFieldIndex;
     bool save_code = false;
+    std::size_t save_code_field_index = StudioProjectMissingFieldIndex;
     bool no_logo = false;
+    std::size_t no_logo_field_index = StudioProjectMissingFieldIndex;
 };
 
 struct StudioProjectWorkspace {

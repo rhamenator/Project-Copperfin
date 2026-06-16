@@ -71,6 +71,15 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
+    expect(workspace.build_plan.project_key_field_index == 1U, "#663: build plan should preserve project key field provenance");
+    expect(workspace.build_plan.home_directory_field_index == 2U, "#663: build plan should preserve home directory field provenance");
+    expect(workspace.build_plan.output_path_field_index == 3U, "#663: build plan should preserve output path field provenance");
+    expect(workspace.build_plan.debug_field_index == 4U, "#663: build plan should preserve DEBUG field provenance");
+    expect(workspace.build_plan.save_code_field_index == 5U, "#663: build plan should preserve SAVECODE field provenance");
+    expect(workspace.build_plan.encrypt_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#663: missing ENCRYPT build-flag provenance should be explicit");
+    expect(workspace.build_plan.no_logo_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#663: missing NOLOGO build-flag provenance should be explicit");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
     expect(workspace.entries[0].name_field_index == copperfin::studio::StudioProjectMissingFieldIndex,

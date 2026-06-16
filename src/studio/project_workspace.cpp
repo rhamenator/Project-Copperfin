@@ -365,10 +365,17 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     }
 
     if (header_record != document.table_preview.records.end()) {
+        workspace.build_plan.project_key_field_index = field_index_or_missing(*header_record, "KEY");
+        workspace.build_plan.home_directory_field_index = field_index_or_missing(*header_record, "HOMEDIR");
+        workspace.build_plan.output_path_field_index = field_index_or_missing(*header_record, "OUTFILE");
         workspace.build_plan.debug_enabled = value_as_bool(*header_record, "DEBUG");
+        workspace.build_plan.debug_field_index = field_index_or_missing(*header_record, "DEBUG");
         workspace.build_plan.encrypt_enabled = value_as_bool(*header_record, "ENCRYPT");
+        workspace.build_plan.encrypt_field_index = field_index_or_missing(*header_record, "ENCRYPT");
         workspace.build_plan.save_code = value_as_bool(*header_record, "SAVECODE");
+        workspace.build_plan.save_code_field_index = field_index_or_missing(*header_record, "SAVECODE");
         workspace.build_plan.no_logo = value_as_bool(*header_record, "NOLOGO");
+        workspace.build_plan.no_logo_field_index = field_index_or_missing(*header_record, "NOLOGO");
     }
 
     if (startup != nullptr) {

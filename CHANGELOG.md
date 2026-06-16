@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#663 project build-plan provenance shipped: normalized PJX build plans now preserve header field ordinals for project key, home directory, output path, and build flags, including explicit missing-field metadata.
 - E1/#662 project-entry provenance shipped: normalized PJX workspace entries now preserve DBF field ordinals for type, name, key, and comments, with explicit missing-field metadata for absent source fields.
 - E1/#661 report-layout provenance shipped: report/label layout settings and object highlights now carry their source record index and DBF field ordinal, preserving enough metadata for round-trip-safe designer edits.
 - E1/#660 design-object identity metadata shipped: Studio object snapshots now expose object name, UNIQUEID, parent, class, and baseclass fields from DBF-family visual records for shared designer navigation and round-trip fidelity.
