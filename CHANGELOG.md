@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#789 selected visual object ungrouping shipped: designer ungroup commands can move immediate children to the container parent, clear root-level child parents, and mark the container deleted while preserving rollback and undo behavior for parent writes.
 - E2/#788 selected visual object grouping shipped: designer grouping can create a container row and reparent selected objects under it while restoring original table/memo bytes on invalid containers or failed selections.
 - E2/#787 selected visual object resize-to-anchor shipped: designer resize commands can set selected objects to an anchor width, height, or full size through `WIDTH`/`HEIGHT` while preserving batch rollback and undo semantics.
 - E2/#786 selected visual object alignment shipped: designer alignment commands can align multiple selected objects to an anchor by left, right, top, bottom, horizontal-center, or vertical-center using `HPOS`/`VPOS`/`WIDTH`/`HEIGHT` while preserving batch rollback and undo semantics.

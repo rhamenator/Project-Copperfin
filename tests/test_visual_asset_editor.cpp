@@ -8177,6 +8177,134 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_ungroup_visual_object_reparents_children_and_marks_container_deleted() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_ungroup_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "ungroup.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmMain", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cntGroup", "groupContainer", "group-guid", "frmMain", "container", "container", "Caption = \"Group\"\r\n"},
+        {"cmdSave", "saveButton", "save-guid", "cntGroup", "commandbutton", "commandbutton", "Caption = \"Save\"\r\n"},
+        {"txtName", "nameBox", "name-guid", "cntGroup", "textbox", "textbox", "Caption = \"Name\"\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "frmMain", "label", "label", "Caption = \"Status\"\r\n"},
+        {"cntRoot", "rootContainer", "root-group-guid", "", "container", "container", "Caption = \"Root\"\r\n"},
+        {"cmdRoot", "rootButton", "root-child-guid", "cntRoot", "commandbutton", "commandbutton", "Caption = \"Root Child\"\r\n"},
+        {"cntEmpty", "emptyContainer", "empty-guid", "frmMain", "container", "container", "Caption = \"Empty\"\r\n"},
+        {"", "", "nameless-guid", "frmMain", "container", "container", "Caption = \"Nameless\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#789: ungroup fixture should be writable");
+
+    const auto parent_value = [&](const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "PARENT"
+        });
+        expect(result.ok && result.exists, "#789: ungroup parent property should be readable");
+        return result.value;
+    };
+    const auto is_deleted = [&](const std::string& unique_id) {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "#789: ungroup fixture should remain listable");
+        const auto object = std::find_if(
+            list_result.objects.begin(),
+            list_result.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& candidate) {
+                return candidate.unique_id == unique_id;
+            });
+        expect(object != list_result.objects.end(), "#789: expected visual object should remain present");
+        return object != list_result.objects.end() && object->deleted;
+    };
+
+    auto ungroup_result = copperfin::vfp::ungroup_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "group-guid"
+    });
+    expect(ungroup_result.ok &&
+            ungroup_result.container_record_index == 1U &&
+            ungroup_result.child_count == 2U,
+        "#789: ungroup should report the selected container and immediate child count");
+    expect(parent_value("save-guid") == "frmMain" &&
+            parent_value("name-guid") == "frmMain" &&
+            parent_value("status-guid") == "frmMain",
+        "#789: ungroup should move children to the container parent and preserve unrelated objects");
+    expect(is_deleted("group-guid"),
+        "#789: ungroup should mark the container deleted after successful child reparenting");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#789: first ungroup reparent write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#789: second ungroup reparent write should remain undo-backed");
+    expect(parent_value("save-guid") == "cntGroup" &&
+            parent_value("name-guid") == "cntGroup" &&
+            is_deleted("group-guid"),
+        "#789: ungroup undo should restore child parents while leaving the container deleted");
+
+    ungroup_result = copperfin::vfp::ungroup_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "root-group-guid"
+    });
+    expect(ungroup_result.ok && ungroup_result.child_count == 1U,
+        "#789: ungroup should support root-level containers");
+    expect(parent_value("root-child-guid").empty() && is_deleted("root-group-guid"),
+        "#789: root-level ungroup should clear child PARENT values and delete the container");
+
+    const std::string save_parent = parent_value("save-guid");
+    const std::string name_parent = parent_value("name-guid");
+    ungroup_result = copperfin::vfp::ungroup_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "empty-guid"
+    });
+    expect(!ungroup_result.ok, "#789: ungroup should reject containers without immediate children");
+    expect(parent_value("save-guid") == save_parent &&
+            parent_value("name-guid") == name_parent &&
+            !is_deleted("empty-guid"),
+        "#789: empty-container failures should not mutate unrelated children or delete the container");
+
+    ungroup_result = copperfin::vfp::ungroup_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "nameless-guid"
+    });
+    expect(!ungroup_result.ok, "#789: ungroup should reject nameless containers");
+    expect(!is_deleted("nameless-guid"),
+        "#789: nameless-container failures should not delete the selected row");
+
+    ungroup_result = copperfin::vfp::ungroup_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid"
+    });
+    expect(!ungroup_result.ok, "#789: ungroup should reject missing containers");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -10467,6 +10595,7 @@ int main() {
     test_align_visual_objects_to_anchor_geometry();
     test_resize_visual_objects_to_anchor_geometry();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
+    test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
     test_rename_visual_objects_rolls_back_failed_batches();

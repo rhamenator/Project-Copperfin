@@ -4390,6 +4390,130 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     return {.ok = true, .error = {}, .container_record_index = create_result.record_index};
 }
 
+VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .container_record_index = 0U, .child_count = 0U};
+    }
+
+    std::size_t container_record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, container_record_index);
+    if (!resolution.ok) {
+        return {.ok = false, .error = resolution.error, .container_record_index = 0U, .child_count = 0U};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error, .container_record_index = 0U, .child_count = 0U};
+    }
+    if (container_record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested container record is not currently available.", .container_record_index = 0U, .child_count = 0U};
+    }
+
+    const std::string container_name = visual_object_record_name(table_result.table.records[container_record_index]);
+    if (container_name.empty()) {
+        return {.ok = false, .error = "The selected container does not expose an object name.", .container_record_index = 0U, .child_count = 0U};
+    }
+    const auto* parent_value = find_record_value(table_result.table.records[container_record_index], "PARENT");
+    const std::string container_parent_name = parent_value == nullptr ? std::string{} : trim_both(parent_value->display_value);
+
+    const auto children_result = list_visual_object_children({
+        .path = request.path,
+        .record_index = container_record_index,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!children_result.ok) {
+        return {.ok = false, .error = children_result.error, .container_record_index = 0U, .child_count = 0U};
+    }
+    if (children_result.children.empty()) {
+        return {.ok = false, .error = "The selected container has no child objects to ungroup.", .container_record_index = 0U, .child_count = 0U};
+    }
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
+    if (original_table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table.", .container_record_index = 0U, .child_count = 0U};
+    }
+    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
+        ? std::vector<std::uint8_t>{}
+        : read_binary_file(memo_path);
+
+    const auto restore_original_asset = [&]() {
+        write_binary_file(request.path, original_table_bytes);
+        if (!memo_path.empty() && !original_memo_bytes.empty()) {
+            write_binary_file(memo_path, original_memo_bytes);
+        }
+    };
+
+    std::vector<VisualObjectReparentBatchItem> reparent_items;
+    reparent_items.reserve(children_result.children.size());
+    for (const auto& child : children_result.children) {
+        reparent_items.push_back({
+            .record_index = child.record_index,
+            .object_name = {},
+            .unique_id = {},
+            .parent_object_name = container_parent_name,
+            .parent_unique_id = {},
+            .clear_parent = container_parent_name.empty()
+        });
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_reparents = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    const auto reparent_result = reparent_visual_objects({
+        .path = request.path,
+        .objects = reparent_items
+    });
+    if (!reparent_result.ok) {
+        restore_original_asset();
+        return {.ok = false, .error = reparent_result.error, .container_record_index = 0U, .child_count = 0U};
+    }
+
+    const auto delete_result = set_visual_object_deleted_state({
+        .path = request.path,
+        .record_index = container_record_index,
+        .object_name = {},
+        .unique_id = {},
+        .deleted = true
+    });
+    if (!delete_result.ok) {
+        const auto rollback_result = rollback_reparents();
+        restore_original_asset();
+        if (!rollback_result.ok) {
+            return {
+                .ok = false,
+                .error = delete_result.error + " Rollback failed: " + rollback_result.error,
+                .container_record_index = 0U,
+                .child_count = 0U
+            };
+        }
+        return {.ok = false, .error = delete_result.error, .container_record_index = 0U, .child_count = 0U};
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .container_record_index = container_record_index,
+        .child_count = children_result.children.size()
+    };
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

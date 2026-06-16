@@ -610,6 +610,20 @@ struct VisualObjectGroupResult {
     std::size_t container_record_index = 0;
 };
 
+struct VisualObjectUngroupRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct VisualObjectUngroupResult {
+    bool ok = false;
+    std::string error;
+    std::size_t container_record_index = 0;
+    std::size_t child_count = 0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -728,6 +742,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request);
 VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& request);
 VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request);
+VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
