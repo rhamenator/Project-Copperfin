@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#764`, adding selected visual object method moves so method/event editors can transfer one selected `PROCEDURE`/`FUNCTION` between objects, optionally rename or replace the target method, delete the source only after the target write succeeds, reject self-overwrites, roll back target writes on source-delete failure, and retain undo support.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#765`, adding selected visual object method reordering so method/event editors can move a selected `PROCEDURE`/`FUNCTION` to first, last, before another method, or after another method within one selected object's `METHODS` memo while preserving source bodies, declaration kinds, unrelated methods, and undo support.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
