@@ -1367,8 +1367,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should admit staged return activation from the final-return-adoption admission and return-activation plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_activation(final_return_adoption_admission, return_activation_plan);") != std::string::npos,
                    "build host DLL wrapper should route final-return-adoption admission through the shared return-activation admission helper.");
-            expect(wrapper_source.find("(void)return_activation_admission;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only return-activation admission result unused.");
+            expect(wrapper_source.find("(void)return_activation_admission;") == std::string::npos,
+                   "build host DLL wrapper should consume return-activation admission when admitting stub-return routing.");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(") != std::string::npos,
                    "build host DLL wrapper should build a stub return plan from the return activation plan");
             expect(wrapper_source.find("const auto stub_return_admission =") != std::string::npos,
@@ -2291,8 +2291,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should admit staged return activation from the final-return-adoption admission and return-activation plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_return_activation(final_return_adoption_admission, return_activation_plan);") != std::string::npos,
                    "build host FLL wrapper should route final-return-adoption admission through the shared return-activation admission helper.");
-            expect(wrapper_source.find("(void)return_activation_admission;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only return-activation admission result unused.");
+            expect(wrapper_source.find("(void)return_activation_admission;") == std::string::npos,
+                   "build host FLL wrapper should consume return-activation admission when admitting stub-return routing.");
             expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(") != std::string::npos,
                    "build host FLL wrapper should build a stub return plan from the return activation plan");
             expect(wrapper_source.find("const auto stub_return_admission =") != std::string::npos,

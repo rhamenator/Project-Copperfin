@@ -2385,7 +2385,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption);\n";
             stream << "    const auto return_activation_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_activation(final_return_adoption_admission, return_activation_plan);\n";
-            stream << "    (void)return_activation_admission;\n";
             stream << "    const auto return_activation =\n";
             stream << "        copperfin_runtime_bridge_execute_return_activation(return_activation_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
@@ -2639,7 +2638,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        final_return_adoption);\n";
             stream << "    const auto return_activation_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_return_activation(final_return_adoption_admission, return_activation_plan);\n";
-            stream << "    (void)return_activation_admission;\n";
             stream << "    const auto return_activation =\n";
             stream << "        copperfin_runtime_bridge_execute_return_activation(return_activation_plan);\n";
             stream << "    const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n";
