@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#822 selected visual object item fore-color assignment shipped: combo/list designer commands can assign caller-provided numeric `ItemForeColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#821 selected visual object item back-color assignment shipped: combo/list designer commands can assign caller-provided numeric `ItemBackColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#820 selected visual object disabled-item fore-color assignment shipped: combo/list designer commands can assign caller-provided numeric `DisabledItemForeColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
 - E2/#819 selected visual object disabled-item back-color assignment shipped: combo/list designer commands can assign caller-provided numeric `DisabledItemBackColor` values to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while rejecting negative values, duplicate selections, and rollback-unsafe failures.
