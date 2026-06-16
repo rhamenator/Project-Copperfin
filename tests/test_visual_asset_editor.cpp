@@ -11204,6 +11204,29 @@ void test_set_visual_object_special_effect_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_mouse_pointer_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#865",
+        "mouse_pointer",
+        "MousePointer",
+        "MOUSEPOINTER",
+        "mouse-pointer",
+        0,
+        0,
+        15,
+        99,
+        1,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_mouse_pointer({
+                .path = path,
+                .objects = objects,
+                .mouse_pointer = value
+            });
+        });
+}
+
 void test_set_visual_object_input_mask_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -22198,6 +22221,7 @@ int main() {
     test_set_visual_object_border_width_assigns_numeric_value();
     test_set_visual_object_border_color_assigns_numeric_value();
     test_set_visual_object_special_effect_assigns_numeric_value();
+    test_set_visual_object_mouse_pointer_assigns_numeric_value();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();

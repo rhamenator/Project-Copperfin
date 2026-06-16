@@ -5438,6 +5438,19 @@ VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecial
         std::to_string(request.special_effect));
 }
 
+VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
+    if (request.mouse_pointer < 0) {
+        return {.ok = false, .error = "MousePointer must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MousePointer",
+        "mouse-pointer",
+        std::to_string(request.mouse_pointer));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

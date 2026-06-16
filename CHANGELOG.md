@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#865 selected visual object mouse-pointer assignment shipped: designer commands can assign caller-provided non-negative numeric `MousePointer` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#864 selected visual object special-effect assignment shipped: designer commands can assign caller-provided non-negative numeric `SpecialEffect` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#863 selected visual object border-color assignment shipped: designer commands can assign caller-provided non-negative numeric `BorderColor` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#862 selected visual object border-width assignment shipped: designer commands can assign caller-provided non-negative numeric `BorderWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
