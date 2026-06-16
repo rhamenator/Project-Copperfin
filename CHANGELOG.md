@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#702 VFP-aware Studio display names shipped: `open_document` now derives display names from backslash-aware VFP filename parsing instead of host-only filesystem semantics.
 - E1/#701 UNC project item path coverage shipped: focused project-workspace tests now prove UNC item paths normalize to project-relative text under the project directory and filename fallbacks outside it.
 - E1/#700 VFP absolute project item path normalization shipped: PJX/PJT entries now normalize Windows/UNC-style absolute item paths independent of host OS, preserving project-relative paths when possible and filename fallbacks otherwise.
 - E1/#699 deleted xAsset record handling shipped: executable xAsset models now skip DBF-deleted design rows for active root paths, methods, menu actions, shortcut detection, and activation fallback behavior.

@@ -128,6 +128,43 @@ void test_open_document_infers_form_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_open_document_uses_vfp_filename_for_display_name() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_vfp_filename_tests";
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / R"(E:\Forms\customer.scx)";
+    const fs::path sidecar_path = temp_dir / R"(E:\Forms\customer.sct)";
+
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    {
+        std::ofstream output(sidecar_path, std::ios::binary);
+        output << "memo-sidecar";
+    }
+
+    const auto result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .launched_from_visual_studio = true
+    });
+
+    expect(result.ok, "#702: open_document should accept synthetic Windows-style VFP path names on the host filesystem");
+    expect(result.document.display_name == "customer.scx",
+           "#702: Studio display names should use VFP-aware filename parsing for backslash paths");
+    expect(result.document.has_sidecar, "#702: sidecar inference should remain compatible with VFP-style path text");
+    expect(result.document.sidecar_path == sidecar_path.string(),
+           "#702: inferred sidecar path should still replace the extension in the host path");
+
+    std::error_code ignored;
+    fs::remove(form_path, ignored);
+    fs::remove(sidecar_path, ignored);
+    fs::remove(temp_dir, ignored);
+}
+
 void test_object_snapshot_preserves_empty_and_null_design_fields() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\customer.scx)";
@@ -653,6 +690,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
+    test_open_document_uses_vfp_filename_for_display_name();
     test_object_snapshot_preserves_empty_and_null_design_fields();
     test_object_snapshot_suppresses_unresolved_memo_placeholders();
     test_menu_object_snapshot_preserves_normalized_menu_metadata();

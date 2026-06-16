@@ -14,7 +14,8 @@ namespace copperfin::studio {
 namespace {
 
 std::string filename_of(const std::string& path) {
-    return std::filesystem::path(path).filename().string();
+    const std::size_t separator = path.find_last_of("/\\");
+    return separator == std::string::npos ? path : path.substr(separator + 1U);
 }
 
 const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
