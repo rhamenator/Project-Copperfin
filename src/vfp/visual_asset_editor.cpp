@@ -153,6 +153,7 @@ struct VisualAssetUndoEntry {
 struct VisualPropertyState {
     bool exists = false;
     bool direct_field = false;
+    std::string property_name;
     std::string value;
 };
 
@@ -528,6 +529,7 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
         return VisualPropertyState{
             .exists = true,
             .direct_field = true,
+            .property_name = direct_field_value->field_name,
             .value = direct_field_value->display_value
         };
     }
@@ -551,6 +553,7 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
         return VisualPropertyState{
             .exists = false,
             .direct_field = false,
+            .property_name = trim_both(property_name),
             .value = {}
         };
     }
@@ -558,6 +561,7 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
     return VisualPropertyState{
         .exists = true,
         .direct_field = false,
+        .property_name = property->name,
         .value = property->value
     };
 }
@@ -839,6 +843,73 @@ bool is_property_blob_asset_path(const std::string& path) {
 
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
     return apply_visual_object_property_change(request, true, false);
+}
+
+VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .exists = false,
+            .direct_field = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+    if (request.property_name.empty()) {
+        return {
+            .ok = false,
+            .error = "No property name was provided.",
+            .exists = false,
+            .direct_field = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .exists = false,
+            .direct_field = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    const auto property_state = read_current_visual_property_state(
+        request.path,
+        record_index,
+        request.property_name);
+    if (!property_state.has_value()) {
+        return {
+            .ok = false,
+            .error = "Unable to read the requested property.",
+            .exists = false,
+            .direct_field = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .exists = property_state->exists,
+        .direct_field = property_state->direct_field,
+        .property_name = property_state->property_name,
+        .value = property_state->value
+    };
 }
 
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {

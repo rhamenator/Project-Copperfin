@@ -34,6 +34,23 @@ struct VisualObjectMultiEditRequest {
     std::vector<VisualObjectPropertyChange> properties;
 };
 
+struct VisualObjectPropertyQueryRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string property_name;
+};
+
+struct VisualObjectPropertyQueryResult {
+    bool ok = false;
+    std::string error;
+    bool exists = false;
+    bool direct_field = false;
+    std::string property_name;
+    std::string value;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -47,6 +64,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::string& text);
 [[nodiscard]] std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssignment>& properties);
 [[nodiscard]] bool is_property_blob_asset_path(const std::string& path);
+[[nodiscard]] VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
 [[nodiscard]] VisualAssetUndoStatus query_visual_object_undo(const std::string& path);

@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#735`, adding a multi-property visual edit request/API for drag/resize-style designer interactions while preserving record-index, object-name, `UNIQUEID`, property-name, no-op, and existing per-property undo semantics.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#736`, adding selector-aware visual property queries for property-grid/context-aware editor reads using the same record-index, object-name, `UNIQUEID`, and case-insensitive property resolution as edits, without creating undo history.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 

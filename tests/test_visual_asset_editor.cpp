@@ -509,6 +509,81 @@ void test_update_visual_object_properties_updates_selected_geometry_fields() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_query_visual_object_property_reads_selected_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_query_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path memo_table_path = temp_dir / "query.scx";
+    const fs::path memo_path = temp_dir / "query.sct";
+    write_synthetic_named_object_asset(memo_table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        },
+        {
+            .objname = "txtName",
+            .name = "nameBox",
+            .unique_id = "target-guid",
+            .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"
+        }
+    });
+
+    auto query_result = copperfin::vfp::query_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = " TARGET-GUID ",
+        .property_name = "caption"
+    });
+    expect(query_result.ok, "#736: visual property queries should support UNIQUEID selectors");
+    expect(query_result.exists, "#736: visual property queries should report existing memo-backed properties");
+    expect(!query_result.direct_field, "#736: visual property queries should identify memo-backed properties");
+    expect(query_result.property_name == "Caption", "#736: visual property queries should return the stored memo property name");
+    expect(query_result.value == "\"Name\"", "#736: visual property queries should return the selected memo property value");
+    expect(!copperfin::vfp::query_visual_object_undo(memo_table_path.string()).available,
+        "#736: visual property queries should not create undo history");
+
+    query_result = copperfin::vfp::query_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {},
+        .property_name = "MissingProp"
+    });
+    expect(query_result.ok, "#736: missing memo-backed property queries should report cleanly");
+    expect(!query_result.exists, "#736: missing memo-backed property queries should not be marked existing");
+    expect(!query_result.direct_field, "#736: missing memo-backed property queries should not be direct fields");
+    expect(query_result.property_name == "MissingProp", "#736: missing property queries should echo the requested property name");
+    expect(query_result.value.empty(), "#736: missing property queries should return an empty value");
+
+    const fs::path direct_table_path = temp_dir / "query_geometry.scx";
+    const fs::path direct_memo_path = temp_dir / "query_geometry.sct";
+    write_synthetic_named_geometry_asset(direct_table_path, direct_memo_path);
+    query_result = copperfin::vfp::query_visual_object_property({
+        .path = direct_table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "hpos"
+    });
+    expect(query_result.ok, "#736: visual property queries should support object-name selectors");
+    expect(query_result.exists, "#736: visual property queries should report existing direct fields");
+    expect(query_result.direct_field, "#736: visual property queries should identify direct fields");
+    expect(query_result.property_name == "HPOS", "#736: visual property queries should return the stored direct field name");
+    expect(std::abs(parse_number(query_result.value) - 222.0) < 0.001,
+        "#736: visual property queries should return the selected direct-field value");
+    expect(!copperfin::vfp::query_visual_object_undo(direct_table_path.string()).available,
+        "#736: direct-field queries should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1373,6 +1448,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_properties_updates_selected_geometry_fields();
+    test_query_visual_object_property_reads_selected_values();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
