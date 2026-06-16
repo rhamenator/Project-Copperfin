@@ -4694,6 +4694,76 @@ VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRe
     });
 }
 
+VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.objects.empty()) {
+        return {.ok = false, .error = "No visual objects were selected for nudging."};
+    }
+
+    const std::string mode = normalize_visual_property_name(request.mode);
+    const bool nudge_horizontal = mode == "horizontal" || mode == "both";
+    const bool nudge_vertical = mode == "vertical" || mode == "both";
+    if (!nudge_horizontal && !nudge_vertical) {
+        return {.ok = false, .error = "Unsupported visual object nudge mode."};
+    }
+    if (nudge_horizontal && std::abs(request.delta_hpos) < 0.0000001) {
+        return {.ok = false, .error = "Horizontal nudge delta must be non-zero."};
+    }
+    if (nudge_vertical && std::abs(request.delta_vpos) < 0.0000001) {
+        return {.ok = false, .error = "Vertical nudge delta must be non-zero."};
+    }
+
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(request.objects.size());
+    for (const auto& object : request.objects) {
+        std::vector<VisualObjectPropertyChange> properties;
+        properties.reserve((nudge_horizontal ? 1U : 0U) + (nudge_vertical ? 1U : 0U));
+        if (nudge_horizontal) {
+            double coordinate = 0.0;
+            const auto coordinate_result = read_visual_object_geometry_coordinate(
+                request.path,
+                object,
+                "HPOS",
+                coordinate);
+            if (!coordinate_result.ok) {
+                return coordinate_result;
+            }
+            properties.push_back({
+                .property_name = "HPOS",
+                .property_value = format_visual_geometry_number(coordinate + request.delta_hpos)
+            });
+        }
+        if (nudge_vertical) {
+            double coordinate = 0.0;
+            const auto coordinate_result = read_visual_object_geometry_coordinate(
+                request.path,
+                object,
+                "VPOS",
+                coordinate);
+            if (!coordinate_result.ok) {
+                return coordinate_result;
+            }
+            properties.push_back({
+                .property_name = "VPOS",
+                .property_value = format_visual_geometry_number(coordinate + request.delta_vpos)
+            });
+        }
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = std::move(properties)
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = edits
+    });
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

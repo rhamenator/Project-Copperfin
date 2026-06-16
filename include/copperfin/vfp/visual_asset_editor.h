@@ -638,6 +638,14 @@ struct VisualObjectSnapToGridRequest {
     double grid_height = 0.0;
 };
 
+struct VisualObjectNudgeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string mode;
+    double delta_hpos = 0.0;
+    double delta_vpos = 0.0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -759,6 +767,7 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
 VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request);
 VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequest& request);
 VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRequest& request);
+VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
