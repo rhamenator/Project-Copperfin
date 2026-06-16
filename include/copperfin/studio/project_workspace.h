@@ -25,8 +25,11 @@ struct StudioProjectEntry {
     std::string comments{};
     std::size_t comments_field_index = StudioProjectMissingFieldIndex;
     bool excluded = false;
+    std::size_t exclude_field_index = StudioProjectMissingFieldIndex;
     bool main_program = false;
+    std::size_t main_program_field_index = StudioProjectMissingFieldIndex;
     bool local = false;
+    std::size_t local_field_index = StudioProjectMissingFieldIndex;
 };
 
 struct StudioProjectGroup {

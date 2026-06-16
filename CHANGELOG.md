@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#677 project entry flag provenance shipped: project workspace entries now preserve source DBF field ordinals for `EXCLUDE`, `MAINPROG`, and `LOCAL` flags, using `StudioProjectMissingFieldIndex` when absent.
 - E1/#676 report setting memo-line provenance shipped: parsed report/label root `EXPR` settings now preserve source memo line indexes, with direct settings marked by `StudioReportMissingLineIndex`.
 - E1/#675 report layout object title provenance shipped: report/label layout object snapshots now preserve source DBF field ordinals for friendly titles, using `StudioReportMissingFieldIndex` for synthesized titles.
 - E1/#674 report layout missing-field provenance shipped: report/label layout snapshots now use an explicit `StudioReportMissingFieldIndex` sentinel instead of conflating absent fields with DBF ordinal `0`.

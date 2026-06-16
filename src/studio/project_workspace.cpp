@@ -273,8 +273,11 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         entry.comments = comments;
         entry.comments_field_index = field_index_or_missing(record, "COMMENTS");
         entry.excluded = value_as_bool(record, "EXCLUDE");
+        entry.exclude_field_index = field_index_or_missing(record, "EXCLUDE");
         entry.main_program = value_as_bool(record, "MAINPROG");
+        entry.main_program_field_index = field_index_or_missing(record, "MAINPROG");
         entry.local = value_as_bool(record, "LOCAL");
+        entry.local_field_index = field_index_or_missing(record, "LOCAL");
 
         auto& group = ensure_group(descriptor.group_id, descriptor.group_title);
         group.record_indexes.push_back(entry.record_index);

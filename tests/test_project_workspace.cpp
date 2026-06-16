@@ -88,6 +88,13 @@ void test_build_project_workspace() {
     expect(workspace.entries[1].type_field_index == 0U, "#662: project entry type field ordinal should be preserved");
     expect(workspace.entries[1].name_field_index == 1U, "#662: project entry name field ordinal should be preserved");
     expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
+    expect(workspace.entries[1].main_program_field_index == 2U, "#677: MAINPROG project entry flag provenance should be preserved");
+    expect(workspace.entries[1].local_field_index == 4U, "#677: LOCAL project entry flag provenance should be preserved");
+    expect(workspace.entries[1].exclude_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#677: missing EXCLUDE project entry flag provenance should be explicit");
+    expect(workspace.entries[2].exclude_field_index == 3U, "#677: EXCLUDE project entry flag provenance should be preserved");
+    expect(workspace.entries[2].main_program_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#677: missing MAINPROG project entry flag provenance should be explicit");
 
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";
