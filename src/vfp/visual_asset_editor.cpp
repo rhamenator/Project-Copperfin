@@ -5606,6 +5606,16 @@ VisualAssetEditResult set_visual_object_disabled_fore_color(
         std::to_string(request.disabled_fore_color));
 }
 
+VisualAssetEditResult set_visual_object_dynamic_back_color(
+    const VisualObjectDynamicBackColorRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicBackColor",
+        "dynamic back-color",
+        request.dynamic_back_color);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
