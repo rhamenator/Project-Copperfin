@@ -842,6 +842,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeInterpretedResultPlan {\n";
     stream << "    CopperfinRuntimeBridgeResponseParsePlan response_parse_plan;\n";
+    stream << "    CopperfinRuntimeBridgeParsedResponse parsed_response;\n";
     stream << "    std::string success_status_value;\n";
     stream << "    std::string wrapper_return_surface;\n";
     stream << "    std::string fallback_return_value;\n";
@@ -1667,12 +1668,14 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        failure_policy_plan.fallback_return_value};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeInterpretedResultPlan copperfin_build_runtime_bridge_interpreted_result_plan(\n";
-    stream << "    CopperfinRuntimeBridgeResponseParsePlan response_parse_plan) {\n";
+    stream << "    CopperfinRuntimeBridgeResponseParsePlan response_parse_plan,\n";
+    stream << "    CopperfinRuntimeBridgeParsedResponse parsed_response) {\n";
     stream << "    const auto& response_validation_plan =\n";
     stream << "        response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan;\n";
     stream << "    const auto& failure_policy_plan = response_validation_plan.failure_policy_plan;\n";
     stream << "    return CopperfinRuntimeBridgeInterpretedResultPlan{\n";
     stream << "        std::move(response_parse_plan),\n";
+    stream << "        std::move(parsed_response),\n";
     stream << "        response_validation_plan.success_status_value,\n";
     stream << "        failure_policy_plan.interpretation_plan.wrapper_return_surface,\n";
     stream << "        failure_policy_plan.fallback_return_value};\n";
@@ -1691,7 +1694,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeInterpretedResult copperfin_runtime_bridge_execute_interpreted_result(\n";
     stream << "    const CopperfinRuntimeBridgeInterpretedResultPlan& plan) {\n";
-    stream << "    const auto parsed_response = copperfin_runtime_bridge_execute_parse_response(plan.response_parse_plan);\n";
+    stream << "    const auto& parsed_response = plan.parsed_response;\n";
     stream << "    const bool matched_success_status = parsed_response.status_value == plan.success_status_value;\n";
     stream << "    const auto selected_return_value_representation = matched_success_status\n";
     stream << "        ? parsed_response.return_value_representation\n";
@@ -1699,7 +1702,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return CopperfinRuntimeBridgeInterpretedResult{\n";
     stream << "        matched_success_status,\n";
     stream << "        std::move(selected_return_value_representation),\n";
-    stream << "        std::move(parsed_response.diagnostics_value),\n";
+    stream << "        parsed_response.diagnostics_value,\n";
     stream << "        plan.wrapper_return_surface};\n";
     stream << "}\n\n";
     stream << "static int copperfin_runtime_bridge_default_int_value() {\n";
@@ -2329,8 +2332,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto response_parse_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);\n";
             stream << "    (void)response_parse_admission;\n";
+            stream << "    const auto parsed_response =\n";
+            stream << "        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
-            stream << "        response_parse_plan);\n";
+            stream << "        response_parse_plan,\n";
+            stream << "        parsed_response);\n";
             stream << "    const auto interpreted_result_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_interpreted_result(response_parse_admission, interpreted_result_plan);\n";
             stream << "    (void)interpreted_result_admission;\n";
@@ -2548,8 +2554,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto response_parse_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);\n";
             stream << "    (void)response_parse_admission;\n";
+            stream << "    const auto parsed_response =\n";
+            stream << "        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
-            stream << "        response_parse_plan);\n";
+            stream << "        response_parse_plan,\n";
+            stream << "        parsed_response);\n";
             stream << "    const auto interpreted_result_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_interpreted_result(response_parse_admission, interpreted_result_plan);\n";
             stream << "    (void)interpreted_result_admission;\n";

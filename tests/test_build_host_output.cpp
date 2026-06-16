@@ -1139,8 +1139,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build the response artifact from the response-read plan and executed response document.");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                    "build host DLL wrapper should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
-            expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,
-                   "build host DLL wrapper should build the interpreted-result plan directly from the response-parse plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto parsed_response =\n        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the response-parse plan before building the interpreted-result plan.");
+            expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan,\n        parsed_response);") != std::string::npos,
+                   "build host DLL wrapper should build the interpreted-result plan from the response-parse plan and parsed response.");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n        result,\n        interpreted_result_plan);") != std::string::npos,
                    "build host DLL wrapper should build the native-return plan directly from the interpreted-result plan once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan);") != std::string::npos,
@@ -2017,8 +2019,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build the response artifact from the response-read plan and executed response document.");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                    "build host FLL wrapper should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
-            expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,
-                   "build host FLL wrapper should build the interpreted-result plan directly from the response-parse plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto parsed_response =\n        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the response-parse plan before building the interpreted-result plan.");
+            expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan,\n        parsed_response);") != std::string::npos,
+                   "build host FLL wrapper should build the interpreted-result plan from the response-parse plan and parsed response.");
             expect(wrapper_source.find("const auto native_return_plan = copperfin_build_runtime_bridge_native_return_plan(\n        result,\n        interpreted_result_plan);") != std::string::npos,
                    "build host FLL wrapper should build the native-return plan directly from the interpreted-result plan once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto outcome_selection_plan = copperfin_build_runtime_bridge_outcome_selection_plan(\n        native_return_plan);") != std::string::npos,
