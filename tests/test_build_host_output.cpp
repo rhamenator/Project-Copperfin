@@ -1335,8 +1335,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should admit staged outcome selection from the native-return admission and outcome-selection plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_outcome_selection(native_return_admission, outcome_selection_plan);") != std::string::npos,
                    "build host DLL wrapper should route native-return admission through the shared outcome-selection admission helper.");
-            expect(wrapper_source.find("(void)outcome_selection_admission;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only outcome-selection admission result unused.");
+            expect(wrapper_source.find("(void)outcome_selection_admission;") == std::string::npos,
+                   "build host DLL wrapper should consume outcome-selection admission when admitting return materialization.");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
                    "build host DLL wrapper should build a return materialization plan from the outcome selection plan");
             expect(wrapper_source.find("const auto return_materialization_admission =") != std::string::npos,
@@ -2259,8 +2259,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should admit staged outcome selection from the native-return admission and outcome-selection plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_outcome_selection(native_return_admission, outcome_selection_plan);") != std::string::npos,
                    "build host FLL wrapper should route native-return admission through the shared outcome-selection admission helper.");
-            expect(wrapper_source.find("(void)outcome_selection_admission;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only outcome-selection admission result unused.");
+            expect(wrapper_source.find("(void)outcome_selection_admission;") == std::string::npos,
+                   "build host FLL wrapper should consume outcome-selection admission when admitting return materialization.");
             expect(wrapper_source.find("const auto return_materialization_plan = copperfin_build_runtime_bridge_return_materialization_plan(") != std::string::npos,
                    "build host FLL wrapper should build a return materialization plan from the outcome selection plan");
             expect(wrapper_source.find("const auto return_materialization_admission =") != std::string::npos,
