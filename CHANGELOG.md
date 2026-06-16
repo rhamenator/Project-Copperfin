@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#851 selected visual object current-control assignment shipped: designer commands can assign caller-provided `CurrentControl` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#850 selected visual object dynamic current-control assignment shipped: designer commands can assign caller-provided raw `DynamicCurrentControl` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#849 selected visual object dynamic line-height assignment shipped: designer commands can assign caller-provided raw `DynamicLineHeight` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#848 selected visual object dynamic input-mask assignment shipped: designer commands can assign caller-provided raw `DynamicInputMask` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.

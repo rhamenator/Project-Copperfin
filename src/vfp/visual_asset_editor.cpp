@@ -5292,6 +5292,15 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
         request.control_source);
 }
 
+VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "CurrentControl",
+        "current control",
+        request.current_control);
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,

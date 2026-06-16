@@ -10316,6 +10316,234 @@ void test_set_visual_object_control_source_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+std::string vfp_string_literal_for_test(const std::string& value) {
+    std::string literal = "\"";
+    for (char ch : value) {
+        if (ch == '"') {
+            literal += "\"\"";
+        } else {
+            literal += ch;
+        }
+    }
+    literal += "\"";
+    return literal;
+}
+
+template <typename AssignTextProperty>
+void test_visual_object_text_property_assigns_text(
+    const std::string& issue_id,
+    const std::string& temp_suffix,
+    const std::string& property_name,
+    const std::string& field_name,
+    const std::string& property_label,
+    const std::string& first_value,
+    const std::string& second_value,
+    const std::string& other_value,
+    const std::string& replacement_value,
+    const std::string& unique_id_value,
+    AssignTextProperty assign_property) {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_" + temp_suffix + "_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto label = issue_id + ": " + property_label;
+    const fs::path table_path = temp_dir / (temp_suffix + ".scx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = field_name, .type = 'C', .length = 96U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtOne", "oneBox", "one-guid", first_value},
+        {"txtTwo", "twoBox", "two-guid", second_value},
+        {"txtOther", "otherBox", "other-guid", other_value}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, label + " fixture should be writable");
+
+    const auto property_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+        expect(result.ok && result.exists, label + " fixture property should be readable");
+        return result.value;
+    };
+    const auto property_value = [&](const std::string& unique_id) {
+        return property_for(table_path.string(), unique_id);
+    };
+    const auto direct_state = [&]() {
+        return property_value("one-guid") + "," +
+            property_value("two-guid") + "," +
+            property_value("other-guid");
+    };
+
+    auto edit_result = assign_property(
+        table_path.string(),
+        {
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        replacement_value);
+    expect(edit_result.ok, label + " assignment should support object-name and record-index selectors");
+    expect(property_value("one-guid") == replacement_value &&
+            property_value("two-guid") == replacement_value &&
+            property_value("other-guid") == other_value,
+        label + " direct assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, label + " first write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, label + " second write should remain undo-backed");
+    expect(direct_state() == first_value + "," + second_value + "," + other_value,
+        label + " undo should restore original direct values");
+
+    edit_result = assign_property(
+        table_path.string(),
+        {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        unique_id_value);
+    expect(edit_result.ok, label + " assignment should support UNIQUEID selectors");
+    expect(property_value("one-guid") == unique_id_value &&
+            property_value("two-guid") == unique_id_value,
+        label + " direct assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = direct_state();
+    edit_result = assign_property(table_path.string(), {}, "Ignored");
+    expect(!edit_result.ok, label + " assignment should reject empty selections");
+    expect(direct_state() == committed_state, label + " empty-selection failures should not mutate values");
+
+    edit_result = assign_property(
+        table_path.string(),
+        {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        "Ignored");
+    expect(!edit_result.ok, label + " assignment should reject missing selected objects");
+    expect(direct_state() == committed_state, label + " missing-object failures should not mutate values");
+
+    edit_result = assign_property(
+        table_path.string(),
+        {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "txtOne", .unique_id = {}}
+        },
+        "Ignored");
+    expect(!edit_result.ok, label + " assignment should reject duplicate selected objects");
+    expect(direct_state() == committed_state, label + " duplicate-selection failures should not mutate values");
+
+    const fs::path blob_path = temp_dir / (temp_suffix + "_blob.scx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", property_name + " = " + vfp_string_literal_for_test(first_value) +
+            "\r\nCaption = \"Name\"\r\n"},
+        {"txtNoValue", "no-value-guid", "Caption = \"No value\"\r\n"},
+        {"txtOther", "other-guid", property_name + " = " + vfp_string_literal_for_test(other_value) + "\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, label + " property-blob fixture should be writable");
+
+    const auto blob_property_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    const std::string serialized_value = replacement_value + ".\"quoted\"";
+    edit_result = assign_property(
+        blob_path.string(),
+        {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoValue", .unique_id = {}}
+        },
+        serialized_value);
+    expect(edit_result.ok, label + " assignment should support existing and absent serialized properties");
+    auto blob_value = blob_property_state("blob-guid");
+    auto appended_value = blob_property_state("no-value-guid");
+    auto other_blob_value = blob_property_state("other-guid");
+    expect(blob_value.ok && blob_value.exists && blob_value.value == vfp_string_literal_for_test(serialized_value) &&
+            appended_value.ok && appended_value.exists &&
+                appended_value.value == vfp_string_literal_for_test(serialized_value) &&
+            other_blob_value.ok && other_blob_value.exists &&
+                other_blob_value.value == vfp_string_literal_for_test(other_value),
+        label + " serialized assignment should quote text, append missing property, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, label + " appended serialized write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, label + " existing serialized write should remain undo-backed");
+    blob_value = blob_property_state("blob-guid");
+    appended_value = blob_property_state("no-value-guid");
+    expect(blob_value.ok && blob_value.exists && blob_value.value == vfp_string_literal_for_test(first_value) &&
+            appended_value.ok && !appended_value.exists,
+        label + " serialized undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / ("missing_" + temp_suffix + ".scx");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, label + " missing-carrier fixture should be writable");
+
+    edit_result = assign_property(
+        incomplete_path.string(),
+        {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        "Ignored");
+    expect(!edit_result.ok, label + " assignment should reject objects without a writable carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_set_visual_object_current_control_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#851",
+        "currentcontrol",
+        "CurrentControl",
+        "CURRENTCONTROL",
+        "current-control",
+        "txtName",
+        "txtCity",
+        "txtState",
+        "txtTotal",
+        "txtCustomer",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_current_control({
+                .path = path,
+                .objects = objects,
+                .current_control = value
+            });
+        });
+}
+
 void test_set_visual_object_input_mask_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -21296,6 +21524,7 @@ int main() {
     test_set_visual_object_tooltip_text_assigns_text();
     test_set_visual_object_status_bar_text_assigns_text();
     test_set_visual_object_control_source_assigns_text();
+    test_set_visual_object_current_control_assigns_text();
     test_set_visual_object_input_mask_assigns_text();
     test_set_visual_object_dynamic_input_mask_assigns_expression_value();
     test_set_visual_object_dynamic_line_height_assigns_expression_value();
