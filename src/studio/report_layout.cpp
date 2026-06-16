@@ -356,6 +356,9 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
+            if (is_report_root_record(record)) {
+                append_report_settings(record, snapshot.deleted_settings);
+            }
             if (is_band_record(record)) {
                 snapshot.deleted_sections.push_back(build_report_section(record));
             }

@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#691 deleted report root settings are now shipped. Report/label layout snapshots now preserve DBF-deleted root settings in a dedicated `deleted_settings` collection without mixing them into live `settings`; focused `test_report_layout` coverage proves deleted EXPR settings retain record, field, and memo-line provenance while deleted direct settings retain DBF field provenance.
 - 2026-06-16: E1/#690 deleted report layout sections are now shipped. Report/label layout snapshots now preserve DBF-deleted band records in a dedicated `deleted_sections` collection without changing visible section grouping; focused `test_report_layout` coverage proves deleted section state, band metadata, and OBJCODE provenance survive.
 - 2026-06-16: E1/#689 deleted report layout objects are now shipped. Report/label layout snapshots now preserve DBF-deleted layout object records in a dedicated `deleted_objects` collection without changing visible section grouping; focused `test_report_layout` coverage proves deleted object state, title metadata, and title provenance survive.
 - 2026-06-16: E1/#688 object snapshot deleted-state coverage is now shipped. Studio object snapshot coverage now proves deleted menu records remain visible with their DBF deleted flag and title provenance, locking in the existing deleted-record preservation behavior for normalized object snapshots.

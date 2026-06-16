@@ -122,6 +122,16 @@ void test_build_report_layout_groups_band_objects() {
                 value("VPOS", "9000.000"),
                 value("HEIGHT", "700.000")
             }
+        },
+        {
+            .record_index = 8U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "DELETEDSETTING=1"),
+                value("TOPMARGIN", "99")
+            }
         }
     };
 
@@ -218,6 +228,30 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.deleted_sections[0].objcode_field_index == 1U,
             "#690: deleted report sections should retain OBJCODE provenance");
     }
+    const auto deleted_setting = std::find_if(layout.deleted_settings.begin(), layout.deleted_settings.end(), [](const auto& setting) {
+        return setting.name == "DELETEDSETTING";
+    });
+    expect(deleted_setting != layout.deleted_settings.end(), "#691: deleted report root settings should be preserved separately");
+    if (deleted_setting != layout.deleted_settings.end()) {
+        expect(deleted_setting->record_index == 8U, "#691: deleted report root settings should retain record provenance");
+        expect(deleted_setting->field_index == 2U, "#691: deleted report root settings should retain EXPR field provenance");
+        expect(deleted_setting->source_line_index == 0U, "#691: deleted report root settings should retain memo-line provenance");
+        expect(deleted_setting->value == "1", "#691: deleted report root settings should retain parsed value text");
+    }
+    const auto deleted_top_margin = std::find_if(layout.deleted_settings.begin(), layout.deleted_settings.end(), [](const auto& setting) {
+        return setting.name == "TOPMARGIN";
+    });
+    expect(deleted_top_margin != layout.deleted_settings.end(), "#691: deleted report root direct settings should be preserved separately");
+    if (deleted_top_margin != layout.deleted_settings.end()) {
+        expect(deleted_top_margin->record_index == 8U, "#691: deleted direct settings should retain record provenance");
+        expect(deleted_top_margin->field_index == 3U, "#691: deleted direct settings should retain DBF field provenance");
+        expect(deleted_top_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#691: deleted direct settings should not masquerade as memo-line settings");
+    }
+    const auto live_deleted_setting = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "DELETEDSETTING";
+    });
+    expect(live_deleted_setting == layout.settings.end(), "#691: deleted report root settings should not mix into live settings");
 }
 
 }  // namespace

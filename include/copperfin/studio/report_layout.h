@@ -65,6 +65,7 @@ struct StudioReportLayoutSnapshot {
     bool is_label = false;
     std::string document_title{};
     std::vector<StudioNamedValue> settings{};
+    std::vector<StudioNamedValue> deleted_settings{};
     std::vector<StudioReportSectionSnapshot> sections{};
     std::vector<StudioReportSectionSnapshot> deleted_sections{};
     std::vector<StudioLayoutObjectSnapshot> unplaced_objects{};
