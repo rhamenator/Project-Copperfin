@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#832 selected visual object font-size assignment shipped: designer commands can assign caller-provided finite non-negative `FontSize` values, including fractional sizes, to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving compact numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#831 selected visual object font-name assignment shipped: designer commands can assign caller-provided `FontName` text to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#830 selected visual object dynamic fore-color assignment shipped: designer commands can assign caller-provided raw `DynamicForeColor` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#829 selected visual object dynamic back-color assignment shipped: designer commands can assign caller-provided raw `DynamicBackColor` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.

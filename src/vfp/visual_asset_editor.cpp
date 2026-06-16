@@ -5319,6 +5319,19 @@ VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequ
         request.font_name);
 }
 
+VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequest& request) {
+    if (!std::isfinite(request.font_size) || request.font_size < 0.0) {
+        return {.ok = false, .error = "FontSize must be a finite non-negative value."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "FontSize",
+        "font size",
+        format_visual_geometry_number(request.font_size));
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,

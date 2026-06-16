@@ -724,6 +724,12 @@ struct VisualObjectFontNameRequest {
     std::string font_name;
 };
 
+struct VisualObjectFontSizeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    double font_size = 0.0;
+};
+
 struct VisualObjectRowSourceRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1015,6 +1021,7 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& request);
 VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequest& request);
+VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);
