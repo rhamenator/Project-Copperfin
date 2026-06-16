@@ -62,8 +62,10 @@ struct StudioDocumentModel {
 
 struct StudioPropertySnapshot {
     std::string name{};
+    std::size_t field_index = 0;
     char type = '\0';
     bool is_null = false;
+    bool derived_from_property_blob = false;
     std::string value{};
 };
 

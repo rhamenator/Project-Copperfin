@@ -47,7 +47,8 @@ bool supports_visual_property_blob(const StudioDocumentModel& document) {
 
 void append_property_snapshots(
     const std::vector<vfp::VisualPropertyAssignment>& assignments,
-    std::vector<StudioPropertySnapshot>& properties) {
+    std::vector<StudioPropertySnapshot>& properties,
+    std::size_t source_field_index) {
     for (const auto& assignment : assignments) {
         if (assignment.name.empty()) {
             continue;
@@ -62,8 +63,10 @@ void append_property_snapshots(
 
         properties.push_back({
             .name = assignment.name,
+            .field_index = source_field_index,
             .type = 'P',
             .is_null = assignment.value.empty(),
+            .derived_from_property_blob = true,
             .value = assignment.value
         });
     }
@@ -198,9 +201,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
             snapshot.title = "Record " + std::to_string(record.record_index);
         }
 
-        for (const auto& value : record.values) {
+        for (std::size_t field_index = 0U; field_index < record.values.size(); ++field_index) {
+            const auto& value = record.values[field_index];
             snapshot.properties.push_back({
                 .name = value.field_name,
+                .field_index = field_index,
                 .type = value.field_type,
                 .is_null = value.is_null,
                 .value = value.display_value
@@ -208,9 +213,17 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         }
 
         if (supports_visual_property_blob(document)) {
-            const auto* property_blob = find_value(record, "PROPERTIES");
-            if (property_blob != nullptr && !property_blob->display_value.empty() && property_blob->display_value != "<memo block 0>") {
-                append_property_snapshots(vfp::parse_visual_property_blob(property_blob->display_value), snapshot.properties);
+            for (std::size_t field_index = 0U; field_index < record.values.size(); ++field_index) {
+                const auto& property_blob = record.values[field_index];
+                if (property_blob.field_name == "PROPERTIES" &&
+                    !property_blob.display_value.empty() &&
+                    property_blob.display_value != "<memo block 0>") {
+                    append_property_snapshots(
+                        vfp::parse_visual_property_blob(property_blob.display_value),
+                        snapshot.properties,
+                        field_index);
+                    break;
+                }
             }
         }
 

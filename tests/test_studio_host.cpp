@@ -162,12 +162,19 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         expect(parent != objects[0].properties.end(), "#658: null design fields should stay in object snapshots");
         if (parent != objects[0].properties.end()) {
             expect(parent->is_null, "#658: null design field metadata should stay attached");
+            expect(parent->field_index == 1U, "#659: direct design fields should preserve their DBF field ordinal");
+            expect(!parent->derived_from_property_blob, "#659: direct DBF fields should not be marked blob-derived");
         }
         expect(tag != objects[0].properties.end(), "#658: empty memo-backed design fields should stay in object snapshots");
         if (tag != objects[0].properties.end()) {
             expect(tag->value.empty(), "#658: empty design fields should preserve their empty value");
+            expect(tag->field_index == 2U, "#659: empty direct fields should preserve their DBF field ordinal");
         }
         expect(caption != objects[0].properties.end(), "#658: visual property blob expansion should still work");
+        if (caption != objects[0].properties.end()) {
+            expect(caption->field_index == 3U, "#659: blob-derived properties should retain the source PROPERTIES field ordinal");
+            expect(caption->derived_from_property_blob, "#659: blob-derived properties should expose their provenance");
+        }
     }
 }
 
