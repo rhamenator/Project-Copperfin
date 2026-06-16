@@ -98,6 +98,9 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
+    expect(layout.sections[0].objcode_field_index == 1U, "#664: report section should preserve OBJCODE field provenance");
+    expect(layout.sections[0].top_field_index == 2U, "#664: report section should preserve VPOS field provenance");
+    expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");

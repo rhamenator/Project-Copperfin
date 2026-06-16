@@ -316,8 +316,11 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
                 .title = band_title(objcode),
                 .band_kind = band_kind_name(objcode),
                 .record_index = record.record_index,
+                .objcode_field_index = find_field_index(record, "OBJCODE").value_or(0U),
                 .top = parse_scaled_int_or_default(record, "VPOS"),
-                .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"))
+                .top_field_index = find_field_index(record, "VPOS").value_or(0U),
+                .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
+                .height_field_index = find_field_index(record, "HEIGHT").value_or(0U)
             });
         }
     }

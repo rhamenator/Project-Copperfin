@@ -32,8 +32,11 @@ struct StudioReportSectionSnapshot {
     std::string title{};
     std::string band_kind{};
     std::size_t record_index = 0;
+    std::size_t objcode_field_index = 0;
     int top = 0;
+    std::size_t top_field_index = 0;
     int height = 0;
+    std::size_t height_field_index = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 
