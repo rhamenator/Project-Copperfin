@@ -869,6 +869,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared request-media-type field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_fields_field_name()") != std::string::npos,
                    "build host DLL wrapper should declare a shared request-fields contract helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_expected_response_media_type_field_name()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared expected-response media-type helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_fields_field_name()") != std::string::npos,
+                   "build host DLL wrapper should declare a shared response-fields contract helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
                    "build host DLL wrapper should declare a shared response-media-type field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
@@ -1536,6 +1540,16 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should serialize the request-field contract list");
             expect(wrapper_source.find("payload_plan.request_fields[index]") != std::string::npos,
                    "build host DLL wrapper should serialize each request-field contract item");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_expected_response_media_type_field_name()") != std::string::npos,
+                   "build host DLL wrapper should route expected response media-type through the shared helper");
+            expect(wrapper_source.find("payload_plan.dispatch_plan.serialization_plan.response_media_type") != std::string::npos,
+                   "build host DLL wrapper should serialize expected response media type into the request document");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_fields_field_name()") != std::string::npos,
+                   "build host DLL wrapper should route the response-fields contract through the shared helper");
+            expect(wrapper_source.find("payload_plan.response_fields.size()") != std::string::npos,
+                   "build host DLL wrapper should serialize the response-field contract list");
+            expect(wrapper_source.find("payload_plan.response_fields[index]") != std::string::npos,
+                   "build host DLL wrapper should serialize each response-field contract item");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
                    "build host DLL wrapper should route the response value field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
@@ -1838,6 +1852,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared request-media-type field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_fields_field_name()") != std::string::npos,
                    "build host FLL wrapper should declare a shared request-fields contract helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_expected_response_media_type_field_name()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared expected-response media-type helper");
+            expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_fields_field_name()") != std::string::npos,
+                   "build host FLL wrapper should declare a shared response-fields contract helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
                    "build host FLL wrapper should declare a shared response-media-type field helper");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_payload_shape_field_name()") != std::string::npos,
@@ -2523,6 +2541,16 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should serialize the request-field contract list");
             expect(wrapper_source.find("payload_plan.request_fields[index]") != std::string::npos,
                    "build host FLL wrapper should serialize each request-field contract item");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_expected_response_media_type_field_name()") != std::string::npos,
+                   "build host FLL wrapper should route expected response media-type through the shared helper");
+            expect(wrapper_source.find("payload_plan.dispatch_plan.serialization_plan.response_media_type") != std::string::npos,
+                   "build host FLL wrapper should serialize expected response media type into the request document");
+            expect(wrapper_source.find("copperfin_build_runtime_bridge_response_fields_field_name()") != std::string::npos,
+                   "build host FLL wrapper should route the response-fields contract through the shared helper");
+            expect(wrapper_source.find("payload_plan.response_fields.size()") != std::string::npos,
+                   "build host FLL wrapper should serialize the response-field contract list");
+            expect(wrapper_source.find("payload_plan.response_fields[index]") != std::string::npos,
+                   "build host FLL wrapper should serialize each response-field contract item");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
                    "build host FLL wrapper should route the response value field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
