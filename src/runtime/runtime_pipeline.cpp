@@ -2327,7 +2327,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_artifact);\n";
             stream << "    const auto response_parse_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);\n";
-            stream << "    (void)response_parse_admission;\n";
             stream << "    const auto parsed_response =\n";
             stream << "        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
@@ -2574,7 +2573,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        response_artifact);\n";
             stream << "    const auto response_parse_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_response_parse(response_validation_evaluation, response_parse_plan);\n";
-            stream << "    (void)response_parse_admission;\n";
             stream << "    const auto parsed_response =\n";
             stream << "        copperfin_runtime_bridge_execute_parse_response(response_parse_plan);\n";
             stream << "    const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n";
