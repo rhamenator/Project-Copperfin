@@ -155,6 +155,7 @@ struct VisualPropertyState {
     bool direct_field = false;
     std::string property_name;
     std::string value;
+    bool record_deleted = false;
 };
 
 std::string normalize_visual_object_name(std::string value) {
@@ -530,7 +531,8 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
             .exists = true,
             .direct_field = true,
             .property_name = direct_field_value->field_name,
-            .value = direct_field_value->display_value
+            .value = direct_field_value->display_value,
+            .record_deleted = record.deleted
         };
     }
 
@@ -554,7 +556,8 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
             .exists = false,
             .direct_field = false,
             .property_name = trim_both(property_name),
-            .value = {}
+            .value = {},
+            .record_deleted = record.deleted
         };
     }
 
@@ -562,7 +565,8 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
         .exists = true,
         .direct_field = false,
         .property_name = property->name,
-        .value = property->value
+        .value = property->value,
+        .record_deleted = record.deleted
     };
 }
 
@@ -853,6 +857,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
+            .record_deleted = false,
             .property_name = {},
             .value = {}
         };
@@ -864,6 +869,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
+            .record_deleted = false,
             .property_name = {},
             .value = {}
         };
@@ -885,6 +891,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
+            .record_deleted = false,
             .property_name = {},
             .value = {}
         };
@@ -901,6 +908,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
+            .record_deleted = false,
             .property_name = {},
             .value = {}
         };
@@ -912,6 +920,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
         .exists = property_state->exists,
         .direct_field = property_state->direct_field,
         .record_index = record_index,
+        .record_deleted = property_state->record_deleted,
         .property_name = property_state->property_name,
         .value = property_state->value
     };
@@ -923,6 +932,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
             .ok = false,
             .error = "No asset path was provided.",
             .record_index = 0U,
+            .record_deleted = false,
             .properties = {}
         };
     }
@@ -941,6 +951,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
             .ok = false,
             .error = resolution.error,
             .record_index = 0U,
+            .record_deleted = false,
             .properties = {}
         };
     }
@@ -951,6 +962,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
             .ok = false,
             .error = table_result.error,
             .record_index = 0U,
+            .record_deleted = false,
             .properties = {}
         };
     }
@@ -959,6 +971,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
             .ok = false,
             .error = "The requested object record is not currently available.",
             .record_index = 0U,
+            .record_deleted = false,
             .properties = {}
         };
     }
@@ -997,6 +1010,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         .ok = true,
         .error = {},
         .record_index = record_index,
+        .record_deleted = record.deleted,
         .properties = std::move(properties)
     };
 }

@@ -727,6 +727,23 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
         expect(parse_result.table.records[1].deleted,
             "#741: selected delete should mark the resolved record deleted");
     }
+    auto query_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .property_name = "HPOS"
+    });
+    expect(query_result.ok && query_result.record_deleted,
+        "#742: property queries should report deleted state for the resolved selected object");
+    auto list_result = copperfin::vfp::list_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    expect(list_result.ok && list_result.record_deleted,
+        "#742: property listings should report deleted state for the resolved selected object");
 
     auto restore_result = copperfin::vfp::set_visual_object_deleted_state({
         .path = table_path.string(),
@@ -745,6 +762,23 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
         expect(!parse_result.table.records[1].deleted,
             "#741: selected restore should clear the resolved record deleted flag");
     }
+    query_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    expect(query_result.ok && !query_result.record_deleted,
+        "#742: property queries should report restored live state for the resolved selected object");
+    list_result = copperfin::vfp::list_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {}
+    });
+    expect(list_result.ok && !list_result.record_deleted,
+        "#742: property listings should report restored live state for the resolved selected object");
 
     delete_result = copperfin::vfp::set_visual_object_deleted_state({
         .path = table_path.string(),
