@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#683 project build output classification provenance shipped: `StudioProjectBuildPlan` now preserves source DBF field ordinals for `output_kind` and `build_target`, using `StudioProjectMissingFieldIndex` for synthesized output-path fallbacks.
 - E1/#682 report layout classification provenance shipped: report/label layout snapshots now preserve source DBF field ordinals for normalized section title/band labels and layout object kind labels.
 - E1/#681 project build startup provenance shipped: `StudioProjectBuildPlan` now preserves the source DBF field ordinal for the selected startup item, including excluded-asset fallback selections.
 - E1/#680 project entry classification provenance shipped: project workspace entries now preserve source DBF field ordinals for normalized type/group classification metadata, distinguishing `TYPE`-derived and `NAME`-extension-derived classifications.

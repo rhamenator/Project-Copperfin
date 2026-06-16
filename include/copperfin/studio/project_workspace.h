@@ -55,7 +55,9 @@ struct StudioProjectBuildPlan {
     std::string output_path{};
     std::size_t output_path_field_index = StudioProjectMissingFieldIndex;
     std::string output_kind{};
+    std::size_t output_kind_field_index = StudioProjectMissingFieldIndex;
     std::string build_target{};
+    std::size_t build_target_field_index = StudioProjectMissingFieldIndex;
     std::string startup_item{};
     std::size_t startup_item_field_index = StudioProjectMissingFieldIndex;
     std::size_t startup_record_index = 0;

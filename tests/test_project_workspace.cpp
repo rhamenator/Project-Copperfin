@@ -71,7 +71,9 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.can_build, "build plan should be buildable with entries and an output path");
     expect(workspace.build_plan.output_path == R"(E:\Project-Copperfin\build\demoapp.exe)", "build plan should keep the explicit output path");
     expect(workspace.build_plan.output_kind == "executable", "build plan should infer executable output kind from .exe output path");
+    expect(workspace.build_plan.output_kind_field_index == 3U, "#683: build plan output kind provenance should retain OUTFILE field ordinal");
     expect(workspace.build_plan.build_target == "x64 Windows executable", "build plan should label .exe outputs as Windows executables");
+    expect(workspace.build_plan.build_target_field_index == 3U, "#683: build plan target provenance should retain OUTFILE field ordinal");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_item_field_index == 1U, "#681: build plan startup item provenance should retain selected NAME field ordinal");
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
@@ -149,6 +151,10 @@ void test_build_project_workspace_with_excluded_assets() {
            "#678: unresolved memo output fallback should not masquerade as stored OUTFILE provenance");
     expect(workspace.project_title_field_index == 1U, "#678: workspace title should keep KEY provenance when KEY supplies title");
     expect(workspace.build_plan.output_kind == "executable", "default output path fallback should still infer executable output kind");
+    expect(workspace.build_plan.output_kind_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#683: fallback output kind provenance should not masquerade as stored OUTFILE provenance");
+    expect(workspace.build_plan.build_target_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#683: fallback build target provenance should not masquerade as stored OUTFILE provenance");
     expect(
         workspace.build_plan.startup_item == R"(forms\legacy.scx)",
         "workspace should choose a real asset as startup even when every asset is excluded");

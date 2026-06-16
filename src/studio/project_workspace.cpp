@@ -324,7 +324,9 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     workspace.build_plan.home_directory = workspace.home_directory;
     workspace.build_plan.output_path = workspace.output_path;
     workspace.build_plan.output_kind = infer_output_kind(workspace.output_path);
+    workspace.build_plan.output_kind_field_index = workspace.output_path_field_index;
     workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind);
+    workspace.build_plan.build_target_field_index = workspace.output_path_field_index;
     workspace.build_plan.total_items = workspace.entries.size();
     workspace.build_plan.excluded_items = static_cast<std::size_t>(std::count_if(
         workspace.entries.begin(),

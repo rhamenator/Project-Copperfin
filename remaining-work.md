@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-16: E1/#683 project build output classification provenance is now shipped. `StudioProjectBuildPlan` now preserves source DBF field ordinals for `output_kind` and `build_target`, using `StudioProjectMissingFieldIndex` when classification comes from a synthesized output-path fallback; focused `test_project_workspace` coverage proves stored OUTFILE provenance and fallback sentinel behavior.
 - 2026-06-16: E1/#682 report layout classification provenance is now shipped. Report/label layout snapshots now preserve source DBF field ordinals for normalized section title/band labels and layout object kind labels; focused `test_report_layout` coverage proves section `OBJCODE` and object `OBJTYPE` classification provenance.
 - 2026-06-16: E1/#681 project build startup provenance is now shipped. `StudioProjectBuildPlan` now preserves the source DBF field ordinal for the selected startup item, including excluded-asset fallback selections; focused `test_project_workspace` coverage proves normal MAINPROG and excluded fallback startup provenance.
 - 2026-06-16: E1/#680 project entry classification provenance is now shipped. Project workspace entries now preserve source DBF field ordinals for normalized type/group classification metadata, distinguishing `TYPE`-derived project/header classifications from `NAME`-extension-derived asset classifications; focused `test_project_workspace` coverage proves header, program, and form classification provenance.
