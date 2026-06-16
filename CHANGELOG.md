@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#772 batch selected visual object memo-property renames shipped: multi-select property grids can rename memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, preserving values, case-insensitive source matching, undo support, and prior undo history when later items fail.
 - E2/#771 batch selected visual object property clears shipped: multi-select property grids can clear direct DBF-backed fields and memo-backed `PROPERTIES` assignments across selected objects in one rollback-safe operation, preserving missing memo assignment no-op behavior, undo support, and prior undo history when later items fail.
 - E2/#770 selected visual object memo-property reordering shipped: property grids can move one memo-backed `PROPERTIES` assignment to first, last, before another assignment, or after another assignment on a selected object by record-index, object-name, or `UNIQUEID`, preserving values and undo support while rejecting direct DBF fields and invalid reorder cases without mutation.
 - E2/#769 selected visual object memo-property renaming shipped: property grids can rename one memo-backed `PROPERTIES` assignment on a selected object by record-index, object-name, or `UNIQUEID`, preserving values and undo support while rejecting direct DBF fields, empty names, missing sources, duplicate sources, target collisions, same-name renames, and missing `PROPERTIES` carriers.

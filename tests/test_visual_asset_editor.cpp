@@ -1685,6 +1685,217 @@ void test_rename_visual_object_memo_property_updates_selected_object() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_object_memo_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_rename_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_rename_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#772: property-rename-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "caption",
+                .new_property_name = "DisplayCaption"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .property_name = "Top",
+                .new_property_name = "TopOffset"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = "Caption",
+                .new_property_name = "StatusCaption"
+            }
+        }
+    });
+    expect(batch_result.ok, "#772: batch property renames should support mixed selectors");
+
+    auto display_caption = property_state("save-guid", "DisplayCaption");
+    auto old_caption = property_state("save-guid", "Caption");
+    auto top_offset = property_state("name-guid", "TopOffset");
+    auto status_caption = property_state("status-guid", "StatusCaption");
+    auto save_left = property_state("save-guid", "Left");
+    expect(display_caption.ok && display_caption.exists && display_caption.value == "\"Save\"" &&
+            old_caption.ok && !old_caption.exists &&
+            top_offset.ok && top_offset.exists && top_offset.value == "30" &&
+            status_caption.ok && status_caption.exists && status_caption.value == "\"Status\"" &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#772: batch property renames should preserve values, target names, and unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#772: successful batch renames should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "Left",
+                .new_property_name = "LeftOffset"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "HPOS",
+                .new_property_name = "HPosition"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#772: batch property renames should reject direct DBF-backed fields");
+    save_left = property_state("save-guid", "Left");
+    auto left_offset = property_state("save-guid", "LeftOffset");
+    expect(save_left.ok && save_left.exists && save_left.value == "10" &&
+            left_offset.ok && !left_offset.exists,
+        "#772: direct-field failures should roll back earlier memo renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "Left",
+                .new_property_name = "StatusLeft"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "DisplayCaption",
+                .new_property_name = "Left"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#772: batch property renames should reject target collisions");
+    auto status_left = property_state("status-guid", "Left");
+    auto status_left_renamed = property_state("status-guid", "StatusLeft");
+    expect(status_left.ok && status_left.exists && status_left.value == "50" &&
+            status_left_renamed.ok && !status_left_renamed.exists,
+        "#772: target-collision failures should roll back earlier memo renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "Left",
+                .new_property_name = "StatusLeft"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = " ",
+                .new_property_name = "EmptySource"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#772: batch property renames should reject empty source names");
+    status_left = property_state("status-guid", "Left");
+    expect(status_left.ok && status_left.exists && status_left.value == "50",
+        "#772: empty-source failures should roll back earlier memo renames");
+
+    batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "Left",
+                .new_property_name = "StatusLeft"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "DisplayCaption",
+                .new_property_name = " "
+            }
+        }
+    });
+    expect(!batch_result.ok, "#772: batch property renames should reject empty target names");
+    status_left = property_state("status-guid", "Left");
+    expect(status_left.ok && status_left.exists && status_left.value == "50",
+        "#772: empty-target failures should roll back earlier memo renames");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#772: failed batch rename rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::rename_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#772: empty batch rename requests should fail explicitly");
+
+    for (int index = 0; index < 3; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#772: undo should restore each successful batch property rename");
+    }
+
+    display_caption = property_state("save-guid", "DisplayCaption");
+    old_caption = property_state("save-guid", "Caption");
+    top_offset = property_state("name-guid", "TopOffset");
+    auto original_top = property_state("name-guid", "Top");
+    status_caption = property_state("status-guid", "StatusCaption");
+    auto original_status_caption = property_state("status-guid", "Caption");
+    expect(display_caption.ok && !display_caption.exists &&
+            old_caption.ok && old_caption.exists && old_caption.value == "\"Save\"" &&
+            top_offset.ok && !top_offset.exists &&
+            original_top.ok && original_top.exists && original_top.value == "30" &&
+            status_caption.ok && !status_caption.exists &&
+            original_status_caption.ok && original_status_caption.exists && original_status_caption.value == "\"Status\"",
+        "#772: successful batch rename undo should restore original memo property names and values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_reorder_visual_object_memo_properties_within_selected_object() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -5979,6 +6190,7 @@ int main() {
     test_copy_visual_object_property_between_selected_objects();
     test_move_visual_object_property_between_selected_objects();
     test_rename_visual_object_memo_property_updates_selected_object();
+    test_rename_visual_object_memo_properties_rolls_back_failed_batches();
     test_reorder_visual_object_memo_properties_within_selected_object();
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
