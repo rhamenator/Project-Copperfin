@@ -5310,6 +5310,15 @@ VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSel
         request.hide_selection ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AllowCellSelection",
+        "allow-cell-selection",
+        request.allow_cell_selection ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

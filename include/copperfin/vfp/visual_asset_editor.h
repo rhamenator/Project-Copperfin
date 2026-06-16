@@ -718,6 +718,12 @@ struct VisualObjectHideSelectionRequest {
     bool hide_selection = false;
 };
 
+struct VisualObjectAllowCellSelectionRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool allow_cell_selection = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1290,6 +1296,7 @@ VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatus
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
 VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
+VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);

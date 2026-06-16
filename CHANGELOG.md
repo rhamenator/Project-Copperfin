@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#878 selected visual object allow-cell-selection assignment shipped: designer commands can assign caller-provided logical `AllowCellSelection` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#877 selected visual object hide-selection assignment shipped: designer commands can assign caller-provided logical `HideSelection` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#876 selected visual object OLE drop text-insertion assignment shipped: designer commands can assign caller-provided non-negative numeric `OLEDropTextInsertion` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#875 selected visual object OLE drop-effects assignment shipped: designer commands can assign caller-provided non-negative numeric `OLEDropEffects` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
