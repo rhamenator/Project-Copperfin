@@ -5451,6 +5451,19 @@ VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePoi
         std::to_string(request.mouse_pointer));
 }
 
+VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request) {
+    if (request.picture_margin < 0) {
+        return {.ok = false, .error = "PictureMargin must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "PictureMargin",
+        "picture-margin",
+        std::to_string(request.picture_margin));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
