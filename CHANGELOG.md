@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#695 unresolved report memo placeholder handling shipped: FRX/LBX layout normalization now treats unresolved `<memo block N>` placeholders as absent text instead of active settings, object titles, expressions, or highlights.
 - E1/#694 unresolved project memo placeholder handling shipped: PJX/PJT workspace normalization now treats unresolved `<memo block N>` placeholders as absent text instead of active project metadata, with Windows-style path stems used for fallback titles/outputs.
 - E1/#693 deleted project startup candidate handling shipped: project build plans now prefer live startup/program entries while retaining deleted-only fallback compatibility and deleted-entry visibility.
 - E1/#692 live project-header selection shipped: project workspace metadata now prefers non-deleted PJX/PJT header records while deleted headers remain visible in preserved entries and deleted-entry counts.

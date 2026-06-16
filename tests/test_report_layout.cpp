@@ -254,10 +254,65 @@ void test_build_report_layout_groups_band_objects() {
     expect(live_deleted_setting == layout.settings.end(), "#691: deleted report root settings should not mix into live settings");
 }
 
+void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "memo-placeholder.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "<memo block 30>"),
+                value("TOPMARGIN", "<memo block 31>")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "8"),
+                value("EXPR", "<memo block 32>"),
+                value("HPOS", "100.000"),
+                value("VPOS", "100.000"),
+                value("WIDTH", "500.000"),
+                value("HEIGHT", "100.000"),
+                value("FONTFACE", "<memo block 33>")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.settings.empty(), "#695: unresolved report root memo placeholders should not become settings");
+    expect(layout.unplaced_objects.size() == 1U, "#695: unresolved report memo placeholders should not prevent object capture");
+    if (!layout.unplaced_objects.empty()) {
+        const auto& object = layout.unplaced_objects[0];
+        expect(object.title == "Record 1", "#695: unresolved memo object titles should use the synthetic fallback");
+        expect(object.title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+            "#695: synthetic titles should not masquerade as unresolved memo field provenance");
+        expect(object.expression.empty(), "#695: unresolved memo expressions should not become active object expressions");
+        expect(object.expression_field_index == 1U,
+            "#695: unresolved memo expression fields should retain source field provenance");
+        const auto expr_highlight = std::find_if(object.highlights.begin(), object.highlights.end(), [](const auto& highlight) {
+            return highlight.name == "EXPR";
+        });
+        expect(expr_highlight == object.highlights.end(), "#695: unresolved memo expressions should not become highlights");
+        const auto font_highlight = std::find_if(object.highlights.begin(), object.highlights.end(), [](const auto& highlight) {
+            return highlight.name == "FONTFACE";
+        });
+        expect(font_highlight == object.highlights.end(), "#695: unresolved memo font fields should not become highlights");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_build_report_layout_groups_band_objects();
+    test_build_report_layout_suppresses_unresolved_memo_placeholders();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

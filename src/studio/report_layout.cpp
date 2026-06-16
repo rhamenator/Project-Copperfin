@@ -35,6 +35,10 @@ const vfp::DbfRecordValue* find_value(const DbfRecord& record, std::string_view 
     return nullptr;
 }
 
+bool looks_like_unresolved_memo(const std::string& value) {
+    return value.rfind("<memo block ", 0) == 0;
+}
+
 struct FieldSelection {
     std::string value{};
     std::size_t field_index = StudioReportMissingFieldIndex;
@@ -55,7 +59,10 @@ std::size_t field_index_or_missing(const DbfRecord& record, std::string_view fie
 
 std::string value_or_empty(const DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
-    return value == nullptr ? std::string() : value->display_value;
+    if (value == nullptr || looks_like_unresolved_memo(value->display_value)) {
+        return {};
+    }
+    return value->display_value;
 }
 
 std::optional<int> parse_scaled_int(const DbfRecord& record, std::string_view field_name) {
@@ -168,7 +175,7 @@ std::string object_kind_name(int objtype) {
 std::string first_non_empty(const DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
-        if (!value.empty() && value != "<memo block 0>") {
+        if (!value.empty()) {
             return value;
         }
     }
@@ -178,7 +185,7 @@ std::string first_non_empty(const DbfRecord& record, std::initializer_list<std::
 FieldSelection first_non_empty_selection(const DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
-        if (!value.empty() && value != "<memo block 0>") {
+        if (!value.empty()) {
             return {.value = value, .field_index = field_index_or_missing(record, field_name)};
         }
     }
