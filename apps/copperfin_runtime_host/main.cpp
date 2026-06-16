@@ -219,6 +219,18 @@ int run_runtime_bridge_invocation(
         std::cout << "error: Bridge request schema version mismatch.\n";
         return 6;
     }
+    const auto descriptor_matches = [&](const std::string& field_name, const std::string& expected_value) {
+        return extract_json_field(request_document, field_name) == expected_value;
+    };
+    if (!descriptor_matches("export_name", options.library_export) ||
+        !descriptor_matches("routine_kind", options.routine_kind) ||
+        !descriptor_matches("source_path", options.source_path) ||
+        !descriptor_matches("parameter_count", options.parameter_count)) {
+        std::cout << "status: error\n";
+        std::cout << "runtime.mode: bridge-invocation\n";
+        std::cout << "error: Bridge request descriptor mismatch.\n";
+        return 6;
+    }
 
     const std::string execution_source = trim_copy(options.source_path).empty()
         ? startup_source
