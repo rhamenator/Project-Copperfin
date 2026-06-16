@@ -2206,9 +2206,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "}\n\n";
     stream << "static int copperfin_runtime_bridge_emit_stub_return_shared(\n";
     stream << "    const CopperfinRuntimeBridgePlaceholderReturnValuePlan& placeholder_return_value_plan,\n";
-    stream << "    const CopperfinRuntimeBridgePlaceholderReturnValue& placeholder_return_value) {\n";
-    stream << "    const auto stub_emission =\n";
-    stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);\n";
+    stream << "    const CopperfinRuntimeBridgeStubEmission& stub_emission) {\n";
     stream << "    const auto stub_emission_return_surface =\n";
     stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
     stream << "            stub_emission,\n";
@@ -2427,7 +2425,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto stub_emission_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_stub_emission(placeholder_return_int_admission);\n";
             stream << "    (void)stub_emission_admission;\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, placeholder_return_value);\n";
+            stream << "    const auto stub_emission =\n";
+            stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);\n";
             stream << "}\n\n";
         }
         stream << "static const CopperfinFoxInfoRecord kCopperfinFoxInfo[] = {\n";
@@ -2675,7 +2675,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto stub_emission_admission =\n";
             stream << "        copperfin_runtime_bridge_admit_stub_emission(placeholder_return_int_admission);\n";
             stream << "    (void)stub_emission_admission;\n";
-            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, placeholder_return_value);\n";
+            stream << "    const auto stub_emission =\n";
+            stream << "        copperfin_runtime_bridge_execute_stub_emission(placeholder_return_value_plan, placeholder_return_value);\n";
+            stream << "    return copperfin_runtime_bridge_emit_stub_return_shared(placeholder_return_value_plan, stub_emission);\n";
             stream << "}\n\n";
         }
         return stream.str();
