@@ -808,6 +808,12 @@ struct VisualObjectDynamicFontOutlineRequest {
     std::string dynamic_font_outline;
 };
 
+struct VisualObjectDynamicFontShadowRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string dynamic_font_shadow;
+};
+
 struct VisualObjectRowSourceRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1113,6 +1119,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_italic(const VisualObjectDy
 VisualAssetEditResult set_visual_object_dynamic_font_underline(const VisualObjectDynamicFontUnderlineRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_font_strikethru(const VisualObjectDynamicFontStrikethruRequest& request);
 VisualAssetEditResult set_visual_object_dynamic_font_outline(const VisualObjectDynamicFontOutlineRequest& request);
+VisualAssetEditResult set_visual_object_dynamic_font_shadow(const VisualObjectDynamicFontShadowRequest& request);
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request);
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request);

@@ -5449,6 +5449,15 @@ VisualAssetEditResult set_visual_object_dynamic_font_outline(const VisualObjectD
         request.dynamic_font_outline);
 }
 
+VisualAssetEditResult set_visual_object_dynamic_font_shadow(const VisualObjectDynamicFontShadowRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DynamicFontShadow",
+        "dynamic font shadow",
+        request.dynamic_font_shadow);
+}
+
 VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRequest& request) {
     return set_visual_object_text_property(
         request.path,

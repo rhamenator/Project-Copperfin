@@ -13361,6 +13361,24 @@ void test_set_visual_object_dynamic_font_outline_assigns_expression_value() {
         });
 }
 
+void test_set_visual_object_dynamic_font_shadow_assigns_expression_value() {
+    test_dynamic_logical_font_property_assigns_expression_value(
+        "#846",
+        "dynamic_font_shadow",
+        "DynamicFontShadow",
+        "DYNAMICFONTSHADOW",
+        "font-shadow",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& expression) {
+            return copperfin::vfp::set_visual_object_dynamic_font_shadow({
+                .path = path,
+                .objects = objects,
+                .dynamic_font_shadow = expression
+            });
+        });
+}
+
 void test_set_visual_object_row_source_assigns_text() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -21015,6 +21033,7 @@ int main() {
     test_set_visual_object_dynamic_font_underline_assigns_expression_value();
     test_set_visual_object_dynamic_font_strikethru_assigns_expression_value();
     test_set_visual_object_dynamic_font_outline_assigns_expression_value();
+    test_set_visual_object_dynamic_font_shadow_assigns_expression_value();
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
