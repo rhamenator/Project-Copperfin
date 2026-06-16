@@ -5345,6 +5345,19 @@ VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColu
         std::to_string(request.bound_column));
 }
 
+VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCountRequest& request) {
+    if (request.column_count < 0) {
+        return {.ok = false, .error = "ColumnCount must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ColumnCount",
+        "column-count",
+        std::to_string(request.column_count));
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

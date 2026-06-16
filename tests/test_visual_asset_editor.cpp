@@ -11258,6 +11258,200 @@ void test_set_visual_object_bound_column_assigns_numeric_value() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_column_count_assigns_numeric_value() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_column_count_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "column_count.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "COLUMNCOUNT", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", "2"},
+        {"lstOrders", "ordersList", "orders-guid", "3"},
+        {"cboOther", "otherCombo", "other-guid", "4"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#808: column-count fixture should be writable");
+
+    const auto column_count_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnCount"
+        });
+        expect(result.ok && result.exists, "#808: column-count fixture property should be readable");
+        return result.value;
+    };
+    const auto column_count = [&](const std::string& unique_id) {
+        return column_count_for(table_path.string(), unique_id);
+    };
+    const auto column_count_state = [&]() {
+        return column_count("customer-guid") + "," +
+            column_count("orders-guid") + "," +
+            column_count("other-guid");
+    };
+
+    auto count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .column_count = 5
+    });
+    expect(count_result.ok, "#808: column-count assignment should support object-name and record-index selectors");
+    expect(column_count("customer-guid") == "5" &&
+            column_count("orders-guid") == "5" &&
+            column_count("other-guid") == "4",
+        "#808: direct column-count assignment should write raw numeric text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#808: first column-count write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#808: second column-count write should remain undo-backed");
+    expect(column_count_state() == "2,3,4", "#808: column-count undo should restore original direct values");
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .column_count = 1
+    });
+    expect(count_result.ok, "#808: column-count assignment should support UNIQUEID selectors");
+    expect(column_count("customer-guid") == "1" &&
+            column_count("orders-guid") == "1",
+        "#808: direct column-count assignment should store unquoted numeric values");
+
+    const std::string committed_state = column_count_state();
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {},
+        .column_count = 4
+    });
+    expect(!count_result.ok, "#808: column-count assignment should reject empty selections");
+    expect(column_count_state() == committed_state, "#808: empty-selection failures should not mutate column counts");
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"}
+        },
+        .column_count = -1
+    });
+    expect(!count_result.ok, "#808: column-count assignment should reject negative values");
+    expect(column_count_state() == committed_state, "#808: negative-value failures should not mutate column counts");
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .column_count = 4
+    });
+    expect(!count_result.ok, "#808: column-count assignment should reject missing selected objects");
+    expect(column_count_state() == committed_state, "#808: missing-object failures should not mutate column counts");
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .column_count = 4
+    });
+    expect(!count_result.ok, "#808: column-count assignment should reject duplicate selected objects");
+    expect(column_count_state() == committed_state, "#808: duplicate-selection failures should not mutate column counts");
+
+    const fs::path blob_path = temp_dir / "column_count_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cboBlob", "blob-guid", "ColumnCount = 2\r\nCaption = \"Customer\"\r\n"},
+        {"cboNoCount", "no-count-guid", "Caption = \"No count\"\r\n"},
+        {"cboOther", "other-guid", "ColumnCount = 4\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#808: column-count property-blob fixture should be writable");
+
+    const auto blob_column_count_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ColumnCount"
+        });
+    };
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cboNoCount", .unique_id = {}}
+        },
+        .column_count = 3
+    });
+    expect(count_result.ok, "#808: column-count assignment should support existing and absent serialized properties");
+    auto blob_count = blob_column_count_state("blob-guid");
+    auto appended_count = blob_column_count_state("no-count-guid");
+    auto other_count = blob_column_count_state("other-guid");
+    expect(blob_count.ok && blob_count.exists && blob_count.value == "3" &&
+            appended_count.ok && appended_count.exists && appended_count.value == "3" &&
+            other_count.ok && other_count.exists && other_count.value == "4",
+        "#808: serialized column-count assignment should write unquoted numeric values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#808: appended serialized column-count write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#808: existing serialized column-count write should remain undo-backed");
+    blob_count = blob_column_count_state("blob-guid");
+    appended_count = blob_column_count_state("no-count-guid");
+    expect(blob_count.ok && blob_count.exists && blob_count.value == "2" &&
+            appended_count.ok && !appended_count.exists,
+        "#808: serialized column-count undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_columncount.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cboA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#808: missing-ColumnCount fixture should be writable");
+
+    count_result = copperfin::vfp::set_visual_object_column_count({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .column_count = 2
+    });
+    expect(!count_result.ok, "#808: column-count assignment should reject objects without a writable ColumnCount carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -13857,6 +14051,7 @@ int main() {
     test_set_visual_object_row_source_assigns_text();
     test_set_visual_object_row_source_type_assigns_numeric_value();
     test_set_visual_object_bound_column_assigns_numeric_value();
+    test_set_visual_object_column_count_assigns_numeric_value();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

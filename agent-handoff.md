@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#807`, adding selected visual object bound-column assignment so combo/list designer commands can assign non-negative numeric `BoundColumn` values to direct fields and serialized properties, including writable `PROPERTIES` rows where `BoundColumn` is absent, while rejecting negative values and duplicate selections before rollback-safe batch writes.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#808`, adding selected visual object column-count assignment so combo/list designer commands can assign non-negative numeric `ColumnCount` values to direct fields and serialized properties, including writable `PROPERTIES` rows where `ColumnCount` is absent, while rejecting negative values and duplicate selections before rollback-safe batch writes.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
