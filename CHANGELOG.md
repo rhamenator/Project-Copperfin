@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-06-16
+
+- D1/#592 descriptor wrapper-plan propagation shipped: generated DLL/FLL native-wrapper scaffolds now carry the stub-emission wrapper contract through `CopperfinRuntimeBridgeDescriptor`, so exported DLL/FLL stubs now build that wrapper once before constructing the descriptor and then build invocations straight from the enriched descriptor instead of passing the wrapper separately at the invocation seam. Focused `test_runtime_pipeline` and `test_build_host_output` coverage now both prove the descriptor-plan wrapper contract path.
 This changelog is an exhaustive ledger compiled from the dated implementation notes already tracked in [remaining-work.md](remaining-work.md).
 
 It is intentionally append-only and mirrors shipped history rather than planned work. For active priorities and issue sequencing, use [agent-handoff.md](agent-handoff.md) and [docs/23-phase-a-dependency-breakdown.md](docs/23-phase-a-dependency-breakdown.md).
