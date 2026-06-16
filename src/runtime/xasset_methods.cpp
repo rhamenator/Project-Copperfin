@@ -33,6 +33,15 @@ std::string value_or_empty(const copperfin::vfp::DbfRecord& record, std::string_
     return value->display_value;
 }
 
+std::size_t field_index_or_missing(const copperfin::vfp::DbfRecord& record, std::string_view field_name) {
+    for (std::size_t index = 0U; index < record.values.size(); ++index) {
+        if (record.values[index].field_name == field_name) {
+            return index;
+        }
+    }
+    return studio::StudioObjectMissingFieldIndex;
+}
+
 std::string trim_copy(std::string value) {
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
         return std::isspace(ch) == 0;
@@ -189,6 +198,7 @@ std::vector<std::string> split_lines(const std::string& text) {
 
 std::vector<XAssetMethod> parse_methods_blob(
     std::size_t record_index,
+    std::size_t source_field_index,
     const std::string& object_path,
     const std::string& blob) {
     std::vector<XAssetMethod> methods;
@@ -202,6 +212,7 @@ std::vector<XAssetMethod> parse_methods_blob(
         const auto [owner_path, method_name] = split_owner_and_method(current_name, object_path);
         XAssetMethod method;
         method.record_index = record_index;
+        method.source_field_index = source_field_index;
         method.object_path = owner_path;
         method.method_name = method_name;
         method.routine_name = sanitize_routine_name("__cf_" + owner_path + "_" + method_name);
@@ -237,18 +248,21 @@ std::vector<XAssetMethod> parse_methods_blob(
 
 std::vector<XAssetMethod> parse_embedded_routines(
     std::size_t record_index,
+    std::size_t source_field_index,
     const std::string& object_path,
     const std::string& blob) {
-    return parse_methods_blob(record_index, object_path, blob);
+    return parse_methods_blob(record_index, source_field_index, object_path, blob);
 }
 
 XAssetMethod make_wrapped_method(
     std::size_t record_index,
+    std::size_t source_field_index,
     const std::string& object_path,
     std::string method_name,
     std::string source_text) {
     XAssetMethod method;
     method.record_index = record_index;
+    method.source_field_index = source_field_index;
     method.object_path = object_path;
     method.method_name = std::move(method_name);
     method.routine_name = sanitize_routine_name("__cf_" + object_path + "_" + method.method_name);
@@ -275,6 +289,7 @@ std::vector<XAssetMethod> parse_field_as_routines(
     std::size_t record_index,
     const std::string& object_path,
     const std::string& field_role,
+    std::size_t source_field_index,
     const std::string& blob) {
     const std::string trimmed = trim_copy(blob);
     if (trimmed.empty()) {
@@ -282,10 +297,10 @@ std::vector<XAssetMethod> parse_field_as_routines(
     }
 
     if (starts_with_insensitive(trimmed, "PROCEDURE ") || starts_with_insensitive(trimmed, "FUNCTION ")) {
-        return parse_embedded_routines(record_index, object_path, trimmed);
+        return parse_embedded_routines(record_index, source_field_index, object_path, trimmed);
     }
 
-    return {make_wrapped_method(record_index, object_path, field_role, trimmed)};
+    return {make_wrapped_method(record_index, source_field_index, object_path, field_role, trimmed)};
 }
 
 bool has_method(
@@ -441,10 +456,14 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
             : build_object_path(record);
 
         if (document.kind == studio::StudioAssetKind::menu) {
-            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "setup", value_or_empty(record, "SETUP")));
-            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "command", value_or_empty(record, "COMMAND")));
-            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "procedure", value_or_empty(record, "PROCEDURE")));
-            append_methods(model.methods, parse_field_as_routines(record.record_index, object_path, "cleanup", value_or_empty(record, "CLEANUP")));
+            append_methods(model.methods, parse_field_as_routines(
+                record.record_index, object_path, "setup", field_index_or_missing(record, "SETUP"), value_or_empty(record, "SETUP")));
+            append_methods(model.methods, parse_field_as_routines(
+                record.record_index, object_path, "command", field_index_or_missing(record, "COMMAND"), value_or_empty(record, "COMMAND")));
+            append_methods(model.methods, parse_field_as_routines(
+                record.record_index, object_path, "procedure", field_index_or_missing(record, "PROCEDURE"), value_or_empty(record, "PROCEDURE")));
+            append_methods(model.methods, parse_field_as_routines(
+                record.record_index, object_path, "cleanup", field_index_or_missing(record, "CLEANUP"), value_or_empty(record, "CLEANUP")));
 
             if (is_menu_item_record(record)) {
                 std::optional<std::string> action_routine = find_menu_action_routine(model.methods, object_path);
@@ -453,6 +472,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                     if (const auto submenu_name = find_following_submenu_name(document, record_position)) {
                         const auto wrapped = make_wrapped_method(
                             record.record_index,
+                            studio::StudioObjectMissingFieldIndex,
                             object_path,
                             "activate_popup",
                             "ACTIVATE POPUP " + *submenu_name);
@@ -478,7 +498,11 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         } else {
             const std::string methods_blob = value_or_empty(record, "METHODS");
             if (!methods_blob.empty()) {
-                append_methods(model.methods, parse_methods_blob(record.record_index, object_path, methods_blob));
+                append_methods(model.methods, parse_methods_blob(
+                    record.record_index,
+                    field_index_or_missing(record, "METHODS"),
+                    object_path,
+                    methods_blob));
             }
 
             const std::string baseclass = lowercase_copy(trim_copy(value_or_empty(record, "BASECLASS")));

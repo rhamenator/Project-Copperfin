@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#706 xAsset method source-field provenance shipped: executable xAsset methods now retain the DBF field ordinal for form/class `METHODS` blobs and menu method fields, with synthetic submenu methods using the missing-field sentinel.
 - E1/#705 Studio display metadata trimming shipped: generic object/menu snapshots now trim normalized active display metadata and ignore whitespace-only fallback candidates while preserving direct DBF property values unchanged.
 - E1/#704 PJX project type-code normalization shipped: project workspace header detection and item classification now trim and uppercase `TYPE` codes for stable metadata.
 - E1/#703 VFP project logical flag normalization shipped: PJX/PJT logical fields now parse trim- and case-insensitive VFP true values for build and entry flags.
