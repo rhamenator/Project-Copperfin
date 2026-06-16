@@ -449,6 +449,23 @@ struct VisualObjectMethodMoveRequest {
     bool replace_existing = false;
 };
 
+struct VisualObjectMethodMoveBatchItem {
+    std::size_t source_record_index = 0;
+    std::string source_object_name;
+    std::string source_unique_id;
+    std::string source_method_name;
+    std::size_t target_record_index = 0;
+    std::string target_object_name;
+    std::string target_unique_id;
+    std::string target_method_name;
+    bool replace_existing = false;
+};
+
+struct VisualObjectMethodMoveBatchRequest {
+    std::string path;
+    std::vector<VisualObjectMethodMoveBatchItem> methods;
+};
+
 struct VisualObjectMethodReorderRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -570,6 +587,7 @@ VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenam
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request);
 VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBatchRequest& request);
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request);
+VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBatchRequest& request);
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
