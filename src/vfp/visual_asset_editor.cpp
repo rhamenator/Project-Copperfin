@@ -391,6 +391,16 @@ const DbfRecordValue* find_record_value(const DbfRecord& record, const std::stri
     return value == record.values.end() ? nullptr : &(*value);
 }
 
+std::optional<std::size_t> find_field_index(const DbfTable& table, const std::string& field_name) {
+    const std::string requested_field_name = normalize_visual_property_name(field_name);
+    for (std::size_t index = 0U; index < table.fields.size(); ++index) {
+        if (normalize_visual_property_name(table.fields[index].name) == requested_field_name) {
+            return index;
+        }
+    }
+    return std::nullopt;
+}
+
 std::vector<std::size_t> find_matching_record_indexes(
     const DbfTable& table,
     const std::string& field_name,
@@ -406,6 +416,55 @@ std::vector<std::size_t> find_matching_record_indexes(
         }
     }
     return matches;
+}
+
+VisualObjectDuplicateResult reject_identity_collision(
+    const DbfTable& table,
+    const std::string& field_name,
+    const std::string& requested_value) {
+    if (normalize_visual_object_name(requested_value).empty()) {
+        return {.ok = true, .error = {}, .record_index = 0U};
+    }
+    if (!find_field_index(table, field_name).has_value()) {
+        return {
+            .ok = false,
+            .error = "The requested replacement identity field is not present in the asset.",
+            .record_index = 0U
+        };
+    }
+    if (!find_matching_record_indexes(table, field_name, normalize_visual_object_name(requested_value)).empty()) {
+        return {
+            .ok = false,
+            .error = "The requested replacement identity already exists in the asset.",
+            .record_index = 0U
+        };
+    }
+    return {.ok = true, .error = {}, .record_index = 0U};
+}
+
+void replace_duplicate_field_value(
+    const DbfTable& table,
+    std::vector<std::string>& values,
+    const std::string& field_name,
+    const std::string& replacement_value) {
+    if (replacement_value.empty()) {
+        return;
+    }
+    const auto field_index = find_field_index(table, field_name);
+    if (field_index.has_value() && *field_index < values.size()) {
+        values[*field_index] = replacement_value;
+    }
+}
+
+std::string duplicate_field_value(
+    const DbfTable& table,
+    const std::vector<std::string>& values,
+    const std::string& field_name) {
+    const auto field_index = find_field_index(table, field_name);
+    if (!field_index.has_value() || *field_index >= values.size()) {
+        return {};
+    }
+    return values[*field_index];
 }
 
 VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
@@ -1453,6 +1512,104 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+}
+
+VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};
+    }
+
+    std::size_t source_record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, source_record_index);
+    if (!resolution.ok) {
+        return {.ok = false, .error = resolution.error, .record_index = 0U};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error, .record_index = 0U};
+    }
+    const auto& table = table_result.table;
+    if (source_record_index >= table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available.", .record_index = 0U};
+    }
+
+    const auto reject_missing_replacement_field = [&](const std::string& field_name, const std::string& value) -> VisualObjectDuplicateResult {
+        if (value.empty() || find_field_index(table, field_name).has_value()) {
+            return {.ok = true, .error = {}, .record_index = 0U};
+        }
+        return {
+            .ok = false,
+            .error = "The requested replacement identity field is not present in the asset.",
+            .record_index = 0U
+        };
+    };
+    for (const auto& check : {
+             reject_missing_replacement_field("OBJNAME", request.new_object_name),
+             reject_missing_replacement_field("NAME", request.new_name),
+             reject_missing_replacement_field("UNIQUEID", request.new_unique_id)
+         }) {
+        if (!check.ok) {
+            return check;
+        }
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table.records.size() + 1U);
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table.records.size());
+    for (const auto& record : table.records) {
+        std::vector<std::string> values;
+        values.reserve(table.fields.size());
+        for (const auto& field : table.fields) {
+            const auto* value = find_record_value(record, field.name);
+            values.push_back(value == nullptr ? std::string{} : value->display_value);
+        }
+        records.push_back(std::move(values));
+        deleted_flags.push_back(record.deleted);
+    }
+
+    std::vector<std::string> duplicate_values = records[source_record_index];
+    replace_duplicate_field_value(table, duplicate_values, "OBJNAME", request.new_object_name);
+    replace_duplicate_field_value(table, duplicate_values, "NAME", request.new_name);
+    replace_duplicate_field_value(table, duplicate_values, "UNIQUEID", request.new_unique_id);
+
+    for (const auto& identity_field : {"OBJNAME", "NAME", "UNIQUEID"}) {
+        const std::string final_value = duplicate_field_value(table, duplicate_values, identity_field);
+        if (normalize_visual_object_name(final_value).empty()) {
+            continue;
+        }
+        const auto collision = reject_identity_collision(table, identity_field, final_value);
+        if (!collision.ok) {
+            return collision;
+        }
+    }
+
+    const std::size_t duplicate_record_index = records.size();
+    records.push_back(std::move(duplicate_values));
+
+    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
+    if (!create_result.ok) {
+        return {.ok = false, .error = create_result.error, .record_index = 0U};
+    }
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const auto delete_result = set_record_deleted_flag(request.path, index, true);
+        if (!delete_result.ok) {
+            return {.ok = false, .error = delete_result.error, .record_index = 0U};
+        }
+    }
+
+    return {.ok = true, .error = {}, .record_index = duplicate_record_index};
 }
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {

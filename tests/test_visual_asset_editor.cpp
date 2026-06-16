@@ -1171,6 +1171,126 @@ void test_delete_visual_object_method_removes_selected_methods() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_duplicate_visual_object_appends_identity_safe_copy() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_duplicate_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "duplicate.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "frmMain",
+            "commandbutton",
+            "commandbutton",
+            "Caption = \"Save\"\r\nLeft = 12\r\n",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "frmMain",
+            "textbox",
+            "textbox",
+            "Caption = \"Name\"\r\n",
+            ""
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#749: duplicate fixture should be writable");
+
+    auto duplicate_result = copperfin::vfp::duplicate_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {},
+        .new_object_name = "cmdSaveCopy",
+        .new_name = "saveButtonCopy",
+        .new_unique_id = "save-copy-guid"
+    });
+    expect(duplicate_result.ok && duplicate_result.record_index == 2U,
+        "#749: selected-object duplication should append a live copy at the next record index");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U,
+        "#749: duplication should append exactly one visual object row");
+    if (list_result.ok && list_result.objects.size() == 3U) {
+        expect(list_result.objects[0].object_name == "cmdSave" &&
+                list_result.objects[0].unique_id == "save-guid",
+            "#749: duplication should preserve the original selected object");
+        expect(!list_result.objects[2].deleted &&
+                list_result.objects[2].object_name == "cmdSaveCopy" &&
+                list_result.objects[2].unique_id == "save-copy-guid" &&
+                list_result.objects[2].parent_name == "frmMain" &&
+                list_result.objects[2].class_name == "commandbutton" &&
+                list_result.objects[2].baseclass_name == "commandbutton" &&
+                list_result.objects[2].caption == "\"Save\"",
+            "#749: duplicated visual objects should expose replacement identity and preserved metadata");
+    }
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-copy-guid",
+        .property_name = "Left"
+    });
+    expect(property_result.ok && property_result.exists && property_result.value == "12",
+        "#749: duplicated visual objects should preserve memo-backed properties");
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-copy-guid"
+    });
+    expect(method_result.ok && find_method_snapshot(method_result.methods, "Click") != nullptr,
+        "#749: duplicated visual objects should preserve METHODS memo content");
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#749: duplicate fixture should support marking an existing object deleted");
+
+    duplicate_result = copperfin::vfp::duplicate_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .new_object_name = "cmdOther",
+        .new_name = "otherButton",
+        .new_unique_id = "name-guid"
+    });
+    expect(!duplicate_result.ok,
+        "#749: duplicate identity checks should reject collisions with deleted records");
+
+    list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U && list_result.objects[1].deleted,
+        "#749: failed duplicate requests should not mutate object count or deleted flags");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2044,6 +2164,7 @@ int main() {
     test_list_visual_object_methods_reads_selected_methods();
     test_update_visual_object_method_updates_and_appends_methods();
     test_delete_visual_object_method_removes_selected_methods();
+    test_duplicate_visual_object_appends_identity_safe_copy();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

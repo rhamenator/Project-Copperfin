@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#749 selected visual object duplication shipped: designer copy/paste workflows can append a live copy of a selected object with caller-provided replacement `OBJNAME`/`NAME`/`UNIQUEID` values while preserving existing properties, methods, hierarchy metadata, and identity collision safety.
 - E2/#748 selected visual object method deletion shipped: method/event editors can now remove existing `METHODS` memo procedure/function blocks by selected object and method name while preserving unrelated methods and existing undo behavior.
 - E2/#747 selected visual object method editing shipped: method/event editors can now update existing `METHODS` memo declarations or append new procedure/function declarations through the same selector and undo surfaces used by visual property edits.
 - E2/#746 selected visual object method listing shipped: context-aware method/event editors can now enumerate `PROCEDURE` and `FUNCTION` declarations from a selected record's `METHODS` memo with source text, declaration line, memo block, and resolved record metadata.
