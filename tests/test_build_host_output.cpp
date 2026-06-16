@@ -1237,8 +1237,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should evaluate staged missing-response policy from the host-failure and response-read helpers.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);") != std::string::npos,
                    "build host DLL wrapper should route host-failure output through the shared missing-response evaluation helper.");
-            expect(wrapper_source.find("(void)missing_response;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only missing-response evaluation result unused.");
+            expect(wrapper_source.find("(void)missing_response;") == std::string::npos,
+                   "build host DLL wrapper should consume missing-response evaluation when evaluating response validation.");
             expect(wrapper_source.find("const auto response_validation_evaluation =") != std::string::npos,
                    "build host DLL wrapper should evaluate staged response-validation policy from the missing-response and validation helpers.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);") != std::string::npos,
@@ -2161,8 +2161,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should evaluate staged missing-response policy from the host-failure and response-read helpers.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);") != std::string::npos,
                    "build host FLL wrapper should route host-failure output through the shared missing-response evaluation helper.");
-            expect(wrapper_source.find("(void)missing_response;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only missing-response evaluation result unused.");
+            expect(wrapper_source.find("(void)missing_response;") == std::string::npos,
+                   "build host FLL wrapper should consume missing-response evaluation when evaluating response validation.");
             expect(wrapper_source.find("const auto response_validation_evaluation =") != std::string::npos,
                    "build host FLL wrapper should evaluate staged response-validation policy from the missing-response and validation helpers.");
             expect(wrapper_source.find("copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);") != std::string::npos,
