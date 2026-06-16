@@ -170,6 +170,16 @@ struct VisualObjectCreateResult {
     std::size_t record_index = 0;
 };
 
+struct VisualObjectReparentRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_object_name;
+    std::string parent_unique_id;
+    bool clear_parent = false;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -191,6 +201,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
+VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);

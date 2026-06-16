@@ -1426,6 +1426,162 @@ void test_create_visual_object_appends_toolbox_field_values() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_reparent_visual_object_updates_container_parent() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_reparent_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "reparent.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmMain", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cntMain", "mainContainer", "container-guid", "frmMain", "container", "container", ""},
+        {"cmdSave", "saveButton", "save-guid", "frmMain", "commandbutton", "commandbutton", ""},
+        {"txtName", "nameBox", "name-guid", "frmMain", "textbox", "textbox", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#751: reparent fixture should be writable");
+
+    auto reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .parent_object_name = "cntMain",
+        .parent_unique_id = {},
+        .clear_parent = false
+    });
+    expect(reparent_result.ok, "#751: reparent should support UNIQUEID source and object-name parent selection");
+
+    auto parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value == "cntMain",
+        "#751: reparent should write the resolved parent object name");
+
+    parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value == "frmMain",
+        "#751: reparent should preserve unrelated object parent fields");
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#751: reparent should route through visual property undo");
+    parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value == "frmMain",
+        "#751: undo should restore the previous parent");
+
+    reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {},
+        .parent_object_name = "cntMain",
+        .parent_unique_id = {},
+        .clear_parent = false
+    });
+    expect(reparent_result.ok, "#751: reparent should support object-name source selection");
+
+    reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .parent_object_name = {},
+        .parent_unique_id = "form-guid",
+        .clear_parent = false
+    });
+    expect(reparent_result.ok, "#751: reparent should support UNIQUEID parent selection");
+    parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value == "frmMain",
+        "#751: UNIQUEID parent selection should write the target object's OBJNAME");
+
+    reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .parent_object_name = {},
+        .parent_unique_id = {},
+        .clear_parent = true
+    });
+    expect(reparent_result.ok, "#751: reparent should support clearing parent for root-level placement");
+    parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value.empty(),
+        "#751: clear-parent reparent should blank the parent field");
+
+    reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .parent_object_name = {},
+        .parent_unique_id = "save-guid",
+        .clear_parent = false
+    });
+    expect(!reparent_result.ok, "#751: reparent should reject self-parenting");
+
+    reparent_result = copperfin::vfp::reparent_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .parent_object_name = "missingParent",
+        .parent_unique_id = {},
+        .clear_parent = false
+    });
+    expect(!reparent_result.ok, "#751: reparent should reject missing parent selectors");
+
+    parent_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "PARENT"
+    });
+    expect(parent_result.ok && parent_result.value.empty(),
+        "#751: failed reparent requests should not mutate the selected object's parent");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2301,6 +2457,7 @@ int main() {
     test_delete_visual_object_method_removes_selected_methods();
     test_duplicate_visual_object_appends_identity_safe_copy();
     test_create_visual_object_appends_toolbox_field_values();
+    test_reparent_visual_object_updates_container_parent();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

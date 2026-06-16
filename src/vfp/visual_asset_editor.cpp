@@ -467,6 +467,16 @@ std::string duplicate_field_value(
     return values[*field_index];
 }
 
+std::string visual_object_record_name(const DbfRecord& record) {
+    const auto* objname = find_record_value(record, "OBJNAME");
+    std::string object_name = objname == nullptr ? std::string{} : trim_both(objname->display_value);
+    if (!object_name.empty()) {
+        return object_name;
+    }
+    const auto* name = find_record_value(record, "NAME");
+    return name == nullptr ? std::string{} : trim_both(name->display_value);
+}
+
 VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
     const std::string requested_unique_id = normalize_visual_object_name(request.unique_id);
     if (!requested_unique_id.empty()) {
@@ -1682,6 +1692,72 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
     }
 
     return {.ok = true, .error = {}, .record_index = created_record_index};
+}
+
+VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    std::size_t source_record_index = 0U;
+    const auto source_resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, source_record_index);
+    if (!source_resolution.ok) {
+        return source_resolution;
+    }
+
+    std::string parent_name;
+    if (!request.clear_parent) {
+        if (trim_both(request.parent_object_name).empty() && trim_both(request.parent_unique_id).empty()) {
+            return {.ok = false, .error = "No parent object selector was provided."};
+        }
+
+        std::size_t parent_record_index = 0U;
+        const auto parent_resolution = resolve_visual_object_record_index({
+            .path = request.path,
+            .record_index = 0U,
+            .object_name = request.parent_object_name,
+            .unique_id = request.parent_unique_id,
+            .property_name = {},
+            .property_value = {}
+        }, parent_record_index);
+        if (!parent_resolution.ok) {
+            return parent_resolution;
+        }
+        if (parent_record_index == source_record_index) {
+            return {.ok = false, .error = "A visual object cannot be reparented to itself."};
+        }
+
+        const auto table_result = parse_dbf_table_from_file(
+            request.path,
+            std::max(source_record_index, parent_record_index) + 1U);
+        if (!table_result.ok) {
+            return {.ok = false, .error = table_result.error};
+        }
+        if (parent_record_index >= table_result.table.records.size()) {
+            return {.ok = false, .error = "The requested parent record is not currently available."};
+        }
+
+        parent_name = visual_object_record_name(table_result.table.records[parent_record_index]);
+        if (parent_name.empty()) {
+            return {.ok = false, .error = "The selected parent does not expose an object name."};
+        }
+    }
+
+    return update_visual_object_property({
+        .path = request.path,
+        .record_index = source_record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "PARENT",
+        .property_value = parent_name
+    });
 }
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
