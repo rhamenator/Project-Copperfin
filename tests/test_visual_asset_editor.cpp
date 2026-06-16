@@ -9757,6 +9757,195 @@ void test_set_visual_object_caption_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_tooltip_text_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_tooltip_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "tooltip.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "TOOLTIPTEXT", .type = 'C', .length = 60U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "oneButton", "one-guid", "One tip"},
+        {"cmdTwo", "twoButton", "two-guid", "Two tip"},
+        {"cmdThree", "threeButton", "three-guid", "Three tip"},
+        {"cmdOther", "otherButton", "other-guid", "Other tip"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#800: tooltip fixture should be writable");
+
+    const auto tooltip_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ToolTipText"
+        });
+        expect(result.ok && result.exists, "#800: tooltip fixture property should be readable");
+        return result.value;
+    };
+    const auto tooltip = [&](const std::string& unique_id) {
+        return tooltip_for(table_path.string(), unique_id);
+    };
+    const auto tooltip_state = [&]() {
+        return tooltip("one-guid") + "," +
+            tooltip("two-guid") + "," +
+            tooltip("three-guid") + "," +
+            tooltip("other-guid");
+    };
+
+    auto tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "two-guid"}
+        },
+        .tooltip_text = "Save the current record"
+    });
+    expect(tooltip_result.ok, "#800: tooltip assignment should support mixed selectors");
+    expect(tooltip("one-guid") == "Save the current record" &&
+            tooltip("two-guid") == "Save the current record" &&
+            tooltip("three-guid") == "Three tip" &&
+            tooltip("other-guid") == "Other tip",
+        "#800: direct tooltip assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#800: first tooltip write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#800: second tooltip write should remain undo-backed");
+    expect(tooltip_state() == "One tip,Two tip,Three tip,Other tip",
+        "#800: tooltip undo should restore original direct values");
+
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 2U, .object_name = {}, .unique_id = {}},
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"}
+        },
+        .tooltip_text = "Use \"Enter\""
+    });
+    expect(tooltip_result.ok, "#800: tooltip assignment should support record-index selectors");
+    expect(tooltip("three-guid") == "Use \"Enter\"" &&
+            tooltip("one-guid") == "Use \"Enter\"" &&
+            tooltip("two-guid") == "Two tip",
+        "#800: direct tooltip assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = tooltip_state();
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = table_path.string(),
+        .objects = {},
+        .tooltip_text = "Ignored"
+    });
+    expect(!tooltip_result.ok, "#800: tooltip assignment should reject empty selections");
+    expect(tooltip_state() == committed_state, "#800: empty-selection failures should not mutate tooltips");
+
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .tooltip_text = "Ignored"
+    });
+    expect(!tooltip_result.ok, "#800: tooltip assignment should reject missing selected objects");
+    expect(tooltip_state() == committed_state, "#800: missing-object failures should not mutate tooltips");
+
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "one-guid"},
+            {.record_index = 0U, .object_name = "cmdOne", .unique_id = {}}
+        },
+        .tooltip_text = "Ignored"
+    });
+    expect(!tooltip_result.ok, "#800: tooltip assignment should reject duplicate selected objects");
+    expect(tooltip_state() == committed_state, "#800: duplicate-selection failures should not mutate tooltips");
+
+    const fs::path blob_path = temp_dir / "tooltip_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"cmdBlob", "blob-guid", "Caption = \"Blob\"\r\nToolTipText = \"Blob tip\"\r\n"},
+        {"cmdNoTooltip", "no-tooltip-guid", "Caption = \"No tooltip\"\r\n"},
+        {"cmdOther", "other-guid", "ToolTipText = \"Other tip\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#800: tooltip property-blob fixture should be writable");
+
+    const auto blob_tooltip_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "ToolTipText"
+        });
+    };
+
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "cmdNoTooltip", .unique_id = {}}
+        },
+        .tooltip_text = "Press \"F1\" for help"
+    });
+    expect(tooltip_result.ok, "#800: tooltip assignment should support existing and absent serialized properties");
+    auto blob_tooltip = blob_tooltip_state("blob-guid");
+    auto appended_tooltip = blob_tooltip_state("no-tooltip-guid");
+    auto other_tooltip = blob_tooltip_state("other-guid");
+    expect(blob_tooltip.ok && blob_tooltip.exists && blob_tooltip.value == "\"Press \"\"F1\"\" for help\"" &&
+            appended_tooltip.ok && appended_tooltip.exists && appended_tooltip.value == "\"Press \"\"F1\"\" for help\"" &&
+            other_tooltip.ok && other_tooltip.exists && other_tooltip.value == "\"Other tip\"",
+        "#800: serialized tooltip assignment should quote text, append missing ToolTipText, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#800: appended serialized tooltip write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#800: existing serialized tooltip write should remain undo-backed");
+    blob_tooltip = blob_tooltip_state("blob-guid");
+    appended_tooltip = blob_tooltip_state("no-tooltip-guid");
+    expect(blob_tooltip.ok && blob_tooltip.exists && blob_tooltip.value == "\"Blob tip\"" &&
+            appended_tooltip.ok && !appended_tooltip.exists,
+        "#800: serialized tooltip undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_tooltip.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"cmdA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#800: missing-ToolTipText fixture should be writable");
+
+    tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .tooltip_text = "Ignored"
+    });
+    expect(!tooltip_result.ok, "#800: tooltip assignment should reject objects without a writable ToolTipText carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -12348,6 +12537,7 @@ int main() {
     test_set_visual_object_read_only_assigns_logical_state();
     test_set_visual_object_locked_assigns_logical_state();
     test_set_visual_object_caption_assigns_text();
+    test_set_visual_object_tooltip_text_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

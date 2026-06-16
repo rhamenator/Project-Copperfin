@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#800 selected visual object tooltip text assignment shipped: designer commands can assign caller text to selected `ToolTipText` values, sharing the caption text preflight path for direct fields, serialized properties, absent memo-backed properties, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#799 selected visual object caption assignment shipped: designer commands can assign caller text to selected `Caption` values, storing raw DBF field text for direct fields and quoted VFP string literals for serialized properties while preserving rollback-safe batch writes.
 - E2/#798 selected visual object locked-state assignment shipped: designer commands can assign FoxPro logical `.T.`/`.F.` `LOCKED` values to selected objects, including existing serialized properties, while rejecting duplicate selections before rollback-safe batch writes.
 - E2/#797 selected visual object read-only assignment shipped: designer commands can assign FoxPro logical `.T.`/`.F.` `READONLY` values to selected objects, including existing serialized properties, while rejecting duplicate selections before rollback-safe batch writes.
