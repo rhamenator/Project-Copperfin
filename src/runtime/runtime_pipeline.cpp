@@ -669,24 +669,24 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::filesystem::path manifest_path;\n";
     stream << "    std::filesystem::path runtime_host_path;\n";
     stream << "};\n\n";
+    stream << "using CopperfinRuntimeBridgeIntReturnAdapter = int (*)(int);\n\n";
+    stream << "struct CopperfinRuntimeBridgeStubEmissionWrapper {\n";
+    stream << "    std::string native_return_surface;\n";
+    stream << "    CopperfinRuntimeBridgeIntReturnAdapter return_adapter = nullptr;\n";
+    stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeInvocation {\n";
     stream << "    CopperfinRuntimeBridgeDescriptor descriptor;\n";
     stream << "    std::vector<std::string> arguments;\n";
+    stream << "    CopperfinRuntimeBridgeStubEmissionWrapper stub_emission_wrapper;\n";
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeParameter {\n";
     stream << "    std::string parameter_name;\n";
     stream << "    std::string value_representation;\n";
     stream << "    std::string call_surface;\n";
     stream << "};\n\n";
-    stream << "using CopperfinRuntimeBridgeIntReturnAdapter = int (*)(int);\n\n";
-    stream << "struct CopperfinRuntimeBridgeStubEmissionWrapper {\n";
-    stream << "    std::string native_return_surface;\n";
-    stream << "    CopperfinRuntimeBridgeIntReturnAdapter return_adapter = nullptr;\n";
-    stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeCall {\n";
     stream << "    CopperfinRuntimeBridgeInvocation invocation;\n";
     stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters;\n";
-    stream << "    CopperfinRuntimeBridgeStubEmissionWrapper stub_emission_wrapper;\n";
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeReturn {\n";
     stream << "    std::string value_representation;\n";
@@ -1115,7 +1115,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return \"--parameter-count\";\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeInvocation copperfin_build_runtime_bridge_invocation(\n";
-    stream << "    const CopperfinRuntimeBridgeDescriptor& descriptor) {\n";
+    stream << "    const CopperfinRuntimeBridgeDescriptor& descriptor,\n";
+    stream << "    CopperfinRuntimeBridgeStubEmissionWrapper stub_emission_wrapper) {\n";
     stream << "    return CopperfinRuntimeBridgeInvocation{\n";
     stream << "        descriptor,\n";
     stream << "        {\n";
@@ -1135,13 +1136,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "            copperfin_runtime_bridge_parameter_names_flag(),\n";
     stream << "            descriptor.parameter_names,\n";
     stream << "            copperfin_runtime_bridge_parameter_count_flag(),\n";
-    stream << "            std::to_string(descriptor.parameter_count)}};\n";
+    stream << "            std::to_string(descriptor.parameter_count)},\n";
+    stream << "        std::move(stub_emission_wrapper)};\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeCall copperfin_build_runtime_bridge_call(\n";
     stream << "    const CopperfinRuntimeBridgeInvocation& invocation,\n";
-    stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters,\n";
-    stream << "    CopperfinRuntimeBridgeStubEmissionWrapper stub_emission_wrapper) {\n";
-    stream << "    return CopperfinRuntimeBridgeCall{invocation, std::move(parameters), std::move(stub_emission_wrapper)};\n";
+    stream << "    std::vector<CopperfinRuntimeBridgeParameter> parameters) {\n";
+    stream << "    return CopperfinRuntimeBridgeCall{invocation, std::move(parameters)};\n";
     stream << "}\n\n";
     stream << "static std::string copperfin_escape_runtime_bridge_json_string(const std::string& value) {\n";
     stream << "    std::string escaped;\n";
@@ -2195,10 +2196,10 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const auto stub_emission_return_surface =\n";
     stream << "        copperfin_runtime_bridge_build_stub_emission_return_surface(\n";
     stream << "            stub_emission,\n";
-    stream << "            placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.stub_emission_wrapper.native_return_surface);\n";
+    stream << "            placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.stub_emission_wrapper.native_return_surface);\n";
     stream << "    return copperfin_runtime_bridge_apply_stub_emission_output(\n";
     stream << "        stub_emission_return_surface,\n";
-    stream << "        placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.stub_emission_wrapper.return_adapter);\n";
+    stream << "        placeholder_return_value_plan.stub_return_plan.return_activation_plan.final_return_adoption_plan.return_emission_plan.return_materialization_plan.outcome_selection_plan.native_return_plan.interpreted_result_plan.response_parse_plan.response_artifact.response_read_plan.request_write_plan.request_artifact.response_validation_plan.failure_policy_plan.interpretation_plan.payload_plan.dispatch_plan.serialization_plan.transport_plan.execution_plan.observation_plan.launch_plan.result.call.invocation.stub_emission_wrapper.return_adapter);\n";
     stream << "}\n\n";
 
     if (plan.output_kind == BuildOutputKind::fll) {
@@ -2259,15 +2260,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                    << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
                    << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
-            stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);\n";
             stream << "    const auto stub_emission_wrapper =\n";
             stream << "        copperfin_runtime_bridge_build_stub_emission_wrapper(\n";
             stream << "            copperfin_build_runtime_bridge_fll_int_return_surface(),\n";
             stream << "            " << kFllDefaultReturnHelper << ");\n";
+            stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(\n";
+            stream << "        descriptor,\n";
+            stream << "        stub_emission_wrapper);\n";
             stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
             stream << "        invocation,\n";
-            stream << "        {{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}},\n";
-            stream << "        stub_emission_wrapper);\n";
+            stream << "        {{\"parm\", std::to_string(static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(parm))), \"ParamBlk*\"}});\n";
             stream << "    const auto placeholder_return_binding =\n";
             stream << "        copperfin_build_runtime_bridge_placeholder_return_binding(\n";
             stream << "            copperfin_build_runtime_bridge_fll_int_return_surface());\n";
@@ -2463,11 +2465,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                    << "U, \"" << quote_manifest_value(parameter_declaration_kind) << "\", \""
                    << quote_manifest_value(parameter_name_manifest) << "\", " << parameter_count
                    << "U, reinterpret_cast<void*>(&" << symbol << "));\n";
-            stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(descriptor);\n";
             stream << "    const auto stub_emission_wrapper =\n";
             stream << "        copperfin_runtime_bridge_build_stub_emission_wrapper(\n";
             stream << "            copperfin_build_runtime_bridge_native_int_return_surface(),\n";
             stream << "            copperfin_runtime_bridge_return_native_int);\n";
+            stream << "    const auto invocation = copperfin_build_runtime_bridge_invocation(\n";
+            stream << "        descriptor,\n";
+            stream << "        stub_emission_wrapper);\n";
             stream << "    const auto call = copperfin_build_runtime_bridge_call(\n";
             stream << "        invocation,\n";
             stream << "        {";
@@ -2480,8 +2484,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
                 stream << "{\"" << quote_manifest_value(parameter_name) << "\", std::to_string(" << sanitized_name
                        << "), \"int\"}";
             }
-            stream << "},\n";
-            stream << "        stub_emission_wrapper);\n";
+            stream << "});\n";
             stream << "    const auto placeholder_return_binding =\n";
             stream << "        copperfin_build_runtime_bridge_placeholder_return_binding(\"int\");\n";
             stream << "    const auto result = copperfin_build_runtime_bridge_result(\n";
