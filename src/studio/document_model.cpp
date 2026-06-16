@@ -213,6 +213,12 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         snapshot.parent_name = first_non_empty(record, {"PARENT", "PARENTID"});
         snapshot.class_name = first_non_empty(record, {"CLASS"});
         snapshot.baseclass_name = first_non_empty(record, {"BASECLASS"});
+        if (document.kind == StudioAssetKind::menu) {
+            snapshot.menu_prompt = first_non_empty(record, {"PROMPT"});
+            snapshot.menu_level_name = first_non_empty(record, {"LEVELNAME"});
+            snapshot.menu_command = first_non_empty(record, {"COMMAND"});
+            snapshot.menu_message = first_non_empty(record, {"MESSAGE"});
+        }
         switch (document.kind) {
             case StudioAssetKind::report:
             case StudioAssetKind::label:

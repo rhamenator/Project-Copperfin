@@ -80,6 +80,10 @@ struct StudioObjectSnapshot {
     std::string parent_name{};
     std::string class_name{};
     std::string baseclass_name{};
+    std::string menu_prompt{};
+    std::string menu_level_name{};
+    std::string menu_command{};
+    std::string menu_message{};
     std::string title{};
     std::string subtitle{};
     std::vector<StudioPropertySnapshot> properties{};

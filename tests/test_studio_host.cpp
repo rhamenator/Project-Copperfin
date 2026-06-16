@@ -201,6 +201,40 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
     }
 }
 
+void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\mainmenu.mnx)";
+    document.kind = copperfin::studio::StudioAssetKind::menu;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Customer"},
+                {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "MAIN"},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO FORM customer"},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "Open customer maintenance"},
+                {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "3.000"},
+                {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "7.000"}
+            }
+        }
+    };
+
+    const auto objects = copperfin::studio::build_object_snapshot(document);
+    expect(objects.size() == 1U, "#668: menu snapshot should include the parsed menu record");
+    if (!objects.empty()) {
+        expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
+        expect(objects[0].menu_level_name == "MAIN", "#668: menu snapshots should expose LEVELNAME metadata");
+        expect(objects[0].menu_command == "DO FORM customer", "#668: menu snapshots should expose COMMAND metadata");
+        expect(objects[0].menu_message == "Open customer maintenance", "#668: menu snapshots should expose MESSAGE metadata");
+        expect(objects[0].title == "Customer", "#668: menu prompt should continue to drive friendly title fallback");
+        expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
+        expect(objects[0].objtype_code == 3, "#668: menu snapshots should retain raw OBJTYPE metadata");
+        expect(objects[0].objcode_code == 7, "#668: menu snapshots should retain raw OBJCODE metadata");
+    }
+}
+
 void test_open_document_preserves_validation_findings() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_validation_tests";
@@ -450,6 +484,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
     test_object_snapshot_preserves_empty_and_null_design_fields();
+    test_menu_object_snapshot_preserves_normalized_menu_metadata();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();
     test_open_document_preserves_dbf_descriptor_validation_findings();
