@@ -808,6 +808,12 @@ struct VisualObjectDisabledItemBackColorRequest {
     int disabled_item_back_color = 0;
 };
 
+struct VisualObjectDisabledItemForeColorRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int disabled_item_fore_color = 0;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -957,6 +963,7 @@ VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayV
 VisualAssetEditResult set_visual_object_selected_item_back_color(const VisualObjectSelectedItemBackColorRequest& request);
 VisualAssetEditResult set_visual_object_selected_item_fore_color(const VisualObjectSelectedItemForeColorRequest& request);
 VisualAssetEditResult set_visual_object_disabled_item_back_color(const VisualObjectDisabledItemBackColorRequest& request);
+VisualAssetEditResult set_visual_object_disabled_item_fore_color(const VisualObjectDisabledItemForeColorRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);
