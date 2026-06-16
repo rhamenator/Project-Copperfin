@@ -738,6 +738,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::filesystem::path executable_path;\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "    std::filesystem::path working_directory;\n";
+    stream << "    std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;\n";
     stream << "    std::filesystem::path stdout_log_path;\n";
     stream << "    std::filesystem::path stderr_log_path;\n";
     stream << "    bool capture_stdout = true;\n";
@@ -748,6 +749,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    std::filesystem::path executable_path;\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "    std::filesystem::path working_directory;\n";
+    stream << "    std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;\n";
     stream << "    std::filesystem::path stdout_log_path;\n";
     stream << "    std::filesystem::path stderr_log_path;\n";
     stream << "    bool capture_stdout = true;\n";
@@ -1481,6 +1483,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        execution_plan.executable_path,\n";
     stream << "        plan.arguments,\n";
     stream << "        launch_plan.working_directory,\n";
+    stream << "        launch_plan.environment,\n";
     stream << "        observation_plan.stdout_log_path,\n";
     stream << "        observation_plan.stderr_log_path,\n";
     stream << "        execution_plan.capture_stdout,\n";
@@ -1522,6 +1525,19 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "                << copperfin_runtime_bridge_quote_command_argument(dispatch_execution.working_directory.string())\n";
     stream << "                << \" && \";\n";
     stream << "    }\n";
+    stream << "    for (const auto& environment_variable : dispatch_execution.environment) {\n";
+    stream << "#if defined(_WIN32)\n";
+    stream << "        command << \"set \"\n";
+    stream << "                << copperfin_runtime_bridge_quote_command_argument(\n";
+    stream << "                    environment_variable.name + \"=\" + environment_variable.value)\n";
+    stream << "                << \" && \";\n";
+    stream << "#else\n";
+    stream << "        command << environment_variable.name\n";
+    stream << "                << '='\n";
+    stream << "                << copperfin_runtime_bridge_quote_command_argument(environment_variable.value)\n";
+    stream << "                << ' ';\n";
+    stream << "#endif\n";
+    stream << "    }\n";
     stream << "    command << copperfin_runtime_bridge_quote_command_argument(dispatch_execution.executable_path.string());\n";
     stream << "    for (const auto& argument : dispatch_execution.arguments) {\n";
     stream << "        command << ' ' << copperfin_runtime_bridge_quote_command_argument(argument);\n";
@@ -1544,6 +1560,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        dispatch_execution.executable_path,\n";
     stream << "        dispatch_execution.arguments,\n";
     stream << "        dispatch_execution.working_directory,\n";
+    stream << "        dispatch_execution.environment,\n";
     stream << "        dispatch_execution.stdout_log_path,\n";
     stream << "        dispatch_execution.stderr_log_path,\n";
     stream << "        dispatch_execution.capture_stdout,\n";

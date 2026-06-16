@@ -775,6 +775,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared placeholder return-binding helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeEnvironmentVariable") != std::string::npos,
                    "build host DLL wrapper should declare a launch-environment surface");
+            expect(wrapper_source.find("std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;") != std::string::npos,
+                   "build host DLL wrapper should carry launch environment entries through dispatch and launch surfaces.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeLaunchPlan") != std::string::npos,
                    "build host DLL wrapper should declare a launch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
@@ -823,6 +825,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should include standard process-launch support.");
             expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
                    "build host DLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("launch_plan.environment") != std::string::npos,
+                   "build host DLL wrapper should carry launch environment entries into dispatch execution.");
+            expect(wrapper_source.find("for (const auto& environment_variable : dispatch_execution.environment)") != std::string::npos,
+                   "build host DLL wrapper should apply launch environment entries during command construction.");
+            expect(wrapper_source.find("environment_variable.name + \"=\" + environment_variable.value") != std::string::npos,
+                   "build host DLL wrapper should construct environment assignments from launch environment entries.");
             expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
                    "build host DLL wrapper should execute the runtime-host command line.");
             expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
@@ -1802,6 +1810,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared placeholder return-binding helper");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeEnvironmentVariable") != std::string::npos,
                    "build host FLL wrapper should declare a launch-environment surface");
+            expect(wrapper_source.find("std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;") != std::string::npos,
+                   "build host FLL wrapper should carry launch environment entries through dispatch and launch surfaces.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgeLaunchPlan") != std::string::npos,
                    "build host FLL wrapper should declare a launch-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeLaunchPlan copperfin_build_runtime_bridge_launch_plan(") != std::string::npos,
@@ -1850,6 +1860,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should include standard process-launch support.");
             expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
                    "build host FLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("launch_plan.environment") != std::string::npos,
+                   "build host FLL wrapper should carry launch environment entries into dispatch execution.");
+            expect(wrapper_source.find("for (const auto& environment_variable : dispatch_execution.environment)") != std::string::npos,
+                   "build host FLL wrapper should apply launch environment entries during command construction.");
+            expect(wrapper_source.find("environment_variable.name + \"=\" + environment_variable.value") != std::string::npos,
+                   "build host FLL wrapper should construct environment assignments from launch environment entries.");
             expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
                    "build host FLL wrapper should execute the runtime-host command line.");
             expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
