@@ -1612,6 +1612,78 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     return {.ok = true, .error = {}, .record_index = duplicate_record_index};
 }
 
+VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};
+    }
+    if (request.field_values.empty()) {
+        return {.ok = false, .error = "No field values were provided.", .record_index = 0U};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error, .record_index = 0U};
+    }
+    const auto& table = table_result.table;
+
+    std::vector<std::string> created_values(table.fields.size());
+    for (const auto& field_value : request.field_values) {
+        if (trim_both(field_value.property_name).empty()) {
+            return {.ok = false, .error = "Field names cannot be empty.", .record_index = 0U};
+        }
+        const auto field_index = find_field_index(table, field_value.property_name);
+        if (!field_index.has_value()) {
+            return {.ok = false, .error = "The requested field was not found in the asset.", .record_index = 0U};
+        }
+        created_values[*field_index] = field_value.property_value;
+    }
+
+    for (const auto& identity_field : {"OBJNAME", "NAME", "UNIQUEID"}) {
+        const std::string final_value = duplicate_field_value(table, created_values, identity_field);
+        if (normalize_visual_object_name(final_value).empty()) {
+            continue;
+        }
+        const auto collision = reject_identity_collision(table, identity_field, final_value);
+        if (!collision.ok) {
+            return {.ok = false, .error = collision.error, .record_index = 0U};
+        }
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table.records.size() + 1U);
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table.records.size());
+    for (const auto& record : table.records) {
+        std::vector<std::string> values;
+        values.reserve(table.fields.size());
+        for (const auto& field : table.fields) {
+            const auto* value = find_record_value(record, field.name);
+            values.push_back(value == nullptr ? std::string{} : value->display_value);
+        }
+        records.push_back(std::move(values));
+        deleted_flags.push_back(record.deleted);
+    }
+
+    const std::size_t created_record_index = records.size();
+    records.push_back(std::move(created_values));
+
+    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
+    if (!create_result.ok) {
+        return {.ok = false, .error = create_result.error, .record_index = 0U};
+    }
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const auto delete_result = set_record_deleted_flag(request.path, index, true);
+        if (!delete_result.ok) {
+            return {.ok = false, .error = delete_result.error, .record_index = 0U};
+        }
+    }
+
+    return {.ok = true, .error = {}, .record_index = created_record_index};
+}
+
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

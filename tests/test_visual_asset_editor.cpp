@@ -1291,6 +1291,141 @@ void test_duplicate_visual_object_appends_identity_safe_copy() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_visual_object_appends_toolbox_field_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "create.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "frmMain",
+            "commandbutton",
+            "commandbutton",
+            "Caption = \"Save\"\r\n",
+            ""
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "frmMain",
+            "textbox",
+            "textbox",
+            "Caption = \"Name\"\r\n",
+            ""
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#750: create fixture should be writable");
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#750: create fixture should support deleted-row preservation setup");
+
+    auto create_object_result = copperfin::vfp::create_visual_object({
+        .path = table_path.string(),
+        .field_values = {
+            {.property_name = "OBJNAME", .property_value = "chkActive"},
+            {.property_name = "NAME", .property_value = "activeCheck"},
+            {.property_name = "UNIQUEID", .property_value = "active-guid"},
+            {.property_name = "PARENT", .property_value = "frmMain"},
+            {.property_name = "CLASS", .property_value = "checkbox"},
+            {.property_name = "BASECLASS", .property_value = "checkbox"},
+            {.property_name = "PROPERTIES", .property_value = "Caption = \"Active\"\r\nLeft = 24\r\n"},
+            {.property_name = "METHODS", .property_value = "PROCEDURE Click\r\nTHIS.Value = !THIS.Value\r\nENDPROC"}
+        }
+    });
+    expect(create_object_result.ok && create_object_result.record_index == 2U,
+        "#750: toolbox creates should append a live object row at the next record index");
+
+    auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U,
+        "#750: toolbox creates should append exactly one object");
+    if (list_result.ok && list_result.objects.size() == 3U) {
+        expect(list_result.objects[0].object_name == "cmdSave" &&
+                list_result.objects[0].unique_id == "save-guid",
+            "#750: toolbox creates should preserve existing live records");
+        expect(list_result.objects[1].deleted && list_result.objects[1].unique_id == "name-guid",
+            "#750: toolbox creates should preserve existing deleted-row flags");
+        expect(!list_result.objects[2].deleted &&
+                list_result.objects[2].object_name == "chkActive" &&
+                list_result.objects[2].unique_id == "active-guid" &&
+                list_result.objects[2].parent_name == "frmMain" &&
+                list_result.objects[2].class_name == "checkbox" &&
+                list_result.objects[2].baseclass_name == "checkbox" &&
+                list_result.objects[2].caption == "\"Active\"",
+            "#750: created objects should expose initialized identity, hierarchy, class, and caption metadata");
+    }
+
+    auto property_result = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "active-guid",
+        .property_name = "Left"
+    });
+    expect(property_result.ok && property_result.exists && property_result.value == "24",
+        "#750: toolbox creates should initialize memo-backed properties");
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "active-guid"
+    });
+    expect(method_result.ok && find_method_snapshot(method_result.methods, "Click") != nullptr,
+        "#750: toolbox creates should initialize METHODS memo content");
+
+    create_object_result = copperfin::vfp::create_visual_object({
+        .path = table_path.string(),
+        .field_values = {
+            {.property_name = "OBJNAME", .property_value = "chkOther"},
+            {.property_name = "NAME", .property_value = "otherCheck"},
+            {.property_name = "UNIQUEID", .property_value = "name-guid"}
+        }
+    });
+    expect(!create_object_result.ok,
+        "#750: toolbox creates should reject identity collisions with deleted rows");
+
+    create_object_result = copperfin::vfp::create_visual_object({
+        .path = table_path.string(),
+        .field_values = {
+            {.property_name = "OBJNAME", .property_value = "chkOther"},
+            {.property_name = "UNKNOWN", .property_value = "value"}
+        }
+    });
+    expect(!create_object_result.ok,
+        "#750: toolbox creates should reject unknown requested fields");
+
+    list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 3U && list_result.objects[1].deleted,
+        "#750: failed toolbox creates should not mutate object count or deleted flags");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2165,6 +2300,7 @@ int main() {
     test_update_visual_object_method_updates_and_appends_methods();
     test_delete_visual_object_method_removes_selected_methods();
     test_duplicate_visual_object_appends_identity_safe_copy();
+    test_create_visual_object_appends_toolbox_field_values();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

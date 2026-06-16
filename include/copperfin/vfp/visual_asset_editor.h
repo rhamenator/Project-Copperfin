@@ -159,6 +159,17 @@ struct VisualObjectDuplicateResult {
     std::size_t record_index = 0;
 };
 
+struct VisualObjectCreateRequest {
+    std::string path;
+    std::vector<VisualObjectPropertyChange> field_values;
+};
+
+struct VisualObjectCreateResult {
+    bool ok = false;
+    std::string error;
+    std::size_t record_index = 0;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -179,6 +190,7 @@ struct VisualAssetUndoStatus {
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
+VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);
