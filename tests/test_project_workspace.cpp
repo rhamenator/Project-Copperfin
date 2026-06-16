@@ -72,6 +72,13 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.startup_record_index == 1U, "build plan should keep the startup record index");
     expect(workspace.build_plan.debug_enabled, "build plan should capture project debug settings");
     expect(workspace.build_plan.excluded_items == 1U, "build plan should count excluded items");
+    expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
+    expect(workspace.entries[0].name_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+           "#662: missing project header name provenance should be explicit");
+    expect(workspace.entries[0].key_field_index == 1U, "#662: project header key field ordinal should be preserved");
+    expect(workspace.entries[1].type_field_index == 0U, "#662: project entry type field ordinal should be preserved");
+    expect(workspace.entries[1].name_field_index == 1U, "#662: project entry name field ordinal should be preserved");
+    expect(workspace.entries[1].comments_field_index == 3U, "#662: project entry comment field ordinal should be preserved");
 
     const auto forms_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
         return group.id == "forms";

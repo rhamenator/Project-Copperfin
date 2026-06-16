@@ -18,6 +18,15 @@ const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_
     return nullptr;
 }
 
+std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_view field_name) {
+    for (std::size_t index = 0U; index < record.values.size(); ++index) {
+        if (record.values[index].field_name == field_name) {
+            return index;
+        }
+    }
+    return StudioProjectMissingFieldIndex;
+}
+
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     if (value == nullptr || value->display_value == "<memo block 0>") {
@@ -252,13 +261,17 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
         StudioProjectEntry entry;
         entry.record_index = record.record_index;
         entry.name = name.empty() ? ("Record " + std::to_string(record.record_index)) : name;
+        entry.name_field_index = field_index_or_missing(record, "NAME");
         entry.relative_path = relative_path;
         entry.type_code = type_code;
+        entry.type_field_index = field_index_or_missing(record, "TYPE");
         entry.type_title = descriptor.type_title;
         entry.group_id = descriptor.group_id;
         entry.group_title = descriptor.group_title;
         entry.key = key;
+        entry.key_field_index = field_index_or_missing(record, "KEY");
         entry.comments = comments;
+        entry.comments_field_index = field_index_or_missing(record, "COMMENTS");
         entry.excluded = value_as_bool(record, "EXCLUDE");
         entry.main_program = value_as_bool(record, "MAINPROG");
         entry.local = value_as_bool(record, "LOCAL");

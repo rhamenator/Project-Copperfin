@@ -8,16 +8,22 @@
 
 namespace copperfin::studio {
 
+inline constexpr std::size_t StudioProjectMissingFieldIndex = static_cast<std::size_t>(-1);
+
 struct StudioProjectEntry {
     std::size_t record_index = 0;
     std::string name{};
+    std::size_t name_field_index = StudioProjectMissingFieldIndex;
     std::string relative_path{};
     std::string type_code{};
+    std::size_t type_field_index = StudioProjectMissingFieldIndex;
     std::string type_title{};
     std::string group_id{};
     std::string group_title{};
     std::string key{};
+    std::size_t key_field_index = StudioProjectMissingFieldIndex;
     std::string comments{};
+    std::size_t comments_field_index = StudioProjectMissingFieldIndex;
     bool excluded = false;
     bool main_program = false;
     bool local = false;
