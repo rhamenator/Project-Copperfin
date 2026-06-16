@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#839 selected visual object dynamic font-name assignment shipped: designer commands can assign caller-provided raw `DynamicFontName` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#838 selected visual object font-shadow assignment shipped: designer commands can assign caller-provided logical `FontShadow` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#837 selected visual object font-outline assignment shipped: designer commands can assign caller-provided logical `FontOutline` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#836 selected visual object font-strikethru assignment shipped: designer commands can assign caller-provided logical `FontStrikethru` state to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
