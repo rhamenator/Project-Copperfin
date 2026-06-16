@@ -1087,8 +1087,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared placeholder-return-value admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValue copperfin_runtime_bridge_execute_placeholder_return_value(") != std::string::npos,
                    "build host DLL wrapper should declare a shared placeholder-return-value execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
-                   "build host DLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
+            expect(wrapper_source.find("const auto& stub_return = plan.stub_return") != std::string::npos,
+                   "build host DLL wrapper should consume explicit stub return while planning placeholder return values.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnIntAdmission copperfin_runtime_bridge_admit_placeholder_return_int(") != std::string::npos,
                    "build host DLL wrapper should declare a shared placeholder-return-int admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmission copperfin_runtime_bridge_execute_stub_emission(") != std::string::npos,
@@ -1379,8 +1379,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should explicitly keep the scaffold-only stub-return admission result unused.");
             expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host DLL wrapper should build a placeholder-return-value plan from the stub return plan");
-            expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n        stub_return_plan);") != std::string::npos,
-                   "build host DLL wrapper should build the placeholder-return-value plan directly from the stub return plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto stub_return =\n        copperfin_runtime_bridge_execute_stub_return(stub_return_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the stub-return plan before building the placeholder-return-value plan.");
+            expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n        stub_return_plan,\n        stub_return);") != std::string::npos,
+                   "build host DLL wrapper should build the placeholder-return-value plan from the stub-return plan and stub return.");
             expect(wrapper_source.find("const auto placeholder_return_value_admission =") != std::string::npos,
                    "build host DLL wrapper should admit staged placeholder-return-value routing from the stub-return admission and placeholder-return-value plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);") != std::string::npos,
@@ -1981,8 +1983,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared placeholder-return-value admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValue copperfin_runtime_bridge_execute_placeholder_return_value(") != std::string::npos,
                    "build host FLL wrapper should declare a shared placeholder-return-value execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_stub_return(plan.stub_return_plan)") != std::string::npos,
-                   "build host FLL wrapper should stage placeholder-return-value handling through the shared execution helper.");
+            expect(wrapper_source.find("const auto& stub_return = plan.stub_return") != std::string::npos,
+                   "build host FLL wrapper should consume explicit stub return while planning placeholder return values.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnIntAdmission copperfin_runtime_bridge_admit_placeholder_return_int(") != std::string::npos,
                    "build host FLL wrapper should declare a shared placeholder-return-int admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubEmissionAdmission copperfin_runtime_bridge_admit_stub_emission(") != std::string::npos,
@@ -2289,8 +2291,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should explicitly keep the scaffold-only stub-return admission result unused.");
             expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
                    "build host FLL wrapper should build a placeholder-return-value plan from the stub return plan");
-            expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n        stub_return_plan);") != std::string::npos,
-                   "build host FLL wrapper should build the placeholder-return-value plan directly from the stub return plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto stub_return =\n        copperfin_runtime_bridge_execute_stub_return(stub_return_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the stub-return plan before building the placeholder-return-value plan.");
+            expect(wrapper_source.find("const auto placeholder_return_value_plan = copperfin_build_runtime_bridge_placeholder_return_value_plan(\n        stub_return_plan,\n        stub_return);") != std::string::npos,
+                   "build host FLL wrapper should build the placeholder-return-value plan from the stub-return plan and stub return.");
             expect(wrapper_source.find("const auto placeholder_return_value_admission =") != std::string::npos,
                    "build host FLL wrapper should admit staged placeholder-return-value routing from the stub-return admission and placeholder-return-value plan.");
             expect(wrapper_source.find("copperfin_runtime_bridge_admit_placeholder_return_value(stub_return_admission, placeholder_return_value_plan);") != std::string::npos,
