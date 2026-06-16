@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#870 selected visual object mouse-icon assignment shipped: designer commands can assign caller-provided `MouseIcon` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#869 selected visual object picture-selection-display assignment shipped: designer commands can assign caller-provided non-negative numeric `PictureSelectionDisplay` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#868 selected visual object picture-spacing assignment shipped: designer commands can assign caller-provided non-negative numeric `PictureSpacing` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#867 selected visual object picture-position assignment shipped: designer commands can assign caller-provided non-negative numeric `PicturePosition` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

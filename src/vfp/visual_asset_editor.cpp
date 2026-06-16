@@ -5373,6 +5373,15 @@ VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDr
         request.ole_drag_picture);
 }
 
+VisualAssetEditResult set_visual_object_mouse_icon(const VisualObjectMouseIconRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "MouseIcon",
+        "mouse-icon",
+        request.mouse_icon);
+}
+
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
         return {.ok = false, .error = "BackStyle must not be negative."};

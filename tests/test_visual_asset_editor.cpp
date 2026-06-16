@@ -11089,6 +11089,29 @@ void test_set_visual_object_ole_drag_picture_assigns_text() {
         });
 }
 
+void test_set_visual_object_mouse_icon_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#870",
+        "mouse_icon",
+        "MouseIcon",
+        "MOUSEICON",
+        "mouse-icon",
+        "icons\\customer.ico",
+        "icons\\orders.ico",
+        "icons\\other.ico",
+        "C:\\\\icons\\\\customer \"hover\".ico",
+        "gallery.forms.customer_mouse",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_mouse_icon({
+                .path = path,
+                .objects = objects,
+                .mouse_icon = value
+            });
+        });
+}
+
 void test_set_visual_object_back_style_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#860",
@@ -22308,6 +22331,7 @@ int main() {
     test_set_visual_object_down_picture_assigns_text();
     test_set_visual_object_disabled_picture_assigns_text();
     test_set_visual_object_ole_drag_picture_assigns_text();
+    test_set_visual_object_mouse_icon_assigns_text();
     test_set_visual_object_back_style_assigns_numeric_value();
     test_set_visual_object_border_style_assigns_numeric_value();
     test_set_visual_object_border_width_assigns_numeric_value();
