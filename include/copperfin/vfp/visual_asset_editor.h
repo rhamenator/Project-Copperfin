@@ -245,6 +245,28 @@ struct VisualObjectDuplicateResult {
     std::size_t record_index = 0;
 };
 
+struct VisualObjectSubtreeDuplicateReplacement {
+    std::string source_unique_id;
+    std::string new_object_name;
+    std::string new_name;
+    std::string new_unique_id;
+};
+
+struct VisualObjectSubtreeDuplicateRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::vector<VisualObjectSubtreeDuplicateReplacement> replacements;
+};
+
+struct VisualObjectSubtreeDuplicateResult {
+    bool ok = false;
+    std::string error;
+    std::size_t root_record_index = 0;
+    std::size_t copied_count = 0;
+};
+
 struct VisualObjectCreateRequest {
     std::string path;
     std::vector<VisualObjectPropertyChange> field_values;
@@ -312,6 +334,7 @@ struct VisualAssetUndoStatus {
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request);
+VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request);
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

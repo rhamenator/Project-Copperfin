@@ -2518,6 +2518,142 @@ void test_list_visual_object_ancestors_walks_parent_chain() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_duplicate_visual_object_subtree_rewrites_copied_parents() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_subtree_duplicate_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "subtree_duplicate.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmMain", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n", ""},
+        {"cntMain", "mainContainer", "container-guid", "frmMain", "container", "container", "Caption = \"Container\"\r\n", ""},
+        {"cmdSave", "saveButton", "save-guid", "cntMain", "commandbutton", "commandbutton", "Caption = \"Save\"\r\nLeft = 10\r\n", "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC"},
+        {"txtName", "nameBox", "name-guid", "cntMain", "textbox", "textbox", "Caption = \"Name\"\r\n", ""},
+        {"lblNested", "nestedLabel", "nested-guid", "txtName", "label", "label", "Caption = \"Nested\"\r\n", ""},
+        {"cmdOther", "otherButton", "other-guid", "", "commandbutton", "commandbutton", "", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#760: subtree duplicate fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#760: subtree duplicate fixture should support deleted descendant setup");
+
+    auto duplicate_result = copperfin::vfp::duplicate_visual_object_subtree({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "container-guid",
+        .replacements = {
+            {.source_unique_id = "container-guid", .new_object_name = "cntCopy", .new_name = "mainContainerCopy", .new_unique_id = "container-copy-guid"},
+            {.source_unique_id = "save-guid", .new_object_name = "cmdSaveCopy", .new_name = "saveButtonCopy", .new_unique_id = "save-copy-guid"},
+            {.source_unique_id = "name-guid", .new_object_name = "txtNameCopy", .new_name = "nameBoxCopy", .new_unique_id = "name-copy-guid"},
+            {.source_unique_id = "nested-guid", .new_object_name = "lblNestedCopy", .new_name = "nestedLabelCopy", .new_unique_id = "nested-copy-guid"}
+        }
+    });
+    expect(duplicate_result.ok &&
+            duplicate_result.root_record_index == 6U &&
+            duplicate_result.copied_count == 4U,
+        "#760: subtree duplicate should append root and descendants in pre-order");
+
+    auto objects_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(objects_result.ok && objects_result.objects.size() == 10U,
+        "#760: subtree duplicate should append the copied subtree without removing source rows");
+    const auto find_object = [&](const std::string& unique_id) {
+        return std::find_if(
+            objects_result.objects.begin(),
+            objects_result.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& object) {
+                return object.unique_id == unique_id;
+            });
+    };
+    if (objects_result.ok) {
+        const auto copied_root = find_object("container-copy-guid");
+        const auto copied_save = find_object("save-copy-guid");
+        const auto copied_name = find_object("name-copy-guid");
+        const auto copied_nested = find_object("nested-copy-guid");
+        expect(copied_root != objects_result.objects.end() &&
+                copied_root->object_name == "cntCopy" &&
+                copied_root->parent_name == "frmMain" &&
+                !copied_root->deleted,
+            "#760: subtree duplicate should preserve root parent and replacement identity");
+        expect(copied_save != objects_result.objects.end() &&
+                copied_save->parent_name == "cntCopy" &&
+                copied_save->caption == "\"Save\"",
+            "#760: subtree duplicate should rewrite copied child parent names and preserve memo properties");
+        expect(copied_name != objects_result.objects.end() &&
+                copied_name->parent_name == "cntCopy" &&
+                copied_name->deleted,
+            "#760: subtree duplicate should preserve deleted state for copied descendants");
+        expect(copied_nested != objects_result.objects.end() &&
+                copied_nested->parent_name == "txtNameCopy",
+            "#760: subtree duplicate should rewrite grandchild parent names to copied parent identities");
+        expect(find_object("container-guid") != objects_result.objects.end() &&
+                find_object("other-guid") != objects_result.objects.end(),
+            "#760: subtree duplicate should preserve source and unrelated rows");
+    }
+
+    auto method_result = copperfin::vfp::list_visual_object_methods({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-copy-guid"
+    });
+    expect(method_result.ok && find_method_snapshot(method_result.methods, "Click") != nullptr,
+        "#760: subtree duplicate should preserve copied METHODS memo content");
+
+    const auto object_count_after_success = objects_result.objects.size();
+    duplicate_result = copperfin::vfp::duplicate_visual_object_subtree({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cntMain",
+        .unique_id = {},
+        .replacements = {
+            {.source_unique_id = "container-guid", .new_object_name = "cntCollision", .new_name = "collisionContainer", .new_unique_id = "container-copy-guid"},
+            {.source_unique_id = "save-guid", .new_object_name = "cmdCollision", .new_name = "collisionButton", .new_unique_id = "collision-save-guid"},
+            {.source_unique_id = "name-guid", .new_object_name = "txtCollision", .new_name = "collisionName", .new_unique_id = "collision-name-guid"},
+            {.source_unique_id = "nested-guid", .new_object_name = "lblCollision", .new_name = "collisionNested", .new_unique_id = "collision-nested-guid"}
+        }
+    });
+    expect(!duplicate_result.ok,
+        "#760: subtree duplicate should reject replacement identities colliding with existing rows");
+
+    duplicate_result = copperfin::vfp::duplicate_visual_object_subtree({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "container-guid",
+        .replacements = {
+            {.source_unique_id = "container-guid", .new_object_name = "cntIncomplete", .new_name = "incompleteContainer", .new_unique_id = "incomplete-container-guid"}
+        }
+    });
+    expect(!duplicate_result.ok,
+        "#760: subtree duplicate should reject missing replacement identity data for copied descendants");
+
+    objects_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(objects_result.ok && objects_result.objects.size() == object_count_after_success,
+        "#760: failed subtree duplicate requests should not mutate object count");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3402,6 +3538,7 @@ int main() {
     test_list_visual_object_descendants_walks_container_tree();
     test_set_visual_object_subtree_deleted_state_updates_descendants();
     test_list_visual_object_ancestors_walks_parent_chain();
+    test_duplicate_visual_object_subtree_rewrites_copied_parents();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

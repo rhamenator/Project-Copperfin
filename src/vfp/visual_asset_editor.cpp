@@ -491,6 +491,19 @@ std::string duplicate_field_value(
     return values[*field_index];
 }
 
+const VisualObjectSubtreeDuplicateReplacement* find_subtree_duplicate_replacement(
+    const std::vector<VisualObjectSubtreeDuplicateReplacement>& replacements,
+    const std::string& source_unique_id) {
+    const std::string normalized_source_unique_id = normalize_visual_object_name(source_unique_id);
+    const auto replacement = std::find_if(
+        replacements.begin(),
+        replacements.end(),
+        [&](const VisualObjectSubtreeDuplicateReplacement& candidate) {
+            return normalize_visual_object_name(candidate.source_unique_id) == normalized_source_unique_id;
+        });
+    return replacement == replacements.end() ? nullptr : &(*replacement);
+}
+
 std::string visual_object_record_name(const DbfRecord& record) {
     const auto* objname = find_record_value(record, "OBJNAME");
     std::string object_name = objname == nullptr ? std::string{} : trim_both(objname->display_value);
@@ -1932,6 +1945,230 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     }
 
     return {.ok = true, .error = {}, .record_index = duplicate_record_index};
+}
+
+VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided.", .root_record_index = 0U, .copied_count = 0U};
+    }
+    if (request.replacements.empty()) {
+        return {.ok = false, .error = "No subtree replacement identities were provided.", .root_record_index = 0U, .copied_count = 0U};
+    }
+
+    std::size_t root_record_index = 0U;
+    const auto root_resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, root_record_index);
+    if (!root_resolution.ok) {
+        return {.ok = false, .error = root_resolution.error, .root_record_index = 0U, .copied_count = 0U};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error, .root_record_index = 0U, .copied_count = 0U};
+    }
+    const auto& table = table_result.table;
+    if (root_record_index >= table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available.", .root_record_index = 0U, .copied_count = 0U};
+    }
+
+    const auto require_field = [&](const std::string& field_name) -> VisualObjectSubtreeDuplicateResult {
+        if (find_field_index(table, field_name).has_value()) {
+            return {.ok = true, .error = {}, .root_record_index = 0U, .copied_count = 0U};
+        }
+        return {
+            .ok = false,
+            .error = "The requested replacement identity field is not present in the asset.",
+            .root_record_index = 0U,
+            .copied_count = 0U
+        };
+    };
+    for (const auto& check : {require_field("OBJNAME"), require_field("NAME"), require_field("UNIQUEID"), require_field("PARENT")}) {
+        if (!check.ok) {
+            return check;
+        }
+    }
+
+    const auto descendants_result = list_visual_object_descendants({
+        .path = request.path,
+        .record_index = root_record_index,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!descendants_result.ok) {
+        return {.ok = false, .error = descendants_result.error, .root_record_index = 0U, .copied_count = 0U};
+    }
+
+    std::vector<std::size_t> copy_record_indexes;
+    copy_record_indexes.reserve(descendants_result.descendants.size() + 1U);
+    copy_record_indexes.push_back(root_record_index);
+    for (const auto& descendant : descendants_result.descendants) {
+        copy_record_indexes.push_back(descendant.object.record_index);
+    }
+
+    struct CopyPlan {
+        std::size_t record_index = 0;
+        std::string source_unique_id;
+        const VisualObjectSubtreeDuplicateReplacement* replacement = nullptr;
+        std::string original_object_name;
+        std::string original_parent_name;
+        std::string copied_parent_name;
+    };
+    std::vector<CopyPlan> copy_plan;
+    copy_plan.reserve(copy_record_indexes.size());
+
+    const auto unique_in_replacements = [&](const std::string& source_unique_id) {
+        const std::string normalized_source_unique_id = normalize_visual_object_name(source_unique_id);
+        return std::count_if(
+            request.replacements.begin(),
+            request.replacements.end(),
+            [&](const VisualObjectSubtreeDuplicateReplacement& replacement) {
+                return normalize_visual_object_name(replacement.source_unique_id) == normalized_source_unique_id;
+            });
+    };
+
+    for (const auto record_index : copy_record_indexes) {
+        const auto* unique_id = find_record_value(table.records[record_index], "UNIQUEID");
+        const std::string source_unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value);
+        if (source_unique_id.empty()) {
+            return {.ok = false, .error = "Every copied row must expose a UNIQUEID.", .root_record_index = 0U, .copied_count = 0U};
+        }
+        if (unique_in_replacements(source_unique_id) != 1) {
+            return {.ok = false, .error = "Missing or ambiguous subtree replacement identity.", .root_record_index = 0U, .copied_count = 0U};
+        }
+
+        const auto* replacement = find_subtree_duplicate_replacement(request.replacements, source_unique_id);
+        if (replacement == nullptr ||
+            trim_both(replacement->new_object_name).empty() ||
+            trim_both(replacement->new_name).empty() ||
+            trim_both(replacement->new_unique_id).empty()) {
+            return {.ok = false, .error = "Missing subtree replacement identity data.", .root_record_index = 0U, .copied_count = 0U};
+        }
+
+        const auto* parent = find_record_value(table.records[record_index], "PARENT");
+        copy_plan.push_back({
+            .record_index = record_index,
+            .source_unique_id = source_unique_id,
+            .replacement = replacement,
+            .original_object_name = visual_object_record_name(table.records[record_index]),
+            .original_parent_name = parent == nullptr ? std::string{} : trim_both(parent->display_value),
+            .copied_parent_name = parent == nullptr ? std::string{} : trim_both(parent->display_value)
+        });
+    }
+
+    for (auto& plan : copy_plan) {
+        const std::string normalized_parent_name = normalize_visual_object_name(plan.original_parent_name);
+        if (normalized_parent_name.empty()) {
+            continue;
+        }
+        const auto parent_plan = std::find_if(copy_plan.begin(), copy_plan.end(), [&](const CopyPlan& candidate) {
+            return normalize_visual_object_name(candidate.original_object_name) == normalized_parent_name;
+        });
+        if (parent_plan != copy_plan.end()) {
+            plan.copied_parent_name = parent_plan->replacement->new_object_name;
+        }
+    }
+
+    const auto reject_duplicate_identity_values = [&](const std::string& field_name, const std::vector<std::string>& values) -> VisualObjectSubtreeDuplicateResult {
+        std::vector<std::string> normalized_values;
+        for (const auto& value : values) {
+            const std::string normalized_value = normalize_visual_object_name(value);
+            if (normalized_value.empty()) {
+                continue;
+            }
+            if (!find_matching_record_indexes(table, field_name, normalized_value).empty()) {
+                return {
+                    .ok = false,
+                    .error = "The requested replacement identity already exists in the asset.",
+                    .root_record_index = 0U,
+                    .copied_count = 0U
+                };
+            }
+            if (std::find(normalized_values.begin(), normalized_values.end(), normalized_value) != normalized_values.end()) {
+                return {
+                    .ok = false,
+                    .error = "The requested replacement identity is duplicated within the copied subtree.",
+                    .root_record_index = 0U,
+                    .copied_count = 0U
+                };
+            }
+            normalized_values.push_back(normalized_value);
+        }
+        return {.ok = true, .error = {}, .root_record_index = 0U, .copied_count = 0U};
+    };
+
+    std::vector<std::string> new_objnames;
+    std::vector<std::string> new_names;
+    std::vector<std::string> new_unique_ids;
+    new_objnames.reserve(copy_plan.size());
+    new_names.reserve(copy_plan.size());
+    new_unique_ids.reserve(copy_plan.size());
+    for (const auto& plan : copy_plan) {
+        new_objnames.push_back(plan.replacement->new_object_name);
+        new_names.push_back(plan.replacement->new_name);
+        new_unique_ids.push_back(plan.replacement->new_unique_id);
+    }
+    for (const auto& check : {
+             reject_duplicate_identity_values("OBJNAME", new_objnames),
+             reject_duplicate_identity_values("NAME", new_names),
+             reject_duplicate_identity_values("UNIQUEID", new_unique_ids)
+         }) {
+        if (!check.ok) {
+            return check;
+        }
+    }
+
+    std::vector<std::vector<std::string>> records;
+    records.reserve(table.records.size() + copy_plan.size());
+    std::vector<bool> deleted_flags;
+    deleted_flags.reserve(table.records.size() + copy_plan.size());
+    for (const auto& record : table.records) {
+        std::vector<std::string> values;
+        values.reserve(table.fields.size());
+        for (const auto& field : table.fields) {
+            const auto* value = find_record_value(record, field.name);
+            values.push_back(value == nullptr ? std::string{} : value->display_value);
+        }
+        records.push_back(std::move(values));
+        deleted_flags.push_back(record.deleted);
+    }
+
+    const std::size_t copied_root_record_index = records.size();
+    for (const auto& plan : copy_plan) {
+        std::vector<std::string> values = records[plan.record_index];
+        replace_duplicate_field_value(table, values, "OBJNAME", plan.replacement->new_object_name);
+        replace_duplicate_field_value(table, values, "NAME", plan.replacement->new_name);
+        replace_duplicate_field_value(table, values, "UNIQUEID", plan.replacement->new_unique_id);
+        replace_duplicate_field_value(table, values, "PARENT", plan.copied_parent_name);
+        records.push_back(std::move(values));
+        deleted_flags.push_back(table.records[plan.record_index].deleted);
+    }
+
+    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
+    if (!create_result.ok) {
+        return {.ok = false, .error = create_result.error, .root_record_index = 0U, .copied_count = 0U};
+    }
+    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
+        if (!deleted_flags[index]) {
+            continue;
+        }
+        const auto delete_result = set_record_deleted_flag(request.path, index, true);
+        if (!delete_result.ok) {
+            return {.ok = false, .error = delete_result.error, .root_record_index = 0U, .copied_count = 0U};
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .root_record_index = copied_root_record_index,
+        .copied_count = copy_plan.size()
+    };
 }
 
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request) {
