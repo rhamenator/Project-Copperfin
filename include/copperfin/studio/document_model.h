@@ -75,8 +75,11 @@ struct StudioObjectSnapshot {
     std::size_t record_index = 0;
     bool deleted = false;
     int objtype_code = 0;
+    std::size_t objtype_field_index = StudioObjectMissingFieldIndex;
     int objcode_code = 0;
+    std::size_t objcode_field_index = StudioObjectMissingFieldIndex;
     std::string platform{};
+    std::size_t platform_field_index = StudioObjectMissingFieldIndex;
     std::string object_name{};
     std::string unique_id{};
     std::string parent_name{};

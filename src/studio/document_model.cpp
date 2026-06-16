@@ -219,8 +219,11 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         snapshot.record_index = record.record_index;
         snapshot.deleted = record.deleted;
         snapshot.objtype_code = parse_scaled_int(record, "OBJTYPE").value_or(0);
+        snapshot.objtype_field_index = field_index_or_missing(record, "OBJTYPE");
         snapshot.objcode_code = parse_scaled_int(record, "OBJCODE").value_or(0);
+        snapshot.objcode_field_index = field_index_or_missing(record, "OBJCODE");
         snapshot.platform = first_non_empty(record, {"PLATFORM"});
+        snapshot.platform_field_index = field_index_or_missing(record, "PLATFORM");
         snapshot.object_name = first_non_empty(record, {"OBJNAME", "NAME"});
         snapshot.unique_id = first_non_empty(record, {"UNIQUEID"});
         snapshot.parent_name = first_non_empty(record, {"PARENT", "PARENTID"});

@@ -157,8 +157,11 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
     expect(objects.size() == 1U, "#658: form design snapshot should include the parsed record");
     if (!objects.empty()) {
         expect(objects[0].objtype_code == 8, "#667: object snapshots should expose raw OBJTYPE metadata");
+        expect(objects[0].objtype_field_index == 1U, "#671: raw OBJTYPE metadata should retain DBF field provenance");
         expect(objects[0].objcode_code == 1, "#667: object snapshots should expose raw OBJCODE metadata");
+        expect(objects[0].objcode_field_index == 2U, "#671: raw OBJCODE metadata should retain DBF field provenance");
         expect(objects[0].platform == "WINDOWS", "#667: object snapshots should expose raw PLATFORM metadata");
+        expect(objects[0].platform_field_index == 3U, "#671: raw PLATFORM metadata should retain DBF field provenance");
         expect(objects[0].object_name == "cmdSave", "#660: object snapshots should expose the design object name");
         expect(objects[0].unique_id == "cmd-save-1", "#660: object snapshots should expose stable UNIQUEID metadata");
         expect(objects[0].parent_name == "frmCustomer", "#660: object snapshots should expose parent hierarchy metadata");
@@ -252,6 +255,12 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[1].menu_message.empty(), "#670: missing menu MESSAGE values should remain empty");
         expect(objects[1].menu_message_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#670: missing menu MESSAGE provenance should not masquerade as field zero");
+        expect(objects[1].objtype_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#671: missing OBJTYPE provenance should use the object missing-field sentinel");
+        expect(objects[1].objcode_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#671: missing OBJCODE provenance should use the object missing-field sentinel");
+        expect(objects[1].platform_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#671: missing PLATFORM provenance should use the object missing-field sentinel");
     }
 }
 
