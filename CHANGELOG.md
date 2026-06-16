@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#756 selected visual object child listing shipped: container editors can enumerate immediate children of a selected parent using existing selectors, including deleted child rows and outline metadata without creating undo history.
 - E2/#755 selected visual object z-order reordering shipped: designers can move rows to front/back or before/after resolved target objects while preserving field values, memo contents, deleted flags, and stable selector behavior after record indexes change.
 - E2/#754 selected visual object identity renaming shipped: designer naming workflows can update `OBJNAME`, `NAME`, and `UNIQUEID` together with collision checks across live and deleted rows while preserving undo-backed property semantics.
 - E2/#753 rollback-safe batch visual object deleted states shipped: multi-select designer delete/restore operations can now mark multiple objects deleted or live while restoring prior flags if a later selection fails.

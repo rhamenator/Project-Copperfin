@@ -126,6 +126,21 @@ struct VisualObjectListResult {
     std::vector<VisualObjectSnapshot> objects;
 };
 
+struct VisualObjectChildrenListRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct VisualObjectChildrenListResult {
+    bool ok = false;
+    std::string error;
+    std::size_t parent_record_index = 0;
+    std::string parent_name;
+    std::vector<VisualObjectSnapshot> children;
+};
+
 struct VisualObjectMethodListRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -243,6 +258,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request);
 [[nodiscard]] VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request);
 [[nodiscard]] VisualObjectListResult list_visual_objects(const std::string& path);
+[[nodiscard]] VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChildrenListRequest& request);
 [[nodiscard]] VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request);
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request);
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request);

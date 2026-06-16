@@ -500,6 +500,36 @@ std::string visual_object_record_name(const DbfRecord& record) {
     return name == nullptr ? std::string{} : trim_both(name->display_value);
 }
 
+VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
+    const auto* unique_id = find_record_value(record, "UNIQUEID");
+    const auto* parent_name = find_record_value(record, "PARENT");
+    const auto* class_name = find_record_value(record, "CLASS");
+    const auto* baseclass_name = find_record_value(record, "BASECLASS");
+    const auto* properties = find_record_value(record, "PROPERTIES");
+
+    std::string caption;
+    if (properties != nullptr) {
+        const auto assignments = parse_visual_property_blob(properties->display_value);
+        const auto caption_it = std::find_if(assignments.begin(), assignments.end(), [](const VisualPropertyAssignment& assignment) {
+            return normalize_visual_property_name(assignment.name) == "caption";
+        });
+        if (caption_it != assignments.end()) {
+            caption = caption_it->value;
+        }
+    }
+
+    return {
+        .record_index = record.record_index,
+        .deleted = record.deleted,
+        .object_name = visual_object_record_name(record),
+        .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value),
+        .parent_name = parent_name == nullptr ? std::string{} : trim_both(parent_name->display_value),
+        .class_name = class_name == nullptr ? std::string{} : trim_both(class_name->display_value),
+        .baseclass_name = baseclass_name == nullptr ? std::string{} : trim_both(baseclass_name->display_value),
+        .caption = caption
+    };
+}
+
 VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
     const std::string requested_unique_id = normalize_visual_object_name(request.unique_id);
     if (!requested_unique_id.empty()) {
@@ -1337,44 +1367,95 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
     std::vector<VisualObjectSnapshot> objects;
     objects.reserve(table_result.table.records.size());
     for (const auto& record : table_result.table.records) {
-        const auto* objname = find_record_value(record, "OBJNAME");
-        const auto* name = find_record_value(record, "NAME");
-        const auto* unique_id = find_record_value(record, "UNIQUEID");
-        const auto* parent_name = find_record_value(record, "PARENT");
-        const auto* class_name = find_record_value(record, "CLASS");
-        const auto* baseclass_name = find_record_value(record, "BASECLASS");
-        const auto* properties = find_record_value(record, "PROPERTIES");
-        std::string object_name = objname == nullptr ? std::string{} : trim_both(objname->display_value);
-        if (object_name.empty() && name != nullptr) {
-            object_name = trim_both(name->display_value);
-        }
-        std::string caption;
-        if (properties != nullptr) {
-            const auto assignments = parse_visual_property_blob(properties->display_value);
-            const auto caption_it = std::find_if(assignments.begin(), assignments.end(), [](const VisualPropertyAssignment& assignment) {
-                return normalize_visual_property_name(assignment.name) == "caption";
-            });
-            if (caption_it != assignments.end()) {
-                caption = caption_it->value;
-            }
-        }
-
-        objects.push_back({
-            .record_index = record.record_index,
-            .deleted = record.deleted,
-            .object_name = object_name,
-            .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value),
-            .parent_name = parent_name == nullptr ? std::string{} : trim_both(parent_name->display_value),
-            .class_name = class_name == nullptr ? std::string{} : trim_both(class_name->display_value),
-            .baseclass_name = baseclass_name == nullptr ? std::string{} : trim_both(baseclass_name->display_value),
-            .caption = caption
-        });
+        objects.push_back(build_visual_object_snapshot(record));
     }
 
     return {
         .ok = true,
         .error = {},
         .objects = std::move(objects)
+    };
+}
+
+VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChildrenListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .children = {}
+        };
+    }
+
+    std::size_t parent_record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, parent_record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .children = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .children = {}
+        };
+    }
+    if (parent_record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested parent record is not currently available.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .children = {}
+        };
+    }
+
+    const std::string parent_name = visual_object_record_name(table_result.table.records[parent_record_index]);
+    if (parent_name.empty()) {
+        return {
+            .ok = false,
+            .error = "The selected parent does not expose an object name.",
+            .parent_record_index = 0U,
+            .parent_name = {},
+            .children = {}
+        };
+    }
+
+    std::vector<VisualObjectSnapshot> children;
+    const std::string normalized_parent_name = normalize_visual_object_name(parent_name);
+    for (const auto& record : table_result.table.records) {
+        const auto* record_parent = find_record_value(record, "PARENT");
+        if (record_parent == nullptr) {
+            continue;
+        }
+        if (normalize_visual_object_name(record_parent->display_value) == normalized_parent_name) {
+            children.push_back(build_visual_object_snapshot(record));
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .parent_record_index = parent_record_index,
+        .parent_name = parent_name,
+        .children = std::move(children)
     };
 }
 

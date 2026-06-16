@@ -2083,6 +2083,106 @@ void test_reorder_visual_object_updates_z_order() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_list_visual_object_children_filters_immediate_children() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_children_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "children.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cmdSave", "saveButton", "save-guid", "mainForm", "commandbutton", "commandbutton", "Caption = \"Save\"\r\n"},
+        {"txtName", "nameBox", "name-guid", "mainForm", "textbox", "textbox", "Caption = \"Name\"\r\n"},
+        {"lblNested", "nestedLabel", "nested-guid", "cmdSave", "label", "label", "Caption = \"Nested\"\r\n"},
+        {"cmdOther", "otherButton", "other-guid", "", "commandbutton", "commandbutton", ""},
+        {"", "", "nameless-guid", "", "custom", "custom", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#756: children fixture should be writable");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#756: children fixture should support deleted child setup");
+
+    auto children_result = copperfin::vfp::list_visual_object_children({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "form-guid"
+    });
+    expect(children_result.ok &&
+            children_result.parent_record_index == 0U &&
+            children_result.parent_name == "mainForm" &&
+            children_result.children.size() == 2U,
+        "#756: child listing should support UNIQUEID parent selection and fallback parent NAME resolution");
+    if (children_result.ok && children_result.children.size() == 2U) {
+        expect(children_result.children[0].unique_id == "save-guid" &&
+                !children_result.children[0].deleted &&
+                children_result.children[0].parent_name == "mainForm" &&
+                children_result.children[0].caption == "\"Save\"",
+            "#756: child listing should include live immediate children with outline metadata");
+        expect(children_result.children[1].unique_id == "name-guid" &&
+                children_result.children[1].deleted &&
+                children_result.children[1].parent_name == "mainForm" &&
+                children_result.children[1].caption == "\"Name\"",
+            "#756: child listing should keep deleted immediate children visible");
+    }
+    const auto has_grandchild = std::find_if(
+        children_result.children.begin(),
+        children_result.children.end(),
+        [](const copperfin::vfp::VisualObjectSnapshot& child) {
+            return child.unique_id == "nested-guid";
+        });
+    expect(has_grandchild == children_result.children.end(),
+        "#756: child listing should exclude grandchildren");
+
+    children_result = copperfin::vfp::list_visual_object_children({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "mainForm",
+        .unique_id = {}
+    });
+    expect(children_result.ok && children_result.children.size() == 2U,
+        "#756: child listing should support fallback NAME parent selection");
+
+    children_result = copperfin::vfp::list_visual_object_children({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid"
+    });
+    expect(!children_result.ok, "#756: child listing should fail explicitly for missing parents");
+
+    children_result = copperfin::vfp::list_visual_object_children({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "nameless-guid"
+    });
+    expect(!children_result.ok, "#756: child listing should fail explicitly for nameless parent rows");
+
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#756: child listing should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2963,6 +3063,7 @@ int main() {
     test_set_visual_object_deleted_states_rolls_back_batch_failures();
     test_rename_visual_object_updates_identity_safely();
     test_reorder_visual_object_updates_z_order();
+    test_list_visual_object_children_filters_immediate_children();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
