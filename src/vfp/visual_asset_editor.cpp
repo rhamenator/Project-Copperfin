@@ -5597,6 +5597,19 @@ VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRe
         std::to_string(request.draw_style));
 }
 
+VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRequest& request) {
+    if (request.draw_width < 0) {
+        return {.ok = false, .error = "DrawWidth must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DrawWidth",
+        "draw-width",
+        std::to_string(request.draw_width));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};

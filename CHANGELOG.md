@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#887 selected visual object draw-width assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#886 selected visual object draw-style assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#885 selected visual object draw-mode assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawMode` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#884 selected visual object curvature assignment shipped: designer commands can assign caller-provided non-negative numeric `Curvature` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
