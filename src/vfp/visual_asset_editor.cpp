@@ -1564,6 +1564,109 @@ VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObj
     };
 }
 
+VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectAncestorsListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .record_index = 0U,
+            .ancestors = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .record_index = 0U,
+            .ancestors = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .record_index = 0U,
+            .ancestors = {}
+        };
+    }
+    const auto& table = table_result.table;
+    if (record_index >= table.records.size()) {
+        return {
+            .ok = false,
+            .error = "The requested object record is not currently available.",
+            .record_index = 0U,
+            .ancestors = {}
+        };
+    }
+
+    std::vector<VisualObjectAncestorSnapshot> ancestors;
+    std::vector<bool> visited(table.records.size(), false);
+    std::size_t current_record_index = record_index;
+    visited[current_record_index] = true;
+
+    for (std::size_t depth = 1U; depth <= table.records.size(); ++depth) {
+        const auto* parent_value = find_record_value(table.records[current_record_index], "PARENT");
+        const std::string parent_name = parent_value == nullptr ? std::string{} : trim_both(parent_value->display_value);
+        if (parent_name.empty()) {
+            break;
+        }
+
+        std::vector<std::size_t> parent_matches;
+        const std::string normalized_parent_name = normalize_visual_object_name(parent_name);
+        for (const auto& record : table.records) {
+            if (normalize_visual_object_name(visual_object_record_name(record)) == normalized_parent_name) {
+                parent_matches.push_back(record.record_index);
+            }
+        }
+        if (parent_matches.empty()) {
+            break;
+        }
+        if (parent_matches.size() > 1U) {
+            return {
+                .ok = false,
+                .error = "The selected object's parent name is ambiguous.",
+                .record_index = 0U,
+                .ancestors = {}
+            };
+        }
+        const std::size_t parent_record_index = parent_matches.front();
+        if (parent_record_index >= visited.size() || visited[parent_record_index]) {
+            return {
+                .ok = false,
+                .error = "The selected object's parent chain contains a cycle.",
+                .record_index = 0U,
+                .ancestors = {}
+            };
+        }
+
+        visited[parent_record_index] = true;
+        ancestors.push_back({
+            .object = build_visual_object_snapshot(table.records[parent_record_index]),
+            .depth = depth
+        });
+        current_record_index = parent_record_index;
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = record_index,
+        .ancestors = std::move(ancestors)
+    };
+}
+
 VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethodListRequest& request) {
     if (request.path.empty()) {
         return {

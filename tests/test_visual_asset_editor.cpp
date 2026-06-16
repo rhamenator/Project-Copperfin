@@ -2397,6 +2397,127 @@ void test_set_visual_object_subtree_deleted_state_updates_descendants() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_list_visual_object_ancestors_walks_parent_chain() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_ancestors_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U},
+        {.name = "CLASS", .type = 'C', .length = 20U},
+        {.name = "BASECLASS", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+
+    const fs::path table_path = temp_dir / "ancestors.scx";
+    const std::vector<std::vector<std::string>> records{
+        {"frmMain", "mainForm", "form-guid", "", "form", "form", "Caption = \"Main\"\r\n"},
+        {"cntMain", "mainContainer", "container-guid", "frmMain", "container", "container", "Caption = \"Container\"\r\n"},
+        {"pgDetails", "detailsPage", "page-guid", "cntMain", "page", "page", "Caption = \"Details\"\r\n"},
+        {"cmdSave", "saveButton", "save-guid", "pgDetails", "commandbutton", "commandbutton", "Caption = \"Save\"\r\n"},
+        {"cmdOther", "otherButton", "other-guid", "", "commandbutton", "commandbutton", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#759: ancestors fixture should be writable");
+
+    auto ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid"
+    });
+    expect(ancestors_result.ok &&
+            ancestors_result.record_index == 3U &&
+            ancestors_result.ancestors.size() == 3U,
+        "#759: ancestors should support UNIQUEID source selection");
+    if (ancestors_result.ok && ancestors_result.ancestors.size() == 3U) {
+        expect(ancestors_result.ancestors[0].object.unique_id == "page-guid" &&
+                ancestors_result.ancestors[0].depth == 1U &&
+                ancestors_result.ancestors[0].object.caption == "\"Details\"",
+            "#759: ancestors should list the immediate parent first with outline metadata");
+        expect(ancestors_result.ancestors[1].object.unique_id == "container-guid" &&
+                ancestors_result.ancestors[1].depth == 2U,
+            "#759: ancestors should include intermediate containers with depth metadata");
+        expect(ancestors_result.ancestors[2].object.unique_id == "form-guid" &&
+                ancestors_result.ancestors[2].depth == 3U,
+            "#759: ancestors should walk upward to the root object");
+    }
+
+    ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {}
+    });
+    expect(ancestors_result.ok && ancestors_result.ancestors.size() == 3U,
+        "#759: ancestors should support object-name source selection");
+
+    ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "form-guid"
+    });
+    expect(ancestors_result.ok && ancestors_result.ancestors.empty(),
+        "#759: root objects should return an empty successful ancestor list");
+
+    ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid"
+    });
+    expect(!ancestors_result.ok, "#759: ancestors should fail explicitly for missing source objects");
+
+    const fs::path ambiguous_path = temp_dir / "ambiguous_ancestor.scx";
+    const std::vector<std::vector<std::string>> ambiguous_records{
+        {"dupParent", "parentOne", "parent-one-guid", "", "container", "container", ""},
+        {"dupParent", "parentTwo", "parent-two-guid", "", "container", "container", ""},
+        {"cmdChild", "childButton", "child-guid", "dupParent", "commandbutton", "commandbutton", ""}
+    };
+    const auto ambiguous_create_result = copperfin::vfp::create_dbf_table_file(
+        ambiguous_path.string(),
+        fields,
+        ambiguous_records);
+    expect(ambiguous_create_result.ok, "#759: ambiguous ancestor fixture should be writable");
+    ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = ambiguous_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "child-guid"
+    });
+    expect(!ancestors_result.ok, "#759: ancestors should reject ambiguous parent names");
+
+    const fs::path cycle_path = temp_dir / "cycle_ancestor.scx";
+    const std::vector<std::vector<std::string>> cycle_records{
+        {"cntA", "containerA", "a-guid", "cntB", "container", "container", ""},
+        {"cntB", "containerB", "b-guid", "cntA", "container", "container", ""}
+    };
+    const auto cycle_create_result = copperfin::vfp::create_dbf_table_file(
+        cycle_path.string(),
+        fields,
+        cycle_records);
+    expect(cycle_create_result.ok, "#759: cycle ancestor fixture should be writable");
+    ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = cycle_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "a-guid"
+    });
+    expect(!ancestors_result.ok, "#759: ancestors should reject parent cycles");
+
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#759: ancestor listing should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3280,6 +3401,7 @@ int main() {
     test_list_visual_object_children_filters_immediate_children();
     test_list_visual_object_descendants_walks_container_tree();
     test_set_visual_object_subtree_deleted_state_updates_descendants();
+    test_list_visual_object_ancestors_walks_parent_chain();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

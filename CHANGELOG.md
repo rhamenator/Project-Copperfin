@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#759 selected visual object ancestor listing shipped: container breadcrumbs can enumerate parent chains from immediate parent to root with depth metadata, ambiguity detection, cycle protection, and read-only behavior.
 - E2/#758 selected visual object subtree deleted-state changes shipped: container delete/restore workflows can mark a selected object and all descendants deleted or live through rollback-safe batch flag updates.
 - E2/#757 selected visual object descendant listing shipped: container trees and group operations can enumerate full descendant subtrees in pre-order with depth metadata, deleted-row visibility, and cycle/duplicate-entry protection.
 - E2/#756 selected visual object child listing shipped: container editors can enumerate immediate children of a selected parent using existing selectors, including deleted child rows and outline metadata without creating undo history.
