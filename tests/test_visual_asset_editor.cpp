@@ -191,6 +191,61 @@ void write_synthetic_named_object_asset(
     }
 }
 
+void write_synthetic_named_direct_asset(
+    const std::filesystem::path& table_path,
+    const std::filesystem::path& memo_path) {
+    constexpr std::size_t header_length = 129U;
+    constexpr std::size_t record_length = 39U;
+    constexpr std::size_t record_count = 2U;
+    std::vector<std::uint8_t> table_bytes(header_length + (record_length * record_count) + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    table_bytes[1] = 126U;
+    table_bytes[2] = 4U;
+    table_bytes[3] = 7U;
+    write_le_u32(table_bytes, 4U, static_cast<std::uint32_t>(record_count));
+    write_le_u16(table_bytes, 8U, static_cast<std::uint16_t>(header_length));
+    write_le_u16(table_bytes, 10U, static_cast<std::uint16_t>(record_length));
+    table_bytes[28] = 0x00U;
+    table_bytes[29] = 0x03U;
+
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "NAME", 'C', 5U, 24U);
+    write_field_descriptor(table_bytes, 96U, "HPOS", 'N', 29U, 10U);
+    table_bytes[128] = 0x0DU;
+    table_bytes[header_length + (record_length * record_count)] = 0x1AU;
+
+    std::vector<std::uint8_t> memo_bytes(1536U, 0U);
+    write_be_u32(memo_bytes, 0U, 3U);
+    write_be_u16(memo_bytes, 6U, 512U);
+    memo_bytes[512U + 3U] = 1U;
+    write_be_u32(memo_bytes, 512U + 4U, 7U);
+    write_ascii(memo_bytes, 520U, "cmdSave");
+    memo_bytes[1024U + 3U] = 1U;
+    write_be_u32(memo_bytes, 1024U + 4U, 7U);
+    write_ascii(memo_bytes, 1032U, "txtName");
+
+    const auto write_record = [&](std::size_t record_index, std::uint32_t objname_block, const std::string& name, const std::string& hpos) {
+        const std::size_t record_offset = header_length + (record_length * record_index);
+        table_bytes[record_offset] = 0x20U;
+        write_le_u32(table_bytes, record_offset + 1U, objname_block);
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 5U), 24U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 5U, name);
+        std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + 29U), 10U, static_cast<std::uint8_t>(' '));
+        write_ascii(table_bytes, record_offset + 29U + (10U - hpos.size()), hpos);
+    };
+    write_record(0U, 1U, "saveButton", "111.000");
+    write_record(1U, 2U, "nameBox", "222.000");
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+}
+
 void test_update_visual_object_property_rewrites_properties_memo() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -384,6 +439,69 @@ void test_update_visual_object_property_targets_selected_object_name() {
     expect(!duplicate_result.ok, "#730: ambiguous object names should fail instead of editing an arbitrary row");
     expect(duplicate_result.error.find("ambiguous") != std::string::npos,
         "#730: ambiguous object-name failures should explain the ambiguity");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_property_targets_selected_object_name_direct_field() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_named_direct_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "named_direct.scx";
+    const fs::path memo_path = temp_dir / "named_direct.sct";
+    write_synthetic_named_direct_asset(table_path, memo_path);
+
+    const auto update_result = copperfin::vfp::update_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "TXTNAME",
+        .property_name = "HPOS",
+        .property_value = "333.000"
+    });
+    expect(update_result.ok, "#731: object-name-targeted edits should update direct DBF fields on the selected object");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#731: name-targeted direct-field fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto first_hpos = std::find_if(
+            parse_result.table.records[0].values.begin(),
+            parse_result.table.records[0].values.end(),
+            [](const auto& value) {
+                return value.field_name == "HPOS";
+            });
+        const auto second_hpos = std::find_if(
+            parse_result.table.records[1].values.begin(),
+            parse_result.table.records[1].values.end(),
+            [](const auto& value) {
+                return value.field_name == "HPOS";
+            });
+        expect(first_hpos != parse_result.table.records[0].values.end() &&
+                std::abs(parse_number(first_hpos->display_value) - 111.0) < 0.001,
+            "#731: direct-field selected-object edits should preserve unrelated object values");
+        expect(second_hpos != parse_result.table.records[1].values.end() &&
+                std::abs(parse_number(second_hpos->display_value) - 333.0) < 0.001,
+            "#731: direct-field selected-object edits should update the resolved object record");
+    }
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#731: direct-field selected-object undo should use the resolved record index");
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "#731: direct-field selected-object fixture should remain readable after undo");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        const auto second_hpos = std::find_if(
+            parse_result.table.records[1].values.begin(),
+            parse_result.table.records[1].values.end(),
+            [](const auto& value) {
+                return value.field_name == "HPOS";
+            });
+        expect(second_hpos != parse_result.table.records[1].values.end() &&
+                std::abs(parse_number(second_hpos->display_value) - 222.0) < 0.001,
+            "#731: direct-field selected-object undo should restore the resolved object's original value");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -821,6 +939,7 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
 int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_property_targets_selected_object_name();
+    test_update_visual_object_property_targets_selected_object_name_direct_field();
     test_update_visual_object_property_rewrites_direct_fields();
     test_update_visual_object_property_round_trips_added_vcx_property();
     test_update_visual_object_property_round_trips_label_and_menu_assets();
