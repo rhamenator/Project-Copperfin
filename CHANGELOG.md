@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#899 selected visual object WhatsThis-help-ID assignment shipped: designer commands can assign caller-provided non-negative numeric `WhatsThisHelpID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#898 selected visual object WhatsThis-help assignment shipped: designer commands can assign caller-provided logical `WhatsThisHelp` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#897 selected visual object WhatsThis-button assignment shipped: designer commands can assign caller-provided logical `WhatsThisButton` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#896 selected visual object MDI form assignment shipped: designer commands can assign caller-provided logical `MDIForm` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

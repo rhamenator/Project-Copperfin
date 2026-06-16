@@ -5383,6 +5383,19 @@ VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsT
         request.whats_this_help ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWhatsThisHelpIdRequest& request) {
+    if (request.whats_this_help_id < 0) {
+        return {.ok = false, .error = "WhatsThisHelpID must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "WhatsThisHelpID",
+        "WhatsThis help ID",
+        std::to_string(request.whats_this_help_id));
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
