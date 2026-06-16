@@ -901,9 +901,9 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
     write_text(startup_path, "RETURN 7\n");
     write_text(
         source_path,
-        "nLeft = 40\n"
-        "nRight = 2\n"
-        "RETURN nLeft + nRight\n");
+        "PROCEDURE AddNumbers\n"
+        "RETURN 42\n"
+        "ENDPROC\n");
     write_text(
         request_path,
         std::string("{\n"
@@ -913,8 +913,8 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
         "  \"source_path\": \"") + source_path.string() + "\",\n"
         "  \"source_line\": 7,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
-        "  \"parameter_names\": \"left,right\",\n"
-        "  \"parameter_count\": 2,\n"
+        "  \"parameter_names\": \"\",\n"
+        "  \"parameter_count\": 0,\n"
         "  \"schema_version\": \"v1\",\n"
         "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
         "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
@@ -930,8 +930,8 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
             "--source-path", source_path.string(),
             "--source-line", "7",
             "--parameter-declaration", "LPARAMETERS",
-            "--parameter-names", "left,right",
-            "--parameter-count", "2",
+            "--parameter-names", "",
+            "--parameter-count", "0",
             "--request-path", request_path.string(),
             "--response-path", response_path.string(),
             "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
@@ -954,8 +954,8 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
            "runtime host should preserve bridge export metadata in diagnostics");
     expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
            "runtime host should report the PRG return value in bridge diagnostics");
-    expect(process.stdout_text.find("bridge.execution_source: " + source_path.string()) != std::string::npos,
-           "runtime host bridge mode should execute the descriptor source instead of manifest startup");
+    expect(process.stdout_text.find("bridge.routine_bootstrap: true") != std::string::npos,
+           "runtime host bridge mode should invoke exported routines through a bootstrap");
     expect(fs::exists(response_path),
            "runtime host should write the requested bridge response artifact");
 
@@ -1434,6 +1434,94 @@ void test_runtime_host_rejects_bridge_parameter_count_mismatch(const std::string
     }
 }
 
+void test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_bridge_nested_parameter_array_tests";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path source_path = temp_root / "content" / "exports.prg";
+    const fs::path request_path = temp_root / "AddNumbers.request.json";
+    const fs::path response_path = temp_root / "AddNumbers.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeNestedParameters\n"
+        "startup_item=exports.prg\n"
+        "startup_source=") + source_path.string() + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(
+        source_path,
+        "PROCEDURE AddNumbers\n"
+        "LPARAMETERS tnLeft, tnRight\n"
+        "RETURN tnLeft + tnRight\n"
+        "ENDPROC\n"
+        "RETURN 7\n");
+    write_text(
+        request_path,
+        std::string("{\n"
+        "  \"payload_shape\": \"bridge_request_v1\",\n"
+        "  \"export_name\": \"AddNumbers\",\n"
+        "  \"routine_kind\": \"procedure\",\n"
+        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_line\": 1,\n"
+        "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+        "  \"parameter_names\": \"tnLeft|tnRight\",\n"
+        "  \"parameter_count\": 2,\n"
+        "  \"schema_version\": \"v1\",\n"
+        "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+        "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+        "  \"parameter_shadow\": {\n"
+        "    \"parameters\": [\n"
+        "      {\"name\": \"tnLeft\", \"value\": \"40\", \"surface\": \"int\"},\n"
+        "      {\"name\": \"tnRight\", \"value\": \"2\", \"surface\": \"int\"}\n"
+        "    ]\n"
+        "  }\n"
+        "}\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--library-export", "AddNumbers",
+            "--routine-kind", "procedure",
+            "--source-path", source_path.string(),
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "tnLeft|tnRight",
+            "--parameter-count", "2",
+            "--request-path", request_path.string(),
+            "--response-path", response_path.string(),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 6) {
+        std::cerr << "bridge-nested-parameter-array stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-nested-parameter-array stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 6,
+           "runtime host should reject nested bridge parameter arrays for nonzero arity");
+    expect(process.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+           "runtime host should keep bridge mode visible on nested parameter-array errors");
+    expect(process.stdout_text.find("error: Bridge request parameter count mismatch.") != std::string::npos,
+           "runtime host should report a parameter count mismatch when no top-level parameter payload exists");
+    expect(!fs::exists(response_path),
+           "runtime host should not write a success response when nonzero bridge parameters are nested");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_rejects_bridge_parameter_name_mismatch(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -1843,6 +1931,7 @@ int main(int argc, char** argv) {
     test_runtime_host_unescapes_bridge_descriptor_string_fields(argv[1]);
     test_runtime_host_passes_bridge_request_parameters_to_export(argv[1]);
     test_runtime_host_rejects_bridge_parameter_count_mismatch(argv[1]);
+    test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity(argv[1]);
     test_runtime_host_rejects_bridge_parameter_name_mismatch(argv[1]);
     test_runtime_host_rejects_bridge_request_contract_mismatch(argv[1]);
     test_runtime_host_rejects_nested_bridge_descriptor_fields(argv[1]);

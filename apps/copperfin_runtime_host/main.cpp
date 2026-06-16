@@ -296,13 +296,10 @@ std::vector<std::string> extract_bridge_parameter_field_values(
     const std::string& document,
     const std::string& field_name) {
     std::vector<std::string> values;
-    const auto parameters_token = std::string("\"parameters\"");
-    const auto parameters_offset = document.find(parameters_token);
-    if (parameters_offset == std::string::npos) {
-        return values;
-    }
-    const auto array_start = document.find('[', parameters_offset + parameters_token.size());
-    if (array_start == std::string::npos) {
+    std::size_t array_start = std::string::npos;
+    if (!find_json_field_value_start(document, "parameters", array_start) ||
+        array_start >= document.size() ||
+        document[array_start] != '[') {
         return values;
     }
     const auto array_end = find_json_array_end(document, array_start);
@@ -539,8 +536,7 @@ int run_runtime_bridge_invocation(
     bool routine_bootstrap_materialized = false;
     std::optional<std::filesystem::path> routine_bootstrap_path;
     if (!trim_copy(options.library_export).empty() &&
-        !trim_copy(options.source_path).empty() &&
-        (trim_copy(options.parameter_count) == "0" || !parameter_values.empty())) {
+        !trim_copy(options.source_path).empty()) {
         if (trim_copy(options.parameter_count) != std::to_string(parameter_values.size())) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
