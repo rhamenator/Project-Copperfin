@@ -1469,6 +1469,115 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
     return {.ok = true, .error = {}};
 }
 
+VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+
+    const std::string source_property_name = trim_both(request.property_name);
+    const std::string target_property_name = trim_both(request.new_property_name);
+    if (source_property_name.empty()) {
+        return {.ok = false, .error = "No property name was provided."};
+    }
+    if (target_property_name.empty()) {
+        return {.ok = false, .error = "No target property name was provided."};
+    }
+    if (normalize_visual_property_name(source_property_name) == normalize_visual_property_name(target_property_name)) {
+        return {.ok = false, .error = "The source property cannot be renamed to itself."};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = source_property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = "The requested object record is not currently available."};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = "Unable to open the visual asset table."};
+    }
+
+    const std::string normalized_source = normalize_visual_property_name(source_property_name);
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return normalize_visual_property_name(field.name) == normalized_source;
+    });
+    if (direct_field_it != fields.end()) {
+        return {.ok = false, .error = "Direct DBF-backed fields cannot be renamed per object."};
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = "The requested property is not exposed as a renameable memo-backed property on this asset."};
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_it == record.values.end()) {
+        return {.ok = false, .error = "The selected object does not expose a PROPERTIES memo field."};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_it->display_value);
+    const std::string normalized_target = normalize_visual_property_name(target_property_name);
+    std::size_t source_count = 0U;
+    std::size_t source_index = 0U;
+    bool target_exists = false;
+    for (std::size_t index = 0U; index < assignments.size(); ++index) {
+        const std::string normalized_name = normalize_visual_property_name(assignments[index].name);
+        if (normalized_name == normalized_source) {
+            ++source_count;
+            source_index = index;
+        }
+        if (normalized_name == normalized_target) {
+            target_exists = true;
+        }
+    }
+
+    if (source_count == 0U) {
+        return {.ok = false, .error = "The source property was not found."};
+    }
+    if (source_count > 1U) {
+        return {.ok = false, .error = "The source property is ambiguous in the selected object."};
+    }
+    if (target_exists) {
+        return {.ok = false, .error = "The target property already exists in the selected object."};
+    }
+
+    std::string error;
+    if (!record_visual_asset_undo_entry(request.path, {
+            .record_index = record_index,
+            .property_name = "PROPERTIES",
+            .prior_value = properties_it->display_value,
+            .prior_value_exists = true,
+            .label = "Rename property " + source_property_name
+        }, error)) {
+        return {.ok = false, .error = error};
+    }
+
+    assignments[source_index].name = target_property_name;
+    return replace_memo_field_value(
+        request.path,
+        record_index,
+        "PROPERTIES",
+        serialize_visual_property_blob(assignments));
+}
+
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
     if (request.path.empty()) {
         return {

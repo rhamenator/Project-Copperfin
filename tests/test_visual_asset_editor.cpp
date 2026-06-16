@@ -1279,6 +1279,272 @@ void test_move_visual_object_property_between_selected_objects() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_rename_visual_object_memo_property_updates_selected_object() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_rename_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_rename.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"dupObj", "dupName", "dup-guid", "333", "Caption = \"First\"\r\ncaption = \"Second\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#769: property-rename fixture should be writable");
+
+    auto rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "caption",
+        .new_property_name = "DisplayCaption"
+    });
+    expect(rename_result.ok, "#769: property rename should support UNIQUEID selection and case-insensitive source matching");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "Top",
+        .new_property_name = "TopOffset"
+    });
+    expect(rename_result.ok, "#769: property rename should support object-name selection");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "Left",
+        .new_property_name = "LeftOffset"
+    });
+    expect(rename_result.ok, "#769: property rename should support record-index selection");
+
+    auto display_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption"
+    });
+    auto old_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    auto left_offset = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "LeftOffset"
+    });
+    auto top_offset = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "TopOffset"
+    });
+    auto unrelated_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Caption"
+    });
+    expect(display_caption.ok && display_caption.exists && display_caption.value == "\"Save\"" &&
+            old_caption.ok && !old_caption.exists &&
+            left_offset.ok && left_offset.exists && left_offset.value == "10" &&
+            top_offset.ok && top_offset.exists && top_offset.value == "30" &&
+            unrelated_caption.ok && unrelated_caption.exists && unrelated_caption.value == "\"Name\"",
+        "#769: property rename should preserve values and unrelated assignments while removing old assignment names");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "HPOS",
+        .new_property_name = "HPosition"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject direct DBF-backed fields");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "MissingProp",
+        .new_property_name = "MissingRenamed"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject missing source properties");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption",
+        .new_property_name = "LeftOffset"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject target-name collisions");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption",
+        .new_property_name = "displaycaption"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject same-name renames case-insensitively");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = " ",
+        .new_property_name = "EmptySource"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject empty source names");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption",
+        .new_property_name = " "
+    });
+    expect(!rename_result.ok, "#769: property rename should reject empty target names");
+
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "dup-guid",
+        .property_name = "caption",
+        .new_property_name = "DuplicateCaption"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject duplicate source assignments");
+
+    display_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption"
+    });
+    left_offset = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "LeftOffset"
+    });
+    auto duplicate_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "dup-guid",
+        .property_name = "DuplicateCaption"
+    });
+    expect(display_caption.ok && display_caption.exists && display_caption.value == "\"Save\"" &&
+            left_offset.ok && left_offset.exists && left_offset.value == "10" &&
+            duplicate_caption.ok && !duplicate_caption.exists,
+        "#769: rejected property renames should not mutate selected object properties");
+
+    const fs::path no_properties_path = temp_dir / "property_rename_missing_properties.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> no_properties_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> no_properties_records{
+        {"cmdSave", "save-guid", "111"}
+    };
+    const auto no_properties_create = copperfin::vfp::create_dbf_table_file(
+        no_properties_path.string(),
+        no_properties_fields,
+        no_properties_records);
+    expect(no_properties_create.ok, "#769: missing-PROPERTIES fixture should be writable");
+    rename_result = copperfin::vfp::rename_visual_object_property({
+        .path = no_properties_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption",
+        .new_property_name = "DisplayCaption"
+    });
+    expect(!rename_result.ok, "#769: property rename should reject objects without PROPERTIES memo fields");
+
+    for (int index = 0; index < 3; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#769: undo should restore each successful memo property rename");
+    }
+
+    display_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "DisplayCaption"
+    });
+    old_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    left_offset = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "LeftOffset"
+    });
+    top_offset = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "TopOffset"
+    });
+    auto original_top = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Top"
+    });
+    expect(display_caption.ok && !display_caption.exists &&
+            old_caption.ok && old_caption.exists && old_caption.value == "\"Save\"" &&
+            left_offset.ok && !left_offset.exists &&
+            top_offset.ok && !top_offset.exists &&
+            original_top.ok && original_top.exists && original_top.value == "30",
+        "#769: undo should restore original memo property names and values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_list_visual_object_properties_reads_selected_surface() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -5297,6 +5563,7 @@ int main() {
     test_clear_visual_object_property_resets_selected_values();
     test_copy_visual_object_property_between_selected_objects();
     test_move_visual_object_property_between_selected_objects();
+    test_rename_visual_object_memo_property_updates_selected_object();
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
     test_list_visual_objects_reads_selection_outline();
