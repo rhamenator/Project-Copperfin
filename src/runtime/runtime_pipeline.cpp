@@ -2287,7 +2287,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(\n";
             stream << "        serialization_plan);\n";
             stream << "    const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);\n";
-            stream << "    (void)dispatch_execution;\n";
             stream << "    const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);\n";
             stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(\n";
             stream << "        dispatch_plan);\n";
@@ -2529,7 +2528,6 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    const auto dispatch_plan = copperfin_build_runtime_bridge_dispatch_plan(\n";
             stream << "        serialization_plan);\n";
             stream << "    const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);\n";
-            stream << "    (void)dispatch_execution;\n";
             stream << "    const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);\n";
             stream << "    const auto payload_plan = copperfin_build_runtime_bridge_payload_plan(\n";
             stream << "        dispatch_plan);\n";

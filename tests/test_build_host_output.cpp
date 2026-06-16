@@ -1201,8 +1201,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build a dispatch plan from the serialization plan");
             expect(wrapper_source.find("const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);") != std::string::npos,
                    "build host DLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
-            expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
-                   "build host DLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
+            expect(wrapper_source.find("(void)dispatch_execution;") == std::string::npos,
+                   "build host DLL wrapper should consume dispatch execution when launching the process.");
             expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
                    "build host DLL wrapper should route dispatch execution through the shared process-launch helper.");
             expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
@@ -2127,8 +2127,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build a dispatch plan from the serialization plan");
             expect(wrapper_source.find("const auto dispatch_execution = copperfin_runtime_bridge_execute_dispatch(dispatch_plan);") != std::string::npos,
                    "build host FLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
-            expect(wrapper_source.find("(void)dispatch_execution;") != std::string::npos,
-                   "build host FLL wrapper should explicitly keep the scaffold-only dispatch-execution result unused.");
+            expect(wrapper_source.find("(void)dispatch_execution;") == std::string::npos,
+                   "build host FLL wrapper should consume dispatch execution when launching the process.");
             expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
                    "build host FLL wrapper should route dispatch execution through the shared process-launch helper.");
             expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
