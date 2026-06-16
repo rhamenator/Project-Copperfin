@@ -31,6 +31,7 @@ enum class StudioUndoMode {
 };
 
 inline constexpr std::size_t StudioObjectMissingFieldIndex = static_cast<std::size_t>(-1);
+inline constexpr std::size_t StudioObjectMissingLineIndex = static_cast<std::size_t>(-1);
 
 struct StudioOpenRequest {
     std::string path{};
@@ -68,6 +69,7 @@ struct StudioPropertySnapshot {
     char type = '\0';
     bool is_null = false;
     bool derived_from_property_blob = false;
+    std::size_t source_line_index = StudioObjectMissingLineIndex;
     std::string value{};
 };
 

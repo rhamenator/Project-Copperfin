@@ -129,6 +129,7 @@ void append_property_snapshots(
             .type = 'P',
             .is_null = assignment.value.empty(),
             .derived_from_property_blob = true,
+            .source_line_index = assignment.source_line_index,
             .value = assignment.value
         });
     }

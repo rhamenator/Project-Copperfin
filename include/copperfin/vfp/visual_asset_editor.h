@@ -9,6 +9,7 @@ namespace copperfin::vfp {
 struct VisualPropertyAssignment {
     std::string name;
     std::string value;
+    std::size_t source_line_index = static_cast<std::size_t>(-1);
 };
 
 struct VisualObjectEditRequest {

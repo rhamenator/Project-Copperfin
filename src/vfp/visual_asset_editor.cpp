@@ -19,11 +19,6 @@ namespace copperfin::vfp {
 
 namespace {
 
-std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return static_cast<std::uint16_t>(bytes[offset]) |
-           (static_cast<std::uint16_t>(bytes[offset + 1]) << 8U);
-}
-
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
            (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
@@ -254,7 +249,7 @@ VisualAssetEditResult replace_non_memo_field_value(
         return {.ok = false, .error = "Unable to write the visual asset table."};
     }
 
-    return {.ok = true};
+    return {.ok = true, .error = {}};
 }
 
 VisualAssetEditResult replace_field_value(
@@ -676,7 +671,7 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = "Unable to write the visual asset table."};
     }
 
-    return {.ok = true};
+    return {.ok = true, .error = {}};
 }
 
 }  // namespace
@@ -685,6 +680,7 @@ std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::stri
     std::vector<VisualPropertyAssignment> properties;
     std::stringstream stream(text);
     std::string line;
+    std::size_t line_index = 0U;
     while (std::getline(stream, line)) {
         if (!line.empty() && line.back() == '\r') {
             line.pop_back();
@@ -693,15 +689,18 @@ std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::stri
         const auto equals = line.find('=');
         if (equals == std::string::npos) {
             if (!trim_both(line).empty()) {
-                properties.push_back({.name = trim_both(line), .value = {}});
+                properties.push_back({.name = trim_both(line), .value = {}, .source_line_index = line_index});
             }
+            ++line_index;
             continue;
         }
 
         properties.push_back({
             .name = trim_both(line.substr(0U, equals)),
-            .value = trim_both(line.substr(equals + 1U))
+            .value = trim_both(line.substr(equals + 1U)),
+            .source_line_index = line_index
         });
+        ++line_index;
     }
     return properties;
 }
@@ -774,7 +773,7 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
         std::filesystem::remove(visual_asset_undo_root_directory(path), error);
     }
 
-    return {.ok = true};
+    return {.ok = true, .error = {}};
 }
 
 }  // namespace copperfin::vfp

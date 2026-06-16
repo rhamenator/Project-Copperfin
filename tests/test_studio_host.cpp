@@ -145,7 +145,7 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
                 {.field_name = "PARENT", .field_type = 'C', .is_null = false, .display_value = "frmCustomer"},
                 {.field_name = "HELP", .field_type = 'M', .is_null = true, .display_value = ""},
                 {.field_name = "TAG", .field_type = 'M', .is_null = false, .display_value = ""},
-                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save"},
+                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "Caption = Save\r\nEnabled = .T."},
                 {.field_name = "UNIQUEID", .field_type = 'C', .is_null = false, .display_value = "cmd-save-1"},
                 {.field_name = "CLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"},
                 {.field_name = "BASECLASS", .field_type = 'C', .is_null = false, .display_value = "commandbutton"}
@@ -188,12 +188,17 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         const auto caption = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
             return property.name == "Caption";
         });
+        const auto enabled = std::find_if(objects[0].properties.begin(), objects[0].properties.end(), [](const auto& property) {
+            return property.name == "Enabled";
+        });
 
         expect(parent != objects[0].properties.end(), "#660: parent design field should stay in object snapshots");
         if (parent != objects[0].properties.end()) {
             expect(parent->value == "frmCustomer", "#660: parent field should remain available as direct property metadata");
             expect(parent->field_index == 4U, "#659: direct design fields should preserve their DBF field ordinal");
             expect(!parent->derived_from_property_blob, "#659: direct DBF fields should not be marked blob-derived");
+            expect(parent->source_line_index == copperfin::studio::StudioObjectMissingLineIndex,
+                "#684: direct DBF fields should not masquerade as property-blob line metadata");
         }
         expect(help != objects[0].properties.end(), "#658: null design fields should stay in object snapshots");
         if (help != objects[0].properties.end()) {
@@ -209,6 +214,12 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
         if (caption != objects[0].properties.end()) {
             expect(caption->field_index == 7U, "#659: blob-derived properties should retain the source PROPERTIES field ordinal");
             expect(caption->derived_from_property_blob, "#659: blob-derived properties should expose their provenance");
+            expect(caption->source_line_index == 0U, "#684: first blob-derived property should retain its source memo line");
+        }
+        expect(enabled != objects[0].properties.end(), "#684: second visual property blob line should expand into snapshots");
+        if (enabled != objects[0].properties.end()) {
+            expect(enabled->field_index == 7U, "#684: later blob-derived properties should retain the source PROPERTIES field ordinal");
+            expect(enabled->source_line_index == 1U, "#684: later blob-derived properties should retain their source memo line");
         }
     }
 }
