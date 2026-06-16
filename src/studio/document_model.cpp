@@ -3,7 +3,10 @@
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <algorithm>
+#include <charconv>
+#include <cctype>
 #include <filesystem>
+#include <optional>
 #include <string_view>
 
 namespace copperfin::studio {
@@ -39,6 +42,37 @@ std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<
         }
     }
     return {};
+}
+
+std::string trim_copy(std::string text) {
+    text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char ch) {
+        return std::isspace(ch) == 0;
+    }));
+    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())) != 0) {
+        text.pop_back();
+    }
+    return text;
+}
+
+std::optional<int> parse_scaled_int(const vfp::DbfRecord& record, std::string_view field_name) {
+    const std::string raw = trim_copy(value_or_empty(record, field_name));
+    if (raw.empty()) {
+        return std::nullopt;
+    }
+
+    const auto dot = raw.find('.');
+    const std::string integer_portion = dot == std::string::npos ? raw : raw.substr(0U, dot);
+    if (integer_portion.empty()) {
+        return std::nullopt;
+    }
+
+    int value = 0;
+    const auto [ptr, ec] = std::from_chars(integer_portion.data(), integer_portion.data() + integer_portion.size(), value);
+    if (ec != std::errc() || ptr != (integer_portion.data() + integer_portion.size())) {
+        return std::nullopt;
+    }
+
+    return value;
 }
 
 bool supports_visual_property_blob(const StudioDocumentModel& document) {
@@ -171,6 +205,9 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         StudioObjectSnapshot snapshot;
         snapshot.record_index = record.record_index;
         snapshot.deleted = record.deleted;
+        snapshot.objtype_code = parse_scaled_int(record, "OBJTYPE").value_or(0);
+        snapshot.objcode_code = parse_scaled_int(record, "OBJCODE").value_or(0);
+        snapshot.platform = first_non_empty(record, {"PLATFORM"});
         snapshot.object_name = first_non_empty(record, {"OBJNAME", "NAME"});
         snapshot.unique_id = first_non_empty(record, {"UNIQUEID"});
         snapshot.parent_name = first_non_empty(record, {"PARENT", "PARENTID"});

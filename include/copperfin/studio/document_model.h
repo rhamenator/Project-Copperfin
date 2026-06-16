@@ -72,6 +72,9 @@ struct StudioPropertySnapshot {
 struct StudioObjectSnapshot {
     std::size_t record_index = 0;
     bool deleted = false;
+    int objtype_code = 0;
+    int objcode_code = 0;
+    std::string platform{};
     std::string object_name{};
     std::string unique_id{};
     std::string parent_name{};

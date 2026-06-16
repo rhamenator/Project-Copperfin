@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E1/#667 visual object raw-code preservation shipped: Studio object snapshots now expose raw visual-record `OBJTYPE`, `OBJCODE`, and `PLATFORM` metadata for form/class designer round-trip workflows.
 - E1/#666 report raw type-code preservation shipped: report/label section and layout-object snapshots now retain raw `OBJTYPE`/`OBJCODE` numeric values alongside derived UI labels for round-trip-safe designer workflows.
 - E1/#665 report-object provenance shipped: report/label layout object snapshots now preserve source field ordinals for `OBJTYPE`, `EXPR`, `HPOS`, `VPOS`, `WIDTH`, and `HEIGHT`, supporting round-trip-safe object expression and geometry edits.
 - E1/#664 report-section provenance shipped: report/label section snapshots now preserve source field ordinals for `OBJCODE`, `VPOS`, and `HEIGHT`, supporting round-trip-safe section geometry edits.
