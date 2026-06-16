@@ -72,6 +72,11 @@ std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_vie
     return find_field_index(record, field_name).value_or(StudioObjectMissingFieldIndex);
 }
 
+std::uint32_t memo_block_number_or_zero(const vfp::DbfRecord& record, std::string_view field_name) {
+    const auto* value = find_value(record, field_name);
+    return value == nullptr ? 0U : value->memo_block_number;
+}
+
 FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const auto* value = find_value(record, field_name);
@@ -282,12 +287,16 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         if (document.kind == StudioAssetKind::menu) {
             snapshot.menu_prompt = first_non_empty(record, {"PROMPT"});
             snapshot.menu_prompt_field_index = field_index_or_missing(record, "PROMPT");
+            snapshot.menu_prompt_memo_block_number = memo_block_number_or_zero(record, "PROMPT");
             snapshot.menu_level_name = first_non_empty(record, {"LEVELNAME"});
             snapshot.menu_level_name_field_index = field_index_or_missing(record, "LEVELNAME");
+            snapshot.menu_level_name_memo_block_number = memo_block_number_or_zero(record, "LEVELNAME");
             snapshot.menu_command = first_non_empty(record, {"COMMAND"});
             snapshot.menu_command_field_index = field_index_or_missing(record, "COMMAND");
+            snapshot.menu_command_memo_block_number = memo_block_number_or_zero(record, "COMMAND");
             snapshot.menu_message = first_non_empty(record, {"MESSAGE"});
             snapshot.menu_message_field_index = field_index_or_missing(record, "MESSAGE");
+            snapshot.menu_message_memo_block_number = memo_block_number_or_zero(record, "MESSAGE");
         }
         switch (document.kind) {
             case StudioAssetKind::report:

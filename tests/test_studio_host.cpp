@@ -333,9 +333,9 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
             .record_index = 11U,
             .deleted = false,
             .values = {
-                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "<memo block 46>"},
-                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "<memo block 47>"},
-                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "<memo block 48>"},
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "<memo block 46>", .memo_block_number = 46U},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "<memo block 47>", .memo_block_number = 47U},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "<memo block 48>", .memo_block_number = 48U},
                 {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "fallback_menu"}
             }
         }
@@ -346,10 +346,16 @@ void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
     if (!menu_objects.empty()) {
         expect(menu_objects[0].menu_prompt.empty(), "#696: unresolved menu PROMPT placeholders should not become prompt text");
         expect(menu_objects[0].menu_prompt_field_index == 0U, "#696: menu PROMPT provenance should remain available");
+        expect(menu_objects[0].menu_prompt_memo_block_number == 46U,
+            "#718: unresolved menu PROMPT metadata should retain memo block provenance");
         expect(menu_objects[0].menu_command.empty(), "#696: unresolved menu COMMAND placeholders should not become command text");
         expect(menu_objects[0].menu_command_field_index == 1U, "#696: menu COMMAND provenance should remain available");
+        expect(menu_objects[0].menu_command_memo_block_number == 47U,
+            "#718: unresolved menu COMMAND metadata should retain memo block provenance");
         expect(menu_objects[0].menu_message.empty(), "#696: unresolved menu MESSAGE placeholders should not become message text");
         expect(menu_objects[0].menu_message_field_index == 2U, "#696: menu MESSAGE provenance should remain available");
+        expect(menu_objects[0].menu_message_memo_block_number == 48U,
+            "#718: unresolved menu MESSAGE metadata should retain memo block provenance");
         expect(menu_objects[0].title == "fallback_menu", "#696: menu titles should skip unresolved PROMPT and use the next usable source");
         expect(menu_objects[0].title_field_index == 3U, "#696: menu title provenance should point at the selected usable source");
     }
@@ -406,10 +412,10 @@ void test_object_snapshot_trims_normalized_display_metadata() {
             .record_index = 13U,
             .deleted = false,
             .values = {
-                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "  Customer  "},
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "  Customer  ", .memo_block_number = 130U},
                 {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "  MAIN  "},
-                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "  DO FORM customer  "},
-                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "  Open customer  "},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "  DO FORM customer  ", .memo_block_number = 132U},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "  Open customer  ", .memo_block_number = 133U},
                 {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "  customer_menu  "}
             }
         }
@@ -419,9 +425,13 @@ void test_object_snapshot_trims_normalized_display_metadata() {
     expect(menu_objects.size() == 1U, "#705: trimmed menu metadata should still produce an object snapshot");
     if (!menu_objects.empty()) {
         expect(menu_objects[0].menu_prompt == "Customer", "#705: menu PROMPT metadata should be trimmed");
+        expect(menu_objects[0].menu_prompt_memo_block_number == 130U, "#718: decoded menu PROMPT metadata should retain memo block provenance");
         expect(menu_objects[0].menu_level_name == "MAIN", "#705: menu LEVELNAME metadata should be trimmed");
+        expect(menu_objects[0].menu_level_name_memo_block_number == 0U, "#718: non-memo menu LEVELNAME metadata should expose memo block zero");
         expect(menu_objects[0].menu_command == "DO FORM customer", "#705: menu COMMAND metadata should be trimmed");
+        expect(menu_objects[0].menu_command_memo_block_number == 132U, "#718: decoded menu COMMAND metadata should retain memo block provenance");
         expect(menu_objects[0].menu_message == "Open customer", "#705: menu MESSAGE metadata should be trimmed");
+        expect(menu_objects[0].menu_message_memo_block_number == 133U, "#718: decoded menu MESSAGE metadata should retain memo block provenance");
         expect(menu_objects[0].object_name == "customer_menu", "#705: menu object-name fallback should be trimmed");
         expect(menu_objects[0].object_name_field_index == 4U, "#705: menu object-name provenance should stay on NAME");
         expect(menu_objects[0].title == "Customer", "#705: menu title metadata should be trimmed");
@@ -449,10 +459,10 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
             .record_index = 2U,
             .deleted = false,
             .values = {
-                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Customer"},
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "Customer", .memo_block_number = 201U},
                 {.field_name = "LEVELNAME", .field_type = 'C', .is_null = false, .display_value = "MAIN"},
-                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO FORM customer"},
-                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "Open customer maintenance"},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "DO FORM customer", .memo_block_number = 203U},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "Open customer maintenance", .memo_block_number = 204U},
                 {.field_name = "OBJTYPE", .field_type = 'N', .is_null = false, .display_value = "3.000"},
                 {.field_name = "OBJCODE", .field_type = 'N', .is_null = false, .display_value = "7.000"}
             }
@@ -490,12 +500,16 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
     if (objects.size() >= 1U) {
         expect(objects[0].menu_prompt == "Customer", "#668: menu snapshots should expose PROMPT metadata");
         expect(objects[0].menu_prompt_field_index == 0U, "#669: menu PROMPT metadata should retain DBF field provenance");
+        expect(objects[0].menu_prompt_memo_block_number == 201U, "#718: menu PROMPT metadata should retain source memo block provenance");
         expect(objects[0].menu_level_name == "MAIN", "#668: menu snapshots should expose LEVELNAME metadata");
         expect(objects[0].menu_level_name_field_index == 1U, "#669: menu LEVELNAME metadata should retain DBF field provenance");
+        expect(objects[0].menu_level_name_memo_block_number == 0U, "#718: non-memo menu LEVELNAME metadata should expose memo block zero");
         expect(objects[0].menu_command == "DO FORM customer", "#668: menu snapshots should expose COMMAND metadata");
         expect(objects[0].menu_command_field_index == 2U, "#669: menu COMMAND metadata should retain DBF field provenance");
+        expect(objects[0].menu_command_memo_block_number == 203U, "#718: menu COMMAND metadata should retain source memo block provenance");
         expect(objects[0].menu_message == "Open customer maintenance", "#668: menu snapshots should expose MESSAGE metadata");
         expect(objects[0].menu_message_field_index == 3U, "#669: menu MESSAGE metadata should retain DBF field provenance");
+        expect(objects[0].menu_message_memo_block_number == 204U, "#718: menu MESSAGE metadata should retain source memo block provenance");
         expect(objects[0].title == "Customer", "#668: menu prompt should continue to drive friendly title fallback");
         expect(objects[0].title_field_index == 0U, "#673: menu title metadata should retain selected PROMPT provenance");
         expect(objects[0].subtitle == "MAIN", "#668: menu level name should continue to drive friendly subtitle fallback");
@@ -523,6 +537,8 @@ void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
         expect(objects[1].menu_message.empty(), "#670: missing menu MESSAGE values should remain empty");
         expect(objects[1].menu_message_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#670: missing menu MESSAGE provenance should not masquerade as field zero");
+        expect(objects[1].menu_message_memo_block_number == 0U,
+            "#718: missing menu MESSAGE metadata should expose memo block zero");
         expect(objects[1].objtype_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
             "#671: missing OBJTYPE provenance should use the object missing-field sentinel");
         expect(objects[1].objcode_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
