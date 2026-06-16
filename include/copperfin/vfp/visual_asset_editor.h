@@ -904,6 +904,12 @@ struct VisualObjectFillStyleRequest {
     int fill_style = 0;
 };
 
+struct VisualObjectScaleModeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int scale_mode = 0;
+};
+
 struct VisualObjectMousePointerRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1406,6 +1412,7 @@ VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequ
 VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRequest& request);
 VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRequest& request);
 VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRequest& request);
+VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request);
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request);
 VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request);
 VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPicturePositionRequest& request);
