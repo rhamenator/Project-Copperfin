@@ -5382,6 +5382,15 @@ VisualAssetEditResult set_visual_object_mouse_icon(const VisualObjectMouseIconRe
         request.mouse_icon);
 }
 
+VisualAssetEditResult set_visual_object_drag_icon(const VisualObjectDragIconRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "DragIcon",
+        "drag-icon",
+        request.drag_icon);
+}
+
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
         return {.ok = false, .error = "BackStyle must not be negative."};
