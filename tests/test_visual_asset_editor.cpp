@@ -553,6 +553,7 @@ void test_query_visual_object_property_reads_selected_values() {
     expect(query_result.ok, "#736: visual property queries should support UNIQUEID selectors");
     expect(query_result.exists, "#736: visual property queries should report existing memo-backed properties");
     expect(!query_result.direct_field, "#736: visual property queries should identify memo-backed properties");
+    expect(query_result.record_index == 1U, "#739: UNIQUEID property queries should report the resolved record index");
     expect(query_result.property_name == "Caption", "#736: visual property queries should return the stored memo property name");
     expect(query_result.value == "\"Name\"", "#736: visual property queries should return the selected memo property value");
     expect(!copperfin::vfp::query_visual_object_undo(memo_table_path.string()).available,
@@ -584,6 +585,7 @@ void test_query_visual_object_property_reads_selected_values() {
     expect(query_result.ok, "#736: visual property queries should support object-name selectors");
     expect(query_result.exists, "#736: visual property queries should report existing direct fields");
     expect(query_result.direct_field, "#736: visual property queries should identify direct fields");
+    expect(query_result.record_index == 1U, "#739: object-name property queries should report the resolved record index");
     expect(query_result.property_name == "HPOS", "#736: visual property queries should return the stored direct field name");
     expect(std::abs(parse_number(query_result.value) - 222.0) < 0.001,
         "#736: visual property queries should return the selected direct-field value");
@@ -625,6 +627,7 @@ void test_list_visual_object_properties_reads_selected_surface() {
         .unique_id = "target-guid"
     });
     expect(list_result.ok, "#737: visual property lists should support selected-object UNIQUEID selectors");
+    expect(list_result.record_index == 1U, "#739: visual property lists should report the resolved selected record index");
 
     const auto* name = find_property_snapshot(list_result.properties, "NAME");
     const auto* unique_id = find_property_snapshot(list_result.properties, "UNIQUEID");

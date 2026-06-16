@@ -47,6 +47,7 @@ struct VisualObjectPropertyQueryResult {
     std::string error;
     bool exists = false;
     bool direct_field = false;
+    std::size_t record_index = 0;
     std::string property_name;
     std::string value;
 };
@@ -69,6 +70,7 @@ struct VisualObjectPropertySnapshot {
 struct VisualObjectPropertyListResult {
     bool ok = false;
     std::string error;
+    std::size_t record_index = 0;
     std::vector<VisualObjectPropertySnapshot> properties;
 };
 

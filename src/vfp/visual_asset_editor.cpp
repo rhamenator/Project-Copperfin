@@ -852,6 +852,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .error = "No asset path was provided.",
             .exists = false,
             .direct_field = false,
+            .record_index = 0U,
             .property_name = {},
             .value = {}
         };
@@ -862,6 +863,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .error = "No property name was provided.",
             .exists = false,
             .direct_field = false,
+            .record_index = 0U,
             .property_name = {},
             .value = {}
         };
@@ -882,6 +884,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .error = resolution.error,
             .exists = false,
             .direct_field = false,
+            .record_index = 0U,
             .property_name = {},
             .value = {}
         };
@@ -897,6 +900,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
             .error = "Unable to read the requested property.",
             .exists = false,
             .direct_field = false,
+            .record_index = 0U,
             .property_name = {},
             .value = {}
         };
@@ -907,6 +911,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
         .error = {},
         .exists = property_state->exists,
         .direct_field = property_state->direct_field,
+        .record_index = record_index,
         .property_name = property_state->property_name,
         .value = property_state->value
     };
@@ -917,6 +922,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         return {
             .ok = false,
             .error = "No asset path was provided.",
+            .record_index = 0U,
             .properties = {}
         };
     }
@@ -934,6 +940,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         return {
             .ok = false,
             .error = resolution.error,
+            .record_index = 0U,
             .properties = {}
         };
     }
@@ -943,6 +950,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         return {
             .ok = false,
             .error = table_result.error,
+            .record_index = 0U,
             .properties = {}
         };
     }
@@ -950,6 +958,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         return {
             .ok = false,
             .error = "The requested object record is not currently available.",
+            .record_index = 0U,
             .properties = {}
         };
     }
@@ -987,6 +996,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
     return {
         .ok = true,
         .error = {},
+        .record_index = record_index,
         .properties = std::move(properties)
     };
 }
