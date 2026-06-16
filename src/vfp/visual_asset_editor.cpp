@@ -3069,6 +3069,74 @@ VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequ
     });
 }
 
+VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = "No asset path was provided."};
+    }
+    if (request.methods.empty()) {
+        return {.ok = false, .error = "No method copies were provided."};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_copies = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& method : request.methods) {
+        if (trim_both(method.source_method_name).empty()) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No method name was provided."};
+        }
+        if (!method.target_method_name.empty() && trim_both(method.target_method_name).empty()) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = "No target method name was provided. Rollback failed: " + rollback_result.error
+                };
+            }
+            return {.ok = false, .error = "No target method name was provided."};
+        }
+
+        const auto result = copy_visual_object_method({
+            .path = request.path,
+            .source_record_index = method.source_record_index,
+            .source_object_name = method.source_object_name,
+            .source_unique_id = method.source_unique_id,
+            .source_method_name = method.source_method_name,
+            .target_record_index = method.target_record_index,
+            .target_object_name = method.target_object_name,
+            .target_unique_id = method.target_unique_id,
+            .target_method_name = method.target_method_name,
+            .replace_existing = method.replace_existing
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = result.error + " Rollback failed: " + rollback_result.error
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}};
+}
+
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request) {
     if (!request.target_method_name.empty() && trim_both(request.target_method_name).empty()) {
         return {.ok = false, .error = "No target method name was provided."};

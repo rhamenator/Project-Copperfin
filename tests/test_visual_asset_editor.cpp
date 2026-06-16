@@ -4649,6 +4649,369 @@ void test_copy_visual_object_method_between_selected_objects() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_copy_visual_object_methods_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_method_copy_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "method_copy_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSource",
+            "sourceButton",
+            "source-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\n"
+            "FUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC"
+        },
+        {
+            "txtTarget",
+            "targetBox",
+            "target-guid",
+            "PROCEDURE Existing\r\nTHISFORM.Old()\r\nENDPROC\r\n"
+            "FUNCTION Refresh\r\nRETURN .F.\r\nENDFUNC"
+        },
+        {
+            "lblOther",
+            "otherLabel",
+            "other-guid",
+            "PROCEDURE Other\r\nTHISFORM.Other()\r\nENDPROC"
+        },
+        {
+            "dupObj",
+            "dupName",
+            "dup-guid",
+            "PROCEDURE Click\r\nWAIT WINDOW \"first\"\r\nENDPROC\r\n"
+            "PROCEDURE click\r\nWAIT WINDOW \"second\"\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#778: method-copy-batch fixture should be writable");
+
+    const auto method_state = [&](const std::string& unique_id, const std::string& method_name) {
+        return copperfin::vfp::query_visual_object_method({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .method_name = method_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "click",
+                .target_record_index = 0U,
+                .target_object_name = "txtTarget",
+                .target_unique_id = {},
+                .target_method_name = {},
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = "cmdSource",
+                .source_unique_id = {},
+                .source_method_name = "GetCaption",
+                .target_record_index = 1U,
+                .target_object_name = {},
+                .target_unique_id = {},
+                .target_method_name = "CaptionText",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "other-guid",
+                .source_method_name = "Other",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "OtherCopy",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "Click",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "Refresh",
+                .replace_existing = true
+            }
+        }
+    });
+    expect(batch_result.ok, "#778: batch method copy should support mixed selectors, procedure/function copy, target renames, and replacement");
+
+    auto target_click = method_state("target-guid", "Click");
+    auto target_caption_text = method_state("target-guid", "CaptionText");
+    auto target_other_copy = method_state("target-guid", "OtherCopy");
+    auto target_refresh = method_state("target-guid", "Refresh");
+    auto target_existing = method_state("target-guid", "Existing");
+    auto source_click = method_state("source-guid", "Click");
+    auto source_get_caption = method_state("source-guid", "GetCaption");
+    auto other_method = method_state("other-guid", "Other");
+    expect(target_click.ok && target_click.exists && target_click.method.kind == "procedure" &&
+            target_caption_text.ok && target_caption_text.exists && target_caption_text.method.kind == "function" &&
+            target_other_copy.ok && target_other_copy.exists && target_other_copy.method.source_text == "THISFORM.Other()" &&
+            target_refresh.ok && target_refresh.exists && target_refresh.method.kind == "function" &&
+            target_refresh.method.source_text == "THISFORM.Save()" &&
+            target_existing.ok && target_existing.exists,
+        "#778: batch method copy should persist copied targets and preserve target declaration kind on replacement");
+    expect(source_click.ok && source_click.exists &&
+            source_get_caption.ok && source_get_caption.exists &&
+            other_method.ok && other_method.exists,
+        "#778: batch method copy should preserve source methods");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#778: successful batch copies should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "GetCaption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "TempCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "Click",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "Click",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject target collisions");
+    auto target_temp_caption = method_state("target-guid", "TempCaption");
+    expect(target_temp_caption.ok && !target_temp_caption.exists,
+        "#778: target-collision failures should roll back earlier method copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "GetCaption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "TempCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "Missing",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "MissingCopy",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject missing source methods");
+    target_temp_caption = method_state("target-guid", "TempCaption");
+    expect(target_temp_caption.ok && !target_temp_caption.exists,
+        "#778: missing-source failures should roll back earlier method copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "GetCaption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "TempCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = " ",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "EmptySource",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject empty source method names");
+    target_temp_caption = method_state("target-guid", "TempCaption");
+    expect(target_temp_caption.ok && !target_temp_caption.exists,
+        "#778: empty-source failures should roll back earlier method copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "GetCaption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "TempCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "Click",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = " ",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject empty target method names");
+    target_temp_caption = method_state("target-guid", "TempCaption");
+    expect(target_temp_caption.ok && !target_temp_caption.exists,
+        "#778: empty-target failures should roll back earlier method copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "source-guid",
+                .source_method_name = "GetCaption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "TempCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "dup-guid",
+                .source_method_name = "Click",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "DupClick",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject duplicate source methods");
+    target_temp_caption = method_state("target-guid", "TempCaption");
+    auto duplicate_click = method_state("dup-guid", "Click");
+    expect(target_temp_caption.ok && !target_temp_caption.exists &&
+            !duplicate_click.ok,
+        "#778: duplicate-source failures should roll back earlier copy targets and report ambiguity");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#778: failed batch copy rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = table_path.string(),
+        .methods = {}
+    });
+    expect(!batch_result.ok, "#778: empty batch method copy requests should fail explicitly");
+
+    const fs::path unsupported_path = temp_dir / "method_copy_batch_unsupported.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdUnsupported", "unsupported-guid"},
+        {"txtTarget", "target-guid"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#778: unsupported method-copy-batch fixture should be writable");
+    batch_result = copperfin::vfp::copy_visual_object_methods({
+        .path = unsupported_path.string(),
+        .methods = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "unsupported-guid",
+                .source_method_name = "Click",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "target-guid",
+                .target_method_name = "Click",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#778: batch method copy should reject objects without METHODS carriers");
+
+    for (int index = 0; index < 4; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#778: undo should restore each successful batch method copy target");
+    }
+
+    target_click = method_state("target-guid", "Click");
+    target_caption_text = method_state("target-guid", "CaptionText");
+    target_other_copy = method_state("target-guid", "OtherCopy");
+    target_refresh = method_state("target-guid", "Refresh");
+    target_existing = method_state("target-guid", "Existing");
+    source_click = method_state("source-guid", "Click");
+    source_get_caption = method_state("source-guid", "GetCaption");
+    other_method = method_state("other-guid", "Other");
+    expect(target_click.ok && !target_click.exists &&
+            target_caption_text.ok && !target_caption_text.exists &&
+            target_other_copy.ok && !target_other_copy.exists &&
+            target_refresh.ok && target_refresh.exists && target_refresh.method.source_text == "RETURN .F." &&
+            target_existing.ok && target_existing.exists &&
+            source_click.ok && source_click.exists &&
+            source_get_caption.ok && source_get_caption.exists &&
+            other_method.ok && other_method.exists,
+        "#778: successful batch copy undo should restore original target state and preserve sources");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_move_visual_object_method_between_selected_objects() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -7598,6 +7961,7 @@ int main() {
     test_rename_visual_object_method_updates_declarations();
     test_rename_visual_object_methods_rolls_back_failed_batches();
     test_copy_visual_object_method_between_selected_objects();
+    test_copy_visual_object_methods_rolls_back_failed_batches();
     test_move_visual_object_method_between_selected_objects();
     test_reorder_visual_object_methods_within_selected_object();
     test_duplicate_visual_object_appends_identity_safe_copy();
