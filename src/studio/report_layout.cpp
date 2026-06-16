@@ -42,6 +42,7 @@ bool looks_like_unresolved_memo(const std::string& value) {
 struct FieldSelection {
     std::string value{};
     std::size_t field_index = StudioReportMissingFieldIndex;
+    std::uint32_t memo_block_number = 0;
 };
 
 std::optional<std::size_t> find_field_index(const DbfRecord& record, std::string_view field_name) {
@@ -191,7 +192,11 @@ FieldSelection first_non_empty_selection(const DbfRecord& record, std::initializ
     for (const auto field_name : field_names) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
         if (!value.empty()) {
-            return {.value = value, .field_index = field_index_or_missing(record, field_name)};
+            return {
+                .value = value,
+                .field_index = field_index_or_missing(record, field_name),
+                .memo_block_number = memo_block_number_or_zero(record, field_name)
+            };
         }
     }
     return {};
@@ -210,8 +215,10 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     const FieldSelection title = first_non_empty_selection(record, {"NAME", "EXPR", "UNIQUEID"});
     object.title = title.value;
     object.title_field_index = title.field_index;
+    object.title_memo_block_number = title.memo_block_number;
     object.expression = first_non_empty(record, {"EXPR"});
     object.expression_field_index = field_index_or_missing(record, "EXPR");
+    object.expression_memo_block_number = memo_block_number_or_zero(record, "EXPR");
     object.left = parse_scaled_int_or_default(record, "HPOS");
     object.left_field_index = field_index_or_missing(record, "HPOS");
     object.top = parse_scaled_int_or_default(record, "VPOS");

@@ -70,7 +70,7 @@ void test_build_report_layout_groups_band_objects() {
             .values = {
                 value("OBJTYPE", "8"),
                 value("OBJCODE", "0"),
-                value("EXPR", "customer.company"),
+                value("EXPR", "customer.company", 31U),
                 value("HPOS", "1200.000"),
                 value("VPOS", "2600.000"),
                 value("WIDTH", "4000.000"),
@@ -84,7 +84,7 @@ void test_build_report_layout_groups_band_objects() {
             .deleted = false,
             .values = {
                 value("OBJTYPE", "5"),
-                value("EXPR", "\"Invoice\""),
+                value("EXPR", "\"Invoice\"", 32U),
                 value("HPOS", "900.000"),
                 value("VPOS", "100.000"),
                 value("WIDTH", "1800.000"),
@@ -107,7 +107,7 @@ void test_build_report_layout_groups_band_objects() {
             .deleted = true,
             .values = {
                 value("OBJTYPE", "5"),
-                value("EXPR", "\"Deleted label\""),
+                value("EXPR", "\"Deleted label\"", 33U),
                 value("HPOS", "1000.000"),
                 value("VPOS", "2600.000"),
                 value("WIDTH", "1200.000"),
@@ -157,6 +157,8 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.sections[0].objects[0].title == "\"Invoice\"", "#675: report layout object titles should keep existing EXPR fallback");
         expect(layout.sections[0].objects[0].title_field_index == 1U,
             "#675: report layout object title provenance should retain selected EXPR field ordinal");
+        expect(layout.sections[0].objects[0].title_memo_block_number == 32U,
+            "#716: report layout object titles should inherit selected EXPR memo block provenance");
     }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
@@ -167,7 +169,9 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].objtype_field_index == 0U, "#665: layout objects should preserve OBJTYPE field provenance");
     expect(layout.sections[1].objects[0].objcode_field_index == 1U, "#666: layout objects should preserve OBJCODE field provenance");
     expect(layout.sections[1].objects[0].title_field_index == 2U, "#675: detail object title provenance should retain selected EXPR field ordinal");
+    expect(layout.sections[1].objects[0].title_memo_block_number == 31U, "#716: detail object title should inherit EXPR memo block provenance");
     expect(layout.sections[1].objects[0].expression_field_index == 2U, "#665: layout objects should preserve EXPR field provenance");
+    expect(layout.sections[1].objects[0].expression_memo_block_number == 31U, "#716: layout object expressions should retain EXPR memo block provenance");
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].top_field_index == 4U, "#665: layout objects should preserve VPOS field provenance");
     expect(layout.sections[1].objects[0].width_field_index == 5U, "#665: layout objects should preserve WIDTH field provenance");
@@ -218,6 +222,8 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.unplaced_objects[0].title == "Record 5", "#675: untitled report layout object should keep synthetic title fallback");
         expect(layout.unplaced_objects[0].title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#675: synthesized report layout object title should use the missing-field sentinel");
+        expect(layout.unplaced_objects[0].title_memo_block_number == 0U,
+            "#716: synthesized report layout object titles should expose memo block zero");
     }
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
@@ -225,6 +231,8 @@ void test_build_report_layout_groups_band_objects() {
         expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
         expect(layout.deleted_objects[0].title_field_index == 1U,
             "#689: deleted report layout objects should retain title provenance");
+        expect(layout.deleted_objects[0].title_memo_block_number == 33U,
+            "#716: deleted report layout object titles should retain memo block provenance");
     }
     expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
     if (!layout.deleted_sections.empty()) {
@@ -283,7 +291,7 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
             .deleted = false,
             .values = {
                 value("OBJTYPE", "8"),
-                value("EXPR", "<memo block 32>"),
+                value("EXPR", "<memo block 32>", 32U),
                 value("HPOS", "100.000"),
                 value("VPOS", "100.000"),
                 value("WIDTH", "500.000"),
@@ -304,6 +312,10 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
         expect(object.expression.empty(), "#695: unresolved memo expressions should not become active object expressions");
         expect(object.expression_field_index == 1U,
             "#695: unresolved memo expression fields should retain source field provenance");
+        expect(object.expression_memo_block_number == 32U,
+            "#716: unresolved memo expression fields should retain source memo block provenance");
+        expect(object.title_memo_block_number == 0U,
+            "#716: synthesized titles from unresolved expressions should expose memo block zero");
         const auto expr_highlight = std::find_if(object.highlights.begin(), object.highlights.end(), [](const auto& highlight) {
             return highlight.name == "EXPR";
         });
