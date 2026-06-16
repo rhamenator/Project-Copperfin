@@ -841,6 +841,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should compare response media type with the expected response media type.");
             expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
                    "build host DLL wrapper should fail response validation when response media type mismatches.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_schema_version_field_name())") != std::string::npos,
+                   "build host DLL wrapper should read response schema version during response validation.");
+            expect(wrapper_source.find("response_schema_version == response_validation_plan.expected_schema_version") != std::string::npos,
+                   "build host DLL wrapper should compare response schema version with the expected schema version.");
+            expect(wrapper_source.find("!response_schema_version_matches") != std::string::npos,
+                   "build host DLL wrapper should fail response validation when response schema version mismatches.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host DLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -1572,6 +1578,12 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should serialize the response-field contract list");
             expect(wrapper_source.find("payload_plan.response_fields[index]") != std::string::npos,
                    "build host DLL wrapper should serialize each response-field contract item");
+            expect(wrapper_source.find("{copperfin_build_runtime_bridge_status_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_return_value_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_response_media_type_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_schema_version_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_diagnostics_field_name()}") != std::string::npos,
+                   "build host DLL wrapper should declare schema version in the response-field contract");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
                    "build host DLL wrapper should route the response value field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
@@ -1846,6 +1858,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should compare response media type with the expected response media type.");
             expect(wrapper_source.find("!response_media_type_matches") != std::string::npos,
                    "build host FLL wrapper should fail response validation when response media type mismatches.");
+            expect(wrapper_source.find("copperfin_runtime_bridge_extract_json_field(\n        response_document,\n        copperfin_build_runtime_bridge_schema_version_field_name())") != std::string::npos,
+                   "build host FLL wrapper should read response schema version during response validation.");
+            expect(wrapper_source.find("response_schema_version == response_validation_plan.expected_schema_version") != std::string::npos,
+                   "build host FLL wrapper should compare response schema version with the expected schema version.");
+            expect(wrapper_source.find("!response_schema_version_matches") != std::string::npos,
+                   "build host FLL wrapper should fail response validation when response schema version mismatches.");
             expect(wrapper_source.find("bool response_document_available = false;") != std::string::npos,
                    "build host FLL wrapper should track response-document availability in response-validation evaluation.");
             expect(wrapper_source.find("const std::string& response_document) {") != std::string::npos,
@@ -2595,6 +2613,12 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should serialize the response-field contract list");
             expect(wrapper_source.find("payload_plan.response_fields[index]") != std::string::npos,
                    "build host FLL wrapper should serialize each response-field contract item");
+            expect(wrapper_source.find("{copperfin_build_runtime_bridge_status_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_return_value_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_response_media_type_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_schema_version_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_diagnostics_field_name()}") != std::string::npos,
+                   "build host FLL wrapper should declare schema version in the response-field contract");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_return_value_field_name()") != std::string::npos,
                    "build host FLL wrapper should route the response value field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_response_media_type_field_name()") != std::string::npos,
