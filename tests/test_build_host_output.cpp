@@ -1133,8 +1133,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
                    "build host DLL wrapper should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
-            expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan);") != std::string::npos,
-                   "build host DLL wrapper should build the response artifact directly from the response-read plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the response-read plan before building the response artifact.");
+            expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
+                   "build host DLL wrapper should build the response artifact from the response-read plan and executed response document.");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                    "build host DLL wrapper should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,
@@ -2009,8 +2011,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
                    "build host FLL wrapper should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
-            expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan);") != std::string::npos,
-                   "build host FLL wrapper should build the response artifact directly from the response-read plan once the wrapper contract is upstream.");
+            expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the response-read plan before building the response artifact.");
+            expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
+                   "build host FLL wrapper should build the response artifact from the response-read plan and executed response document.");
             expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                    "build host FLL wrapper should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
             expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,

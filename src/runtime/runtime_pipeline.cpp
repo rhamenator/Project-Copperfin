@@ -1596,11 +1596,11 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    return response_document.str();\n";
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeResponseArtifact copperfin_build_runtime_bridge_response_artifact(\n";
-    stream << "    CopperfinRuntimeBridgeResponseReadPlan response_read_plan) {\n";
-    stream << "    const auto response_document = copperfin_build_runtime_bridge_empty_response_document();\n";
+    stream << "    CopperfinRuntimeBridgeResponseReadPlan response_read_plan,\n";
+    stream << "    std::string response_document) {\n";
     stream << "    return CopperfinRuntimeBridgeResponseArtifact{\n";
     stream << "        std::move(response_read_plan),\n";
-    stream << "        response_document};\n";
+    stream << "        std::move(response_document)};\n";
     stream << "}\n\n";
     stream << "static std::string copperfin_build_runtime_bridge_response_parse_kind() {\n";
     stream << "    return \"json_field_map\";\n";
@@ -2313,6 +2313,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)request_write_execution;\n";
             stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
             stream << "        request_write_plan);\n";
+            stream << "    const auto response_document =\n";
+            stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";
             stream << "        copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);\n";
             stream << "    (void)missing_response;\n";
@@ -2320,7 +2322,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);\n";
             stream << "    (void)response_validation_evaluation;\n";
             stream << "    const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n";
-            stream << "        response_read_plan);\n";
+            stream << "        response_read_plan,\n";
+            stream << "        response_document);\n";
             stream << "    const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n";
             stream << "        response_artifact);\n";
             stream << "    const auto response_parse_admission =\n";
@@ -2529,6 +2532,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "    (void)request_write_execution;\n";
             stream << "    const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n";
             stream << "        request_write_plan);\n";
+            stream << "    const auto response_document =\n";
+            stream << "        copperfin_runtime_bridge_execute_read_response(response_read_plan);\n";
             stream << "    const auto missing_response =\n";
             stream << "        copperfin_runtime_bridge_evaluate_missing_response(host_failure, response_read_plan);\n";
             stream << "    (void)missing_response;\n";
@@ -2536,7 +2541,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
             stream << "        copperfin_runtime_bridge_evaluate_response_validation(missing_response, response_validation);\n";
             stream << "    (void)response_validation_evaluation;\n";
             stream << "    const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n";
-            stream << "        response_read_plan);\n";
+            stream << "        response_read_plan,\n";
+            stream << "        response_document);\n";
             stream << "    const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n";
             stream << "        response_artifact);\n";
             stream << "    const auto response_parse_admission =\n";

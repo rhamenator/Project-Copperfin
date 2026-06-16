@@ -1544,8 +1544,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
                "library-output wrapper source should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
-        expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan);") != std::string::npos,
-               "library-output wrapper source should build the response artifact directly from the response-read plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
+               "library-output wrapper source should execute the response-read plan before building the response artifact.");
+        expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
+               "library-output wrapper source should build the response artifact from the response-read plan and executed response document.");
         expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                "library-output wrapper source should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,
@@ -2923,8 +2925,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan);") != std::string::npos,
                "fll-output wrapper source should build the response-read plan directly from the request-write plan once the wrapper contract is upstream.");
-        expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan);") != std::string::npos,
-               "fll-output wrapper source should build the response artifact directly from the response-read plan once the wrapper contract is upstream.");
+        expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
+               "fll-output wrapper source should execute the response-read plan before building the response artifact.");
+        expect(wrapper_source.find("const auto response_artifact = copperfin_build_runtime_bridge_response_artifact(\n        response_read_plan,\n        response_document);") != std::string::npos,
+               "fll-output wrapper source should build the response artifact from the response-read plan and executed response document.");
         expect(wrapper_source.find("const auto response_parse_plan = copperfin_build_runtime_bridge_response_parse_plan(\n        response_artifact);") != std::string::npos,
                "fll-output wrapper source should build the response-parse plan directly from the response artifact once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto interpreted_result_plan = copperfin_build_runtime_bridge_interpreted_result_plan(\n        response_parse_plan);") != std::string::npos,
