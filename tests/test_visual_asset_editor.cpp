@@ -10316,6 +10316,191 @@ void test_set_visual_object_control_source_assigns_text() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_input_mask_assigns_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_inputmask_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "inputmask.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "INPUTMASK", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtPhone", "phoneBox", "phone-guid", "(999) 999-9999"},
+        {"txtZip", "zipBox", "zip-guid", "99999"},
+        {"txtOther", "otherBox", "other-guid", "XXXXXXXX"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#803: input-mask fixture should be writable");
+
+    const auto input_mask_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "InputMask"
+        });
+        expect(result.ok && result.exists, "#803: input-mask fixture property should be readable");
+        return result.value;
+    };
+    const auto input_mask = [&](const std::string& unique_id) {
+        return input_mask_for(table_path.string(), unique_id);
+    };
+    const auto input_mask_state = [&]() {
+        return input_mask("phone-guid") + "," +
+            input_mask("zip-guid") + "," +
+            input_mask("other-guid");
+    };
+
+    auto mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "txtPhone", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .input_mask = "999-99-9999"
+    });
+    expect(mask_result.ok, "#803: input-mask assignment should support object-name and record-index selectors");
+    expect(input_mask("phone-guid") == "999-99-9999" &&
+            input_mask("zip-guid") == "999-99-9999" &&
+            input_mask("other-guid") == "XXXXXXXX",
+        "#803: direct input-mask assignment should write raw text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#803: first input-mask write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#803: second input-mask write should remain undo-backed");
+    expect(input_mask_state() == "(999) 999-9999,99999,XXXXXXXX",
+        "#803: input-mask undo should restore original direct values");
+
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "phone-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "zip-guid"}
+        },
+        .input_mask = "AA-9999"
+    });
+    expect(mask_result.ok, "#803: input-mask assignment should support UNIQUEID selectors");
+    expect(input_mask("phone-guid") == "AA-9999" &&
+            input_mask("zip-guid") == "AA-9999",
+        "#803: direct input-mask assignment should store caller text without serialized quoting");
+
+    const std::string committed_state = input_mask_state();
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = table_path.string(),
+        .objects = {},
+        .input_mask = "Ignored"
+    });
+    expect(!mask_result.ok, "#803: input-mask assignment should reject empty selections");
+    expect(input_mask_state() == committed_state, "#803: empty-selection failures should not mutate input masks");
+
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "phone-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .input_mask = "Ignored"
+    });
+    expect(!mask_result.ok, "#803: input-mask assignment should reject missing selected objects");
+    expect(input_mask_state() == committed_state, "#803: missing-object failures should not mutate input masks");
+
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "phone-guid"},
+            {.record_index = 0U, .object_name = "txtPhone", .unique_id = {}}
+        },
+        .input_mask = "Ignored"
+    });
+    expect(!mask_result.ok, "#803: input-mask assignment should reject duplicate selected objects");
+    expect(input_mask_state() == committed_state, "#803: duplicate-selection failures should not mutate input masks");
+
+    const fs::path blob_path = temp_dir / "inputmask_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"txtBlob", "blob-guid", "InputMask = \"99999\"\r\nCaption = \"Zip\"\r\n"},
+        {"txtNoMask", "no-mask-guid", "Caption = \"No mask\"\r\n"},
+        {"txtOther", "other-guid", "InputMask = \"XXXXXXXX\"\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#803: input-mask property-blob fixture should be writable");
+
+    const auto blob_input_mask_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "InputMask"
+        });
+    };
+
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "txtNoMask", .unique_id = {}}
+        },
+        .input_mask = "AA\"99"
+    });
+    expect(mask_result.ok, "#803: input-mask assignment should support existing and absent serialized properties");
+    auto blob_mask = blob_input_mask_state("blob-guid");
+    auto appended_mask = blob_input_mask_state("no-mask-guid");
+    auto other_mask = blob_input_mask_state("other-guid");
+    expect(blob_mask.ok && blob_mask.exists && blob_mask.value == "\"AA\"\"99\"" &&
+            appended_mask.ok && appended_mask.exists && appended_mask.value == "\"AA\"\"99\"" &&
+            other_mask.ok && other_mask.exists && other_mask.value == "\"XXXXXXXX\"",
+        "#803: serialized input-mask assignment should quote text, append missing InputMask, and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#803: appended serialized input-mask write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#803: existing serialized input-mask write should remain undo-backed");
+    blob_mask = blob_input_mask_state("blob-guid");
+    appended_mask = blob_input_mask_state("no-mask-guid");
+    expect(blob_mask.ok && blob_mask.exists && blob_mask.value == "\"99999\"" &&
+            appended_mask.ok && !appended_mask.exists,
+        "#803: serialized input-mask undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_inputmask.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"txtA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#803: missing-InputMask fixture should be writable");
+
+    mask_result = copperfin::vfp::set_visual_object_input_mask({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .input_mask = "Ignored"
+    });
+    expect(!mask_result.ok, "#803: input-mask assignment should reject objects without a writable InputMask carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -12910,6 +13095,7 @@ int main() {
     test_set_visual_object_tooltip_text_assigns_text();
     test_set_visual_object_status_bar_text_assigns_text();
     test_set_visual_object_control_source_assigns_text();
+    test_set_visual_object_input_mask_assigns_text();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

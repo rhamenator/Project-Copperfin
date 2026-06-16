@@ -706,6 +706,12 @@ struct VisualObjectControlSourceRequest {
     std::string control_source;
 };
 
+struct VisualObjectInputMaskRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string input_mask;
+};
+
 struct VisualObjectReparentRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -838,6 +844,7 @@ VisualAssetEditResult set_visual_object_caption(const VisualObjectCaptionRequest
 VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTextRequest& request);
 VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatusBarTextRequest& request);
 VisualAssetEditResult set_visual_object_control_source(const VisualObjectControlSourceRequest& request);
+VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request);
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request);
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request);
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request);

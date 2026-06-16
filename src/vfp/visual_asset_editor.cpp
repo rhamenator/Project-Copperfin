@@ -5238,6 +5238,15 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
         request.control_source);
 }
 
+VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "InputMask",
+        "input-mask",
+        request.input_mask);
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};

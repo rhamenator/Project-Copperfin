@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#802`, adding selected visual object control-source assignment so designer commands can assign caller text to direct `ControlSource` fields and serialized `ControlSource` properties, including writable `PROPERTIES` rows where `ControlSource` is absent, while rejecting duplicate selections before rollback-safe batch writes.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#803`, adding selected visual object input-mask assignment so designer commands can assign caller text to direct `InputMask` fields and serialized `InputMask` properties, including writable `PROPERTIES` rows where `InputMask` is absent, while rejecting duplicate selections before rollback-safe batch writes.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
