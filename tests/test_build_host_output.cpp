@@ -1513,6 +1513,17 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the schema-version field through the shared helper");
             expect(wrapper_source.find("payload_plan.dispatch_plan.serialization_plan.schema_version") != std::string::npos,
                    "build host DLL wrapper should serialize schema-version metadata into the request document");
+            expect(wrapper_source.find("{copperfin_build_runtime_bridge_export_name_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_routine_kind_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_source_path_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_source_line_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_declaration_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_names_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_count_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_schema_version_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameters_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_request_media_type_field_name()}") != std::string::npos,
+                   "build host DLL wrapper should declare descriptor metadata in the request-field contract");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_parameters_field_name()") != std::string::npos,
                    "build host DLL wrapper should route the parameters field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_field_name()") != std::string::npos,
@@ -2481,6 +2492,17 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should route the schema-version field through the shared helper");
             expect(wrapper_source.find("payload_plan.dispatch_plan.serialization_plan.schema_version") != std::string::npos,
                    "build host FLL wrapper should serialize schema-version metadata into the request document");
+            expect(wrapper_source.find("{copperfin_build_runtime_bridge_export_name_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_routine_kind_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_source_path_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_source_line_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_declaration_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_names_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameter_count_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_schema_version_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_parameters_field_name(),\n"
+                                       "         copperfin_build_runtime_bridge_request_media_type_field_name()}") != std::string::npos,
+                   "build host FLL wrapper should declare descriptor metadata in the request-field contract");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_parameters_field_name()") != std::string::npos,
                    "build host FLL wrapper should route the parameters field through the shared helper");
             expect(wrapper_source.find("copperfin_build_runtime_bridge_request_media_type_field_name()") != std::string::npos,

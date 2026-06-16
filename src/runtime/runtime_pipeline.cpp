@@ -1524,7 +1524,13 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        copperfin_build_runtime_bridge_request_payload_shape_name(),\n";
     stream << "        copperfin_build_runtime_bridge_response_payload_shape_name(),\n";
     stream << "        {copperfin_build_runtime_bridge_export_name_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_routine_kind_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_source_path_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_source_line_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_parameter_declaration_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_parameter_names_field_name(),\n";
     stream << "         copperfin_build_runtime_bridge_parameter_count_field_name(),\n";
+    stream << "         copperfin_build_runtime_bridge_schema_version_field_name(),\n";
     stream << "         copperfin_build_runtime_bridge_parameters_field_name(),\n";
     stream << "         copperfin_build_runtime_bridge_request_media_type_field_name()},\n";
     stream << "        {copperfin_build_runtime_bridge_status_field_name(),\n";
