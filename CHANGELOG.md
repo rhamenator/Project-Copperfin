@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#845 selected visual object dynamic font-outline assignment shipped: designer commands can assign caller-provided raw `DynamicFontOutline` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#844 selected visual object dynamic font-strikethru assignment shipped: designer commands can assign caller-provided raw `DynamicFontStrikethru` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#843 selected visual object dynamic font-underline assignment shipped: designer commands can assign caller-provided raw `DynamicFontUnderline` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
 - E2/#842 selected visual object dynamic font-italic assignment shipped: designer commands can assign caller-provided raw `DynamicFontItalic` expressions to selected objects through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving duplicate selection rejection and rollback-safe batch writes.
