@@ -295,6 +295,50 @@ void test_build_project_workspace_normalizes_unc_item_paths() {
            "#701: outside UNC fallback should still retain NAME provenance");
 }
 
+void test_build_project_workspace_normalizes_vfp_logical_flags() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\flags.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "FLAGS"},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = R"(E:\Project-Copperfin\build\flags.exe)"},
+            {.field_name = "DEBUG", .field_type = 'L', .display_value = ".T."},
+            {.field_name = "ENCRYPT", .field_type = 'L', .display_value = " T "},
+            {.field_name = "SAVECODE", .field_type = 'L', .display_value = "Y"},
+            {.field_name = "NOLOGO", .field_type = 'L', .display_value = "TRUE"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "main.prg"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = ".T."},
+            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = " F "},
+            {.field_name = "LOCAL", .field_type = 'L', .display_value = "Y"}
+        }),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "excluded.prg"},
+            {.field_name = "EXCLUDE", .field_type = 'L', .display_value = "T"}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.build_plan.debug_enabled, "#703: DEBUG should accept uppercase VFP .T. true values");
+    expect(workspace.build_plan.encrypt_enabled, "#703: ENCRYPT should accept padded T true values");
+    expect(workspace.build_plan.save_code, "#703: SAVECODE should accept Y true values");
+    expect(workspace.build_plan.no_logo, "#703: NOLOGO should accept TRUE true values");
+    expect(workspace.entries[1].main_program, "#703: MAINPROG should accept VFP .T. true values");
+    expect(!workspace.entries[1].excluded, "#703: EXCLUDE should keep padded F values false");
+    expect(workspace.entries[1].local, "#703: LOCAL should accept Y true values");
+    expect(workspace.entries[2].excluded, "#703: EXCLUDE should accept uppercase T true values");
+    expect(workspace.build_plan.startup_item == "main.prg",
+           "#703: normalized MAINPROG should drive startup selection");
+    expect(workspace.build_plan.excluded_items == 1U,
+           "#703: normalized EXCLUDE should drive excluded item counts");
+}
+
 void test_build_project_workspace_prefers_live_header() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\headerdemo.pjx)";
@@ -471,6 +515,7 @@ int main() {
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
     test_build_project_workspace_normalizes_unc_item_paths();
+    test_build_project_workspace_normalizes_vfp_logical_flags();
     test_build_project_workspace_prefers_live_header();
     test_build_project_workspace_skips_deleted_startup_candidates();
     test_build_project_workspace_with_dll_output();

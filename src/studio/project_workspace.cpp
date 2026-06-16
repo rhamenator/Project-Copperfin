@@ -40,11 +40,6 @@ std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_
     return value->display_value;
 }
 
-bool value_as_bool(const vfp::DbfRecord& record, std::string_view field_name) {
-    const std::string value = value_or_empty(record, field_name);
-    return value == "true" || value == "t" || value == ".t." || value == "Y" || value == "y";
-}
-
 std::string trim_copy(std::string value) {
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
         return std::isspace(ch) == 0;
@@ -60,6 +55,11 @@ std::string lowercase_copy(std::string value) {
         return static_cast<char>(std::tolower(ch));
     });
     return value;
+}
+
+bool value_as_bool(const vfp::DbfRecord& record, std::string_view field_name) {
+    const std::string value = lowercase_copy(trim_copy(value_or_empty(record, field_name)));
+    return value == "true" || value == "t" || value == ".t." || value == "y";
 }
 
 std::string extension_of(const std::string& value) {

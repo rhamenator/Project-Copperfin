@@ -338,7 +338,7 @@ Current active-open prompt-sized slice queue after Phase A/D1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#22` | `#702` | use VFP filename parsing for Studio display names |
+| `#22` | `#703` | normalize VFP project logical flags |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -354,7 +354,7 @@ Historical-closed prompt-sized native slice queues:
 
 Remaining active-open adjacent prompt-sized native slice queues:
 
-- `#22`: complete `#702`, then continue by opening the next shared design-model child if no open child remains
+- `#22`: complete `#703`, then continue by opening the next shared design-model child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Canonical post-D1 execution order:
@@ -404,8 +404,9 @@ Canonical post-D1 execution order:
 43. `#700`
 44. `#701`
 45. `#702`
-46. next prompt-sized child under `#22`
-47. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
+46. `#703`
+47. next prompt-sized child under `#22`
+48. continue the live open umbrella queue under `#23`-`#43`, `#57`, and `#91` by dependency weight
 
 Execution guardrails:
 
