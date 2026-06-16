@@ -137,18 +137,70 @@ std::optional<std::string> parse_json_string_at(
     std::size_t value_start,
     std::size_t& value_end);
 
-std::string extract_json_field(const std::string& document, const std::string& field_name) {
+bool find_json_field_value_start(
+    const std::string& document,
+    const std::string& field_name,
+    std::size_t& value_start) {
     const auto field_token = std::string("\"") + field_name + "\"";
-    const auto field_offset = document.find(field_token);
-    if (field_offset == std::string::npos) {
-        return {};
+    value_start = std::string::npos;
+    std::size_t object_depth = 0U;
+    std::size_t array_depth = 0U;
+    for (std::size_t index = 0U; index < document.size(); ++index) {
+        const char ch = document[index];
+        if (ch == '"') {
+            std::size_t string_end = index + 1U;
+            bool escaping = false;
+            for (; string_end < document.size(); ++string_end) {
+                const char string_ch = document[string_end];
+                if (escaping) {
+                    escaping = false;
+                    continue;
+                }
+                if (string_ch == '\\') {
+                    escaping = true;
+                    continue;
+                }
+                if (string_ch == '"') {
+                    break;
+                }
+            }
+            if (string_end >= document.size()) {
+                return false;
+            }
+            if (object_depth == 1U && array_depth == 0U &&
+                string_end + 1U == index + field_token.size() &&
+                document.compare(index, field_token.size(), field_token) == 0) {
+                const auto colon_offset = document.find_first_not_of(" \t\r\n", string_end + 1U);
+                if (colon_offset != std::string::npos && document[colon_offset] == ':') {
+                    value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
+                    return value_start != std::string::npos;
+                }
+            }
+            index = string_end;
+            continue;
+        }
+        if (ch == '{') {
+            ++object_depth;
+            continue;
+        }
+        if (ch == '}' && object_depth > 0U) {
+            --object_depth;
+            continue;
+        }
+        if (ch == '[') {
+            ++array_depth;
+            continue;
+        }
+        if (ch == ']' && array_depth > 0U) {
+            --array_depth;
+        }
     }
-    const auto colon_offset = document.find(':', field_offset + field_token.size());
-    if (colon_offset == std::string::npos) {
-        return {};
-    }
-    const auto value_start = document.find_first_not_of(" \t\r\n", colon_offset + 1U);
-    if (value_start == std::string::npos) {
+    return false;
+}
+
+std::string extract_json_field(const std::string& document, const std::string& field_name) {
+    std::size_t value_start = std::string::npos;
+    if (!find_json_field_value_start(document, field_name, value_start)) {
         return {};
     }
     if (document[value_start] == '"') {
