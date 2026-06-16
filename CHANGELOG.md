@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#860 selected visual object back-style assignment shipped: designer commands can assign caller-provided non-negative numeric `BackStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#859 selected visual object OLE drag-picture assignment shipped: designer commands can assign caller-provided `OLEDragPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#858 selected visual object disabled-picture assignment shipped: designer commands can assign caller-provided `DisabledPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#857 selected visual object down-picture assignment shipped: designer commands can assign caller-provided `DownPicture` text/path values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted serialized string values, duplicate selection rejection, and rollback-safe batch writes.

@@ -5373,6 +5373,19 @@ VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDr
         request.ole_drag_picture);
 }
 
+VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
+    if (request.back_style < 0) {
+        return {.ok = false, .error = "BackStyle must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BackStyle",
+        "back-style",
+        std::to_string(request.back_style));
+}
+
 VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRequest& request) {
     return set_visual_object_text_property(
         request.path,
