@@ -31,12 +31,20 @@ struct FieldSelection {
     std::size_t field_index = StudioObjectMissingFieldIndex;
 };
 
+bool looks_like_unresolved_memo(const std::string& value) {
+    return value.rfind("<memo block ", 0) == 0;
+}
+
+std::string usable_display_value(const vfp::DbfRecordValue& value) {
+    return looks_like_unresolved_memo(value.display_value) ? std::string() : value.display_value;
+}
+
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
     const auto* value = find_value(record, field_name);
     if (value == nullptr) {
         return {};
     }
-    return value->display_value;
+    return usable_display_value(*value);
 }
 
 std::optional<std::size_t> find_field_index(const vfp::DbfRecord& record, std::string_view field_name) {
@@ -55,8 +63,11 @@ std::size_t field_index_or_missing(const vfp::DbfRecord& record, std::string_vie
 FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const auto* value = find_value(record, field_name);
-        if (value != nullptr && !value->display_value.empty()) {
-            return {.value = value->display_value, .field_index = field_index_or_missing(record, field_name)};
+        if (value != nullptr) {
+            const std::string usable_value = usable_display_value(*value);
+            if (!usable_value.empty()) {
+                return {.value = usable_value, .field_index = field_index_or_missing(record, field_name)};
+            }
         }
     }
     return {};
@@ -326,7 +337,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 .field_index = field_index,
                 .type = value.field_type,
                 .is_null = value.is_null,
-                .value = value.display_value
+                .value = usable_display_value(value)
             });
         }
 
@@ -335,7 +346,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 const auto& property_blob = record.values[field_index];
                 if (property_blob.field_name == "PROPERTIES" &&
                     !property_blob.display_value.empty() &&
-                    property_blob.display_value != "<memo block 0>") {
+                    !looks_like_unresolved_memo(property_blob.display_value)) {
                     append_property_snapshots(
                         vfp::parse_visual_property_blob(property_blob.display_value),
                         snapshot.properties,

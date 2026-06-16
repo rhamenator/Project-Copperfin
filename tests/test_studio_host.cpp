@@ -224,6 +224,81 @@ void test_object_snapshot_preserves_empty_and_null_design_fields() {
     }
 }
 
+void test_object_snapshot_suppresses_unresolved_memo_placeholders() {
+    copperfin::studio::StudioDocumentModel form_document;
+    form_document.path = R"(E:\Project-Copperfin\samples\placeholder.scx)";
+    form_document.kind = copperfin::studio::StudioAssetKind::form;
+    form_document.table_preview_available = true;
+    form_document.table_preview.records = {
+        {
+            .record_index = 10U,
+            .deleted = false,
+            .values = {
+                {.field_name = "OBJNAME", .field_type = 'M', .is_null = false, .display_value = "<memo block 40>"},
+                {.field_name = "NAME", .field_type = 'M', .is_null = false, .display_value = "<memo block 41>"},
+                {.field_name = "TITLE", .field_type = 'M', .is_null = false, .display_value = "<memo block 42>"},
+                {.field_name = "CLASS", .field_type = 'M', .is_null = false, .display_value = "<memo block 43>"},
+                {.field_name = "BASECLASS", .field_type = 'M', .is_null = false, .display_value = "<memo block 44>"},
+                {.field_name = "PROPERTIES", .field_type = 'M', .is_null = false, .display_value = "<memo block 45>"}
+            }
+        }
+    };
+
+    const auto form_objects = copperfin::studio::build_object_snapshot(form_document);
+    expect(form_objects.size() == 1U, "#696: unresolved memo placeholders should not prevent object capture");
+    if (!form_objects.empty()) {
+        expect(form_objects[0].object_name.empty(), "#696: unresolved memo object names should not become active names");
+        expect(form_objects[0].object_name_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#696: active object-name provenance should be missing when usable text is absent");
+        expect(form_objects[0].title == "Record 10", "#696: unresolved memo title sources should use synthetic fallback");
+        expect(form_objects[0].title_field_index == copperfin::studio::StudioObjectMissingFieldIndex,
+            "#696: synthetic titles should not masquerade as unresolved memo provenance");
+        expect(form_objects[0].subtitle.empty(), "#696: unresolved memo subtitle sources should remain absent");
+        const auto objname = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
+            return property.name == "OBJNAME";
+        });
+        expect(objname != form_objects[0].properties.end(), "#696: direct unresolved memo fields should remain visible as properties");
+        if (objname != form_objects[0].properties.end()) {
+            expect(objname->field_index == 0U, "#696: direct unresolved memo fields should retain field provenance");
+            expect(objname->value.empty(), "#696: direct unresolved memo placeholders should not become property values");
+        }
+        const auto caption = std::find_if(form_objects[0].properties.begin(), form_objects[0].properties.end(), [](const auto& property) {
+            return property.name == "Caption";
+        });
+        expect(caption == form_objects[0].properties.end(), "#696: unresolved PROPERTIES memo placeholders should not expand blob properties");
+    }
+
+    copperfin::studio::StudioDocumentModel menu_document;
+    menu_document.path = R"(E:\Project-Copperfin\samples\placeholder.mnx)";
+    menu_document.kind = copperfin::studio::StudioAssetKind::menu;
+    menu_document.table_preview_available = true;
+    menu_document.table_preview.records = {
+        {
+            .record_index = 11U,
+            .deleted = false,
+            .values = {
+                {.field_name = "PROMPT", .field_type = 'M', .is_null = false, .display_value = "<memo block 46>"},
+                {.field_name = "COMMAND", .field_type = 'M', .is_null = false, .display_value = "<memo block 47>"},
+                {.field_name = "MESSAGE", .field_type = 'M', .is_null = false, .display_value = "<memo block 48>"},
+                {.field_name = "NAME", .field_type = 'C', .is_null = false, .display_value = "fallback_menu"}
+            }
+        }
+    };
+
+    const auto menu_objects = copperfin::studio::build_object_snapshot(menu_document);
+    expect(menu_objects.size() == 1U, "#696: unresolved menu memo placeholders should not prevent object capture");
+    if (!menu_objects.empty()) {
+        expect(menu_objects[0].menu_prompt.empty(), "#696: unresolved menu PROMPT placeholders should not become prompt text");
+        expect(menu_objects[0].menu_prompt_field_index == 0U, "#696: menu PROMPT provenance should remain available");
+        expect(menu_objects[0].menu_command.empty(), "#696: unresolved menu COMMAND placeholders should not become command text");
+        expect(menu_objects[0].menu_command_field_index == 1U, "#696: menu COMMAND provenance should remain available");
+        expect(menu_objects[0].menu_message.empty(), "#696: unresolved menu MESSAGE placeholders should not become message text");
+        expect(menu_objects[0].menu_message_field_index == 2U, "#696: menu MESSAGE provenance should remain available");
+        expect(menu_objects[0].title == "fallback_menu", "#696: menu titles should skip unresolved PROMPT and use the next usable source");
+        expect(menu_objects[0].title_field_index == 3U, "#696: menu title provenance should point at the selected usable source");
+    }
+}
+
 void test_menu_object_snapshot_preserves_normalized_menu_metadata() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\mainmenu.mnx)";
@@ -579,6 +654,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
     test_object_snapshot_preserves_empty_and_null_design_fields();
+    test_object_snapshot_suppresses_unresolved_memo_placeholders();
     test_menu_object_snapshot_preserves_normalized_menu_metadata();
     test_open_document_preserves_validation_findings();
     test_open_document_preserves_memo_validation_findings();
