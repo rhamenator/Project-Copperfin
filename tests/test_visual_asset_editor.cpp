@@ -799,6 +799,63 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_list_visual_objects_reads_selection_outline() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_object_outline_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "outline.scx";
+    const fs::path memo_path = temp_dir / "outline.sct";
+    write_synthetic_named_object_asset(table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\n"
+        },
+        {
+            .objname = "",
+            .name = "fallbackButton",
+            .unique_id = "fallback-guid",
+            .properties = "Caption = \"Fallback\"\r\n"
+        }
+    });
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "fallback-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#743: object outline fixtures should allow marking one row deleted");
+
+    const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok, "#743: visual object outlines should list DBF-family visual assets");
+    expect(list_result.objects.size() == 2U, "#743: visual object outlines should include each object record");
+    if (list_result.objects.size() == 2U) {
+        expect(list_result.objects[0].record_index == 0U && !list_result.objects[0].deleted,
+            "#743: visual object outlines should expose live record identity");
+        expect(list_result.objects[0].object_name == "cmdSave",
+            "#743: visual object outlines should prefer OBJNAME over NAME");
+        expect(list_result.objects[0].unique_id == "save-guid",
+            "#743: visual object outlines should expose stable UNIQUEID values");
+        expect(list_result.objects[1].record_index == 1U && list_result.objects[1].deleted,
+            "#743: visual object outlines should keep deleted records visible");
+        expect(list_result.objects[1].object_name == "fallbackButton",
+            "#743: visual object outlines should fall back to NAME when OBJNAME is absent");
+        expect(list_result.objects[1].unique_id == "fallback-guid",
+            "#743: visual object outlines should expose stable UNIQUEID values on fallback-name rows");
+    }
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#743: visual object outlining should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_update_visual_object_property_skips_noop_writes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1667,6 +1724,7 @@ int main() {
     test_query_visual_object_property_reads_selected_values();
     test_list_visual_object_properties_reads_selected_surface();
     test_set_visual_object_deleted_state_targets_selected_object();
+    test_list_visual_objects_reads_selection_outline();
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();

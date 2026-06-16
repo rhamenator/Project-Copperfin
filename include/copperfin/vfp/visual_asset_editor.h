@@ -84,6 +84,19 @@ struct VisualObjectDeletedStateRequest {
     bool deleted = false;
 };
 
+struct VisualObjectSnapshot {
+    std::size_t record_index = 0;
+    bool deleted = false;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct VisualObjectListResult {
+    bool ok = false;
+    std::string error;
+    std::vector<VisualObjectSnapshot> objects;
+};
+
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
@@ -99,6 +112,7 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] bool is_property_blob_asset_path(const std::string& path);
 [[nodiscard]] VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request);
 [[nodiscard]] VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request);
+[[nodiscard]] VisualObjectListResult list_visual_objects(const std::string& path);
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request);
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request);
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request);

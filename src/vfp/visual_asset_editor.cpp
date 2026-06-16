@@ -1015,6 +1015,50 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
     };
 }
 
+VisualObjectListResult list_visual_objects(const std::string& path) {
+    if (path.empty()) {
+        return {
+            .ok = false,
+            .error = "No asset path was provided.",
+            .objects = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .objects = {}
+        };
+    }
+
+    std::vector<VisualObjectSnapshot> objects;
+    objects.reserve(table_result.table.records.size());
+    for (const auto& record : table_result.table.records) {
+        const auto* objname = find_record_value(record, "OBJNAME");
+        const auto* name = find_record_value(record, "NAME");
+        const auto* unique_id = find_record_value(record, "UNIQUEID");
+        std::string object_name = objname == nullptr ? std::string{} : trim_both(objname->display_value);
+        if (object_name.empty() && name != nullptr) {
+            object_name = trim_both(name->display_value);
+        }
+
+        objects.push_back({
+            .record_index = record.record_index,
+            .deleted = record.deleted,
+            .object_name = object_name,
+            .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .objects = std::move(objects)
+    };
+}
+
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
