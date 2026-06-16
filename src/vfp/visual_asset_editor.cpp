@@ -5319,6 +5319,15 @@ VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBox
         request.control_box ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenterRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AutoCenter",
+        "auto-center",
+        request.auto_center ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
