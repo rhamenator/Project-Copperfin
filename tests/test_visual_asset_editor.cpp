@@ -12189,6 +12189,190 @@ void test_set_visual_object_incremental_search_assigns_logical_state() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_set_visual_object_multi_select_assigns_logical_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_multi_select_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "multi_select.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "MULTISELECT", .type = 'C', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "customerCombo", "customer-guid", ".F."},
+        {"lstOrders", "ordersList", "orders-guid", ".F."},
+        {"lstOther", "otherList", "other-guid", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#813: multi-select fixture should be writable");
+
+    const auto multi_select_for = [&](const std::string& path, const std::string& unique_id) {
+        const auto result = copperfin::vfp::query_visual_object_property({
+            .path = path,
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "MultiSelect"
+        });
+        expect(result.ok && result.exists, "#813: multi-select fixture property should be readable");
+        return result.value;
+    };
+    const auto multi_select = [&](const std::string& unique_id) {
+        return multi_select_for(table_path.string(), unique_id);
+    };
+    const auto multi_select_state = [&]() {
+        return multi_select("customer-guid") + "," +
+            multi_select("orders-guid") + "," +
+            multi_select("other-guid");
+    };
+
+    auto select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}},
+            {.record_index = 1U, .object_name = {}, .unique_id = {}}
+        },
+        .multi_select = true
+    });
+    expect(select_result.ok, "#813: multi-select assignment should support object-name and record-index selectors");
+    expect(multi_select("customer-guid") == ".T." &&
+            multi_select("orders-guid") == ".T." &&
+            multi_select("other-guid") == ".T.",
+        "#813: direct multi-select assignment should write FoxPro logical text and preserve unrelated objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#813: first multi-select write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#813: second multi-select write should remain undo-backed");
+    expect(multi_select_state() == ".F.,.F.,.T.", "#813: multi-select undo should restore original direct values");
+
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "orders-guid"}
+        },
+        .multi_select = false
+    });
+    expect(select_result.ok, "#813: multi-select assignment should support UNIQUEID selectors");
+    expect(multi_select("customer-guid") == ".F." &&
+            multi_select("orders-guid") == ".F.",
+        "#813: direct multi-select assignment should store false FoxPro logical values");
+
+    const std::string committed_state = multi_select_state();
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = table_path.string(),
+        .objects = {},
+        .multi_select = true
+    });
+    expect(!select_result.ok, "#813: multi-select assignment should reject empty selections");
+    expect(multi_select_state() == committed_state, "#813: empty-selection failures should not mutate multi-select values");
+
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
+        },
+        .multi_select = true
+    });
+    expect(!select_result.ok, "#813: multi-select assignment should reject missing selected objects");
+    expect(multi_select_state() == committed_state, "#813: missing-object failures should not mutate multi-select values");
+
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "customer-guid"},
+            {.record_index = 0U, .object_name = "cboCustomer", .unique_id = {}}
+        },
+        .multi_select = true
+    });
+    expect(!select_result.ok, "#813: multi-select assignment should reject duplicate selected objects");
+    expect(multi_select_state() == committed_state, "#813: duplicate-selection failures should not mutate multi-select values");
+
+    const fs::path blob_path = temp_dir / "multi_select_blob.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> blob_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> blob_records{
+        {"lstBlob", "blob-guid", "MultiSelect = .F.\r\nCaption = \"Customer\"\r\n"},
+        {"lstNoSelect", "no-select-guid", "Caption = \"No select\"\r\n"},
+        {"lstOther", "other-guid", "MultiSelect = .T.\r\n"}
+    };
+    const auto blob_create = copperfin::vfp::create_dbf_table_file(blob_path.string(), blob_fields, blob_records);
+    expect(blob_create.ok, "#813: multi-select property-blob fixture should be writable");
+
+    const auto blob_multi_select_state = [&](const std::string& unique_id) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = blob_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = "MultiSelect"
+        });
+    };
+
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"},
+            {.record_index = 0U, .object_name = "lstNoSelect", .unique_id = {}}
+        },
+        .multi_select = true
+    });
+    expect(select_result.ok, "#813: multi-select assignment should support existing and absent serialized properties");
+    auto blob_select = blob_multi_select_state("blob-guid");
+    auto appended_select = blob_multi_select_state("no-select-guid");
+    auto other_select = blob_multi_select_state("other-guid");
+    expect(blob_select.ok && blob_select.exists && blob_select.value == ".T." &&
+            appended_select.ok && appended_select.exists && appended_select.value == ".T." &&
+            other_select.ok && other_select.exists && other_select.value == ".T.",
+        "#813: serialized multi-select assignment should write FoxPro logical values and preserve unrelated objects");
+
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#813: appended serialized multi-select write should remain undo-backed");
+    undo_result = copperfin::vfp::undo_visual_object_property(blob_path.string());
+    expect(undo_result.ok, "#813: existing serialized multi-select write should remain undo-backed");
+    blob_select = blob_multi_select_state("blob-guid");
+    appended_select = blob_multi_select_state("no-select-guid");
+    expect(blob_select.ok && blob_select.exists && blob_select.value == ".F." &&
+            appended_select.ok && !appended_select.exists,
+        "#813: serialized multi-select undo should restore existing values and remove appended properties");
+
+    const fs::path incomplete_path = temp_dir / "missing_multiselect.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> incomplete_records{
+        {"lstA", "a-guid"}
+    };
+    const auto incomplete_create = copperfin::vfp::create_dbf_table_file(
+        incomplete_path.string(),
+        incomplete_fields,
+        incomplete_records);
+    expect(incomplete_create.ok, "#813: missing-MultiSelect fixture should be writable");
+
+    select_result = copperfin::vfp::set_visual_object_multi_select({
+        .path = incomplete_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "a-guid"}
+        },
+        .multi_select = true
+    });
+    expect(!select_result.ok, "#813: multi-select assignment should reject objects without a writable MultiSelect carrier");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -14793,6 +14977,7 @@ int main() {
     test_set_visual_object_column_lines_assigns_logical_state();
     test_set_visual_object_integral_height_assigns_logical_state();
     test_set_visual_object_incremental_search_assigns_logical_state();
+    test_set_visual_object_multi_select_assigns_logical_state();
     test_group_visual_objects_creates_container_and_rolls_back_failures();
     test_ungroup_visual_object_reparents_children_and_marks_container_deleted();
     test_set_visual_object_deleted_states_rolls_back_batch_failures();

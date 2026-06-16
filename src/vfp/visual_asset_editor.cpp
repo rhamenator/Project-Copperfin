@@ -5394,6 +5394,15 @@ VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectInc
         request.incremental_search ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSelectRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MultiSelect",
+        "multi-select",
+        request.multi_select ? ".T." : ".F.");
+}
+
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
         return {.ok = false, .error = "No asset path was provided."};
