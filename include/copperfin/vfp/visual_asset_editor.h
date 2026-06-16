@@ -742,6 +742,12 @@ struct VisualObjectMovableRequest {
     bool movable = false;
 };
 
+struct VisualObjectHalfHeightCaptionRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool half_height_caption = false;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1396,6 +1402,7 @@ VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBox
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request);
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request);
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request);
+VisualAssetEditResult set_visual_object_half_height_caption(const VisualObjectHalfHeightCaptionRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);

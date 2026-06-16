@@ -5346,6 +5346,16 @@ VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest
         request.movable ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_half_height_caption(
+    const VisualObjectHalfHeightCaptionRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HalfHeightCaption",
+        "half-height-caption",
+        request.half_height_caption ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
