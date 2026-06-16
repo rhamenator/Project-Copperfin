@@ -1077,8 +1077,8 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared stub-return admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubReturn copperfin_runtime_bridge_execute_stub_return(") != std::string::npos,
                    "build host DLL wrapper should declare a shared stub-return execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_activation(plan.return_activation_plan)") != std::string::npos,
-                   "build host DLL wrapper should stage stub-return handling through the shared execution helper.");
+            expect(wrapper_source.find("const auto& return_activation = plan.return_activation") != std::string::npos,
+                   "build host DLL wrapper should consume explicit return activation while routing stub returns.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePlaceholderReturnValuePlan") != std::string::npos,
                    "build host DLL wrapper should declare a placeholder-return-value-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
@@ -1167,8 +1167,10 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should execute the final-return-adoption plan before building the return-activation plan.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n        final_return_adoption_plan,\n        final_return_adoption);") != std::string::npos,
                    "build host DLL wrapper should build the return-activation plan from the final-return-adoption plan and adopted return.");
-            expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan);") != std::string::npos,
-                   "build host DLL wrapper should build the stub-return plan directly from the return-activation plan once the wrapper contract is carried by response validation.");
+            expect(wrapper_source.find("const auto return_activation =\n        copperfin_runtime_bridge_execute_return_activation(return_activation_plan);") != std::string::npos,
+                   "build host DLL wrapper should execute the return-activation plan before building the stub-return plan.");
+            expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan,\n        return_activation);") != std::string::npos,
+                   "build host DLL wrapper should build the stub-return plan from the return-activation plan and activated return.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(\n") == std::string::npos,
                    "build host DLL wrapper should no longer declare an output-specific stub-return wrapper helper once the plan carries the wrapper contract.");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
@@ -1969,8 +1971,8 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared stub-return admission helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeStubReturn copperfin_runtime_bridge_execute_stub_return(") != std::string::npos,
                    "build host FLL wrapper should declare a shared stub-return execution helper.");
-            expect(wrapper_source.find("copperfin_runtime_bridge_execute_return_activation(plan.return_activation_plan)") != std::string::npos,
-                   "build host FLL wrapper should stage stub-return handling through the shared execution helper.");
+            expect(wrapper_source.find("const auto& return_activation = plan.return_activation") != std::string::npos,
+                   "build host FLL wrapper should consume explicit return activation while routing stub returns.");
             expect(wrapper_source.find("struct CopperfinRuntimeBridgePlaceholderReturnValuePlan") != std::string::npos,
                    "build host FLL wrapper should declare a placeholder-return-value-plan surface");
             expect(wrapper_source.find("static CopperfinRuntimeBridgePlaceholderReturnValuePlan copperfin_build_runtime_bridge_placeholder_return_value_plan(") != std::string::npos,
@@ -2059,8 +2061,10 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should execute the final-return-adoption plan before building the return-activation plan.");
             expect(wrapper_source.find("const auto return_activation_plan = copperfin_build_runtime_bridge_return_activation_plan(\n        final_return_adoption_plan,\n        final_return_adoption);") != std::string::npos,
                    "build host FLL wrapper should build the return-activation plan from the final-return-adoption plan and adopted return.");
-            expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan);") != std::string::npos,
-                   "build host FLL wrapper should build the stub-return plan directly from the return-activation plan once the wrapper contract is carried by response validation.");
+            expect(wrapper_source.find("const auto return_activation =\n        copperfin_runtime_bridge_execute_return_activation(return_activation_plan);") != std::string::npos,
+                   "build host FLL wrapper should execute the return-activation plan before building the stub-return plan.");
+            expect(wrapper_source.find("const auto stub_return_plan = copperfin_build_runtime_bridge_stub_return_plan(\n        return_activation_plan,\n        return_activation);") != std::string::npos,
+                   "build host FLL wrapper should build the stub-return plan from the return-activation plan and activated return.");
             expect(wrapper_source.find("static int copperfin_runtime_bridge_emit_stub_return(\n") == std::string::npos,
                    "build host FLL wrapper should no longer declare an output-specific stub-return wrapper helper once the plan carries the wrapper contract.");
             expect(wrapper_source.find("const char* routine_kind;") != std::string::npos,
