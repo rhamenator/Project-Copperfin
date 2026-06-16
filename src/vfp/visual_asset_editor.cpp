@@ -5328,6 +5328,15 @@ VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRe
         request.max_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MinButton",
+        "min-button",
+        request.min_button ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

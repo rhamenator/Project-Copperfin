@@ -10997,6 +10997,24 @@ void test_set_visual_object_max_button_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_min_button_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#890",
+        "min_button",
+        "MinButton",
+        "MINBUTTON",
+        "min-button",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_min_button({
+                .path = path,
+                .objects = objects,
+                .min_button = value
+            });
+        });
+}
+
 void test_set_visual_object_hide_selection_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#877",
@@ -22738,6 +22756,7 @@ int main() {
     test_set_visual_object_closable_assigns_logical_state();
     test_set_visual_object_control_box_assigns_logical_state();
     test_set_visual_object_max_button_assigns_logical_state();
+    test_set_visual_object_min_button_assigns_logical_state();
     test_set_visual_object_hide_selection_assigns_logical_state();
     test_set_visual_object_allow_cell_selection_assigns_logical_state();
     test_set_visual_object_sparse_assigns_logical_state();

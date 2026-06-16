@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#890 selected visual object min-button assignment shipped: designer commands can assign caller-provided logical `MinButton` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#889 selected visual object max-button assignment shipped: designer commands can assign caller-provided logical `MaxButton` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#888 selected visual object fill-style assignment shipped: designer commands can assign caller-provided non-negative numeric `FillStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#887 selected visual object draw-width assignment shipped: designer commands can assign caller-provided non-negative numeric `DrawWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
