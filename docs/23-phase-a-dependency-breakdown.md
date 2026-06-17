@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), or shared design-model lane (`#22`) unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest shipped E2 slice: `#1063`, which exposes host item-fore-color-object commands by stable target selectors.
+- Latest shipped E2 slice: `#1064`, which exposes host highlight-back-color-object commands by stable target selectors.
 - Current continuation shape: expose already-implemented rollback-safe visual-object editor APIs through `copperfin_studio_host` one property command at a time, with stable selectors, no-mutation failure coverage, docs, validation, commit, push, and issue closure per slice.
 - Next work: create or pick the next prompt-sized `#23` child for the next implemented visual-object editor API that still lacks a host wrapper, unless the live issue tracker already contains a more specific open child.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
@@ -356,7 +356,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1063`; do not divert back to the closed Phase A safety gate without reopened regression evidence |
+| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1064`; do not divert back to the closed Phase A safety gate without reopened regression evidence |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -373,7 +373,7 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1063` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
+- `#23`: `#1064` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Historical post-D1 execution order through the current E2 queue:
@@ -787,6 +787,7 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 405. `#1061`
 406. `#1062`
 407. `#1063`
+408. `#1064`
 
 Execution guardrails:
 
