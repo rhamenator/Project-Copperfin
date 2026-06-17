@@ -5567,6 +5567,15 @@ VisualAssetEditResult set_visual_object_panel_link(const VisualObjectPanelLinkRe
         request.panel_link ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_allow_header_sizing(const VisualObjectAllowHeaderSizingRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AllowHeaderSizing",
+        "allow-header-sizing",
+        request.allow_header_sizing ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
