@@ -5346,6 +5346,15 @@ VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreview
         request.key_preview ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_mac_desktop(const VisualObjectMacDesktopRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MacDesktop",
+        "Mac desktop",
+        request.mac_desktop ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

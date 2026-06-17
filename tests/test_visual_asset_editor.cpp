@@ -11033,6 +11033,24 @@ void test_set_visual_object_key_preview_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_mac_desktop_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#903",
+        "mac_desktop",
+        "MacDesktop",
+        "MACDESKTOP",
+        "Mac desktop",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_mac_desktop({
+                .path = path,
+                .objects = objects,
+                .mac_desktop = value
+            });
+        });
+}
+
 void test_set_visual_object_max_button_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#889",
@@ -22994,6 +23012,7 @@ int main() {
     test_set_visual_object_auto_center_assigns_logical_state();
     test_set_visual_object_desktop_assigns_logical_state();
     test_set_visual_object_key_preview_assigns_logical_state();
+    test_set_visual_object_mac_desktop_assigns_logical_state();
     test_set_visual_object_max_button_assigns_logical_state();
     test_set_visual_object_min_button_assigns_logical_state();
     test_set_visual_object_movable_assigns_logical_state();
