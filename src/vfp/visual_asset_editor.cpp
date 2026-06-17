@@ -5517,6 +5517,19 @@ VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpCo
         std::to_string(request.help_context_id));
 }
 
+VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDisplayOrientationRequest& request) {
+    if (request.display_orientation < 0) {
+        return {.ok = false, .error = "DisplayOrientation must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DisplayOrientation",
+        "display orientation",
+        std::to_string(request.display_orientation));
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

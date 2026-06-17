@@ -850,6 +850,12 @@ struct VisualObjectHelpContextIdRequest {
     int help_context_id = 0;
 };
 
+struct VisualObjectDisplayOrientationRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int display_orientation = 0;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1696,6 +1702,7 @@ VisualAssetEditResult set_visual_object_whats_this_button(const VisualObjectWhat
 VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsThisHelpRequest& request);
 VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWhatsThisHelpIdRequest& request);
 VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpContextIdRequest& request);
+VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDisplayOrientationRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMarkRequest& request);
