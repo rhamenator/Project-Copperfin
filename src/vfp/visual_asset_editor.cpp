@@ -6666,6 +6666,19 @@ VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRe
         std::to_string(request.list_index));
 }
 
+VisualAssetEditResult set_visual_object_left_column(const VisualObjectLeftColumnRequest& request) {
+    if (request.left_column < 0) {
+        return {.ok = false, .error = "LeftColumn must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "LeftColumn",
+        "left-column",
+        std::to_string(request.left_column));
+}
+
 VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayValueRequest& request) {
     return set_visual_object_text_property(
         request.path,

@@ -1474,6 +1474,12 @@ struct VisualObjectListIndexRequest {
     int list_index = 0;
 };
 
+struct VisualObjectLeftColumnRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int left_column = 0;
+};
+
 struct VisualObjectDisplayValueRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1840,6 +1846,7 @@ VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectInc
 VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSelectRequest& request);
 VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& request);
 VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRequest& request);
+VisualAssetEditResult set_visual_object_left_column(const VisualObjectLeftColumnRequest& request);
 VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayValueRequest& request);
 VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSelectedBackColorRequest& request);
 VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSelectedForeColorRequest& request);
