@@ -183,6 +183,10 @@ void test_parse_launch_arguments() {
         "#1064: launch contract should keep highlight-back-color-object off by default");
     expect(!result.request.highlight_back_color_available,
         "#1064: launch contract should keep highlight back color unavailable by default");
+    expect(!result.request.highlight_fore_color_object,
+        "#1065: launch contract should keep highlight-fore-color-object off by default");
+    expect(!result.request.highlight_fore_color_available,
+        "#1065: launch contract should keep highlight fore color unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -3716,6 +3720,101 @@ void test_parse_launch_arguments_rejects_highlight_back_color_object_ambiguity()
         "#1064: launch contract should reject stray highlight-back-color arguments");
 }
 
+void test_parse_launch_arguments_for_highlight_fore_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--highlight-fore-color-object",
+        "--highlight-fore-color", "65280",
+        "--highlight-fore-color-target-object-name", "lstOrders",
+        "--highlight-fore-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1065: launch contract should parse highlight-fore-color-object requests");
+    expect(result.request.highlight_fore_color_object,
+        "#1065: launch contract should detect --highlight-fore-color-object");
+    expect(result.request.highlight_fore_color_available && result.request.highlight_fore_color == 65280,
+        "#1065: highlight-fore-color-object requests should carry highlight fore color values");
+    expect(result.request.highlight_fore_color_objects.size() == 2U,
+        "#1065: highlight-fore-color-object requests should collect highlight-fore-color target selectors");
+    if (result.request.highlight_fore_color_objects.size() == 2U) {
+        expect(result.request.highlight_fore_color_objects[0].object_name == "lstOrders" &&
+                result.request.highlight_fore_color_objects[0].unique_id.empty(),
+            "#1065: highlight-fore-color-object requests should parse target object-name selectors");
+        expect(result.request.highlight_fore_color_objects[1].object_name.empty() &&
+                result.request.highlight_fore_color_objects[1].unique_id == "two-guid",
+            "#1065: highlight-fore-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_highlight_fore_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--highlight-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1065: launch contract should reject highlight-fore-color-object requests without highlight fore color");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--highlight-fore-color", "65280"
+    });
+    expect(!missing_targets_result.ok,
+        "#1065: launch contract should reject highlight-fore-color-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--highlight-fore-color", "green",
+        "--highlight-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1065: launch contract should reject non-integer highlight-fore-color values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--highlight-fore-color", "-1",
+        "--highlight-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1065: launch contract should reject negative highlight-fore-color values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_highlight_fore_color_object_ambiguity() {
+    const auto highlight_fore_back_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--highlight-back-color-object",
+        "--highlight-fore-color", "65280",
+        "--highlight-fore-color-target-unique-id", "one-guid",
+        "--highlight-back-color", "65280",
+        "--highlight-back-color-target-unique-id", "one-guid"
+    });
+    expect(!highlight_fore_back_result.ok,
+        "#1065: launch contract should reject simultaneous highlight-fore-color-object and highlight-back-color-object requests");
+
+    const auto highlight_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color-object",
+        "--clear-property",
+        "--property-name", "HighlightForeColor",
+        "--highlight-fore-color", "65280",
+        "--highlight-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!highlight_property_result.ok,
+        "#1065: launch contract should reject highlight-fore-color-object combined with property commands");
+
+    const auto stray_highlight_fore_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-fore-color", "65280"
+    });
+    expect(!stray_highlight_fore_color_result.ok,
+        "#1065: launch contract should reject stray highlight-fore-color arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -5059,6 +5158,9 @@ int main() {
     test_parse_launch_arguments_for_highlight_back_color_object();
     test_parse_launch_arguments_rejects_highlight_back_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_highlight_back_color_object_ambiguity();
+    test_parse_launch_arguments_for_highlight_fore_color_object();
+    test_parse_launch_arguments_rejects_highlight_fore_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_highlight_fore_color_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
