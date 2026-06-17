@@ -2630,6 +2630,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.allow_output_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> allow_output_objects;
+        allow_output_objects.reserve(parse_result.request.allow_output_objects.size());
+        for (const auto& allow_output_object : parse_result.request.allow_output_objects) {
+            allow_output_objects.push_back({
+                .record_index = allow_output_object.record_index,
+                .object_name = allow_output_object.object_name,
+                .unique_id = allow_output_object.unique_id
+            });
+        }
+
+        const auto allow_output_result = copperfin::vfp::set_visual_object_allow_output({
+            .path = parse_result.request.path,
+            .objects = allow_output_objects,
+            .allow_output = parse_result.request.allow_output
+        });
+
+        if (!allow_output_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << allow_output_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.ungroup_object) {
         const auto ungroup_result = copperfin::vfp::ungroup_visual_object({
             .path = parse_result.request.path,

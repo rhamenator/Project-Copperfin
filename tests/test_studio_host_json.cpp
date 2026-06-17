@@ -1132,6 +1132,24 @@ void write_synthetic_form_table_for_object_control_box(const std::filesystem::pa
     expect(create_result.ok, "#1074: synthetic SCX table for object control box should be created");
 }
 
+void write_synthetic_form_table_for_object_allow_output(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "ALLOWOUTPUT", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1075: synthetic SCX table for object allow output should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -8831,6 +8849,129 @@ void test_studio_host_json_assigns_control_box_by_stable_selectors(const std::st
     }
 }
 
+void test_studio_host_json_assigns_allow_output_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_allow_output_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path allow_output_path = temp_root / "allow_output.scx";
+    write_synthetic_form_table_for_object_allow_output(allow_output_path);
+    const auto allow_output_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", allow_output_path.string(),
+            "--allow-output-object",
+            "--allow-output", "false",
+            "--allow-output-target-object-name", "frmCustomer",
+            "--allow-output-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(allow_output_process.exit_code == 0,
+        "#1075: host object allow-output assignment should exit successfully");
+    expect(visual_object_property(allow_output_path, "one-guid", "ALLOWOUTPUT") == "false" &&
+            visual_object_property(allow_output_path, "two-guid", "ALLOWOUTPUT") == "false" &&
+            visual_object_property(allow_output_path, "three-guid", "ALLOWOUTPUT") == "false" &&
+            visual_object_property(allow_output_path, "other-guid", "ALLOWOUTPUT") == "true",
+        "#1075: host object allow-output assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_allow_output(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--allow-output-object",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--allow-output-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1075: missing-target host object allow-output assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "ALLOWOUTPUT") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "ALLOWOUTPUT") == "true",
+        "#1075: missing-target host object allow-output assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_allow_output(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--allow-output-object",
+            "--allow-output", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1075: allow-output-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "ALLOWOUTPUT") == "true",
+        "#1075: allow-output-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_allow_output(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--allow-output-object",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1075: allow-output-object without allow-output value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "ALLOWOUTPUT") == "true",
+        "#1075: allow-output-object without allow-output value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_allow_output(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--allow-output-object",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--allow-output-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1075: duplicate-target host object allow-output assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "ALLOWOUTPUT") == "true",
+        "#1075: duplicate-target host object allow-output assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_allow_output(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--allow-output-object",
+            "--control-box-object",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--control-box", "false",
+            "--control-box-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1075: allow-output-object plus control-box-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "ALLOWOUTPUT") == "true",
+        "#1075: allow-output-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -9014,6 +9155,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_dynamic_fore_color_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_closable_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_box_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_allow_output_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

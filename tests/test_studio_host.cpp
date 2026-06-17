@@ -223,6 +223,10 @@ void test_parse_launch_arguments() {
         "#1074: launch contract should keep control-box-object off by default");
     expect(!result.request.control_box_available,
         "#1074: launch contract should keep control box unavailable by default");
+    expect(!result.request.allow_output_object,
+        "#1075: launch contract should keep allow-output-object off by default");
+    expect(!result.request.allow_output_available,
+        "#1075: launch contract should keep allow output unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4636,6 +4640,92 @@ void test_parse_launch_arguments_rejects_control_box_object_ambiguity() {
         "#1074: launch contract should reject stray control-box arguments");
 }
 
+void test_parse_launch_arguments_for_allow_output_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--allow-output-object",
+        "--allow-output", "false",
+        "--allow-output-target-object-name", "frmCustomer",
+        "--allow-output-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1075: launch contract should parse allow-output-object requests");
+    expect(result.request.allow_output_object,
+        "#1075: launch contract should detect --allow-output-object");
+    expect(result.request.allow_output_available && !result.request.allow_output,
+        "#1075: allow-output-object requests should carry allow output state");
+    expect(result.request.allow_output_objects.size() == 2U,
+        "#1075: allow-output-object requests should collect allow-output target selectors");
+    if (result.request.allow_output_objects.size() == 2U) {
+        expect(result.request.allow_output_objects[0].object_name == "frmCustomer" &&
+                result.request.allow_output_objects[0].unique_id.empty(),
+            "#1075: allow-output-object requests should parse target object-name selectors");
+        expect(result.request.allow_output_objects[1].object_name.empty() &&
+                result.request.allow_output_objects[1].unique_id == "two-guid",
+            "#1075: allow-output-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_allow_output_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output-object",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1075: launch contract should reject allow-output-object requests without allow output state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output-object",
+        "--allow-output", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1075: launch contract should reject allow-output-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output-object",
+        "--allow-output", "sometimes",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1075: launch contract should reject invalid allow-output boolean values");
+}
+
+void test_parse_launch_arguments_rejects_allow_output_object_ambiguity() {
+    const auto allow_output_control_box_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output-object",
+        "--control-box-object",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid",
+        "--control-box", "false",
+        "--control-box-target-unique-id", "one-guid"
+    });
+    expect(!allow_output_control_box_result.ok,
+        "#1075: launch contract should reject simultaneous allow-output-object and control-box-object requests");
+
+    const auto allow_output_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output-object",
+        "--clear-property",
+        "--property-name", "AllowOutput",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!allow_output_property_result.ok,
+        "#1075: launch contract should reject allow-output-object combined with property commands");
+
+    const auto stray_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-output", "false"
+    });
+    expect(!stray_allow_output_result.ok,
+        "#1075: launch contract should reject stray allow-output arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6009,6 +6099,9 @@ int main() {
     test_parse_launch_arguments_for_control_box_object();
     test_parse_launch_arguments_rejects_control_box_object_invalid_inputs();
     test_parse_launch_arguments_rejects_control_box_object_ambiguity();
+    test_parse_launch_arguments_for_allow_output_object();
+    test_parse_launch_arguments_rejects_allow_output_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_allow_output_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
