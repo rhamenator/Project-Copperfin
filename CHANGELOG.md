@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#907 selected visual object clip-controls assignment shipped: designer commands can assign caller-provided logical `ClipControls` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#906 selected visual object auto-size assignment shipped: designer commands can assign caller-provided logical `AutoSize` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 
 ## 2026-06-16

@@ -5337,6 +5337,15 @@ VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequ
         request.auto_size ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ClipControls",
+        "clip-controls",
+        request.clip_controls ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

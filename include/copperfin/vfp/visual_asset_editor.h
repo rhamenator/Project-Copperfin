@@ -736,6 +736,12 @@ struct VisualObjectAutoSizeRequest {
     bool auto_size = false;
 };
 
+struct VisualObjectClipControlsRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool clip_controls = false;
+};
+
 struct VisualObjectDesktopRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1467,6 +1473,7 @@ VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableReque
 VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBoxRequest& request);
 VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenterRequest& request);
 VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequest& request);
+VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request);
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request);
 VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreviewRequest& request);
 VisualAssetEditResult set_visual_object_mac_desktop(const VisualObjectMacDesktopRequest& request);
