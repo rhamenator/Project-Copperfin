@@ -5328,6 +5328,15 @@ VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenter
         request.auto_center ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Desktop",
+        "desktop",
+        request.desktop ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#901 selected visual object desktop assignment shipped: designer commands can assign caller-provided logical `Desktop` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#900 selected visual object auto-center assignment shipped: designer commands can assign caller-provided logical `AutoCenter` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#899 selected visual object WhatsThis-help-ID assignment shipped: designer commands can assign caller-provided non-negative numeric `WhatsThisHelpID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#898 selected visual object WhatsThis-help assignment shipped: designer commands can assign caller-provided logical `WhatsThisHelp` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
