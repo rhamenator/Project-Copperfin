@@ -8862,6 +8862,8 @@ void test_set_visual_object_tab_order_assigns_sequential_indexes() {
         .starting_tab_index = 5
     });
     expect(tab_result.ok, "#793: tab order should support mixed selectors in caller order");
+    expect(tab_result.affected_object_count == 3U,
+        "#1000: successful tab-order assignment should report affected object count");
     expect(tab_index("two-guid") == "5" &&
             tab_index("one-guid") == "6" &&
             tab_index("three-guid") == "7" &&
@@ -8897,6 +8899,8 @@ void test_set_visual_object_tab_order_assigns_sequential_indexes() {
         .starting_tab_index = 1
     });
     expect(!tab_result.ok, "#793: tab order should reject empty selections");
+    expect(tab_result.affected_object_count == 0U,
+        "#1000: failed tab-order assignment should report zero affected objects");
     expect(tab_state() == committed_state, "#793: empty-selection failures should not mutate tab indexes");
 
     tab_result = copperfin::vfp::set_visual_object_tab_order({
@@ -9008,6 +9012,8 @@ void test_set_visual_object_tab_stop_assigns_logical_state() {
         .tab_stop = false
     });
     expect(tab_result.ok, "#794: tab-stop assignment should support mixed selectors");
+    expect(tab_result.affected_object_count == 2U,
+        "#1000: successful tab-stop assignment should report affected object count");
     expect(tab_stop("one-guid") == ".F." &&
             tab_stop("two-guid") == ".F." &&
             tab_stop("three-guid") == ".F." &&
@@ -9041,6 +9047,8 @@ void test_set_visual_object_tab_stop_assigns_logical_state() {
         .tab_stop = true
     });
     expect(!tab_result.ok, "#794: tab-stop assignment should reject empty selections");
+    expect(tab_result.affected_object_count == 0U,
+        "#1000: failed tab-stop assignment should report zero affected objects");
     expect(tab_stop_state() == committed_state, "#794: empty-selection failures should not mutate tab-stop states");
 
     tab_result = copperfin::vfp::set_visual_object_tab_stop({
