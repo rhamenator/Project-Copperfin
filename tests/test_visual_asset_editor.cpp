@@ -11051,6 +11051,24 @@ void test_set_visual_object_dockable_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_continuous_scroll_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#909",
+        "continuous_scroll",
+        "ContinuousScroll",
+        "CONTINUOUSSCROLL",
+        "continuous-scroll",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_continuous_scroll({
+                .path = path,
+                .objects = objects,
+                .continuous_scroll = value
+            });
+        });
+}
+
 void test_set_visual_object_desktop_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#901",
@@ -23113,6 +23131,7 @@ int main() {
     test_set_visual_object_auto_size_assigns_logical_state();
     test_set_visual_object_clip_controls_assigns_logical_state();
     test_set_visual_object_dockable_assigns_logical_state();
+    test_set_visual_object_continuous_scroll_assigns_logical_state();
     test_set_visual_object_desktop_assigns_logical_state();
     test_set_visual_object_key_preview_assigns_logical_state();
     test_set_visual_object_mac_desktop_assigns_logical_state();

@@ -748,6 +748,12 @@ struct VisualObjectDockableRequest {
     bool dockable = false;
 };
 
+struct VisualObjectContinuousScrollRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool continuous_scroll = false;
+};
+
 struct VisualObjectDesktopRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1481,6 +1487,7 @@ VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenter
 VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequest& request);
 VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request);
 VisualAssetEditResult set_visual_object_dockable(const VisualObjectDockableRequest& request);
+VisualAssetEditResult set_visual_object_continuous_scroll(const VisualObjectContinuousScrollRequest& request);
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request);
 VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreviewRequest& request);
 VisualAssetEditResult set_visual_object_mac_desktop(const VisualObjectMacDesktopRequest& request);

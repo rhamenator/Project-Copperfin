@@ -5355,6 +5355,15 @@ VisualAssetEditResult set_visual_object_dockable(const VisualObjectDockableReque
         request.dockable ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_continuous_scroll(const VisualObjectContinuousScrollRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ContinuousScroll",
+        "continuous-scroll",
+        request.continuous_scroll ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
