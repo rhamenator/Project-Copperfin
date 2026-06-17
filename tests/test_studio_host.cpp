@@ -1,5 +1,6 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -44,6 +45,21 @@ std::vector<std::uint8_t> make_vfp_header() {
     bytes[28] = 0x01U;
     bytes[29] = 0x03U;
     return bytes;
+}
+
+void write_synthetic_form_table_with_data_environment(const std::filesystem::path& path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Dataenvironment", "dataenvironment", ""},
+        {"frmCustomer", "form", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, records);
+    expect(create_result.ok, "#966: synthetic SCX table with DataEnvironment record should be created");
 }
 
 void test_parse_launch_arguments() {
@@ -271,6 +287,36 @@ void test_open_document_attaches_default_designer_contexts() {
                "#965: inferred data-environment contexts should include data-environment builders");
     }
 
+    const fs::path selected_record_path = temp_dir / "selected_record.scx";
+    write_synthetic_form_table_with_data_environment(selected_record_path);
+    const auto data_environment_record_result = copperfin::studio::open_document({
+        .path = selected_record_path.string(),
+        .record_index = 0U
+    });
+    expect(data_environment_record_result.ok, "#966: synthetic form should open for selected-record context checks");
+    expect(data_environment_record_result.document.designer_contexts.size() == 1U,
+           "#966: selected DataEnvironment records should expose one inferred designer context");
+    if (!data_environment_record_result.document.designer_contexts.empty()) {
+        const auto& context = data_environment_record_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#966: selected DataEnvironment records should infer the data-environment designer context");
+        expect(has_descriptor_id(context.builders, "data-environment-builder"),
+               "#966: selected DataEnvironment records should include data-environment builders");
+    }
+
+    const auto visual_record_result = copperfin::studio::open_document({
+        .path = selected_record_path.string(),
+        .record_index = 1U
+    });
+    expect(visual_record_result.ok, "#966: synthetic form should open for visual selected-record context checks");
+    expect(visual_record_result.document.designer_contexts.size() == 1U,
+           "#966: visual selected records should preserve the generic form default context count");
+    if (!visual_record_result.document.designer_contexts.empty()) {
+        expect(visual_record_result.document.designer_contexts.front().selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::visual_object,
+               "#966: non-DataEnvironment selected records should preserve visual-object defaults");
+    }
+
     const auto multi_override_result = copperfin::studio::open_document({
         .path = (temp_dir / "customer.scx").string(),
         .designer_selection_contexts = {
@@ -295,19 +341,19 @@ void test_open_document_attaches_default_designer_contexts() {
     }
 
     const auto override_result = copperfin::studio::open_document({
-        .path = (temp_dir / "customer.scx").string(),
-        .symbol = "Dataenvironment.OpenTables",
+        .path = selected_record_path.string(),
+        .record_index = 0U,
         .designer_selection_contexts = {
             copperfin::studio::StudioEditorSelectionContext::report_expression
         }
     });
     expect(override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
     expect(override_result.document.designer_contexts.size() == 1U,
-           "#965: explicit selection contexts should override data-environment symbol-inferred context defaults");
+           "#966: explicit selection contexts should override selected-record context defaults");
     if (override_result.document.designer_contexts.size() == 1U) {
         expect(override_result.document.designer_contexts[0].selection_context ==
                    copperfin::studio::StudioEditorSelectionContext::report_expression,
-               "#965: explicit report_expression contexts should win over inferred data-environment contexts");
+               "#966: explicit report_expression contexts should win over selected-record data-environment contexts");
         expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-report-expression"),
                "#962: explicit report_expression contexts should include expression-editor actions");
     }

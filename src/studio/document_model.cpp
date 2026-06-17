@@ -150,6 +150,32 @@ bool has_data_environment_symbol(std::string_view symbol) {
     return owner == "dataenvironment" || owner == "data_environment";
 }
 
+bool is_data_environment_token(std::string_view value) {
+    const std::string normalized = lowercase_copy(trim_copy(std::string(value)));
+    return normalized == "dataenvironment" || normalized == "data_environment";
+}
+
+bool selected_record_is_data_environment(const StudioDocumentModel& document, std::size_t record_index) {
+    if (!document.table_preview_available) {
+        return false;
+    }
+
+    const auto record = std::find_if(
+        document.table_preview.records.begin(),
+        document.table_preview.records.end(),
+        [&](const vfp::DbfRecord& preview_record) {
+            return preview_record.record_index == record_index;
+        });
+    if (record == document.table_preview.records.end()) {
+        return false;
+    }
+
+    return is_data_environment_token(value_or_empty(*record, "OBJNAME")) ||
+        is_data_environment_token(value_or_empty(*record, "NAME")) ||
+        is_data_environment_token(value_or_empty(*record, "BASECLASS")) ||
+        is_data_environment_token(value_or_empty(*record, "CLASS"));
+}
+
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
@@ -190,9 +216,19 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
 }
 
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_request(
-    StudioAssetKind kind,
+    const StudioDocumentModel& document,
+    std::size_t record_index,
     std::string_view symbol) {
+    const StudioAssetKind kind = document.kind;
     if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_data_environment_symbol(symbol)) {
+        return {
+            studio_designer_context_for_selection({
+                .selection_context = StudioEditorSelectionContext::data_environment
+            })
+        };
+    }
+    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) &&
+        selected_record_is_data_environment(document, record_index)) {
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::data_environment
@@ -521,9 +557,6 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.selection_column = request.column;
     document.selection_record_index = request.record_index;
     document.inspection = inspection;
-    document.designer_contexts = request.designer_selection_contexts.empty()
-        ? default_designer_contexts_for_request(document.kind, request.symbol)
-        : requested_designer_contexts(request.designer_selection_contexts);
     if (document.kind == StudioAssetKind::program) {
         document.static_diagnostics = runtime::analyze_prg_file(request.path);
     }
@@ -538,6 +571,10 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             document.table_preview = std::move(table_result.table);
         }
     }
+
+    document.designer_contexts = request.designer_selection_contexts.empty()
+        ? default_designer_contexts_for_request(document, request.record_index, request.symbol)
+        : requested_designer_contexts(request.designer_selection_contexts);
 
     return {.ok = true, .document = document};
 }

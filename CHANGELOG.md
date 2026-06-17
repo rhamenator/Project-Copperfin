@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#966 selected-record DataEnvironment inference shipped: form/class launches targeting a parsed DataEnvironment record now infer `data_environment` designer context when no explicit override or symbol inference applies.
 - E2/#965 Studio DataEnvironment symbol inference shipped: form/class launches targeting DataEnvironment methods now infer `data_environment` designer contexts before generic visual-method fallback.
 - E2/#964 Studio launch selection metadata shipped: opened Studio documents and `copperfin_studio_host --json` now preserve launch symbol, line, column, and record-index selection metadata.
 - E2/#963 Studio host method-symbol context inference shipped: form/class launches with method-like symbols now infer `visual_method` designer contexts unless an explicit `--selection-context` override is supplied.
