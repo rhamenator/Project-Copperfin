@@ -111,6 +111,7 @@ struct StudioObjectSnapshot {
     std::string baseclass_name{};
     std::size_t baseclass_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t baseclass_name_memo_block_number = 0;
+    std::size_t child_count = 0;
     std::string menu_prompt{};
     std::size_t menu_prompt_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t menu_prompt_memo_block_number = 0;

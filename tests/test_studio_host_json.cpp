@@ -135,7 +135,8 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     };
     const std::vector<std::vector<std::string>> records{
         {"Dataenvironment", "de-1", "", "", "dataenvironment"},
-        {"frmCustomer", "form-1", "", "customerform", "form"}
+        {"frmCustomer", "form-1", "", "customerform", "form"},
+        {"cmdSave", "button-1", "frmCustomer", "commandbutton", "commandbutton"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
@@ -341,6 +342,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#968: selected object properties should include later direct DBF fields");
         expect_contains(selected_object_json, "\"value\": \"form\"",
                         "#968: selected object properties should include selected baseclass values");
+        expect_contains(selected_object_json, "\"childCount\": 1",
+                        "#970: selected parent object summaries should expose direct child counts");
     }
     const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
     expect(objects_begin != std::string::npos,
@@ -357,6 +360,20 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#969: full object entries should expose class names directly");
         expect_contains(objects_json, "\"baseclassName\": \"form\"",
                         "#969: full object entries should expose baseclass names directly");
+        const auto child_object_begin = objects_json.find("\"objectName\": \"cmdSave\"");
+        expect(child_object_begin != std::string::npos,
+               "#970: synthetic SCX object array should include the child control object");
+        if (child_object_begin != std::string::npos) {
+            const auto child_properties_begin = objects_json.find("\"properties\": [", child_object_begin);
+            const auto child_object_json =
+                child_properties_begin == std::string::npos
+                    ? objects_json.substr(child_object_begin)
+                    : objects_json.substr(child_object_begin, child_properties_begin - child_object_begin);
+            expect_contains(child_object_json, "\"parentName\": \"frmCustomer\"",
+                            "#970: child object entries should expose their parent object name");
+            expect_contains(child_object_json, "\"childCount\": 0",
+                            "#970: leaf child object entries should expose zero child count");
+        }
     }
 
     if (failures == 0) {

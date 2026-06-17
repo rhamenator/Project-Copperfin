@@ -94,6 +94,15 @@ FieldSelection first_non_empty_selection(const vfp::DbfRecord& record, std::init
     return {};
 }
 
+std::string lowercase_ascii(std::string_view value) {
+    std::string lowered;
+    lowered.reserve(value.size());
+    for (const unsigned char ch : value) {
+        lowered.push_back(static_cast<char>(std::tolower(ch)));
+    }
+    return lowered;
+}
+
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
@@ -529,6 +538,21 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
         }
 
         objects.push_back(std::move(snapshot));
+    }
+
+    for (auto& object : objects) {
+        if (object.object_name.empty()) {
+            continue;
+        }
+
+        const std::string normalized_object_name = lowercase_ascii(object.object_name);
+        object.child_count = static_cast<std::size_t>(std::count_if(
+            objects.begin(),
+            objects.end(),
+            [&](const StudioObjectSnapshot& candidate) {
+                return !candidate.parent_name.empty() &&
+                    lowercase_ascii(candidate.parent_name) == normalized_object_name;
+            }));
     }
 
     return objects;
