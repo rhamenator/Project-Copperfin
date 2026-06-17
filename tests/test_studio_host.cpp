@@ -141,6 +141,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.column_count_available, "#1051: launch contract should keep column count unavailable by default");
     expect(!result.request.style_object, "#1052: launch contract should keep style-object off by default");
     expect(!result.request.style_available, "#1052: launch contract should keep style unavailable by default");
+    expect(!result.request.list_index_object, "#1053: launch contract should keep list-index-object off by default");
+    expect(!result.request.list_index_available, "#1053: launch contract should keep list index unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2555,6 +2557,100 @@ void test_parse_launch_arguments_rejects_style_object_ambiguity() {
         "#1052: launch contract should reject stray style arguments");
 }
 
+void test_parse_launch_arguments_for_list_index_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--list-index-object",
+        "--list-index", "3",
+        "--list-index-target-object-name", "cboCustomer",
+        "--list-index-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1053: launch contract should parse list-index-object requests");
+    expect(result.request.list_index_object, "#1053: launch contract should detect --list-index-object");
+    expect(result.request.list_index_available && result.request.list_index == 3,
+        "#1053: list-index-object requests should carry list index values");
+    expect(result.request.list_index_objects.size() == 2U,
+        "#1053: list-index-object requests should collect list index target selectors");
+    if (result.request.list_index_objects.size() == 2U) {
+        expect(result.request.list_index_objects[0].object_name == "cboCustomer" &&
+                result.request.list_index_objects[0].unique_id.empty(),
+            "#1053: list-index-object requests should parse target object-name selectors");
+        expect(result.request.list_index_objects[1].object_name.empty() &&
+                result.request.list_index_objects[1].unique_id == "two-guid",
+            "#1053: list-index-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_list_index_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--list-index-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1053: launch contract should reject list-index-object requests without list index");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--list-index", "3"
+    });
+    expect(!missing_targets_result.ok,
+        "#1053: launch contract should reject list-index-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--list-index", "selected",
+        "--list-index-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1053: launch contract should reject non-integer list-index values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--list-index", "-1",
+        "--list-index-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1053: launch contract should reject negative list-index values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_list_index_object_ambiguity() {
+    const auto index_style_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--style-object",
+        "--list-index", "3",
+        "--list-index-target-unique-id", "one-guid",
+        "--style", "2",
+        "--style-target-unique-id", "one-guid"
+    });
+    expect(!index_style_result.ok,
+        "#1053: launch contract should reject simultaneous list-index-object and style-object requests");
+
+    const auto index_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index-object",
+        "--clear-property",
+        "--property-name", "ListIndex",
+        "--list-index", "3",
+        "--list-index-target-unique-id", "one-guid"
+    });
+    expect(!index_property_result.ok,
+        "#1053: launch contract should reject list-index-object combined with property commands");
+
+    const auto stray_list_index_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-index", "3"
+    });
+    expect(!stray_list_index_result.ok,
+        "#1053: launch contract should reject stray list-index arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3862,6 +3958,9 @@ int main() {
     test_parse_launch_arguments_for_style_object();
     test_parse_launch_arguments_rejects_style_object_invalid_inputs();
     test_parse_launch_arguments_rejects_style_object_ambiguity();
+    test_parse_launch_arguments_for_list_index_object();
+    test_parse_launch_arguments_rejects_list_index_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_list_index_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

@@ -736,6 +736,24 @@ void write_synthetic_form_table_for_object_style(const std::filesystem::path& fo
     expect(create_result.ok, "#1052: synthetic SCX table for object style should be created");
 }
 
+void write_synthetic_form_table_for_object_list_index(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "LISTINDEX", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "cboCustomer", "one-guid", "0"},
+        {"lstOrders", "lstOrders", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "0"},
+        {"cboOther", "cboOther", "other-guid", "2"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1053: synthetic SCX table for object list index should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -5439,6 +5457,146 @@ void test_studio_host_json_assigns_style_by_stable_selectors(const std::string& 
     }
 }
 
+void test_studio_host_json_assigns_list_index_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_list_index_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path list_index_path = temp_root / "list_index.scx";
+    write_synthetic_form_table_for_object_list_index(list_index_path);
+    const auto list_index_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", list_index_path.string(),
+            "--list-index-object",
+            "--list-index", "3",
+            "--list-index-target-object-name", "cboCustomer",
+            "--list-index-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(list_index_process.exit_code == 0,
+        "#1053: host object list-index assignment should exit successfully");
+    expect(visual_object_property(list_index_path, "one-guid", "LISTINDEX") == "3" &&
+            visual_object_property(list_index_path, "two-guid", "LISTINDEX") == "3" &&
+            visual_object_property(list_index_path, "three-guid", "LISTINDEX") == "0" &&
+            visual_object_property(list_index_path, "other-guid", "LISTINDEX") == "2",
+        "#1053: host object list-index assignment should assign selected numeric values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_list_index(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--list-index-object",
+            "--list-index", "3",
+            "--list-index-target-unique-id", "one-guid",
+            "--list-index-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1053: missing-target host object list-index assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "LISTINDEX") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "LISTINDEX") == "1",
+        "#1053: missing-target host object list-index assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_list_index(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--list-index-object",
+            "--list-index", "3",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1053: list-index-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "LISTINDEX") == "0",
+        "#1053: list-index-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_list_index(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--list-index-object",
+            "--list-index-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1053: list-index-object without list-index value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "LISTINDEX") == "0",
+        "#1053: list-index-object without list-index value should not mutate the asset");
+
+    const fs::path negative_path = temp_root / "negative.scx";
+    write_synthetic_form_table_for_object_list_index(negative_path);
+    const auto negative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_path.string(),
+            "--list-index-object",
+            "--list-index", "-1",
+            "--list-index-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_process.exit_code == 2,
+        "#1053: negative list-index values should fail during launch parsing");
+    expect(visual_object_property(negative_path, "one-guid", "LISTINDEX") == "0",
+        "#1053: negative list-index values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_list_index(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--list-index-object",
+            "--list-index", "3",
+            "--list-index-target-unique-id", "one-guid",
+            "--list-index-target-object-name", "cboCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1053: duplicate-target host object list-index assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "LISTINDEX") == "0",
+        "#1053: duplicate-target host object list-index assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_list_index(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--list-index-object",
+            "--style-object",
+            "--list-index", "3",
+            "--list-index-target-unique-id", "one-guid",
+            "--style", "2",
+            "--style-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1053: list-index-object plus style-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "LISTINDEX") == "0",
+        "#1053: list-index-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -5600,6 +5758,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_bound_column_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_column_count_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_style_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_list_index_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
