@@ -342,6 +342,22 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
         expect_contains(selected_object_json, "\"value\": \"form\"",
                         "#968: selected object properties should include selected baseclass values");
     }
+    const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
+    expect(objects_begin != std::string::npos,
+           "#969: Studio host JSON should expose a full object array section");
+    if (objects_begin != std::string::npos) {
+        const auto objects_json = selected_object_process.stdout_text.substr(objects_begin);
+        expect_contains(objects_json, "\"objectName\": \"frmCustomer\"",
+                        "#969: full object entries should expose object names directly");
+        expect_contains(objects_json, "\"uniqueId\": \"form-1\"",
+                        "#969: full object entries should expose unique ids directly");
+        expect_contains(objects_json, "\"parentName\": \"\"",
+                        "#969: full object entries should expose parent names directly");
+        expect_contains(objects_json, "\"className\": \"customerform\"",
+                        "#969: full object entries should expose class names directly");
+        expect_contains(objects_json, "\"baseclassName\": \"form\"",
+                        "#969: full object entries should expose baseclass names directly");
+    }
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
