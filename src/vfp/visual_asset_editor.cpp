@@ -5730,6 +5730,19 @@ VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderCol
         std::to_string(request.border_color));
 }
 
+VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLineColorRequest& request) {
+    if (request.grid_line_color < 0) {
+        return {.ok = false, .error = "GridLineColor must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "GridLineColor",
+        "grid-line-color",
+        std::to_string(request.grid_line_color));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};

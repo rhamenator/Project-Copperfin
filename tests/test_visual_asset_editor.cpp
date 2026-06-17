@@ -11779,6 +11779,29 @@ void test_set_visual_object_border_color_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_grid_line_color_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#917",
+        "grid_line_color",
+        "GridLineColor",
+        "GRIDLINECOLOR",
+        "grid-line-color",
+        0,
+        0,
+        16777215,
+        8421504,
+        255,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_grid_line_color({
+                .path = path,
+                .objects = objects,
+                .grid_line_color = value
+            });
+        });
+}
+
 void test_set_visual_object_special_effect_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#864",
@@ -23309,6 +23332,7 @@ int main() {
     test_set_visual_object_border_style_assigns_numeric_value();
     test_set_visual_object_border_width_assigns_numeric_value();
     test_set_visual_object_border_color_assigns_numeric_value();
+    test_set_visual_object_grid_line_color_assigns_numeric_value();
     test_set_visual_object_special_effect_assigns_numeric_value();
     test_set_visual_object_curvature_assigns_numeric_value();
     test_set_visual_object_draw_mode_assigns_numeric_value();
