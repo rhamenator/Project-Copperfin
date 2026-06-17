@@ -76,6 +76,7 @@ struct StudioOpenRequest {
     std::string format{};
     std::string row_source{};
     std::string display_value{};
+    std::string dynamic_back_color{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -158,6 +159,7 @@ struct StudioOpenRequest {
     bool fore_color_object = false;
     bool disabled_back_color_object = false;
     bool disabled_fore_color_object = false;
+    bool dynamic_back_color_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -200,6 +202,7 @@ struct StudioOpenRequest {
     bool fore_color_available = false;
     bool disabled_back_color_available = false;
     bool disabled_fore_color_available = false;
+    bool dynamic_back_color_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -243,6 +246,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> fore_color_objects{};
     std::vector<StudioObjectSelector> disabled_back_color_objects{};
     std::vector<StudioObjectSelector> disabled_fore_color_objects{};
+    std::vector<StudioObjectSelector> dynamic_back_color_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
