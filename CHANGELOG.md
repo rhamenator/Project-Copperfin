@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#947 selected visual object list-item-id assignment shipped: designer commands can assign caller-provided non-negative numeric `ListItemID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#946 selected visual object form-set-class assignment shipped: designer commands can assign caller-provided text `FormSetClass` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#945 selected visual object default-file-path assignment shipped: designer commands can assign caller-provided text `DefaultFilePath` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#944 selected visual object initial-selected-alias assignment shipped: designer commands can assign caller-provided text `InitialSelectedAlias` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.

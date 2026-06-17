@@ -5543,6 +5543,19 @@ VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOri
         std::to_string(request.tab_orientation));
 }
 
+VisualAssetEditResult set_visual_object_list_item_id(const VisualObjectListItemIdRequest& request) {
+    if (request.list_item_id < 0) {
+        return {.ok = false, .error = "ListItemID must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ListItemID",
+        "list-item ID",
+        std::to_string(request.list_item_id));
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
