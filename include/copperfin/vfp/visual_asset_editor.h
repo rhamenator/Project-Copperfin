@@ -524,6 +524,13 @@ struct VisualObjectDuplicateBatchRequest {
     std::vector<VisualObjectDuplicateBatchItem> objects;
 };
 
+struct VisualObjectCreatedObject {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
+};
+
 struct VisualObjectDuplicateResult {
     bool ok = false;
     std::string error;
@@ -537,6 +544,7 @@ struct VisualObjectDuplicateBatchResult {
     bool ok = false;
     std::string error;
     std::vector<std::size_t> record_indexes;
+    std::vector<VisualObjectCreatedObject> duplicated_objects;
 };
 
 struct VisualObjectSubtreeDuplicateReplacement {
@@ -578,13 +586,6 @@ struct VisualObjectCreateBatchRequest {
 struct VisualObjectCreateResult {
     bool ok = false;
     std::string error;
-    std::size_t record_index = 0;
-    std::string object_name;
-    std::string unique_id;
-    std::string parent_name;
-};
-
-struct VisualObjectCreatedObject {
     std::size_t record_index = 0;
     std::string object_name;
     std::string unique_id;

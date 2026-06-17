@@ -739,6 +739,15 @@ VisualObjectDuplicateResult failed_visual_object_duplicate_result(std::string er
     };
 }
 
+VisualObjectDuplicateBatchResult failed_visual_object_duplicate_batch_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .record_indexes = {},
+        .duplicated_objects = {}
+    };
+}
+
 VisualObjectDuplicateResult reject_identity_collision(
     const DbfTable& table,
     const std::string& field_name,
@@ -4140,15 +4149,15 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 
 VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDuplicateBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided.", .record_indexes = {}};
+        return failed_visual_object_duplicate_batch_result("No asset path was provided.");
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object duplicates were provided.", .record_indexes = {}};
+        return failed_visual_object_duplicate_batch_result("No visual object duplicates were provided.");
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table.", .record_indexes = {}};
+        return failed_visual_object_duplicate_batch_result("Unable to open the visual asset table.");
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -4164,6 +4173,8 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
 
     std::vector<std::size_t> duplicated_record_indexes;
     duplicated_record_indexes.reserve(request.objects.size());
+    std::vector<VisualObjectCreatedObject> duplicated_objects;
+    duplicated_objects.reserve(request.objects.size());
     for (const auto& object : request.objects) {
         const auto duplicate_result = duplicate_visual_object({
             .path = request.path,
@@ -4176,12 +4187,23 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
         });
         if (!duplicate_result.ok) {
             restore_original_asset();
-            return {.ok = false, .error = duplicate_result.error, .record_indexes = {}};
+            return failed_visual_object_duplicate_batch_result(duplicate_result.error);
         }
         duplicated_record_indexes.push_back(duplicate_result.record_index);
+        duplicated_objects.push_back({
+            .record_index = duplicate_result.record_index,
+            .object_name = duplicate_result.object_name,
+            .unique_id = duplicate_result.unique_id,
+            .parent_name = duplicate_result.parent_name
+        });
     }
 
-    return {.ok = true, .error = {}, .record_indexes = duplicated_record_indexes};
+    return {
+        .ok = true,
+        .error = {},
+        .record_indexes = duplicated_record_indexes,
+        .duplicated_objects = std::move(duplicated_objects)
+    };
 }
 
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request) {
