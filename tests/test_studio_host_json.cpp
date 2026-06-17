@@ -343,6 +343,24 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#968: selected object properties should preserve DBF null flags");
         expect_contains(selected_object_json, "\"value\": \"frmCustomer\"",
                         "#968: selected object properties should include selected object values");
+        const auto objname_property_begin = selected_object_json.find("\"name\": \"OBJNAME\"");
+        expect(objname_property_begin != std::string::npos,
+               "#975: selected object properties should include an OBJNAME property object");
+        if (objname_property_begin != std::string::npos) {
+            const auto objname_property_end = selected_object_json.find("}", objname_property_begin);
+            const auto objname_property_json =
+                objname_property_end == std::string::npos
+                    ? selected_object_json.substr(objname_property_begin)
+                    : selected_object_json.substr(objname_property_begin, objname_property_end - objname_property_begin);
+            expect_contains(objname_property_json, "\"fieldIndex\": 3",
+                            "#975: selected direct-field properties should expose DBF field indexes");
+            expect_contains(objname_property_json, "\"memoBlockNumber\": 0",
+                            "#975: selected direct-field properties should expose memo block provenance");
+            expect_contains(objname_property_json, "\"derivedFromPropertyBlob\": false",
+                            "#975: selected direct-field properties should not be marked as property-blob derived");
+            expect_contains(objname_property_json, "\"sourceLineIndex\": null",
+                            "#975: selected direct-field properties should expose null source line provenance");
+        }
         expect_contains(selected_object_json, "\"name\": \"BASECLASS\"",
                         "#968: selected object properties should include later direct DBF fields");
         expect_contains(selected_object_json, "\"value\": \"form\"",

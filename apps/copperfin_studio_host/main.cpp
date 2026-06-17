@@ -77,6 +77,14 @@ void print_json_string_view(std::string_view value) {
     print_json_string(std::string(value));
 }
 
+void print_json_line_index_or_null(std::size_t line_index) {
+    if (line_index == copperfin::studio::StudioObjectMissingLineIndex) {
+        std::cout << "null";
+    } else {
+        std::cout << line_index;
+    }
+}
+
 void print_json_editor_contexts(const std::vector<copperfin::studio::StudioEditorSelectionContext>& contexts) {
     std::cout << "[";
     for (std::size_t index = 0; index < contexts.size(); ++index) {
@@ -231,6 +239,11 @@ void print_json_object_properties(
         print_json_string(std::string(1U, property.type));
         std::cout << ", \"isNull\": " << (property.is_null ? "true" : "false") << ", \"value\": ";
         print_json_string(property.value);
+        std::cout << ", \"fieldIndex\": " << property.field_index;
+        std::cout << ", \"memoBlockNumber\": " << property.memo_block_number;
+        std::cout << ", \"derivedFromPropertyBlob\": " << (property.derived_from_property_blob ? "true" : "false");
+        std::cout << ", \"sourceLineIndex\": ";
+        print_json_line_index_or_null(property.source_line_index);
         std::cout << "}";
         if ((property_index + 1U) != properties.size()) {
             std::cout << ",";
