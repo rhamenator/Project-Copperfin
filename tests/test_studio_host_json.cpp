@@ -390,6 +390,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#980: selected parent object summaries should expose direct child record links");
         expect_contains(selected_object_json, "\"parentRecordIndex\": null",
                         "#971: root selected object summaries should expose null parent record links");
+        expect_contains(selected_object_json, "\"ancestorRecordIndexes\": []",
+                        "#985: root selected object summaries should expose empty ancestor record links");
         expect_contains(selected_object_json, "\"objectPath\": \"frmCustomer\"",
                         "#972: root selected object summaries should expose direct object paths");
         expect_contains(selected_object_json, "\"objectDepth\": 0",
@@ -438,6 +440,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#970: child object entries should expose their parent object name");
             expect_contains(child_object_json, "\"parentRecordIndex\": 1",
                             "#971: child object entries should expose resolved parent record links");
+            expect_contains(child_object_json, "\"ancestorRecordIndexes\": [1]",
+                            "#985: child object entries should expose root-to-parent ancestor record links");
             expect_contains(child_object_json, "\"childCount\": 0",
                             "#970: leaf child object entries should expose zero child count");
             expect_contains(child_object_json, "\"childRecordIndexes\": []",
@@ -473,6 +477,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         : objects_json.substr(sibling_entry_begin, sibling_properties_begin - sibling_entry_begin);
             expect_contains(sibling_object_json, "\"parentRecordIndex\": 1",
                             "#984: second child object entries should preserve resolved parent links");
+            expect_contains(sibling_object_json, "\"ancestorRecordIndexes\": [1]",
+                            "#985: second child object entries should expose root-to-parent ancestor record links");
             expect_contains(sibling_object_json, "\"objectDepth\": 1",
                             "#984: second child object entries should expose nested object tree depth");
             expect_contains(sibling_object_json, "\"siblingIndex\": 1",

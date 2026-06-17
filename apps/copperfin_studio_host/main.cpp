@@ -305,6 +305,9 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << indent << "  \"parentRecordIndex\": ";
     print_json_record_index_or_null(object.parent_record_index);
     std::cout << ",\n";
+    std::cout << indent << "  \"ancestorRecordIndexes\": ";
+    print_json_record_index_array(object.ancestor_record_indexes);
+    std::cout << ",\n";
     std::cout << indent << "  \"className\": ";
     print_json_string(object.class_name);
     std::cout << ",\n";
@@ -968,6 +971,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << ",\n";
         std::cout << "        \"parentRecordIndex\": ";
         print_json_record_index_or_null(object.parent_record_index);
+        std::cout << ",\n";
+        std::cout << "        \"ancestorRecordIndexes\": ";
+        print_json_record_index_array(object.ancestor_record_indexes);
         std::cout << ",\n";
         std::cout << "        \"className\": ";
         print_json_string(object.class_name);

@@ -364,6 +364,23 @@ std::size_t build_object_depth(
     return depth;
 }
 
+std::vector<std::size_t> build_ancestor_record_indexes(
+    const StudioObjectSnapshot& object,
+    const std::vector<StudioObjectSnapshot>& objects) {
+    std::vector<std::size_t> record_indexes;
+    std::size_t parent_record_index = object.parent_record_index;
+    while (parent_record_index != StudioObjectMissingRecordIndex && record_indexes.size() < objects.size()) {
+        const auto* parent = find_object_by_record_index(objects, parent_record_index);
+        if (parent == nullptr) {
+            break;
+        }
+        record_indexes.push_back(parent->record_index);
+        parent_record_index = parent->parent_record_index;
+    }
+    std::reverse(record_indexes.begin(), record_indexes.end());
+    return record_indexes;
+}
+
 void assign_sibling_order(
     StudioObjectSnapshot& object,
     const std::vector<StudioObjectSnapshot>& objects) {
@@ -646,6 +663,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
     for (auto& object : objects) {
         object.object_depth = build_object_depth(object, objects);
         object.object_path = build_object_path(object, objects);
+        object.ancestor_record_indexes = build_ancestor_record_indexes(object, objects);
         assign_sibling_order(object, objects);
         object.child_record_indexes.clear();
         for (const auto& candidate : objects) {

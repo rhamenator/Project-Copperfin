@@ -111,6 +111,7 @@ struct StudioObjectSnapshot {
     std::size_t parent_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t parent_name_memo_block_number = 0;
     std::size_t parent_record_index = StudioObjectMissingRecordIndex;
+    std::vector<std::size_t> ancestor_record_indexes{};
     std::string class_name{};
     std::size_t class_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t class_name_memo_block_number = 0;
