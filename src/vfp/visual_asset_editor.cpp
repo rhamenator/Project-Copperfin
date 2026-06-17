@@ -5530,6 +5530,19 @@ VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDi
         std::to_string(request.display_orientation));
 }
 
+VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOrientationRequest& request) {
+    if (request.tab_orientation < 0) {
+        return {.ok = false, .error = "TabOrientation must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "TabOrientation",
+        "tab orientation",
+        std::to_string(request.tab_orientation));
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

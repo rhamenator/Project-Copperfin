@@ -11390,6 +11390,29 @@ void test_set_visual_object_display_orientation_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_tab_orientation_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#943",
+        "tab_orientation",
+        "TabOrientation",
+        "TABORIENTATION",
+        "tab orientation",
+        0,
+        1,
+        42,
+        7,
+        99,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_tab_orientation({
+                .path = path,
+                .objects = objects,
+                .tab_orientation = value
+            });
+        });
+}
+
 void test_set_visual_object_hide_selection_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#877",
@@ -23848,6 +23871,7 @@ int main() {
     test_set_visual_object_whats_this_help_id_assigns_numeric_value();
     test_set_visual_object_help_context_id_assigns_numeric_value();
     test_set_visual_object_display_orientation_assigns_numeric_value();
+    test_set_visual_object_tab_orientation_assigns_numeric_value();
     test_set_visual_object_hide_selection_assigns_logical_state();
     test_set_visual_object_allow_cell_selection_assigns_logical_state();
     test_set_visual_object_delete_mark_assigns_logical_state();
