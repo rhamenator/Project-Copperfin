@@ -257,6 +257,11 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << indent << "  \"subtitle\": ";
     print_json_string(object.subtitle);
     std::cout << ",\n";
+    std::cout << indent << "  \"objectTypeCode\": " << object.objtype_code << ",\n";
+    std::cout << indent << "  \"objectCode\": " << object.objcode_code << ",\n";
+    std::cout << indent << "  \"platform\": ";
+    print_json_string(object.platform);
+    std::cout << ",\n";
     std::cout << indent << "  \"objectName\": ";
     print_json_string(object.object_name);
     std::cout << ",\n";
@@ -862,6 +867,11 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << ",\n";
         std::cout << "        \"subtitle\": ";
         print_json_string(object.subtitle);
+        std::cout << ",\n";
+        std::cout << "        \"objectTypeCode\": " << object.objtype_code << ",\n";
+        std::cout << "        \"objectCode\": " << object.objcode_code << ",\n";
+        std::cout << "        \"platform\": ";
+        print_json_string(object.platform);
         std::cout << ",\n";
         std::cout << "        \"objectName\": ";
         print_json_string(object.object_name);

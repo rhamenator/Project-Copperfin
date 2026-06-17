@@ -127,6 +127,9 @@ void write_synthetic_form_asset(const std::filesystem::path& form_path) {
 
 void write_synthetic_form_table_with_objects(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "PLATFORM", .type = 'C', .length = 12U},
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U},
         {.name = "PARENT", .type = 'C', .length = 24U},
@@ -134,9 +137,9 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
         {.name = "BASECLASS", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"Dataenvironment", "de-1", "", "", "dataenvironment"},
-        {"frmCustomer", "form-1", "", "customerform", "form"},
-        {"cmdSave", "button-1", "frmCustomer", "commandbutton", "commandbutton"}
+        {"2", "0", "WINDOWS", "Dataenvironment", "de-1", "", "", "dataenvironment"},
+        {"1", "0", "WINDOWS", "frmCustomer", "form-1", "", "customerform", "form"},
+        {"4", "2", "WINDOWS", "cmdSave", "button-1", "frmCustomer", "commandbutton", "commandbutton"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
@@ -348,6 +351,12 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#971: root selected object summaries should expose null parent record links");
         expect_contains(selected_object_json, "\"objectPath\": \"frmCustomer\"",
                         "#972: root selected object summaries should expose direct object paths");
+        expect_contains(selected_object_json, "\"objectTypeCode\": 1",
+                        "#973: selected object summaries should expose raw object type codes");
+        expect_contains(selected_object_json, "\"objectCode\": 0",
+                        "#973: selected object summaries should expose raw object codes");
+        expect_contains(selected_object_json, "\"platform\": \"WINDOWS\"",
+                        "#973: selected object summaries should expose parsed platform metadata");
     }
     const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
     expect(objects_begin != std::string::npos,
@@ -368,11 +377,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
         expect(child_object_begin != std::string::npos,
                "#970: synthetic SCX object array should include the child control object");
         if (child_object_begin != std::string::npos) {
+            const auto child_entry_begin = objects_json.rfind("{", child_object_begin);
             const auto child_properties_begin = objects_json.find("\"properties\": [", child_object_begin);
             const auto child_object_json =
-                child_properties_begin == std::string::npos
+                child_entry_begin == std::string::npos
                     ? objects_json.substr(child_object_begin)
-                    : objects_json.substr(child_object_begin, child_properties_begin - child_object_begin);
+                    : child_properties_begin == std::string::npos
+                        ? objects_json.substr(child_entry_begin)
+                        : objects_json.substr(child_entry_begin, child_properties_begin - child_entry_begin);
             expect_contains(child_object_json, "\"parentName\": \"frmCustomer\"",
                             "#970: child object entries should expose their parent object name");
             expect_contains(child_object_json, "\"parentRecordIndex\": 1",
@@ -381,6 +393,12 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#970: leaf child object entries should expose zero child count");
             expect_contains(child_object_json, "\"objectPath\": \"frmCustomer.cmdSave\"",
                             "#972: child object entries should expose parent-prefixed object paths");
+            expect_contains(child_object_json, "\"objectTypeCode\": 4",
+                            "#973: child object entries should expose raw object type codes");
+            expect_contains(child_object_json, "\"objectCode\": 2",
+                            "#973: child object entries should expose raw object codes");
+            expect_contains(child_object_json, "\"platform\": \"WINDOWS\"",
+                            "#973: child object entries should expose parsed platform metadata");
         }
     }
 
