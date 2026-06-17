@@ -466,6 +466,24 @@ void write_synthetic_form_table_for_object_tab_stop(const std::filesystem::path&
     expect(create_result.ok, "#1037: synthetic SCX table for object tab stop should be created");
 }
 
+void write_synthetic_form_table_for_object_visibility(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "VISIBLE", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "cmdOne", "one-guid", ".T."},
+        {"cmdTwo", "cmdTwo", "two-guid", ".T."},
+        {"cmdThree", "cmdThree", "three-guid", ".F."},
+        {"cmdOther", "cmdOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1038: synthetic SCX table for object visibility should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -3256,6 +3274,129 @@ void test_studio_host_json_assigns_tab_stop_by_stable_selectors(const std::strin
     }
 }
 
+void test_studio_host_json_assigns_visibility_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visibility_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path visibility_path = temp_root / "visibility.scx";
+    write_synthetic_form_table_for_object_visibility(visibility_path);
+    const auto visibility_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", visibility_path.string(),
+            "--visibility-object",
+            "--visible", "false",
+            "--visibility-target-object-name", "cmdOne",
+            "--visibility-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(visibility_process.exit_code == 0,
+        "#1038: host object visibility assignment should exit successfully");
+    expect(visual_object_property(visibility_path, "one-guid", "VISIBLE") == ".F." &&
+            visual_object_property(visibility_path, "two-guid", "VISIBLE") == ".F." &&
+            visual_object_property(visibility_path, "three-guid", "VISIBLE") == ".F." &&
+            visual_object_property(visibility_path, "other-guid", "VISIBLE") == ".T.",
+        "#1038: host object visibility assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_visibility(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--visibility-object",
+            "--visible", "false",
+            "--visibility-target-unique-id", "one-guid",
+            "--visibility-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1038: missing-target host object visibility assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "VISIBLE") == ".T." &&
+            visual_object_property(missing_target_path, "two-guid", "VISIBLE") == ".T.",
+        "#1038: missing-target host object visibility assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_visibility(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--visibility-object",
+            "--visible", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1038: visibility-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "VISIBLE") == ".T.",
+        "#1038: visibility-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_visibility(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--visibility-object",
+            "--visibility-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1038: visibility-object without visible value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "VISIBLE") == ".T.",
+        "#1038: visibility-object without visible value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_visibility(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--visibility-object",
+            "--visible", "false",
+            "--visibility-target-unique-id", "one-guid",
+            "--visibility-target-object-name", "cmdOne",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1038: duplicate-target host object visibility assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "VISIBLE") == ".T.",
+        "#1038: duplicate-target host object visibility assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_visibility(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--visibility-object",
+            "--tab-stop-object",
+            "--visible", "false",
+            "--visibility-target-unique-id", "one-guid",
+            "--tab-stop", "true",
+            "--tab-stop-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1038: visibility-object plus tab-stop-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "VISIBLE") == ".T.",
+        "#1038: visibility-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -3402,6 +3543,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_nudges_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_stop_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_visibility_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

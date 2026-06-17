@@ -111,6 +111,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.tab_order_object, "#1036: launch contract should keep tab-order-object off by default");
     expect(!result.request.tab_stop_object, "#1037: launch contract should keep tab-stop-object off by default");
     expect(!result.request.tab_stop_available, "#1037: launch contract should keep tab-stop unavailable by default");
+    expect(!result.request.visibility_object, "#1038: launch contract should keep visibility-object off by default");
+    expect(!result.request.visible_available, "#1038: launch contract should keep visible unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1275,6 +1277,91 @@ void test_parse_launch_arguments_rejects_tab_stop_object_ambiguity() {
     });
     expect(!stray_tab_stop_result.ok,
         "#1037: launch contract should reject stray tab-stop arguments");
+}
+
+void test_parse_launch_arguments_for_visibility_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--visibility-object",
+        "--visible", "false",
+        "--visibility-target-object-name", "cmdOne",
+        "--visibility-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1038: launch contract should parse visibility-object requests");
+    expect(result.request.visibility_object, "#1038: launch contract should detect --visibility-object");
+    expect(result.request.visible_available && !result.request.visible,
+        "#1038: visibility-object requests should carry false visible state");
+    expect(result.request.visibility_objects.size() == 2U,
+        "#1038: visibility-object requests should collect visibility target selectors");
+    if (result.request.visibility_objects.size() == 2U) {
+        expect(result.request.visibility_objects[0].object_name == "cmdOne" &&
+                result.request.visibility_objects[0].unique_id.empty(),
+            "#1038: visibility-object requests should parse target object-name selectors");
+        expect(result.request.visibility_objects[1].object_name.empty() &&
+                result.request.visibility_objects[1].unique_id == "two-guid",
+            "#1038: visibility-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_visibility_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visibility-object",
+        "--visibility-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1038: launch contract should reject visibility-object requests without visible state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visibility-object",
+        "--visible", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1038: launch contract should reject visibility-object requests without target selectors");
+
+    const auto invalid_bool_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visibility-object",
+        "--visible", "maybe",
+        "--visibility-target-unique-id", "one-guid"
+    });
+    expect(!invalid_bool_result.ok,
+        "#1038: launch contract should reject unsupported visible values");
+}
+
+void test_parse_launch_arguments_rejects_visibility_object_ambiguity() {
+    const auto visibility_tab_stop_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visibility-object",
+        "--tab-stop-object",
+        "--visible", "true",
+        "--visibility-target-unique-id", "one-guid",
+        "--tab-stop", "true",
+        "--tab-stop-target-unique-id", "one-guid"
+    });
+    expect(!visibility_tab_stop_result.ok,
+        "#1038: launch contract should reject simultaneous visibility-object and tab-stop-object requests");
+
+    const auto visibility_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visibility-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--visible", "true",
+        "--visibility-target-unique-id", "one-guid"
+    });
+    expect(!visibility_property_result.ok,
+        "#1038: launch contract should reject visibility-object combined with property commands");
+
+    const auto stray_visible_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--visible", "true"
+    });
+    expect(!stray_visible_result.ok,
+        "#1038: launch contract should reject stray visible arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2539,6 +2626,9 @@ int main() {
     test_parse_launch_arguments_for_tab_stop_object();
     test_parse_launch_arguments_rejects_tab_stop_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tab_stop_object_ambiguity();
+    test_parse_launch_arguments_for_visibility_object();
+    test_parse_launch_arguments_rejects_visibility_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_visibility_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
