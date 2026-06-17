@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cctype>
+#include <optional>
 
 namespace copperfin::studio {
 
@@ -13,6 +14,37 @@ bool parse_size_value(const std::string& text, std::size_t& value) {
     const char* end = text.data() + text.size();
     const auto result = std::from_chars(begin, end, value);
     return result.ec == std::errc{} && result.ptr == end;
+}
+
+std::string lowercase_copy(std::string text) {
+    std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return text;
+}
+
+std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::string token) {
+    token = lowercase_copy(std::move(token));
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::visual_object)) {
+        return StudioEditorSelectionContext::visual_object;
+    }
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::visual_method)) {
+        return StudioEditorSelectionContext::visual_method;
+    }
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::report_expression)) {
+        return StudioEditorSelectionContext::report_expression;
+    }
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::project_item)) {
+        return StudioEditorSelectionContext::project_item;
+    }
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::data_environment)) {
+        return StudioEditorSelectionContext::data_environment;
+    }
+    return std::nullopt;
+}
+
+std::string selection_context_error() {
+    return "The --selection-context value must be visual_object, visual_method, report_expression, project_item, or data_environment.";
 }
 
 }  // namespace
@@ -62,6 +94,18 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --symbol."};
             }
             result.request.symbol = args[++index];
+            continue;
+        }
+
+        if (argument == "--selection-context") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --selection-context."};
+            }
+            const auto selection_context = parse_selection_context_token(args[++index]);
+            if (!selection_context.has_value()) {
+                return {.ok = false, .error = selection_context_error()};
+            }
+            result.request.designer_selection_contexts.push_back(*selection_context);
             continue;
         }
 
@@ -121,10 +165,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --undo-mode."};
             }
-            std::string mode = args[++index];
-            std::transform(mode.begin(), mode.end(), mode.begin(), [](unsigned char ch) {
-                return static_cast<char>(std::tolower(ch));
-            });
+            std::string mode = lowercase_copy(args[++index]);
             if (mode == "edit") {
                 result.request.undo_mode = StudioUndoMode::edit;
                 continue;

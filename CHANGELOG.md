@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#962 Studio host selection-context override shipped: `copperfin_studio_host` now accepts explicit `--selection-context` tokens and threads them through opened-document designer contexts and JSON output.
 - E2/#961 Studio host designer-context JSON shipped: `copperfin_studio_host --json` now serializes opened-document designer contexts with stable selection-context tokens, editor actions, builder/wizard entries, and toolbox item metadata.
 - E2/#960 opened-document designer contexts shipped: Studio document models now carry default designer-context aggregates for form/class, report/label, project, and data-environment assets.
 - E2/#959 designer context aggregation shipped: Studio now exposes a single selection-context query that aggregates filtered editor actions, builder/wizard entries, and toolbox entries for visual object, report expression, project item, and data-environment designer selections.

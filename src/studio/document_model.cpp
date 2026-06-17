@@ -168,6 +168,27 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
     return {};
 }
 
+std::vector<StudioDesignerContextResult> requested_designer_contexts(
+    const std::vector<StudioEditorSelectionContext>& selection_contexts) {
+    std::vector<StudioDesignerContextResult> designer_contexts;
+    for (const auto selection_context : selection_contexts) {
+        const auto existing = std::find_if(
+            designer_contexts.begin(),
+            designer_contexts.end(),
+            [&](const StudioDesignerContextResult& context) {
+                return context.selection_context == selection_context;
+            });
+        if (existing != designer_contexts.end()) {
+            continue;
+        }
+
+        designer_contexts.push_back(studio_designer_context_for_selection({
+            .selection_context = selection_context
+        }));
+    }
+    return designer_contexts;
+}
+
 void append_property_snapshots(
     const std::vector<vfp::VisualPropertyAssignment>& assignments,
     std::vector<StudioPropertySnapshot>& properties,
@@ -455,7 +476,9 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.read_only = request.read_only;
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.inspection = inspection;
-    document.designer_contexts = default_designer_contexts_for_kind(document.kind);
+    document.designer_contexts = request.designer_selection_contexts.empty()
+        ? default_designer_contexts_for_kind(document.kind)
+        : requested_designer_contexts(request.designer_selection_contexts);
     if (document.kind == StudioAssetKind::program) {
         document.static_diagnostics = runtime::analyze_prg_file(request.path);
     }

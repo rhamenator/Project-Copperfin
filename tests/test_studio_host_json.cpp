@@ -25,6 +25,10 @@ void expect_contains(const std::string& text, const std::string& needle, const s
     expect(text.find(needle) != std::string::npos, message);
 }
 
+void expect_not_contains(const std::string& text, const std::string& needle, const std::string& message) {
+    expect(text.find(needle) == std::string::npos, message);
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -158,6 +162,25 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#961: designer context JSON should expose toolbox items");
     expect_contains(process.stdout_text, "\"id\": \"textbox\"",
                     "#961: designer context JSON should expose TextBox toolbox ids");
+
+    const auto override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "visual_method", "--json"},
+        temp_root);
+
+    if (override_process.exit_code != 0) {
+        std::cerr << "studio host override stdout:\n" << override_process.stdout_text << "\n";
+        std::cerr << "studio host override stderr:\n" << override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(override_process.exit_code == 0, "#962: Studio host explicit context JSON smoke should exit successfully");
+    expect_contains(override_process.stdout_text, "\"selectionContext\": \"visual_method\"",
+                    "#962: explicit visual_method selection contexts should serialize through host JSON");
+    expect_contains(override_process.stdout_text, "\"id\": \"edit-visual-method\"",
+                    "#962: explicit visual_method contexts should expose method-editor actions");
+    expect_not_contains(override_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+                        "#962: explicit selection contexts should override the form default selection context");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

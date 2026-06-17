@@ -49,6 +49,7 @@ struct StudioOpenRequest {
     bool apply_property_update = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
+    std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
 struct StudioDocumentModel {

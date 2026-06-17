@@ -59,6 +59,8 @@ void test_parse_launch_arguments() {
         "--line", "25",
         "--column", "7",
         "--symbol", "cmdSave.Click",
+        "--selection-context", "visual_method",
+        "--selection-context", "report_expression",
         "--undo-mode", "command",
         "--undo-label", "Bulk Undo"
     });
@@ -75,6 +77,14 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
+    expect(result.request.designer_selection_contexts.size() == 2U,
+           "#962: launch contract should collect explicit selection-context tokens");
+    if (result.request.designer_selection_contexts.size() == 2U) {
+        expect(result.request.designer_selection_contexts[0] == copperfin::studio::StudioEditorSelectionContext::visual_method,
+               "#962: launch contract should parse visual_method selection-context tokens");
+        expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::report_expression,
+               "#962: launch contract should parse report_expression selection-context tokens");
+    }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
 }
@@ -90,6 +100,22 @@ void test_parse_launch_arguments_rejects_unknown_undo_mode() {
         "--undo-mode", "mystery"
     });
     expect(!result.ok, "launch contract should reject unknown undo modes");
+}
+
+void test_parse_launch_arguments_rejects_unknown_selection_context() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selection-context", "mystery"
+    });
+    expect(!result.ok, "#962: launch contract should reject unknown selection-context tokens");
+}
+
+void test_parse_launch_arguments_rejects_missing_selection_context() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selection-context"
+    });
+    expect(!result.ok, "#962: launch contract should reject missing selection-context values");
 }
 
 void test_open_document_infers_form_sidecar() {
@@ -206,6 +232,29 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: form designer context should include control builders");
         expect(has_descriptor_id(context.toolbox_items, "textbox"),
                "#960: form designer context should include form toolbox items");
+    }
+
+    const auto override_result = copperfin::studio::open_document({
+        .path = (temp_dir / "customer.scx").string(),
+        .designer_selection_contexts = {
+            copperfin::studio::StudioEditorSelectionContext::visual_method,
+            copperfin::studio::StudioEditorSelectionContext::report_expression
+        }
+    });
+    expect(override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
+    expect(override_result.document.designer_contexts.size() == 2U,
+           "#962: explicit selection contexts should override the form default context list");
+    if (override_result.document.designer_contexts.size() == 2U) {
+        expect(override_result.document.designer_contexts[0].selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::visual_method,
+               "#962: explicit visual_method contexts should be preserved in request order");
+        expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-visual-method"),
+               "#962: explicit visual_method contexts should include method-editor actions");
+        expect(override_result.document.designer_contexts[1].selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::report_expression,
+               "#962: explicit report_expression contexts should be preserved in request order");
+        expect(has_descriptor_id(override_result.document.designer_contexts[1].editor_actions, "edit-report-expression"),
+               "#962: explicit report_expression contexts should include expression-editor actions");
     }
 
     const auto report_result = copperfin::studio::open_document({
@@ -920,6 +969,8 @@ int main() {
     test_parse_launch_arguments();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
+    test_parse_launch_arguments_rejects_unknown_selection_context();
+    test_parse_launch_arguments_rejects_missing_selection_context();
     test_open_document_infers_form_sidecar();
     test_open_document_uses_vfp_filename_for_display_name();
     test_open_document_attaches_default_designer_contexts();
