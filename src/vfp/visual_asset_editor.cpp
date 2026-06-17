@@ -5510,6 +5510,19 @@ VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRe
         std::to_string(request.min_height));
 }
 
+VisualAssetEditResult set_visual_object_min_width(const VisualObjectMinWidthRequest& request) {
+    if (request.min_width < 0) {
+        return {.ok = false, .error = "MinWidth must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MinWidth",
+        "min-width",
+        std::to_string(request.min_width));
+}
+
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
