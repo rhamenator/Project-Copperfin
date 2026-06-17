@@ -322,6 +322,12 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         [](const copperfin::studio::StudioObjectSnapshot& object) {
             return object.deleted;
         }));
+    const auto root_object_count = static_cast<std::size_t>(std::count_if(
+        objects.begin(),
+        objects.end(),
+        [](const copperfin::studio::StudioObjectSnapshot& object) {
+            return object.parent_record_index == copperfin::studio::StudioObjectMissingRecordIndex;
+        }));
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
     const auto security_profile = copperfin::security::default_native_security_profile();
@@ -382,6 +388,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"recordCount\": " << document.table_preview.records.size() << ",\n";
     std::cout << "    \"objectCount\": " << objects.size() << ",\n";
     std::cout << "    \"deletedObjectCount\": " << deleted_object_count << ",\n";
+    std::cout << "    \"rootObjectCount\": " << root_object_count << ",\n";
     std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);

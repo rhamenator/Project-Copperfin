@@ -309,6 +309,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#977: Studio host JSON should expose document-level object counts");
     expect_contains(selected_object_process.stdout_text, "\"deletedObjectCount\": 0",
                     "#977: Studio host JSON should expose document-level deleted object counts");
+    expect_contains(selected_object_process.stdout_text, "\"rootObjectCount\": 2",
+                    "#978: Studio host JSON should expose document-level root object counts");
     expect_contains(selected_object_process.stdout_text, "\"selectedObject\": {",
                     "#967: Studio host JSON should expose selected object summaries for matching records");
     expect_contains(selected_object_process.stdout_text, "\"recordIndex\": 1",
