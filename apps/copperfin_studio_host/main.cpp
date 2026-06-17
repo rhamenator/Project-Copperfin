@@ -22,7 +22,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -1510,6 +1510,39 @@ int main(int argc, char** argv) {
         if (!reorder_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << reorder_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.group_object) {
+        std::vector<copperfin::vfp::VisualObjectPropertyChange> container_field_values;
+        container_field_values.reserve(parse_result.request.field_values.size());
+        for (const auto& field_value : parse_result.request.field_values) {
+            container_field_values.push_back({
+                .property_name = field_value.property_name,
+                .property_value = field_value.property_value
+            });
+        }
+
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> group_objects;
+        group_objects.reserve(parse_result.request.group_objects.size());
+        for (const auto& group_object : parse_result.request.group_objects) {
+            group_objects.push_back({
+                .record_index = group_object.record_index,
+                .object_name = group_object.object_name,
+                .unique_id = group_object.unique_id
+            });
+        }
+
+        const auto group_result = copperfin::vfp::group_visual_objects({
+            .path = parse_result.request.path,
+            .container_field_values = container_field_values,
+            .objects = group_objects
+        });
+
+        if (!group_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << group_result.error << "\n";
             return 4;
         }
     }

@@ -316,6 +316,27 @@ void write_synthetic_form_table_for_object_reorder(const std::filesystem::path& 
     expect(create_result.ok, "#1028: synthetic SCX table for object reorder should be created");
 }
 
+void write_synthetic_form_table_for_object_group(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "form-guid", "", "Form", "Form", ""},
+        {"cmdSave", "cmdSave", "save-guid", "frmCustomer", "CommandButton", "CommandButton", ""},
+        {"txtName", "txtName", "name-guid", "frmCustomer", "TextBox", "TextBox", ""},
+        {"lblStatus", "lblStatus", "status-guid", "frmCustomer", "Label", "Label", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1030: synthetic SCX table for object group should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -2092,6 +2113,119 @@ void test_studio_host_json_reorders_objects_by_stable_selectors(const std::strin
     }
 }
 
+void test_studio_host_json_groups_objects_by_stable_child_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_group_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path group_path = temp_root / "group.scx";
+    write_synthetic_form_table_for_object_group(group_path);
+    const auto group_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", group_path.string(),
+            "--group-object",
+            "--field-value", "OBJNAME=cntGroup",
+            "--field-value", "NAME=cntGroup",
+            "--field-value", "UNIQUEID=group-guid",
+            "--field-value", "PARENT=frmCustomer",
+            "--field-value", "CLASS=Container",
+            "--field-value", "BASECLASS=Container",
+            "--field-value", "PROPERTIES=Caption = \"Group\"",
+            "--group-child-object-name", "cmdSave",
+            "--group-child-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(group_process.exit_code == 0,
+        "#1030: host object group should exit successfully");
+    expect(visual_object_count(group_path) == 5U &&
+            visual_object_parent(group_path, "save-guid") == "cntGroup" &&
+            visual_object_parent(group_path, "name-guid") == "cntGroup" &&
+            visual_object_parent(group_path, "status-guid") == "frmCustomer",
+        "#1030: host object group should append a container and reparent only selected children");
+
+    const fs::path missing_child_path = temp_root / "missing_child.scx";
+    write_synthetic_form_table_for_object_group(missing_child_path);
+    const auto missing_child_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_child_path.string(),
+            "--group-object",
+            "--field-value", "OBJNAME=cntGroup",
+            "--field-value", "UNIQUEID=group-guid",
+            "--group-child-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_child_process.exit_code == 4,
+        "#1030: missing child host object group should return command failure");
+    expect(visual_object_count(missing_child_path) == 4U &&
+            visual_object_parent(missing_child_path, "save-guid") == "frmCustomer" &&
+            visual_object_parent(missing_child_path, "name-guid") == "frmCustomer",
+        "#1030: missing child host object group should not mutate the asset");
+
+    const fs::path missing_field_values_path = temp_root / "missing_field_values.scx";
+    write_synthetic_form_table_for_object_group(missing_field_values_path);
+    const auto missing_field_values_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_field_values_path.string(),
+            "--group-object",
+            "--group-child-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_field_values_process.exit_code == 2,
+        "#1030: group-object without container field values should fail during launch parsing");
+    expect(visual_object_count(missing_field_values_path) == 4U &&
+            visual_object_parent(missing_field_values_path, "name-guid") == "frmCustomer",
+        "#1030: group-object without container field values should not mutate the asset");
+
+    const fs::path missing_children_path = temp_root / "missing_children.scx";
+    write_synthetic_form_table_for_object_group(missing_children_path);
+    const auto missing_children_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_children_path.string(),
+            "--group-object",
+            "--field-value", "OBJNAME=cntGroup",
+            "--json"
+        },
+        temp_root);
+    expect(missing_children_process.exit_code == 2,
+        "#1030: group-object without child selectors should fail during launch parsing");
+    expect(visual_object_count(missing_children_path) == 4U &&
+            visual_object_parent(missing_children_path, "save-guid") == "frmCustomer",
+        "#1030: group-object without child selectors should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_group(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--group-object",
+            "--ungroup-object",
+            "--field-value", "OBJNAME=cntGroup",
+            "--group-child-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1030: group-object plus ungroup-object requests should fail during launch parsing");
+    expect(visual_object_count(ambiguous_path) == 4U &&
+            visual_object_parent(ambiguous_path, "name-guid") == "frmCustomer",
+        "#1030: group-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2230,6 +2364,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

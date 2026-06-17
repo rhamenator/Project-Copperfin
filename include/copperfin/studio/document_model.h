@@ -36,6 +36,17 @@ inline constexpr std::size_t StudioObjectMissingFieldIndex = static_cast<std::si
 inline constexpr std::size_t StudioObjectMissingLineIndex = static_cast<std::size_t>(-1);
 inline constexpr std::size_t StudioObjectMissingRecordIndex = static_cast<std::size_t>(-1);
 
+struct StudioObjectSelector {
+    std::size_t record_index = 0;
+    std::string object_name{};
+    std::string unique_id{};
+};
+
+struct StudioFieldValueAssignment {
+    std::string property_name{};
+    std::string property_value{};
+};
+
 struct StudioOpenRequest {
     std::string path{};
     std::string symbol{};
@@ -67,11 +78,14 @@ struct StudioOpenRequest {
     bool rename_object = false;
     bool reparent_object = false;
     bool reorder_object = false;
+    bool group_object = false;
     bool ungroup_object = false;
     bool clear_parent = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
+    std::vector<StudioFieldValueAssignment> field_values{};
+    std::vector<StudioObjectSelector> group_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

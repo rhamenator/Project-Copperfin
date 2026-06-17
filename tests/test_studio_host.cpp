@@ -102,6 +102,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
     expect(!result.request.reorder_object, "#1028: launch contract should keep reorder-object off by default");
+    expect(!result.request.group_object, "#1030: launch contract should keep group-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -543,6 +544,99 @@ void test_parse_launch_arguments_rejects_ungroup_object_ambiguity() {
     });
     expect(!ungroup_property_result.ok,
         "#1029: launch contract should reject ungroup-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_group_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--group-object",
+        "--field-value", "OBJNAME=cntGroup",
+        "--field-value", "UNIQUEID=group-guid",
+        "--field-value", "PARENT=frmCustomer",
+        "--group-child-object-name", "cmdSave",
+        "--group-child-unique-id", "name-guid"
+    });
+
+    expect(result.ok, "#1030: launch contract should parse group-object requests");
+    expect(result.request.group_object, "#1030: launch contract should detect --group-object");
+    expect(result.request.field_values.size() == 3U,
+        "#1030: group-object requests should collect container field values");
+    if (result.request.field_values.size() == 3U) {
+        expect(result.request.field_values[0].property_name == "OBJNAME" &&
+                result.request.field_values[0].property_value == "cntGroup",
+            "#1030: group-object requests should parse first container field assignment");
+        expect(result.request.field_values[1].property_name == "UNIQUEID" &&
+                result.request.field_values[1].property_value == "group-guid",
+            "#1030: group-object requests should parse second container field assignment");
+    }
+    expect(result.request.group_objects.size() == 2U,
+        "#1030: group-object requests should collect grouped child selectors");
+    if (result.request.group_objects.size() == 2U) {
+        expect(result.request.group_objects[0].object_name == "cmdSave" &&
+                result.request.group_objects[0].unique_id.empty(),
+            "#1030: group-object requests should parse child object-name selectors");
+        expect(result.request.group_objects[1].object_name.empty() &&
+                result.request.group_objects[1].unique_id == "name-guid",
+            "#1030: group-object requests should parse child unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_group_object_invalid_inputs() {
+    const auto missing_field_values_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--group-object",
+        "--group-child-unique-id", "name-guid"
+    });
+    expect(!missing_field_values_result.ok,
+        "#1030: launch contract should reject group-object requests without container field values");
+
+    const auto missing_children_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--group-object",
+        "--field-value", "OBJNAME=cntGroup"
+    });
+    expect(!missing_children_result.ok,
+        "#1030: launch contract should reject group-object requests without child selectors");
+
+    const auto invalid_assignment_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--group-object",
+        "--field-value", "OBJNAME",
+        "--group-child-unique-id", "name-guid"
+    });
+    expect(!invalid_assignment_result.ok,
+        "#1030: launch contract should reject group-object field values without assignment syntax");
+}
+
+void test_parse_launch_arguments_rejects_group_object_ambiguity() {
+    const auto group_ungroup_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--group-object",
+        "--ungroup-object",
+        "--field-value", "OBJNAME=cntGroup",
+        "--group-child-unique-id", "name-guid"
+    });
+    expect(!group_ungroup_result.ok,
+        "#1030: launch contract should reject simultaneous group-object and ungroup-object requests");
+
+    const auto group_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--group-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--field-value", "OBJNAME=cntGroup",
+        "--group-child-unique-id", "name-guid"
+    });
+    expect(!group_property_result.ok,
+        "#1030: launch contract should reject group-object combined with property commands");
+
+    const auto stray_field_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--field-value", "OBJNAME=cntGroup"
+    });
+    expect(!stray_field_value_result.ok,
+        "#1030: launch contract should reject stray group field values");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1783,6 +1877,9 @@ int main() {
     test_parse_launch_arguments_rejects_reorder_object_ambiguity_and_missing_placement();
     test_parse_launch_arguments_for_ungroup_object();
     test_parse_launch_arguments_rejects_ungroup_object_ambiguity();
+    test_parse_launch_arguments_for_group_object();
+    test_parse_launch_arguments_rejects_group_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_group_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

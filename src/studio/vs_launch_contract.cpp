@@ -128,6 +128,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--group-object") {
+            result.request.group_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -272,6 +277,46 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--group-child-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --group-child-object-name."};
+            }
+            result.request.group_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--group-child-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --group-child-unique-id."};
+            }
+            result.request.group_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--field-value") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --field-value."};
+            }
+            const std::string assignment = args[++index];
+            const auto separator = assignment.find('=');
+            if (separator == std::string::npos || separator == 0U) {
+                return {.ok = false, .error = "Field values must use name=value syntax."};
+            }
+            result.request.field_values.push_back({
+                .property_name = assignment.substr(0U, separator),
+                .property_value = assignment.substr(separator + 1U)
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -379,6 +424,18 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (result.request.reorder_object && result.request.placement.empty()) {
         return {.ok = false, .error = "An object reorder requires --placement."};
     }
+    if (result.request.group_object && result.request.field_values.empty()) {
+        return {.ok = false, .error = "An object group requires at least one --field-value."};
+    }
+    if (result.request.group_object && result.request.group_objects.empty()) {
+        return {.ok = false, .error = "An object group requires at least one grouped child selector."};
+    }
+    if (!result.request.group_object && !result.request.field_values.empty()) {
+        return {.ok = false, .error = "--field-value can only be used with --group-object."};
+    }
+    if (!result.request.group_object && !result.request.group_objects.empty()) {
+        return {.ok = false, .error = "Grouped child selectors can only be used with --group-object."};
+    }
     const int property_command_count =
         (result.request.apply_property_update ? 1 : 0) +
         (result.request.clear_property ? 1 : 0) +
@@ -390,6 +447,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.rename_object ? 1 : 0) +
         (result.request.reparent_object ? 1 : 0) +
         (result.request.reorder_object ? 1 : 0) +
+        (result.request.group_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
