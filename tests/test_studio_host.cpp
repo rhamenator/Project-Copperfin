@@ -113,6 +113,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.tab_stop_available, "#1037: launch contract should keep tab-stop unavailable by default");
     expect(!result.request.visibility_object, "#1038: launch contract should keep visibility-object off by default");
     expect(!result.request.visible_available, "#1038: launch contract should keep visible unavailable by default");
+    expect(!result.request.enabled_object, "#1039: launch contract should keep enabled-object off by default");
+    expect(!result.request.enabled_available, "#1039: launch contract should keep enabled unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1362,6 +1364,91 @@ void test_parse_launch_arguments_rejects_visibility_object_ambiguity() {
     });
     expect(!stray_visible_result.ok,
         "#1038: launch contract should reject stray visible arguments");
+}
+
+void test_parse_launch_arguments_for_enabled_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--enabled-object",
+        "--enabled", "false",
+        "--enabled-target-object-name", "cmdOne",
+        "--enabled-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1039: launch contract should parse enabled-object requests");
+    expect(result.request.enabled_object, "#1039: launch contract should detect --enabled-object");
+    expect(result.request.enabled_available && !result.request.enabled,
+        "#1039: enabled-object requests should carry false enabled state");
+    expect(result.request.enabled_objects.size() == 2U,
+        "#1039: enabled-object requests should collect enabled target selectors");
+    if (result.request.enabled_objects.size() == 2U) {
+        expect(result.request.enabled_objects[0].object_name == "cmdOne" &&
+                result.request.enabled_objects[0].unique_id.empty(),
+            "#1039: enabled-object requests should parse target object-name selectors");
+        expect(result.request.enabled_objects[1].object_name.empty() &&
+                result.request.enabled_objects[1].unique_id == "two-guid",
+            "#1039: enabled-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_enabled_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled-object",
+        "--enabled-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1039: launch contract should reject enabled-object requests without enabled state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled-object",
+        "--enabled", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1039: launch contract should reject enabled-object requests without target selectors");
+
+    const auto invalid_bool_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled-object",
+        "--enabled", "maybe",
+        "--enabled-target-unique-id", "one-guid"
+    });
+    expect(!invalid_bool_result.ok,
+        "#1039: launch contract should reject unsupported enabled values");
+}
+
+void test_parse_launch_arguments_rejects_enabled_object_ambiguity() {
+    const auto enabled_visibility_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled-object",
+        "--visibility-object",
+        "--enabled", "true",
+        "--enabled-target-unique-id", "one-guid",
+        "--visible", "true",
+        "--visibility-target-unique-id", "one-guid"
+    });
+    expect(!enabled_visibility_result.ok,
+        "#1039: launch contract should reject simultaneous enabled-object and visibility-object requests");
+
+    const auto enabled_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--enabled", "true",
+        "--enabled-target-unique-id", "one-guid"
+    });
+    expect(!enabled_property_result.ok,
+        "#1039: launch contract should reject enabled-object combined with property commands");
+
+    const auto stray_enabled_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--enabled", "true"
+    });
+    expect(!stray_enabled_result.ok,
+        "#1039: launch contract should reject stray enabled arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2629,6 +2716,9 @@ int main() {
     test_parse_launch_arguments_for_visibility_object();
     test_parse_launch_arguments_rejects_visibility_object_invalid_inputs();
     test_parse_launch_arguments_rejects_visibility_object_ambiguity();
+    test_parse_launch_arguments_for_enabled_object();
+    test_parse_launch_arguments_rejects_enabled_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_enabled_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
