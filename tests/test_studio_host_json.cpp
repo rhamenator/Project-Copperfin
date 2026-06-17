@@ -664,6 +664,24 @@ void write_synthetic_form_table_for_object_row_source(const std::filesystem::pat
     expect(create_result.ok, "#1048: synthetic SCX table for object row source should be created");
 }
 
+void write_synthetic_form_table_for_object_row_source_type(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "ROWSOURCETYPE", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "cboCustomer", "one-guid", "2"},
+        {"lstOrders", "lstOrders", "two-guid", "3"},
+        {"lblStatus", "lblStatus", "three-guid", "0"},
+        {"cboOther", "cboOther", "other-guid", "5"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1049: synthetic SCX table for object row source type should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4807,6 +4825,146 @@ void test_studio_host_json_assigns_row_source_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_assigns_row_source_type_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_row_source_type_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path row_source_type_path = temp_root / "row_source_type.scx";
+    write_synthetic_form_table_for_object_row_source_type(row_source_type_path);
+    const auto row_source_type_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", row_source_type_path.string(),
+            "--row-source-type-object",
+            "--row-source-type", "6",
+            "--row-source-type-target-object-name", "cboCustomer",
+            "--row-source-type-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(row_source_type_process.exit_code == 0,
+        "#1049: host object row-source-type assignment should exit successfully");
+    expect(visual_object_property(row_source_type_path, "one-guid", "ROWSOURCETYPE") == "6" &&
+            visual_object_property(row_source_type_path, "two-guid", "ROWSOURCETYPE") == "6" &&
+            visual_object_property(row_source_type_path, "three-guid", "ROWSOURCETYPE") == "0" &&
+            visual_object_property(row_source_type_path, "other-guid", "ROWSOURCETYPE") == "5",
+        "#1049: host object row-source-type assignment should assign selected numeric values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_row_source_type(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--row-source-type-object",
+            "--row-source-type", "6",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--row-source-type-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1049: missing-target host object row-source-type assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "ROWSOURCETYPE") == "2" &&
+            visual_object_property(missing_target_path, "two-guid", "ROWSOURCETYPE") == "3",
+        "#1049: missing-target host object row-source-type assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_row_source_type(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--row-source-type-object",
+            "--row-source-type", "6",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1049: row-source-type-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "ROWSOURCETYPE") == "2",
+        "#1049: row-source-type-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_row_source_type(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--row-source-type-object",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1049: row-source-type-object without row-source-type value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "ROWSOURCETYPE") == "2",
+        "#1049: row-source-type-object without row-source-type value should not mutate the asset");
+
+    const fs::path negative_path = temp_root / "negative.scx";
+    write_synthetic_form_table_for_object_row_source_type(negative_path);
+    const auto negative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_path.string(),
+            "--row-source-type-object",
+            "--row-source-type", "-1",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_process.exit_code == 2,
+        "#1049: negative row-source-type values should fail during launch parsing");
+    expect(visual_object_property(negative_path, "one-guid", "ROWSOURCETYPE") == "2",
+        "#1049: negative row-source-type values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_row_source_type(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--row-source-type-object",
+            "--row-source-type", "6",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--row-source-type-target-object-name", "cboCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1049: duplicate-target host object row-source-type assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "ROWSOURCETYPE") == "2",
+        "#1049: duplicate-target host object row-source-type assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_row_source_type(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--row-source-type-object",
+            "--row-source-object",
+            "--row-source-type", "6",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--row-source", "products.name",
+            "--row-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1049: row-source-type-object plus row-source-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "ROWSOURCETYPE") == "2",
+        "#1049: row-source-type-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -4964,6 +5122,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_input_mask_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_format_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_row_source_type_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
