@@ -5436,6 +5436,58 @@ VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRe
         request.max_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRequest& request) {
+    if (request.max_height < 0) {
+        return {.ok = false, .error = "MaxHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MaxHeight",
+        "max-height",
+        std::to_string(request.max_height));
+}
+
+VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequest& request) {
+    if (request.max_width < 0) {
+        return {.ok = false, .error = "MaxWidth must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MaxWidth",
+        "max-width",
+        std::to_string(request.max_width));
+}
+
+VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftRequest& request) {
+    if (request.max_left < 0) {
+        return {.ok = false, .error = "MaxLeft must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MaxLeft",
+        "max-left",
+        std::to_string(request.max_left));
+}
+
+VisualAssetEditResult set_visual_object_max_top(const VisualObjectMaxTopRequest& request) {
+    if (request.max_top < 0) {
+        return {.ok = false, .error = "MaxTop must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MaxTop",
+        "max-top",
+        std::to_string(request.max_top));
+}
+
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
@@ -5443,6 +5495,19 @@ VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRe
         "MinButton",
         "min-button",
         request.min_button ? ".T." : ".F.");
+}
+
+VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRequest& request) {
+    if (request.min_height < 0) {
+        return {.ok = false, .error = "MinHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MinHeight",
+        "min-height",
+        std::to_string(request.min_height));
 }
 
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request) {

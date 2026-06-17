@@ -802,10 +802,40 @@ struct VisualObjectMaxButtonRequest {
     bool max_button = false;
 };
 
+struct VisualObjectMaxHeightRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int max_height = 0;
+};
+
+struct VisualObjectMaxWidthRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int max_width = 0;
+};
+
+struct VisualObjectMaxLeftRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int max_left = 0;
+};
+
+struct VisualObjectMaxTopRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int max_top = 0;
+};
+
 struct VisualObjectMinButtonRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
     bool min_button = false;
+};
+
+struct VisualObjectMinHeightRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int min_height = 0;
 };
 
 struct VisualObjectMovableRequest {
@@ -1736,7 +1766,12 @@ VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest
 VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreviewRequest& request);
 VisualAssetEditResult set_visual_object_mac_desktop(const VisualObjectMacDesktopRequest& request);
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request);
+VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRequest& request);
+VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequest& request);
+VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftRequest& request);
+VisualAssetEditResult set_visual_object_max_top(const VisualObjectMaxTopRequest& request);
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request);
+VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRequest& request);
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request);
 VisualAssetEditResult set_visual_object_half_height_caption(const VisualObjectHalfHeightCaptionRequest& request);
 VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormRequest& request);
