@@ -10020,6 +10020,8 @@ void test_set_visual_object_tooltip_text_assigns_text() {
         .tooltip_text = "Save the current record"
     });
     expect(tooltip_result.ok, "#800: tooltip assignment should support mixed selectors");
+    expect(tooltip_result.affected_object_count == 2U,
+        "#1002: successful tooltip assignment should report affected object count");
     expect(tooltip("one-guid") == "Save the current record" &&
             tooltip("two-guid") == "Save the current record" &&
             tooltip("three-guid") == "Three tip" &&
@@ -10054,6 +10056,8 @@ void test_set_visual_object_tooltip_text_assigns_text() {
         .tooltip_text = "Ignored"
     });
     expect(!tooltip_result.ok, "#800: tooltip assignment should reject empty selections");
+    expect(tooltip_result.affected_object_count == 0U,
+        "#1002: failed tooltip assignment should report zero affected objects");
     expect(tooltip_state() == committed_state, "#800: empty-selection failures should not mutate tooltips");
 
     tooltip_result = copperfin::vfp::set_visual_object_tooltip_text({
@@ -10207,6 +10211,8 @@ void test_set_visual_object_status_bar_text_assigns_text() {
         .status_bar_text = "Ready to save"
     });
     expect(status_result.ok, "#801: status-bar assignment should support object-name and record-index selectors");
+    expect(status_result.affected_object_count == 2U,
+        "#1002: successful status-bar assignment should report affected object count");
     expect(status_bar("one-guid") == "Ready to save" &&
             status_bar("two-guid") == "Ready to save" &&
             status_bar("other-guid") == "Other status",
@@ -10239,6 +10245,8 @@ void test_set_visual_object_status_bar_text_assigns_text() {
         .status_bar_text = "Ignored"
     });
     expect(!status_result.ok, "#801: status-bar assignment should reject empty selections");
+    expect(status_result.affected_object_count == 0U,
+        "#1002: failed status-bar assignment should report zero affected objects");
     expect(status_bar_state() == committed_state, "#801: empty-selection failures should not mutate status-bar text");
 
     status_result = copperfin::vfp::set_visual_object_status_bar_text({
@@ -10392,6 +10400,8 @@ void test_set_visual_object_control_source_assigns_text() {
         .control_source = "orders.total"
     });
     expect(control_result.ok, "#802: control-source assignment should support object-name and record-index selectors");
+    expect(control_result.affected_object_count == 2U,
+        "#1002: successful control-source assignment should report affected object count");
     expect(control_source("one-guid") == "orders.total" &&
             control_source("two-guid") == "orders.total" &&
             control_source("other-guid") == "customers.state",
@@ -10424,6 +10434,8 @@ void test_set_visual_object_control_source_assigns_text() {
         .control_source = "Ignored"
     });
     expect(!control_result.ok, "#802: control-source assignment should reject empty selections");
+    expect(control_result.affected_object_count == 0U,
+        "#1002: failed control-source assignment should report zero affected objects");
     expect(control_source_state() == committed_state, "#802: empty-selection failures should not mutate control sources");
 
     control_result = copperfin::vfp::set_visual_object_control_source({
@@ -10602,6 +10614,8 @@ void test_visual_object_text_property_assigns_text(
         },
         replacement_value);
     expect(edit_result.ok, label + " assignment should support object-name and record-index selectors");
+    expect(edit_result.affected_object_count == 2U,
+        "#1002: " + label + " successful assignment should report affected object count");
     expect(property_value("one-guid") == replacement_value &&
             property_value("two-guid") == replacement_value &&
             property_value("other-guid") == other_value,
@@ -10629,6 +10643,8 @@ void test_visual_object_text_property_assigns_text(
     const std::string committed_state = direct_state();
     edit_result = assign_property(table_path.string(), {}, "Ignored");
     expect(!edit_result.ok, label + " assignment should reject empty selections");
+    expect(edit_result.affected_object_count == 0U,
+        "#1002: " + label + " failed assignment should report zero affected objects");
     expect(direct_state() == committed_state, label + " empty-selection failures should not mutate values");
 
     edit_result = assign_property(
