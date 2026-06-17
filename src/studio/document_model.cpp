@@ -305,6 +305,49 @@ void append_property_snapshots(
     }
 }
 
+const StudioObjectSnapshot* find_object_by_record_index(
+    const std::vector<StudioObjectSnapshot>& objects,
+    std::size_t record_index) {
+    const auto object = std::find_if(
+        objects.begin(),
+        objects.end(),
+        [&](const StudioObjectSnapshot& candidate) {
+            return candidate.record_index == record_index;
+        });
+    return object == objects.end() ? nullptr : &*object;
+}
+
+std::string build_object_path(
+    const StudioObjectSnapshot& object,
+    const std::vector<StudioObjectSnapshot>& objects) {
+    if (object.object_name.empty()) {
+        return {};
+    }
+
+    std::vector<std::string> names{object.object_name};
+    std::size_t parent_record_index = object.parent_record_index;
+    for (std::size_t depth = 0U;
+         parent_record_index != StudioObjectMissingRecordIndex && depth < objects.size();
+         ++depth) {
+        const auto* parent = find_object_by_record_index(objects, parent_record_index);
+        if (parent == nullptr || parent->object_name.empty()) {
+            break;
+        }
+        names.push_back(parent->object_name);
+        parent_record_index = parent->parent_record_index;
+    }
+
+    std::reverse(names.begin(), names.end());
+    std::string path;
+    for (std::size_t index = 0U; index < names.size(); ++index) {
+        if (index != 0U) {
+            path += ".";
+        }
+        path += names[index];
+    }
+    return path;
+}
+
 }  // namespace
 
 StudioAssetKind studio_asset_kind_from_vfp_family(vfp::AssetFamily family) {
@@ -566,6 +609,10 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 object.parent_record_index = parent->record_index;
             }
         }
+    }
+
+    for (auto& object : objects) {
+        object.object_path = build_object_path(object, objects);
     }
 
     return objects;

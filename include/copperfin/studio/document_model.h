@@ -100,6 +100,7 @@ struct StudioObjectSnapshot {
     std::string object_name{};
     std::size_t object_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t object_name_memo_block_number = 0;
+    std::string object_path{};
     std::string unique_id{};
     std::size_t unique_id_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t unique_id_memo_block_number = 0;

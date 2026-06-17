@@ -346,6 +346,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#970: selected parent object summaries should expose direct child counts");
         expect_contains(selected_object_json, "\"parentRecordIndex\": null",
                         "#971: root selected object summaries should expose null parent record links");
+        expect_contains(selected_object_json, "\"objectPath\": \"frmCustomer\"",
+                        "#972: root selected object summaries should expose direct object paths");
     }
     const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
     expect(objects_begin != std::string::npos,
@@ -377,6 +379,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#971: child object entries should expose resolved parent record links");
             expect_contains(child_object_json, "\"childCount\": 0",
                             "#970: leaf child object entries should expose zero child count");
+            expect_contains(child_object_json, "\"objectPath\": \"frmCustomer.cmdSave\"",
+                            "#972: child object entries should expose parent-prefixed object paths");
         }
     }
 

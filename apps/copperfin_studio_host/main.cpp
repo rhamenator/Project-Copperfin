@@ -260,6 +260,9 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << indent << "  \"objectName\": ";
     print_json_string(object.object_name);
     std::cout << ",\n";
+    std::cout << indent << "  \"objectPath\": ";
+    print_json_string(object.object_path);
+    std::cout << ",\n";
     std::cout << indent << "  \"uniqueId\": ";
     print_json_string(object.unique_id);
     std::cout << ",\n";
@@ -862,6 +865,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << ",\n";
         std::cout << "        \"objectName\": ";
         print_json_string(object.object_name);
+        std::cout << ",\n";
+        std::cout << "        \"objectPath\": ";
+        print_json_string(object.object_path);
         std::cout << ",\n";
         std::cout << "        \"uniqueId\": ";
         print_json_string(object.unique_id);
