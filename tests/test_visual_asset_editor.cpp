@@ -9150,6 +9150,8 @@ void test_set_visual_object_visibility_assigns_logical_state() {
         .visible = false
     });
     expect(visibility_result.ok, "#795: visibility assignment should support mixed selectors");
+    expect(visibility_result.affected_object_count == 2U,
+        "#1001: successful visibility assignment should report affected object count");
     expect(visibility("one-guid") == ".F." &&
             visibility("two-guid") == ".F." &&
             visibility("three-guid") == ".F." &&
@@ -9183,6 +9185,8 @@ void test_set_visual_object_visibility_assigns_logical_state() {
         .visible = true
     });
     expect(!visibility_result.ok, "#795: visibility assignment should reject empty selections");
+    expect(visibility_result.affected_object_count == 0U,
+        "#1001: failed visibility assignment should report zero affected objects");
     expect(visibility_state() == committed_state, "#795: empty-selection failures should not mutate visibility states");
 
     visibility_result = copperfin::vfp::set_visual_object_visibility({
@@ -9287,6 +9291,8 @@ void test_set_visual_object_enabled_assigns_logical_state() {
         .enabled = false
     });
     expect(enabled_result.ok, "#796: enabled assignment should support mixed selectors");
+    expect(enabled_result.affected_object_count == 2U,
+        "#1001: successful enabled assignment should report affected object count");
     expect(enabled("one-guid") == ".F." &&
             enabled("two-guid") == ".F." &&
             enabled("three-guid") == ".F." &&
@@ -9320,6 +9326,8 @@ void test_set_visual_object_enabled_assigns_logical_state() {
         .enabled = true
     });
     expect(!enabled_result.ok, "#796: enabled assignment should reject empty selections");
+    expect(enabled_result.affected_object_count == 0U,
+        "#1001: failed enabled assignment should report zero affected objects");
     expect(enabled_state() == committed_state, "#796: empty-selection failures should not mutate enabled states");
 
     enabled_result = copperfin::vfp::set_visual_object_enabled({
@@ -9462,6 +9470,8 @@ void test_set_visual_object_read_only_assigns_logical_state() {
         .read_only = true
     });
     expect(read_only_result.ok, "#797: read-only assignment should support mixed selectors");
+    expect(read_only_result.affected_object_count == 2U,
+        "#1001: successful read-only assignment should report affected object count");
     expect(read_only("one-guid") == ".T." &&
             read_only("two-guid") == ".T." &&
             read_only("three-guid") == ".T." &&
@@ -9495,6 +9505,8 @@ void test_set_visual_object_read_only_assigns_logical_state() {
         .read_only = true
     });
     expect(!read_only_result.ok, "#797: read-only assignment should reject empty selections");
+    expect(read_only_result.affected_object_count == 0U,
+        "#1001: failed read-only assignment should report zero affected objects");
     expect(read_only_state() == committed_state, "#797: empty-selection failures should not mutate read-only states");
 
     read_only_result = copperfin::vfp::set_visual_object_read_only({
@@ -9637,6 +9649,8 @@ void test_set_visual_object_locked_assigns_logical_state() {
         .locked = true
     });
     expect(locked_result.ok, "#798: locked assignment should support mixed selectors");
+    expect(locked_result.affected_object_count == 2U,
+        "#1001: successful locked assignment should report affected object count");
     expect(locked("one-guid") == ".T." &&
             locked("two-guid") == ".T." &&
             locked("three-guid") == ".T." &&
@@ -9670,6 +9684,8 @@ void test_set_visual_object_locked_assigns_logical_state() {
         .locked = true
     });
     expect(!locked_result.ok, "#798: locked assignment should reject empty selections");
+    expect(locked_result.affected_object_count == 0U,
+        "#1001: failed locked assignment should report zero affected objects");
     expect(locked_state() == committed_state, "#798: empty-selection failures should not mutate locked states");
 
     locked_result = copperfin::vfp::set_visual_object_locked({
@@ -9812,6 +9828,8 @@ void test_set_visual_object_caption_assigns_text() {
         .caption = "Primary Action"
     });
     expect(caption_result.ok, "#799: caption assignment should support mixed selectors");
+    expect(caption_result.affected_object_count == 2U,
+        "#1001: successful caption assignment should report affected object count");
     expect(caption("one-guid") == "Primary Action" &&
             caption("two-guid") == "Primary Action" &&
             caption("three-guid") == "Three" &&
@@ -9845,6 +9863,8 @@ void test_set_visual_object_caption_assigns_text() {
         .caption = "Ignored"
     });
     expect(!caption_result.ok, "#799: caption assignment should reject empty selections");
+    expect(caption_result.affected_object_count == 0U,
+        "#1001: failed caption assignment should report zero affected objects");
     expect(caption_state() == committed_state, "#799: empty-selection failures should not mutate captions");
 
     caption_result = copperfin::vfp::set_visual_object_caption({
