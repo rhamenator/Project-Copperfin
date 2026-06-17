@@ -12227,6 +12227,29 @@ void test_set_visual_object_column_order_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_child_order_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#938",
+        "child_order",
+        "ChildOrder",
+        "CHILDORDER",
+        "child-order",
+        0,
+        1,
+        2,
+        3,
+        4,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_child_order({
+                .path = path,
+                .objects = objects,
+                .child_order = value
+            });
+        });
+}
+
 void test_set_visual_object_special_effect_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#864",
@@ -23778,6 +23801,7 @@ int main() {
     test_set_visual_object_record_source_type_assigns_numeric_value();
     test_set_visual_object_partition_assigns_numeric_value();
     test_set_visual_object_column_order_assigns_numeric_value();
+    test_set_visual_object_child_order_assigns_numeric_value();
     test_set_visual_object_special_effect_assigns_numeric_value();
     test_set_visual_object_curvature_assigns_numeric_value();
     test_set_visual_object_draw_mode_assigns_numeric_value();

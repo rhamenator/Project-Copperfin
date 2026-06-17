@@ -1096,6 +1096,12 @@ struct VisualObjectColumnOrderRequest {
     int column_order = 0;
 };
 
+struct VisualObjectChildOrderRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int child_order = 0;
+};
+
 struct VisualObjectSpecialEffectRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1715,6 +1721,7 @@ VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMaster
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionRequest& request);
 VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrderRequest& request);
+VisualAssetEditResult set_visual_object_child_order(const VisualObjectChildOrderRequest& request);
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request);
 VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request);
 VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request);
