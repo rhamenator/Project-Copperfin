@@ -207,6 +207,10 @@ void test_parse_launch_arguments() {
         "#1070: launch contract should keep dynamic-back-color-object off by default");
     expect(!result.request.dynamic_back_color_available,
         "#1070: launch contract should keep dynamic back color unavailable by default");
+    expect(!result.request.dynamic_fore_color_object,
+        "#1071: launch contract should keep dynamic-fore-color-object off by default");
+    expect(!result.request.dynamic_fore_color_available,
+        "#1071: launch contract should keep dynamic fore color unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4293,6 +4297,84 @@ void test_parse_launch_arguments_rejects_dynamic_back_color_object_ambiguity() {
         "#1070: launch contract should reject stray dynamic-back-color arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_fore_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-fore-color-object",
+        "--dynamic-fore-color", "IIF(.T., RGB(7,8,9), 0)",
+        "--dynamic-fore-color-target-object-name", "lstOrders",
+        "--dynamic-fore-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1071: launch contract should parse dynamic-fore-color-object requests");
+    expect(result.request.dynamic_fore_color_object,
+        "#1071: launch contract should detect --dynamic-fore-color-object");
+    expect(result.request.dynamic_fore_color_available &&
+            result.request.dynamic_fore_color == "IIF(.T., RGB(7,8,9), 0)",
+        "#1071: dynamic-fore-color-object requests should carry raw expression text");
+    expect(result.request.dynamic_fore_color_objects.size() == 2U,
+        "#1071: dynamic-fore-color-object requests should collect dynamic-fore-color target selectors");
+    if (result.request.dynamic_fore_color_objects.size() == 2U) {
+        expect(result.request.dynamic_fore_color_objects[0].object_name == "lstOrders" &&
+                result.request.dynamic_fore_color_objects[0].unique_id.empty(),
+            "#1071: dynamic-fore-color-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_fore_color_objects[1].object_name.empty() &&
+                result.request.dynamic_fore_color_objects[1].unique_id == "two-guid",
+            "#1071: dynamic-fore-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_fore_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-fore-color-object",
+        "--dynamic-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1071: launch contract should reject dynamic-fore-color-object requests without dynamic fore color");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-fore-color-object",
+        "--dynamic-fore-color", "RGB(7,8,9)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1071: launch contract should reject dynamic-fore-color-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_fore_color_object_ambiguity() {
+    const auto dynamic_fore_back_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-fore-color-object",
+        "--dynamic-back-color-object",
+        "--dynamic-fore-color", "RGB(7,8,9)",
+        "--dynamic-fore-color-target-unique-id", "one-guid",
+        "--dynamic-back-color", "RGB(1,2,3)",
+        "--dynamic-back-color-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_fore_back_result.ok,
+        "#1071: launch contract should reject simultaneous dynamic-fore-color-object and dynamic-back-color-object requests");
+
+    const auto dynamic_fore_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-fore-color-object",
+        "--clear-property",
+        "--property-name", "DynamicForeColor",
+        "--dynamic-fore-color", "RGB(7,8,9)",
+        "--dynamic-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_fore_property_result.ok,
+        "#1071: launch contract should reject dynamic-fore-color-object combined with property commands");
+
+    const auto stray_dynamic_fore_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-fore-color", "RGB(7,8,9)"
+    });
+    expect(!stray_dynamic_fore_color_result.ok,
+        "#1071: launch contract should reject stray dynamic-fore-color arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -5654,6 +5736,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_back_color_object();
     test_parse_launch_arguments_rejects_dynamic_back_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_back_color_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_fore_color_object();
+    test_parse_launch_arguments_rejects_dynamic_fore_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_fore_color_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
