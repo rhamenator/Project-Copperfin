@@ -5942,6 +5942,19 @@ VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionReq
         std::to_string(request.partition));
 }
 
+VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrderRequest& request) {
+    if (request.column_order < 0) {
+        return {.ok = false, .error = "ColumnOrder must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ColumnOrder",
+        "column-order",
+        std::to_string(request.column_order));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
