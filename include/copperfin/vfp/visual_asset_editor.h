@@ -862,6 +862,12 @@ struct VisualObjectDeleteMarkRequest {
     bool delete_mark = false;
 };
 
+struct VisualObjectRecordMarkRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool record_mark = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1596,6 +1602,7 @@ VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWha
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMarkRequest& request);
+VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMarkRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);

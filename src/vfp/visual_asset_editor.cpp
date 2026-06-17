@@ -5531,6 +5531,15 @@ VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMark
         request.delete_mark ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMarkRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "RecordMark",
+        "record-mark",
+        request.record_mark ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

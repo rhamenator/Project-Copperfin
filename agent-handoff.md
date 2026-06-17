@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#924`, adding selected visual object delete-mark assignment so designer commands can assign FoxPro logical `DeleteMark` state to direct fields and serialized properties, including writable `PROPERTIES` rows where `DeleteMark` is absent, while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#925`, adding selected visual object record-mark assignment so designer commands can assign FoxPro logical `RecordMark` state to direct fields and serialized properties, including writable `PROPERTIES` rows where `RecordMark` is absent, while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
