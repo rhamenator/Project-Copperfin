@@ -99,6 +99,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.delete_object, "#1023: launch contract should keep delete-object off by default");
     expect(!result.request.restore_object, "#1024: launch contract should keep restore-object off by default");
     expect(!result.request.duplicate_object, "#1025: launch contract should keep duplicate-object off by default");
+    expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -325,6 +326,62 @@ void test_parse_launch_arguments_rejects_duplicate_object_ambiguity() {
     });
     expect(!duplicate_property_result.ok,
         "#1025: launch contract should reject duplicate-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_rename_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--rename-object",
+        "--object-name", "txtName",
+        "--unique-id", "textbox-guid",
+        "--new-object-name", "txtCustomer",
+        "--new-name", "txtCustomer",
+        "--new-unique-id", "customer-textbox-guid"
+    });
+
+    expect(result.ok, "#1026: launch contract should parse rename-object requests");
+    expect(result.request.rename_object, "#1026: launch contract should detect --rename-object");
+    expect(result.request.object_name == "txtName",
+        "#1026: rename-object requests should carry object-name selectors");
+    expect(result.request.unique_id == "textbox-guid",
+        "#1026: rename-object requests should carry unique-id selectors");
+    expect(result.request.new_object_name == "txtCustomer",
+        "#1026: rename-object requests should carry replacement object names");
+    expect(result.request.new_name == "txtCustomer",
+        "#1026: rename-object requests should carry replacement NAME values");
+    expect(result.request.new_unique_id == "customer-textbox-guid",
+        "#1026: rename-object requests should carry replacement unique ids");
+}
+
+void test_parse_launch_arguments_rejects_rename_object_ambiguity_and_empty_identity() {
+    const auto empty_identity_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--rename-object",
+        "--unique-id", "textbox-guid"
+    });
+    expect(!empty_identity_result.ok,
+        "#1026: launch contract should reject rename-object requests without replacement identity fields");
+
+    const auto rename_duplicate_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--rename-object",
+        "--duplicate-object",
+        "--unique-id", "textbox-guid",
+        "--new-object-name", "txtCustomer"
+    });
+    expect(!rename_duplicate_result.ok,
+        "#1026: launch contract should reject simultaneous rename-object and duplicate-object requests");
+
+    const auto rename_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--rename-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--new-object-name", "txtCustomer"
+    });
+    expect(!rename_property_result.ok,
+        "#1026: launch contract should reject rename-object combined with property commands");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1557,6 +1614,8 @@ int main() {
     test_parse_launch_arguments_rejects_restore_object_ambiguity();
     test_parse_launch_arguments_for_duplicate_object();
     test_parse_launch_arguments_rejects_duplicate_object_ambiguity();
+    test_parse_launch_arguments_for_rename_object();
+    test_parse_launch_arguments_rejects_rename_object_ambiguity_and_empty_identity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

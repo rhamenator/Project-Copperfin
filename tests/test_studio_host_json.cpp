@@ -1630,6 +1630,119 @@ void test_studio_host_json_duplicates_objects_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_renames_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_rename_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path object_name_path = temp_root / "object_name.scx";
+    write_synthetic_form_table_for_toolbox_creation(object_name_path);
+    const auto object_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", object_name_path.string(),
+            "--rename-object",
+            "--object-name", "txt1",
+            "--new-object-name", "txtCustomer",
+            "--new-name", "txtCustomer",
+            "--new-unique-id", "customer-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(object_name_process.exit_code == 0,
+        "#1026: object-name host object renames should exit successfully");
+    expect(visual_object_count(object_name_path) == 2U,
+        "#1026: object-name host object renames should not append visual objects");
+    expect(visual_object_exists(object_name_path, "customer-textbox-guid") &&
+            !visual_object_exists(object_name_path, "existing-textbox-guid"),
+        "#1026: object-name host object renames should replace the target identity");
+
+    const fs::path unique_id_path = temp_root / "unique_id.scx";
+    write_synthetic_form_table_for_toolbox_creation(unique_id_path);
+    const auto unique_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--rename-object",
+            "--unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtCustomerById",
+            "--new-name", "txtCustomerById",
+            "--new-unique-id", "customer-by-id-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_process.exit_code == 0,
+        "#1026: unique-id host object renames should exit successfully");
+    expect(visual_object_count(unique_id_path) == 2U,
+        "#1026: unique-id host object renames should not append visual objects");
+    expect(visual_object_exists(unique_id_path, "customer-by-id-guid") &&
+            !visual_object_exists(unique_id_path, "existing-textbox-guid"),
+        "#1026: unique-id host object renames should replace the target identity");
+
+    const fs::path missing_path = temp_root / "missing.scx";
+    write_synthetic_form_table_for_toolbox_creation(missing_path);
+    const auto missing_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_path.string(),
+            "--rename-object",
+            "--object-name", "missingObject",
+            "--new-object-name", "missingRename",
+            "--new-name", "missingRename",
+            "--new-unique-id", "missing-rename-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_process.exit_code == 4,
+        "#1026: missing object-name host object renames should return command failure");
+    expect(visual_object_count(missing_path) == 2U &&
+            visual_object_exists(missing_path, "existing-textbox-guid"),
+        "#1026: missing object-name host object renames should not mutate the asset");
+
+    const fs::path empty_identity_path = temp_root / "empty_identity.scx";
+    write_synthetic_form_table_for_toolbox_creation(empty_identity_path);
+    const auto empty_identity_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", empty_identity_path.string(),
+            "--rename-object",
+            "--unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(empty_identity_process.exit_code == 2,
+        "#1026: rename-object without replacement identity fields should fail during launch parsing");
+    expect(visual_object_count(empty_identity_path) == 2U &&
+            visual_object_exists(empty_identity_path, "existing-textbox-guid"),
+        "#1026: rename-object empty-identity failures should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_toolbox_creation(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--rename-object",
+            "--duplicate-object",
+            "--unique-id", "existing-textbox-guid",
+            "--new-object-name", "ambiguousRename",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1026: rename-object plus duplicate-object requests should fail during launch parsing");
+    expect(visual_object_count(ambiguous_path) == 2U &&
+            visual_object_exists(ambiguous_path, "existing-textbox-guid"),
+        "#1026: rename-object/duplicate-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1646,5 +1759,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
