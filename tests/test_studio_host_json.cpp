@@ -682,6 +682,24 @@ void write_synthetic_form_table_for_object_row_source_type(const std::filesystem
     expect(create_result.ok, "#1049: synthetic SCX table for object row source type should be created");
 }
 
+void write_synthetic_form_table_for_object_bound_column(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "BOUNDCOLUMN", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "cboCustomer", "one-guid", "1"},
+        {"lstOrders", "lstOrders", "two-guid", "2"},
+        {"lblStatus", "lblStatus", "three-guid", "0"},
+        {"cboOther", "cboOther", "other-guid", "3"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1050: synthetic SCX table for object bound column should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4965,6 +4983,146 @@ void test_studio_host_json_assigns_row_source_type_by_stable_selectors(const std
     }
 }
 
+void test_studio_host_json_assigns_bound_column_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_bound_column_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path bound_column_path = temp_root / "bound_column.scx";
+    write_synthetic_form_table_for_object_bound_column(bound_column_path);
+    const auto bound_column_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", bound_column_path.string(),
+            "--bound-column-object",
+            "--bound-column", "4",
+            "--bound-column-target-object-name", "cboCustomer",
+            "--bound-column-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(bound_column_process.exit_code == 0,
+        "#1050: host object bound-column assignment should exit successfully");
+    expect(visual_object_property(bound_column_path, "one-guid", "BOUNDCOLUMN") == "4" &&
+            visual_object_property(bound_column_path, "two-guid", "BOUNDCOLUMN") == "4" &&
+            visual_object_property(bound_column_path, "three-guid", "BOUNDCOLUMN") == "0" &&
+            visual_object_property(bound_column_path, "other-guid", "BOUNDCOLUMN") == "3",
+        "#1050: host object bound-column assignment should assign selected numeric values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_bound_column(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--bound-column-object",
+            "--bound-column", "4",
+            "--bound-column-target-unique-id", "one-guid",
+            "--bound-column-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1050: missing-target host object bound-column assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "BOUNDCOLUMN") == "1" &&
+            visual_object_property(missing_target_path, "two-guid", "BOUNDCOLUMN") == "2",
+        "#1050: missing-target host object bound-column assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_bound_column(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--bound-column-object",
+            "--bound-column", "4",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1050: bound-column-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "BOUNDCOLUMN") == "1",
+        "#1050: bound-column-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_bound_column(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--bound-column-object",
+            "--bound-column-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1050: bound-column-object without bound-column value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "BOUNDCOLUMN") == "1",
+        "#1050: bound-column-object without bound-column value should not mutate the asset");
+
+    const fs::path negative_path = temp_root / "negative.scx";
+    write_synthetic_form_table_for_object_bound_column(negative_path);
+    const auto negative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_path.string(),
+            "--bound-column-object",
+            "--bound-column", "-1",
+            "--bound-column-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_process.exit_code == 2,
+        "#1050: negative bound-column values should fail during launch parsing");
+    expect(visual_object_property(negative_path, "one-guid", "BOUNDCOLUMN") == "1",
+        "#1050: negative bound-column values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_bound_column(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--bound-column-object",
+            "--bound-column", "4",
+            "--bound-column-target-unique-id", "one-guid",
+            "--bound-column-target-object-name", "cboCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1050: duplicate-target host object bound-column assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "BOUNDCOLUMN") == "1",
+        "#1050: duplicate-target host object bound-column assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_bound_column(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--bound-column-object",
+            "--row-source-type-object",
+            "--bound-column", "4",
+            "--bound-column-target-unique-id", "one-guid",
+            "--row-source-type", "6",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1050: bound-column-object plus row-source-type-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "BOUNDCOLUMN") == "1",
+        "#1050: bound-column-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -5123,6 +5281,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_format_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_type_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_bound_column_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

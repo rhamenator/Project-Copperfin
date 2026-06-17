@@ -135,6 +135,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.row_source_available, "#1048: launch contract should keep row source unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
+    expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
+    expect(!result.request.bound_column_available, "#1050: launch contract should keep bound column unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2267,6 +2269,100 @@ void test_parse_launch_arguments_rejects_row_source_type_object_ambiguity() {
         "#1049: launch contract should reject stray row-source-type arguments");
 }
 
+void test_parse_launch_arguments_for_bound_column_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--bound-column-object",
+        "--bound-column", "4",
+        "--bound-column-target-object-name", "cboCustomer",
+        "--bound-column-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1050: launch contract should parse bound-column-object requests");
+    expect(result.request.bound_column_object, "#1050: launch contract should detect --bound-column-object");
+    expect(result.request.bound_column_available && result.request.bound_column == 4,
+        "#1050: bound-column-object requests should carry bound column values");
+    expect(result.request.bound_column_objects.size() == 2U,
+        "#1050: bound-column-object requests should collect bound column target selectors");
+    if (result.request.bound_column_objects.size() == 2U) {
+        expect(result.request.bound_column_objects[0].object_name == "cboCustomer" &&
+                result.request.bound_column_objects[0].unique_id.empty(),
+            "#1050: bound-column-object requests should parse target object-name selectors");
+        expect(result.request.bound_column_objects[1].object_name.empty() &&
+                result.request.bound_column_objects[1].unique_id == "two-guid",
+            "#1050: bound-column-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_bound_column_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--bound-column-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1050: launch contract should reject bound-column-object requests without bound column");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--bound-column", "4"
+    });
+    expect(!missing_targets_result.ok,
+        "#1050: launch contract should reject bound-column-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--bound-column", "first",
+        "--bound-column-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1050: launch contract should reject non-integer bound-column values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--bound-column", "-1",
+        "--bound-column-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1050: launch contract should reject negative bound-column values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_bound_column_object_ambiguity() {
+    const auto column_type_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--row-source-type-object",
+        "--bound-column", "4",
+        "--bound-column-target-unique-id", "one-guid",
+        "--row-source-type", "6",
+        "--row-source-type-target-unique-id", "one-guid"
+    });
+    expect(!column_type_result.ok,
+        "#1050: launch contract should reject simultaneous bound-column-object and row-source-type-object requests");
+
+    const auto column_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column-object",
+        "--clear-property",
+        "--property-name", "BoundColumn",
+        "--bound-column", "4",
+        "--bound-column-target-unique-id", "one-guid"
+    });
+    expect(!column_property_result.ok,
+        "#1050: launch contract should reject bound-column-object combined with property commands");
+
+    const auto stray_bound_column_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bound-column", "4"
+    });
+    expect(!stray_bound_column_result.ok,
+        "#1050: launch contract should reject stray bound-column arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3565,6 +3661,9 @@ int main() {
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();
+    test_parse_launch_arguments_for_bound_column_object();
+    test_parse_launch_arguments_rejects_bound_column_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_bound_column_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

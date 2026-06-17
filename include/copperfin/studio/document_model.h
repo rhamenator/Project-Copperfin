@@ -83,6 +83,7 @@ struct StudioOpenRequest {
     double delta_vpos = 0.0;
     int starting_tab_index = 0;
     int row_source_type = 0;
+    int bound_column = 0;
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -118,6 +119,7 @@ struct StudioOpenRequest {
     bool format_object = false;
     bool row_source_object = false;
     bool row_source_type_object = false;
+    bool bound_column_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -140,6 +142,7 @@ struct StudioOpenRequest {
     bool format_available = false;
     bool row_source_available = false;
     bool row_source_type_available = false;
+    bool bound_column_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -163,6 +166,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> format_objects{};
     std::vector<StudioObjectSelector> row_source_objects{};
     std::vector<StudioObjectSelector> row_source_type_objects{};
+    std::vector<StudioObjectSelector> bound_column_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
