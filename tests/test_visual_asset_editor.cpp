@@ -21742,6 +21742,10 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     });
     expect(group_result.ok && group_result.container_record_index == 4U && group_result.child_count == 2U,
         "#989: grouping should append a container and report the grouped child count");
+    expect(group_result.container_object_name == "cntGroup" &&
+            group_result.container_unique_id == "group-guid" &&
+            group_result.container_parent_name == "frmMain",
+        "#996: grouping should report created container identity metadata");
     expect(object_count() == 5U,
         "#788: grouping should append exactly one group container");
 
@@ -21786,6 +21790,10 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
     });
     expect(!group_result.ok && group_result.child_count == 0U,
         "#989: grouping should reject missing selected objects with zero grouped child count");
+    expect(group_result.container_object_name.empty() &&
+            group_result.container_unique_id.empty() &&
+            group_result.container_parent_name.empty(),
+        "#996: failed grouping should not report stale container identity metadata");
     expect(object_count() == committed_count &&
             parent_value("save-guid") == "frmMain" &&
             parent_value("name-guid") == "frmMain",

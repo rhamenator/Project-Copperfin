@@ -4827,20 +4827,32 @@ VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& req
     });
 }
 
+VisualObjectGroupResult failed_visual_object_group_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .container_record_index = 0U,
+        .child_count = 0U,
+        .container_object_name = {},
+        .container_unique_id = {},
+        .container_parent_name = {}
+    };
+}
+
 VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result("No asset path was provided.");
     }
     if (request.container_field_values.empty()) {
-        return {.ok = false, .error = "No group container field values were provided.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result("No group container field values were provided.");
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for grouping.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result("No visual objects were selected for grouping.");
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result("Unable to open the visual asset table.");
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -4860,29 +4872,20 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     });
     if (!create_result.ok) {
         restore_original_asset();
-        return {.ok = false, .error = create_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result(create_result.error);
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, create_result.record_index + 1U);
     if (!table_result.ok || create_result.record_index >= table_result.table.records.size()) {
         restore_original_asset();
-        return {
-            .ok = false,
-            .error = table_result.ok ? "The created group container is not available." : table_result.error,
-            .container_record_index = 0U,
-            .child_count = 0U
-        };
+        return failed_visual_object_group_result(
+            table_result.ok ? "The created group container is not available." : table_result.error);
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[create_result.record_index]);
     if (container_name.empty()) {
         restore_original_asset();
-        return {
-            .ok = false,
-            .error = "The group container does not expose an object name.",
-            .container_record_index = 0U,
-            .child_count = 0U
-        };
+        return failed_visual_object_group_result("The group container does not expose an object name.");
     }
 
     std::vector<VisualObjectReparentBatchItem> reparent_items;
@@ -4904,14 +4907,17 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     });
     if (!reparent_result.ok) {
         restore_original_asset();
-        return {.ok = false, .error = reparent_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_group_result(reparent_result.error);
     }
 
     return {
         .ok = true,
         .error = {},
         .container_record_index = create_result.record_index,
-        .child_count = request.objects.size()
+        .child_count = request.objects.size(),
+        .container_object_name = create_result.object_name,
+        .container_unique_id = create_result.unique_id,
+        .container_parent_name = create_result.parent_name
     };
 }
 
