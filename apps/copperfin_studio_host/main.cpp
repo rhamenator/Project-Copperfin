@@ -342,6 +342,13 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         [](const copperfin::studio::StudioObjectSnapshot& object) {
             return object.parent_record_index == copperfin::studio::StudioObjectMissingRecordIndex;
         }));
+    std::vector<std::size_t> root_record_indexes;
+    root_record_indexes.reserve(root_object_count);
+    for (const auto& object : objects) {
+        if (object.parent_record_index == copperfin::studio::StudioObjectMissingRecordIndex) {
+            root_record_indexes.push_back(object.record_index);
+        }
+    }
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
     const auto security_profile = copperfin::security::default_native_security_profile();
@@ -404,6 +411,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"objectCount\": " << objects.size() << ",\n";
     std::cout << "    \"deletedObjectCount\": " << deleted_object_count << ",\n";
     std::cout << "    \"rootObjectCount\": " << root_object_count << ",\n";
+    std::cout << "    \"rootRecordIndexes\": ";
+    print_json_record_index_array(root_record_indexes);
+    std::cout << ",\n";
     std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);
