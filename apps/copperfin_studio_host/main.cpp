@@ -261,6 +261,17 @@ void print_json_record_index_or_null(std::size_t record_index) {
     }
 }
 
+void print_json_record_index_array(const std::vector<std::size_t>& record_indexes) {
+    std::cout << "[";
+    for (std::size_t index = 0; index < record_indexes.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ", ";
+        }
+        std::cout << record_indexes[index];
+    }
+    std::cout << "]";
+}
+
 void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent) {
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
@@ -298,6 +309,9 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     print_json_string(object.baseclass_name);
     std::cout << ",\n";
     std::cout << indent << "  \"childCount\": " << object.child_count << ",\n";
+    std::cout << indent << "  \"childRecordIndexes\": ";
+    print_json_record_index_array(object.child_record_indexes);
+    std::cout << ",\n";
     std::cout << indent << "  \"propertyCount\": " << object.properties.size() << ",\n";
     std::cout << indent << "  \"properties\": ";
     print_json_object_properties(object.properties, indent + "  ");
@@ -926,6 +940,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_string(object.baseclass_name);
         std::cout << ",\n";
         std::cout << "        \"childCount\": " << object.child_count << ",\n";
+        std::cout << "        \"childRecordIndexes\": ";
+        print_json_record_index_array(object.child_record_indexes);
+        std::cout << ",\n";
         std::cout << "        \"propertyCount\": " << object.properties.size() << ",\n";
         std::cout << "        \"properties\": ";
         print_json_object_properties(object.properties, "        ");

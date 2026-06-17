@@ -613,6 +613,13 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
 
     for (auto& object : objects) {
         object.object_path = build_object_path(object, objects);
+        object.child_record_indexes.clear();
+        for (const auto& candidate : objects) {
+            if (candidate.parent_record_index == object.record_index) {
+                object.child_record_indexes.push_back(candidate.record_index);
+            }
+        }
+        object.child_count = object.child_record_indexes.size();
     }
 
     return objects;
