@@ -3414,7 +3414,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
         request.method_kind,
         request.source_text);
 
-    return update_visual_object_property({
+    auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
@@ -3422,6 +3422,10 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request) {
@@ -3477,7 +3481,7 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         return {.ok = false, .error = "The requested method was not found."};
     }
 
-    return update_visual_object_property({
+    auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
@@ -3485,6 +3489,10 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDeleteBatchRequest& request) {
@@ -3537,7 +3545,7 @@ VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDelet
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.methods.size()};
 }
 
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request) {
@@ -3587,7 +3595,7 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
         return rename_result;
     }
 
-    return update_visual_object_property({
+    auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
@@ -3595,6 +3603,10 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenameBatchRequest& request) {
@@ -3658,7 +3670,7 @@ VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenam
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.methods.size()};
 }
 
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request) {
@@ -3773,7 +3785,7 @@ VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBat
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.methods.size()};
 }
 
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request) {
@@ -3847,7 +3859,7 @@ VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequ
         return {.ok = false, .error = delete_result.error};
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBatchRequest& request) {
@@ -3915,7 +3927,7 @@ VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBat
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.methods.size()};
 }
 
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request) {
@@ -3963,7 +3975,7 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
         return reorder_result;
     }
 
-    return update_visual_object_property({
+    auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
@@ -3971,6 +3983,10 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
         .property_name = "METHODS",
         .property_value = updated_blob
     });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReorderBatchRequest& request) {
@@ -4025,7 +4041,7 @@ VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReor
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.methods.size()};
 }
 
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {

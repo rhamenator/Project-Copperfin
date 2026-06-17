@@ -3644,6 +3644,8 @@ void test_update_visual_object_method_updates_and_appends_methods() {
         .source_text = "THISFORM.Save(.T.)"
     });
     expect(update_result.ok, "#747: method edits should update existing selected-object methods case-insensitively");
+    expect(update_result.affected_object_count == 1U,
+        "#1004: successful method update should report one affected object");
 
     update_result = copperfin::vfp::update_visual_object_method({
         .path = table_path.string(),
@@ -3655,6 +3657,8 @@ void test_update_visual_object_method_updates_and_appends_methods() {
         .source_text = "RETURN THIS.Caption"
     });
     expect(update_result.ok, "#747: method edits should append missing selected-object methods");
+    expect(update_result.affected_object_count == 1U,
+        "#1004: successful method append should report one affected object");
 
     auto method_result = copperfin::vfp::list_visual_object_methods({
         .path = table_path.string(),
@@ -3736,6 +3740,8 @@ void test_delete_visual_object_method_removes_selected_methods() {
         .method_name = "click"
     });
     expect(delete_result.ok, "#748: method deletes should remove existing selected-object methods case-insensitively");
+    expect(delete_result.affected_object_count == 1U,
+        "#1004: successful method delete should report one affected object");
 
     auto method_result = copperfin::vfp::list_visual_object_methods({
         .path = table_path.string(),
@@ -3766,6 +3772,8 @@ void test_delete_visual_object_method_removes_selected_methods() {
         .method_name = "DoesNotExist"
     });
     expect(!delete_result.ok, "#748: missing method deletes should fail explicitly");
+    expect(delete_result.affected_object_count == 0U,
+        "#1004: failed method delete should report zero affected objects");
 
     method_result = copperfin::vfp::list_visual_object_methods({
         .path = table_path.string(),
@@ -3877,6 +3885,8 @@ void test_delete_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#776: batch method delete should support mixed selectors plus procedure and function deletion");
+    expect(batch_result.affected_object_count == 3U,
+        "#1004: successful batch method delete should report affected item count");
 
     auto save_click = method_state("save-guid", "Click");
     auto save_get_caption = method_state("save-guid", "GetCaption");
@@ -3917,6 +3927,8 @@ void test_delete_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#776: batch method delete should reject missing methods");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: failed batch method delete should report zero affected objects");
     save_init = method_state("save-guid", "Init");
     expect(save_init.ok && save_init.exists,
         "#776: missing-method failures should roll back earlier method deletes");
@@ -3977,6 +3989,8 @@ void test_delete_visual_object_methods_rolls_back_failed_batches() {
         .methods = {}
     });
     expect(!batch_result.ok, "#776: empty batch method delete requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: empty batch method delete should report zero affected objects");
 
     const fs::path unsupported_path = temp_dir / "method_delete_batch_unsupported.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
@@ -4069,6 +4083,8 @@ void test_rename_visual_object_method_updates_declarations() {
         .new_method_name = "SaveClick"
     });
     expect(rename_result.ok, "#761: method rename should update procedure declarations case-insensitively");
+    expect(rename_result.affected_object_count == 1U,
+        "#1004: successful method rename should report one affected object");
 
     rename_result = copperfin::vfp::rename_visual_object_method({
         .path = table_path.string(),
@@ -4119,6 +4135,8 @@ void test_rename_visual_object_method_updates_declarations() {
         .new_method_name = "BuildCaption"
     });
     expect(!rename_result.ok, "#761: method rename should reject target method collisions");
+    expect(rename_result.affected_object_count == 0U,
+        "#1004: failed method rename should report zero affected objects");
 
     rename_result = copperfin::vfp::rename_visual_object_method({
         .path = table_path.string(),
@@ -4248,6 +4266,8 @@ void test_rename_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#777: batch method rename should support mixed selectors plus procedure and function renames");
+    expect(batch_result.affected_object_count == 3U,
+        "#1004: successful batch method rename should report affected item count");
 
     auto save_click = method_state("save-guid", "Click");
     auto save_save_click = method_state("save-guid", "SaveClick");
@@ -4296,6 +4316,8 @@ void test_rename_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#777: batch method rename should reject missing methods");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: failed batch method rename should report zero affected objects");
     save_init = method_state("save-guid", "Init");
     auto save_start_up = method_state("save-guid", "StartUp");
     expect(save_init.ok && save_init.exists &&
@@ -4420,6 +4442,8 @@ void test_rename_visual_object_methods_rolls_back_failed_batches() {
         .methods = {}
     });
     expect(!batch_result.ok, "#777: empty batch method rename requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: empty batch method rename should report zero affected objects");
 
     const fs::path unsupported_path = temp_dir / "method_rename_batch_unsupported.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
@@ -4527,6 +4551,8 @@ void test_copy_visual_object_method_between_selected_objects() {
         .replace_existing = false
     });
     expect(copy_result.ok, "#763: method copy should copy procedures by UNIQUEID source and object-name target");
+    expect(copy_result.affected_object_count == 1U,
+        "#1004: successful method copy should report one affected object");
 
     copy_result = copperfin::vfp::copy_visual_object_method({
         .path = table_path.string(),
@@ -4596,6 +4622,8 @@ void test_copy_visual_object_method_between_selected_objects() {
         .replace_existing = false
     });
     expect(!copy_result.ok, "#763: method copy should reject target collisions without replacement");
+    expect(copy_result.affected_object_count == 0U,
+        "#1004: failed method copy should report zero affected objects");
 
     copy_result = copperfin::vfp::copy_visual_object_method({
         .path = table_path.string(),
@@ -4867,6 +4895,8 @@ void test_copy_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#778: batch method copy should support mixed selectors, procedure/function copy, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1004: successful batch method copy should report affected item count");
 
     auto target_click = method_state("target-guid", "Click");
     auto target_caption_text = method_state("target-guid", "CaptionText");
@@ -4920,6 +4950,8 @@ void test_copy_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#778: batch method copy should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: failed batch method copy should report zero affected objects");
     auto target_temp_caption = method_state("target-guid", "TempCaption");
     expect(target_temp_caption.ok && !target_temp_caption.exists,
         "#778: target-collision failures should roll back earlier method copy targets");
@@ -5064,6 +5096,8 @@ void test_copy_visual_object_methods_rolls_back_failed_batches() {
         .methods = {}
     });
     expect(!batch_result.ok, "#778: empty batch method copy requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: empty batch method copy should report zero affected objects");
 
     const fs::path unsupported_path = temp_dir / "method_copy_batch_unsupported.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
@@ -5174,6 +5208,8 @@ void test_move_visual_object_method_between_selected_objects() {
         .replace_existing = false
     });
     expect(move_result.ok, "#764: method move should move procedures by UNIQUEID source and object-name target");
+    expect(move_result.affected_object_count == 1U,
+        "#1004: successful method move should report one affected object");
 
     auto source_methods = copperfin::vfp::list_visual_object_methods({
         .path = table_path.string(),
@@ -5283,6 +5319,8 @@ void test_move_visual_object_method_between_selected_objects() {
         .replace_existing = false
     });
     expect(!move_result.ok, "#764: method move should reject target collisions without replacement");
+    expect(move_result.affected_object_count == 0U,
+        "#1004: failed method move should report zero affected objects");
     source_methods = copperfin::vfp::list_visual_object_methods({
         .path = table_path.string(),
         .record_index = 0U,
@@ -5547,6 +5585,8 @@ void test_move_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#779: batch method move should support mixed selectors, procedure/function move, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1004: successful batch method move should report affected item count");
 
     auto source_click = method_state("source-guid", "Click");
     auto source_get_caption = method_state("source-guid", "GetCaption");
@@ -5607,6 +5647,8 @@ void test_move_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#779: batch method move should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: failed batch method move should report zero affected objects");
     auto target_temp_late = method_state("target-guid", "TempLate");
     source_late = method_state("source-guid", "Late");
     expect(target_temp_late.ok && !target_temp_late.exists &&
@@ -5782,6 +5824,8 @@ void test_move_visual_object_methods_rolls_back_failed_batches() {
         .methods = {}
     });
     expect(!batch_result.ok, "#779: empty batch method move requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: empty batch method move should report zero affected objects");
 
     const fs::path unsupported_path = temp_dir / "method_move_batch_unsupported.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
@@ -5919,6 +5963,8 @@ void test_reorder_visual_object_methods_within_selected_object() {
         .relative_method_name = {}
     });
     expect(reorder_result.ok, "#765: method reorder should support UNIQUEID selection and first placement");
+    expect(reorder_result.affected_object_count == 1U,
+        "#1004: successful method reorder should report one affected object");
     expect(order_is(method_order("source-guid"), {"Charlie", "Alpha", "Bravo"}),
         "#765: first placement should move the requested method to the start");
 
@@ -5994,6 +6040,8 @@ void test_reorder_visual_object_methods_within_selected_object() {
         .relative_method_name = {}
     });
     expect(!reorder_result.ok, "#765: method reorder should reject missing methods");
+    expect(reorder_result.affected_object_count == 0U,
+        "#1004: failed method reorder should report zero affected objects");
 
     reorder_result = copperfin::vfp::reorder_visual_object_method({
         .path = table_path.string(),
@@ -6241,6 +6289,8 @@ void test_reorder_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#780: batch method reorder should support mixed selectors and all placements");
+    expect(batch_result.affected_object_count == 4U,
+        "#1004: successful batch method reorder should report affected item count");
     expect(order_is(method_order("source-guid"), {"Alpha", "Bravo", "Delta", "Charlie"}) &&
             order_is(method_order("name-guid"), {"Two", "Three", "One"}) &&
             order_is(method_order("status-guid"), {"Red", "Blue", "Green"}),
@@ -6280,6 +6330,8 @@ void test_reorder_visual_object_methods_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#780: batch method reorder should reject missing methods");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: failed batch method reorder should report zero affected objects");
     expect(order_is(method_order("source-guid"), {"Alpha", "Bravo", "Delta", "Charlie"}),
         "#780: missing-method failures should roll back earlier method reorders");
 
@@ -6445,6 +6497,8 @@ void test_reorder_visual_object_methods_rolls_back_failed_batches() {
         .methods = {}
     });
     expect(!batch_result.ok, "#780: empty batch method reorder requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1004: empty batch method reorder should report zero affected objects");
 
     const fs::path unsupported_path = temp_dir / "method_reorder_batch_unsupported.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
