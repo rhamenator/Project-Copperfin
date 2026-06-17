@@ -174,6 +174,12 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#961: document JSON should expose designer context array");
     expect_contains(process.stdout_text, "\"selectionContext\": \"visual_object\"",
                     "#961: form JSON should expose the visual-object context token");
+    expect_contains(process.stdout_text, "\"editorActionCount\": 5",
+                    "#1009: form JSON should expose designer context editor-action count");
+    expect_contains(process.stdout_text, "\"builderCount\": 2",
+                    "#1009: form JSON should expose designer context builder count");
+    expect_contains(process.stdout_text, "\"toolboxItemCount\": ",
+                    "#1009: form JSON should expose designer context toolbox-item count");
     expect_contains(process.stdout_text, "\"editorActions\": [",
                     "#961: designer context JSON should expose editor actions");
     expect_contains(process.stdout_text, "\"id\": \"show-property-grid\"",
@@ -263,6 +269,10 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
            "#965: Studio host data-environment symbol context JSON smoke should exit successfully");
     expect_contains(data_environment_process.stdout_text, "\"selectionContext\": \"data_environment\"",
                     "#965: DataEnvironment symbols should infer data-environment JSON contexts");
+    expect_contains(data_environment_process.stdout_text, "\"builderCount\": 1",
+                    "#1009: data-environment JSON should expose designer context builder count");
+    expect_contains(data_environment_process.stdout_text, "\"toolboxItemCount\": 0",
+                    "#1009: data-environment JSON should expose zero toolbox-item count");
     expect_contains(data_environment_process.stdout_text, "\"id\": \"edit-data-environment\"",
                     "#965: inferred data-environment contexts should expose data-environment editor actions");
     expect_contains(data_environment_process.stdout_text, "\"id\": \"data-environment-builder\"",

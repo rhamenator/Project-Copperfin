@@ -115,6 +115,9 @@ void print_json_designer_contexts(const std::vector<copperfin::studio::StudioDes
         std::cout << "        \"selectionContext\": ";
         print_json_string(copperfin::studio::studio_editor_selection_context_name(context.selection_context));
         std::cout << ",\n";
+        std::cout << "        \"editorActionCount\": " << context.editor_action_count << ",\n";
+        std::cout << "        \"builderCount\": " << context.builder_count << ",\n";
+        std::cout << "        \"toolboxItemCount\": " << context.toolbox_item_count << ",\n";
         std::cout << "        \"editorActions\": [\n";
         for (std::size_t action_index = 0; action_index < context.editor_actions.size(); ++action_index) {
             const auto& action = context.editor_actions[action_index];

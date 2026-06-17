@@ -250,6 +250,12 @@ void test_open_document_attaches_default_designer_contexts() {
         const auto& context = form_result.document.designer_contexts.front();
         expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object,
                "#960: form documents should expose the visual-object designer context");
+        expect(context.editor_action_count == context.editor_actions.size(),
+               "#1009: form designer context should report editor-action count metadata");
+        expect(context.builder_count == context.builders.size(),
+               "#1009: form designer context should report builder count metadata");
+        expect(context.toolbox_item_count == context.toolbox_items.size(),
+               "#1009: form designer context should report toolbox-item count metadata");
         expect(has_descriptor_id(context.editor_actions, "show-property-grid"),
                "#960: form designer context should include property-grid actions");
         expect(has_descriptor_id(context.builders, "control-builder"),
@@ -284,6 +290,10 @@ void test_open_document_attaches_default_designer_contexts() {
         const auto& context = data_environment_symbol_result.document.designer_contexts.front();
         expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::data_environment,
                "#965: DataEnvironment method symbols should infer the data-environment designer context for forms");
+        expect(context.editor_action_count == context.editor_actions.size() &&
+                   context.builder_count == context.builders.size() &&
+                   context.toolbox_item_count == 0U,
+               "#1009: inferred data-environment contexts should report filtered descriptor counts");
         expect(has_descriptor_id(context.editor_actions, "edit-data-environment"),
                "#965: inferred data-environment contexts should include data-environment editor actions");
         expect(has_descriptor_id(context.builders, "data-environment-builder"),
@@ -374,6 +384,10 @@ void test_open_document_attaches_default_designer_contexts() {
         const auto& context = report_result.document.designer_contexts.front();
         expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression,
                "#960: report documents should expose the report-expression designer context");
+        expect(context.editor_action_count == context.editor_actions.size() &&
+                   context.builder_count == context.builders.size() &&
+                   context.toolbox_item_count == context.toolbox_items.size(),
+               "#1009: report designer context should report descriptor counts");
         expect(has_descriptor_id(context.editor_actions, "edit-report-expression"),
                "#960: report designer context should include expression editor actions");
         expect(has_descriptor_id(context.builders, "report-builder"),

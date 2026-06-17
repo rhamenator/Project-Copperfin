@@ -1,5 +1,7 @@
 #include "copperfin/studio/designer_context.h"
 
+#include <utility>
+
 namespace copperfin::studio {
 
 namespace {
@@ -36,11 +38,18 @@ std::vector<StudioToolboxItemDescriptor> toolbox_items_for_selection_context(Stu
 }  // namespace
 
 StudioDesignerContextResult studio_designer_context_for_selection(const StudioDesignerContextRequest& request) {
+    auto editor_actions = studio_editor_actions_for_context(request.selection_context);
+    auto builders = builders_for_selection_context(request.selection_context);
+    auto toolbox_items = toolbox_items_for_selection_context(request.selection_context);
+
     return {
         .selection_context = request.selection_context,
-        .editor_actions = studio_editor_actions_for_context(request.selection_context),
-        .builders = builders_for_selection_context(request.selection_context),
-        .toolbox_items = toolbox_items_for_selection_context(request.selection_context)
+        .editor_action_count = editor_actions.size(),
+        .builder_count = builders.size(),
+        .toolbox_item_count = toolbox_items.size(),
+        .editor_actions = std::move(editor_actions),
+        .builders = std::move(builders),
+        .toolbox_items = std::move(toolbox_items)
     };
 }
 
