@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1016 report/label DataEnvironment context inference shipped: DataEnvironment symbols and selected DataEnvironment records now infer `data_environment` for FRX/LBX assets as well as forms/classes, while report/label expression defaults and explicit override precedence remain intact.
 - E2/#1015 selected visual container context inference shipped: form/class launches that select container-like records such as PageFrame or Grid now infer `container_object` when no explicit context override is present, with DataEnvironment and explicit override precedence preserved.
 - E2/#1014 container designer selection context shipped: explicit Studio launches can request `container_object`, exposing property-grid, method-editor, control/grid builders, and container-safe toolbox metadata without inheriting form/class/report/menu/project/data-environment builders.
 - E2/#1013 menu designer selection context shipped: MNX/MNT documents now default to `menu_item`, explicit Studio launches accept the token, and menu contexts expose property-grid plus `menu-designer` builder metadata with zero toolbox items and no form/report builder leakage.

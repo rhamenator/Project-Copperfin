@@ -211,6 +211,17 @@ bool selected_record_is_container_surface(const StudioDocumentModel& document, s
     return selected_record_matches_visual_token(document, record_index, is_container_surface_token);
 }
 
+bool supports_data_environment_context(StudioAssetKind kind) {
+    return kind == StudioAssetKind::form ||
+        kind == StudioAssetKind::class_library ||
+        kind == StudioAssetKind::report ||
+        kind == StudioAssetKind::label;
+}
+
+bool supports_visual_container_context(StudioAssetKind kind) {
+    return kind == StudioAssetKind::form || kind == StudioAssetKind::class_library;
+}
+
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
@@ -270,30 +281,28 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_request(
     std::size_t record_index,
     std::string_view symbol) {
     const StudioAssetKind kind = document.kind;
-    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_data_environment_symbol(symbol)) {
+    if (supports_data_environment_context(kind) && has_data_environment_symbol(symbol)) {
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::data_environment
             })
         };
     }
-    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) &&
-        selected_record_is_data_environment(document, record_index)) {
+    if (supports_data_environment_context(kind) && selected_record_is_data_environment(document, record_index)) {
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::data_environment
             })
         };
     }
-    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) &&
-        selected_record_is_container_surface(document, record_index)) {
+    if (supports_visual_container_context(kind) && selected_record_is_container_surface(document, record_index)) {
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::container_object
             })
         };
     }
-    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_method_like_symbol(symbol)) {
+    if (supports_visual_container_context(kind) && has_method_like_symbol(symbol)) {
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::visual_method

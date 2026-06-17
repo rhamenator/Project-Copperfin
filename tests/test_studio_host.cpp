@@ -500,6 +500,39 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: report designer context should exclude form-only toolbox items");
     }
 
+    const auto report_data_environment_symbol_result = copperfin::studio::open_document({
+        .path = (temp_dir / "summary.frx").string(),
+        .symbol = "Dataenvironment.OpenTables"
+    });
+    expect(report_data_environment_symbol_result.ok,
+           "#1016: synthetic report should open for data-environment symbol checks");
+    expect(report_data_environment_symbol_result.document.designer_contexts.size() == 1U,
+           "#1016: report DataEnvironment symbols should expose one inferred designer context");
+    if (!report_data_environment_symbol_result.document.designer_contexts.empty()) {
+        const auto& context = report_data_environment_symbol_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#1016: report DataEnvironment symbols should infer the data-environment designer context");
+        expect(has_descriptor_id(context.builders, "data-environment-builder"),
+               "#1016: report DataEnvironment symbols should include data-environment builders");
+    }
+
+    const fs::path report_data_environment_path = temp_dir / "report_data_environment.frx";
+    write_synthetic_form_table_with_data_environment(report_data_environment_path);
+    const auto report_data_environment_record_result = copperfin::studio::open_document({
+        .path = report_data_environment_path.string(),
+        .record_index = 0U,
+        .selection_record_available = true
+    });
+    expect(report_data_environment_record_result.ok,
+           "#1016: synthetic report should open for selected DataEnvironment record checks");
+    expect(report_data_environment_record_result.document.designer_contexts.size() == 1U,
+           "#1016: selected report DataEnvironment records should expose one inferred designer context");
+    if (!report_data_environment_record_result.document.designer_contexts.empty()) {
+        expect(report_data_environment_record_result.document.designer_contexts.front().selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#1016: selected report DataEnvironment records should infer the data-environment designer context");
+    }
+
     const auto label_result = copperfin::studio::open_document({
         .path = write_synthetic_asset("mailing.lbx").string()
     });
@@ -518,6 +551,41 @@ void test_open_document_attaches_default_designer_contexts() {
                "#1011: label designer context should not reuse report builders");
         expect(has_descriptor_id(context.toolbox_items, "label"),
                "#1011: label designer context should include report-safe toolbox items");
+    }
+
+    const fs::path label_data_environment_path = temp_dir / "label_data_environment.lbx";
+    write_synthetic_form_table_with_data_environment(label_data_environment_path);
+    const auto label_data_environment_record_result = copperfin::studio::open_document({
+        .path = label_data_environment_path.string(),
+        .record_index = 0U,
+        .selection_record_available = true
+    });
+    expect(label_data_environment_record_result.ok,
+           "#1016: synthetic label should open for selected DataEnvironment record checks");
+    expect(label_data_environment_record_result.document.designer_contexts.size() == 1U,
+           "#1016: selected label DataEnvironment records should expose one inferred designer context");
+    if (!label_data_environment_record_result.document.designer_contexts.empty()) {
+        expect(label_data_environment_record_result.document.designer_contexts.front().selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#1016: selected label DataEnvironment records should infer the data-environment designer context");
+    }
+
+    const auto label_override_precedence_result = copperfin::studio::open_document({
+        .path = label_data_environment_path.string(),
+        .record_index = 0U,
+        .selection_record_available = true,
+        .designer_selection_contexts = {
+            copperfin::studio::StudioEditorSelectionContext::label_expression
+        }
+    });
+    expect(label_override_precedence_result.ok,
+           "#1016: synthetic label should open for explicit-over-DataEnvironment checks");
+    expect(label_override_precedence_result.document.designer_contexts.size() == 1U,
+           "#1016: explicit selection contexts should override selected label DataEnvironment defaults");
+    if (label_override_precedence_result.document.designer_contexts.size() == 1U) {
+        expect(label_override_precedence_result.document.designer_contexts[0].selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::label_expression,
+               "#1016: explicit label_expression contexts should win over selected-record data-environment contexts");
     }
 
     const auto menu_result = copperfin::studio::open_document({

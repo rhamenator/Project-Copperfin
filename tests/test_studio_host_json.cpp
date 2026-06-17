@@ -168,6 +168,21 @@ void write_synthetic_form_table_with_container_object(const std::filesystem::pat
     expect(create_result.ok, "#1015: synthetic SCX table with selectable container objects should be created");
 }
 
+void write_synthetic_table_with_data_environment(const std::filesystem::path& asset_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Dataenvironment", "dataenvironment", ""},
+        {"DetailExpression", "field", "field"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    expect(create_result.ok, "#1016: synthetic table with DataEnvironment record should be created");
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -350,6 +365,30 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(label_process.stdout_text, "\"id\": \"report-builder\"",
                         "#1011: label JSON should not expose report builder ids");
 
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_form_asset(report_path);
+    const auto report_data_environment_symbol_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--symbol", "Dataenvironment.OpenTables", "--json"},
+        temp_root);
+
+    if (report_data_environment_symbol_process.exit_code != 0) {
+        std::cerr << "studio host report data-environment symbol stdout:\n"
+                  << report_data_environment_symbol_process.stdout_text << "\n";
+        std::cerr << "studio host report data-environment symbol stderr:\n"
+                  << report_data_environment_symbol_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(report_data_environment_symbol_process.exit_code == 0,
+           "#1016: Studio host report DataEnvironment symbol JSON smoke should exit successfully");
+    expect_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+                    "#1016: report DataEnvironment symbols should infer data-environment JSON contexts");
+    expect_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"data-environment-builder\"",
+                    "#1016: report DataEnvironment symbols should expose data-environment builders");
+    expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+                        "#1016: DataEnvironment symbols should override report/label expression defaults");
+
     const fs::path class_path = temp_root / "customer.vcx";
     write_synthetic_form_asset(class_path);
     const auto class_process = run_process_capture(
@@ -403,6 +442,36 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#1013: menu JSON should expose menu designer builder ids");
     expect_not_contains(menu_process.stdout_text, "\"id\": \"form-builder\"",
                         "#1013: menu JSON should not expose form builder ids");
+
+    const fs::path label_data_environment_path = temp_root / "mailing_data_environment.lbx";
+    write_synthetic_table_with_data_environment(label_data_environment_path);
+    const auto label_data_environment_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_data_environment_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (label_data_environment_process.exit_code != 0) {
+        std::cerr << "studio host label data-environment stdout:\n"
+                  << label_data_environment_process.stdout_text << "\n";
+        std::cerr << "studio host label data-environment stderr:\n"
+                  << label_data_environment_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(label_data_environment_process.exit_code == 0,
+           "#1016: Studio host selected label DataEnvironment JSON smoke should exit successfully");
+    expect_contains(label_data_environment_process.stdout_text, "\"kind\": \"label\"",
+                    "#1016: selected DataEnvironment label JSON should preserve label document kind");
+    expect_contains(label_data_environment_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+                    "#1016: selected label DataEnvironment records should infer data-environment JSON contexts");
+    expect_contains(label_data_environment_process.stdout_text, "\"toolboxItemCount\": 0",
+                    "#1016: selected label DataEnvironment records should expose zero toolbox-item count");
+    expect_contains(label_data_environment_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#1016: selected label DataEnvironment records should expose data-environment editor actions");
+    expect_contains(label_data_environment_process.stdout_text, "\"id\": \"data-environment-builder\"",
+                    "#1016: selected label DataEnvironment records should expose data-environment builders");
+    expect_not_contains(label_data_environment_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+                        "#1016: selected label DataEnvironment records should not keep label-expression defaults");
 
     const auto symbol_process = run_process_capture(
         studio_host_path,
