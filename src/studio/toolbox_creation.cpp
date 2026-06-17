@@ -105,6 +105,12 @@ namespace {
     return {};
 }
 
+[[nodiscard]] bool toolbox_item_supports_context(
+    const StudioToolboxItemDescriptor& item,
+    StudioToolboxContext context) {
+    return std::find(item.contexts.begin(), item.contexts.end(), context) != item.contexts.end();
+}
+
 }  // namespace
 
 vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
@@ -116,6 +122,9 @@ vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     const auto item = find_toolbox_item(request.toolbox_item_id);
     if (!item.has_value()) {
         return failed_create_result("The requested toolbox item was not found.");
+    }
+    if (request.toolbox_context_provided && !toolbox_item_supports_context(*item, request.toolbox_context)) {
+        return failed_create_result("The requested toolbox item is not available in the requested designer context.");
     }
 
     const auto table_result = vfp::parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());

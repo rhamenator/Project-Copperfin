@@ -1,5 +1,6 @@
 #pragma once
 
+#include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <string>
@@ -13,6 +14,8 @@ struct StudioToolboxObjectCreateRequest {
     std::string object_name;
     std::string unique_id;
     std::string parent_name;
+    bool toolbox_context_provided = false;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
     std::vector<vfp::VisualObjectPropertyChange> field_values;
 };
 

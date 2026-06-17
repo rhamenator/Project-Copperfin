@@ -191,12 +191,63 @@ void test_toolbox_creation_rejects_unknown_toolbox_without_mutation() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_enforces_optional_context_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_context_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+
+    const auto label_result = copperfin::studio::create_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "label",
+        .object_name = {},
+        .unique_id = "report-label-guid",
+        .parent_name = "DetailBand",
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Total"}
+        }
+    });
+    expect(label_result.ok && label_result.object_name == "lbl1",
+        "#1019: report-compatible toolbox items should create when report context is requested");
+
+    const std::size_t before_rejected_count = object_count(table_path);
+    const auto textbox_result = copperfin::studio::create_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "report-textbox-guid",
+        .parent_name = "DetailBand",
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Should Not Exist"}
+        }
+    });
+    expect(!textbox_result.ok,
+        "#1019: report-incompatible toolbox items should fail when report context is requested");
+    expect(textbox_result.object_name.empty() &&
+            textbox_result.unique_id.empty() &&
+            textbox_result.parent_name.empty(),
+        "#1019: rejected context-filtered toolbox creates should not report stale identity metadata");
+    expect(object_count(table_path) == before_rejected_count,
+        "#1019: rejected context-filtered toolbox creates should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();
+    test_toolbox_creation_enforces_optional_context_filters();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

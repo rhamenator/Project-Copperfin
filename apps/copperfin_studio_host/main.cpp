@@ -23,7 +23,7 @@ namespace {
 
 void print_usage() {
     std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--set-property --record <n> --property-name <name> --property-value <value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -88,6 +88,23 @@ struct ToolboxCreateParseResult {
     copperfin::studio::StudioToolboxObjectCreateRequest request;
 };
 
+bool parse_toolbox_context_token(
+    const std::string& token,
+    copperfin::studio::StudioToolboxContext& context) {
+    for (const auto candidate : {
+             copperfin::studio::StudioToolboxContext::form,
+             copperfin::studio::StudioToolboxContext::class_designer,
+             copperfin::studio::StudioToolboxContext::container,
+             copperfin::studio::StudioToolboxContext::report
+         }) {
+        if (token == copperfin::studio::studio_toolbox_context_name(candidate)) {
+            context = candidate;
+            return true;
+        }
+    }
+    return false;
+}
+
 ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::string>& args) {
     ToolboxCreateParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -119,6 +136,15 @@ ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::s
             result.request.path = require_value(argument);
         } else if (argument == "--toolbox-create") {
             result.request.toolbox_item_id = require_value(argument);
+        } else if (argument == "--toolbox-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioToolboxContext parsed_context{};
+            if (!parse_toolbox_context_token(token, parsed_context)) {
+                fail("Unknown toolbox context token: " + token);
+                continue;
+            }
+            result.request.toolbox_context_provided = true;
+            result.request.toolbox_context = parsed_context;
         } else if (argument == "--object-name") {
             result.request.object_name = require_value(argument);
         } else if (argument == "--unique-id") {

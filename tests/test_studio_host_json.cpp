@@ -929,6 +929,51 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
     expect(visual_object_count(form_path) == object_count_before_failure,
         "#1018: failed toolbox-create host commands should not mutate the asset");
 
+    const auto report_label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create", "label",
+            "--toolbox-context", "report",
+            "--unique-id", "report-label-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Total",
+            "--json"
+        },
+        temp_root);
+
+    expect(report_label_process.exit_code == 0,
+        "#1019: report-compatible toolbox items should create through host JSON when report context is requested");
+    expect_contains(report_label_process.stdout_text, "\"objectName\": \"lbl1\"",
+                    "#1019: report-compatible toolbox creates should expose generated label names");
+    expect_contains(report_label_process.stdout_text, "\"uniqueId\": \"report-label-guid\"",
+                    "#1019: report-compatible toolbox creates should expose created unique ids");
+
+    const std::size_t object_count_before_context_failure = visual_object_count(form_path);
+    const auto report_textbox_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create", "textbox",
+            "--toolbox-context", "report",
+            "--unique-id", "report-textbox-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Should Not Exist",
+            "--json"
+        },
+        temp_root);
+
+    expect(report_textbox_process.exit_code == 4,
+        "#1019: report-incompatible toolbox items should fail through host JSON when report context is requested");
+    expect_contains(report_textbox_process.stdout_text, "\"status\": \"error\"",
+                    "#1019: context-filtered toolbox failures should report JSON error status");
+    expect_contains(
+        report_textbox_process.stdout_text,
+        "\"error\": \"The requested toolbox item is not available in the requested designer context.\"",
+        "#1019: context-filtered toolbox failures should expose clean error text");
+    expect(visual_object_count(form_path) == object_count_before_context_failure,
+        "#1019: context-filtered toolbox failures should not mutate the asset");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
