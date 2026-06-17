@@ -94,6 +94,7 @@ void test_parse_launch_arguments() {
     expect(result.request.read_only, "launch contract should detect --read-only");
     expect(result.output_json, "launch contract should detect --json");
     expect(result.request.apply_property_update, "launch contract should detect --set-property");
+    expect(!result.request.clear_property, "#1021: launch contract should keep clear-property off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -121,6 +122,41 @@ void test_parse_launch_arguments() {
     }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
+}
+
+void test_parse_launch_arguments_for_clear_property() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--clear-property",
+        "--object-name", "txtName",
+        "--unique-id", "textbox-guid",
+        "--property-name", "Caption"
+    });
+
+    expect(result.ok, "#1021: launch contract should parse clear-property requests");
+    expect(result.request.clear_property, "#1021: launch contract should detect --clear-property");
+    expect(!result.request.apply_property_update,
+        "#1021: launch contract should not treat clear-property as set-property");
+    expect(result.request.object_name == "txtName",
+        "#1021: clear-property requests should carry object-name selectors");
+    expect(result.request.unique_id == "textbox-guid",
+        "#1021: clear-property requests should carry unique-id selectors");
+    expect(result.request.property_name == "Caption",
+        "#1021: clear-property requests should carry property names");
+}
+
+void test_parse_launch_arguments_rejects_ambiguous_property_command() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--set-property",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--property-value", "New"
+    });
+
+    expect(!result.ok,
+        "#1021: launch contract should reject simultaneous set-property and clear-property requests");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1342,6 +1378,8 @@ void test_open_document_includes_prg_static_diagnostics() {
 
 int main() {
     test_parse_launch_arguments();
+    test_parse_launch_arguments_for_clear_property();
+    test_parse_launch_arguments_rejects_ambiguous_property_command();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

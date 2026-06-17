@@ -88,6 +88,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--clear-property") {
+            result.request.clear_property = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -232,6 +237,12 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
     if (result.request.apply_property_update && result.request.property_name.empty()) {
         return {.ok = false, .error = "A property update requires --property-name."};
+    }
+    if (result.request.clear_property && result.request.property_name.empty()) {
+        return {.ok = false, .error = "A property clear requires --property-name."};
+    }
+    if (result.request.apply_property_update && result.request.clear_property) {
+        return {.ok = false, .error = "--set-property and --clear-property cannot be used together."};
     }
 
     result.ok = true;

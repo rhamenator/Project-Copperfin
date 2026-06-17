@@ -1073,6 +1073,125 @@ void test_studio_host_json_sets_properties_by_stable_selectors(const std::string
     }
 }
 
+void test_studio_host_json_clears_properties_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_property_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+
+    auto caption_value = [&]() {
+        return copperfin::vfp::query_visual_object_property({
+            .path = form_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "existing-textbox-guid",
+            .property_name = "CAPTION"
+        });
+    };
+
+    const auto object_name_clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--clear-property",
+            "--object-name", "txt1",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(object_name_clear_process.exit_code == 0,
+        "#1021: object-name host property clears should exit successfully");
+    auto caption = caption_value();
+    expect(caption.ok && caption.exists && caption.value.empty(),
+        "#1021: object-name host property clears should empty direct-field properties");
+
+    const auto set_before_unique_clear = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--set-property",
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "BeforeUniqueClear",
+            "--json"
+        },
+        temp_root);
+    expect(set_before_unique_clear.exit_code == 0,
+        "#1021: clear-property setup should be able to restore a direct-field value");
+
+    const auto unique_id_clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--clear-property",
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_clear_process.exit_code == 0,
+        "#1021: unique-id host property clears should exit successfully");
+    caption = caption_value();
+    expect(caption.ok && caption.exists && caption.value.empty(),
+        "#1021: unique-id host property clears should empty direct-field properties");
+
+    const auto set_before_missing_clear = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--set-property",
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "BeforeMissingClear",
+            "--json"
+        },
+        temp_root);
+    expect(set_before_missing_clear.exit_code == 0,
+        "#1021: missing-clear setup should be able to restore a direct-field value");
+
+    const auto missing_clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--clear-property",
+            "--object-name", "missingObject",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(missing_clear_process.exit_code == 4,
+        "#1021: missing object-name host property clears should return command failure");
+    caption = caption_value();
+    expect(caption.ok && caption.exists && caption.value == "BeforeMissingClear",
+        "#1021: missing object-name host property clears should not mutate the asset");
+
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--set-property",
+            "--clear-property",
+            "--property-name", "CAPTION",
+            "--property-value", "Ambiguous",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1021: ambiguous set/clear property requests should fail during launch parsing");
+    caption = caption_value();
+    expect(caption.ok && caption.exists && caption.value == "BeforeMissingClear",
+        "#1021: ambiguous set/clear property requests should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1084,5 +1203,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
+    test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

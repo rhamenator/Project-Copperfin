@@ -50,6 +50,7 @@ struct StudioOpenRequest {
     bool read_only = false;
     bool load_full_table = false;
     bool apply_property_update = false;
+    bool clear_property = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
