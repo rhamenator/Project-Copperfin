@@ -129,6 +129,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.control_source_available, "#1045: launch contract should keep control source unavailable by default");
     expect(!result.request.input_mask_object, "#1046: launch contract should keep input-mask-object off by default");
     expect(!result.request.input_mask_available, "#1046: launch contract should keep input mask unavailable by default");
+    expect(!result.request.format_object, "#1047: launch contract should keep format-object off by default");
+    expect(!result.request.format_available, "#1047: launch contract should keep format unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2015,6 +2017,82 @@ void test_parse_launch_arguments_rejects_input_mask_object_ambiguity() {
         "#1046: launch contract should reject stray input-mask arguments");
 }
 
+void test_parse_launch_arguments_for_format_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--format-object",
+        "--format", "999,999.99",
+        "--format-target-object-name", "txtAmount",
+        "--format-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1047: launch contract should parse format-object requests");
+    expect(result.request.format_object, "#1047: launch contract should detect --format-object");
+    expect(result.request.format_available && result.request.format == "999,999.99",
+        "#1047: format-object requests should carry format text");
+    expect(result.request.format_objects.size() == 2U,
+        "#1047: format-object requests should collect format target selectors");
+    if (result.request.format_objects.size() == 2U) {
+        expect(result.request.format_objects[0].object_name == "txtAmount" &&
+                result.request.format_objects[0].unique_id.empty(),
+            "#1047: format-object requests should parse target object-name selectors");
+        expect(result.request.format_objects[1].object_name.empty() &&
+                result.request.format_objects[1].unique_id == "two-guid",
+            "#1047: format-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_format_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--format-object",
+        "--format-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1047: launch contract should reject format-object requests without format text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--format-object",
+        "--format", "99999"
+    });
+    expect(!missing_targets_result.ok,
+        "#1047: launch contract should reject format-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_format_object_ambiguity() {
+    const auto format_input_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--format-object",
+        "--input-mask-object",
+        "--format", "99999",
+        "--format-target-unique-id", "one-guid",
+        "--input-mask", "99999",
+        "--input-mask-target-unique-id", "one-guid"
+    });
+    expect(!format_input_result.ok,
+        "#1047: launch contract should reject simultaneous format-object and input-mask-object requests");
+
+    const auto format_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--format-object",
+        "--clear-property",
+        "--property-name", "Format",
+        "--format", "99999",
+        "--format-target-unique-id", "one-guid"
+    });
+    expect(!format_property_result.ok,
+        "#1047: launch contract should reject format-object combined with property commands");
+
+    const auto stray_format_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--format", "99999"
+    });
+    expect(!stray_format_result.ok,
+        "#1047: launch contract should reject stray format arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3304,6 +3382,9 @@ int main() {
     test_parse_launch_arguments_for_input_mask_object();
     test_parse_launch_arguments_rejects_input_mask_object_invalid_inputs();
     test_parse_launch_arguments_rejects_input_mask_object_ambiguity();
+    test_parse_launch_arguments_for_format_object();
+    test_parse_launch_arguments_rejects_format_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_format_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

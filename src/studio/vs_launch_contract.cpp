@@ -238,6 +238,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--format-object") {
+            result.request.format_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -630,6 +635,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.input_mask = args[++index];
             result.request.input_mask_available = true;
+            continue;
+        }
+
+        if (argument == "--format") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --format."};
+            }
+            result.request.format = args[++index];
+            result.request.format_available = true;
             continue;
         }
 
@@ -1033,6 +1047,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--format-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --format-target-object-name."};
+            }
+            result.request.format_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--format-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --format-target-unique-id."};
+            }
+            result.request.format_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -1342,6 +1380,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.input_mask_objects.empty())) {
         return {.ok = false, .error = "Input-mask arguments can only be used with --input-mask-object."};
     }
+    if (result.request.format_object && !result.request.format_available) {
+        return {.ok = false, .error = "An object format assignment requires --format."};
+    }
+    if (result.request.format_object && result.request.format_objects.empty()) {
+        return {.ok = false, .error = "An object format assignment requires at least one target selector."};
+    }
+    if (!result.request.format_object &&
+        (result.request.format_available ||
+         !result.request.format_objects.empty())) {
+        return {.ok = false, .error = "Format arguments can only be used with --format-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -1374,6 +1423,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +
         (result.request.input_mask_object ? 1 : 0) +
+        (result.request.format_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

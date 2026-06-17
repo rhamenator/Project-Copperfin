@@ -22,7 +22,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--distribute-object|--snap-object|--nudge-object|--tab-order-object|--tab-stop-object|--visibility-object|--enabled-object|--read-only-object|--locked-object|--caption-object|--tooltip-text-object|--status-bar-text-object|--control-source-object|--input-mask-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--distribution-mode <horizontal|vertical>] [--snap-mode <horizontal|vertical|both>] [--nudge-mode <horizontal|vertical|both>] [--grid-width <n>] [--grid-height <n>] [--delta-hpos <n>] [--delta-vpos <n>] [--starting-tab-index <n>] [--tab-stop <true|false>] [--visible <true|false>] [--enabled <true|false>] [--object-read-only <true|false>] [--locked <true|false>] [--caption <value>] [--tooltip-text <value>] [--status-bar-text <value>] [--control-source <value>] [--input-mask <value>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--distribute-target-object-name <name>] [--distribute-target-unique-id <id>] [--snap-target-object-name <name>] [--snap-target-unique-id <id>] [--nudge-target-object-name <name>] [--nudge-target-unique-id <id>] [--tab-order-target-object-name <name>] [--tab-order-target-unique-id <id>] [--tab-stop-target-object-name <name>] [--tab-stop-target-unique-id <id>] [--visibility-target-object-name <name>] [--visibility-target-unique-id <id>] [--enabled-target-object-name <name>] [--enabled-target-unique-id <id>] [--read-only-target-object-name <name>] [--read-only-target-unique-id <id>] [--locked-target-object-name <name>] [--locked-target-unique-id <id>] [--caption-target-object-name <name>] [--caption-target-unique-id <id>] [--tooltip-text-target-object-name <name>] [--tooltip-text-target-unique-id <id>] [--status-bar-text-target-object-name <name>] [--status-bar-text-target-unique-id <id>] [--control-source-target-object-name <name>] [--control-source-target-unique-id <id>] [--input-mask-target-object-name <name>] [--input-mask-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--distribute-object|--snap-object|--nudge-object|--tab-order-object|--tab-stop-object|--visibility-object|--enabled-object|--read-only-object|--locked-object|--caption-object|--tooltip-text-object|--status-bar-text-object|--control-source-object|--input-mask-object|--format-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--distribution-mode <horizontal|vertical>] [--snap-mode <horizontal|vertical|both>] [--nudge-mode <horizontal|vertical|both>] [--grid-width <n>] [--grid-height <n>] [--delta-hpos <n>] [--delta-vpos <n>] [--starting-tab-index <n>] [--tab-stop <true|false>] [--visible <true|false>] [--enabled <true|false>] [--object-read-only <true|false>] [--locked <true|false>] [--caption <value>] [--tooltip-text <value>] [--status-bar-text <value>] [--control-source <value>] [--input-mask <value>] [--format <value>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--distribute-target-object-name <name>] [--distribute-target-unique-id <id>] [--snap-target-object-name <name>] [--snap-target-unique-id <id>] [--nudge-target-object-name <name>] [--nudge-target-unique-id <id>] [--tab-order-target-object-name <name>] [--tab-order-target-unique-id <id>] [--tab-stop-target-object-name <name>] [--tab-stop-target-unique-id <id>] [--visibility-target-object-name <name>] [--visibility-target-unique-id <id>] [--enabled-target-object-name <name>] [--enabled-target-unique-id <id>] [--read-only-target-object-name <name>] [--read-only-target-unique-id <id>] [--locked-target-object-name <name>] [--locked-target-unique-id <id>] [--caption-target-object-name <name>] [--caption-target-unique-id <id>] [--tooltip-text-target-object-name <name>] [--tooltip-text-target-unique-id <id>] [--status-bar-text-target-object-name <name>] [--status-bar-text-target-unique-id <id>] [--control-source-target-object-name <name>] [--control-source-target-unique-id <id>] [--input-mask-target-object-name <name>] [--input-mask-target-unique-id <id>] [--format-target-object-name <name>] [--format-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -1937,6 +1937,30 @@ int main(int argc, char** argv) {
         if (!input_mask_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << input_mask_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.format_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> format_objects;
+        format_objects.reserve(parse_result.request.format_objects.size());
+        for (const auto& format_object : parse_result.request.format_objects) {
+            format_objects.push_back({
+                .record_index = format_object.record_index,
+                .object_name = format_object.object_name,
+                .unique_id = format_object.unique_id
+            });
+        }
+
+        const auto format_result = copperfin::vfp::set_visual_object_format({
+            .path = parse_result.request.path,
+            .objects = format_objects,
+            .format = parse_result.request.format
+        });
+
+        if (!format_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << format_result.error << "\n";
             return 4;
         }
     }
