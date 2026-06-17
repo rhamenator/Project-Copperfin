@@ -12,13 +12,13 @@ It is intentionally narrower than the top-level roadmap:
 
 This is the only actionable queue in this file as of 2026-06-17.
 
-- Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), or shared design-model lane (`#22`) unless fresh issue evidence shows a regression.
+- Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest shipped E2 slice: `#1065`, which exposes host highlight-fore-color-object commands by stable target selectors.
+- Latest shipped E2 slice: `#1066`, which exposes host back-color-object commands by stable target selectors.
 - Current continuation shape: expose already-implemented rollback-safe visual-object editor APIs through `copperfin_studio_host` one property command at a time, with stable selectors, no-mutation failure coverage, docs, validation, commit, push, and issue closure per slice.
 - Next work: create or pick the next prompt-sized `#23` child for the next implemented visual-object editor API that still lacks a host wrapper, unless the live issue tracker already contains a more specific open child.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
-- If any older handoff, prompt, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, or `#94` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
+- If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
 
 ## Reading Notes
 
@@ -352,11 +352,11 @@ Historical-closed lane structure under `#8`:
 
 ## Current Active Queue
 
-Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
+Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This table supersedes the historical dependency graph, historical critical path, and numbered closure list in this file.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1065`; do not divert back to the closed Phase A safety gate without reopened regression evidence |
+| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1066`; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -373,12 +373,12 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1065` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
-- broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
+- `#23`: `#1066` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
+- broader repo execution leaves remain pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document currently points to the live E2/#23 continuation lane, not those adjacent historical/planning leaves
 
 Historical post-D1 execution order through the current E2 queue:
 
-The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. For active work, use the table above and create the next prompt-sized child under `#23` unless the issue tracker shows a higher-weight blocker.
+The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. Do not continue by counting the next number in this list. For active work, use the table above and create the next prompt-sized child under `#23` unless the issue tracker shows a higher-weight blocker.
 
 1. `#658`
 2. `#659`
@@ -789,6 +789,7 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 407. `#1063`
 408. `#1064`
 409. `#1065`
+410. `#1066`
 
 Execution guardrails:
 

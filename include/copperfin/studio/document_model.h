@@ -99,6 +99,7 @@ struct StudioOpenRequest {
     int item_fore_color = 0;
     int highlight_back_color = 0;
     int highlight_fore_color = 0;
+    int back_color = 0;
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -150,6 +151,7 @@ struct StudioOpenRequest {
     bool item_fore_color_object = false;
     bool highlight_back_color_object = false;
     bool highlight_fore_color_object = false;
+    bool back_color_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -188,6 +190,7 @@ struct StudioOpenRequest {
     bool item_fore_color_available = false;
     bool highlight_back_color_available = false;
     bool highlight_fore_color_available = false;
+    bool back_color_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -227,6 +230,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> item_fore_color_objects{};
     std::vector<StudioObjectSelector> highlight_back_color_objects{};
     std::vector<StudioObjectSelector> highlight_fore_color_objects{};
+    std::vector<StudioObjectSelector> back_color_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
