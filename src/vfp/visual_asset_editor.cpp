@@ -5769,6 +5769,19 @@ VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRe
         std::to_string(request.row_height));
 }
 
+VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColumnsRequest& request) {
+    if (request.lock_columns < 0) {
+        return {.ok = false, .error = "LockColumns must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "LockColumns",
+        "lock-columns",
+        std::to_string(request.lock_columns));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
