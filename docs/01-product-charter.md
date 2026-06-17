@@ -27,7 +27,7 @@ Implementation stance:
 
 Version target:
 
-- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior.
+- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Older Fox Software and xBase-family assets can be tracked as wishlist interpretation/inspection targets, but Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior.
 
 ## Problem
 
@@ -84,7 +84,7 @@ Language and framework choices should be judged against these, not the other way
 - pixel-perfect recreation of the original IDE shell
 - support for every third-party ActiveX control on day one
 - full cloud-native rewrite of every legacy app automatically
-- FoxBASE, FoxPro 1.x, and FoxPro 2.x binary-format support
+- producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper
 
 ## Success Criteria
 

@@ -1,3 +1,5 @@
+1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
+1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
 202	OPEN	H3/#91 slice: Tighten runtime interop bridge contract fidelity		2026-05-01T02:14:17Z
 201	OPEN	H3/#57 slice: Tighten LINQ projection/materialization fidelity		2026-05-01T02:14:14Z
@@ -52,11 +54,11 @@
 152	OPEN	B2/#14 slice: Tighten pause metadata and stack-frame fidelity		2026-05-01T02:06:43Z
 151	OPEN	B1/#13 slice: Preserve repeated-continue stability after runtime faults		2026-05-01T02:06:41Z
 150	OPEN	B1/#13 slice: Preserve session and cursor state after runtime faults		2026-05-01T02:06:38Z
-141	OPEN	Future enhancement: IMPORT/EXPORT DATABASE ... TYPE ACCESS		2026-05-01T00:56:59Z
-140	OPEN	Future enhancement: IMPORT/EXPORT DATABASE ... TYPE JSON or SQL		2026-05-01T00:56:59Z
-138	OPEN	Future enhancement: Access forms, reports, queries, and VBA migration bridge		2026-05-01T00:56:59Z
-139	OPEN	Future enhancement: .NET execution and interop bridge for non-VFP statements		2026-05-01T00:56:59Z
-137	OPEN	Future enhancement: Cross-database import/export and migration umbrella		2026-05-01T00:53:01Z
+141	OPEN	Wishlist: IMPORT/EXPORT DATABASE ... TYPE ACCESS		2026-05-01T00:56:59Z
+140	OPEN	Wishlist: IMPORT/EXPORT DATABASE ... TYPE JSON or SQL		2026-05-01T00:56:59Z
+138	OPEN	Wishlist: Access forms, reports, queries, and VBA migration bridge		2026-05-01T00:56:59Z
+139	OPEN	Wishlist: .NET execution and interop bridge for non-VFP statements		2026-05-01T00:56:59Z
+137	OPEN	Wishlist umbrella: non-critical database/container interchange and migration bridges		2026-05-01T00:53:01Z
 114	OPEN	Backlog Umbrella: Portability and portable core boundary		2026-04-30T22:47:31Z
 113	OPEN	Backlog Umbrella: Modernization, outputs, interop, and security		2026-04-30T22:47:30Z
 112	OPEN	Backlog Umbrella: IDE and editor parity		2026-04-30T22:47:28Z
