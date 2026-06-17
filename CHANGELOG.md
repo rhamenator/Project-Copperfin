@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#931 selected visual object link-master assignment shipped: designer commands can assign caller-provided text `LinkMaster` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#930 selected visual object record-source assignment shipped: designer commands can assign caller-provided text `RecordSource` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#929 selected visual object record-source-type assignment shipped: designer commands can assign caller-provided non-negative numeric `RecordSourceType` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#928 selected visual object highlight-row-line-width assignment shipped: designer commands can assign caller-provided non-negative numeric `HighlightRowLineWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

@@ -5880,6 +5880,15 @@ VisualAssetEditResult set_visual_object_record_source(const VisualObjectRecordSo
         request.record_source);
 }
 
+VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMasterRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "LinkMaster",
+        "link-master",
+        request.link_master);
+}
+
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
     if (request.record_source_type < 0) {
         return {.ok = false, .error = "RecordSourceType must not be negative."};
