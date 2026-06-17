@@ -334,6 +334,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto database_profile = copperfin::platform::default_database_federation_profile();
     const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
     const auto command_undo_status = copperfin::vfp::query_visual_object_undo(document.path);
+    const auto* selected_object = document.selection_record_available
+        ? find_selected_object(objects, document.selection_record_index)
+        : nullptr;
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -359,11 +362,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "      \"recordAvailable\": " << (document.selection_record_available ? "true" : "false") << ",\n";
     std::cout << "      \"recordIndex\": " << document.selection_record_index << "\n";
     std::cout << "    },\n";
+    std::cout << "    \"selectedObjectAvailable\": " << (selected_object != nullptr ? "true" : "false") << ",\n";
     std::cout << "    \"selectedObject\": ";
-    if (const auto* selected_object = document.selection_record_available
-            ? find_selected_object(objects, document.selection_record_index)
-            : nullptr;
-        selected_object != nullptr) {
+    if (selected_object != nullptr) {
         print_json_object_summary(*selected_object, "    ");
     } else {
         std::cout << "null";

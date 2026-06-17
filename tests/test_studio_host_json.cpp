@@ -236,6 +236,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#967: Studio host JSON should expose explicit launch record availability");
     expect_contains(symbol_process.stdout_text, "\"recordIndex\": 5",
                     "#964: Studio host JSON should expose launch selection record indexes");
+    expect_contains(symbol_process.stdout_text, "\"selectedObjectAvailable\": false",
+                    "#979: unmatched explicit selected records should report no selected object availability");
     expect_contains(symbol_process.stdout_text, "\"selectedObject\": null",
                     "#967: Studio host JSON should report null selectedObject when no parsed object matches");
     expect_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_method\"",
@@ -311,6 +313,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#977: Studio host JSON should expose document-level deleted object counts");
     expect_contains(selected_object_process.stdout_text, "\"rootObjectCount\": 2",
                     "#978: Studio host JSON should expose document-level root object counts");
+    expect_contains(selected_object_process.stdout_text, "\"selectedObjectAvailable\": true",
+                    "#979: matched explicit selected records should report selected object availability");
     expect_contains(selected_object_process.stdout_text, "\"selectedObject\": {",
                     "#967: Studio host JSON should expose selected object summaries for matching records");
     expect_contains(selected_object_process.stdout_text, "\"recordIndex\": 1",
