@@ -874,6 +874,12 @@ struct VisualObjectSplitBarRequest {
     bool split_bar = false;
 };
 
+struct VisualObjectHighlightRowRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool highlight_row = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1610,6 +1616,7 @@ VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectA
 VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMarkRequest& request);
 VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMarkRequest& request);
 VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequest& request);
+VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighlightRowRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);

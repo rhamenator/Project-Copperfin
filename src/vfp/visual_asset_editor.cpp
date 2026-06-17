@@ -5549,6 +5549,15 @@ VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequ
         request.split_bar ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighlightRowRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HighlightRow",
+        "highlight-row",
+        request.highlight_row ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
