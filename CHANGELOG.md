@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-17
+
+- E2/#906 selected visual object auto-size assignment shipped: designer commands can assign caller-provided logical `AutoSize` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
+
 ## 2026-06-16
 
 - E2/#905 selected visual object title-bar assignment shipped: designer commands can assign caller-provided non-negative numeric `TitleBar` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
