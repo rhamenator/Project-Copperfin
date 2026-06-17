@@ -377,6 +377,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#973: selected object summaries should expose raw object codes");
         expect_contains(selected_object_json, "\"platform\": \"WINDOWS\"",
                         "#973: selected object summaries should expose parsed platform metadata");
+        expect_contains(selected_object_json, "\"propertyCount\": 8",
+                        "#976: selected object summaries should expose direct property counts");
     }
     const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
     expect(objects_begin != std::string::npos,
@@ -419,6 +421,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#973: child object entries should expose raw object codes");
             expect_contains(child_object_json, "\"platform\": \"WINDOWS\"",
                             "#973: child object entries should expose parsed platform metadata");
+            expect_contains(child_object_json, "\"propertyCount\": 8",
+                            "#976: child object entries should expose direct property counts");
         }
     }
 

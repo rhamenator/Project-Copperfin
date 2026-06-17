@@ -298,6 +298,7 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     print_json_string(object.baseclass_name);
     std::cout << ",\n";
     std::cout << indent << "  \"childCount\": " << object.child_count << ",\n";
+    std::cout << indent << "  \"propertyCount\": " << object.properties.size() << ",\n";
     std::cout << indent << "  \"properties\": ";
     print_json_object_properties(object.properties, indent + "  ");
     std::cout << "\n";
@@ -909,6 +910,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_string(object.baseclass_name);
         std::cout << ",\n";
         std::cout << "        \"childCount\": " << object.child_count << ",\n";
+        std::cout << "        \"propertyCount\": " << object.properties.size() << ",\n";
         std::cout << "        \"properties\": ";
         print_json_object_properties(object.properties, "        ");
         std::cout << "\n";
