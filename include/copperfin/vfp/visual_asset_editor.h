@@ -724,6 +724,12 @@ struct VisualObjectControlBoxRequest {
     bool control_box = false;
 };
 
+struct VisualObjectAllowOutputRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool allow_output = false;
+};
+
 struct VisualObjectAutoCenterRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1513,6 +1519,7 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
 VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurrentControlRequest& request);
 VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableRequest& request);
 VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBoxRequest& request);
+VisualAssetEditResult set_visual_object_allow_output(const VisualObjectAllowOutputRequest& request);
 VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenterRequest& request);
 VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequest& request);
 VisualAssetEditResult set_visual_object_auto_release(const VisualObjectAutoReleaseRequest& request);
