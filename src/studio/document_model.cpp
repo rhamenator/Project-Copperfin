@@ -553,6 +553,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.has_sidecar = !document.sidecar_path.empty() && std::filesystem::exists(document.sidecar_path);
     document.read_only = request.read_only;
     document.launched_from_visual_studio = request.launched_from_visual_studio;
+    document.selection_record_available = request.selection_record_available;
     document.selection_line = request.line;
     document.selection_column = request.column;
     document.selection_record_index = request.record_index;
@@ -573,7 +574,10 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     }
 
     document.designer_contexts = request.designer_selection_contexts.empty()
-        ? default_designer_contexts_for_request(document, request.record_index, request.symbol)
+        ? default_designer_contexts_for_request(
+            document,
+            request.selection_record_available ? request.record_index : StudioObjectMissingFieldIndex,
+            request.symbol)
         : requested_designer_contexts(request.designer_selection_contexts);
 
     return {.ok = true, .document = document};

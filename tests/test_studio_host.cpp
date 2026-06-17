@@ -88,6 +88,7 @@ void test_parse_launch_arguments() {
     expect(result.output_json, "launch contract should detect --json");
     expect(result.request.apply_property_update, "launch contract should detect --set-property");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
+    expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.property_name == "Left", "launch contract should capture the property name");
     expect(result.request.property_value == "25", "launch contract should capture the property value");
     expect(result.request.line == 25U, "launch contract should parse the line value");
@@ -174,6 +175,8 @@ void test_open_document_infers_form_sidecar() {
     expect(result.document.selection_column == 2U, "#964: launch selection column should flow into the Studio document");
     expect(result.document.selection_record_index == 0U,
            "#964: launch selection record index should keep the default when none is supplied");
+    expect(!result.document.selection_record_available,
+           "#967: launch selection record availability should be false when no record is supplied");
     expect(result.document.inspection.header_available, "inspection metadata should be attached to the document");
 
     const auto objects = copperfin::studio::build_object_snapshot(result.document);
@@ -291,7 +294,8 @@ void test_open_document_attaches_default_designer_contexts() {
     write_synthetic_form_table_with_data_environment(selected_record_path);
     const auto data_environment_record_result = copperfin::studio::open_document({
         .path = selected_record_path.string(),
-        .record_index = 0U
+        .record_index = 0U,
+        .selection_record_available = true
     });
     expect(data_environment_record_result.ok, "#966: synthetic form should open for selected-record context checks");
     expect(data_environment_record_result.document.designer_contexts.size() == 1U,
@@ -306,7 +310,8 @@ void test_open_document_attaches_default_designer_contexts() {
 
     const auto visual_record_result = copperfin::studio::open_document({
         .path = selected_record_path.string(),
-        .record_index = 1U
+        .record_index = 1U,
+        .selection_record_available = true
     });
     expect(visual_record_result.ok, "#966: synthetic form should open for visual selected-record context checks");
     expect(visual_record_result.document.designer_contexts.size() == 1U,
@@ -343,6 +348,7 @@ void test_open_document_attaches_default_designer_contexts() {
     const auto override_result = copperfin::studio::open_document({
         .path = selected_record_path.string(),
         .record_index = 0U,
+        .selection_record_available = true,
         .designer_selection_contexts = {
             copperfin::studio::StudioEditorSelectionContext::report_expression
         }
@@ -434,7 +440,8 @@ void test_open_document_preserves_launch_selection_record_metadata() {
         .symbol = "cmdSave.Click",
         .line = 42U,
         .column = 7U,
-        .record_index = 5U
+        .record_index = 5U,
+        .selection_record_available = true
     });
 
     expect(result.ok, "#964: synthetic form should open for launch selection metadata checks");
@@ -446,6 +453,8 @@ void test_open_document_preserves_launch_selection_record_metadata() {
            "#964: open_document should preserve launch selection columns");
     expect(result.document.selection_record_index == 5U,
            "#964: open_document should preserve launch selection record indexes");
+    expect(result.document.selection_record_available,
+           "#967: open_document should preserve explicit launch selection record availability");
 
     fs::remove_all(temp_dir, ignored);
 }

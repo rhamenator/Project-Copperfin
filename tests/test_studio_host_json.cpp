@@ -1,3 +1,5 @@
+#include "copperfin/vfp/dbf_table.h"
+
 #include <cstdlib>
 #include <cstdint>
 #include <filesystem>
@@ -123,6 +125,23 @@ void write_synthetic_form_asset(const std::filesystem::path& form_path) {
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 
+void write_synthetic_form_table_with_objects(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Dataenvironment", "de-1", "", "", "dataenvironment"},
+        {"frmCustomer", "form-1", "", "customerform", "form"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -209,8 +228,12 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#964: Studio host JSON should expose launch selection lines");
     expect_contains(symbol_process.stdout_text, "\"column\": 7",
                     "#964: Studio host JSON should expose launch selection columns");
+    expect_contains(symbol_process.stdout_text, "\"recordAvailable\": true",
+                    "#967: Studio host JSON should expose explicit launch record availability");
     expect_contains(symbol_process.stdout_text, "\"recordIndex\": 5",
                     "#964: Studio host JSON should expose launch selection record indexes");
+    expect_contains(symbol_process.stdout_text, "\"selectedObject\": null",
+                    "#967: Studio host JSON should report null selectedObject when no parsed object matches");
     expect_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_method\"",
                     "#963: method-like launch symbols should infer visual-method JSON contexts");
     expect_contains(symbol_process.stdout_text, "\"id\": \"edit-visual-method\"",
@@ -262,6 +285,34 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#965: explicit selection contexts should serialize when a DataEnvironment symbol is also present");
     expect_not_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"data_environment\"",
                         "#965: explicit selection contexts should override symbol-inferred data-environment contexts");
+
+    const fs::path selected_form_path = temp_root / "selected.scx";
+    write_synthetic_form_table_with_objects(selected_form_path);
+    const auto selected_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", selected_form_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (selected_object_process.exit_code != 0) {
+        std::cerr << "studio host selected object stdout:\n" << selected_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected object stderr:\n" << selected_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(selected_object_process.exit_code == 0,
+           "#967: Studio host selected-object JSON smoke should exit successfully");
+    expect_contains(selected_object_process.stdout_text, "\"selectedObject\": {",
+                    "#967: Studio host JSON should expose selected object summaries for matching records");
+    expect_contains(selected_object_process.stdout_text, "\"recordIndex\": 1",
+                    "#967: selected object summaries should expose selected record indexes");
+    expect_contains(selected_object_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+                    "#967: selected object summaries should expose object names");
+    expect_contains(selected_object_process.stdout_text, "\"uniqueId\": \"form-1\"",
+                    "#967: selected object summaries should expose unique ids");
+    expect_contains(selected_object_process.stdout_text, "\"className\": \"customerform\"",
+                    "#967: selected object summaries should expose class names");
+    expect_contains(selected_object_process.stdout_text, "\"baseclassName\": \"form\"",
+                    "#967: selected object summaries should expose baseclass names");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

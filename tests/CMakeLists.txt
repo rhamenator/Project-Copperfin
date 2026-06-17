@@ -66,6 +66,7 @@ add_test(
 add_executable(test_studio_host_json
     test_studio_host_json.cpp
 )
+target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
 
 if(MSVC)
     target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)

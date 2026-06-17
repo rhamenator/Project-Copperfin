@@ -219,6 +219,42 @@ void print_json_designer_contexts(const std::vector<copperfin::studio::StudioDes
     std::cout << "    ]";
 }
 
+void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent) {
+    std::cout << "{\n";
+    std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string(object.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"subtitle\": ";
+    print_json_string(object.subtitle);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectName\": ";
+    print_json_string(object.object_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"uniqueId\": ";
+    print_json_string(object.unique_id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"parentName\": ";
+    print_json_string(object.parent_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"className\": ";
+    print_json_string(object.class_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"baseclassName\": ";
+    print_json_string(object.baseclass_name);
+    std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+const copperfin::studio::StudioObjectSnapshot* find_selected_object(
+    const std::vector<copperfin::studio::StudioObjectSnapshot>& objects,
+    std::size_t record_index) {
+    const auto selected = std::find_if(objects.begin(), objects.end(), [&](const auto& object) {
+        return object.record_index == record_index;
+    });
+    return selected == objects.end() ? nullptr : &*selected;
+}
+
 void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto report_layout = copperfin::studio::build_report_layout(document);
@@ -249,8 +285,19 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << ",\n";
     std::cout << "      \"line\": " << document.selection_line << ",\n";
     std::cout << "      \"column\": " << document.selection_column << ",\n";
+    std::cout << "      \"recordAvailable\": " << (document.selection_record_available ? "true" : "false") << ",\n";
     std::cout << "      \"recordIndex\": " << document.selection_record_index << "\n";
     std::cout << "    },\n";
+    std::cout << "    \"selectedObject\": ";
+    if (const auto* selected_object = document.selection_record_available
+            ? find_selected_object(objects, document.selection_record_index)
+            : nullptr;
+        selected_object != nullptr) {
+        print_json_object_summary(*selected_object, "    ");
+    } else {
+        std::cout << "null";
+    }
+    std::cout << ",\n";
     std::cout << "    \"hasSidecar\": " << (document.has_sidecar ? "true" : "false") << ",\n";
     std::cout << "    \"sidecarPath\": ";
     print_json_string(document.sidecar_path);
@@ -819,6 +866,8 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     std::cout << "document.selection_symbol: " << document.selection_symbol << "\n";
     std::cout << "document.selection_line: " << document.selection_line << "\n";
     std::cout << "document.selection_column: " << document.selection_column << "\n";
+    std::cout << "document.selection_record_available: "
+              << (document.selection_record_available ? "true" : "false") << "\n";
     std::cout << "document.selection_record_index: " << document.selection_record_index << "\n";
     std::cout << "document.has_sidecar: " << (document.has_sidecar ? "true" : "false") << "\n";
     if (!document.sidecar_path.empty()) {

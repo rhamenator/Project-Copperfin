@@ -47,6 +47,7 @@ struct StudioOpenRequest {
     bool read_only = false;
     bool load_full_table = false;
     bool apply_property_update = false;
+    bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
@@ -61,6 +62,7 @@ struct StudioDocumentModel {
     bool has_sidecar = false;
     bool read_only = false;
     bool launched_from_visual_studio = false;
+    bool selection_record_available = false;
     std::size_t selection_line = 0;
     std::size_t selection_column = 0;
     std::size_t selection_record_index = 0;

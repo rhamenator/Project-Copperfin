@@ -118,6 +118,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "The --record value must be an unsigned integer."};
             }
             result.request.record_index = record_index;
+            result.request.selection_record_available = true;
             continue;
         }
 

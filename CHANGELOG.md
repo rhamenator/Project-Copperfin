@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#967 selected Studio object JSON shipped: `copperfin_studio_host --json` now emits a `selectedObject` summary when explicit record selection matches a parsed designer object.
 - E2/#966 selected-record DataEnvironment inference shipped: form/class launches targeting a parsed DataEnvironment record now infer `data_environment` designer context when no explicit override or symbol inference applies.
 - E2/#965 Studio DataEnvironment symbol inference shipped: form/class launches targeting DataEnvironment methods now infer `data_environment` designer contexts before generic visual-method fallback.
 - E2/#964 Studio launch selection metadata shipped: opened Studio documents and `copperfin_studio_host --json` now preserve launch symbol, line, column, and record-index selection metadata.
