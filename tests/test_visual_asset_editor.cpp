@@ -11452,6 +11452,24 @@ void test_set_visual_object_highlight_row_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_panel_link_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#932",
+        "panel_link",
+        "PanelLink",
+        "PANELLINK",
+        "panel-link",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_panel_link({
+                .path = path,
+                .objects = objects,
+                .panel_link = value
+            });
+        });
+}
+
 void test_set_visual_object_add_line_feeds_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#853",
@@ -23619,6 +23637,7 @@ int main() {
     test_set_visual_object_record_mark_assigns_logical_state();
     test_set_visual_object_split_bar_assigns_logical_state();
     test_set_visual_object_highlight_row_assigns_logical_state();
+    test_set_visual_object_panel_link_assigns_logical_state();
     test_set_visual_object_sparse_assigns_logical_state();
     test_set_visual_object_add_line_feeds_assigns_logical_state();
     test_set_visual_object_always_on_top_assigns_logical_state();

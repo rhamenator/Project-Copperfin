@@ -880,6 +880,12 @@ struct VisualObjectHighlightRowRequest {
     bool highlight_row = false;
 };
 
+struct VisualObjectPanelLinkRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool panel_link = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1641,6 +1647,7 @@ VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMark
 VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMarkRequest& request);
 VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequest& request);
 VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighlightRowRequest& request);
+VisualAssetEditResult set_visual_object_panel_link(const VisualObjectPanelLinkRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);

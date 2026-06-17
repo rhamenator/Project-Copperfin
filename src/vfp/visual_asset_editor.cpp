@@ -5558,6 +5558,15 @@ VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighligh
         request.highlight_row ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_panel_link(const VisualObjectPanelLinkRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "PanelLink",
+        "panel-link",
+        request.panel_link ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
