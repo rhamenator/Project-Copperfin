@@ -10,7 +10,7 @@ It is intentionally narrower than the top-level roadmap:
 
 ## Current Agent Directive
 
-This is the only actionable queue in this file as of 2026-06-17.
+This is the only actionable queue in this file as of 2026-06-17. If another section in this document appears to name a different next issue, that section is historical unless GitHub shows a reopened, active issue with fresh regression evidence.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
@@ -19,6 +19,7 @@ This is the only actionable queue in this file as of 2026-06-17.
 - Next work: create or pick the next prompt-sized `#23` child for the next implemented visual-object editor API that still lacks a host wrapper, unless the live issue tracker already contains a more specific open child.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
+- Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Active Queue" table instead.
 
 ## Reading Notes
 
@@ -358,6 +359,13 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 | --- | --- | --- |
 | `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1071`; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
 
+Decision rule for agents:
+
+1. Check live GitHub open issues under `#23`.
+2. If a prompt-sized host-wrapper child exists, work that child.
+3. If no such child exists, create the next prompt-sized `#23` child for an already-implemented rollback-safe visual-object editor API that lacks a Studio host command.
+4. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
+
 Historical-closed prompt-sized native slice queues:
 
 - `#96`: `#121`, `#122`
@@ -375,6 +383,9 @@ Adjacent prompt-sized native slice queues:
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
 - `#23`: `#1071` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
 - broader repo execution leaves remain pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document currently points to the live E2/#23 continuation lane, not those adjacent historical/planning leaves
+
+<details>
+<summary>Historical post-D1/E1/E2 closed issue sweep through #1071</summary>
 
 Historical post-D1 execution order through the current E2 queue:
 
@@ -795,6 +806,8 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 413. `#1069`
 414. `#1070`
 415. `#1071`
+
+</details>
 
 Execution guardrails:
 
