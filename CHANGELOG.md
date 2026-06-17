@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#933 selected visual object partition assignment shipped: designer commands can assign caller-provided non-negative numeric `Partition` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#932 selected visual object panel-link assignment shipped: designer commands can assign caller-provided FoxPro logical `PanelLink` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#931 selected visual object link-master assignment shipped: designer commands can assign caller-provided text `LinkMaster` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#930 selected visual object record-source assignment shipped: designer commands can assign caller-provided text `RecordSource` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.

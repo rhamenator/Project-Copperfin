@@ -1066,6 +1066,12 @@ struct VisualObjectRecordSourceTypeRequest {
     int record_source_type = 0;
 };
 
+struct VisualObjectPartitionRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int partition = 0;
+};
+
 struct VisualObjectSpecialEffectRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1680,6 +1686,7 @@ VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLock
 VisualAssetEditResult set_visual_object_record_source(const VisualObjectRecordSourceRequest& request);
 VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMasterRequest& request);
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request);
+VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionRequest& request);
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request);
 VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request);
 VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request);

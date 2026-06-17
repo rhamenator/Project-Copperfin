@@ -5911,6 +5911,19 @@ VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRec
         std::to_string(request.record_source_type));
 }
 
+VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionRequest& request) {
+    if (request.partition < 0) {
+        return {.ok = false, .error = "Partition must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Partition",
+        "partition",
+        std::to_string(request.partition));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
