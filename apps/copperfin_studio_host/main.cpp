@@ -26,6 +26,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
     std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
+    std::cout << "Selected-fore-color object: --selected-fore-color-object --selected-fore-color <n> [--selected-fore-color-target-object-name <name>] [--selected-fore-color-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2179,6 +2180,30 @@ int main(int argc, char** argv) {
         if (!selected_back_color_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << selected_back_color_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.selected_fore_color_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> selected_fore_color_objects;
+        selected_fore_color_objects.reserve(parse_result.request.selected_fore_color_objects.size());
+        for (const auto& selected_fore_color_object : parse_result.request.selected_fore_color_objects) {
+            selected_fore_color_objects.push_back({
+                .record_index = selected_fore_color_object.record_index,
+                .object_name = selected_fore_color_object.object_name,
+                .unique_id = selected_fore_color_object.unique_id
+            });
+        }
+
+        const auto selected_fore_color_result = copperfin::vfp::set_visual_object_selected_fore_color({
+            .path = parse_result.request.path,
+            .objects = selected_fore_color_objects,
+            .selected_fore_color = parse_result.request.selected_fore_color
+        });
+
+        if (!selected_fore_color_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << selected_fore_color_result.error << "\n";
             return 4;
         }
     }
