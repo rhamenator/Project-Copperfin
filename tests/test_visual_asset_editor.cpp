@@ -7061,6 +7061,16 @@ void test_create_visual_objects_rolls_back_failed_batches() {
     expect(batch_result.ok && batch_result.record_indexes.size() == 2U &&
             batch_result.record_indexes[0] == 2U && batch_result.record_indexes[1] == 3U,
         "#784: batch creates should append each object and return created record indexes");
+    expect(batch_result.created_objects.size() == 2U &&
+            batch_result.created_objects[0].record_index == 2U &&
+            batch_result.created_objects[0].object_name == "chkActive" &&
+            batch_result.created_objects[0].unique_id == "active-guid" &&
+            batch_result.created_objects[0].parent_name == "frmMain" &&
+            batch_result.created_objects[1].record_index == 3U &&
+            batch_result.created_objects[1].object_name == "lblState" &&
+            batch_result.created_objects[1].unique_id == "state-guid" &&
+            batch_result.created_objects[1].parent_name == "frmMain",
+        "#992: batch creates should report created object identity metadata in append order");
 
     auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 4U,
@@ -7120,6 +7130,8 @@ void test_create_visual_objects_rolls_back_failed_batches() {
     });
     expect(!batch_result.ok && batch_result.record_indexes.empty(),
         "#784: batch creates should reject identity collisions with deleted rows");
+    expect(batch_result.created_objects.empty(),
+        "#992: failed batch creates should not report stale identity metadata after collisions");
     expect(object_count() == committed_count,
         "#784: deleted-row collision failures should not append partial rows");
 
@@ -7163,6 +7175,8 @@ void test_create_visual_objects_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#784: batch creates should reject unknown fields");
+    expect(batch_result.created_objects.empty(),
+        "#992: failed batch creates should not report stale identity metadata after invalid fields");
     expect(object_count() == committed_count,
         "#784: unknown-field failures should not append partial rows");
 

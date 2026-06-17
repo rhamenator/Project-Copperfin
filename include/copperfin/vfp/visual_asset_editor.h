@@ -581,10 +581,18 @@ struct VisualObjectCreateResult {
     std::string parent_name;
 };
 
+struct VisualObjectCreatedObject {
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
+};
+
 struct VisualObjectCreateBatchResult {
     bool ok = false;
     std::string error;
     std::vector<std::size_t> record_indexes;
+    std::vector<VisualObjectCreatedObject> created_objects;
 };
 
 struct VisualObjectAlignmentTarget {

@@ -4368,6 +4368,26 @@ VisualObjectCreateResult failed_visual_object_create_result(std::string error) {
     };
 }
 
+VisualObjectCreatedObject created_visual_object_from_record(const DbfRecord& record, std::size_t record_index) {
+    const auto* unique_id = find_record_value(record, "UNIQUEID");
+    const auto* parent_name = find_record_value(record, "PARENT");
+    return {
+        .record_index = record_index,
+        .object_name = visual_object_record_name(record),
+        .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value),
+        .parent_name = parent_name == nullptr ? std::string{} : trim_both(parent_name->display_value)
+    };
+}
+
+VisualObjectCreateBatchResult failed_visual_object_create_batch_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .record_indexes = {},
+        .created_objects = {}
+    };
+}
+
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request) {
     if (request.path.empty()) {
         return failed_visual_object_create_result("No asset path was provided.");
@@ -4458,15 +4478,15 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
 
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided.", .record_indexes = {}};
+        return failed_visual_object_create_batch_result("No asset path was provided.");
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object creates were provided.", .record_indexes = {}};
+        return failed_visual_object_create_batch_result("No visual object creates were provided.");
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
     if (!table_result.ok) {
-        return {.ok = false, .error = table_result.error, .record_indexes = {}};
+        return failed_visual_object_create_batch_result(table_result.error);
     }
     const auto& table = table_result.table;
 
@@ -4481,17 +4501,17 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
     created_record_indexes.reserve(request.objects.size());
     for (const auto& object : request.objects) {
         if (object.field_values.empty()) {
-            return {.ok = false, .error = "No field values were provided.", .record_indexes = {}};
+            return failed_visual_object_create_batch_result("No field values were provided.");
         }
 
         std::vector<std::string> created_values(table.fields.size());
         for (const auto& field_value : object.field_values) {
             if (trim_both(field_value.property_name).empty()) {
-                return {.ok = false, .error = "Field names cannot be empty.", .record_indexes = {}};
+                return failed_visual_object_create_batch_result("Field names cannot be empty.");
             }
             const auto field_index = find_field_index(table, field_value.property_name);
             if (!field_index.has_value()) {
-                return {.ok = false, .error = "The requested field was not found in the asset.", .record_indexes = {}};
+                return failed_visual_object_create_batch_result("The requested field was not found in the asset.");
             }
             created_values[*field_index] = field_value.property_value;
         }
@@ -4513,11 +4533,8 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
                 return normalize_visual_object_name(record_values[*identity_field_index]) == normalized_final_value;
             });
             if (collision != records.end()) {
-                return {
-                    .ok = false,
-                    .error = "The requested replacement identity already exists in the asset.",
-                    .record_indexes = {}
-                };
+                return failed_visual_object_create_batch_result(
+                    "The requested replacement identity already exists in the asset.");
             }
         }
 
@@ -4527,7 +4544,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table.", .record_indexes = {}};
+        return failed_visual_object_create_batch_result("Unable to open the visual asset table.");
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -4536,7 +4553,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 
     const auto create_result = create_dbf_table_file(request.path, table.fields, records);
     if (!create_result.ok) {
-        return {.ok = false, .error = create_result.error, .record_indexes = {}};
+        return failed_visual_object_create_batch_result(create_result.error);
     }
     for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
         if (!deleted_flags[index]) {
@@ -4548,11 +4565,32 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
             if (!memo_path.empty() && !original_memo_bytes.empty()) {
                 write_binary_file(memo_path, original_memo_bytes);
             }
-            return {.ok = false, .error = delete_result.error, .record_indexes = {}};
+            return failed_visual_object_create_batch_result(delete_result.error);
         }
     }
 
-    return {.ok = true, .error = {}, .record_indexes = created_record_indexes};
+    const auto created_table_result = parse_dbf_table_from_file(request.path, records.size());
+    if (!created_table_result.ok) {
+        return failed_visual_object_create_batch_result(created_table_result.error);
+    }
+
+    std::vector<VisualObjectCreatedObject> created_objects;
+    created_objects.reserve(created_record_indexes.size());
+    for (const auto created_record_index : created_record_indexes) {
+        if (created_record_index >= created_table_result.table.records.size()) {
+            return failed_visual_object_create_batch_result(
+                "A created visual object record is not currently available.");
+        }
+        created_objects.push_back(
+            created_visual_object_from_record(created_table_result.table.records[created_record_index], created_record_index));
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .record_indexes = created_record_indexes,
+        .created_objects = std::move(created_objects)
+    };
 }
 
 VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request) {
