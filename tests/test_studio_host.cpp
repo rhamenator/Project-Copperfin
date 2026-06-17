@@ -235,6 +235,10 @@ void test_parse_launch_arguments() {
         "#1079: launch contract should keep auto-size-object off by default");
     expect(!result.request.auto_size_available,
         "#1079: launch contract should keep auto size unavailable by default");
+    expect(!result.request.auto_release_object,
+        "#1080: launch contract should keep auto-release-object off by default");
+    expect(!result.request.auto_release_available,
+        "#1080: launch contract should keep auto release unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4906,6 +4910,92 @@ void test_parse_launch_arguments_rejects_auto_size_object_ambiguity() {
         "#1079: launch contract should reject stray auto-size arguments");
 }
 
+void test_parse_launch_arguments_for_auto_release_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--auto-release-object",
+        "--auto-release", "false",
+        "--auto-release-target-object-name", "frmCustomer",
+        "--auto-release-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1080: launch contract should parse auto-release-object requests");
+    expect(result.request.auto_release_object,
+        "#1080: launch contract should detect --auto-release-object");
+    expect(result.request.auto_release_available && !result.request.auto_release,
+        "#1080: auto-release-object requests should carry auto release state");
+    expect(result.request.auto_release_objects.size() == 2U,
+        "#1080: auto-release-object requests should collect auto-release target selectors");
+    if (result.request.auto_release_objects.size() == 2U) {
+        expect(result.request.auto_release_objects[0].object_name == "frmCustomer" &&
+                result.request.auto_release_objects[0].unique_id.empty(),
+            "#1080: auto-release-object requests should parse target object-name selectors");
+        expect(result.request.auto_release_objects[1].object_name.empty() &&
+                result.request.auto_release_objects[1].unique_id == "two-guid",
+            "#1080: auto-release-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_auto_release_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release-object",
+        "--auto-release-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1080: launch contract should reject auto-release-object requests without auto release state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release-object",
+        "--auto-release", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1080: launch contract should reject auto-release-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release-object",
+        "--auto-release", "sometimes",
+        "--auto-release-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1080: launch contract should reject invalid auto-release boolean values");
+}
+
+void test_parse_launch_arguments_rejects_auto_release_object_ambiguity() {
+    const auto auto_release_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release-object",
+        "--auto-size-object",
+        "--auto-release", "false",
+        "--auto-release-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!auto_release_auto_size_result.ok,
+        "#1080: launch contract should reject simultaneous auto-release-object and auto-size-object requests");
+
+    const auto auto_release_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release-object",
+        "--clear-property",
+        "--property-name", "AutoRelease",
+        "--auto-release", "false",
+        "--auto-release-target-unique-id", "one-guid"
+    });
+    expect(!auto_release_property_result.ok,
+        "#1080: launch contract should reject auto-release-object combined with property commands");
+
+    const auto stray_auto_release_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-release", "false"
+    });
+    expect(!stray_auto_release_result.ok,
+        "#1080: launch contract should reject stray auto-release arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6288,6 +6378,9 @@ int main() {
     test_parse_launch_arguments_for_auto_size_object();
     test_parse_launch_arguments_rejects_auto_size_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_size_object_ambiguity();
+    test_parse_launch_arguments_for_auto_release_object();
+    test_parse_launch_arguments_rejects_auto_release_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_auto_release_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

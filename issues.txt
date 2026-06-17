@@ -1,3 +1,4 @@
+1080	OPEN	E2/#23 slice: Expose host auto-release-object command		2026-06-17T23:31:21Z
 1079	OPEN	E2/#23 slice: Expose host auto-size-object command		2026-06-17T23:26:59Z
 1078	OPEN	E2/#23 slice: Expose host auto-center-object command		2026-06-17T23:20:52Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z

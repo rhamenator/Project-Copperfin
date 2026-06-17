@@ -393,6 +393,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-release-object") {
+            result.request.auto_release_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -982,6 +987,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.auto_size = *auto_size;
             result.request.auto_size_available = true;
+            continue;
+        }
+
+        if (argument == "--auto-release") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-release."};
+            }
+            const auto auto_release = parse_bool_value(args[++index]);
+            if (!auto_release.has_value()) {
+                return {.ok = false, .error = "The --auto-release value must be true or false."};
+            }
+            result.request.auto_release = *auto_release;
+            result.request.auto_release_available = true;
             continue;
         }
 
@@ -2311,6 +2329,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-release-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-release-target-object-name."};
+            }
+            result.request.auto_release_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--auto-release-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-release-target-unique-id."};
+            }
+            result.request.auto_release_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3021,6 +3063,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.auto_size_objects.empty())) {
         return {.ok = false, .error = "Auto-size arguments can only be used with --auto-size-object."};
     }
+    if (result.request.auto_release_object && !result.request.auto_release_available) {
+        return {.ok = false, .error = "An object auto-release assignment requires --auto-release."};
+    }
+    if (result.request.auto_release_object && result.request.auto_release_objects.empty()) {
+        return {.ok = false, .error = "An object auto-release assignment requires at least one target selector."};
+    }
+    if (!result.request.auto_release_object &&
+        (result.request.auto_release_available ||
+         !result.request.auto_release_objects.empty())) {
+        return {.ok = false, .error = "Auto-release arguments can only be used with --auto-release-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3084,6 +3137,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
+        (result.request.auto_release_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
