@@ -227,6 +227,10 @@ void test_parse_launch_arguments() {
         "#1075: launch contract should keep allow-output-object off by default");
     expect(!result.request.allow_output_available,
         "#1075: launch contract should keep allow output unavailable by default");
+    expect(!result.request.auto_center_object,
+        "#1078: launch contract should keep auto-center-object off by default");
+    expect(!result.request.auto_center_available,
+        "#1078: launch contract should keep auto center unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4726,6 +4730,92 @@ void test_parse_launch_arguments_rejects_allow_output_object_ambiguity() {
         "#1075: launch contract should reject stray allow-output arguments");
 }
 
+void test_parse_launch_arguments_for_auto_center_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--auto-center-object",
+        "--auto-center", "false",
+        "--auto-center-target-object-name", "frmCustomer",
+        "--auto-center-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1078: launch contract should parse auto-center-object requests");
+    expect(result.request.auto_center_object,
+        "#1078: launch contract should detect --auto-center-object");
+    expect(result.request.auto_center_available && !result.request.auto_center,
+        "#1078: auto-center-object requests should carry auto center state");
+    expect(result.request.auto_center_objects.size() == 2U,
+        "#1078: auto-center-object requests should collect auto-center target selectors");
+    if (result.request.auto_center_objects.size() == 2U) {
+        expect(result.request.auto_center_objects[0].object_name == "frmCustomer" &&
+                result.request.auto_center_objects[0].unique_id.empty(),
+            "#1078: auto-center-object requests should parse target object-name selectors");
+        expect(result.request.auto_center_objects[1].object_name.empty() &&
+                result.request.auto_center_objects[1].unique_id == "two-guid",
+            "#1078: auto-center-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center-object",
+        "--auto-center-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1078: launch contract should reject auto-center-object requests without auto center state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center-object",
+        "--auto-center", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1078: launch contract should reject auto-center-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center-object",
+        "--auto-center", "sometimes",
+        "--auto-center-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1078: launch contract should reject invalid auto-center boolean values");
+}
+
+void test_parse_launch_arguments_rejects_auto_center_object_ambiguity() {
+    const auto auto_center_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center-object",
+        "--allow-output-object",
+        "--auto-center", "false",
+        "--auto-center-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!auto_center_allow_output_result.ok,
+        "#1078: launch contract should reject simultaneous auto-center-object and allow-output-object requests");
+
+    const auto auto_center_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center-object",
+        "--clear-property",
+        "--property-name", "AutoCenter",
+        "--auto-center", "false",
+        "--auto-center-target-unique-id", "one-guid"
+    });
+    expect(!auto_center_property_result.ok,
+        "#1078: launch contract should reject auto-center-object combined with property commands");
+
+    const auto stray_auto_center_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-center", "false"
+    });
+    expect(!stray_auto_center_result.ok,
+        "#1078: launch contract should reject stray auto-center arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6102,6 +6192,9 @@ int main() {
     test_parse_launch_arguments_for_allow_output_object();
     test_parse_launch_arguments_rejects_allow_output_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_output_object_ambiguity();
+    test_parse_launch_arguments_for_auto_center_object();
+    test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_auto_center_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
