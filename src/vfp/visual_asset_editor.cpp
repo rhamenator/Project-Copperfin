@@ -5835,6 +5835,19 @@ VisualAssetEditResult set_visual_object_buffer_mode_override(
         std::to_string(request.buffer_mode_override));
 }
 
+VisualAssetEditResult set_visual_object_data_session(const VisualObjectDataSessionRequest& request) {
+    if (request.data_session < 0) {
+        return {.ok = false, .error = "DataSession must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DataSession",
+        "data-session",
+        std::to_string(request.data_session));
+}
+
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request) {
     if (request.scale_mode < 0) {
         return {.ok = false, .error = "ScaleMode must not be negative."};
