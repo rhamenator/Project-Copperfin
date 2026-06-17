@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1025 host duplicate-object command shipped: `copperfin_studio_host --duplicate-object` now duplicates visual objects by record index, object name, or unique id, accepts replacement object/name/unique-id values, rejects ambiguous duplicate/delete/restore/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1024 host restore-object command shipped: `copperfin_studio_host --restore-object` now clears visual-object deletion state by record index, object name, or unique id, rejects ambiguous delete/restore/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1023 host delete-object command shipped: `copperfin_studio_host --delete-object` now marks visual objects deleted by record index, object name, or unique id, rejects ambiguous delete/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1022 host rename-property command shipped: `copperfin_studio_host --rename-property` now renames memo-backed visual object properties by record index, object name, or unique id, rejects ambiguous property commands, and preserves no-mutation behavior for missing targets.

@@ -44,6 +44,9 @@ struct StudioOpenRequest {
     std::string new_property_name{};
     std::string object_name{};
     std::string unique_id{};
+    std::string new_object_name{};
+    std::string new_name{};
+    std::string new_unique_id{};
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -55,6 +58,7 @@ struct StudioOpenRequest {
     bool rename_property = false;
     bool delete_object = false;
     bool restore_object = false;
+    bool duplicate_object = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};

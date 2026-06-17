@@ -108,6 +108,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--duplicate-object") {
+            result.request.duplicate_object = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -175,6 +180,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --new-property-name."};
             }
             result.request.new_property_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--new-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --new-object-name."};
+            }
+            result.request.new_object_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--new-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --new-name."};
+            }
+            result.request.new_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--new-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --new-unique-id."};
+            }
+            result.request.new_unique_id = args[++index];
             continue;
         }
 
@@ -276,7 +305,8 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.rename_property ? 1 : 0);
     const int object_command_count =
         (result.request.delete_object ? 1 : 0) +
-        (result.request.restore_object ? 1 : 0);
+        (result.request.restore_object ? 1 : 0) +
+        (result.request.duplicate_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
     }

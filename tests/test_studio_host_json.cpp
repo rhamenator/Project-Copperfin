@@ -186,6 +186,19 @@ bool visual_object_deleted(const std::filesystem::path& form_path, const std::st
     return false;
 }
 
+bool visual_object_exists(const std::filesystem::path& form_path, const std::string& unique_id) {
+    const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
+    if (!list_result.ok) {
+        return false;
+    }
+    for (const auto& object : list_result.objects) {
+        if (object.unique_id == unique_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void delete_existing_textbox(const std::filesystem::path& form_path, const std::string& evidence) {
     const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
         .path = form_path.string(),
@@ -1523,6 +1536,100 @@ void test_studio_host_json_restores_objects_by_stable_selectors(const std::strin
     }
 }
 
+void test_studio_host_json_duplicates_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_duplicate_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path object_name_path = temp_root / "object_name.scx";
+    write_synthetic_form_table_for_toolbox_creation(object_name_path);
+    const auto object_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", object_name_path.string(),
+            "--duplicate-object",
+            "--object-name", "txt1",
+            "--new-object-name", "txtCopy",
+            "--new-name", "txtCopy",
+            "--new-unique-id", "copied-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(object_name_process.exit_code == 0,
+        "#1025: object-name host object duplicates should exit successfully");
+    expect(visual_object_count(object_name_path) == 3U,
+        "#1025: object-name host object duplicates should append one visual object");
+    expect(visual_object_exists(object_name_path, "copied-textbox-guid"),
+        "#1025: object-name host object duplicates should use replacement unique ids");
+
+    const fs::path unique_id_path = temp_root / "unique_id.scx";
+    write_synthetic_form_table_for_toolbox_creation(unique_id_path);
+    const auto unique_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--duplicate-object",
+            "--unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtCopyById",
+            "--new-name", "txtCopyById",
+            "--new-unique-id", "copied-by-id-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_process.exit_code == 0,
+        "#1025: unique-id host object duplicates should exit successfully");
+    expect(visual_object_count(unique_id_path) == 3U,
+        "#1025: unique-id host object duplicates should append one visual object");
+    expect(visual_object_exists(unique_id_path, "copied-by-id-guid"),
+        "#1025: unique-id host object duplicates should use replacement unique ids");
+
+    const fs::path missing_path = temp_root / "missing.scx";
+    write_synthetic_form_table_for_toolbox_creation(missing_path);
+    const auto missing_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_path.string(),
+            "--duplicate-object",
+            "--object-name", "missingObject",
+            "--new-object-name", "missingCopy",
+            "--new-name", "missingCopy",
+            "--new-unique-id", "missing-copy-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_process.exit_code == 4,
+        "#1025: missing object-name host object duplicates should return command failure");
+    expect(visual_object_count(missing_path) == 2U,
+        "#1025: missing object-name host object duplicates should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_toolbox_creation(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--duplicate-object",
+            "--delete-object",
+            "--unique-id", "existing-textbox-guid",
+            "--new-object-name", "ambiguousCopy",
+            "--new-name", "ambiguousCopy",
+            "--new-unique-id", "ambiguous-copy-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1025: duplicate-object plus delete-object requests should fail during launch parsing");
+    expect(visual_object_count(ambiguous_path) == 2U,
+        "#1025: duplicate-object/delete-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1538,5 +1645,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
