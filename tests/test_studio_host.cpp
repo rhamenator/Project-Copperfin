@@ -143,6 +143,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.style_available, "#1052: launch contract should keep style unavailable by default");
     expect(!result.request.list_index_object, "#1053: launch contract should keep list-index-object off by default");
     expect(!result.request.list_index_available, "#1053: launch contract should keep list index unavailable by default");
+    expect(!result.request.left_column_object, "#1054: launch contract should keep left-column-object off by default");
+    expect(!result.request.left_column_available, "#1054: launch contract should keep left column unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2651,6 +2653,100 @@ void test_parse_launch_arguments_rejects_list_index_object_ambiguity() {
         "#1053: launch contract should reject stray list-index arguments");
 }
 
+void test_parse_launch_arguments_for_left_column_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--left-column-object",
+        "--left-column", "7",
+        "--left-column-target-object-name", "cboCustomer",
+        "--left-column-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1054: launch contract should parse left-column-object requests");
+    expect(result.request.left_column_object, "#1054: launch contract should detect --left-column-object");
+    expect(result.request.left_column_available && result.request.left_column == 7,
+        "#1054: left-column-object requests should carry left column values");
+    expect(result.request.left_column_objects.size() == 2U,
+        "#1054: left-column-object requests should collect left column target selectors");
+    if (result.request.left_column_objects.size() == 2U) {
+        expect(result.request.left_column_objects[0].object_name == "cboCustomer" &&
+                result.request.left_column_objects[0].unique_id.empty(),
+            "#1054: left-column-object requests should parse target object-name selectors");
+        expect(result.request.left_column_objects[1].object_name.empty() &&
+                result.request.left_column_objects[1].unique_id == "two-guid",
+            "#1054: left-column-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_left_column_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--left-column-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1054: launch contract should reject left-column-object requests without left column");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--left-column", "7"
+    });
+    expect(!missing_targets_result.ok,
+        "#1054: launch contract should reject left-column-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--left-column", "first",
+        "--left-column-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1054: launch contract should reject non-integer left-column values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--left-column", "-1",
+        "--left-column-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1054: launch contract should reject negative left-column values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_left_column_object_ambiguity() {
+    const auto left_index_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--list-index-object",
+        "--left-column", "7",
+        "--left-column-target-unique-id", "one-guid",
+        "--list-index", "3",
+        "--list-index-target-unique-id", "one-guid"
+    });
+    expect(!left_index_result.ok,
+        "#1054: launch contract should reject simultaneous left-column-object and list-index-object requests");
+
+    const auto left_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column-object",
+        "--clear-property",
+        "--property-name", "LeftColumn",
+        "--left-column", "7",
+        "--left-column-target-unique-id", "one-guid"
+    });
+    expect(!left_property_result.ok,
+        "#1054: launch contract should reject left-column-object combined with property commands");
+
+    const auto stray_left_column_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--left-column", "7"
+    });
+    expect(!stray_left_column_result.ok,
+        "#1054: launch contract should reject stray left-column arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3961,6 +4057,9 @@ int main() {
     test_parse_launch_arguments_for_list_index_object();
     test_parse_launch_arguments_rejects_list_index_object_invalid_inputs();
     test_parse_launch_arguments_rejects_list_index_object_ambiguity();
+    test_parse_launch_arguments_for_left_column_object();
+    test_parse_launch_arguments_rejects_left_column_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_left_column_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

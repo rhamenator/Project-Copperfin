@@ -87,6 +87,7 @@ struct StudioOpenRequest {
     int column_count = 0;
     int style = 0;
     int list_index = 0;
+    int left_column = 0;
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -126,6 +127,7 @@ struct StudioOpenRequest {
     bool column_count_object = false;
     bool style_object = false;
     bool list_index_object = false;
+    bool left_column_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -152,6 +154,7 @@ struct StudioOpenRequest {
     bool column_count_available = false;
     bool style_available = false;
     bool list_index_available = false;
+    bool left_column_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -179,6 +182,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> column_count_objects{};
     std::vector<StudioObjectSelector> style_objects{};
     std::vector<StudioObjectSelector> list_index_objects{};
+    std::vector<StudioObjectSelector> left_column_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
