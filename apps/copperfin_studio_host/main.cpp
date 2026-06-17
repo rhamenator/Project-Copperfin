@@ -14,6 +14,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -71,6 +72,152 @@ void print_json_string(const std::string& value) {
     std::cout << "\"" << json_escape(value) << "\"";
 }
 
+void print_json_string_view(std::string_view value) {
+    print_json_string(std::string(value));
+}
+
+void print_json_editor_contexts(const std::vector<copperfin::studio::StudioEditorSelectionContext>& contexts) {
+    std::cout << "[";
+    for (std::size_t index = 0; index < contexts.size(); ++index) {
+        print_json_string(copperfin::studio::studio_editor_selection_context_name(contexts[index]));
+        if ((index + 1U) != contexts.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]";
+}
+
+void print_json_toolbox_contexts(const std::vector<copperfin::studio::StudioToolboxContext>& contexts) {
+    std::cout << "[";
+    for (std::size_t index = 0; index < contexts.size(); ++index) {
+        print_json_string(copperfin::studio::studio_toolbox_context_name(contexts[index]));
+        if ((index + 1U) != contexts.size()) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]";
+}
+
+void print_json_designer_contexts(const std::vector<copperfin::studio::StudioDesignerContextResult>& contexts) {
+    std::cout << "[\n";
+    for (std::size_t context_index = 0; context_index < contexts.size(); ++context_index) {
+        const auto& context = contexts[context_index];
+        std::cout << "      {\n";
+        std::cout << "        \"selectionContext\": ";
+        print_json_string(copperfin::studio::studio_editor_selection_context_name(context.selection_context));
+        std::cout << ",\n";
+        std::cout << "        \"editorActions\": [\n";
+        for (std::size_t action_index = 0; action_index < context.editor_actions.size(); ++action_index) {
+            const auto& action = context.editor_actions[action_index];
+            std::cout << "          {\n";
+            std::cout << "            \"id\": ";
+            print_json_string_view(action.id);
+            std::cout << ",\n";
+            std::cout << "            \"label\": ";
+            print_json_string_view(action.label);
+            std::cout << ",\n";
+            std::cout << "            \"kind\": ";
+            print_json_string(copperfin::studio::studio_editor_action_kind_name(action.kind));
+            std::cout << ",\n";
+            std::cout << "            \"contexts\": ";
+            print_json_editor_contexts(action.contexts);
+            std::cout << ",\n";
+            std::cout << "            \"commandToken\": ";
+            print_json_string_view(action.command_token);
+            std::cout << ",\n";
+            std::cout << "            \"targetSurface\": ";
+            print_json_string_view(action.target_surface);
+            std::cout << ",\n";
+            std::cout << "            \"description\": ";
+            print_json_string_view(action.description);
+            std::cout << "\n";
+            std::cout << "          }";
+            if ((action_index + 1U) != context.editor_actions.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "        ],\n";
+        std::cout << "        \"builders\": [\n";
+        for (std::size_t builder_index = 0; builder_index < context.builders.size(); ++builder_index) {
+            const auto& builder = context.builders[builder_index];
+            std::cout << "          {\n";
+            std::cout << "            \"id\": ";
+            print_json_string_view(builder.id);
+            std::cout << ",\n";
+            std::cout << "            \"title\": ";
+            print_json_string_view(builder.title);
+            std::cout << ",\n";
+            std::cout << "            \"kind\": ";
+            print_json_string(copperfin::studio::studio_builder_kind_name(builder.kind));
+            std::cout << ",\n";
+            std::cout << "            \"context\": ";
+            print_json_string(copperfin::studio::studio_builder_context_name(builder.context));
+            std::cout << ",\n";
+            std::cout << "            \"vfp9Equivalent\": ";
+            print_json_string_view(builder.vfp9_equivalent);
+            std::cout << ",\n";
+            std::cout << "            \"copperfinComponent\": ";
+            print_json_string_view(builder.copperfin_component);
+            std::cout << ",\n";
+            std::cout << "            \"entryPoint\": ";
+            print_json_string_view(builder.entry_point);
+            std::cout << ",\n";
+            std::cout << "            \"description\": ";
+            print_json_string_view(builder.description);
+            std::cout << "\n";
+            std::cout << "          }";
+            if ((builder_index + 1U) != context.builders.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "        ],\n";
+        std::cout << "        \"toolboxItems\": [\n";
+        for (std::size_t toolbox_index = 0; toolbox_index < context.toolbox_items.size(); ++toolbox_index) {
+            const auto& toolbox_item = context.toolbox_items[toolbox_index];
+            std::cout << "          {\n";
+            std::cout << "            \"id\": ";
+            print_json_string_view(toolbox_item.id);
+            std::cout << ",\n";
+            std::cout << "            \"title\": ";
+            print_json_string_view(toolbox_item.title);
+            std::cout << ",\n";
+            std::cout << "            \"category\": ";
+            print_json_string_view(toolbox_item.category);
+            std::cout << ",\n";
+            std::cout << "            \"vfpClass\": ";
+            print_json_string_view(toolbox_item.vfp_class);
+            std::cout << ",\n";
+            std::cout << "            \"baseClass\": ";
+            print_json_string_view(toolbox_item.base_class);
+            std::cout << ",\n";
+            std::cout << "            \"defaultNamePrefix\": ";
+            print_json_string_view(toolbox_item.default_name_prefix);
+            std::cout << ",\n";
+            std::cout << "            \"contexts\": ";
+            print_json_toolbox_contexts(toolbox_item.contexts);
+            std::cout << ",\n";
+            std::cout << "            \"container\": " << (toolbox_item.container ? "true" : "false") << ",\n";
+            std::cout << "            \"description\": ";
+            print_json_string_view(toolbox_item.description);
+            std::cout << "\n";
+            std::cout << "          }";
+            if ((toolbox_index + 1U) != context.toolbox_items.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "        ]\n";
+        std::cout << "      }";
+        if ((context_index + 1U) != contexts.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ]";
+}
+
 void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto report_layout = copperfin::studio::build_report_layout(document);
@@ -115,6 +262,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);
+    std::cout << ",\n";
+    std::cout << "    \"designerContexts\": ";
+    print_json_designer_contexts(document.designer_contexts);
     std::cout << ",\n";
     std::cout << "    \"fields\": [\n";
     for (std::size_t index = 0; index < document.table_preview.fields.size(); ++index) {

@@ -63,6 +63,21 @@ add_test(
     COMMAND $<TARGET_FILE:test_build_host_output> $<TARGET_FILE:copperfin_build_host>
 )
 
+add_executable(test_studio_host_json
+    test_studio_host_json.cpp
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_json PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_json
+    COMMAND $<TARGET_FILE:test_studio_host_json> $<TARGET_FILE:copperfin_studio_host>
+)
+
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )

@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#960`, attaching default designer-context aggregates to opened Studio documents so form/class, report/label, project, and data-environment assets expose relevant context-aware actions without a second registry query.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#961`, exposing opened-document designer contexts through `copperfin_studio_host --json` so external Studio and Visual Studio shells can consume stable selection-context, editor-action, builder/wizard, and toolbox metadata from the host contract.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
