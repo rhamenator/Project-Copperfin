@@ -164,9 +164,18 @@ bool is_data_environment_token(std::string_view value) {
     return normalized == "dataenvironment" || normalized == "data_environment";
 }
 
-bool selected_record_is_data_environment(const StudioDocumentModel& document, std::size_t record_index) {
+bool is_container_surface_token(std::string_view value) {
+    const std::string normalized = lowercase_copy(trim_copy(std::string(value)));
+    return normalized == "container" ||
+        normalized == "pageframe" ||
+        normalized == "page" ||
+        normalized == "grid" ||
+        normalized == "column";
+}
+
+const vfp::DbfRecord* find_preview_record(const StudioDocumentModel& document, std::size_t record_index) {
     if (!document.table_preview_available) {
-        return false;
+        return nullptr;
     }
 
     const auto record = std::find_if(
@@ -175,14 +184,31 @@ bool selected_record_is_data_environment(const StudioDocumentModel& document, st
         [&](const vfp::DbfRecord& preview_record) {
             return preview_record.record_index == record_index;
         });
-    if (record == document.table_preview.records.end()) {
+    return record == document.table_preview.records.end() ? nullptr : &*record;
+}
+
+template <typename Predicate>
+bool selected_record_matches_visual_token(
+    const StudioDocumentModel& document,
+    std::size_t record_index,
+    Predicate predicate) {
+    const auto* record = find_preview_record(document, record_index);
+    if (record == nullptr) {
         return false;
     }
 
-    return is_data_environment_token(value_or_empty(*record, "OBJNAME")) ||
-        is_data_environment_token(value_or_empty(*record, "NAME")) ||
-        is_data_environment_token(value_or_empty(*record, "BASECLASS")) ||
-        is_data_environment_token(value_or_empty(*record, "CLASS"));
+    return predicate(value_or_empty(*record, "OBJNAME")) ||
+        predicate(value_or_empty(*record, "NAME")) ||
+        predicate(value_or_empty(*record, "BASECLASS")) ||
+        predicate(value_or_empty(*record, "CLASS"));
+}
+
+bool selected_record_is_data_environment(const StudioDocumentModel& document, std::size_t record_index) {
+    return selected_record_matches_visual_token(document, record_index, is_data_environment_token);
+}
+
+bool selected_record_is_container_surface(const StudioDocumentModel& document, std::size_t record_index) {
+    return selected_record_matches_visual_token(document, record_index, is_container_surface_token);
 }
 
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
@@ -256,6 +282,14 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_request(
         return {
             studio_designer_context_for_selection({
                 .selection_context = StudioEditorSelectionContext::data_environment
+            })
+        };
+    }
+    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) &&
+        selected_record_is_container_surface(document, record_index)) {
+        return {
+            studio_designer_context_for_selection({
+                .selection_context = StudioEditorSelectionContext::container_object
             })
         };
     }

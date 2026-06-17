@@ -147,6 +147,27 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
 }
 
+void write_synthetic_form_table_with_container_object(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "PLATFORM", .type = 'C', .length = 12U},
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "0", "WINDOWS", "frmCustomer", "form-1", "", "customerform", "form"},
+        {"4", "0", "WINDOWS", "pgfMain", "pageframe-1", "frmCustomer", "pageframe", "pageframe"},
+        {"4", "0", "WINDOWS", "grdOrders", "grid-1", "frmCustomer", "grid", "grid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1015: synthetic SCX table with selectable container objects should be created");
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -473,6 +494,54 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#965: explicit selection contexts should serialize when a DataEnvironment symbol is also present");
     expect_not_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"data_environment\"",
                         "#965: explicit selection contexts should override symbol-inferred data-environment contexts");
+
+    const fs::path selected_container_path = temp_root / "selected_container.scx";
+    write_synthetic_form_table_with_container_object(selected_container_path);
+    const auto selected_container_process = run_process_capture(
+        studio_host_path,
+        {"--path", selected_container_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (selected_container_process.exit_code != 0) {
+        std::cerr << "studio host selected container stdout:\n" << selected_container_process.stdout_text << "\n";
+        std::cerr << "studio host selected container stderr:\n" << selected_container_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(selected_container_process.exit_code == 0,
+           "#1015: Studio host selected container JSON smoke should exit successfully");
+    expect_contains(selected_container_process.stdout_text, "\"recordIndex\": 1",
+                    "#1015: selected container JSON should preserve selected record index");
+    expect_contains(selected_container_process.stdout_text, "\"baseclassName\": \"pageframe\"",
+                    "#1015: selected container JSON should expose selected baseclass metadata");
+    expect_contains(selected_container_process.stdout_text, "\"selectionContext\": \"container_object\"",
+                    "#1015: selected container records should infer container-object JSON contexts");
+    expect_contains(selected_container_process.stdout_text, "\"id\": \"control-builder\"",
+                    "#1015: inferred container contexts should expose control builders");
+    expect_contains(selected_container_process.stdout_text, "\"id\": \"grid-builder\"",
+                    "#1015: inferred container contexts should expose grid builders");
+    expect_contains(selected_container_process.stdout_text, "\"id\": \"checkbox\"",
+                    "#1015: inferred container contexts should expose container-safe toolbox items");
+    expect_not_contains(selected_container_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1015: inferred container contexts should not expose form builders");
+
+    const auto selected_grid_process = run_process_capture(
+        studio_host_path,
+        {"--path", selected_container_path.string(), "--record", "2", "--json"},
+        temp_root);
+
+    if (selected_grid_process.exit_code != 0) {
+        std::cerr << "studio host selected grid stdout:\n" << selected_grid_process.stdout_text << "\n";
+        std::cerr << "studio host selected grid stderr:\n" << selected_grid_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(selected_grid_process.exit_code == 0,
+           "#1015: Studio host selected grid JSON smoke should exit successfully");
+    expect_contains(selected_grid_process.stdout_text, "\"baseclassName\": \"grid\"",
+                    "#1015: selected grid JSON should expose selected baseclass metadata");
+    expect_contains(selected_grid_process.stdout_text, "\"selectionContext\": \"container_object\"",
+                    "#1015: selected grid records should infer container-object JSON contexts");
 
     const fs::path selected_form_path = temp_root / "selected.scx";
     write_synthetic_form_table_with_objects(selected_form_path);

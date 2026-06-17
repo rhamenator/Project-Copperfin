@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-17: E2/#1015 selected visual container context inference is now shipped. Form/class launches that select container-like records such as PageFrame or Grid now infer `container_object` when no explicit context override is present, while DataEnvironment and explicit override precedence remain intact.
 - 2026-06-17: E2/#1014 explicit container designer selection context is now shipped. Explicit Studio launches can request `container_object`, which exposes property-grid, method-editor, control/grid builders, and container-safe toolbox metadata without inheriting form/class/report/menu/project/data-environment builders.
 - 2026-06-17: E2/#1013 explicit menu designer selection context is now shipped. MNX/MNT documents default to `menu_item`, explicit launch parsing accepts the token, and menu contexts expose property-grid plus `menu-designer` builder metadata with zero toolbox items and no form/report builder leakage.
 - 2026-06-17: E2/#1012 explicit class designer selection context is now shipped. VCX/VCT documents default to `class_designer`, explicit launch parsing accepts the token, and class contexts expose property-grid, method-editor, class-safe toolbox, and `class-builder` metadata without inheriting form/control builders.

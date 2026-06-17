@@ -55,7 +55,8 @@ void write_synthetic_form_table_with_data_environment(const std::filesystem::pat
     };
     const std::vector<std::vector<std::string>> records{
         {"Dataenvironment", "dataenvironment", ""},
-        {"frmCustomer", "form", ""}
+        {"frmCustomer", "form", ""},
+        {"pgfCustomer", "pageframe", "pageframe"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, records);
@@ -395,6 +396,26 @@ void test_open_document_attaches_default_designer_contexts() {
                "#966: non-DataEnvironment selected records should preserve visual-object defaults");
     }
 
+    const auto container_record_result = copperfin::studio::open_document({
+        .path = selected_record_path.string(),
+        .record_index = 2U,
+        .selection_record_available = true
+    });
+    expect(container_record_result.ok, "#1015: synthetic form should open for selected container context checks");
+    expect(container_record_result.document.designer_contexts.size() == 1U,
+           "#1015: selected container records should expose one inferred designer context");
+    if (!container_record_result.document.designer_contexts.empty()) {
+        const auto& context = container_record_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::container_object,
+               "#1015: selected container records should infer the container-object designer context");
+        expect(has_descriptor_id(context.builders, "control-builder"),
+               "#1015: selected container records should include control builders");
+        expect(!has_descriptor_id(context.builders, "form-builder"),
+               "#1015: selected container records should not include form builders");
+        expect(has_descriptor_id(context.toolbox_items, "checkbox"),
+               "#1015: selected container records should include container-safe toolbox items");
+    }
+
     const auto multi_override_result = copperfin::studio::open_document({
         .path = (temp_dir / "customer.scx").string(),
         .designer_selection_contexts = {
@@ -435,6 +456,24 @@ void test_open_document_attaches_default_designer_contexts() {
                "#966: explicit report_expression contexts should win over selected-record data-environment contexts");
         expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-report-expression"),
                "#962: explicit report_expression contexts should include expression-editor actions");
+    }
+
+    const auto container_override_precedence_result = copperfin::studio::open_document({
+        .path = selected_record_path.string(),
+        .record_index = 2U,
+        .selection_record_available = true,
+        .designer_selection_contexts = {
+            copperfin::studio::StudioEditorSelectionContext::report_expression
+        }
+    });
+    expect(container_override_precedence_result.ok,
+           "#1015: synthetic form should open for explicit-over-container checks");
+    expect(container_override_precedence_result.document.designer_contexts.size() == 1U,
+           "#1015: explicit selection contexts should override selected-record container defaults");
+    if (container_override_precedence_result.document.designer_contexts.size() == 1U) {
+        expect(container_override_precedence_result.document.designer_contexts[0].selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::report_expression,
+               "#1015: explicit report_expression contexts should win over selected-record container contexts");
     }
 
     const auto report_result = copperfin::studio::open_document({
