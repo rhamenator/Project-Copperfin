@@ -3256,28 +3256,81 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
         {.name = "BASECLASS", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
+        {"Page1", "pageOne", "page-guid", "", "pageframe", "Page"},
         {"cmdSave", "saveButton", "save-guid", "Page1", "cmdButton", "CommandButton"},
-        {"txtName", "nameBox", "name-guid", "", "", ""}
+        {"txtName", "nameBox", "name-guid", "page1", "textBox", "TextBox"}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "#744: object outline metadata fixture should be writable");
 
     const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok, "#744: visual object outlines should list metadata fixtures");
-    expect(list_result.objects.size() == 2U, "#744: visual object outlines should preserve row count with metadata fields");
-    if (list_result.objects.size() == 2U) {
-        expect(list_result.objects[0].parent_name == "Page1",
+    expect(list_result.objects.size() == 3U, "#744: visual object outlines should preserve row count with metadata fields");
+    if (list_result.objects.size() == 3U) {
+        expect(!list_result.objects[0].parent_record_available &&
+                list_result.objects[0].parent_record_index == 0U &&
+                list_result.objects[0].child_count == 2U,
+            "#986: root visual object outlines should expose no resolved parent and direct child counts");
+        expect(list_result.objects[1].parent_name == "Page1",
             "#744: visual object outlines should expose parent/container names");
-        expect(list_result.objects[0].class_name == "cmdButton",
+        expect(list_result.objects[1].parent_record_available &&
+                list_result.objects[1].parent_record_index == 0U &&
+                list_result.objects[1].child_count == 0U,
+            "#986: child visual object outlines should expose resolved parent record links and leaf counts");
+        expect(list_result.objects[1].class_name == "cmdButton",
             "#744: visual object outlines should expose class names");
-        expect(list_result.objects[0].baseclass_name == "CommandButton",
+        expect(list_result.objects[1].baseclass_name == "CommandButton",
             "#744: visual object outlines should expose baseclass names");
-        expect(list_result.objects[1].parent_name.empty() &&
-                list_result.objects[1].class_name.empty() &&
-                list_result.objects[1].baseclass_name.empty(),
-            "#744: missing hierarchy/class metadata should remain empty");
-        expect(list_result.objects[1].caption.empty(),
+        expect(list_result.objects[2].parent_name == "page1" &&
+                list_result.objects[2].parent_record_available &&
+                list_result.objects[2].parent_record_index == 0U,
+            "#986: visual object outline parent resolution should be case-insensitive");
+        expect(list_result.objects[2].caption.empty(),
             "#745: visual object outlines should keep captions empty when no Caption property exists");
+    }
+
+    const auto children_result = copperfin::vfp::list_visual_object_children({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(children_result.ok && children_result.children.size() == 2U,
+        "#986: visual object child listings should preserve direct child snapshots");
+    if (children_result.ok && children_result.children.size() == 2U) {
+        expect(children_result.children[0].parent_record_available &&
+                children_result.children[0].parent_record_index == 0U &&
+                children_result.children[0].child_count == 0U,
+            "#986: embedded child-list snapshots should expose resolved parent links and child counts");
+    }
+
+    const auto descendants_result = copperfin::vfp::list_visual_object_descendants({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(descendants_result.ok && descendants_result.descendants.size() == 2U,
+        "#986: visual object descendant listings should preserve direct descendant snapshots");
+    if (descendants_result.ok && descendants_result.descendants.size() == 2U) {
+        expect(descendants_result.descendants[1].object.parent_record_available &&
+                descendants_result.descendants[1].object.parent_record_index == 0U &&
+                descendants_result.descendants[1].object.child_count == 0U,
+            "#986: embedded descendant snapshots should expose resolved parent links and child counts");
+    }
+
+    const auto ancestors_result = copperfin::vfp::list_visual_object_ancestors({
+        .path = table_path.string(),
+        .record_index = 2U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(ancestors_result.ok && ancestors_result.ancestors.size() == 1U,
+        "#986: visual object ancestor listings should preserve parent snapshots");
+    if (ancestors_result.ok && ancestors_result.ancestors.size() == 1U) {
+        expect(!ancestors_result.ancestors[0].object.parent_record_available &&
+                ancestors_result.ancestors[0].object.child_count == 2U,
+            "#986: embedded ancestor snapshots should expose their own parent availability and child counts");
     }
 
     fs::remove_all(temp_dir, ignored);

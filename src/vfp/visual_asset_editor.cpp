@@ -955,6 +955,44 @@ VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
     };
 }
 
+void enrich_visual_object_hierarchy_snapshot(
+    VisualObjectSnapshot& snapshot,
+    const DbfTable& table) {
+    const std::string normalized_parent_name = normalize_visual_object_name(snapshot.parent_name);
+    snapshot.parent_record_available = false;
+    snapshot.parent_record_index = 0U;
+    if (!normalized_parent_name.empty()) {
+        const auto parent = std::find_if(
+            table.records.begin(),
+            table.records.end(),
+            [&](const DbfRecord& candidate) {
+                return normalize_visual_object_name(visual_object_record_name(candidate)) == normalized_parent_name;
+            });
+        if (parent != table.records.end()) {
+            snapshot.parent_record_available = true;
+            snapshot.parent_record_index = parent->record_index;
+        }
+    }
+
+    const std::string normalized_object_name = normalize_visual_object_name(snapshot.object_name);
+    snapshot.child_count = normalized_object_name.empty()
+        ? 0U
+        : static_cast<std::size_t>(std::count_if(
+              table.records.begin(),
+              table.records.end(),
+              [&](const DbfRecord& candidate) {
+                  const auto* parent = find_record_value(candidate, "PARENT");
+                  return parent != nullptr &&
+                      normalize_visual_object_name(parent->display_value) == normalized_object_name;
+              }));
+}
+
+VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record, const DbfTable& table) {
+    VisualObjectSnapshot snapshot = build_visual_object_snapshot(record);
+    enrich_visual_object_hierarchy_snapshot(snapshot, table);
+    return snapshot;
+}
+
 VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditRequest& request, std::size_t& record_index) {
     const std::string requested_unique_id = normalize_visual_object_name(request.unique_id);
     if (!requested_unique_id.empty()) {
@@ -2702,7 +2740,7 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
     std::vector<VisualObjectSnapshot> objects;
     objects.reserve(table_result.table.records.size());
     for (const auto& record : table_result.table.records) {
-        objects.push_back(build_visual_object_snapshot(record));
+        objects.push_back(build_visual_object_snapshot(record, table_result.table));
     }
 
     return {
@@ -2781,7 +2819,7 @@ VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChi
             continue;
         }
         if (normalize_visual_object_name(record_parent->display_value) == normalized_parent_name) {
-            children.push_back(build_visual_object_snapshot(record));
+            children.push_back(build_visual_object_snapshot(record, table_result.table));
         }
     }
 
@@ -2878,7 +2916,7 @@ VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObj
                 }
 
                 visited[record_index] = true;
-                VisualObjectSnapshot snapshot = build_visual_object_snapshot(table.records[record_index]);
+                VisualObjectSnapshot snapshot = build_visual_object_snapshot(table.records[record_index], table);
                 descendants.push_back({
                     .object = snapshot,
                     .depth = depth
@@ -2987,7 +3025,7 @@ VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectA
 
         visited[parent_record_index] = true;
         ancestors.push_back({
-            .object = build_visual_object_snapshot(table.records[parent_record_index]),
+            .object = build_visual_object_snapshot(table.records[parent_record_index], table),
             .depth = depth
         });
         current_record_index = parent_record_index;

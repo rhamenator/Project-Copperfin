@@ -249,6 +249,9 @@ struct VisualObjectSnapshot {
     std::string object_name;
     std::string unique_id;
     std::string parent_name;
+    bool parent_record_available = false;
+    std::size_t parent_record_index = 0;
+    std::size_t child_count = 0;
     std::string class_name;
     std::string baseclass_name;
     std::string caption;
