@@ -5986,6 +5986,15 @@ VisualAssetEditResult set_visual_object_initial_selected_alias(const VisualObjec
         request.initial_selected_alias);
 }
 
+VisualAssetEditResult set_visual_object_default_file_path(const VisualObjectDefaultFilePathRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "DefaultFilePath",
+        "default file path",
+        request.default_file_path);
+}
+
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
     if (request.record_source_type < 0) {
         return {.ok = false, .error = "RecordSourceType must not be negative."};
