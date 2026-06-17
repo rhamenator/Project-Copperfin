@@ -98,6 +98,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--delete-object") {
+            result.request.delete_object = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -266,6 +271,9 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.rename_property ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
+    }
+    if (result.request.delete_object && property_command_count > 0) {
+        return {.ok = false, .error = "--delete-object cannot be combined with property commands."};
     }
 
     result.ok = true;

@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1023 host delete-object command shipped: `copperfin_studio_host --delete-object` now marks visual objects deleted by record index, object name, or unique id, rejects ambiguous delete/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1022 host rename-property command shipped: `copperfin_studio_host --rename-property` now renames memo-backed visual object properties by record index, object name, or unique id, rejects ambiguous property commands, and preserves no-mutation behavior for missing targets.
 - E2/#1021 host clear-property command shipped: `copperfin_studio_host --clear-property` now clears visual object properties by record index, object name, or unique id, rejects ambiguous set/clear requests, and preserves no-mutation behavior for missing targets.
 - E2/#1020 stable-selector host property edits shipped: `copperfin_studio_host --set-property` now accepts `--object-name` and `--unique-id` selectors and routes them through the visual asset editor, preserving record-index compatibility while avoiding DBF row-order dependence.
