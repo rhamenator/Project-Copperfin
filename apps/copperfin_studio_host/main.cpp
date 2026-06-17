@@ -36,6 +36,7 @@ void print_usage() {
     std::cout << "Highlight-back-color object: --highlight-back-color-object --highlight-back-color <n> [--highlight-back-color-target-object-name <name>] [--highlight-back-color-target-unique-id <id>]\n";
     std::cout << "Highlight-fore-color object: --highlight-fore-color-object --highlight-fore-color <n> [--highlight-fore-color-target-object-name <name>] [--highlight-fore-color-target-unique-id <id>]\n";
     std::cout << "Back-color object: --back-color-object --back-color <n> [--back-color-target-object-name <name>] [--back-color-target-unique-id <id>]\n";
+    std::cout << "Fore-color object: --fore-color-object --fore-color <n> [--fore-color-target-object-name <name>] [--fore-color-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2429,6 +2430,30 @@ int main(int argc, char** argv) {
         if (!back_color_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << back_color_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.fore_color_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> fore_color_objects;
+        fore_color_objects.reserve(parse_result.request.fore_color_objects.size());
+        for (const auto& fore_color_object : parse_result.request.fore_color_objects) {
+            fore_color_objects.push_back({
+                .record_index = fore_color_object.record_index,
+                .object_name = fore_color_object.object_name,
+                .unique_id = fore_color_object.unique_id
+            });
+        }
+
+        const auto fore_color_result = copperfin::vfp::set_visual_object_fore_color({
+            .path = parse_result.request.path,
+            .objects = fore_color_objects,
+            .fore_color = parse_result.request.fore_color
+        });
+
+        if (!fore_color_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << fore_color_result.error << "\n";
             return 4;
         }
     }
