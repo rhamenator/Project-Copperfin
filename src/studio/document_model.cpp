@@ -217,6 +217,12 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
                     .selection_context = StudioEditorSelectionContext::project_item
                 })
             };
+        case StudioAssetKind::menu:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::menu_item
+                })
+            };
         case StudioAssetKind::table:
         case StudioAssetKind::database_container:
             return {
@@ -224,7 +230,6 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
                     .selection_context = StudioEditorSelectionContext::data_environment
                 })
             };
-        case StudioAssetKind::menu:
         case StudioAssetKind::index:
         case StudioAssetKind::program:
         case StudioAssetKind::header:

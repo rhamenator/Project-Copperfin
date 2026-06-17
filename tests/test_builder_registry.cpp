@@ -31,7 +31,7 @@ int main() {
     using copperfin::studio::StudioBuilderKind;
 
     const auto& builders = copperfin::studio::studio_builder_registry();
-    expect(builders.size() >= 8U, "#956: builder registry should cover major VFP-compatible designer actions");
+    expect(builders.size() >= 9U, "#956: builder registry should cover major VFP-compatible designer actions");
     expect(std::string(copperfin::studio::studio_builder_kind_name(StudioBuilderKind::builder)) == "builder",
            "#956: builder kind token should be stable");
     expect(std::string(copperfin::studio::studio_builder_kind_name(StudioBuilderKind::wizard)) == "wizard",
@@ -39,6 +39,8 @@ int main() {
     expect(std::string(copperfin::studio::studio_builder_context_name(StudioBuilderContext::data_environment)) ==
                "data_environment",
            "#956: data-environment context token should be stable");
+    expect(std::string(copperfin::studio::studio_builder_context_name(StudioBuilderContext::menu)) == "menu",
+           "#1013: menu builder context token should be stable");
 
     bool found_builder = false;
     bool found_wizard = false;
@@ -73,6 +75,7 @@ int main() {
     expect(has_builder(builders, "control-builder"), "#956: registry should include the control builder");
     expect(has_builder(builders, "grid-builder"), "#956: registry should include the grid builder");
     expect(has_builder(builders, "report-builder"), "#956: registry should include the report builder");
+    expect(has_builder(builders, "menu-designer"), "#1013: registry should include the menu designer builder");
     expect(has_builder(builders, "application-wizard"), "#956: registry should include the application wizard");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
@@ -84,6 +87,11 @@ int main() {
     const auto report_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::report);
     expect(report_builders.size() == 1U, "#956: report context should expose only report actions for now");
     expect(has_builder(report_builders, "report-builder"), "#956: report context should include report builder");
+
+    const auto menu_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::menu);
+    expect(menu_builders.size() == 1U, "#1013: menu context should expose only menu designer actions for now");
+    expect(has_builder(menu_builders, "menu-designer"), "#1013: menu context should include menu designer builder");
+    expect(!has_builder(menu_builders, "form-builder"), "#1013: menu context should exclude form builders");
 
     const auto project_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::project);
     expect(project_builders.size() == 1U, "#956: project context should expose application wizard");

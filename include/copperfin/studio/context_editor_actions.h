@@ -11,6 +11,7 @@ enum class StudioEditorSelectionContext {
     class_designer,
     report_expression,
     label_expression,
+    menu_item,
     project_item,
     data_environment
 };

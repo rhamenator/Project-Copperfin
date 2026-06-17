@@ -26,6 +26,8 @@ const char* studio_builder_context_name(StudioBuilderContext context) {
             return "report";
         case StudioBuilderContext::label:
             return "label";
+        case StudioBuilderContext::menu:
+            return "menu";
         case StudioBuilderContext::project:
             return "project";
         case StudioBuilderContext::data_environment:
@@ -95,6 +97,16 @@ const std::vector<StudioBuilderDescriptor>& studio_builder_registry() {
             .copperfin_component = "cf_wizards",
             .entry_point = "cf_wizards.label_wizard",
             .description = "Create label layouts from stock/template choices while preserving LBX/LBT semantics."
+        },
+        {
+            .id = "menu-designer",
+            .title = "Menu Designer",
+            .kind = StudioBuilderKind::builder,
+            .context = StudioBuilderContext::menu,
+            .vfp9_equivalent = "Menu Designer",
+            .copperfin_component = "cf_menu_surface",
+            .entry_point = "cf_builders.menu_designer",
+            .description = "Edit MNX/MNT prompt, command, hierarchy, setup, and cleanup metadata."
         },
         {
             .id = "application-wizard",

@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1013 menu designer selection context shipped: MNX/MNT documents now default to `menu_item`, explicit Studio launches accept the token, and menu contexts expose property-grid plus `menu-designer` builder metadata with zero toolbox items and no form/report builder leakage.
 - E2/#1012 class designer selection context shipped: VCX/VCT documents now default to `class_designer`, explicit Studio launches accept the token, and class contexts expose property-grid, method-editor, class-safe toolbox, and `class-builder` metadata without inheriting form/control builders.
 - E2/#1011 label designer selection context shipped: LBX/LBT documents now default to `label_expression`, explicit Studio launches accept the token, and label contexts expose shared expression editing plus `label-wizard` metadata without inheriting report-builder actions.
 - E2/#967 selected Studio object JSON shipped: `copperfin_studio_host --json` now emits a `selectedObject` summary when explicit record selection matches a parsed designer object.

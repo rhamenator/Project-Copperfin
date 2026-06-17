@@ -16,6 +16,7 @@ enum class StudioBuilderContext {
     control,
     report,
     label,
+    menu,
     project,
     data_environment
 };

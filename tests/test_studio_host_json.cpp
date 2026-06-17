@@ -256,6 +256,28 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(class_override_process.stdout_text, "\"id\": \"control-builder\"",
                         "#1012: explicit class_designer contexts should not expose control builders");
 
+    const auto menu_override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "menu_item", "--json"},
+        temp_root);
+
+    if (menu_override_process.exit_code != 0) {
+        std::cerr << "studio host menu override stdout:\n" << menu_override_process.stdout_text << "\n";
+        std::cerr << "studio host menu override stderr:\n" << menu_override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(menu_override_process.exit_code == 0,
+           "#1013: Studio host explicit menu context JSON smoke should exit successfully");
+    expect_contains(menu_override_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+                    "#1013: explicit menu_item selection contexts should serialize through host JSON");
+    expect_contains(menu_override_process.stdout_text, "\"id\": \"menu-designer\"",
+                    "#1013: explicit menu_item contexts should expose menu designer metadata");
+    expect_contains(menu_override_process.stdout_text, "\"toolboxItemCount\": 0",
+                    "#1013: explicit menu_item contexts should expose zero toolbox-item count");
+    expect_not_contains(menu_override_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1013: explicit menu_item contexts should not expose form builders");
+
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_form_asset(label_path);
     const auto label_process = run_process_capture(
@@ -307,6 +329,33 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#1012: class-library JSON should not expose form builder ids");
     expect_not_contains(class_process.stdout_text, "\"id\": \"control-builder\"",
                         "#1012: class-library JSON should not expose control builder ids");
+
+    const fs::path menu_path = temp_root / "mainmenu.mnx";
+    write_synthetic_form_asset(menu_path);
+    const auto menu_process = run_process_capture(
+        studio_host_path,
+        {"--path", menu_path.string(), "--json"},
+        temp_root);
+
+    if (menu_process.exit_code != 0) {
+        std::cerr << "studio host menu stdout:\n" << menu_process.stdout_text << "\n";
+        std::cerr << "studio host menu stderr:\n" << menu_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(menu_process.exit_code == 0, "#1013: Studio host menu JSON smoke should exit successfully");
+    expect_contains(menu_process.stdout_text, "\"kind\": \"menu\"",
+                    "#1013: menu JSON should preserve menu document kind");
+    expect_contains(menu_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+                    "#1013: menu documents should default to menu-item JSON contexts");
+    expect_contains(menu_process.stdout_text, "\"builderCount\": 1",
+                    "#1013: menu JSON should expose menu builder count");
+    expect_contains(menu_process.stdout_text, "\"toolboxItemCount\": 0",
+                    "#1013: menu JSON should expose zero toolbox-item count");
+    expect_contains(menu_process.stdout_text, "\"id\": \"menu-designer\"",
+                    "#1013: menu JSON should expose menu designer builder ids");
+    expect_not_contains(menu_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1013: menu JSON should not expose form builder ids");
 
     const auto symbol_process = run_process_capture(
         studio_host_path,

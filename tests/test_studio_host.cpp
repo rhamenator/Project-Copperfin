@@ -79,6 +79,7 @@ void test_parse_launch_arguments() {
         "--selection-context", "report_expression",
         "--selection-context", "label_expression",
         "--selection-context", "class_designer",
+        "--selection-context", "menu_item",
         "--undo-mode", "command",
         "--undo-label", "Bulk Undo"
     });
@@ -96,9 +97,9 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
-    expect(result.request.designer_selection_contexts.size() == 4U,
+    expect(result.request.designer_selection_contexts.size() == 5U,
            "#962: launch contract should collect explicit selection-context tokens");
-    if (result.request.designer_selection_contexts.size() == 4U) {
+    if (result.request.designer_selection_contexts.size() == 5U) {
         expect(result.request.designer_selection_contexts[0] == copperfin::studio::StudioEditorSelectionContext::visual_method,
                "#962: launch contract should parse visual_method selection-context tokens");
         expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::report_expression,
@@ -107,6 +108,8 @@ void test_parse_launch_arguments() {
                "#1011: launch contract should parse label_expression selection-context tokens");
         expect(result.request.designer_selection_contexts[3] == copperfin::studio::StudioEditorSelectionContext::class_designer,
                "#1012: launch contract should parse class_designer selection-context tokens");
+        expect(result.request.designer_selection_contexts[4] == copperfin::studio::StudioEditorSelectionContext::menu_item,
+               "#1013: launch contract should parse menu_item selection-context tokens");
     }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
@@ -450,6 +453,28 @@ void test_open_document_attaches_default_designer_contexts() {
                "#1011: label designer context should not reuse report builders");
         expect(has_descriptor_id(context.toolbox_items, "label"),
                "#1011: label designer context should include report-safe toolbox items");
+    }
+
+    const auto menu_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("mainmenu.mnx").string()
+    });
+    expect(menu_result.ok, "#1013: synthetic menu should open for designer-context checks");
+    expect(menu_result.document.designer_contexts.size() == 1U,
+           "#1013: menu documents should expose one default designer context");
+    if (!menu_result.document.designer_contexts.empty()) {
+        const auto& context = menu_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item,
+               "#1013: menu documents should expose the menu-item designer context");
+        expect(has_descriptor_id(context.editor_actions, "show-property-grid"),
+               "#1013: menu designer context should include property-grid actions");
+        expect(has_descriptor_id(context.editor_actions, "open-builder"),
+               "#1013: menu designer context should include builder actions");
+        expect(has_descriptor_id(context.builders, "menu-designer"),
+               "#1013: menu designer context should include menu designer builders");
+        expect(!has_descriptor_id(context.builders, "form-builder"),
+               "#1013: menu designer context should not expose form builders");
+        expect(context.toolbox_items.empty(),
+               "#1013: menu designer context should not expose toolbox items");
     }
 
     const auto project_result = copperfin::studio::open_document({

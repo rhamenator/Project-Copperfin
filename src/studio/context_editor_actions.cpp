@@ -24,6 +24,8 @@ const char* studio_editor_selection_context_name(StudioEditorSelectionContext co
             return "report_expression";
         case StudioEditorSelectionContext::label_expression:
             return "label_expression";
+        case StudioEditorSelectionContext::menu_item:
+            return "menu_item";
         case StudioEditorSelectionContext::project_item:
             return "project_item";
         case StudioEditorSelectionContext::data_environment:
@@ -64,6 +66,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
                 Context::class_designer,
                 Context::report_expression,
                 Context::label_expression,
+                Context::menu_item,
                 Context::project_item
             },
             .command_token = "studio.property_grid.show",
@@ -97,6 +100,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
                 Context::class_designer,
                 Context::report_expression,
                 Context::label_expression,
+                Context::menu_item,
                 Context::project_item,
                 Context::data_environment
             },

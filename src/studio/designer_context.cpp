@@ -23,6 +23,8 @@ std::vector<StudioBuilderDescriptor> builders_for_selection_context(StudioEditor
             return studio_builders_for_context(StudioBuilderContext::report);
         case StudioEditorSelectionContext::label_expression:
             return studio_builders_for_context(StudioBuilderContext::label);
+        case StudioEditorSelectionContext::menu_item:
+            return studio_builders_for_context(StudioBuilderContext::menu);
         case StudioEditorSelectionContext::project_item:
             return studio_builders_for_context(StudioBuilderContext::project);
         case StudioEditorSelectionContext::data_environment:
@@ -41,6 +43,8 @@ std::vector<StudioToolboxItemDescriptor> toolbox_items_for_selection_context(Stu
         case StudioEditorSelectionContext::report_expression:
         case StudioEditorSelectionContext::label_expression:
             return studio_toolbox_items_for_context(StudioToolboxContext::report);
+        case StudioEditorSelectionContext::menu_item:
+            return {};
         case StudioEditorSelectionContext::project_item:
         case StudioEditorSelectionContext::data_environment:
             return {};

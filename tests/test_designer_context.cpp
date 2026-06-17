@@ -114,6 +114,28 @@ int main() {
                label_context.toolbox_item_count == label_context.toolbox_items.size(),
            "#1011: label context should report filtered descriptor counts");
 
+    const auto menu_context = copperfin::studio::studio_designer_context_for_selection({
+        .selection_context = StudioEditorSelectionContext::menu_item
+    });
+    expect(menu_context.selection_context == StudioEditorSelectionContext::menu_item,
+           "#1013: menu context result should preserve the requested selection context");
+    expect(has_id(menu_context.editor_actions, "show-property-grid"),
+           "#1013: menu context should include property-grid action");
+    expect(has_id(menu_context.editor_actions, "open-builder"),
+           "#1013: menu context should include builder action");
+    expect(has_id(menu_context.builders, "menu-designer"),
+           "#1013: menu context should include menu designer builder");
+    expect(!has_id(menu_context.builders, "form-builder"),
+           "#1013: menu context should not inherit form builder availability");
+    expect(!has_id(menu_context.builders, "report-builder"),
+           "#1013: menu context should not inherit report builder availability");
+    expect(menu_context.toolbox_items.empty(),
+           "#1013: menu context should not expose toolbox items");
+    expect(menu_context.builder_count == 1U &&
+               menu_context.editor_action_count == menu_context.editor_actions.size() &&
+               menu_context.toolbox_item_count == 0U,
+           "#1013: menu context should report filtered descriptor counts");
+
     const auto visual_method_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::visual_method
     });
