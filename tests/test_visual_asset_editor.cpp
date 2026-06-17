@@ -11033,6 +11033,24 @@ void test_set_visual_object_auto_release_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_auto_verb_menu_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#911",
+        "auto_verb_menu",
+        "AutoVerbMenu",
+        "AUTOVERBMENU",
+        "auto-verb-menu",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_auto_verb_menu({
+                .path = path,
+                .objects = objects,
+                .auto_verb_menu = value
+            });
+        });
+}
+
 void test_set_visual_object_clip_controls_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#907",
@@ -23148,6 +23166,7 @@ int main() {
     test_set_visual_object_auto_center_assigns_logical_state();
     test_set_visual_object_auto_size_assigns_logical_state();
     test_set_visual_object_auto_release_assigns_logical_state();
+    test_set_visual_object_auto_verb_menu_assigns_logical_state();
     test_set_visual_object_clip_controls_assigns_logical_state();
     test_set_visual_object_dockable_assigns_logical_state();
     test_set_visual_object_continuous_scroll_assigns_logical_state();

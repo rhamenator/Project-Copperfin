@@ -5346,6 +5346,15 @@ VisualAssetEditResult set_visual_object_auto_release(const VisualObjectAutoRelea
         request.auto_release ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_auto_verb_menu(const VisualObjectAutoVerbMenuRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AutoVerbMenu",
+        "auto-verb-menu",
+        request.auto_verb_menu ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
