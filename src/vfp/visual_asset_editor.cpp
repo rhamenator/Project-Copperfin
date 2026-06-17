@@ -4763,9 +4763,21 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     };
 }
 
+VisualObjectUngroupResult failed_visual_object_ungroup_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .container_record_index = 0U,
+        .child_count = 0U,
+        .parent_name = {},
+        .parent_record_available = false,
+        .parent_record_index = 0U
+    };
+}
+
 VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result("No asset path was provided.");
     }
 
     std::size_t container_record_index = 0U;
@@ -4778,23 +4790,26 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         .property_value = {}
     }, container_record_index);
     if (!resolution.ok) {
-        return {.ok = false, .error = resolution.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result(resolution.error);
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
     if (!table_result.ok) {
-        return {.ok = false, .error = table_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result(table_result.error);
     }
     if (container_record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested container record is not currently available.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result("The requested container record is not currently available.");
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[container_record_index]);
     if (container_name.empty()) {
-        return {.ok = false, .error = "The selected container does not expose an object name.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result("The selected container does not expose an object name.");
     }
     const auto* parent_value = find_record_value(table_result.table.records[container_record_index], "PARENT");
     const std::string container_parent_name = parent_value == nullptr ? std::string{} : trim_both(parent_value->display_value);
+    const auto* container_parent = find_visual_object_record_by_name(table_result.table, container_parent_name);
+    const bool container_parent_available = container_parent != nullptr;
+    const std::size_t container_parent_record_index = container_parent_available ? container_parent->record_index : 0U;
 
     const auto children_result = list_visual_object_children({
         .path = request.path,
@@ -4803,15 +4818,15 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         .unique_id = {}
     });
     if (!children_result.ok) {
-        return {.ok = false, .error = children_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result(children_result.error);
     }
     if (children_result.children.empty()) {
-        return {.ok = false, .error = "The selected container has no child objects to ungroup.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result("The selected container has no child objects to ungroup.");
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table.", .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result("Unable to open the visual asset table.");
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -4855,7 +4870,7 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
     });
     if (!reparent_result.ok) {
         restore_original_asset();
-        return {.ok = false, .error = reparent_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result(reparent_result.error);
     }
 
     const auto delete_result = set_visual_object_deleted_state({
@@ -4869,21 +4884,19 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         const auto rollback_result = rollback_reparents();
         restore_original_asset();
         if (!rollback_result.ok) {
-            return {
-                .ok = false,
-                .error = delete_result.error + " Rollback failed: " + rollback_result.error,
-                .container_record_index = 0U,
-                .child_count = 0U
-            };
+            return failed_visual_object_ungroup_result(delete_result.error + " Rollback failed: " + rollback_result.error);
         }
-        return {.ok = false, .error = delete_result.error, .container_record_index = 0U, .child_count = 0U};
+        return failed_visual_object_ungroup_result(delete_result.error);
     }
 
     return {
         .ok = true,
         .error = {},
         .container_record_index = container_record_index,
-        .child_count = children_result.children.size()
+        .child_count = children_result.children.size(),
+        .parent_name = container_parent_name,
+        .parent_record_available = container_parent_available,
+        .parent_record_index = container_parent_record_index
     };
 }
 

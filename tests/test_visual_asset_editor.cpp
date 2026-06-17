@@ -21867,8 +21867,11 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
     });
     expect(ungroup_result.ok &&
             ungroup_result.container_record_index == 1U &&
-            ungroup_result.child_count == 2U,
-        "#789: ungroup should report the selected container and immediate child count");
+            ungroup_result.child_count == 2U &&
+            ungroup_result.parent_name == "frmMain" &&
+            ungroup_result.parent_record_available &&
+            ungroup_result.parent_record_index == 0U,
+        "#990: nested ungroup should report selected container, child count, and target parent metadata");
     expect(parent_value("save-guid") == "frmMain" &&
             parent_value("name-guid") == "frmMain" &&
             parent_value("status-guid") == "frmMain",
@@ -21891,8 +21894,12 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
         .object_name = {},
         .unique_id = "root-group-guid"
     });
-    expect(ungroup_result.ok && ungroup_result.child_count == 1U,
-        "#789: ungroup should support root-level containers");
+    expect(ungroup_result.ok &&
+            ungroup_result.child_count == 1U &&
+            ungroup_result.parent_name.empty() &&
+            !ungroup_result.parent_record_available &&
+            ungroup_result.parent_record_index == 0U,
+        "#990: root-level ungroup should report empty target-parent metadata");
     expect(parent_value("root-child-guid").empty() && is_deleted("root-group-guid"),
         "#789: root-level ungroup should clear child PARENT values and delete the container");
 
@@ -21904,7 +21911,11 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
         .object_name = {},
         .unique_id = "empty-guid"
     });
-    expect(!ungroup_result.ok, "#789: ungroup should reject containers without immediate children");
+    expect(!ungroup_result.ok &&
+            ungroup_result.parent_name.empty() &&
+            !ungroup_result.parent_record_available &&
+            ungroup_result.parent_record_index == 0U,
+        "#990: empty-container ungroup failures should report empty target-parent metadata");
     expect(parent_value("save-guid") == save_parent &&
             parent_value("name-guid") == name_parent &&
             !is_deleted("empty-guid"),
@@ -21916,7 +21927,11 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
         .object_name = {},
         .unique_id = "nameless-guid"
     });
-    expect(!ungroup_result.ok, "#789: ungroup should reject nameless containers");
+    expect(!ungroup_result.ok &&
+            ungroup_result.parent_name.empty() &&
+            !ungroup_result.parent_record_available &&
+            ungroup_result.parent_record_index == 0U,
+        "#990: nameless-container ungroup failures should report empty target-parent metadata");
     expect(!is_deleted("nameless-guid"),
         "#789: nameless-container failures should not delete the selected row");
 
@@ -21926,7 +21941,11 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
         .object_name = {},
         .unique_id = "missing-guid"
     });
-    expect(!ungroup_result.ok, "#789: ungroup should reject missing containers");
+    expect(!ungroup_result.ok &&
+            ungroup_result.parent_name.empty() &&
+            !ungroup_result.parent_record_available &&
+            ungroup_result.parent_record_index == 0U,
+        "#990: missing-container ungroup failures should report empty target-parent metadata");
 
     fs::remove_all(temp_dir, ignored);
 }
