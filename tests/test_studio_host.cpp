@@ -139,6 +139,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.bound_column_available, "#1050: launch contract should keep bound column unavailable by default");
     expect(!result.request.column_count_object, "#1051: launch contract should keep column-count-object off by default");
     expect(!result.request.column_count_available, "#1051: launch contract should keep column count unavailable by default");
+    expect(!result.request.style_object, "#1052: launch contract should keep style-object off by default");
+    expect(!result.request.style_available, "#1052: launch contract should keep style unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2459,6 +2461,100 @@ void test_parse_launch_arguments_rejects_column_count_object_ambiguity() {
         "#1051: launch contract should reject stray column-count arguments");
 }
 
+void test_parse_launch_arguments_for_style_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--style-object",
+        "--style", "2",
+        "--style-target-object-name", "cboCustomer",
+        "--style-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1052: launch contract should parse style-object requests");
+    expect(result.request.style_object, "#1052: launch contract should detect --style-object");
+    expect(result.request.style_available && result.request.style == 2,
+        "#1052: style-object requests should carry style values");
+    expect(result.request.style_objects.size() == 2U,
+        "#1052: style-object requests should collect style target selectors");
+    if (result.request.style_objects.size() == 2U) {
+        expect(result.request.style_objects[0].object_name == "cboCustomer" &&
+                result.request.style_objects[0].unique_id.empty(),
+            "#1052: style-object requests should parse target object-name selectors");
+        expect(result.request.style_objects[1].object_name.empty() &&
+                result.request.style_objects[1].unique_id == "two-guid",
+            "#1052: style-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_style_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--style-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1052: launch contract should reject style-object requests without style");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--style", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1052: launch contract should reject style-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--style", "combo",
+        "--style-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1052: launch contract should reject non-integer style values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--style", "-1",
+        "--style-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1052: launch contract should reject negative style values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_style_object_ambiguity() {
+    const auto style_count_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--column-count-object",
+        "--style", "2",
+        "--style-target-unique-id", "one-guid",
+        "--column-count", "5",
+        "--column-count-target-unique-id", "one-guid"
+    });
+    expect(!style_count_result.ok,
+        "#1052: launch contract should reject simultaneous style-object and column-count-object requests");
+
+    const auto style_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style-object",
+        "--clear-property",
+        "--property-name", "Style",
+        "--style", "2",
+        "--style-target-unique-id", "one-guid"
+    });
+    expect(!style_property_result.ok,
+        "#1052: launch contract should reject style-object combined with property commands");
+
+    const auto stray_style_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--style", "2"
+    });
+    expect(!stray_style_result.ok,
+        "#1052: launch contract should reject stray style arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3763,6 +3859,9 @@ int main() {
     test_parse_launch_arguments_for_column_count_object();
     test_parse_launch_arguments_rejects_column_count_object_invalid_inputs();
     test_parse_launch_arguments_rejects_column_count_object_ambiguity();
+    test_parse_launch_arguments_for_style_object();
+    test_parse_launch_arguments_rejects_style_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_style_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

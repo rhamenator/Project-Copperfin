@@ -263,6 +263,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--style-object") {
+            result.request.style_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -712,6 +717,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.column_count = column_count;
             result.request.column_count_available = true;
+            continue;
+        }
+
+        if (argument == "--style") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --style."};
+            }
+            int style = 0;
+            if (!parse_int_value(args[++index], style)) {
+                return {.ok = false, .error = "The --style value must be an integer."};
+            }
+            result.request.style = style;
+            result.request.style_available = true;
             continue;
         }
 
@@ -1235,6 +1253,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--style-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --style-target-object-name."};
+            }
+            result.request.style_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--style-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --style-target-unique-id."};
+            }
+            result.request.style_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -1608,6 +1650,20 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.column_count_objects.empty())) {
         return {.ok = false, .error = "Column-count arguments can only be used with --column-count-object."};
     }
+    if (result.request.style_object && !result.request.style_available) {
+        return {.ok = false, .error = "An object style assignment requires --style."};
+    }
+    if (result.request.style_object && result.request.style < 0) {
+        return {.ok = false, .error = "An object style assignment requires a non-negative value."};
+    }
+    if (result.request.style_object && result.request.style_objects.empty()) {
+        return {.ok = false, .error = "An object style assignment requires at least one target selector."};
+    }
+    if (!result.request.style_object &&
+        (result.request.style_available ||
+         !result.request.style_objects.empty())) {
+        return {.ok = false, .error = "Style arguments can only be used with --style-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -1645,6 +1701,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.row_source_type_object ? 1 : 0) +
         (result.request.bound_column_object ? 1 : 0) +
         (result.request.column_count_object ? 1 : 0) +
+        (result.request.style_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
