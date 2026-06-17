@@ -79,6 +79,7 @@ add_library(cf_design_model
     src/studio/project_workspace.cpp
     src/studio/product_subsystems.cpp
     src/studio/report_layout.cpp
+    src/studio/toolbox_palette.cpp
     src/studio/vs_launch_contract.cpp
 )
 

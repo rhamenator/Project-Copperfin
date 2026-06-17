@@ -87,6 +87,10 @@ copperfin_add_test(test_builder_registry cf_design_model
     test_builder_registry.cpp
 )
 
+copperfin_add_test(test_toolbox_palette cf_design_model
+    test_toolbox_palette.cpp
+)
+
 copperfin_add_test(test_report_layout cf_design_model
     test_report_layout.cpp
 )

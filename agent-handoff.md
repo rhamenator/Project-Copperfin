@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#956`, adding a context-aware Studio builder/wizard registry so designer shells can discover VFP-compatible form, class, control, report, label, project, and data-environment actions through stable descriptor metadata and context filtering.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#957`, adding a designer toolbox palette registry so Studio shells can discover VFP-compatible form, class, container, and report control-creation entries through stable descriptors and context filtering.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
