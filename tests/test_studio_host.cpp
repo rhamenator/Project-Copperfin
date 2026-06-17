@@ -127,6 +127,10 @@ void test_parse_launch_arguments() {
     expect(!result.request.status_bar_text_available, "#1044: launch contract should keep status-bar text unavailable by default");
     expect(!result.request.control_source_object, "#1045: launch contract should keep control-source-object off by default");
     expect(!result.request.control_source_available, "#1045: launch contract should keep control source unavailable by default");
+    expect(!result.request.current_control_object,
+        "#1072: launch contract should keep current-control-object off by default");
+    expect(!result.request.current_control_available,
+        "#1072: launch contract should keep current control unavailable by default");
     expect(!result.request.input_mask_object, "#1046: launch contract should keep input-mask-object off by default");
     expect(!result.request.input_mask_available, "#1046: launch contract should keep input mask unavailable by default");
     expect(!result.request.format_object, "#1047: launch contract should keep format-object off by default");
@@ -2019,6 +2023,83 @@ void test_parse_launch_arguments_rejects_control_source_object_ambiguity() {
     });
     expect(!stray_control_result.ok,
         "#1045: launch contract should reject stray control-source arguments");
+}
+
+void test_parse_launch_arguments_for_current_control_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--current-control-object",
+        "--current-control", "txtCity",
+        "--current-control-target-object-name", "frmCustomer",
+        "--current-control-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1072: launch contract should parse current-control-object requests");
+    expect(result.request.current_control_object,
+        "#1072: launch contract should detect --current-control-object");
+    expect(result.request.current_control_available && result.request.current_control == "txtCity",
+        "#1072: current-control-object requests should carry current control text");
+    expect(result.request.current_control_objects.size() == 2U,
+        "#1072: current-control-object requests should collect current-control target selectors");
+    if (result.request.current_control_objects.size() == 2U) {
+        expect(result.request.current_control_objects[0].object_name == "frmCustomer" &&
+                result.request.current_control_objects[0].unique_id.empty(),
+            "#1072: current-control-object requests should parse target object-name selectors");
+        expect(result.request.current_control_objects[1].object_name.empty() &&
+                result.request.current_control_objects[1].unique_id == "two-guid",
+            "#1072: current-control-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_current_control_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--current-control-object",
+        "--current-control-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1072: launch contract should reject current-control-object requests without current control text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--current-control-object",
+        "--current-control", "txtCity"
+    });
+    expect(!missing_targets_result.ok,
+        "#1072: launch contract should reject current-control-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_current_control_object_ambiguity() {
+    const auto current_control_source_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--current-control-object",
+        "--control-source-object",
+        "--current-control", "txtCity",
+        "--current-control-target-unique-id", "one-guid",
+        "--control-source", "customers.name",
+        "--control-source-target-unique-id", "one-guid"
+    });
+    expect(!current_control_source_result.ok,
+        "#1072: launch contract should reject simultaneous current-control-object and control-source-object requests");
+
+    const auto current_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--current-control-object",
+        "--clear-property",
+        "--property-name", "CurrentControl",
+        "--current-control", "txtCity",
+        "--current-control-target-unique-id", "one-guid"
+    });
+    expect(!current_property_result.ok,
+        "#1072: launch contract should reject current-control-object combined with property commands");
+
+    const auto stray_current_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--current-control", "txtCity"
+    });
+    expect(!stray_current_result.ok,
+        "#1072: launch contract should reject stray current-control arguments");
 }
 
 void test_parse_launch_arguments_for_input_mask_object() {
@@ -5661,6 +5742,9 @@ int main() {
     test_parse_launch_arguments_for_control_source_object();
     test_parse_launch_arguments_rejects_control_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_control_source_object_ambiguity();
+    test_parse_launch_arguments_for_current_control_object();
+    test_parse_launch_arguments_rejects_current_control_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_current_control_object_ambiguity();
     test_parse_launch_arguments_for_input_mask_object();
     test_parse_launch_arguments_rejects_input_mask_object_invalid_inputs();
     test_parse_launch_arguments_rejects_input_mask_object_ambiguity();

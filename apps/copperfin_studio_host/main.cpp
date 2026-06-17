@@ -1934,6 +1934,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.current_control_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> current_control_objects;
+        current_control_objects.reserve(parse_result.request.current_control_objects.size());
+        for (const auto& current_control_object : parse_result.request.current_control_objects) {
+            current_control_objects.push_back({
+                .record_index = current_control_object.record_index,
+                .object_name = current_control_object.object_name,
+                .unique_id = current_control_object.unique_id
+            });
+        }
+
+        const auto current_control_result = copperfin::vfp::set_visual_object_current_control({
+            .path = parse_result.request.path,
+            .objects = current_control_objects,
+            .current_control = parse_result.request.current_control
+        });
+
+        if (!current_control_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << current_control_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.input_mask_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> input_mask_objects;
         input_mask_objects.reserve(parse_result.request.input_mask_objects.size());

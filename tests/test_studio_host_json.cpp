@@ -610,6 +610,24 @@ void write_synthetic_form_table_for_object_control_source(const std::filesystem:
     expect(create_result.ok, "#1045: synthetic SCX table for object control source should be created");
 }
 
+void write_synthetic_form_table_for_object_current_control(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "CURRENTCONTROL", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", "txtName"},
+        {"frmOrder", "frmOrder", "two-guid", "txtOrderId"},
+        {"cntDetails", "cntDetails", "three-guid", "txtDetail"},
+        {"frmOther", "frmOther", "other-guid", "txtOther"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1072: synthetic SCX table for object current control should be created");
+}
+
 void write_synthetic_form_table_for_object_input_mask(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4852,6 +4870,129 @@ void test_studio_host_json_assigns_control_source_by_stable_selectors(const std:
     }
 }
 
+void test_studio_host_json_assigns_current_control_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_current_control_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path current_control_path = temp_root / "current_control.scx";
+    write_synthetic_form_table_for_object_current_control(current_control_path);
+    const auto current_control_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", current_control_path.string(),
+            "--current-control-object",
+            "--current-control", "txtCity",
+            "--current-control-target-object-name", "frmCustomer",
+            "--current-control-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(current_control_process.exit_code == 0,
+        "#1072: host object current-control assignment should exit successfully");
+    expect(visual_object_property(current_control_path, "one-guid", "CURRENTCONTROL") == "txtCity" &&
+            visual_object_property(current_control_path, "two-guid", "CURRENTCONTROL") == "txtCity" &&
+            visual_object_property(current_control_path, "three-guid", "CURRENTCONTROL") == "txtDetail" &&
+            visual_object_property(current_control_path, "other-guid", "CURRENTCONTROL") == "txtOther",
+        "#1072: host object current-control assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_current_control(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--current-control-object",
+            "--current-control", "txtCity",
+            "--current-control-target-unique-id", "one-guid",
+            "--current-control-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1072: missing-target host object current-control assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "CURRENTCONTROL") == "txtName" &&
+            visual_object_property(missing_target_path, "two-guid", "CURRENTCONTROL") == "txtOrderId",
+        "#1072: missing-target host object current-control assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_current_control(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--current-control-object",
+            "--current-control", "txtCity",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1072: current-control-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "CURRENTCONTROL") == "txtName",
+        "#1072: current-control-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_current_control(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--current-control-object",
+            "--current-control-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1072: current-control-object without current-control value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "CURRENTCONTROL") == "txtName",
+        "#1072: current-control-object without current-control value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_current_control(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--current-control-object",
+            "--current-control", "txtCity",
+            "--current-control-target-unique-id", "one-guid",
+            "--current-control-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1072: duplicate-target host object current-control assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "CURRENTCONTROL") == "txtName",
+        "#1072: duplicate-target host object current-control assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_current_control(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--current-control-object",
+            "--control-source-object",
+            "--current-control", "txtCity",
+            "--current-control-target-unique-id", "one-guid",
+            "--control-source", "customers.name",
+            "--control-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1072: current-control-object plus control-source-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "CURRENTCONTROL") == "txtName",
+        "#1072: current-control-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_input_mask_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -8562,6 +8703,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_current_control_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_input_mask_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_format_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_by_stable_selectors(argv[1]);

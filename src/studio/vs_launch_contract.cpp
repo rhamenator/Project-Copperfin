@@ -233,6 +233,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--current-control-object") {
+            result.request.current_control_object = true;
+            continue;
+        }
+
         if (argument == "--input-mask-object") {
             result.request.input_mask_object = true;
             continue;
@@ -746,6 +751,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.control_source = args[++index];
             result.request.control_source_available = true;
+            continue;
+        }
+
+        if (argument == "--current-control") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --current-control."};
+            }
+            result.request.current_control = args[++index];
+            result.request.current_control_available = true;
             continue;
         }
 
@@ -1432,6 +1446,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --control-source-target-unique-id."};
             }
             result.request.control_source_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--current-control-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --current-control-target-object-name."};
+            }
+            result.request.current_control_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--current-control-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --current-control-target-unique-id."};
+            }
+            result.request.current_control_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -2361,6 +2399,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.control_source_objects.empty())) {
         return {.ok = false, .error = "Control-source arguments can only be used with --control-source-object."};
     }
+    if (result.request.current_control_object && !result.request.current_control_available) {
+        return {.ok = false, .error = "An object current-control assignment requires --current-control."};
+    }
+    if (result.request.current_control_object && result.request.current_control_objects.empty()) {
+        return {.ok = false, .error = "An object current-control assignment requires at least one target selector."};
+    }
+    if (!result.request.current_control_object &&
+        (result.request.current_control_available ||
+         !result.request.current_control_objects.empty())) {
+        return {.ok = false, .error = "Current-control arguments can only be used with --current-control-object."};
+    }
     if (result.request.input_mask_object && !result.request.input_mask_available) {
         return {.ok = false, .error = "An object input-mask assignment requires --input-mask."};
     }
@@ -2738,6 +2787,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +
+        (result.request.current_control_object ? 1 : 0) +
         (result.request.input_mask_object ? 1 : 0) +
         (result.request.format_object ? 1 : 0) +
         (result.request.row_source_object ? 1 : 0) +

@@ -72,6 +72,7 @@ struct StudioOpenRequest {
     std::string tooltip_text{};
     std::string status_bar_text{};
     std::string control_source{};
+    std::string current_control{};
     std::string input_mask{};
     std::string format{};
     std::string row_source{};
@@ -136,6 +137,7 @@ struct StudioOpenRequest {
     bool tooltip_text_object = false;
     bool status_bar_text_object = false;
     bool control_source_object = false;
+    bool current_control_object = false;
     bool input_mask_object = false;
     bool format_object = false;
     bool row_source_object = false;
@@ -180,6 +182,7 @@ struct StudioOpenRequest {
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
+    bool current_control_available = false;
     bool input_mask_available = false;
     bool format_available = false;
     bool row_source_available = false;
@@ -225,6 +228,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> tooltip_text_objects{};
     std::vector<StudioObjectSelector> status_bar_text_objects{};
     std::vector<StudioObjectSelector> control_source_objects{};
+    std::vector<StudioObjectSelector> current_control_objects{};
     std::vector<StudioObjectSelector> input_mask_objects{};
     std::vector<StudioObjectSelector> format_objects{};
     std::vector<StudioObjectSelector> row_source_objects{};
