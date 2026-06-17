@@ -37,6 +37,17 @@ std::string lowercase_copy(std::string text) {
     return text;
 }
 
+std::optional<bool> parse_bool_value(std::string text) {
+    text = lowercase_copy(std::move(text));
+    if (text == "true" || text == ".t." || text == "t" || text == "1" || text == "yes" || text == "on") {
+        return true;
+    }
+    if (text == "false" || text == ".f." || text == "f" || text == "0" || text == "no" || text == "off") {
+        return false;
+    }
+    return std::nullopt;
+}
+
 std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::string token) {
     token = lowercase_copy(std::move(token));
     if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::visual_object)) {
@@ -174,6 +185,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
         if (argument == "--tab-order-object") {
             result.request.tab_order_object = true;
+            continue;
+        }
+
+        if (argument == "--tab-stop-object") {
+            result.request.tab_stop_object = true;
             continue;
         }
 
@@ -462,6 +478,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--tab-stop") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --tab-stop."};
+            }
+            const auto tab_stop = parse_bool_value(args[++index]);
+            if (!tab_stop.has_value()) {
+                return {.ok = false, .error = "The --tab-stop value must be true or false."};
+            }
+            result.request.tab_stop = *tab_stop;
+            result.request.tab_stop_available = true;
+            continue;
+        }
+
         if (argument == "--anchor-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --anchor-object-name."};
@@ -615,6 +644,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --tab-order-target-unique-id."};
             }
             result.request.tab_order_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--tab-stop-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --tab-stop-target-object-name."};
+            }
+            result.request.tab_stop_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--tab-stop-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --tab-stop-target-unique-id."};
+            }
+            result.request.tab_stop_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -821,6 +874,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.tab_order_objects.empty())) {
         return {.ok = false, .error = "Tab-order arguments can only be used with --tab-order-object."};
     }
+    if (result.request.tab_stop_object && !result.request.tab_stop_available) {
+        return {.ok = false, .error = "An object tab-stop assignment requires --tab-stop."};
+    }
+    if (result.request.tab_stop_object && result.request.tab_stop_objects.empty()) {
+        return {.ok = false, .error = "An object tab-stop assignment requires at least one target selector."};
+    }
+    if (!result.request.tab_stop_object &&
+        (result.request.tab_stop_available ||
+         !result.request.tab_stop_objects.empty())) {
+        return {.ok = false, .error = "Tab-stop arguments can only be used with --tab-stop-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -843,6 +907,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.snap_object ? 1 : 0) +
         (result.request.nudge_object ? 1 : 0) +
         (result.request.tab_order_object ? 1 : 0) +
+        (result.request.tab_stop_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

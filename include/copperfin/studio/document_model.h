@@ -97,10 +97,13 @@ struct StudioOpenRequest {
     bool snap_object = false;
     bool nudge_object = false;
     bool tab_order_object = false;
+    bool tab_stop_object = false;
     bool ungroup_object = false;
+    bool tab_stop = false;
     bool clear_parent = false;
     bool selection_record_available = false;
     bool starting_tab_index_available = false;
+    bool tab_stop_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -111,6 +114,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> snap_objects{};
     std::vector<StudioObjectSelector> nudge_objects{};
     std::vector<StudioObjectSelector> tab_order_objects{};
+    std::vector<StudioObjectSelector> tab_stop_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

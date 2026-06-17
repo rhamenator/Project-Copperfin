@@ -109,6 +109,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.snap_object, "#1034: launch contract should keep snap-object off by default");
     expect(!result.request.nudge_object, "#1035: launch contract should keep nudge-object off by default");
     expect(!result.request.tab_order_object, "#1036: launch contract should keep tab-order-object off by default");
+    expect(!result.request.tab_stop_object, "#1037: launch contract should keep tab-stop-object off by default");
+    expect(!result.request.tab_stop_available, "#1037: launch contract should keep tab-stop unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1188,6 +1190,91 @@ void test_parse_launch_arguments_rejects_tab_order_object_ambiguity() {
     });
     expect(!stray_tab_order_result.ok,
         "#1036: launch contract should reject stray tab-order arguments");
+}
+
+void test_parse_launch_arguments_for_tab_stop_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--tab-stop-object",
+        "--tab-stop", "false",
+        "--tab-stop-target-object-name", "cmdOne",
+        "--tab-stop-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1037: launch contract should parse tab-stop-object requests");
+    expect(result.request.tab_stop_object, "#1037: launch contract should detect --tab-stop-object");
+    expect(result.request.tab_stop_available && !result.request.tab_stop,
+        "#1037: tab-stop-object requests should carry false tab-stop state");
+    expect(result.request.tab_stop_objects.size() == 2U,
+        "#1037: tab-stop-object requests should collect tab-stop target selectors");
+    if (result.request.tab_stop_objects.size() == 2U) {
+        expect(result.request.tab_stop_objects[0].object_name == "cmdOne" &&
+                result.request.tab_stop_objects[0].unique_id.empty(),
+            "#1037: tab-stop-object requests should parse target object-name selectors");
+        expect(result.request.tab_stop_objects[1].object_name.empty() &&
+                result.request.tab_stop_objects[1].unique_id == "two-guid",
+            "#1037: tab-stop-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_tab_stop_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop-object",
+        "--tab-stop-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1037: launch contract should reject tab-stop-object requests without tab-stop state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop-object",
+        "--tab-stop", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1037: launch contract should reject tab-stop-object requests without target selectors");
+
+    const auto invalid_bool_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop-object",
+        "--tab-stop", "maybe",
+        "--tab-stop-target-unique-id", "one-guid"
+    });
+    expect(!invalid_bool_result.ok,
+        "#1037: launch contract should reject unsupported tab-stop values");
+}
+
+void test_parse_launch_arguments_rejects_tab_stop_object_ambiguity() {
+    const auto tab_stop_tab_order_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop-object",
+        "--tab-order-object",
+        "--tab-stop", "true",
+        "--tab-stop-target-unique-id", "one-guid",
+        "--starting-tab-index", "1",
+        "--tab-order-target-unique-id", "one-guid"
+    });
+    expect(!tab_stop_tab_order_result.ok,
+        "#1037: launch contract should reject simultaneous tab-stop-object and tab-order-object requests");
+
+    const auto tab_stop_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--tab-stop", "true",
+        "--tab-stop-target-unique-id", "one-guid"
+    });
+    expect(!tab_stop_property_result.ok,
+        "#1037: launch contract should reject tab-stop-object combined with property commands");
+
+    const auto stray_tab_stop_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-stop", "true"
+    });
+    expect(!stray_tab_stop_result.ok,
+        "#1037: launch contract should reject stray tab-stop arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2449,6 +2536,9 @@ int main() {
     test_parse_launch_arguments_for_tab_order_object();
     test_parse_launch_arguments_rejects_tab_order_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tab_order_object_ambiguity();
+    test_parse_launch_arguments_for_tab_stop_object();
+    test_parse_launch_arguments_rejects_tab_stop_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_tab_stop_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

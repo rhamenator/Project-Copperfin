@@ -448,6 +448,24 @@ void write_synthetic_form_table_for_object_tab_order(const std::filesystem::path
     expect(create_result.ok, "#1036: synthetic SCX table for object tab order should be created");
 }
 
+void write_synthetic_form_table_for_object_tab_stop(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "TABSTOP", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "cmdOne", "one-guid", ".T."},
+        {"cmdTwo", "cmdTwo", "two-guid", ".T."},
+        {"cmdThree", "cmdThree", "three-guid", ".F."},
+        {"cmdOther", "cmdOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1037: synthetic SCX table for object tab stop should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -3115,6 +3133,129 @@ void test_studio_host_json_assigns_tab_order_by_stable_selectors(const std::stri
     }
 }
 
+void test_studio_host_json_assigns_tab_stop_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_tab_stop_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path tab_stop_path = temp_root / "tab_stop.scx";
+    write_synthetic_form_table_for_object_tab_stop(tab_stop_path);
+    const auto tab_stop_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", tab_stop_path.string(),
+            "--tab-stop-object",
+            "--tab-stop", "false",
+            "--tab-stop-target-object-name", "cmdOne",
+            "--tab-stop-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(tab_stop_process.exit_code == 0,
+        "#1037: host object tab-stop assignment should exit successfully");
+    expect(visual_object_property(tab_stop_path, "one-guid", "TABSTOP") == ".F." &&
+            visual_object_property(tab_stop_path, "two-guid", "TABSTOP") == ".F." &&
+            visual_object_property(tab_stop_path, "three-guid", "TABSTOP") == ".F." &&
+            visual_object_property(tab_stop_path, "other-guid", "TABSTOP") == ".T.",
+        "#1037: host object tab-stop assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_tab_stop(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--tab-stop-object",
+            "--tab-stop", "false",
+            "--tab-stop-target-unique-id", "one-guid",
+            "--tab-stop-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1037: missing-target host object tab-stop assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "TABSTOP") == ".T." &&
+            visual_object_property(missing_target_path, "two-guid", "TABSTOP") == ".T.",
+        "#1037: missing-target host object tab-stop assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_tab_stop(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--tab-stop-object",
+            "--tab-stop", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1037: tab-stop-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "TABSTOP") == ".T.",
+        "#1037: tab-stop-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_tab_stop(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--tab-stop-object",
+            "--tab-stop-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1037: tab-stop-object without tab-stop value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "TABSTOP") == ".T.",
+        "#1037: tab-stop-object without tab-stop value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_tab_stop(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--tab-stop-object",
+            "--tab-stop", "false",
+            "--tab-stop-target-unique-id", "one-guid",
+            "--tab-stop-target-object-name", "cmdOne",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1037: duplicate-target host object tab-stop assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "TABSTOP") == ".T.",
+        "#1037: duplicate-target host object tab-stop assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_tab_stop(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--tab-stop-object",
+            "--tab-order-object",
+            "--tab-stop", "false",
+            "--tab-stop-target-unique-id", "one-guid",
+            "--starting-tab-index", "1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1037: tab-stop-object plus tab-order-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "TABSTOP") == ".T.",
+        "#1037: tab-stop-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -3260,6 +3401,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_snaps_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_order_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_tab_stop_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
