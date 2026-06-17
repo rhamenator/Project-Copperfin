@@ -1743,6 +1743,7 @@ struct VisualObjectReorderBatchRequest {
 struct VisualAssetEditResult {
     bool ok = false;
     std::string error;
+    std::size_t affected_object_count = 0;
 };
 
 struct VisualAssetUndoStatus {

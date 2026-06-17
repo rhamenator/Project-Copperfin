@@ -7988,7 +7988,7 @@ VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequ
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
 }
 
 VisualAssetUndoStatus query_visual_object_undo(const std::string& path) {

@@ -7661,6 +7661,8 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
         }
     });
     expect(batch_result.ok, "#752: batch edits should apply multi-object geometry changes");
+    expect(batch_result.affected_object_count == 2U,
+        "#998: successful batch edits should report affected object count");
     expect(property_value("save-guid", "HPOS") == "100" &&
             property_value("save-guid", "VPOS") == "200",
         "#752: batch edits should update UNIQUEID-selected geometry");
@@ -7695,6 +7697,8 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
         }
     });
     expect(!batch_result.ok, "#752: batch edits should fail explicitly on an empty item property list");
+    expect(batch_result.affected_object_count == 0U,
+        "#998: failed batch edits should report zero affected objects after rollback");
     expect(property_value("save-guid", "HPOS") == "100",
         "#752: failed batch edits should roll back earlier successful object edits");
     const auto undo_after_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
@@ -7707,6 +7711,8 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
         .objects = {}
     });
     expect(!batch_result.ok, "#752: empty batch edit requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#998: empty batch edit requests should report zero affected objects");
     expect(property_value("save-guid", "HPOS") == "100" &&
             property_value("name-guid", "VPOS") == "300",
         "#752: empty batch edit requests should not mutate existing geometry");
