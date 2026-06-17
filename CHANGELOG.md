@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#910 selected visual object auto-release assignment shipped: designer commands can assign caller-provided logical `AutoRelease` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#909 selected visual object continuous-scroll assignment shipped: designer commands can assign caller-provided logical `ContinuousScroll` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#908 selected visual object dockable assignment shipped: designer commands can assign caller-provided logical `Dockable` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#907 selected visual object clip-controls assignment shipped: designer commands can assign caller-provided logical `ClipControls` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

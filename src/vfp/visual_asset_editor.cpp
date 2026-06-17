@@ -5337,6 +5337,15 @@ VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequ
         request.auto_size ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_auto_release(const VisualObjectAutoReleaseRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "AutoRelease",
+        "auto-release",
+        request.auto_release ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
