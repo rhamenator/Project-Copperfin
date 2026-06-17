@@ -145,6 +145,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.list_index_available, "#1053: launch contract should keep list index unavailable by default");
     expect(!result.request.left_column_object, "#1054: launch contract should keep left-column-object off by default");
     expect(!result.request.left_column_available, "#1054: launch contract should keep left column unavailable by default");
+    expect(!result.request.display_value_object, "#1055: launch contract should keep display-value-object off by default");
+    expect(!result.request.display_value_available, "#1055: launch contract should keep display value unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2747,6 +2749,82 @@ void test_parse_launch_arguments_rejects_left_column_object_ambiguity() {
         "#1054: launch contract should reject stray left-column arguments");
 }
 
+void test_parse_launch_arguments_for_display_value_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--display-value-object",
+        "--display-value", "Bob \"B\"",
+        "--display-value-target-object-name", "cboCustomer",
+        "--display-value-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1055: launch contract should parse display-value-object requests");
+    expect(result.request.display_value_object, "#1055: launch contract should detect --display-value-object");
+    expect(result.request.display_value_available && result.request.display_value == "Bob \"B\"",
+        "#1055: display-value-object requests should carry display values");
+    expect(result.request.display_value_objects.size() == 2U,
+        "#1055: display-value-object requests should collect display-value target selectors");
+    if (result.request.display_value_objects.size() == 2U) {
+        expect(result.request.display_value_objects[0].object_name == "cboCustomer" &&
+                result.request.display_value_objects[0].unique_id.empty(),
+            "#1055: display-value-object requests should parse target object-name selectors");
+        expect(result.request.display_value_objects[1].object_name.empty() &&
+                result.request.display_value_objects[1].unique_id == "two-guid",
+            "#1055: display-value-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_display_value_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-value-object",
+        "--display-value-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1055: launch contract should reject display-value-object requests without display value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-value-object",
+        "--display-value", "Bob"
+    });
+    expect(!missing_targets_result.ok,
+        "#1055: launch contract should reject display-value-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_display_value_object_ambiguity() {
+    const auto display_left_column_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-value-object",
+        "--left-column-object",
+        "--display-value", "Bob",
+        "--display-value-target-unique-id", "one-guid",
+        "--left-column", "7",
+        "--left-column-target-unique-id", "one-guid"
+    });
+    expect(!display_left_column_result.ok,
+        "#1055: launch contract should reject simultaneous display-value-object and left-column-object requests");
+
+    const auto display_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-value-object",
+        "--clear-property",
+        "--property-name", "DisplayValue",
+        "--display-value", "Bob",
+        "--display-value-target-unique-id", "one-guid"
+    });
+    expect(!display_property_result.ok,
+        "#1055: launch contract should reject display-value-object combined with property commands");
+
+    const auto stray_display_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-value", "Bob"
+    });
+    expect(!stray_display_value_result.ok,
+        "#1055: launch contract should reject stray display-value arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -4060,6 +4138,9 @@ int main() {
     test_parse_launch_arguments_for_left_column_object();
     test_parse_launch_arguments_rejects_left_column_object_invalid_inputs();
     test_parse_launch_arguments_rejects_left_column_object_ambiguity();
+    test_parse_launch_arguments_for_display_value_object();
+    test_parse_launch_arguments_rejects_display_value_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_display_value_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

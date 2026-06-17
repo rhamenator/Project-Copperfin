@@ -75,6 +75,7 @@ struct StudioOpenRequest {
     std::string input_mask{};
     std::string format{};
     std::string row_source{};
+    std::string display_value{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -128,6 +129,7 @@ struct StudioOpenRequest {
     bool style_object = false;
     bool list_index_object = false;
     bool left_column_object = false;
+    bool display_value_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -155,6 +157,7 @@ struct StudioOpenRequest {
     bool style_available = false;
     bool list_index_available = false;
     bool left_column_available = false;
+    bool display_value_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -183,6 +186,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> style_objects{};
     std::vector<StudioObjectSelector> list_index_objects{};
     std::vector<StudioObjectSelector> left_column_objects{};
+    std::vector<StudioObjectSelector> display_value_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
