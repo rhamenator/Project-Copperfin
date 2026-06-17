@@ -5504,6 +5504,19 @@ VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWha
         std::to_string(request.whats_this_help_id));
 }
 
+VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpContextIdRequest& request) {
+    if (request.help_context_id < 0) {
+        return {.ok = false, .error = "HelpContextID must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HelpContextID",
+        "help-context ID",
+        std::to_string(request.help_context_id));
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

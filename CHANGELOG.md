@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#941 selected visual object help-context-id assignment shipped: designer commands can assign caller-provided non-negative numeric `HelpContextID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#940 selected visual object resizable assignment shipped: designer commands can assign caller-provided FoxPro logical `Resizable` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#939 selected visual object fill-color assignment shipped: designer commands can assign caller-provided non-negative numeric `FillColor` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#938 selected visual object child-order assignment shipped: designer commands can assign caller-provided non-negative numeric `ChildOrder` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
