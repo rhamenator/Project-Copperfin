@@ -4927,6 +4927,9 @@ VisualObjectUngroupResult failed_visual_object_ungroup_result(std::string error)
         .error = std::move(error),
         .container_record_index = 0U,
         .child_count = 0U,
+        .container_object_name = {},
+        .container_unique_id = {},
+        .container_parent_name = {},
         .parent_name = {},
         .parent_record_available = false,
         .parent_record_index = 0U
@@ -4960,6 +4963,9 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[container_record_index]);
+    const auto container_identity = created_visual_object_from_record(
+        table_result.table.records[container_record_index],
+        container_record_index);
     if (container_name.empty()) {
         return failed_visual_object_ungroup_result("The selected container does not expose an object name.");
     }
@@ -5052,6 +5058,9 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         .error = {},
         .container_record_index = container_record_index,
         .child_count = children_result.children.size(),
+        .container_object_name = container_identity.object_name,
+        .container_unique_id = container_identity.unique_id,
+        .container_parent_name = container_identity.parent_name,
         .parent_name = container_parent_name,
         .parent_record_available = container_parent_available,
         .parent_record_index = container_parent_record_index

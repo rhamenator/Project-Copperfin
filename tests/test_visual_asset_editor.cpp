@@ -21926,6 +21926,10 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
             ungroup_result.parent_record_available &&
             ungroup_result.parent_record_index == 0U,
         "#990: nested ungroup should report selected container, child count, and target parent metadata");
+    expect(ungroup_result.container_object_name == "cntGroup" &&
+            ungroup_result.container_unique_id == "group-guid" &&
+            ungroup_result.container_parent_name == "frmMain",
+        "#997: nested ungroup should report selected container identity metadata");
     expect(parent_value("save-guid") == "frmMain" &&
             parent_value("name-guid") == "frmMain" &&
             parent_value("status-guid") == "frmMain",
@@ -21970,6 +21974,10 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
             !ungroup_result.parent_record_available &&
             ungroup_result.parent_record_index == 0U,
         "#990: empty-container ungroup failures should report empty target-parent metadata");
+    expect(ungroup_result.container_object_name.empty() &&
+            ungroup_result.container_unique_id.empty() &&
+            ungroup_result.container_parent_name.empty(),
+        "#997: failed ungroup should not report stale container identity metadata");
     expect(parent_value("save-guid") == save_parent &&
             parent_value("name-guid") == name_parent &&
             !is_deleted("empty-guid"),

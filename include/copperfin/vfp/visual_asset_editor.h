@@ -654,6 +654,9 @@ struct VisualObjectUngroupResult {
     std::string error;
     std::size_t container_record_index = 0;
     std::size_t child_count = 0;
+    std::string container_object_name;
+    std::string container_unique_id;
+    std::string container_parent_name;
     std::string parent_name;
     bool parent_record_available = false;
     std::size_t parent_record_index = 0;
