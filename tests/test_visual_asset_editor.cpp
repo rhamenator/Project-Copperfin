@@ -10833,6 +10833,8 @@ void test_visual_object_non_negative_numeric_property_assigns_value(
         },
         replacement_value);
     expect(edit_result.ok, label + " assignment should support object-name and record-index selectors");
+    expect(edit_result.affected_object_count == 2U,
+        "#1003: " + label + " successful numeric assignment should report affected object count");
     expect(property_value("one-guid") == std::to_string(replacement_value) &&
             property_value("two-guid") == std::to_string(replacement_value) &&
             property_value("other-guid") == std::to_string(other_value),
@@ -10861,6 +10863,8 @@ void test_visual_object_non_negative_numeric_property_assigns_value(
     const std::string committed_state = direct_state();
     edit_result = assign_property(table_path.string(), {}, replacement_value);
     expect(!edit_result.ok, label + " assignment should reject empty selections");
+    expect(edit_result.affected_object_count == 0U,
+        "#1003: " + label + " failed numeric assignment should report zero affected objects");
     expect(direct_state() == committed_state, label + " empty-selection failures should not mutate values");
 
     edit_result = assign_property(
@@ -11027,6 +11031,8 @@ void test_visual_object_logical_property_assigns_state(
         },
         true);
     expect(edit_result.ok, label + " assignment should support object-name and record-index selectors");
+    expect(edit_result.affected_object_count == 2U,
+        "#1003: " + label + " successful logical assignment should report affected object count");
     expect(property_value("one-guid") == ".T." &&
             property_value("two-guid") == ".T." &&
             property_value("other-guid") == ".T.",
@@ -11053,6 +11059,8 @@ void test_visual_object_logical_property_assigns_state(
     const std::string committed_state = direct_state();
     edit_result = assign_property(table_path.string(), {}, true);
     expect(!edit_result.ok, label + " assignment should reject empty selections");
+    expect(edit_result.affected_object_count == 0U,
+        "#1003: " + label + " failed logical assignment should report zero affected objects");
     expect(direct_state() == committed_state, label + " empty-selection failures should not mutate values");
 
     edit_result = assign_property(
