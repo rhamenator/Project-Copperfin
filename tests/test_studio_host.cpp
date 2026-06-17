@@ -71,6 +71,8 @@ void test_parse_launch_arguments() {
         "--json",
         "--set-property",
         "--record", "3",
+        "--object-name", "cmdSave",
+        "--unique-id", "button-guid",
         "--property-name", "Left",
         "--property-value", "25",
         "--line", "25",
@@ -94,6 +96,8 @@ void test_parse_launch_arguments() {
     expect(result.request.apply_property_update, "launch contract should detect --set-property");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
+    expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
+    expect(result.request.unique_id == "button-guid", "#1020: launch contract should parse unique-id selectors");
     expect(result.request.property_name == "Left", "launch contract should capture the property name");
     expect(result.request.property_value == "25", "launch contract should capture the property value");
     expect(result.request.line == 25U, "launch contract should parse the line value");

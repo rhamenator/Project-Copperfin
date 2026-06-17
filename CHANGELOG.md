@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1020 stable-selector host property edits shipped: `copperfin_studio_host --set-property` now accepts `--object-name` and `--unique-id` selectors and routes them through the visual asset editor, preserving record-index compatibility while avoiding DBF row-order dependence.
 - E2/#1019 toolbox creation context filtering shipped: Studio toolbox descriptor creation now accepts an optional toolbox context and rejects items outside that context without mutation, and `copperfin_studio_host --toolbox-create` exposes the same filter through `--toolbox-context`.
 - E2/#1018 Studio host toolbox-create JSON shipped: `copperfin_studio_host` now accepts `--toolbox-create` requests with optional object, unique-id, parent, and repeatable field values, delegates to `create_visual_object_from_toolbox_item`, and emits deterministic success/failure JSON without mutating assets on unknown toolbox ids.
 - E2/#1017 toolbox descriptor visual creation shipped: Studio now exposes `create_visual_object_from_toolbox_item`, resolving toolbox palette metadata into rollback-safe VFP visual-object create requests with default name generation, descriptor class/baseclass mapping, parent/identity propagation, extra field values, and clean unknown-toolbox failures without mutation.

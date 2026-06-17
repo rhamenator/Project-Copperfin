@@ -1361,8 +1361,8 @@ int main(int argc, char** argv) {
         const auto update_result = copperfin::vfp::update_visual_object_property({
             .path = parse_result.request.path,
             .record_index = parse_result.request.record_index,
-            .object_name = {},
-            .unique_id = {},
+            .object_name = parse_result.request.object_name,
+            .unique_id = parse_result.request.unique_id,
             .property_name = parse_result.request.property_name,
             .property_value = parse_result.request.property_value
         });

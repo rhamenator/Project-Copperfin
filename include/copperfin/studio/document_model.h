@@ -41,6 +41,8 @@ struct StudioOpenRequest {
     std::string symbol{};
     std::string property_name{};
     std::string property_value{};
+    std::string object_name{};
+    std::string unique_id{};
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;

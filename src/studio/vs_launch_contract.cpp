@@ -150,6 +150,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --object-name."};
+            }
+            result.request.object_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --unique-id."};
+            }
+            result.request.unique_id = args[++index];
+            continue;
+        }
+
         if (argument == "--line") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --line."};
