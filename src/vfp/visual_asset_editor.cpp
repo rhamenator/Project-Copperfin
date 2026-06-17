@@ -5788,6 +5788,19 @@ VisualAssetEditResult set_visual_object_show_window(const VisualObjectShowWindow
         std::to_string(request.show_window));
 }
 
+VisualAssetEditResult set_visual_object_title_bar(const VisualObjectTitleBarRequest& request) {
+    if (request.title_bar < 0) {
+        return {.ok = false, .error = "TitleBar must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "TitleBar",
+        "title-bar",
+        std::to_string(request.title_bar));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};
