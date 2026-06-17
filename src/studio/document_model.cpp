@@ -553,6 +553,19 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 return !candidate.parent_name.empty() &&
                     lowercase_ascii(candidate.parent_name) == normalized_object_name;
             }));
+        if (!object.parent_name.empty()) {
+            const std::string normalized_parent_name = lowercase_ascii(object.parent_name);
+            const auto parent = std::find_if(
+                objects.begin(),
+                objects.end(),
+                [&](const StudioObjectSnapshot& candidate) {
+                    return !candidate.object_name.empty() &&
+                        lowercase_ascii(candidate.object_name) == normalized_parent_name;
+                });
+            if (parent != objects.end()) {
+                object.parent_record_index = parent->record_index;
+            }
+        }
     }
 
     return objects;

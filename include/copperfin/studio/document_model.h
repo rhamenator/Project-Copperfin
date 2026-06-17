@@ -34,6 +34,7 @@ enum class StudioUndoMode {
 
 inline constexpr std::size_t StudioObjectMissingFieldIndex = static_cast<std::size_t>(-1);
 inline constexpr std::size_t StudioObjectMissingLineIndex = static_cast<std::size_t>(-1);
+inline constexpr std::size_t StudioObjectMissingRecordIndex = static_cast<std::size_t>(-1);
 
 struct StudioOpenRequest {
     std::string path{};
@@ -105,6 +106,7 @@ struct StudioObjectSnapshot {
     std::string parent_name{};
     std::size_t parent_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t parent_name_memo_block_number = 0;
+    std::size_t parent_record_index = StudioObjectMissingRecordIndex;
     std::string class_name{};
     std::size_t class_name_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t class_name_memo_block_number = 0;

@@ -344,6 +344,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#968: selected object properties should include selected baseclass values");
         expect_contains(selected_object_json, "\"childCount\": 1",
                         "#970: selected parent object summaries should expose direct child counts");
+        expect_contains(selected_object_json, "\"parentRecordIndex\": null",
+                        "#971: root selected object summaries should expose null parent record links");
     }
     const auto objects_begin = selected_object_process.stdout_text.find("\"objects\": [");
     expect(objects_begin != std::string::npos,
@@ -371,6 +373,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     : objects_json.substr(child_object_begin, child_properties_begin - child_object_begin);
             expect_contains(child_object_json, "\"parentName\": \"frmCustomer\"",
                             "#970: child object entries should expose their parent object name");
+            expect_contains(child_object_json, "\"parentRecordIndex\": 1",
+                            "#971: child object entries should expose resolved parent record links");
             expect_contains(child_object_json, "\"childCount\": 0",
                             "#970: leaf child object entries should expose zero child count");
         }

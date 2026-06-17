@@ -240,6 +240,14 @@ void print_json_object_properties(
     std::cout << indent << "]";
 }
 
+void print_json_record_index_or_null(std::size_t record_index) {
+    if (record_index == copperfin::studio::StudioObjectMissingRecordIndex) {
+        std::cout << "null";
+    } else {
+        std::cout << record_index;
+    }
+}
+
 void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent) {
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
@@ -257,6 +265,9 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << ",\n";
     std::cout << indent << "  \"parentName\": ";
     print_json_string(object.parent_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"parentRecordIndex\": ";
+    print_json_record_index_or_null(object.parent_record_index);
     std::cout << ",\n";
     std::cout << indent << "  \"className\": ";
     print_json_string(object.class_name);
@@ -857,6 +868,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << ",\n";
         std::cout << "        \"parentName\": ";
         print_json_string(object.parent_name);
+        std::cout << ",\n";
+        std::cout << "        \"parentRecordIndex\": ";
+        print_json_record_index_or_null(object.parent_record_index);
         std::cout << ",\n";
         std::cout << "        \"className\": ";
         print_json_string(object.class_name);
