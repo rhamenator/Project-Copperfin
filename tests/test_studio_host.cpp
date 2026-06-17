@@ -125,6 +125,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
     expect(!result.request.status_bar_text_available, "#1044: launch contract should keep status-bar text unavailable by default");
+    expect(!result.request.control_source_object, "#1045: launch contract should keep control-source-object off by default");
+    expect(!result.request.control_source_available, "#1045: launch contract should keep control source unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1859,6 +1861,82 @@ void test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity() {
         "#1044: launch contract should reject stray status-bar text arguments");
 }
 
+void test_parse_launch_arguments_for_control_source_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--control-source-object",
+        "--control-source", "customers.name",
+        "--control-source-target-object-name", "txtName",
+        "--control-source-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1045: launch contract should parse control-source-object requests");
+    expect(result.request.control_source_object, "#1045: launch contract should detect --control-source-object");
+    expect(result.request.control_source_available && result.request.control_source == "customers.name",
+        "#1045: control-source-object requests should carry control source text");
+    expect(result.request.control_source_objects.size() == 2U,
+        "#1045: control-source-object requests should collect control source target selectors");
+    if (result.request.control_source_objects.size() == 2U) {
+        expect(result.request.control_source_objects[0].object_name == "txtName" &&
+                result.request.control_source_objects[0].unique_id.empty(),
+            "#1045: control-source-object requests should parse target object-name selectors");
+        expect(result.request.control_source_objects[1].object_name.empty() &&
+                result.request.control_source_objects[1].unique_id == "two-guid",
+            "#1045: control-source-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_control_source_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-source-object",
+        "--control-source-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1045: launch contract should reject control-source-object requests without control source text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-source-object",
+        "--control-source", "customers.name"
+    });
+    expect(!missing_targets_result.ok,
+        "#1045: launch contract should reject control-source-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_control_source_object_ambiguity() {
+    const auto control_status_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-source-object",
+        "--status-bar-text-object",
+        "--control-source", "customers.name",
+        "--control-source-target-unique-id", "one-guid",
+        "--status-bar-text", "Ready",
+        "--status-bar-text-target-unique-id", "one-guid"
+    });
+    expect(!control_status_result.ok,
+        "#1045: launch contract should reject simultaneous control-source-object and status-bar-text-object requests");
+
+    const auto control_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-source-object",
+        "--clear-property",
+        "--property-name", "ControlSource",
+        "--control-source", "customers.name",
+        "--control-source-target-unique-id", "one-guid"
+    });
+    expect(!control_property_result.ok,
+        "#1045: launch contract should reject control-source-object combined with property commands");
+
+    const auto stray_control_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-source", "customers.name"
+    });
+    expect(!stray_control_result.ok,
+        "#1045: launch contract should reject stray control-source arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3142,6 +3220,9 @@ int main() {
     test_parse_launch_arguments_for_status_bar_text_object();
     test_parse_launch_arguments_rejects_status_bar_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity();
+    test_parse_launch_arguments_for_control_source_object();
+    test_parse_launch_arguments_rejects_control_source_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_control_source_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

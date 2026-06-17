@@ -592,6 +592,24 @@ void write_synthetic_form_table_for_object_status_bar_text(const std::filesystem
     expect(create_result.ok, "#1044: synthetic SCX table for object status-bar text should be created");
 }
 
+void write_synthetic_form_table_for_object_control_source(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "CONTROLSOURCE", .type = 'C', .length = 70U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtName", "txtName", "one-guid", "customers.name"},
+        {"txtCity", "txtCity", "two-guid", "customers.city"},
+        {"lblStatus", "lblStatus", "three-guid", "Ready"},
+        {"txtOther", "txtOther", "other-guid", "customers.state"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1045: synthetic SCX table for object control source should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4243,6 +4261,129 @@ void test_studio_host_json_assigns_status_bar_text_by_stable_selectors(const std
     }
 }
 
+void test_studio_host_json_assigns_control_source_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_control_source_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path control_source_path = temp_root / "control_source.scx";
+    write_synthetic_form_table_for_object_control_source(control_source_path);
+    const auto control_source_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", control_source_path.string(),
+            "--control-source-object",
+            "--control-source", "ThisForm.Current Customer",
+            "--control-source-target-object-name", "txtName",
+            "--control-source-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(control_source_process.exit_code == 0,
+        "#1045: host object control-source assignment should exit successfully");
+    expect(visual_object_property(control_source_path, "one-guid", "CONTROLSOURCE") == "ThisForm.Current Customer" &&
+            visual_object_property(control_source_path, "two-guid", "CONTROLSOURCE") == "ThisForm.Current Customer" &&
+            visual_object_property(control_source_path, "three-guid", "CONTROLSOURCE") == "Ready" &&
+            visual_object_property(control_source_path, "other-guid", "CONTROLSOURCE") == "customers.state",
+        "#1045: host object control-source assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_control_source(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--control-source-object",
+            "--control-source", "ThisForm.Current Customer",
+            "--control-source-target-unique-id", "one-guid",
+            "--control-source-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1045: missing-target host object control-source assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "CONTROLSOURCE") == "customers.name" &&
+            visual_object_property(missing_target_path, "two-guid", "CONTROLSOURCE") == "customers.city",
+        "#1045: missing-target host object control-source assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_control_source(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--control-source-object",
+            "--control-source", "ThisForm.Current Customer",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1045: control-source-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "CONTROLSOURCE") == "customers.name",
+        "#1045: control-source-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_control_source(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--control-source-object",
+            "--control-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1045: control-source-object without control-source value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "CONTROLSOURCE") == "customers.name",
+        "#1045: control-source-object without control-source value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_control_source(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--control-source-object",
+            "--control-source", "ThisForm.Current Customer",
+            "--control-source-target-unique-id", "one-guid",
+            "--control-source-target-object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1045: duplicate-target host object control-source assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "CONTROLSOURCE") == "customers.name",
+        "#1045: duplicate-target host object control-source assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_control_source(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--control-source-object",
+            "--status-bar-text-object",
+            "--control-source", "ThisForm.Current Customer",
+            "--control-source-target-unique-id", "one-guid",
+            "--status-bar-text", "Ready",
+            "--status-bar-text-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1045: control-source-object plus status-bar-text-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "CONTROLSOURCE") == "customers.name",
+        "#1045: control-source-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -4396,6 +4537,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_caption_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
