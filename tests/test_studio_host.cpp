@@ -247,6 +247,10 @@ void test_parse_launch_arguments() {
         "#1082: launch contract should keep dockable-object off by default");
     expect(!result.request.dockable_available,
         "#1082: launch contract should keep dockable unavailable by default");
+    expect(!result.request.clip_controls_object,
+        "#1083: launch contract should keep clip-controls-object off by default");
+    expect(!result.request.clip_controls_available,
+        "#1083: launch contract should keep clip controls unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5176,6 +5180,92 @@ void test_parse_launch_arguments_rejects_dockable_object_ambiguity() {
         "#1082: launch contract should reject stray dockable arguments");
 }
 
+void test_parse_launch_arguments_for_clip_controls_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--clip-controls-object",
+        "--clip-controls", "false",
+        "--clip-controls-target-object-name", "frmCustomer",
+        "--clip-controls-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1083: launch contract should parse clip-controls-object requests");
+    expect(result.request.clip_controls_object,
+        "#1083: launch contract should detect --clip-controls-object");
+    expect(result.request.clip_controls_available && !result.request.clip_controls,
+        "#1083: clip-controls-object requests should carry clip controls state");
+    expect(result.request.clip_controls_objects.size() == 2U,
+        "#1083: clip-controls-object requests should collect clip_controls target selectors");
+    if (result.request.clip_controls_objects.size() == 2U) {
+        expect(result.request.clip_controls_objects[0].object_name == "frmCustomer" &&
+                result.request.clip_controls_objects[0].unique_id.empty(),
+            "#1083: clip-controls-object requests should parse target object-name selectors");
+        expect(result.request.clip_controls_objects[1].object_name.empty() &&
+                result.request.clip_controls_objects[1].unique_id == "two-guid",
+            "#1083: clip-controls-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_clip_controls_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls-object",
+        "--clip-controls-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1083: launch contract should reject clip-controls-object requests without clip controls state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls-object",
+        "--clip-controls", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1083: launch contract should reject clip-controls-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls-object",
+        "--clip-controls", "sometimes",
+        "--clip-controls-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1083: launch contract should reject invalid clip-controls boolean values");
+}
+
+void test_parse_launch_arguments_rejects_clip_controls_object_ambiguity() {
+    const auto clip_controls_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls-object",
+        "--auto-size-object",
+        "--clip-controls", "false",
+        "--clip-controls-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!clip_controls_auto_size_result.ok,
+        "#1083: launch contract should reject simultaneous clip-controls-object and auto-size-object requests");
+
+    const auto clip_controls_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--clip-controls", "false",
+        "--clip-controls-target-unique-id", "one-guid"
+    });
+    expect(!clip_controls_property_result.ok,
+        "#1083: launch contract should reject clip-controls-object combined with property commands");
+
+    const auto stray_clip_controls_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--clip-controls", "false"
+    });
+    expect(!stray_clip_controls_result.ok,
+        "#1083: launch contract should reject stray clip-controls arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6567,6 +6657,9 @@ int main() {
     test_parse_launch_arguments_for_dockable_object();
     test_parse_launch_arguments_rejects_dockable_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dockable_object_ambiguity();
+    test_parse_launch_arguments_for_clip_controls_object();
+    test_parse_launch_arguments_rejects_clip_controls_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_clip_controls_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
