@@ -5436,6 +5436,19 @@ VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRe
         request.max_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRequest& request) {
+    if (request.max_height < 0) {
+        return {.ok = false, .error = "MaxHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MaxHeight",
+        "max-height",
+        std::to_string(request.max_height));
+}
+
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
