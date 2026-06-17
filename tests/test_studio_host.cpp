@@ -119,6 +119,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.object_read_only_available, "#1040: launch contract should keep object read-only unavailable by default");
     expect(!result.request.locked_object, "#1041: launch contract should keep locked-object off by default");
     expect(!result.request.locked_available, "#1041: launch contract should keep locked unavailable by default");
+    expect(!result.request.caption_object, "#1042: launch contract should keep caption-object off by default");
+    expect(!result.request.caption_available, "#1042: launch contract should keep caption unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1625,6 +1627,82 @@ void test_parse_launch_arguments_rejects_locked_object_ambiguity() {
         "#1041: launch contract should reject stray locked arguments");
 }
 
+void test_parse_launch_arguments_for_caption_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--caption-object",
+        "--caption", "Save Customer",
+        "--caption-target-object-name", "cmdSave",
+        "--caption-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1042: launch contract should parse caption-object requests");
+    expect(result.request.caption_object, "#1042: launch contract should detect --caption-object");
+    expect(result.request.caption_available && result.request.caption == "Save Customer",
+        "#1042: caption-object requests should carry caption text");
+    expect(result.request.caption_objects.size() == 2U,
+        "#1042: caption-object requests should collect caption target selectors");
+    if (result.request.caption_objects.size() == 2U) {
+        expect(result.request.caption_objects[0].object_name == "cmdSave" &&
+                result.request.caption_objects[0].unique_id.empty(),
+            "#1042: caption-object requests should parse target object-name selectors");
+        expect(result.request.caption_objects[1].object_name.empty() &&
+                result.request.caption_objects[1].unique_id == "two-guid",
+            "#1042: caption-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_caption_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--caption-object",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1042: launch contract should reject caption-object requests without caption text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--caption-object",
+        "--caption", "Save"
+    });
+    expect(!missing_targets_result.ok,
+        "#1042: launch contract should reject caption-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_caption_object_ambiguity() {
+    const auto caption_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--caption-object",
+        "--locked-object",
+        "--caption", "Save",
+        "--caption-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!caption_locked_result.ok,
+        "#1042: launch contract should reject simultaneous caption-object and locked-object requests");
+
+    const auto caption_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--caption-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--caption", "Save",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!caption_property_result.ok,
+        "#1042: launch contract should reject caption-object combined with property commands");
+
+    const auto stray_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--caption", "Save"
+    });
+    expect(!stray_caption_result.ok,
+        "#1042: launch contract should reject stray caption arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -2899,6 +2977,9 @@ int main() {
     test_parse_launch_arguments_for_locked_object();
     test_parse_launch_arguments_rejects_locked_object_invalid_inputs();
     test_parse_launch_arguments_rejects_locked_object_ambiguity();
+    test_parse_launch_arguments_for_caption_object();
+    test_parse_launch_arguments_rejects_caption_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_caption_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

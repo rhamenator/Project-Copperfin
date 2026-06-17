@@ -213,6 +213,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--caption-object") {
+            result.request.caption_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -563,6 +568,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--caption") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --caption."};
+            }
+            result.request.caption = args[++index];
+            result.request.caption_available = true;
+            continue;
+        }
+
         if (argument == "--anchor-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --anchor-object-name."};
@@ -843,6 +857,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--caption-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --caption-target-object-name."};
+            }
+            result.request.caption_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--caption-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --caption-target-unique-id."};
+            }
+            result.request.caption_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -1097,6 +1135,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.locked_objects.empty())) {
         return {.ok = false, .error = "Locked arguments can only be used with --locked-object."};
     }
+    if (result.request.caption_object && !result.request.caption_available) {
+        return {.ok = false, .error = "An object caption assignment requires --caption."};
+    }
+    if (result.request.caption_object && result.request.caption_objects.empty()) {
+        return {.ok = false, .error = "An object caption assignment requires at least one target selector."};
+    }
+    if (!result.request.caption_object &&
+        (result.request.caption_available ||
+         !result.request.caption_objects.empty())) {
+        return {.ok = false, .error = "Caption arguments can only be used with --caption-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -1124,6 +1173,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.enabled_object ? 1 : 0) +
         (result.request.read_only_object ? 1 : 0) +
         (result.request.locked_object ? 1 : 0) +
+        (result.request.caption_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

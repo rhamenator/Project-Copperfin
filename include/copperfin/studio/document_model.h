@@ -68,6 +68,7 @@ struct StudioOpenRequest {
     std::string distribution_mode{};
     std::string snap_mode{};
     std::string nudge_mode{};
+    std::string caption{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -102,6 +103,7 @@ struct StudioOpenRequest {
     bool enabled_object = false;
     bool read_only_object = false;
     bool locked_object = false;
+    bool caption_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -116,6 +118,7 @@ struct StudioOpenRequest {
     bool enabled_available = false;
     bool object_read_only_available = false;
     bool locked_available = false;
+    bool caption_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -131,6 +134,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> enabled_objects{};
     std::vector<StudioObjectSelector> read_only_objects{};
     std::vector<StudioObjectSelector> locked_objects{};
+    std::vector<StudioObjectSelector> caption_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
