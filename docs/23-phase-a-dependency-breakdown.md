@@ -1,10 +1,10 @@
 # Phase A Dependency Breakdown
 
-This document expands Phase A of [remaining-work.md](/home/rich/dev/Project-Copperfin/remaining-work.md:306) into a deeper dependency model so the next implementation slices can be chosen in the right order.
+This document began as a Phase A expansion of [remaining-work.md](/home/rich/dev/Project-Copperfin/remaining-work.md:306). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence.
 
 It is intentionally narrower than the top-level roadmap:
 
-- scope: Phase A only
+- scope: historical Phase A dependency evidence plus current post-D1/E1 continuation pointers
 - granularity: command/function groups and runtime engine seams
 - purpose: decide what to finish first, what can run in parallel, and what is actually on the critical path
 
@@ -307,9 +307,9 @@ If the goal is "what should be handled first, concretely?", the answer is:
 
 ## Issue Hierarchy
 
-GitHub issue hierarchy is now in use for the remaining Phase A work. Repo-wide top-level umbrella issues are now `#108`-`#114`, and within the active runtime tree `#7` and `#8` remain the A3 umbrella issues whose durable lane issues exist as real sub-issues.
+GitHub issue hierarchy is now in use for ongoing work. Repo-wide top-level umbrella issues are `#108`-`#114`; the old Phase A runtime tree under `#7` and `#8` is closed and retained below as historical dependency evidence.
 
-Active-open lane structure under `#7`:
+Historical-closed lane structure under `#7`:
 
 | Parent | Sub-Issue | Maps To |
 | --- | --- | --- |
@@ -324,7 +324,7 @@ Historical-closed lane structure under `#7`:
 | `#7` | `#95` Finish aggregate/view/helper command parity | G13 / WP11 |
 | `#7` | `#96` Finish DBC/container and catalog fidelity | G3 / WP3 |
 
-Active-open lane structure under `#8`:
+Historical-closed lane structure under `#8`:
 
 | Parent | Sub-Issue | Maps To |
 | --- | --- | --- |
@@ -334,11 +334,11 @@ Active-open lane structure under `#8`:
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
 
-Current active-open prompt-sized slice queue after Phase A/D1 closure:
+Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#958` |
+| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#959` |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -352,13 +352,15 @@ Historical-closed prompt-sized native slice queues:
 - `#14`: `#152`, `#153`
 - `#95`: `#146`, `#147`, `#148`, `#149`
 
-Remaining active-open adjacent prompt-sized native slice queues:
+Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#958` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
+- `#23`: `#959` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
-Canonical post-D1 execution order:
+Historical post-D1 execution order through the current E2 queue:
+
+The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. For active work, use the table above and create the next prompt-sized child under `#23` unless the issue tracker shows a higher-weight blocker.
 
 1. `#658`
 2. `#659`
@@ -659,8 +661,10 @@ Canonical post-D1 execution order:
 297. `#953`
 298. `#954`
 299. `#955`
-300. next prompt-sized child under `#23`
-301. continue the live open umbrella queue under `#24`-`#43`, `#57`, and `#91` by dependency weight
+300. `#956`
+301. `#957`
+302. `#958`
+303. `#959`
 
 Execution guardrails:
 
@@ -676,17 +680,17 @@ Historical dependency links:
 - 2026-05-12 historical execution note: `#151` implementation slice advanced in focused tests (non-default data-session repeated-`CONTINUE` stability); the gate then proceeded to `#152`, and both are now closed.
 - 2026-05-12 historical execution note: `#152` implementation slice advanced in focused tests (repeated nested-fault caller-frame metadata refresh); the gate then proceeded to `#153`, and both are now closed.
 - 2026-05-12 historical execution note: `#153` implementation slice advanced in focused tests (repeated-fault diagnostic normalization refresh); the gate then proceeded to `#92`, and both are now closed.
-- 2026-05-12 execution note: `#98` implementation slice advanced in focused tests (`SET()` option readback/isolation for `FDOW`/`FWEEK`/`POINT`/`SEPARATOR`/`CURRENCY`); continue strict gate order with `#99` next.
-- 2026-05-12 execution note: `#99` implementation slice advanced in focused tests (`RELEASE ALL` with `PRIVATE` shadow restoration semantics); continue strict gate order with `#100` next.
-- 2026-05-12 execution note: `#101` implementation slice advanced in focused tests (`INPUT`/`ACCEPT` `TO LOCAL` target-scope fidelity in headless mode); continue strict gate order with `#93` next.
-- 2026-05-12 execution note: `#93` implementation slice advanced in focused tests (`COPY TO ... TYPE JSON` selected SQL/result cursor export parity + pointer/alias preservation); continue strict gate order with `#94` next.
-- 2026-05-12 execution note: `#94` implementation slice advanced in focused tests (`ALTER TABLE ... ROLLBACK` open-cursor pointer preservation); continue strict gate order with `#100` residuals if any remain.
-- 2026-05-12 execution note: help-mining tracker `docs/23-vfp-help-and-component-mining.md` now explicitly targets `#100` residual field-transfer semantics after the `#93/#94/#99/#101` coverage expansion.
-- 2026-05-12 execution note: `#100` implementation slice advanced in focused tests (`SCATTER FIELDS LIKE ... TO <array>` plus `GATHER FROM <array> FIELDS EXCEPT ...` transfer filtering); continue with next unresolved `#100` residual only if a concrete gap remains.
+- 2026-05-12 historical execution note: `#98` implementation slice advanced in focused tests (`SET()` option readback/isolation for `FDOW`/`FWEEK`/`POINT`/`SEPARATOR`/`CURRENCY`); the old strict gate order then proceeded through closed `#99` and `#100` work.
+- 2026-05-12 historical execution note: `#99` implementation slice advanced in focused tests (`RELEASE ALL` with `PRIVATE` shadow restoration semantics); the old strict gate order then proceeded through closed `#100` work.
+- 2026-05-12 historical execution note: `#101` implementation slice advanced in focused tests (`INPUT`/`ACCEPT` `TO LOCAL` target-scope fidelity in headless mode); the old strict gate order then proceeded through closed `#93` work.
+- 2026-05-12 historical execution note: `#93` implementation slice advanced in focused tests (`COPY TO ... TYPE JSON` selected SQL/result cursor export parity + pointer/alias preservation); the old strict gate order then proceeded through closed `#94` work.
+- 2026-05-12 historical execution note: `#94` implementation slice advanced in focused tests (`ALTER TABLE ... ROLLBACK` open-cursor pointer preservation); the old strict gate order then proceeded through closed `#100` residual work.
+- 2026-05-12 historical execution note: help-mining tracker `docs/23-vfp-help-and-component-mining.md` targeted `#100` residual field-transfer semantics after the `#93/#94/#99/#101` coverage expansion; `#100` is now closed, so treat that tracker reference as historical unless new evidence reopens a concrete gap.
+- 2026-05-12 historical execution note: `#100` implementation slice advanced in focused tests (`SCATTER FIELDS LIKE ... TO <array>` plus `GATHER FROM <array> FIELDS EXCEPT ...` transfer filtering); `#100` is now closed, so do not treat this as an active residual queue without new regression evidence.
 - 2026-05-12 execution note: `#92` optimizer-support slice advanced in focused tests (`test_prg_engine_index_seek_optimization` enum/default contract coverage for `ExecutionStrategy` and `IndexOrderCandidate` planning metadata).
 - 2026-05-12 execution note: `#93` implementation slice advanced in focused tests (`APPEND FROM ... TYPE JSON FOR ...` selected SQL/result cursor filtering parity).
 - 2026-05-12 execution note: `#94` implementation slice advanced in focused tests (`PACK MEMO` rollback `RECNO()` position preservation plus sidecar/readability restoration checks).
-- 2026-05-12 execution note: resumed active-open queue branch `#154`-`#203` with C1/#154 lifecycle-order coverage in `test_xasset_methods` (form/class startup and shutdown routine sequence lock-in).
+- 2026-05-12 historical execution note: resumed then-active queue branch `#154`-`#203` with C1/#154 lifecycle-order coverage in `test_xasset_methods` (form/class startup and shutdown routine sequence lock-in).
 - 2026-05-12 execution note: C1/#155 advanced in focused tests (`test_xasset_methods` root-object selection ignores comment/data-environment records and retains nested object-graph action paths).
 - 2026-05-12 execution note: C2/#156 advanced in focused tests (`test_xasset_methods` report preview models remain startup-only without synthetic method/action/shutdown drift).
 - 2026-05-12 execution note: C2/#157 advanced in focused tests (`test_xasset_methods` label preview models remain startup-only without synthetic method/action/shutdown drift).
@@ -713,11 +717,11 @@ Historical dependency links:
 
 ## Slice-Issue Policy
 
-For the remaining Phase A runtime work, the implementation unit should be a prompt-sized issue rather than a broad umbrella issue.
+For current post-D1/E1 work, the implementation unit should be a prompt-sized issue rather than a broad umbrella issue.
 
-- Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as planning and closure umbrellas.
+- Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as historical planning and closure umbrellas.
 - Keep the repo-root umbrella issues `#108`-`#114` as navigation/grouping roots rather than execution units.
-- Keep milestones aligned to the same tree: `Root/#...` for repo umbrellas, `A3/#...` / `A4/#...` for active runtime lanes, and slice issues inheriting the milestone of their parent lane.
+- Keep milestones aligned to the same tree: `Root/#...` for repo umbrellas, historical `A3/#...` / `A4/#...` for closed runtime lanes, and slice issues inheriting the milestone of their parent lane.
 - Before starting code work, pick one open slice issue under the active lane, or create a new slice issue if the intended change does not fit an existing one.
 - One implementation prompt should normally map to one slice issue, one focused validation loop, and one doc/handoff update.
 - Close or retarget the slice issue when the prompt-sized implementation lands; do not hide shipped work only inside the broader lane issue body.
@@ -732,5 +736,5 @@ Use this document together with:
 Operationally:
 
 - pick work from the current critical path unless there is a very cheap near-complete lane to close
-- avoid starting new A4 automation depth before the next A3 macro/eval slice is tighter
+- do not treat the closed Phase A/A3/A4 notes as active runtime queues without fresh issue evidence
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task

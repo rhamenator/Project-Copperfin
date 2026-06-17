@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#959 designer context aggregation shipped: Studio now exposes a single selection-context query that aggregates filtered editor actions, builder/wizard entries, and toolbox entries for visual object, report expression, project item, and data-environment designer selections.
 - E2/#958 context-aware editor action registry shipped: Studio now exposes stable selection-context action descriptors and filtering for property grids, method editors, expression editors, builders, toolbox panes, data-environment editors, and project navigation.
 - E2/#957 designer toolbox palette registry shipped: Studio now exposes stable VFP-compatible toolbox descriptors and context filtering for form, class, container, and report designer control-creation palettes.
 - E2/#956 context-aware builder and wizard registry shipped: Studio now exposes stable VFP-compatible builder/wizard descriptors and context filtering for forms, classes, controls, reports, labels, projects, and data-environment workflows.
