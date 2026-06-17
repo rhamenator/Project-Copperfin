@@ -212,6 +212,21 @@ std::string visual_object_parent(const std::filesystem::path& form_path, const s
     return {};
 }
 
+std::string visual_object_order(const std::filesystem::path& form_path) {
+    const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
+    if (!list_result.ok) {
+        return {};
+    }
+    std::string value;
+    for (const auto& object : list_result.objects) {
+        if (!value.empty()) {
+            value += ",";
+        }
+        value += object.unique_id;
+    }
+    return value;
+}
+
 void delete_existing_textbox(const std::filesystem::path& form_path, const std::string& evidence) {
     const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
         .path = form_path.string(),
@@ -265,6 +280,27 @@ void write_synthetic_form_table_for_object_reparent(const std::filesystem::path&
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
     expect(create_result.ok, "#1027: synthetic SCX table for object reparent should be created");
+}
+
+void write_synthetic_form_table_for_object_reorder(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdA", "cmdA", "a-guid", "frmCustomer", "CommandButton", "CommandButton", ""},
+        {"cmdB", "cmdB", "b-guid", "frmCustomer", "CommandButton", "CommandButton", ""},
+        {"cmdC", "cmdC", "c-guid", "frmCustomer", "CommandButton", "CommandButton", ""},
+        {"cmdD", "cmdD", "d-guid", "frmCustomer", "CommandButton", "CommandButton", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1028: synthetic SCX table for object reorder should be created");
 }
 
 void write_synthetic_form_table_with_container_object(const std::filesystem::path& form_path) {
@@ -1893,6 +1929,132 @@ void test_studio_host_json_reparents_objects_by_stable_selectors(const std::stri
     }
 }
 
+void test_studio_host_json_reorders_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_reorder_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path reorder_path = temp_root / "reorder.scx";
+    write_synthetic_form_table_for_object_reorder(reorder_path);
+
+    const auto front_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--unique-id", "c-guid",
+            "--placement", "front",
+            "--json"
+        },
+        temp_root);
+    expect(front_process.exit_code == 0,
+        "#1028: front host object reorder should exit successfully");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,b-guid,d-guid",
+        "#1028: front host object reorder should move the selected object to the front");
+
+    const auto back_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--object-name", "cmdA",
+            "--placement", "back",
+            "--json"
+        },
+        temp_root);
+    expect(back_process.exit_code == 0,
+        "#1028: back host object reorder should exit successfully");
+    expect(visual_object_order(reorder_path) == "c-guid,b-guid,d-guid,a-guid",
+        "#1028: back host object reorder should move the selected object to the back");
+
+    const auto before_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--unique-id", "a-guid",
+            "--placement", "before",
+            "--target-object-name", "cmdB",
+            "--json"
+        },
+        temp_root);
+    expect(before_process.exit_code == 0,
+        "#1028: before host object reorder should exit successfully");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,b-guid,d-guid",
+        "#1028: before host object reorder should move the selected object before the target object name");
+
+    const auto after_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--unique-id", "b-guid",
+            "--placement", "after",
+            "--target-unique-id", "d-guid",
+            "--json"
+        },
+        temp_root);
+    expect(after_process.exit_code == 0,
+        "#1028: after host object reorder should exit successfully");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,d-guid,b-guid",
+        "#1028: after host object reorder should move the selected object after the target unique id");
+
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--unique-id", "b-guid",
+            "--placement", "before",
+            "--target-object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1028: missing target host object reorder should return command failure");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,d-guid,b-guid",
+        "#1028: missing target host object reorder should not mutate order");
+
+    const auto unsupported_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--unique-id", "b-guid",
+            "--placement", "sideways",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_process.exit_code == 4,
+        "#1028: unsupported placement host object reorder should return command failure");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,d-guid,b-guid",
+        "#1028: unsupported placement host object reorder should not mutate order");
+
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", reorder_path.string(),
+            "--reorder-object",
+            "--reparent-object",
+            "--unique-id", "b-guid",
+            "--placement", "front",
+            "--parent-name", "cmdA",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1028: reorder-object plus reparent-object requests should fail during launch parsing");
+    expect(visual_object_order(reorder_path) == "c-guid,a-guid,d-guid,b-guid",
+        "#1028: reorder-object/reparent-object ambiguity should not mutate order");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1911,5 +2073,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

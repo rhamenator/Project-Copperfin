@@ -101,6 +101,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.duplicate_object, "#1025: launch contract should keep duplicate-object off by default");
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
+    expect(!result.request.reorder_object, "#1028: launch contract should keep reorder-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -446,6 +447,63 @@ void test_parse_launch_arguments_rejects_reparent_object_ambiguity_and_missing_p
     });
     expect(!reparent_property_result.ok,
         "#1027: launch contract should reject reparent-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_reorder_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--reorder-object",
+        "--object-name", "txtName",
+        "--unique-id", "textbox-guid",
+        "--placement", "before",
+        "--target-object-name", "cmdSave",
+        "--target-unique-id", "button-guid"
+    });
+
+    expect(result.ok, "#1028: launch contract should parse reorder-object requests");
+    expect(result.request.reorder_object, "#1028: launch contract should detect --reorder-object");
+    expect(result.request.object_name == "txtName",
+        "#1028: reorder-object requests should carry source object-name selectors");
+    expect(result.request.unique_id == "textbox-guid",
+        "#1028: reorder-object requests should carry source unique-id selectors");
+    expect(result.request.placement == "before",
+        "#1028: reorder-object requests should carry placement");
+    expect(result.request.target_object_name == "cmdSave",
+        "#1028: reorder-object requests should carry target object-name selectors");
+    expect(result.request.target_unique_id == "button-guid",
+        "#1028: reorder-object requests should carry target unique-id selectors");
+}
+
+void test_parse_launch_arguments_rejects_reorder_object_ambiguity_and_missing_placement() {
+    const auto missing_placement_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reorder-object",
+        "--unique-id", "textbox-guid"
+    });
+    expect(!missing_placement_result.ok,
+        "#1028: launch contract should reject reorder-object requests without placement");
+
+    const auto reorder_reparent_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reorder-object",
+        "--reparent-object",
+        "--unique-id", "textbox-guid",
+        "--placement", "front",
+        "--parent-name", "cntPanel"
+    });
+    expect(!reorder_reparent_result.ok,
+        "#1028: launch contract should reject simultaneous reorder-object and reparent-object requests");
+
+    const auto reorder_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reorder-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--placement", "front"
+    });
+    expect(!reorder_property_result.ok,
+        "#1028: launch contract should reject reorder-object combined with property commands");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1682,6 +1740,8 @@ int main() {
     test_parse_launch_arguments_rejects_rename_object_ambiguity_and_empty_identity();
     test_parse_launch_arguments_for_reparent_object();
     test_parse_launch_arguments_rejects_reparent_object_ambiguity_and_missing_parent();
+    test_parse_launch_arguments_for_reorder_object();
+    test_parse_launch_arguments_rejects_reorder_object_ambiguity_and_missing_placement();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

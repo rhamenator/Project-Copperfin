@@ -123,6 +123,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--reorder-object") {
+            result.request.reorder_object = true;
+            continue;
+        }
+
         if (argument == "--clear-parent") {
             result.request.clear_parent = true;
             continue;
@@ -238,6 +243,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--placement") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --placement."};
+            }
+            result.request.placement = args[++index];
+            continue;
+        }
+
+        if (argument == "--target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --target-object-name."};
+            }
+            result.request.target_object_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --target-unique-id."};
+            }
+            result.request.target_unique_id = args[++index];
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -342,6 +371,9 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         result.request.parent_unique_id.empty()) {
         return {.ok = false, .error = "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent."};
     }
+    if (result.request.reorder_object && result.request.placement.empty()) {
+        return {.ok = false, .error = "An object reorder requires --placement."};
+    }
     const int property_command_count =
         (result.request.apply_property_update ? 1 : 0) +
         (result.request.clear_property ? 1 : 0) +
@@ -351,7 +383,8 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.restore_object ? 1 : 0) +
         (result.request.duplicate_object ? 1 : 0) +
         (result.request.rename_object ? 1 : 0) +
-        (result.request.reparent_object ? 1 : 0);
+        (result.request.reparent_object ? 1 : 0) +
+        (result.request.reorder_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
     }

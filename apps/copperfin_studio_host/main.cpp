@@ -22,7 +22,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -1492,6 +1492,24 @@ int main(int argc, char** argv) {
         if (!reparent_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << reparent_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.reorder_object) {
+        const auto reorder_result = copperfin::vfp::reorder_visual_object({
+            .path = parse_result.request.path,
+            .record_index = parse_result.request.record_index,
+            .object_name = parse_result.request.object_name,
+            .unique_id = parse_result.request.unique_id,
+            .placement = parse_result.request.placement,
+            .target_object_name = parse_result.request.target_object_name,
+            .target_unique_id = parse_result.request.target_unique_id
+        });
+
+        if (!reorder_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << reorder_result.error << "\n";
             return 4;
         }
     }
