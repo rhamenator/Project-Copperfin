@@ -11506,6 +11506,24 @@ void test_set_visual_object_allow_row_sizing_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_resizable_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#940",
+        "resizable",
+        "Resizable",
+        "RESIZABLE",
+        "resizable",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_resizable({
+                .path = path,
+                .objects = objects,
+                .resizable = value
+            });
+        });
+}
+
 void test_set_visual_object_add_line_feeds_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#853",
@@ -23791,6 +23809,7 @@ int main() {
     test_set_visual_object_panel_link_assigns_logical_state();
     test_set_visual_object_allow_header_sizing_assigns_logical_state();
     test_set_visual_object_allow_row_sizing_assigns_logical_state();
+    test_set_visual_object_resizable_assigns_logical_state();
     test_set_visual_object_sparse_assigns_logical_state();
     test_set_visual_object_add_line_feeds_assigns_logical_state();
     test_set_visual_object_always_on_top_assigns_logical_state();

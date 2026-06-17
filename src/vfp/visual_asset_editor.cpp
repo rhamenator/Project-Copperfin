@@ -5585,6 +5585,15 @@ VisualAssetEditResult set_visual_object_allow_row_sizing(const VisualObjectAllow
         request.allow_row_sizing ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_resizable(const VisualObjectResizableRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Resizable",
+        "resizable",
+        request.resizable ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
