@@ -6,6 +6,7 @@
 #include "copperfin/studio/project_workspace.h"
 #include "copperfin/studio/product_subsystems.h"
 #include "copperfin/studio/report_layout.h"
+#include "copperfin/studio/toolbox_creation.h"
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -15,12 +16,14 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace {
 
 void print_usage() {
     std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--set-property --record <n> --property-name <name> --property-value <value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -75,6 +78,109 @@ void print_json_string(const std::string& value) {
 
 void print_json_string_view(std::string_view value) {
     print_json_string(std::string(value));
+}
+
+struct ToolboxCreateParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    std::string error;
+    copperfin::studio::StudioToolboxObjectCreateRequest request;
+};
+
+ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::string>& args) {
+    ToolboxCreateParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--toolbox-create") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size()) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+        } else if (argument == "--toolbox-create") {
+            result.request.toolbox_item_id = require_value(argument);
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--parent-name") {
+            result.request.parent_name = require_value(argument);
+        } else if (argument == "--field-value") {
+            const std::string assignment = require_value(argument);
+            const auto separator = assignment.find('=');
+            if (separator == std::string::npos || separator == 0U) {
+                fail("Toolbox field values must use name=value syntax.");
+                continue;
+            }
+            result.request.field_values.push_back({
+                .property_name = assignment.substr(0U, separator),
+                .property_value = assignment.substr(separator + 1U)
+            });
+        } else {
+            fail("Unknown toolbox-create option: " + argument);
+        }
+    }
+
+    if (result.ok && result.request.path.empty()) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.toolbox_item_id.empty()) {
+        fail("No toolbox item id was provided.");
+    }
+    return result;
+}
+
+void print_json_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"toolboxCreate\": {\n";
+    std::cout << "    \"ok\": " << (result.ok ? "true" : "false") << ",\n";
+    std::cout << "    \"error\": ";
+    print_json_string(result.error);
+    std::cout << ",\n";
+    std::cout << "    \"recordIndex\": " << result.record_index << ",\n";
+    std::cout << "    \"objectName\": ";
+    print_json_string(result.object_name);
+    std::cout << ",\n";
+    std::cout << "    \"uniqueId\": ";
+    print_json_string(result.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"parentName\": ";
+    print_json_string(result.parent_name);
+    std::cout << "\n";
+    std::cout << "  }\n";
+    std::cout << "}\n";
+}
+
+void print_text_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    std::cout << "record_index: " << result.record_index << "\n";
+    std::cout << "object_name: " << result.object_name << "\n";
+    std::cout << "unique_id: " << result.unique_id << "\n";
+    std::cout << "parent_name: " << result.parent_name << "\n";
 }
 
 void print_json_line_index_or_null(std::size_t line_index) {
@@ -1171,6 +1277,36 @@ int main(int argc, char** argv) {
             print_subsystems();
         }
         return 0;
+    }
+
+    const auto toolbox_create_parse = parse_toolbox_create_arguments(args);
+    if (toolbox_create_parse.requested) {
+        if (!toolbox_create_parse.ok) {
+            const auto result = copperfin::vfp::VisualObjectCreateResult{
+                .ok = false,
+                .error = toolbox_create_parse.error,
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = {}
+            };
+            if (toolbox_create_parse.output_json) {
+                print_json_toolbox_create_result(result);
+            } else {
+                print_text_toolbox_create_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto create_result = copperfin::studio::create_visual_object_from_toolbox_item(
+            toolbox_create_parse.request);
+        if (toolbox_create_parse.output_json) {
+            print_json_toolbox_create_result(create_result);
+        } else {
+            print_text_toolbox_create_result(create_result);
+        }
+        return create_result.ok ? 0 : 4;
     }
 
     const auto parse_result = copperfin::studio::parse_launch_arguments(args);

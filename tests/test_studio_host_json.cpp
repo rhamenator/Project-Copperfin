@@ -1,4 +1,5 @@
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/visual_asset_editor.h"
 
 #include <cstdlib>
 #include <cstdint>
@@ -145,6 +146,31 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
     expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
+}
+
+void write_synthetic_form_table_for_toolbox_creation(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "CAPTION", .type = 'C', .length = 32U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "form-guid", "", "Form", "Form", "Customer", ""},
+        {"txt1", "txt1", "existing-textbox-guid", "frmCustomer", "TextBox", "TextBox", "Existing", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1018: synthetic SCX table for toolbox creation should be created");
+}
+
+std::size_t visual_object_count(const std::filesystem::path& form_path) {
+    const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
+    return list_result.ok ? list_result.objects.size() : 0U;
 }
 
 void write_synthetic_form_table_with_container_object(const std::filesystem::path& form_path) {
@@ -812,6 +838,102 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     }
 }
 
+void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+
+    const auto create_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create", "textbox",
+            "--unique-id", "created-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Customer",
+            "--field-value", "PROPERTIES=ControlSource = \"customer.name\"",
+            "--json"
+        },
+        temp_root);
+
+    if (create_process.exit_code != 0) {
+        std::cerr << "studio host toolbox-create stdout:\n" << create_process.stdout_text << "\n";
+        std::cerr << "studio host toolbox-create stderr:\n" << create_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(create_process.exit_code == 0, "#1018: toolbox-create JSON command should exit successfully");
+    expect_contains(create_process.stdout_text, "\"status\": \"ok\"",
+                    "#1018: successful toolbox-create JSON should report ok status");
+    expect_contains(create_process.stdout_text, "\"toolboxCreate\": {",
+                    "#1018: toolbox-create JSON should use a stable result object");
+    expect_contains(create_process.stdout_text, "\"ok\": true",
+                    "#1018: toolbox-create JSON should expose result success");
+    expect_contains(create_process.stdout_text, "\"recordIndex\": 2",
+                    "#1018: toolbox-create JSON should expose appended record index");
+    expect_contains(create_process.stdout_text, "\"objectName\": \"txt2\"",
+                    "#1018: toolbox-create JSON should expose generated object name");
+    expect_contains(create_process.stdout_text, "\"uniqueId\": \"created-textbox-guid\"",
+                    "#1018: toolbox-create JSON should expose created unique id");
+    expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+                    "#1018: toolbox-create JSON should expose created parent name");
+
+    const auto caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "created-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    expect(caption.ok && caption.exists && caption.value == "Customer",
+        "#1018: toolbox-create host command should propagate extra direct fields");
+
+    const auto control_source = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "created-textbox-guid",
+        .property_name = "ControlSource"
+    });
+    expect(control_source.ok && control_source.exists && control_source.value == "\"customer.name\"",
+        "#1018: toolbox-create host command should propagate extra memo fields");
+
+    const std::size_t object_count_before_failure = visual_object_count(form_path);
+    const auto failure_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create", "missing-toolbox-item",
+            "--unique-id", "should-not-exist",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Should Not Exist",
+            "--json"
+        },
+        temp_root);
+
+    expect(failure_process.exit_code == 4, "#1018: unknown toolbox ids should return a command failure exit code");
+    expect_contains(failure_process.stdout_text, "\"status\": \"error\"",
+                    "#1018: failed toolbox-create JSON should report error status");
+    expect_contains(failure_process.stdout_text, "\"ok\": false",
+                    "#1018: failed toolbox-create JSON should expose result failure");
+    expect_contains(failure_process.stdout_text, "\"error\": \"The requested toolbox item was not found.\"",
+                    "#1018: failed toolbox-create JSON should expose clean error text");
+    expect_contains(failure_process.stdout_text, "\"objectName\": \"\"",
+                    "#1018: failed toolbox-create JSON should not report stale object names");
+    expect(visual_object_count(form_path) == object_count_before_failure,
+        "#1018: failed toolbox-create host commands should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -821,5 +943,6 @@ int main(int argc, char** argv) {
     }
 
     test_studio_host_json_exposes_designer_contexts(argv[1]);
+    test_studio_host_json_creates_toolbox_objects(argv[1]);
     return failures == 0 ? 0 : 1;
 }
