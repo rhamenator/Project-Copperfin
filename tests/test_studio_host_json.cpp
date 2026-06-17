@@ -430,6 +430,24 @@ void write_synthetic_form_table_for_object_nudge(const std::filesystem::path& fo
     expect(create_result.ok, "#1035: synthetic SCX table for object nudge should be created");
 }
 
+void write_synthetic_form_table_for_object_tab_order(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "TABINDEX", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "cmdOne", "one-guid", "10"},
+        {"cmdTwo", "cmdTwo", "two-guid", "20"},
+        {"cmdThree", "cmdThree", "three-guid", "30"},
+        {"cmdOther", "cmdOther", "other-guid", "99"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1036: synthetic SCX table for object tab order should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -2971,6 +2989,132 @@ void test_studio_host_json_nudges_objects_by_stable_selectors(const std::string&
     }
 }
 
+void test_studio_host_json_assigns_tab_order_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_tab_order_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path tab_order_path = temp_root / "tab_order.scx";
+    write_synthetic_form_table_for_object_tab_order(tab_order_path);
+    const auto tab_order_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", tab_order_path.string(),
+            "--tab-order-object",
+            "--starting-tab-index", "5",
+            "--tab-order-target-unique-id", "two-guid",
+            "--tab-order-target-object-name", "cmdOne",
+            "--tab-order-target-unique-id", "three-guid",
+            "--json"
+        },
+        temp_root);
+    expect(tab_order_process.exit_code == 0,
+        "#1036: host object tab-order assignment should exit successfully");
+    expect(visual_object_property(tab_order_path, "two-guid", "TABINDEX") == "5" &&
+            visual_object_property(tab_order_path, "one-guid", "TABINDEX") == "6" &&
+            visual_object_property(tab_order_path, "three-guid", "TABINDEX") == "7" &&
+            visual_object_property(tab_order_path, "other-guid", "TABINDEX") == "99",
+        "#1036: host object tab-order assignment should assign sequential indexes and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_tab_order(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--tab-order-object",
+            "--starting-tab-index", "1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--tab-order-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1036: missing-target host object tab-order assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "TABINDEX") == "10" &&
+            visual_object_property(missing_target_path, "two-guid", "TABINDEX") == "20",
+        "#1036: missing-target host object tab-order assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_tab_order(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--tab-order-object",
+            "--starting-tab-index", "0",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1036: tab-order-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "TABINDEX") == "10",
+        "#1036: tab-order-object without target selectors should not mutate the asset");
+
+    const fs::path negative_start_path = temp_root / "negative_start.scx";
+    write_synthetic_form_table_for_object_tab_order(negative_start_path);
+    const auto negative_start_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_start_path.string(),
+            "--tab-order-object",
+            "--starting-tab-index", "-1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_start_process.exit_code == 2,
+        "#1036: negative-start host object tab-order assignment should fail during launch parsing");
+    expect(visual_object_property(negative_start_path, "one-guid", "TABINDEX") == "10",
+        "#1036: negative-start host object tab-order assignment should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_tab_order(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--tab-order-object",
+            "--starting-tab-index", "1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--tab-order-target-object-name", "cmdOne",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1036: duplicate-target host object tab-order assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "TABINDEX") == "10",
+        "#1036: duplicate-target host object tab-order assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_tab_order(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--tab-order-object",
+            "--nudge-object",
+            "--starting-tab-index", "1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--nudge-mode", "horizontal",
+            "--delta-hpos", "1",
+            "--nudge-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1036: tab-order-object plus nudge-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "TABINDEX") == "10",
+        "#1036: tab-order-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -3115,6 +3259,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_distributes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_tab_order_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

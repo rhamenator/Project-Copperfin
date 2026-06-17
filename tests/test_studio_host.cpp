@@ -108,6 +108,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.distribute_object, "#1033: launch contract should keep distribute-object off by default");
     expect(!result.request.snap_object, "#1034: launch contract should keep snap-object off by default");
     expect(!result.request.nudge_object, "#1035: launch contract should keep nudge-object off by default");
+    expect(!result.request.tab_order_object, "#1036: launch contract should keep tab-order-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1101,6 +1102,92 @@ void test_parse_launch_arguments_rejects_nudge_object_ambiguity() {
     });
     expect(!stray_nudge_result.ok,
         "#1035: launch contract should reject stray nudge arguments");
+}
+
+void test_parse_launch_arguments_for_tab_order_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--tab-order-object",
+        "--starting-tab-index", "5",
+        "--tab-order-target-object-name", "cmdOne",
+        "--tab-order-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1036: launch contract should parse tab-order-object requests");
+    expect(result.request.tab_order_object, "#1036: launch contract should detect --tab-order-object");
+    expect(result.request.starting_tab_index == 5 && result.request.starting_tab_index_available,
+        "#1036: tab-order-object requests should carry starting tab index");
+    expect(result.request.tab_order_objects.size() == 2U,
+        "#1036: tab-order-object requests should collect tab-order target selectors");
+    if (result.request.tab_order_objects.size() == 2U) {
+        expect(result.request.tab_order_objects[0].object_name == "cmdOne" &&
+                result.request.tab_order_objects[0].unique_id.empty(),
+            "#1036: tab-order-object requests should parse target object-name selectors");
+        expect(result.request.tab_order_objects[1].object_name.empty() &&
+                result.request.tab_order_objects[1].unique_id == "two-guid",
+            "#1036: tab-order-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_tab_order_object_invalid_inputs() {
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--starting-tab-index", "0"
+    });
+    expect(!missing_targets_result.ok,
+        "#1036: launch contract should reject tab-order-object requests without target selectors");
+
+    const auto negative_start_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--starting-tab-index", "-1",
+        "--tab-order-target-unique-id", "one-guid"
+    });
+    expect(!negative_start_result.ok,
+        "#1036: launch contract should reject negative tab-order starting indexes");
+
+    const auto invalid_start_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--starting-tab-index", "first",
+        "--tab-order-target-unique-id", "one-guid"
+    });
+    expect(!invalid_start_result.ok,
+        "#1036: launch contract should reject non-integer tab-order starting indexes");
+}
+
+void test_parse_launch_arguments_rejects_tab_order_object_ambiguity() {
+    const auto tab_order_nudge_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--nudge-object",
+        "--starting-tab-index", "1",
+        "--tab-order-target-unique-id", "one-guid",
+        "--nudge-mode", "horizontal",
+        "--delta-hpos", "1",
+        "--nudge-target-unique-id", "one-guid"
+    });
+    expect(!tab_order_nudge_result.ok,
+        "#1036: launch contract should reject simultaneous tab-order-object and nudge-object requests");
+
+    const auto tab_order_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--tab-order-target-unique-id", "one-guid"
+    });
+    expect(!tab_order_property_result.ok,
+        "#1036: launch contract should reject tab-order-object combined with property commands");
+
+    const auto stray_tab_order_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--starting-tab-index", "0"
+    });
+    expect(!stray_tab_order_result.ok,
+        "#1036: launch contract should reject stray tab-order arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2359,6 +2446,9 @@ int main() {
     test_parse_launch_arguments_for_nudge_object();
     test_parse_launch_arguments_rejects_nudge_object_invalid_inputs();
     test_parse_launch_arguments_rejects_nudge_object_ambiguity();
+    test_parse_launch_arguments_for_tab_order_object();
+    test_parse_launch_arguments_rejects_tab_order_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_tab_order_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

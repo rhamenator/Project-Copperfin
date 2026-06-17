@@ -74,6 +74,7 @@ struct StudioOpenRequest {
     double grid_height = 0.0;
     double delta_hpos = 0.0;
     double delta_vpos = 0.0;
+    int starting_tab_index = 0;
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -95,9 +96,11 @@ struct StudioOpenRequest {
     bool distribute_object = false;
     bool snap_object = false;
     bool nudge_object = false;
+    bool tab_order_object = false;
     bool ungroup_object = false;
     bool clear_parent = false;
     bool selection_record_available = false;
+    bool starting_tab_index_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -107,6 +110,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> distribute_objects{};
     std::vector<StudioObjectSelector> snap_objects{};
     std::vector<StudioObjectSelector> nudge_objects{};
+    std::vector<StudioObjectSelector> tab_order_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
