@@ -243,6 +243,10 @@ void test_parse_launch_arguments() {
         "#1081: launch contract should keep continuous-scroll-object off by default");
     expect(!result.request.continuous_scroll_available,
         "#1081: launch contract should keep continuous scroll unavailable by default");
+    expect(!result.request.dockable_object,
+        "#1082: launch contract should keep dockable-object off by default");
+    expect(!result.request.dockable_available,
+        "#1082: launch contract should keep dockable unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5086,6 +5090,92 @@ void test_parse_launch_arguments_rejects_continuous_scroll_object_ambiguity() {
         "#1081: launch contract should reject stray continuous-scroll arguments");
 }
 
+void test_parse_launch_arguments_for_dockable_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dockable-object",
+        "--dockable", "false",
+        "--dockable-target-object-name", "frmCustomer",
+        "--dockable-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1082: launch contract should parse dockable-object requests");
+    expect(result.request.dockable_object,
+        "#1082: launch contract should detect --dockable-object");
+    expect(result.request.dockable_available && !result.request.dockable,
+        "#1082: dockable-object requests should carry dockable state");
+    expect(result.request.dockable_objects.size() == 2U,
+        "#1082: dockable-object requests should collect dockable target selectors");
+    if (result.request.dockable_objects.size() == 2U) {
+        expect(result.request.dockable_objects[0].object_name == "frmCustomer" &&
+                result.request.dockable_objects[0].unique_id.empty(),
+            "#1082: dockable-object requests should parse target object-name selectors");
+        expect(result.request.dockable_objects[1].object_name.empty() &&
+                result.request.dockable_objects[1].unique_id == "two-guid",
+            "#1082: dockable-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dockable_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable-object",
+        "--dockable-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1082: launch contract should reject dockable-object requests without dockable state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable-object",
+        "--dockable", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1082: launch contract should reject dockable-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable-object",
+        "--dockable", "sometimes",
+        "--dockable-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1082: launch contract should reject invalid dockable boolean values");
+}
+
+void test_parse_launch_arguments_rejects_dockable_object_ambiguity() {
+    const auto dockable_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable-object",
+        "--auto-size-object",
+        "--dockable", "false",
+        "--dockable-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!dockable_auto_size_result.ok,
+        "#1082: launch contract should reject simultaneous dockable-object and auto-size-object requests");
+
+    const auto dockable_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--dockable", "false",
+        "--dockable-target-unique-id", "one-guid"
+    });
+    expect(!dockable_property_result.ok,
+        "#1082: launch contract should reject dockable-object combined with property commands");
+
+    const auto stray_dockable_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dockable", "false"
+    });
+    expect(!stray_dockable_result.ok,
+        "#1082: launch contract should reject stray dockable arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6474,6 +6564,9 @@ int main() {
     test_parse_launch_arguments_for_continuous_scroll_object();
     test_parse_launch_arguments_rejects_continuous_scroll_object_invalid_inputs();
     test_parse_launch_arguments_rejects_continuous_scroll_object_ambiguity();
+    test_parse_launch_arguments_for_dockable_object();
+    test_parse_launch_arguments_rejects_dockable_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dockable_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
