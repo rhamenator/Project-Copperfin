@@ -255,6 +255,10 @@ void test_parse_launch_arguments() {
         "#1084: launch contract should keep sparse-object off by default");
     expect(!result.request.sparse_available,
         "#1084: launch contract should keep sparse unavailable by default");
+    expect(!result.request.lock_screen_object,
+        "#1085: launch contract should keep lock-screen-object off by default");
+    expect(!result.request.lock_screen_available,
+        "#1085: launch contract should keep lock screen unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5356,6 +5360,92 @@ void test_parse_launch_arguments_rejects_sparse_object_ambiguity() {
         "#1084: launch contract should reject stray sparse arguments");
 }
 
+void test_parse_launch_arguments_for_lock_screen_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--lock-screen-object",
+        "--lock-screen", "false",
+        "--lock-screen-target-object-name", "frmCustomer",
+        "--lock-screen-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1085: launch contract should parse lock-screen-object requests");
+    expect(result.request.lock_screen_object,
+        "#1085: launch contract should detect --lock-screen-object");
+    expect(result.request.lock_screen_available && !result.request.lock_screen,
+        "#1085: lock-screen-object requests should carry lock screen state");
+    expect(result.request.lock_screen_objects.size() == 2U,
+        "#1085: lock-screen-object requests should collect lock_screen target selectors");
+    if (result.request.lock_screen_objects.size() == 2U) {
+        expect(result.request.lock_screen_objects[0].object_name == "frmCustomer" &&
+                result.request.lock_screen_objects[0].unique_id.empty(),
+            "#1085: lock-screen-object requests should parse target object-name selectors");
+        expect(result.request.lock_screen_objects[1].object_name.empty() &&
+                result.request.lock_screen_objects[1].unique_id == "two-guid",
+            "#1085: lock-screen-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_lock_screen_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen-object",
+        "--lock-screen-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1085: launch contract should reject lock-screen-object requests without lock screen state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen-object",
+        "--lock-screen", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1085: launch contract should reject lock-screen-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen-object",
+        "--lock-screen", "sometimes",
+        "--lock-screen-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1085: launch contract should reject invalid lock-screen boolean values");
+}
+
+void test_parse_launch_arguments_rejects_lock_screen_object_ambiguity() {
+    const auto lock_screen_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen-object",
+        "--auto-size-object",
+        "--lock-screen", "false",
+        "--lock-screen-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!lock_screen_auto_size_result.ok,
+        "#1085: launch contract should reject simultaneous lock-screen-object and auto-size-object requests");
+
+    const auto lock_screen_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--lock-screen", "false",
+        "--lock-screen-target-unique-id", "one-guid"
+    });
+    expect(!lock_screen_property_result.ok,
+        "#1085: launch contract should reject lock-screen-object combined with property commands");
+
+    const auto stray_lock_screen_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-screen", "false"
+    });
+    expect(!stray_lock_screen_result.ok,
+        "#1085: launch contract should reject stray lock-screen arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6753,6 +6843,9 @@ int main() {
     test_parse_launch_arguments_for_sparse_object();
     test_parse_launch_arguments_rejects_sparse_object_invalid_inputs();
     test_parse_launch_arguments_rejects_sparse_object_ambiguity();
+    test_parse_launch_arguments_for_lock_screen_object();
+    test_parse_launch_arguments_rejects_lock_screen_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_lock_screen_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

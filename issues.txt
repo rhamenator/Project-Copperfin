@@ -1,3 +1,4 @@
+1085	OPEN	E2/#23 slice: Expose host lock-screen-object command		2026-06-17T23:50:53Z
 1084	OPEN	E2/#23 slice: Expose host sparse-object command		2026-06-17T23:47:46Z
 1083	OPEN	E2/#23 slice: Expose host clip-controls-object command		2026-06-17T23:44:37Z
 1082	OPEN	E2/#23 slice: Expose host dockable-object command		2026-06-17T23:40:56Z

@@ -418,6 +418,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--lock-screen-object") {
+            result.request.lock_screen_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1072,6 +1077,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.sparse = *sparse;
             result.request.sparse_available = true;
+            continue;
+        }
+
+        if (argument == "--lock-screen") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-screen."};
+            }
+            const auto lock_screen = parse_bool_value(args[++index]);
+            if (!lock_screen.has_value()) {
+                return {.ok = false, .error = "The --lock-screen value must be true or false."};
+            }
+            result.request.lock_screen = *lock_screen;
+            result.request.lock_screen_available = true;
             continue;
         }
 
@@ -2521,6 +2539,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--lock-screen-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-screen-target-object-name."};
+            }
+            result.request.lock_screen_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--lock-screen-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-screen-target-unique-id."};
+            }
+            result.request.lock_screen_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3286,6 +3328,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.sparse_objects.empty())) {
         return {.ok = false, .error = "Sparse arguments can only be used with --sparse-object."};
     }
+    if (result.request.lock_screen_object && !result.request.lock_screen_available) {
+        return {.ok = false, .error = "An object lock-screen assignment requires --lock-screen."};
+    }
+    if (result.request.lock_screen_object && result.request.lock_screen_objects.empty()) {
+        return {.ok = false, .error = "An object lock-screen assignment requires at least one target selector."};
+    }
+    if (!result.request.lock_screen_object &&
+        (result.request.lock_screen_available ||
+         !result.request.lock_screen_objects.empty())) {
+        return {.ok = false, .error = "Lock-screen arguments can only be used with --lock-screen-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3354,6 +3407,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.dockable_object ? 1 : 0) +
         (result.request.clip_controls_object ? 1 : 0) +
         (result.request.sparse_object ? 1 : 0) +
+        (result.request.lock_screen_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
