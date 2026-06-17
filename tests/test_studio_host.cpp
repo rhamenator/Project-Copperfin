@@ -234,26 +234,59 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: form designer context should include form toolbox items");
     }
 
-    const auto override_result = copperfin::studio::open_document({
+    const auto method_symbol_result = copperfin::studio::open_document({
+        .path = (temp_dir / "customer.scx").string(),
+        .symbol = "cmdSave.Click"
+    });
+    expect(method_symbol_result.ok, "#963: synthetic form should open for method-symbol context checks");
+    expect(method_symbol_result.document.designer_contexts.size() == 1U,
+           "#963: method-symbol form documents should expose one inferred designer context");
+    if (!method_symbol_result.document.designer_contexts.empty()) {
+        const auto& context = method_symbol_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_method,
+               "#963: method-like symbols should infer the visual-method designer context for forms");
+        expect(has_descriptor_id(context.editor_actions, "edit-visual-method"),
+               "#963: inferred visual-method contexts should include method-editor actions");
+    }
+
+    const auto multi_override_result = copperfin::studio::open_document({
         .path = (temp_dir / "customer.scx").string(),
         .designer_selection_contexts = {
             copperfin::studio::StudioEditorSelectionContext::visual_method,
             copperfin::studio::StudioEditorSelectionContext::report_expression
         }
     });
-    expect(override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
-    expect(override_result.document.designer_contexts.size() == 2U,
+    expect(multi_override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
+    expect(multi_override_result.document.designer_contexts.size() == 2U,
            "#962: explicit selection contexts should override the form default context list");
-    if (override_result.document.designer_contexts.size() == 2U) {
-        expect(override_result.document.designer_contexts[0].selection_context ==
+    if (multi_override_result.document.designer_contexts.size() == 2U) {
+        expect(multi_override_result.document.designer_contexts[0].selection_context ==
                    copperfin::studio::StudioEditorSelectionContext::visual_method,
                "#962: explicit visual_method contexts should be preserved in request order");
-        expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-visual-method"),
+        expect(has_descriptor_id(multi_override_result.document.designer_contexts[0].editor_actions, "edit-visual-method"),
                "#962: explicit visual_method contexts should include method-editor actions");
-        expect(override_result.document.designer_contexts[1].selection_context ==
+        expect(multi_override_result.document.designer_contexts[1].selection_context ==
                    copperfin::studio::StudioEditorSelectionContext::report_expression,
                "#962: explicit report_expression contexts should be preserved in request order");
-        expect(has_descriptor_id(override_result.document.designer_contexts[1].editor_actions, "edit-report-expression"),
+        expect(has_descriptor_id(multi_override_result.document.designer_contexts[1].editor_actions, "edit-report-expression"),
+               "#962: explicit report_expression contexts should include expression-editor actions");
+    }
+
+    const auto override_result = copperfin::studio::open_document({
+        .path = (temp_dir / "customer.scx").string(),
+        .symbol = "cmdSave.Click",
+        .designer_selection_contexts = {
+            copperfin::studio::StudioEditorSelectionContext::report_expression
+        }
+    });
+    expect(override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
+    expect(override_result.document.designer_contexts.size() == 1U,
+           "#963: explicit selection contexts should override symbol-inferred context defaults");
+    if (override_result.document.designer_contexts.size() == 1U) {
+        expect(override_result.document.designer_contexts[0].selection_context ==
+                   copperfin::studio::StudioEditorSelectionContext::report_expression,
+               "#963: explicit report_expression contexts should win over inferred visual-method contexts");
+        expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-report-expression"),
                "#962: explicit report_expression contexts should include expression-editor actions");
     }
 

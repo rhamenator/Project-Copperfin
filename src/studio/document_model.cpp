@@ -129,6 +129,13 @@ bool supports_visual_property_blob(const StudioDocumentModel& document) {
     return document.kind == StudioAssetKind::form || document.kind == StudioAssetKind::class_library;
 }
 
+bool has_method_like_symbol(std::string_view symbol) {
+    const std::size_t separator = symbol.find('.');
+    return separator != std::string_view::npos &&
+        separator > 0U &&
+        (separator + 1U) < symbol.size();
+}
+
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
@@ -166,6 +173,19 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
             return {};
     }
     return {};
+}
+
+std::vector<StudioDesignerContextResult> default_designer_contexts_for_request(
+    StudioAssetKind kind,
+    std::string_view symbol) {
+    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_method_like_symbol(symbol)) {
+        return {
+            studio_designer_context_for_selection({
+                .selection_context = StudioEditorSelectionContext::visual_method
+            })
+        };
+    }
+    return default_designer_contexts_for_kind(kind);
 }
 
 std::vector<StudioDesignerContextResult> requested_designer_contexts(
@@ -477,7 +497,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.inspection = inspection;
     document.designer_contexts = request.designer_selection_contexts.empty()
-        ? default_designer_contexts_for_kind(document.kind)
+        ? default_designer_contexts_for_request(document.kind, request.symbol)
         : requested_designer_contexts(request.designer_selection_contexts);
     if (document.kind == StudioAssetKind::program) {
         document.static_diagnostics = runtime::analyze_prg_file(request.path);

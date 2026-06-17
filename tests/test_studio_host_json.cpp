@@ -182,6 +182,48 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(override_process.stdout_text, "\"selectionContext\": \"visual_object\"",
                         "#962: explicit selection contexts should override the form default selection context");
 
+    const auto symbol_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--symbol", "cmdSave.Click", "--json"},
+        temp_root);
+
+    if (symbol_process.exit_code != 0) {
+        std::cerr << "studio host symbol stdout:\n" << symbol_process.stdout_text << "\n";
+        std::cerr << "studio host symbol stderr:\n" << symbol_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(symbol_process.exit_code == 0, "#963: Studio host symbol-inferred context JSON smoke should exit successfully");
+    expect_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_method\"",
+                    "#963: method-like launch symbols should infer visual-method JSON contexts");
+    expect_contains(symbol_process.stdout_text, "\"id\": \"edit-visual-method\"",
+                    "#963: symbol-inferred visual-method contexts should expose method-editor actions");
+    expect_not_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+                        "#963: symbol-inferred contexts should replace the form default selection context");
+
+    const auto explicit_precedence_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--symbol", "cmdSave.Click",
+            "--selection-context", "report_expression",
+            "--json"
+        },
+        temp_root);
+
+    if (explicit_precedence_process.exit_code != 0) {
+        std::cerr << "studio host explicit precedence stdout:\n" << explicit_precedence_process.stdout_text << "\n";
+        std::cerr << "studio host explicit precedence stderr:\n" << explicit_precedence_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(explicit_precedence_process.exit_code == 0,
+           "#963: Studio host explicit-over-symbol context JSON smoke should exit successfully");
+    expect_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+                    "#963: explicit selection contexts should serialize when a method-like symbol is also present");
+    expect_not_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"visual_method\"",
+                        "#963: explicit selection contexts should override symbol-inferred visual-method contexts");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
