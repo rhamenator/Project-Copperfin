@@ -7778,6 +7778,8 @@ void test_align_visual_objects_to_anchor_geometry() {
         .mode = "left"
     });
     expect(align_result.ok, "#786: align should support left alignment with mixed selectors");
+    expect(align_result.affected_object_count == 2U,
+        "#999: successful alignment should report affected object count");
     expect(property_value("name-guid", "HPOS") == "10" &&
             property_value("status-guid", "HPOS") == "10" &&
             property_value("name-guid", "VPOS") == "2",
@@ -7883,6 +7885,8 @@ void test_align_visual_objects_to_anchor_geometry() {
         .mode = "left"
     });
     expect(!align_result.ok, "#786: align should reject missing selected objects");
+    expect(align_result.affected_object_count == 0U,
+        "#999: failed alignment should report zero affected objects");
     expect(geometry_state() == committed_state,
         "#786: missing-target alignment failures should leave prior geometry unchanged");
 
@@ -8030,6 +8034,8 @@ void test_resize_visual_objects_to_anchor_geometry() {
         .mode = "width"
     });
     expect(resize_result.ok, "#787: resize should support width mode with mixed selectors");
+    expect(resize_result.affected_object_count == 2U,
+        "#999: successful resize should report affected object count");
     expect(property_value("name-guid", "WIDTH") == "100" &&
             property_value("status-guid", "WIDTH") == "100" &&
             property_value("name-guid", "HEIGHT") == "10",
@@ -8239,6 +8245,8 @@ void test_distribute_visual_objects_evenly_by_axis() {
     });
     expect(distribute_result.ok,
         "#790: horizontal distribution should support mixed selectors and unsorted inputs");
+    expect(distribute_result.affected_object_count == 2U,
+        "#999: successful distribution should report affected interior object count");
     expect(property_value("left-guid", "HPOS") == "0" &&
             property_value("midb-guid", "HPOS") == "33.333" &&
             property_value("mida-guid", "HPOS") == "66.667" &&
@@ -8280,6 +8288,8 @@ void test_distribute_visual_objects_evenly_by_axis() {
         .mode = "horizontal"
     });
     expect(!distribute_result.ok, "#790: distribution should reject fewer than three selected objects");
+    expect(distribute_result.affected_object_count == 0U,
+        "#999: failed distribution should report zero affected objects");
     expect(coordinate_state() == committed_state,
         "#790: too-few-object failures should not mutate coordinates");
 
@@ -8422,6 +8432,8 @@ void test_snap_visual_objects_to_grid_by_axis() {
         .grid_height = 0.0
     });
     expect(snap_result.ok, "#791: horizontal snap should support mixed selectors");
+    expect(snap_result.affected_object_count == 2U,
+        "#999: successful snap-to-grid should report affected object count");
     expect(property_value("one-guid", "HPOS") == "10" &&
             property_value("two-guid", "HPOS") == "40" &&
             property_value("one-guid", "VPOS") == "24.9" &&
@@ -8480,6 +8492,8 @@ void test_snap_visual_objects_to_grid_by_axis() {
         .grid_height = 10.0
     });
     expect(!snap_result.ok, "#791: snap-grid should reject empty selections");
+    expect(snap_result.affected_object_count == 0U,
+        "#999: failed snap-to-grid should report zero affected objects");
     expect(coordinate_state() == committed_state,
         "#791: empty-selection failures should not mutate coordinates");
 
@@ -8635,6 +8649,8 @@ void test_nudge_visual_objects_by_delta() {
         .delta_vpos = 0.0
     });
     expect(nudge_result.ok, "#792: horizontal nudge should support mixed selectors");
+    expect(nudge_result.affected_object_count == 2U,
+        "#999: successful nudge should report affected object count");
     expect(property_value("one-guid", "HPOS") == "15" &&
             property_value("two-guid", "HPOS") == "38.5" &&
             property_value("one-guid", "VPOS") == "20" &&
@@ -8693,6 +8709,8 @@ void test_nudge_visual_objects_by_delta() {
         .delta_vpos = 1.0
     });
     expect(!nudge_result.ok, "#792: nudge should reject empty selections");
+    expect(nudge_result.affected_object_count == 0U,
+        "#999: failed nudge should report zero affected objects");
     expect(coordinate_state() == committed_state,
         "#792: empty-selection failures should not mutate coordinates");
 
