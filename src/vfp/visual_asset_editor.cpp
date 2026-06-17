@@ -5756,6 +5756,19 @@ VisualAssetEditResult set_visual_object_grid_line_width(const VisualObjectGridLi
         std::to_string(request.grid_line_width));
 }
 
+VisualAssetEditResult set_visual_object_grid_lines(const VisualObjectGridLinesRequest& request) {
+    if (request.grid_lines < 0) {
+        return {.ok = false, .error = "GridLines must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "GridLines",
+        "grid-lines",
+        std::to_string(request.grid_lines));
+}
+
 VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHeightRequest& request) {
     if (request.header_height < 0) {
         return {.ok = false, .error = "HeaderHeight must not be negative."};
