@@ -373,6 +373,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--control-box-object") {
+            result.request.control_box_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -910,6 +915,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.closable = *closable;
             result.request.closable_available = true;
+            continue;
+        }
+
+        if (argument == "--control-box") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --control-box."};
+            }
+            const auto control_box = parse_bool_value(args[++index]);
+            if (!control_box.has_value()) {
+                return {.ok = false, .error = "The --control-box value must be true or false."};
+            }
+            result.request.control_box = *control_box;
+            result.request.control_box_available = true;
             continue;
         }
 
@@ -2143,6 +2161,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--control-box-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --control-box-target-object-name."};
+            }
+            result.request.control_box_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--control-box-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --control-box-target-unique-id."};
+            }
+            result.request.control_box_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -2809,6 +2851,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.closable_objects.empty())) {
         return {.ok = false, .error = "Closable arguments can only be used with --closable-object."};
     }
+    if (result.request.control_box_object && !result.request.control_box_available) {
+        return {.ok = false, .error = "An object control-box assignment requires --control-box."};
+    }
+    if (result.request.control_box_object && result.request.control_box_objects.empty()) {
+        return {.ok = false, .error = "An object control-box assignment requires at least one target selector."};
+    }
+    if (!result.request.control_box_object &&
+        (result.request.control_box_available ||
+         !result.request.control_box_objects.empty())) {
+        return {.ok = false, .error = "Control-box arguments can only be used with --control-box-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -2868,6 +2921,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.dynamic_back_color_object ? 1 : 0) +
         (result.request.dynamic_fore_color_object ? 1 : 0) +
         (result.request.closable_object ? 1 : 0) +
+        (result.request.control_box_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

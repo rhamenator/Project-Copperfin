@@ -219,6 +219,10 @@ void test_parse_launch_arguments() {
         "#1073: launch contract should keep closable-object off by default");
     expect(!result.request.closable_available,
         "#1073: launch contract should keep closable unavailable by default");
+    expect(!result.request.control_box_object,
+        "#1074: launch contract should keep control-box-object off by default");
+    expect(!result.request.control_box_available,
+        "#1074: launch contract should keep control box unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4546,6 +4550,92 @@ void test_parse_launch_arguments_rejects_closable_object_ambiguity() {
         "#1073: launch contract should reject stray closable arguments");
 }
 
+void test_parse_launch_arguments_for_control_box_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--control-box-object",
+        "--control-box", "false",
+        "--control-box-target-object-name", "frmCustomer",
+        "--control-box-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1074: launch contract should parse control-box-object requests");
+    expect(result.request.control_box_object,
+        "#1074: launch contract should detect --control-box-object");
+    expect(result.request.control_box_available && !result.request.control_box,
+        "#1074: control-box-object requests should carry control box state");
+    expect(result.request.control_box_objects.size() == 2U,
+        "#1074: control-box-object requests should collect control-box target selectors");
+    if (result.request.control_box_objects.size() == 2U) {
+        expect(result.request.control_box_objects[0].object_name == "frmCustomer" &&
+                result.request.control_box_objects[0].unique_id.empty(),
+            "#1074: control-box-object requests should parse target object-name selectors");
+        expect(result.request.control_box_objects[1].object_name.empty() &&
+                result.request.control_box_objects[1].unique_id == "two-guid",
+            "#1074: control-box-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_control_box_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box-object",
+        "--control-box-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1074: launch contract should reject control-box-object requests without control box state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box-object",
+        "--control-box", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1074: launch contract should reject control-box-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box-object",
+        "--control-box", "sometimes",
+        "--control-box-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1074: launch contract should reject invalid control-box boolean values");
+}
+
+void test_parse_launch_arguments_rejects_control_box_object_ambiguity() {
+    const auto control_box_closable_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box-object",
+        "--closable-object",
+        "--control-box", "false",
+        "--control-box-target-unique-id", "one-guid",
+        "--closable", "false",
+        "--closable-target-unique-id", "one-guid"
+    });
+    expect(!control_box_closable_result.ok,
+        "#1074: launch contract should reject simultaneous control-box-object and closable-object requests");
+
+    const auto control_box_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box-object",
+        "--clear-property",
+        "--property-name", "ControlBox",
+        "--control-box", "false",
+        "--control-box-target-unique-id", "one-guid"
+    });
+    expect(!control_box_property_result.ok,
+        "#1074: launch contract should reject control-box-object combined with property commands");
+
+    const auto stray_control_box_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--control-box", "false"
+    });
+    expect(!stray_control_box_result.ok,
+        "#1074: launch contract should reject stray control-box arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -5916,6 +6006,9 @@ int main() {
     test_parse_launch_arguments_for_closable_object();
     test_parse_launch_arguments_rejects_closable_object_invalid_inputs();
     test_parse_launch_arguments_rejects_closable_object_ambiguity();
+    test_parse_launch_arguments_for_control_box_object();
+    test_parse_launch_arguments_rejects_control_box_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_control_box_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

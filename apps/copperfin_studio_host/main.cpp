@@ -2606,6 +2606,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.control_box_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> control_box_objects;
+        control_box_objects.reserve(parse_result.request.control_box_objects.size());
+        for (const auto& control_box_object : parse_result.request.control_box_objects) {
+            control_box_objects.push_back({
+                .record_index = control_box_object.record_index,
+                .object_name = control_box_object.object_name,
+                .unique_id = control_box_object.unique_id
+            });
+        }
+
+        const auto control_box_result = copperfin::vfp::set_visual_object_control_box({
+            .path = parse_result.request.path,
+            .objects = control_box_objects,
+            .control_box = parse_result.request.control_box
+        });
+
+        if (!control_box_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << control_box_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.ungroup_object) {
         const auto ungroup_result = copperfin::vfp::ungroup_visual_object({
             .path = parse_result.request.path,

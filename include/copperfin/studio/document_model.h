@@ -165,6 +165,7 @@ struct StudioOpenRequest {
     bool dynamic_back_color_object = false;
     bool dynamic_fore_color_object = false;
     bool closable_object = false;
+    bool control_box_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -211,7 +212,9 @@ struct StudioOpenRequest {
     bool dynamic_back_color_available = false;
     bool dynamic_fore_color_available = false;
     bool closable_available = false;
+    bool control_box_available = false;
     bool closable = false;
+    bool control_box = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -259,6 +262,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> dynamic_back_color_objects{};
     std::vector<StudioObjectSelector> dynamic_fore_color_objects{};
     std::vector<StudioObjectSelector> closable_objects{};
+    std::vector<StudioObjectSelector> control_box_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
