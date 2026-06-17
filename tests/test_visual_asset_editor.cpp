@@ -6893,6 +6893,10 @@ void test_create_visual_object_appends_toolbox_field_values() {
     });
     expect(create_object_result.ok && create_object_result.record_index == 2U,
         "#750: toolbox creates should append a live object row at the next record index");
+    expect(create_object_result.object_name == "chkActive" &&
+            create_object_result.unique_id == "active-guid" &&
+            create_object_result.parent_name == "frmMain",
+        "#991: toolbox creates should report created object identity metadata");
 
     auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 3U,
@@ -6942,6 +6946,10 @@ void test_create_visual_object_appends_toolbox_field_values() {
     });
     expect(!create_object_result.ok,
         "#750: toolbox creates should reject identity collisions with deleted rows");
+    expect(create_object_result.object_name.empty() &&
+            create_object_result.unique_id.empty() &&
+            create_object_result.parent_name.empty(),
+        "#991: failed toolbox creates should not report stale identity metadata after collisions");
 
     create_object_result = copperfin::vfp::create_visual_object({
         .path = table_path.string(),
@@ -6952,6 +6960,10 @@ void test_create_visual_object_appends_toolbox_field_values() {
     });
     expect(!create_object_result.ok,
         "#750: toolbox creates should reject unknown requested fields");
+    expect(create_object_result.object_name.empty() &&
+            create_object_result.unique_id.empty() &&
+            create_object_result.parent_name.empty(),
+        "#991: failed toolbox creates should not report stale identity metadata after invalid fields");
 
     list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 3U && list_result.objects[1].deleted,

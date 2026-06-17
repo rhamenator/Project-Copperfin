@@ -4357,28 +4357,39 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
     };
 }
 
+VisualObjectCreateResult failed_visual_object_create_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .parent_name = {}
+    };
+}
+
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided.", .record_index = 0U};
+        return failed_visual_object_create_result("No asset path was provided.");
     }
     if (request.field_values.empty()) {
-        return {.ok = false, .error = "No field values were provided.", .record_index = 0U};
+        return failed_visual_object_create_result("No field values were provided.");
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
     if (!table_result.ok) {
-        return {.ok = false, .error = table_result.error, .record_index = 0U};
+        return failed_visual_object_create_result(table_result.error);
     }
     const auto& table = table_result.table;
 
     std::vector<std::string> created_values(table.fields.size());
     for (const auto& field_value : request.field_values) {
         if (trim_both(field_value.property_name).empty()) {
-            return {.ok = false, .error = "Field names cannot be empty.", .record_index = 0U};
+            return failed_visual_object_create_result("Field names cannot be empty.");
         }
         const auto field_index = find_field_index(table, field_value.property_name);
         if (!field_index.has_value()) {
-            return {.ok = false, .error = "The requested field was not found in the asset.", .record_index = 0U};
+            return failed_visual_object_create_result("The requested field was not found in the asset.");
         }
         created_values[*field_index] = field_value.property_value;
     }
@@ -4390,7 +4401,7 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
         }
         const auto collision = reject_identity_collision(table, identity_field, final_value);
         if (!collision.ok) {
-            return {.ok = false, .error = collision.error, .record_index = 0U};
+            return failed_visual_object_create_result(collision.error);
         }
     }
 
@@ -4414,7 +4425,7 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
 
     const auto create_result = create_dbf_table_file(request.path, table.fields, records);
     if (!create_result.ok) {
-        return {.ok = false, .error = create_result.error, .record_index = 0U};
+        return failed_visual_object_create_result(create_result.error);
     }
     for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
         if (!deleted_flags[index]) {
@@ -4422,11 +4433,27 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
         }
         const auto delete_result = set_record_deleted_flag(request.path, index, true);
         if (!delete_result.ok) {
-            return {.ok = false, .error = delete_result.error, .record_index = 0U};
+            return failed_visual_object_create_result(delete_result.error);
         }
     }
 
-    return {.ok = true, .error = {}, .record_index = created_record_index};
+    const auto created_table_result = parse_dbf_table_from_file(request.path, created_record_index + 1U);
+    if (!created_table_result.ok || created_record_index >= created_table_result.table.records.size()) {
+        return failed_visual_object_create_result(
+            created_table_result.ok ? "The created visual object record is not currently available." : created_table_result.error);
+    }
+    const auto& created_record = created_table_result.table.records[created_record_index];
+    const auto* created_unique_id = find_record_value(created_record, "UNIQUEID");
+    const auto* created_parent_name = find_record_value(created_record, "PARENT");
+
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = created_record_index,
+        .object_name = visual_object_record_name(created_record),
+        .unique_id = created_unique_id == nullptr ? std::string{} : trim_both(created_unique_id->display_value),
+        .parent_name = created_parent_name == nullptr ? std::string{} : trim_both(created_parent_name->display_value)
+    };
 }
 
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request) {
