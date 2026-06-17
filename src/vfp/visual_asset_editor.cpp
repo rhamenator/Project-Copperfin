@@ -947,12 +947,48 @@ VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
         .record_index = record.record_index,
         .deleted = record.deleted,
         .object_name = visual_object_record_name(record),
+        .object_path = {},
+        .object_depth = 0U,
         .unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value),
         .parent_name = parent_name == nullptr ? std::string{} : trim_both(parent_name->display_value),
+        .parent_record_available = false,
+        .parent_record_index = 0U,
+        .ancestor_record_indexes = {},
+        .sibling_index = 0U,
+        .sibling_count = 0U,
+        .child_count = 0U,
         .class_name = class_name == nullptr ? std::string{} : trim_both(class_name->display_value),
         .baseclass_name = baseclass_name == nullptr ? std::string{} : trim_both(baseclass_name->display_value),
         .caption = caption
     };
+}
+
+const DbfRecord* find_visual_object_record_by_record_index(
+    const DbfTable& table,
+    std::size_t record_index) {
+    const auto record = std::find_if(
+        table.records.begin(),
+        table.records.end(),
+        [&](const DbfRecord& candidate) {
+            return candidate.record_index == record_index;
+        });
+    return record == table.records.end() ? nullptr : &*record;
+}
+
+const DbfRecord* find_visual_object_record_by_name(
+    const DbfTable& table,
+    const std::string& object_name) {
+    const std::string normalized_object_name = normalize_visual_object_name(object_name);
+    if (normalized_object_name.empty()) {
+        return nullptr;
+    }
+    const auto record = std::find_if(
+        table.records.begin(),
+        table.records.end(),
+        [&](const DbfRecord& candidate) {
+            return normalize_visual_object_name(visual_object_record_name(candidate)) == normalized_object_name;
+        });
+    return record == table.records.end() ? nullptr : &*record;
 }
 
 void enrich_visual_object_hierarchy_snapshot(
@@ -962,16 +998,80 @@ void enrich_visual_object_hierarchy_snapshot(
     snapshot.parent_record_available = false;
     snapshot.parent_record_index = 0U;
     if (!normalized_parent_name.empty()) {
-        const auto parent = std::find_if(
-            table.records.begin(),
-            table.records.end(),
-            [&](const DbfRecord& candidate) {
-                return normalize_visual_object_name(visual_object_record_name(candidate)) == normalized_parent_name;
-            });
-        if (parent != table.records.end()) {
+        const auto* parent = find_visual_object_record_by_name(table, snapshot.parent_name);
+        if (parent != nullptr) {
             snapshot.parent_record_available = true;
             snapshot.parent_record_index = parent->record_index;
         }
+    }
+
+    snapshot.ancestor_record_indexes.clear();
+    if (snapshot.parent_record_available) {
+        std::size_t current_parent_record_index = snapshot.parent_record_index;
+        while (snapshot.ancestor_record_indexes.size() < table.records.size()) {
+            const auto* parent = find_visual_object_record_by_record_index(table, current_parent_record_index);
+            if (parent == nullptr) {
+                break;
+            }
+            snapshot.ancestor_record_indexes.push_back(parent->record_index);
+            const auto* next_parent_name = find_record_value(*parent, "PARENT");
+            if (next_parent_name == nullptr || trim_both(next_parent_name->display_value).empty()) {
+                break;
+            }
+            const auto* next_parent = find_visual_object_record_by_name(table, next_parent_name->display_value);
+            if (next_parent == nullptr) {
+                break;
+            }
+            current_parent_record_index = next_parent->record_index;
+        }
+        std::reverse(snapshot.ancestor_record_indexes.begin(), snapshot.ancestor_record_indexes.end());
+    }
+    snapshot.object_depth = snapshot.ancestor_record_indexes.size();
+
+    snapshot.object_path.clear();
+    if (!snapshot.object_name.empty()) {
+        for (const auto ancestor_record_index : snapshot.ancestor_record_indexes) {
+            const auto* ancestor = find_visual_object_record_by_record_index(table, ancestor_record_index);
+            if (ancestor == nullptr) {
+                continue;
+            }
+            const std::string ancestor_name = visual_object_record_name(*ancestor);
+            if (ancestor_name.empty()) {
+                continue;
+            }
+            if (!snapshot.object_path.empty()) {
+                snapshot.object_path += ".";
+            }
+            snapshot.object_path += ancestor_name;
+        }
+        if (!snapshot.object_path.empty()) {
+            snapshot.object_path += ".";
+        }
+        snapshot.object_path += snapshot.object_name;
+    }
+
+    snapshot.sibling_index = 0U;
+    snapshot.sibling_count = 0U;
+    for (const auto& candidate : table.records) {
+        const auto* candidate_parent_value = find_record_value(candidate, "PARENT");
+        const std::string candidate_parent_name =
+            candidate_parent_value == nullptr ? std::string{} : trim_both(candidate_parent_value->display_value);
+        const auto* candidate_parent = find_visual_object_record_by_name(table, candidate_parent_name);
+        const bool candidate_parent_available = candidate_parent != nullptr;
+        const bool same_resolved_parent = snapshot.parent_record_available &&
+            candidate_parent_available &&
+            candidate_parent->record_index == snapshot.parent_record_index;
+        const bool same_unresolved_parent = !snapshot.parent_record_available &&
+            !candidate_parent_available &&
+            normalize_visual_object_name(candidate_parent_name) == normalize_visual_object_name(snapshot.parent_name);
+        const bool same_parent = same_resolved_parent || same_unresolved_parent;
+        if (!same_parent) {
+            continue;
+        }
+        if (candidate.record_index == snapshot.record_index) {
+            snapshot.sibling_index = snapshot.sibling_count;
+        }
+        ++snapshot.sibling_count;
     }
 
     const std::string normalized_object_name = normalize_visual_object_name(snapshot.object_name);

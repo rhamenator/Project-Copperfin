@@ -247,10 +247,15 @@ struct VisualObjectSnapshot {
     std::size_t record_index = 0;
     bool deleted = false;
     std::string object_name;
+    std::string object_path;
+    std::size_t object_depth = 0;
     std::string unique_id;
     std::string parent_name;
     bool parent_record_available = false;
     std::size_t parent_record_index = 0;
+    std::vector<std::size_t> ancestor_record_indexes;
+    std::size_t sibling_index = 0;
+    std::size_t sibling_count = 0;
     std::size_t child_count = 0;
     std::string class_name;
     std::string baseclass_name;

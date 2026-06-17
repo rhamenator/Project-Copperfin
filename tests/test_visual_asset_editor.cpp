@@ -3271,12 +3271,25 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[0].parent_record_index == 0U &&
                 list_result.objects[0].child_count == 2U,
             "#986: root visual object outlines should expose no resolved parent and direct child counts");
+        expect(list_result.objects[0].object_path == "Page1" &&
+                list_result.objects[0].object_depth == 0U &&
+                list_result.objects[0].ancestor_record_indexes.empty() &&
+                list_result.objects[0].sibling_index == 0U &&
+                list_result.objects[0].sibling_count == 1U,
+            "#987: root visual object outlines should expose path, depth, ancestor, and sibling metadata");
         expect(list_result.objects[1].parent_name == "Page1",
             "#744: visual object outlines should expose parent/container names");
         expect(list_result.objects[1].parent_record_available &&
                 list_result.objects[1].parent_record_index == 0U &&
                 list_result.objects[1].child_count == 0U,
             "#986: child visual object outlines should expose resolved parent record links and leaf counts");
+        expect(list_result.objects[1].object_path == "Page1.cmdSave" &&
+                list_result.objects[1].object_depth == 1U &&
+                list_result.objects[1].ancestor_record_indexes.size() == 1U &&
+                list_result.objects[1].ancestor_record_indexes[0] == 0U &&
+                list_result.objects[1].sibling_index == 0U &&
+                list_result.objects[1].sibling_count == 2U,
+            "#987: first child visual object outlines should expose path, depth, ancestors, and sibling order");
         expect(list_result.objects[1].class_name == "cmdButton",
             "#744: visual object outlines should expose class names");
         expect(list_result.objects[1].baseclass_name == "CommandButton",
@@ -3285,6 +3298,13 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[2].parent_record_available &&
                 list_result.objects[2].parent_record_index == 0U,
             "#986: visual object outline parent resolution should be case-insensitive");
+        expect(list_result.objects[2].object_path == "Page1.txtName" &&
+                list_result.objects[2].object_depth == 1U &&
+                list_result.objects[2].ancestor_record_indexes.size() == 1U &&
+                list_result.objects[2].ancestor_record_indexes[0] == 0U &&
+                list_result.objects[2].sibling_index == 1U &&
+                list_result.objects[2].sibling_count == 2U,
+            "#987: second child visual object outlines should expose case-insensitive sibling order");
         expect(list_result.objects[2].caption.empty(),
             "#745: visual object outlines should keep captions empty when no Caption property exists");
     }
@@ -3300,8 +3320,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
     if (children_result.ok && children_result.children.size() == 2U) {
         expect(children_result.children[0].parent_record_available &&
                 children_result.children[0].parent_record_index == 0U &&
-                children_result.children[0].child_count == 0U,
-            "#986: embedded child-list snapshots should expose resolved parent links and child counts");
+                children_result.children[0].child_count == 0U &&
+                children_result.children[0].object_path == "Page1.cmdSave" &&
+                children_result.children[0].sibling_count == 2U,
+            "#987: embedded child-list snapshots should expose resolved hierarchy and sibling metadata");
     }
 
     const auto descendants_result = copperfin::vfp::list_visual_object_descendants({
@@ -3315,8 +3337,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
     if (descendants_result.ok && descendants_result.descendants.size() == 2U) {
         expect(descendants_result.descendants[1].object.parent_record_available &&
                 descendants_result.descendants[1].object.parent_record_index == 0U &&
-                descendants_result.descendants[1].object.child_count == 0U,
-            "#986: embedded descendant snapshots should expose resolved parent links and child counts");
+                descendants_result.descendants[1].object.child_count == 0U &&
+                descendants_result.descendants[1].object.object_path == "Page1.txtName" &&
+                descendants_result.descendants[1].object.sibling_index == 1U,
+            "#987: embedded descendant snapshots should expose resolved hierarchy and sibling metadata");
     }
 
     const auto ancestors_result = copperfin::vfp::list_visual_object_ancestors({
@@ -3329,8 +3353,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
         "#986: visual object ancestor listings should preserve parent snapshots");
     if (ancestors_result.ok && ancestors_result.ancestors.size() == 1U) {
         expect(!ancestors_result.ancestors[0].object.parent_record_available &&
-                ancestors_result.ancestors[0].object.child_count == 2U,
-            "#986: embedded ancestor snapshots should expose their own parent availability and child counts");
+                ancestors_result.ancestors[0].object.child_count == 2U &&
+                ancestors_result.ancestors[0].object.object_path == "Page1" &&
+                ancestors_result.ancestors[0].object.sibling_count == 1U,
+            "#987: embedded ancestor snapshots should expose their own hierarchy and sibling metadata");
     }
 
     fs::remove_all(temp_dir, ignored);
