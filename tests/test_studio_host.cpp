@@ -254,6 +254,23 @@ void test_open_document_attaches_default_designer_contexts() {
                "#963: inferred visual-method contexts should include method-editor actions");
     }
 
+    const auto data_environment_symbol_result = copperfin::studio::open_document({
+        .path = (temp_dir / "customer.scx").string(),
+        .symbol = "Dataenvironment.OpenTables"
+    });
+    expect(data_environment_symbol_result.ok, "#965: synthetic form should open for data-environment symbol checks");
+    expect(data_environment_symbol_result.document.designer_contexts.size() == 1U,
+           "#965: data-environment symbols should expose one inferred designer context");
+    if (!data_environment_symbol_result.document.designer_contexts.empty()) {
+        const auto& context = data_environment_symbol_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#965: DataEnvironment method symbols should infer the data-environment designer context for forms");
+        expect(has_descriptor_id(context.editor_actions, "edit-data-environment"),
+               "#965: inferred data-environment contexts should include data-environment editor actions");
+        expect(has_descriptor_id(context.builders, "data-environment-builder"),
+               "#965: inferred data-environment contexts should include data-environment builders");
+    }
+
     const auto multi_override_result = copperfin::studio::open_document({
         .path = (temp_dir / "customer.scx").string(),
         .designer_selection_contexts = {
@@ -279,18 +296,18 @@ void test_open_document_attaches_default_designer_contexts() {
 
     const auto override_result = copperfin::studio::open_document({
         .path = (temp_dir / "customer.scx").string(),
-        .symbol = "cmdSave.Click",
+        .symbol = "Dataenvironment.OpenTables",
         .designer_selection_contexts = {
             copperfin::studio::StudioEditorSelectionContext::report_expression
         }
     });
     expect(override_result.ok, "#962: synthetic form should open for explicit designer-context checks");
     expect(override_result.document.designer_contexts.size() == 1U,
-           "#963: explicit selection contexts should override symbol-inferred context defaults");
+           "#965: explicit selection contexts should override data-environment symbol-inferred context defaults");
     if (override_result.document.designer_contexts.size() == 1U) {
         expect(override_result.document.designer_contexts[0].selection_context ==
                    copperfin::studio::StudioEditorSelectionContext::report_expression,
-               "#963: explicit report_expression contexts should win over inferred visual-method contexts");
+               "#965: explicit report_expression contexts should win over inferred data-environment contexts");
         expect(has_descriptor_id(override_result.document.designer_contexts[0].editor_actions, "edit-report-expression"),
                "#962: explicit report_expression contexts should include expression-editor actions");
     }

@@ -136,6 +136,20 @@ bool has_method_like_symbol(std::string_view symbol) {
         (separator + 1U) < symbol.size();
 }
 
+std::string lowercase_copy(std::string_view text) {
+    std::string lowered(text);
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return lowered;
+}
+
+bool has_data_environment_symbol(std::string_view symbol) {
+    const std::size_t separator = symbol.find('.');
+    const std::string owner = lowercase_copy(symbol.substr(0U, separator));
+    return owner == "dataenvironment" || owner == "data_environment";
+}
+
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
@@ -178,6 +192,13 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_request(
     StudioAssetKind kind,
     std::string_view symbol) {
+    if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_data_environment_symbol(symbol)) {
+        return {
+            studio_designer_context_for_selection({
+                .selection_context = StudioEditorSelectionContext::data_environment
+            })
+        };
+    }
     if ((kind == StudioAssetKind::form || kind == StudioAssetKind::class_library) && has_method_like_symbol(symbol)) {
         return {
             studio_designer_context_for_selection({

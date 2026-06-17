@@ -218,11 +218,33 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_object\"",
                         "#963: symbol-inferred contexts should replace the form default selection context");
 
+    const auto data_environment_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--symbol", "Dataenvironment.OpenTables", "--json"},
+        temp_root);
+
+    if (data_environment_process.exit_code != 0) {
+        std::cerr << "studio host data-environment stdout:\n" << data_environment_process.stdout_text << "\n";
+        std::cerr << "studio host data-environment stderr:\n" << data_environment_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(data_environment_process.exit_code == 0,
+           "#965: Studio host data-environment symbol context JSON smoke should exit successfully");
+    expect_contains(data_environment_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+                    "#965: DataEnvironment symbols should infer data-environment JSON contexts");
+    expect_contains(data_environment_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#965: inferred data-environment contexts should expose data-environment editor actions");
+    expect_contains(data_environment_process.stdout_text, "\"id\": \"data-environment-builder\"",
+                    "#965: inferred data-environment contexts should expose data-environment builders");
+    expect_not_contains(data_environment_process.stdout_text, "\"selectionContext\": \"visual_method\"",
+                        "#965: DataEnvironment symbols should not fall through to visual-method contexts");
+
     const auto explicit_precedence_process = run_process_capture(
         studio_host_path,
         {
             "--path", form_path.string(),
-            "--symbol", "cmdSave.Click",
+            "--symbol", "Dataenvironment.OpenTables",
             "--selection-context", "report_expression",
             "--json"
         },
@@ -235,11 +257,11 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     }
 
     expect(explicit_precedence_process.exit_code == 0,
-           "#963: Studio host explicit-over-symbol context JSON smoke should exit successfully");
+           "#965: Studio host explicit-over-DataEnvironment context JSON smoke should exit successfully");
     expect_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"report_expression\"",
-                    "#963: explicit selection contexts should serialize when a method-like symbol is also present");
-    expect_not_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"visual_method\"",
-                        "#963: explicit selection contexts should override symbol-inferred visual-method contexts");
+                    "#965: explicit selection contexts should serialize when a DataEnvironment symbol is also present");
+    expect_not_contains(explicit_precedence_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+                        "#965: explicit selection contexts should override symbol-inferred data-environment contexts");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
