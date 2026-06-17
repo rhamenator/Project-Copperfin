@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#952 selected visual object max-left assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxLeft` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#951 selected visual object max-width assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#950 selected visual object max-height assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxHeight` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#949 selected visual object lock-screen assignment shipped: designer commands can assign caller-provided FoxPro logical `LockScreen` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
