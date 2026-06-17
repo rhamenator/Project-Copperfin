@@ -5540,6 +5540,15 @@ VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMark
         request.record_mark ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "SplitBar",
+        "split-bar",
+        request.split_bar ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
